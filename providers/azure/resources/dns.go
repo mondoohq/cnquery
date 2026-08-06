@@ -164,13 +164,23 @@ func (a *mqlAzureSubscriptionDnsServiceZone) recordSets() ([]any, error) {
 				}
 			}
 
+			// Derive the takeover-relevant view of the record from the same
+			// properties bag rather than a second API call: which hostname a
+			// CNAME points at, whether that hostname belongs to an Azure
+			// service, and whether the record is an alias (which Azure cleans
+			// up on its own).
+			cnameTarget := cnameTargetFromProperties(properties)
+
 			mqlRs, err := CreateResource(a.MqlRuntime, "azure.subscription.dnsService.zone.recordSet", map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(rs.ID),
-				"name":       llx.StringDataPtr(rs.Name),
-				"type":       llx.StringDataPtr(rs.Type),
-				"ttl":        llx.IntData(ttl),
-				"fqdn":       llx.StringData(fqdn),
-				"properties": llx.DictData(properties),
+				"id":                 llx.StringDataPtr(rs.ID),
+				"name":               llx.StringDataPtr(rs.Name),
+				"type":               llx.StringDataPtr(rs.Type),
+				"ttl":                llx.IntData(ttl),
+				"fqdn":               llx.StringData(fqdn),
+				"properties":         llx.DictData(properties),
+				"cnameTarget":        llx.StringData(cnameTarget),
+				"targetAzureService": llx.StringData(azureServiceForHostname(cnameTarget)),
+				"targetResourceId":   llx.StringData(targetResourceIDFromProperties(properties)),
 			})
 			if err != nil {
 				return nil, err

@@ -1836,6 +1836,10 @@ var azureServiceToARMMap = map[string]string{
 	// Microsoft.Management; without this the default branch would emit
 	// "Microsoft.Managementgroups", which is not a real provider.
 	"managementgroups": "Microsoft.Management",
+	// The default branch capitalizes only the first letter, giving
+	// "Microsoft.Eventgrid" and "Microsoft.Apimanagement" for these two.
+	"eventgrid":     "Microsoft.EventGrid",
+	"apimanagement": "Microsoft.ApiManagement",
 }
 
 func azureServiceToARM(service string) string {
@@ -1886,6 +1890,37 @@ var azureMethodPermissionOverrides = map[string]string{
 	// The entities listing walks the management group hierarchy; the governing
 	// permission is on managementGroups, not on an "entities" resource type.
 	"Entities.NewListPager": "Microsoft.Management/managementGroups/read",
+
+	// Synapse client names begin with an acronym (IPFirewallRules, SQLPools),
+	// which the resource-type derivation lower-cases one character at a time
+	// into "iPFirewallRules" and "sQLPools". They are also all children of a
+	// workspace, which the client name does not carry.
+	"IPFirewallRules.NewListByWorkspacePager": "Microsoft.Synapse/workspaces/firewallRules/read",
+	"SQLPools.NewListByWorkspacePager":        "Microsoft.Synapse/workspaces/sqlPools/read",
+	"SQLPoolTransparentDataEncryptions.Get":   "Microsoft.Synapse/workspaces/sqlPools/transparentDataEncryption/read",
+	"SQLPoolBlobAuditingPolicies.Get":         "Microsoft.Synapse/workspaces/sqlPools/auditingSettings/read",
+
+	// armfrontdoor's client is named PoliciesClient, which derives to a bare
+	// "policies" resource type under Microsoft.Network rather than the Front
+	// Door firewall policy type it actually reads.
+	"Policies.NewListBySubscriptionPager": "Microsoft.Network/frontdoorWebApplicationFirewallPolicies/read",
+	"Policies.Get":                        "Microsoft.Network/frontdoorWebApplicationFirewallPolicies/read",
+
+	// Event Grid event subscriptions are children of the topic, system topic or
+	// domain they belong to; the client names flatten that nesting.
+	"TopicEventSubscriptions.NewListPager":                    "Microsoft.EventGrid/topics/eventSubscriptions/read",
+	"SystemTopicEventSubscriptions.NewListBySystemTopicPager": "Microsoft.EventGrid/systemTopics/eventSubscriptions/read",
+	"DomainEventSubscriptions.NewListPager":                   "Microsoft.EventGrid/domains/eventSubscriptions/read",
+
+	// Every API Management child resource sits under service/, and the acronym
+	// clients (APIClient, APIPolicyClient) derive to "aPI" and "aPIPolicy".
+	"API.NewListByServicePager":        "Microsoft.ApiManagement/service/apis/read",
+	"APIPolicy.Get":                    "Microsoft.ApiManagement/service/apis/policies/read",
+	"Product.NewListByServicePager":    "Microsoft.ApiManagement/service/products/read",
+	"ProductPolicy.Get":                "Microsoft.ApiManagement/service/products/policies/read",
+	"NamedValue.NewListByServicePager": "Microsoft.ApiManagement/service/namedValues/read",
+	"Policy.Get":                       "Microsoft.ApiManagement/service/policies/read",
+	"Subscription.NewListPager":        "Microsoft.ApiManagement/service/subscriptions/read",
 }
 
 // azurePermissionOverrides maps generated permission strings to the correct

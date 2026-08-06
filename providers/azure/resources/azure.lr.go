@@ -16,495 +16,514 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAzure                                                                                     string = "azure"
-	ResourceAzureManagementGroup                                                                      string = "azure.managementGroup"
-	ResourceAzureEntraPrincipal                                                                       string = "azure.entraPrincipal"
-	ResourceAzureSubscription                                                                         string = "azure.subscription"
-	ResourceAzureSubscriptionWebServiceFunction                                                       string = "azure.subscription.webService.function"
-	ResourceAzureSubscriptionResourcegroup                                                            string = "azure.subscription.resourcegroup"
-	ResourceAzureSubscriptionLock                                                                     string = "azure.subscription.lock"
-	ResourceAzureSubscriptionResource                                                                 string = "azure.subscription.resource"
-	ResourceAzureSubscriptionSystemData                                                               string = "azure.subscription.systemData"
-	ResourceAzureSubscriptionDeployment                                                               string = "azure.subscription.deployment"
-	ResourceAzureSubscriptionComputeService                                                           string = "azure.subscription.computeService"
-	ResourceAzureSubscriptionComputeServiceVm                                                         string = "azure.subscription.computeService.vm"
-	ResourceAzureSubscriptionComputeServiceVmImageReference                                           string = "azure.subscription.computeService.vm.imageReference"
-	ResourceAzureSubscriptionComputeServiceHybridMachine                                              string = "azure.subscription.computeService.hybridMachine"
-	ResourceAzureSubscriptionComputeServiceHybridMachineExtension                                     string = "azure.subscription.computeService.hybridMachine.extension"
-	ResourceAzureSubscriptionComputeServiceDisk                                                       string = "azure.subscription.computeService.disk"
-	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                          string = "azure.subscription.computeService.diskEncryptionSet"
-	ResourceAzureSubscriptionComputeServiceDiskAccess                                                 string = "azure.subscription.computeService.diskAccess"
-	ResourceAzureSubscriptionComputeServiceSnapshot                                                   string = "azure.subscription.computeService.snapshot"
-	ResourceAzureSubscriptionComputeServiceVmScaleSet                                                 string = "azure.subscription.computeService.vmScaleSet"
-	ResourceAzureSubscriptionComputeServiceVmScaleSetInstance                                         string = "azure.subscription.computeService.vmScaleSet.instance"
-	ResourceAzureSubscriptionComputeServiceDedicatedHostGroup                                         string = "azure.subscription.computeService.dedicatedHostGroup"
-	ResourceAzureSubscriptionComputeServiceDedicatedHost                                              string = "azure.subscription.computeService.dedicatedHost"
-	ResourceAzureSubscriptionComputeServiceProximityPlacementGroup                                    string = "azure.subscription.computeService.proximityPlacementGroup"
-	ResourceAzureSubscriptionComputeServiceImage                                                      string = "azure.subscription.computeService.image"
-	ResourceAzureSubscriptionComputeServiceGallery                                                    string = "azure.subscription.computeService.gallery"
-	ResourceAzureSubscriptionComputeServiceGalleryImage                                               string = "azure.subscription.computeService.gallery.image"
-	ResourceAzureSubscriptionComputeServiceGalleryImageVersion                                        string = "azure.subscription.computeService.gallery.image.version"
-	ResourceAzureSubscriptionBatchService                                                             string = "azure.subscription.batchService"
-	ResourceAzureSubscriptionBatchServiceAccount                                                      string = "azure.subscription.batchService.account"
-	ResourceAzureSubscriptionBatchServiceAccountPool                                                  string = "azure.subscription.batchService.account.pool"
-	ResourceAzureSubscriptionDatabricksService                                                        string = "azure.subscription.databricksService"
-	ResourceAzureSubscriptionDatabricksServiceWorkspace                                               string = "azure.subscription.databricksService.workspace"
-	ResourceAzureSubscriptionNetworkService                                                           string = "azure.subscription.networkService"
-	ResourceAzureSubscriptionNetworkServiceNetworkManager                                             string = "azure.subscription.networkService.networkManager"
-	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup                                 string = "azure.subscription.networkService.networkManager.networkGroup"
-	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember                     string = "azure.subscription.networkService.networkManager.networkGroup.staticMember"
-	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration                   string = "azure.subscription.networkService.networkManager.securityAdminConfiguration"
-	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection     string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection"
-	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule"
-	ResourceAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration                    string = "azure.subscription.networkService.networkManager.connectivityConfiguration"
-	ResourceAzureSubscriptionNetworkServiceIpGroup                                                    string = "azure.subscription.networkService.ipGroup"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                      string = "azure.subscription.networkService.virtualNetworkGateway"
-	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                           string = "azure.subscription.networkService.appSecurityGroup"
-	ResourceAzureSubscriptionNetworkServiceFirewall                                                   string = "azure.subscription.networkService.firewall"
-	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                                           string = "azure.subscription.networkService.firewall.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                                        string = "azure.subscription.networkService.firewall.networkRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                                    string = "azure.subscription.networkService.firewall.applicationRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                            string = "azure.subscription.networkService.firewall.natRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                             string = "azure.subscription.networkService.firewallPolicy"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup                          string = "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                               string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
-	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                         string = "azure.subscription.networkService.ddosProtectionPlan"
-	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                      string = "azure.subscription.networkService.serviceEndpointPolicy"
-	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                            string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                              string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule                               string = "azure.subscription.networkService.virtualNetworkGateway.natRule"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                            string = "azure.subscription.networkService.virtualNetworkGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionIpsecPolicy                 string = "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy"
-	ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway                                        string = "azure.subscription.networkService.localNetworkGateway"
-	ResourceAzureSubscriptionNetworkServiceBgpSettings                                                string = "azure.subscription.networkService.bgpSettings"
-	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress                string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
-	ResourceAzureSubscriptionNetworkServiceNatGateway                                                 string = "azure.subscription.networkService.natGateway"
-	ResourceAzureSubscriptionNetworkServiceSubnet                                                     string = "azure.subscription.networkService.subnet"
-	ResourceAzureSubscriptionNetworkServiceSubnetServiceEndpoint                                      string = "azure.subscription.networkService.subnet.serviceEndpoint"
-	ResourceAzureSubscriptionNetworkServiceSubnetDelegation                                           string = "azure.subscription.networkService.subnet.delegation"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                                             string = "azure.subscription.networkService.virtualNetwork"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkPeering                                      string = "azure.subscription.networkService.virtualNetwork.peering"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                                  string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                               string = "azure.subscription.networkService.loadBalancer"
-	ResourceAzureSubscriptionNetworkServiceProbe                                                      string = "azure.subscription.networkService.probe"
-	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                                         string = "azure.subscription.networkService.backendAddressPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatPool                                             string = "azure.subscription.networkService.inboundNatPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatRule                                             string = "azure.subscription.networkService.inboundNatRule"
-	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                                           string = "azure.subscription.networkService.frontendIpConfig"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                                           string = "azure.subscription.networkService.loadBalancerRule"
-	ResourceAzureSubscriptionNetworkServiceOutboundRule                                               string = "azure.subscription.networkService.outboundRule"
-	ResourceAzureSubscriptionNetworkServiceInterface                                                  string = "azure.subscription.networkService.interface"
-	ResourceAzureSubscriptionNetworkServiceInterfaceIpConfiguration                                   string = "azure.subscription.networkService.interface.ipConfiguration"
-	ResourceAzureSubscriptionNetworkServiceIpAddress                                                  string = "azure.subscription.networkService.ipAddress"
-	ResourceAzureSubscriptionNetworkServiceBastionHost                                                string = "azure.subscription.networkService.bastionHost"
-	ResourceAzureSubscriptionNetworkServiceBastionHostIpConfiguration                                 string = "azure.subscription.networkService.bastionHost.ipConfiguration"
-	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                              string = "azure.subscription.networkService.securityGroup"
-	ResourceAzureSubscriptionNetworkServiceSecurityrule                                               string = "azure.subscription.networkService.securityrule"
-	ResourceAzureSubscriptionNetworkServiceExposure                                                   string = "azure.subscription.networkService.exposure"
-	ResourceAzureSubscriptionNetworkServiceWatcher                                                    string = "azure.subscription.networkService.watcher"
-	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                             string = "azure.subscription.networkService.watcher.flowlog"
-	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                       string = "azure.subscription.networkService.watcher.packetCapture"
-	ResourceAzureSubscriptionNetworkServiceWatcherConnectionMonitor                                   string = "azure.subscription.networkService.watcher.connectionMonitor"
-	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                         string = "azure.subscription.networkService.applicationGateway"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig                          string = "azure.subscription.networkService.applicationGateway.gatewayIpConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig                         string = "azure.subscription.networkService.applicationGateway.frontendIpConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                                 string = "azure.subscription.networkService.applicationGateway.listener"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                           string = "azure.subscription.networkService.applicationGateway.sslCertificate"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings                      string = "azure.subscription.networkService.applicationGateway.backendHttpSettings"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslProfile                               string = "azure.subscription.networkService.applicationGateway.sslProfile"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate                   string = "azure.subscription.networkService.applicationGateway.trustedRootCertificate"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate                 string = "azure.subscription.networkService.applicationGateway.trustedClientCertificate"
-	ResourceAzureSubscriptionNetworkServiceWafConfig                                                  string = "azure.subscription.networkService.wafConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                                  string = "azure.subscription.networkService.applicationFirewallPolicy"
-	ResourceAzureSubscriptionNetworkServicePrivateEndpoint                                            string = "azure.subscription.networkService.privateEndpoint"
-	ResourceAzureSubscriptionNetworkServicePrivateEndpointServiceconnection                           string = "azure.subscription.networkService.privateEndpoint.serviceconnection"
-	ResourceAzureSubscriptionNetworkServicePrivateLinkService                                         string = "azure.subscription.networkService.privateLinkService"
-	ResourceAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection                string = "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
-	ResourceAzureSubscriptionNetworkServiceRouteTable                                                 string = "azure.subscription.networkService.routeTable"
-	ResourceAzureSubscriptionNetworkServiceRoute                                                      string = "azure.subscription.networkService.route"
-	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfile                                      string = "azure.subscription.networkService.trafficManagerProfile"
-	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint                              string = "azure.subscription.networkService.trafficManagerProfile.endpoint"
-	ResourceAzureSubscriptionNetworkServiceVirtualWan                                                 string = "azure.subscription.networkService.virtualWan"
-	ResourceAzureSubscriptionNetworkServiceVirtualHub                                                 string = "azure.subscription.networkService.virtualHub"
-	ResourceAzureSubscriptionNetworkServiceVirtualHubRouteTable                                       string = "azure.subscription.networkService.virtualHub.routeTable"
-	ResourceAzureSubscriptionNetworkServiceVirtualHubVnetConnection                                   string = "azure.subscription.networkService.virtualHub.vnetConnection"
-	ResourceAzureSubscriptionNetworkServiceVpnSite                                                    string = "azure.subscription.networkService.vpnSite"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit                                        string = "azure.subscription.networkService.expressRouteCircuit"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitPeering                                 string = "azure.subscription.networkService.expressRouteCircuit.peering"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization                           string = "azure.subscription.networkService.expressRouteCircuit.authorization"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeter                                          string = "azure.subscription.networkService.securityPerimeter"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterProfile                                   string = "azure.subscription.networkService.securityPerimeter.profile"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule                                string = "azure.subscription.networkService.securityPerimeter.accessRule"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAssociation                               string = "azure.subscription.networkService.securityPerimeter.association"
-	ResourceAzureSubscriptionNetworkServiceVpnGateway                                                 string = "azure.subscription.networkService.vpnGateway"
-	ResourceAzureSubscriptionNetworkServiceVpnGatewayConnection                                       string = "azure.subscription.networkService.vpnGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceVpnServerConfiguration                                     string = "azure.subscription.networkService.vpnServerConfiguration"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteGateway                                        string = "azure.subscription.networkService.expressRouteGateway"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteGatewayConnection                              string = "azure.subscription.networkService.expressRouteGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceExpressRoutePort                                           string = "azure.subscription.networkService.expressRoutePort"
-	ResourceAzureSubscriptionNetworkServiceRouteFilter                                                string = "azure.subscription.networkService.routeFilter"
-	ResourceAzureSubscriptionNetworkServiceRouteFilterRule                                            string = "azure.subscription.networkService.routeFilter.rule"
-	ResourceAzureSubscriptionNetworkServiceVirtualAppliance                                           string = "azure.subscription.networkService.virtualAppliance"
-	ResourceAzureSubscriptionNetworkServiceVirtualRouter                                              string = "azure.subscription.networkService.virtualRouter"
-	ResourceAzureSubscriptionNetworkServicePublicIpPrefix                                             string = "azure.subscription.networkService.publicIpPrefix"
-	ResourceAzureSubscriptionNetworkServiceCustomIpPrefix                                             string = "azure.subscription.networkService.customIpPrefix"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkTap                                          string = "azure.subscription.networkService.virtualNetworkTap"
-	ResourceAzureSubscriptionNetworkServiceIpAllocation                                               string = "azure.subscription.networkService.ipAllocation"
-	ResourceAzureSubscriptionStorageService                                                           string = "azure.subscription.storageService"
-	ResourceAzureSubscriptionStorageServiceAccount                                                    string = "azure.subscription.storageService.account"
-	ResourceAzureSubscriptionStorageServiceAccountQueue                                               string = "azure.subscription.storageService.account.queue"
-	ResourceAzureSubscriptionStorageServiceAccountTable                                               string = "azure.subscription.storageService.account.table"
-	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                           string = "azure.subscription.storageService.account.localUser"
-	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                      string = "azure.subscription.storageService.account.dataProtection"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                                string = "azure.subscription.storageService.account.filePropertiesConfig"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig      string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig                string = "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig             string = "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
-	ResourceAzureSubscriptionStorageServiceAccountEncryptionScope                                     string = "azure.subscription.storageService.account.encryptionScope"
-	ResourceAzureSubscriptionStorageServiceAccountManagementPolicy                                    string = "azure.subscription.storageService.account.managementPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule                                string = "azure.subscription.storageService.account.managementPolicy.rule"
-	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                                   string = "azure.subscription.storageService.account.service.properties"
-	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                               string = "azure.subscription.storageService.account.service.blobProperties"
-	ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig                                 string = "azure.subscription.storageService.account.staticWebsiteConfig"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                            string = "azure.subscription.storageService.account.service.properties.metrics"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy                    string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                            string = "azure.subscription.storageService.account.service.properties.logging"
-	ResourceAzureSubscriptionStorageServiceAccountContainer                                           string = "azure.subscription.storageService.account.container"
-	ResourceAzureSubscriptionStorageServiceAccountFileShare                                           string = "azure.subscription.storageService.account.fileShare"
-	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                           string = "azure.subscription.storageService.account.privateEndpointConnection"
-	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                             string = "azure.subscription.storageService.account.objectReplicationPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration               string = "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration"
-	ResourceAzureSubscriptionStorageServiceAccountBlobInventoryPolicy                                 string = "azure.subscription.storageService.account.blobInventoryPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountDefenderForStorageSetting                           string = "azure.subscription.storageService.account.defenderForStorageSetting"
-	ResourceAzureSubscriptionWebService                                                               string = "azure.subscription.webService"
-	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                                string = "azure.subscription.webService.appRuntimeStack"
-	ResourceAzureSubscriptionWebServiceAppsite                                                        string = "azure.subscription.webService.appsite"
-	ResourceAzureSubscriptionWebServiceAppsiteOutboundVnetRouting                                     string = "azure.subscription.webService.appsite.outboundVnetRouting"
-	ResourceAzureSubscriptionPrivateEndpointConnection                                                string = "azure.subscription.privateEndpointConnection"
-	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                                 string = "azure.subscription.privateEndpointConnection.connectionState"
-	ResourceAzureSubscriptionWebServiceAppslot                                                        string = "azure.subscription.webService.appslot"
-	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                      string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
-	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                            string = "azure.subscription.webService.appsiteauthsettings"
-	ResourceAzureSubscriptionWebServiceAppsiteconfig                                                  string = "azure.subscription.webService.appsiteconfig"
-	ResourceAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction                             string = "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
-	ResourceAzureSubscriptionWebServiceHostingEnvironment                                             string = "azure.subscription.webService.hostingEnvironment"
-	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                               string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
-	ResourceAzureSubscriptionWebServiceAppServicePlan                                                 string = "azure.subscription.webService.appServicePlan"
-	ResourceAzureSubscriptionWebServiceCertificate                                                    string = "azure.subscription.webService.certificate"
-	ResourceAzureSubscriptionWebServiceStaticSite                                                     string = "azure.subscription.webService.staticSite"
-	ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding                                         string = "azure.subscription.webService.appsite.hostNameBinding"
-	ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection                                string = "azure.subscription.webService.appsite.virtualNetworkConnection"
-	ResourceAzureSubscriptionSqlService                                                               string = "azure.subscription.sqlService"
-	ResourceAzureSubscriptionSqlServiceServer                                                         string = "azure.subscription.sqlService.server"
-	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings                          string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
-	ResourceAzureSubscriptionSqlServiceServerAdministrator                                            string = "azure.subscription.sqlService.server.administrator"
-	ResourceAzureSubscriptionSqlServiceDatabase                                                       string = "azure.subscription.sqlService.database"
-	ResourceAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection                               string = "azure.subscription.sqlService.database.advancedthreatprotection"
-	ResourceAzureSubscriptionSqlServiceDatabaseBackupshorttermretentionpolicy                         string = "azure.subscription.sqlService.database.backupshorttermretentionpolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseLongtermretentionpolicy                                string = "azure.subscription.sqlService.database.longtermretentionpolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseusage                                                  string = "azure.subscription.sqlService.databaseusage"
-	ResourceAzureSubscriptionSqlServiceServerBlobAuditingPolicy                                       string = "azure.subscription.sqlService.server.blobAuditingPolicy"
-	ResourceAzureSubscriptionSqlServiceServerEncryptionProtectorConfig                                string = "azure.subscription.sqlService.server.encryptionProtectorConfig"
-	ResourceAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig                                string = "azure.subscription.sqlService.server.securityAlertPolicyConfig"
-	ResourceAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting                          string = "azure.subscription.sqlService.server.advancedThreatProtectionSetting"
-	ResourceAzureSubscriptionSqlServiceServerDevOpsAuditingSetting                                    string = "azure.subscription.sqlService.server.devOpsAuditingSetting"
-	ResourceAzureSubscriptionSqlServiceServerKey                                                      string = "azure.subscription.sqlService.server.key"
-	ResourceAzureSubscriptionSqlServiceServerOutboundFirewallRule                                     string = "azure.subscription.sqlService.server.outboundFirewallRule"
-	ResourceAzureSubscriptionSqlServiceServerFailoverGroup                                            string = "azure.subscription.sqlService.server.failoverGroup"
-	ResourceAzureSubscriptionSqlServiceServerReplicationLink                                          string = "azure.subscription.sqlService.server.replicationLink"
-	ResourceAzureSubscriptionSqlServiceVulnerabilityAssessmentScan                                    string = "azure.subscription.sqlService.vulnerabilityAssessmentScan"
-	ResourceAzureSubscriptionSqlServiceDatabaseBlobAuditingPolicy                                     string = "azure.subscription.sqlService.database.blobAuditingPolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy                                    string = "azure.subscription.sqlService.database.securityAlertPolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseVulnerabilityAssessment                                string = "azure.subscription.sqlService.database.vulnerabilityAssessment"
-	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingPolicy                                      string = "azure.subscription.sqlService.database.dataMaskingPolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingRule                                        string = "azure.subscription.sqlService.database.dataMaskingRule"
-	ResourceAzureSubscriptionSqlServiceDatabaseLedgerDigestUpload                                     string = "azure.subscription.sqlService.database.ledgerDigestUpload"
-	ResourceAzureSubscriptionSqlServiceDatabaseGeoBackupPolicy                                        string = "azure.subscription.sqlService.database.geoBackupPolicy"
-	ResourceAzureSubscriptionPostgreSqlService                                                        string = "azure.subscription.postgreSqlService"
-	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                                          string = "azure.subscription.postgreSqlService.flexibleServer"
-	ResourceAzureSubscriptionPostgreSqlServiceServer                                                  string = "azure.subscription.postgreSqlService.server"
-	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                                string = "azure.subscription.postgreSqlService.database"
-	ResourceAzureSubscriptionSqlServiceConfiguration                                                  string = "azure.subscription.sqlService.configuration"
-	ResourceAzureSubscriptionSqlServiceFirewallrule                                                   string = "azure.subscription.sqlService.firewallrule"
-	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                             string = "azure.subscription.sqlService.virtualNetworkRule"
-	ResourceAzureSubscriptionSqlServiceManagedInstance                                                string = "azure.subscription.sqlService.managedInstance"
-	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                        string = "azure.subscription.sqlService.managedInstance.database"
-	ResourceAzureSubscriptionMySqlService                                                             string = "azure.subscription.mySqlService"
-	ResourceAzureSubscriptionMySqlServiceServer                                                       string = "azure.subscription.mySqlService.server"
-	ResourceAzureSubscriptionMySqlServiceDatabase                                                     string = "azure.subscription.mySqlService.database"
-	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                               string = "azure.subscription.mySqlService.flexibleServer"
-	ResourceAzureSubscriptionMySqlServiceFlexibleServerAdministrator                                  string = "azure.subscription.mySqlService.flexibleServer.administrator"
-	ResourceAzureSubscriptionCosmosDbService                                                          string = "azure.subscription.cosmosDbService"
-	ResourceAzureSubscriptionCosmosDbServiceAccount                                                   string = "azure.subscription.cosmosDbService.account"
-	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                                 string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
-	ResourceAzureSubscriptionCosmosDbServiceMongoCluster                                              string = "azure.subscription.cosmosDbService.mongoCluster"
-	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                         string = "azure.subscription.cosmosDbService.postgresqlCluster"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                                  string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                                  string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
-	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition                            string = "azure.subscription.cosmosDbService.account.cassandraRoleDefinition"
-	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment                            string = "azure.subscription.cosmosDbService.account.cassandraRoleAssignment"
-	ResourceAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition                              string = "azure.subscription.cosmosDbService.account.gremlinRoleDefinition"
-	ResourceAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment                              string = "azure.subscription.cosmosDbService.account.gremlinRoleAssignment"
-	ResourceAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition                                string = "azure.subscription.cosmosDbService.account.tableRoleDefinition"
-	ResourceAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment                                string = "azure.subscription.cosmosDbService.account.tableRoleAssignment"
-	ResourceAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition                              string = "azure.subscription.cosmosDbService.account.mongoMIRoleDefinition"
-	ResourceAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment                              string = "azure.subscription.cosmosDbService.account.mongoMIRoleAssignment"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                        string = "azure.subscription.cosmosDbService.account.sqlDatabase"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer                               string = "azure.subscription.cosmosDbService.account.sqlDatabase.container"
-	ResourceAzureSubscriptionKeyVaultService                                                          string = "azure.subscription.keyVaultService"
-	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                                string = "azure.subscription.keyVaultService.managedHsm"
-	ResourceAzureSubscriptionKeyVaultServiceVault                                                     string = "azure.subscription.keyVaultService.vault"
-	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                         string = "azure.subscription.keyVaultService.vault.accessPolicy"
-	ResourceAzureSubscriptionKeyVaultServiceVaultNetworkAcls                                          string = "azure.subscription.keyVaultService.vault.networkAcls"
-	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                           string = "azure.subscription.keyVaultService.key.autorotation"
-	ResourceAzureSubscriptionKeyVaultServiceKey                                                       string = "azure.subscription.keyVaultService.key"
-	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                                   string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
-	ResourceAzureSubscriptionKeyVaultServiceCertificate                                               string = "azure.subscription.keyVaultService.certificate"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicy                                         string = "azure.subscription.keyVaultService.certificate.policy"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties                            string = "azure.subscription.keyVaultService.certificate.policy.keyProperties"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters                         string = "azure.subscription.keyVaultService.certificate.policy.issuerParameters"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties                string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
-	ResourceAzureSubscriptionKeyVaultServiceSecret                                                    string = "azure.subscription.keyVaultService.secret"
-	ResourceAzureSubscriptionMonitorService                                                           string = "azure.subscription.monitorService"
-	ResourceAzureSubscriptionMonitorServiceMetricAlert                                                string = "azure.subscription.monitorService.metricAlert"
-	ResourceAzureSubscriptionMonitorServiceScheduledQueryRule                                         string = "azure.subscription.monitorService.scheduledQueryRule"
-	ResourceAzureSubscriptionMonitorServiceActionGroup                                                string = "azure.subscription.monitorService.actionGroup"
-	ResourceAzureSubscriptionMonitorServiceActivityLog                                                string = "azure.subscription.monitorService.activityLog"
-	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                         string = "azure.subscription.monitorService.applicationInsight"
-	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                                           string = "azure.subscription.monitorService.activityLog.alert"
-	ResourceAzureSubscriptionMonitorServiceActivityLogEntry                                           string = "azure.subscription.monitorService.activityLog.entry"
-	ResourceAzureSubscriptionMonitorServiceLogprofile                                                 string = "azure.subscription.monitorService.logprofile"
-	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                          string = "azure.subscription.monitorService.diagnosticsetting"
-	ResourceAzureSubscriptionMonitorServiceDiagnosticSettingsCategory                                 string = "azure.subscription.monitorService.diagnosticSettingsCategory"
-	ResourceAzureSubscriptionCloudDefenderService                                                     string = "azure.subscription.cloudDefenderService"
-	ResourceAzureSubscriptionCloudDefenderServiceApiCollection                                        string = "azure.subscription.cloudDefenderService.apiCollection"
-	ResourceAzureSubscriptionCloudDefenderServiceAlertSuppressionRule                                 string = "azure.subscription.cloudDefenderService.alertSuppressionRule"
-	ResourceAzureSubscriptionCloudDefenderServiceWorkspaceSetting                                     string = "azure.subscription.cloudDefenderService.workspaceSetting"
-	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy                               string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
-	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine                 string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine"
-	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                          string = "azure.subscription.cloudDefenderService.secureScore"
-	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                                   string = "azure.subscription.cloudDefenderService.secureScoreControl"
-	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                         string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
-	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl                          string = "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
-	ResourceAzureSubscriptionCloudDefenderServiceAssessment                                           string = "azure.subscription.cloudDefenderService.assessment"
-	ResourceAzureSubscriptionCloudDefenderServiceAssessmentSubAssessment                              string = "azure.subscription.cloudDefenderService.assessment.subAssessment"
-	ResourceAzureSubscriptionCloudDefenderServiceAlert                                                string = "azure.subscription.cloudDefenderService.alert"
-	ResourceAzureSubscriptionCloudDefenderServiceSettings                                             string = "azure.subscription.cloudDefenderService.settings"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                      string = "azure.subscription.cloudDefenderService.defenderForApis"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                         string = "azure.subscription.cloudDefenderService.defenderCSPM"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                                string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers                                   string = "azure.subscription.cloudDefenderService.defenderForServers"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices                               string = "azure.subscription.cloudDefenderService.defenderForAppServices"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines                      string = "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases                              string = "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases                       string = "azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb                                  string = "azure.subscription.cloudDefenderService.defenderForCosmosDb"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts                           string = "azure.subscription.cloudDefenderService.defenderForStorageAccounts"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults                                 string = "azure.subscription.cloudDefenderService.defenderForKeyVaults"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager                           string = "azure.subscription.cloudDefenderService.defenderForResourceManager"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers                                string = "azure.subscription.cloudDefenderService.defenderForContainers"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                       string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
-	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                      string = "azure.subscription.cloudDefenderService.securityContact"
-	ResourceAzureSubscriptionAuthorizationService                                                     string = "azure.subscription.authorizationService"
-	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicy                                 string = "azure.subscription.authorizationService.roleManagementPolicy"
-	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule                             string = "azure.subscription.authorizationService.roleManagementPolicy.rule"
-	ResourceAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule                              string = "azure.subscription.authorizationService.roleEligibilitySchedule"
-	ResourceAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule                               string = "azure.subscription.authorizationService.roleAssignmentSchedule"
-	ResourceAzureSubscriptionAuthorizationServiceDenyAssignment                                       string = "azure.subscription.authorizationService.denyAssignment"
-	ResourceAzureSubscriptionAuthorizationServiceClassicAdministrator                                 string = "azure.subscription.authorizationService.classicAdministrator"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                       string = "azure.subscription.authorizationService.roleDefinition"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission                             string = "azure.subscription.authorizationService.roleDefinition.permission"
-	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                                       string = "azure.subscription.authorizationService.roleAssignment"
-	ResourceAzureSubscriptionManagedIdentity                                                          string = "azure.subscription.managedIdentity"
-	ResourceAzureSubscriptionAksService                                                               string = "azure.subscription.aksService"
-	ResourceAzureSubscriptionAksServiceCluster                                                        string = "azure.subscription.aksService.cluster"
-	ResourceAzureSubscriptionAksServiceClusterAadProfile                                              string = "azure.subscription.aksService.cluster.aadProfile"
-	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                      string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
-	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                      string = "azure.subscription.aksService.cluster.advancedNetworking"
-	ResourceAzureSubscriptionAksServiceClusterIdentityBinding                                         string = "azure.subscription.aksService.cluster.identityBinding"
-	ResourceAzureSubscriptionAksServiceClusterNodePool                                                string = "azure.subscription.aksService.cluster.nodePool"
-	ResourceAzureSubscriptionAdvisorService                                                           string = "azure.subscription.advisorService"
-	ResourceAzureSubscriptionAdvisorServiceRecommendation                                             string = "azure.subscription.advisorService.recommendation"
-	ResourceAzureSubscriptionAdvisorServiceScore                                                      string = "azure.subscription.advisorService.score"
-	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                                 string = "azure.subscription.advisorService.timeSeries"
-	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                              string = "azure.subscription.advisorService.securityScore"
-	ResourceAzureSubscriptionPolicy                                                                   string = "azure.subscription.policy"
-	ResourceAzureSubscriptionPolicyState                                                              string = "azure.subscription.policy.state"
-	ResourceAzureSubscriptionPolicyAssignment                                                         string = "azure.subscription.policy.assignment"
-	ResourceAzureSubscriptionPolicyDefinition                                                         string = "azure.subscription.policy.definition"
-	ResourceAzureSubscriptionPolicySetDefinition                                                      string = "azure.subscription.policy.setDefinition"
-	ResourceAzureSubscriptionPolicyExemption                                                          string = "azure.subscription.policy.exemption"
-	ResourceAzureSubscriptionPolicyComplianceSummary                                                  string = "azure.subscription.policy.complianceSummary"
-	ResourceAzureSubscriptionIotService                                                               string = "azure.subscription.iotService"
-	ResourceAzureSubscriptionIotServiceIotHub                                                         string = "azure.subscription.iotService.iotHub"
-	ResourceAzureSubscriptionCacheService                                                             string = "azure.subscription.cacheService"
-	ResourceAzureSubscriptionCacheServiceRedisInstance                                                string = "azure.subscription.cacheService.redisInstance"
-	ResourceAzureSubscriptionCacheServiceRedisInstanceFirewallRule                                    string = "azure.subscription.cacheService.redisInstance.firewallRule"
-	ResourceAzureSubscriptionCacheServiceRedisInstancePatchSchedule                                   string = "azure.subscription.cacheService.redisInstance.patchSchedule"
-	ResourceAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection                       string = "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
-	ResourceAzureSubscriptionDataFactoryService                                                       string = "azure.subscription.dataFactoryService"
-	ResourceAzureSubscriptionDataFactoryServiceFactory                                                string = "azure.subscription.dataFactoryService.factory"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryLinkedService                                   string = "azure.subscription.dataFactoryService.factory.linkedService"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime                              string = "azure.subscription.dataFactoryService.factory.integrationRuntime"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork                           string = "azure.subscription.dataFactoryService.factory.managedVirtualNetwork"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint                          string = "azure.subscription.dataFactoryService.factory.managedPrivateEndpoint"
-	ResourceAzureSubscriptionSynapseService                                                           string = "azure.subscription.synapseService"
-	ResourceAzureSubscriptionSynapseServiceWorkspace                                                  string = "azure.subscription.synapseService.workspace"
-	ResourceAzureSubscriptionContainerRegistryService                                                 string = "azure.subscription.containerRegistryService"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistry                                         string = "azure.subscription.containerRegistryService.registry"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSet                           string = "azure.subscription.containerRegistryService.registry.networkRuleSet"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSetIpRule                     string = "azure.subscription.containerRegistryService.registry.networkRuleSet.ipRule"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies                                 string = "azure.subscription.containerRegistryService.registry.policies"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryEncryption                               string = "azure.subscription.containerRegistryService.registry.encryption"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryWebhook                                  string = "azure.subscription.containerRegistryService.registry.webhook"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryReplication                              string = "azure.subscription.containerRegistryService.registry.replication"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryScopeMap                                 string = "azure.subscription.containerRegistryService.registry.scopeMap"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryToken                                    string = "azure.subscription.containerRegistryService.registry.token"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryCacheRule                                string = "azure.subscription.containerRegistryService.registry.cacheRule"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet                            string = "azure.subscription.containerRegistryService.registry.credentialSet"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistry                        string = "azure.subscription.containerRegistryService.registry.connectedRegistry"
-	ResourceAzureSubscriptionMonitorServiceWorkspace                                                  string = "azure.subscription.monitorService.workspace"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceCapping                                           string = "azure.subscription.monitorService.workspace.capping"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceFeatures                                          string = "azure.subscription.monitorService.workspace.features"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceDataExport                                        string = "azure.subscription.monitorService.workspace.dataExport"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceLinkedService                                     string = "azure.subscription.monitorService.workspace.linkedService"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceReplication                                       string = "azure.subscription.monitorService.workspace.replication"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceFailover                                          string = "azure.subscription.monitorService.workspace.failover"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceTable                                             string = "azure.subscription.monitorService.workspace.table"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceNspConfiguration                                  string = "azure.subscription.monitorService.workspace.nspConfiguration"
-	ResourceAzureSubscriptionMonitorServiceQueryPack                                                  string = "azure.subscription.monitorService.queryPack"
-	ResourceAzureSubscriptionMonitorServiceQueryPackQuery                                             string = "azure.subscription.monitorService.queryPack.query"
-	ResourceAzureSubscriptionRecoveryServicesService                                                  string = "azure.subscription.recoveryServicesService"
-	ResourceAzureSubscriptionRecoveryServicesServiceVault                                             string = "azure.subscription.recoveryServicesService.vault"
-	ResourceAzureSubscriptionRecoveryServicesServiceDeletedVault                                      string = "azure.subscription.recoveryServicesService.deletedVault"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings                             string = "azure.subscription.recoveryServicesService.vault.securitySettings"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultEncryption                                   string = "azure.subscription.recoveryServicesService.vault.encryption"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings                           string = "azure.subscription.recoveryServicesService.vault.monitoringSettings"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings                           string = "azure.subscription.recoveryServicesService.vault.redundancySettings"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupConfig                                 string = "azure.subscription.recoveryServicesService.vault.backupConfig"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy                                 string = "azure.subscription.recoveryServicesService.vault.backupPolicy"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem                                string = "azure.subscription.recoveryServicesService.vault.protectedItem"
-	ResourceAzureSubscriptionFunctionsService                                                         string = "azure.subscription.functionsService"
-	ResourceAzureSubscriptionFunctionsServiceFunctionApp                                              string = "azure.subscription.functionsService.functionApp"
-	ResourceAzureSubscriptionFunctionsServiceFunctionAppAppSetting                                    string = "azure.subscription.functionsService.functionApp.appSetting"
-	ResourceAzureSubscriptionFunctionsServiceFunctionAppFunction                                      string = "azure.subscription.functionsService.functionApp.function"
-	ResourceAzureSubscriptionServiceBusService                                                        string = "azure.subscription.serviceBusService"
-	ResourceAzureSubscriptionServiceBusServiceNamespace                                               string = "azure.subscription.serviceBusService.namespace"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRules                                   string = "azure.subscription.serviceBusService.namespace.networkRules"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule                 string = "azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceQueue                                          string = "azure.subscription.serviceBusService.namespace.queue"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceTopic                                          string = "azure.subscription.serviceBusService.namespace.topic"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceTopicSubscription                              string = "azure.subscription.serviceBusService.namespace.topic.subscription"
-	ResourceAzureSubscriptionServiceBusServiceAuthorizationRule                                       string = "azure.subscription.serviceBusService.authorizationRule"
-	ResourceAzureSubscriptionEventHubService                                                          string = "azure.subscription.eventHubService"
-	ResourceAzureSubscriptionEventHubServiceNamespace                                                 string = "azure.subscription.eventHubService.namespace"
-	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules                                     string = "azure.subscription.eventHubService.namespace.networkRules"
-	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule                   string = "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
-	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                         string = "azure.subscription.eventHubService.namespace.eventHub"
-	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                            string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
-	ResourceAzureSubscriptionEventHubServiceAuthorizationRule                                         string = "azure.subscription.eventHubService.authorizationRule"
-	ResourceAzureSubscriptionEventGridService                                                         string = "azure.subscription.eventGridService"
-	ResourceAzureSubscriptionEventGridServiceTopic                                                    string = "azure.subscription.eventGridService.topic"
-	ResourceAzureSubscriptionEventGridServiceSystemTopic                                              string = "azure.subscription.eventGridService.systemTopic"
-	ResourceAzureSubscriptionEventGridServiceDomain                                                   string = "azure.subscription.eventGridService.domain"
-	ResourceAzureSubscriptionDnsService                                                               string = "azure.subscription.dnsService"
-	ResourceAzureSubscriptionDnsServiceZone                                                           string = "azure.subscription.dnsService.zone"
-	ResourceAzureSubscriptionDnsServiceZoneRecordSet                                                  string = "azure.subscription.dnsService.zone.recordSet"
-	ResourceAzureSubscriptionDnsServicePrivateZone                                                    string = "azure.subscription.dnsService.privateZone"
-	ResourceAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink                                  string = "azure.subscription.dnsService.privateZone.virtualNetworkLink"
-	ResourceAzureSubscriptionFrontDoorService                                                         string = "azure.subscription.frontDoorService"
-	ResourceAzureSubscriptionFrontDoorServiceProfile                                                  string = "azure.subscription.frontDoorService.profile"
-	ResourceAzureSubscriptionFrontDoorServiceProfileSecurityPolicy                                    string = "azure.subscription.frontDoorService.profile.securityPolicy"
-	ResourceAzureSubscriptionFrontDoorServiceProfileEndpoint                                          string = "azure.subscription.frontDoorService.profile.endpoint"
-	ResourceAzureSubscriptionFrontDoorServiceProfileEndpointRoute                                     string = "azure.subscription.frontDoorService.profile.endpoint.route"
-	ResourceAzureSubscriptionFrontDoorServiceProfileCustomDomain                                      string = "azure.subscription.frontDoorService.profile.customDomain"
-	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroup                                       string = "azure.subscription.frontDoorService.profile.originGroup"
-	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin                                 string = "azure.subscription.frontDoorService.profile.originGroup.origin"
-	ResourceAzureSubscriptionContainerAppService                                                      string = "azure.subscription.containerAppService"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironment                                    string = "azure.subscription.containerAppService.managedEnvironment"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection           string = "azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig                     string = "azure.subscription.containerAppService.managedEnvironment.httpRouteConfig"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration            string = "azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent                       string = "azure.subscription.containerAppService.managedEnvironment.daprComponent"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate                         string = "azure.subscription.containerAppService.managedEnvironment.certificate"
-	ResourceAzureSubscriptionContainerAppServiceContainerApp                                          string = "azure.subscription.containerAppService.containerApp"
-	ResourceAzureSubscriptionContainerAppServiceContainerAppContainer                                 string = "azure.subscription.containerAppService.containerApp.container"
-	ResourceAzureSubscriptionContainerAppServiceContainerAppRevision                                  string = "azure.subscription.containerAppService.containerApp.revision"
-	ResourceAzureSubscriptionContainerAppServiceContainerAppAuthConfig                                string = "azure.subscription.containerAppService.containerApp.authConfig"
-	ResourceAzureSubscriptionContainerAppServiceJob                                                   string = "azure.subscription.containerAppService.job"
-	ResourceAzureSubscriptionContainerInstanceService                                                 string = "azure.subscription.containerInstanceService"
-	ResourceAzureSubscriptionContainerInstanceServiceContainerGroup                                   string = "azure.subscription.containerInstanceService.containerGroup"
-	ResourceAzureSubscriptionContainerInstanceServiceContainerGroupContainer                          string = "azure.subscription.containerInstanceService.containerGroup.container"
-	ResourceAzureSubscriptionLogicService                                                             string = "azure.subscription.logicService"
-	ResourceAzureSubscriptionLogicServiceWorkflow                                                     string = "azure.subscription.logicService.workflow"
-	ResourceAzureSubscriptionApiManagementService                                                     string = "azure.subscription.apiManagementService"
-	ResourceAzureSubscriptionApiManagementServiceService                                              string = "azure.subscription.apiManagementService.service"
-	ResourceAzureSubscriptionPurviewService                                                           string = "azure.subscription.purviewService"
-	ResourceAzureSubscriptionPurviewServiceAccount                                                    string = "azure.subscription.purviewService.account"
-	ResourceAzureSubscriptionSearchService                                                            string = "azure.subscription.searchService"
-	ResourceAzureSubscriptionSearchServiceService                                                     string = "azure.subscription.searchService.service"
-	ResourceAzureSubscriptionLighthouseService                                                        string = "azure.subscription.lighthouseService"
-	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinition                                  string = "azure.subscription.lighthouseService.registrationDefinition"
-	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization                     string = "azure.subscription.lighthouseService.registrationDefinition.authorization"
-	ResourceAzureSubscriptionLighthouseServiceRegistrationAssignment                                  string = "azure.subscription.lighthouseService.registrationAssignment"
-	ResourceAzureSubscriptionMachineLearningService                                                   string = "azure.subscription.machineLearningService"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspace                                          string = "azure.subscription.machineLearningService.workspace"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule                string = "azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint                            string = "azure.subscription.machineLearningService.workspace.onlineEndpoint"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment                  string = "azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint                        string = "azure.subscription.machineLearningService.workspace.serverlessEndpoint"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceCompute                                   string = "azure.subscription.machineLearningService.workspace.compute"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceModel                                     string = "azure.subscription.machineLearningService.workspace.model"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceDatastore                                 string = "azure.subscription.machineLearningService.workspace.datastore"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceConnection                                string = "azure.subscription.machineLearningService.workspace.connection"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint                             string = "azure.subscription.machineLearningService.workspace.batchEndpoint"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment                   string = "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment"
-	ResourceAzureSubscriptionAppConfigurationService                                                  string = "azure.subscription.appConfigurationService"
-	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                                string = "azure.subscription.appConfigurationService.configurationStore"
-	ResourceAzureSubscriptionCognitiveServicesService                                                 string = "azure.subscription.cognitiveServicesService"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                          string = "azure.subscription.cognitiveServicesService.account"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule                        string = "azure.subscription.cognitiveServicesService.account.virtualNetworkRule"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage                          string = "azure.subscription.cognitiveServicesService.account.userOwnedStorage"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection                          string = "azure.subscription.cognitiveServicesService.account.networkInjection"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                                string = "azure.subscription.cognitiveServicesService.account.deployment"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountProject                                   string = "azure.subscription.cognitiveServicesService.account.project"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountProjectConnection                         string = "azure.subscription.cognitiveServicesService.account.project.connection"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountConnection                                string = "azure.subscription.cognitiveServicesService.account.connection"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                                 string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                         string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                                  string = "azure.subscription.cognitiveServicesService.account.raiTopic"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountModel                                     string = "azure.subscription.cognitiveServicesService.account.model"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist                              string = "azure.subscription.cognitiveServicesService.account.raiBlocklist"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem                          string = "azure.subscription.cognitiveServicesService.account.raiBlocklist.item"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope                           string = "azure.subscription.cognitiveServicesService.account.encryptionScope"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost                            string = "azure.subscription.cognitiveServicesService.account.capabilityHost"
-	ResourceAzureSubscriptionSentinelService                                                          string = "azure.subscription.sentinelService"
-	ResourceAzureSubscriptionSentinelServiceWorkspace                                                 string = "azure.subscription.sentinelService.workspace"
-	ResourceAzureSubscriptionSentinelServiceAlertRule                                                 string = "azure.subscription.sentinelService.alertRule"
-	ResourceAzureSubscriptionSentinelServiceIncident                                                  string = "azure.subscription.sentinelService.incident"
-	ResourceAzureSubscriptionSentinelServiceWatchlist                                                 string = "azure.subscription.sentinelService.watchlist"
-	ResourceAzureSubscriptionSentinelServiceAutomationRule                                            string = "azure.subscription.sentinelService.automationRule"
-	ResourceAzureSubscriptionSignalRService                                                           string = "azure.subscription.signalRService"
-	ResourceAzureSubscriptionSignalRServiceSignalR                                                    string = "azure.subscription.signalRService.signalR"
-	ResourceAzureSubscriptionWebPubSubService                                                         string = "azure.subscription.webPubSubService"
-	ResourceAzureSubscriptionWebPubSubServiceWebPubSub                                                string = "azure.subscription.webPubSubService.webPubSub"
-	ResourceAzureSubscriptionKustoService                                                             string = "azure.subscription.kustoService"
-	ResourceAzureSubscriptionKustoServiceCluster                                                      string = "azure.subscription.kustoService.cluster"
-	ResourceAzureSubscriptionKustoServiceClusterDatabase                                              string = "azure.subscription.kustoService.cluster.database"
-	ResourceAzureSubscriptionKustoServiceClusterPrincipalAssignment                                   string = "azure.subscription.kustoService.cluster.principalAssignment"
-	ResourceAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment                           string = "azure.subscription.kustoService.cluster.database.principalAssignment"
-	ResourceAzureSubscriptionKustoServiceClusterCalloutPolicy                                         string = "azure.subscription.kustoService.cluster.calloutPolicy"
-	ResourceAzureSubscriptionKustoServiceClusterPrivateEndpointConnection                             string = "azure.subscription.kustoService.cluster.privateEndpointConnection"
-	ResourceAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint                                string = "azure.subscription.kustoService.cluster.managedPrivateEndpoint"
-	ResourceAzureSubscriptionKustoServiceClusterDatabaseDataConnection                                string = "azure.subscription.kustoService.cluster.database.dataConnection"
-	ResourceAzureSubscriptionAutomationService                                                        string = "azure.subscription.automationService"
-	ResourceAzureSubscriptionAutomationServiceAccount                                                 string = "azure.subscription.automationService.account"
-	ResourceAzureSubscriptionAutomationServiceAccountVariable                                         string = "azure.subscription.automationService.account.variable"
-	ResourceAzureSubscriptionAutomationServiceAccountCredential                                       string = "azure.subscription.automationService.account.credential"
-	ResourceAzureSubscriptionAutomationServiceAccountCertificate                                      string = "azure.subscription.automationService.account.certificate"
-	ResourceAzureSubscriptionDesktopVirtualizationService                                             string = "azure.subscription.desktopVirtualizationService"
-	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                     string = "azure.subscription.desktopVirtualizationService.hostPool"
+	ResourceAzure                                                                                       string = "azure"
+	ResourceAzureManagementGroup                                                                        string = "azure.managementGroup"
+	ResourceAzureEntraPrincipal                                                                         string = "azure.entraPrincipal"
+	ResourceAzureSubscription                                                                           string = "azure.subscription"
+	ResourceAzureSubscriptionWebServiceFunction                                                         string = "azure.subscription.webService.function"
+	ResourceAzureSubscriptionResourcegroup                                                              string = "azure.subscription.resourcegroup"
+	ResourceAzureSubscriptionLock                                                                       string = "azure.subscription.lock"
+	ResourceAzureSubscriptionResource                                                                   string = "azure.subscription.resource"
+	ResourceAzureSubscriptionSystemData                                                                 string = "azure.subscription.systemData"
+	ResourceAzureSubscriptionDeployment                                                                 string = "azure.subscription.deployment"
+	ResourceAzureSubscriptionComputeService                                                             string = "azure.subscription.computeService"
+	ResourceAzureSubscriptionComputeServiceVm                                                           string = "azure.subscription.computeService.vm"
+	ResourceAzureSubscriptionComputeServiceVmImageReference                                             string = "azure.subscription.computeService.vm.imageReference"
+	ResourceAzureSubscriptionComputeServiceHybridMachine                                                string = "azure.subscription.computeService.hybridMachine"
+	ResourceAzureSubscriptionComputeServiceHybridMachineExtension                                       string = "azure.subscription.computeService.hybridMachine.extension"
+	ResourceAzureSubscriptionComputeServiceDisk                                                         string = "azure.subscription.computeService.disk"
+	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                            string = "azure.subscription.computeService.diskEncryptionSet"
+	ResourceAzureSubscriptionComputeServiceDiskAccess                                                   string = "azure.subscription.computeService.diskAccess"
+	ResourceAzureSubscriptionComputeServiceSnapshot                                                     string = "azure.subscription.computeService.snapshot"
+	ResourceAzureSubscriptionComputeServiceVmScaleSet                                                   string = "azure.subscription.computeService.vmScaleSet"
+	ResourceAzureSubscriptionComputeServiceVmScaleSetInstance                                           string = "azure.subscription.computeService.vmScaleSet.instance"
+	ResourceAzureSubscriptionComputeServiceDedicatedHostGroup                                           string = "azure.subscription.computeService.dedicatedHostGroup"
+	ResourceAzureSubscriptionComputeServiceDedicatedHost                                                string = "azure.subscription.computeService.dedicatedHost"
+	ResourceAzureSubscriptionComputeServiceProximityPlacementGroup                                      string = "azure.subscription.computeService.proximityPlacementGroup"
+	ResourceAzureSubscriptionComputeServiceImage                                                        string = "azure.subscription.computeService.image"
+	ResourceAzureSubscriptionComputeServiceGallery                                                      string = "azure.subscription.computeService.gallery"
+	ResourceAzureSubscriptionComputeServiceGalleryImage                                                 string = "azure.subscription.computeService.gallery.image"
+	ResourceAzureSubscriptionComputeServiceGalleryImageVersion                                          string = "azure.subscription.computeService.gallery.image.version"
+	ResourceAzureSubscriptionBatchService                                                               string = "azure.subscription.batchService"
+	ResourceAzureSubscriptionBatchServiceAccount                                                        string = "azure.subscription.batchService.account"
+	ResourceAzureSubscriptionBatchServiceAccountPool                                                    string = "azure.subscription.batchService.account.pool"
+	ResourceAzureSubscriptionDatabricksService                                                          string = "azure.subscription.databricksService"
+	ResourceAzureSubscriptionDatabricksServiceWorkspace                                                 string = "azure.subscription.databricksService.workspace"
+	ResourceAzureSubscriptionNetworkService                                                             string = "azure.subscription.networkService"
+	ResourceAzureSubscriptionNetworkServiceNetworkManager                                               string = "azure.subscription.networkService.networkManager"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup                                   string = "azure.subscription.networkService.networkManager.networkGroup"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupStaticMember                       string = "azure.subscription.networkService.networkManager.networkGroup.staticMember"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration                     string = "azure.subscription.networkService.networkManager.securityAdminConfiguration"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection       string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule   string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration                      string = "azure.subscription.networkService.networkManager.connectivityConfiguration"
+	ResourceAzureSubscriptionNetworkServiceIpGroup                                                      string = "azure.subscription.networkService.ipGroup"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                        string = "azure.subscription.networkService.virtualNetworkGateway"
+	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                             string = "azure.subscription.networkService.appSecurityGroup"
+	ResourceAzureSubscriptionNetworkServiceFirewall                                                     string = "azure.subscription.networkService.firewall"
+	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                                             string = "azure.subscription.networkService.firewall.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                                          string = "azure.subscription.networkService.firewall.networkRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                                      string = "azure.subscription.networkService.firewall.applicationRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                              string = "azure.subscription.networkService.firewall.natRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                               string = "azure.subscription.networkService.firewallPolicy"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup                            string = "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                                 string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
+	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                           string = "azure.subscription.networkService.ddosProtectionPlan"
+	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                        string = "azure.subscription.networkService.serviceEndpointPolicy"
+	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                              string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                                string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayNatRule                                 string = "azure.subscription.networkService.virtualNetworkGateway.natRule"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                              string = "azure.subscription.networkService.virtualNetworkGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionIpsecPolicy                   string = "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy"
+	ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway                                          string = "azure.subscription.networkService.localNetworkGateway"
+	ResourceAzureSubscriptionNetworkServiceBgpSettings                                                  string = "azure.subscription.networkService.bgpSettings"
+	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress                  string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
+	ResourceAzureSubscriptionNetworkServiceNatGateway                                                   string = "azure.subscription.networkService.natGateway"
+	ResourceAzureSubscriptionNetworkServiceSubnet                                                       string = "azure.subscription.networkService.subnet"
+	ResourceAzureSubscriptionNetworkServiceSubnetServiceEndpoint                                        string = "azure.subscription.networkService.subnet.serviceEndpoint"
+	ResourceAzureSubscriptionNetworkServiceSubnetDelegation                                             string = "azure.subscription.networkService.subnet.delegation"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                                               string = "azure.subscription.networkService.virtualNetwork"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkPeering                                        string = "azure.subscription.networkService.virtualNetwork.peering"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                                    string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
+	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                                 string = "azure.subscription.networkService.loadBalancer"
+	ResourceAzureSubscriptionNetworkServiceProbe                                                        string = "azure.subscription.networkService.probe"
+	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                                           string = "azure.subscription.networkService.backendAddressPool"
+	ResourceAzureSubscriptionNetworkServiceInboundNatPool                                               string = "azure.subscription.networkService.inboundNatPool"
+	ResourceAzureSubscriptionNetworkServiceInboundNatRule                                               string = "azure.subscription.networkService.inboundNatRule"
+	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                                             string = "azure.subscription.networkService.frontendIpConfig"
+	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                                             string = "azure.subscription.networkService.loadBalancerRule"
+	ResourceAzureSubscriptionNetworkServiceOutboundRule                                                 string = "azure.subscription.networkService.outboundRule"
+	ResourceAzureSubscriptionNetworkServiceInterface                                                    string = "azure.subscription.networkService.interface"
+	ResourceAzureSubscriptionNetworkServiceInterfaceIpConfiguration                                     string = "azure.subscription.networkService.interface.ipConfiguration"
+	ResourceAzureSubscriptionNetworkServiceIpAddress                                                    string = "azure.subscription.networkService.ipAddress"
+	ResourceAzureSubscriptionNetworkServiceBastionHost                                                  string = "azure.subscription.networkService.bastionHost"
+	ResourceAzureSubscriptionNetworkServiceBastionHostIpConfiguration                                   string = "azure.subscription.networkService.bastionHost.ipConfiguration"
+	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                                string = "azure.subscription.networkService.securityGroup"
+	ResourceAzureSubscriptionNetworkServiceSecurityrule                                                 string = "azure.subscription.networkService.securityrule"
+	ResourceAzureSubscriptionNetworkServiceExposure                                                     string = "azure.subscription.networkService.exposure"
+	ResourceAzureSubscriptionNetworkServiceWatcher                                                      string = "azure.subscription.networkService.watcher"
+	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                               string = "azure.subscription.networkService.watcher.flowlog"
+	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                         string = "azure.subscription.networkService.watcher.packetCapture"
+	ResourceAzureSubscriptionNetworkServiceWatcherConnectionMonitor                                     string = "azure.subscription.networkService.watcher.connectionMonitor"
+	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                           string = "azure.subscription.networkService.applicationGateway"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig                            string = "azure.subscription.networkService.applicationGateway.gatewayIpConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig                           string = "azure.subscription.networkService.applicationGateway.frontendIpConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                                   string = "azure.subscription.networkService.applicationGateway.listener"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                             string = "azure.subscription.networkService.applicationGateway.sslCertificate"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings                        string = "azure.subscription.networkService.applicationGateway.backendHttpSettings"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslProfile                                 string = "azure.subscription.networkService.applicationGateway.sslProfile"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate                     string = "azure.subscription.networkService.applicationGateway.trustedRootCertificate"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate                   string = "azure.subscription.networkService.applicationGateway.trustedClientCertificate"
+	ResourceAzureSubscriptionNetworkServiceWafConfig                                                    string = "azure.subscription.networkService.wafConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                                    string = "azure.subscription.networkService.applicationFirewallPolicy"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet                      string = "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride     string = "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule string = "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule                          string = "azure.subscription.networkService.applicationFirewallPolicy.customRule"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition            string = "azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition"
+	ResourceAzureSubscriptionNetworkServicePrivateEndpoint                                              string = "azure.subscription.networkService.privateEndpoint"
+	ResourceAzureSubscriptionNetworkServicePrivateEndpointServiceconnection                             string = "azure.subscription.networkService.privateEndpoint.serviceconnection"
+	ResourceAzureSubscriptionNetworkServicePrivateLinkService                                           string = "azure.subscription.networkService.privateLinkService"
+	ResourceAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection                  string = "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
+	ResourceAzureSubscriptionNetworkServiceRouteTable                                                   string = "azure.subscription.networkService.routeTable"
+	ResourceAzureSubscriptionNetworkServiceRoute                                                        string = "azure.subscription.networkService.route"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfile                                        string = "azure.subscription.networkService.trafficManagerProfile"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint                                string = "azure.subscription.networkService.trafficManagerProfile.endpoint"
+	ResourceAzureSubscriptionNetworkServiceVirtualWan                                                   string = "azure.subscription.networkService.virtualWan"
+	ResourceAzureSubscriptionNetworkServiceVirtualHub                                                   string = "azure.subscription.networkService.virtualHub"
+	ResourceAzureSubscriptionNetworkServiceVirtualHubRouteTable                                         string = "azure.subscription.networkService.virtualHub.routeTable"
+	ResourceAzureSubscriptionNetworkServiceVirtualHubVnetConnection                                     string = "azure.subscription.networkService.virtualHub.vnetConnection"
+	ResourceAzureSubscriptionNetworkServiceVpnSite                                                      string = "azure.subscription.networkService.vpnSite"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit                                          string = "azure.subscription.networkService.expressRouteCircuit"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitPeering                                   string = "azure.subscription.networkService.expressRouteCircuit.peering"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization                             string = "azure.subscription.networkService.expressRouteCircuit.authorization"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeter                                            string = "azure.subscription.networkService.securityPerimeter"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterProfile                                     string = "azure.subscription.networkService.securityPerimeter.profile"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule                                  string = "azure.subscription.networkService.securityPerimeter.accessRule"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAssociation                                 string = "azure.subscription.networkService.securityPerimeter.association"
+	ResourceAzureSubscriptionNetworkServiceVpnGateway                                                   string = "azure.subscription.networkService.vpnGateway"
+	ResourceAzureSubscriptionNetworkServiceVpnGatewayConnection                                         string = "azure.subscription.networkService.vpnGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceVpnServerConfiguration                                       string = "azure.subscription.networkService.vpnServerConfiguration"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteGateway                                          string = "azure.subscription.networkService.expressRouteGateway"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteGatewayConnection                                string = "azure.subscription.networkService.expressRouteGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceExpressRoutePort                                             string = "azure.subscription.networkService.expressRoutePort"
+	ResourceAzureSubscriptionNetworkServiceRouteFilter                                                  string = "azure.subscription.networkService.routeFilter"
+	ResourceAzureSubscriptionNetworkServiceRouteFilterRule                                              string = "azure.subscription.networkService.routeFilter.rule"
+	ResourceAzureSubscriptionNetworkServiceVirtualAppliance                                             string = "azure.subscription.networkService.virtualAppliance"
+	ResourceAzureSubscriptionNetworkServiceVirtualRouter                                                string = "azure.subscription.networkService.virtualRouter"
+	ResourceAzureSubscriptionNetworkServicePublicIpPrefix                                               string = "azure.subscription.networkService.publicIpPrefix"
+	ResourceAzureSubscriptionNetworkServiceCustomIpPrefix                                               string = "azure.subscription.networkService.customIpPrefix"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkTap                                            string = "azure.subscription.networkService.virtualNetworkTap"
+	ResourceAzureSubscriptionNetworkServiceIpAllocation                                                 string = "azure.subscription.networkService.ipAllocation"
+	ResourceAzureSubscriptionStorageService                                                             string = "azure.subscription.storageService"
+	ResourceAzureSubscriptionStorageServiceAccount                                                      string = "azure.subscription.storageService.account"
+	ResourceAzureSubscriptionStorageServiceAccountQueue                                                 string = "azure.subscription.storageService.account.queue"
+	ResourceAzureSubscriptionStorageServiceAccountTable                                                 string = "azure.subscription.storageService.account.table"
+	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                             string = "azure.subscription.storageService.account.localUser"
+	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                        string = "azure.subscription.storageService.account.dataProtection"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                                  string = "azure.subscription.storageService.account.filePropertiesConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig        string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig                  string = "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig               string = "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
+	ResourceAzureSubscriptionStorageServiceAccountEncryptionScope                                       string = "azure.subscription.storageService.account.encryptionScope"
+	ResourceAzureSubscriptionStorageServiceAccountManagementPolicy                                      string = "azure.subscription.storageService.account.managementPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule                                  string = "azure.subscription.storageService.account.managementPolicy.rule"
+	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                                     string = "azure.subscription.storageService.account.service.properties"
+	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                                 string = "azure.subscription.storageService.account.service.blobProperties"
+	ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig                                   string = "azure.subscription.storageService.account.staticWebsiteConfig"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                              string = "azure.subscription.storageService.account.service.properties.metrics"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy                      string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                              string = "azure.subscription.storageService.account.service.properties.logging"
+	ResourceAzureSubscriptionStorageServiceAccountContainer                                             string = "azure.subscription.storageService.account.container"
+	ResourceAzureSubscriptionStorageServiceAccountFileShare                                             string = "azure.subscription.storageService.account.fileShare"
+	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                             string = "azure.subscription.storageService.account.privateEndpointConnection"
+	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                               string = "azure.subscription.storageService.account.objectReplicationPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration                 string = "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration"
+	ResourceAzureSubscriptionStorageServiceAccountBlobInventoryPolicy                                   string = "azure.subscription.storageService.account.blobInventoryPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountDefenderForStorageSetting                             string = "azure.subscription.storageService.account.defenderForStorageSetting"
+	ResourceAzureSubscriptionWebService                                                                 string = "azure.subscription.webService"
+	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                                  string = "azure.subscription.webService.appRuntimeStack"
+	ResourceAzureSubscriptionWebServiceAppsite                                                          string = "azure.subscription.webService.appsite"
+	ResourceAzureSubscriptionWebServiceAppsiteOutboundVnetRouting                                       string = "azure.subscription.webService.appsite.outboundVnetRouting"
+	ResourceAzureSubscriptionPrivateEndpointConnection                                                  string = "azure.subscription.privateEndpointConnection"
+	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                                   string = "azure.subscription.privateEndpointConnection.connectionState"
+	ResourceAzureSubscriptionWebServiceAppslot                                                          string = "azure.subscription.webService.appslot"
+	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                        string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
+	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                              string = "azure.subscription.webService.appsiteauthsettings"
+	ResourceAzureSubscriptionWebServiceAppsiteconfig                                                    string = "azure.subscription.webService.appsiteconfig"
+	ResourceAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction                               string = "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
+	ResourceAzureSubscriptionWebServiceHostingEnvironment                                               string = "azure.subscription.webService.hostingEnvironment"
+	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                                 string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
+	ResourceAzureSubscriptionWebServiceAppServicePlan                                                   string = "azure.subscription.webService.appServicePlan"
+	ResourceAzureSubscriptionWebServiceCertificate                                                      string = "azure.subscription.webService.certificate"
+	ResourceAzureSubscriptionWebServiceStaticSite                                                       string = "azure.subscription.webService.staticSite"
+	ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding                                           string = "azure.subscription.webService.appsite.hostNameBinding"
+	ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection                                  string = "azure.subscription.webService.appsite.virtualNetworkConnection"
+	ResourceAzureSubscriptionSqlService                                                                 string = "azure.subscription.sqlService"
+	ResourceAzureSubscriptionSqlServiceServer                                                           string = "azure.subscription.sqlService.server"
+	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings                            string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
+	ResourceAzureSubscriptionSqlServiceServerAdministrator                                              string = "azure.subscription.sqlService.server.administrator"
+	ResourceAzureSubscriptionSqlServiceDatabase                                                         string = "azure.subscription.sqlService.database"
+	ResourceAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection                                 string = "azure.subscription.sqlService.database.advancedthreatprotection"
+	ResourceAzureSubscriptionSqlServiceDatabaseBackupshorttermretentionpolicy                           string = "azure.subscription.sqlService.database.backupshorttermretentionpolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseLongtermretentionpolicy                                  string = "azure.subscription.sqlService.database.longtermretentionpolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseusage                                                    string = "azure.subscription.sqlService.databaseusage"
+	ResourceAzureSubscriptionSqlServiceServerBlobAuditingPolicy                                         string = "azure.subscription.sqlService.server.blobAuditingPolicy"
+	ResourceAzureSubscriptionSqlServiceServerEncryptionProtectorConfig                                  string = "azure.subscription.sqlService.server.encryptionProtectorConfig"
+	ResourceAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig                                  string = "azure.subscription.sqlService.server.securityAlertPolicyConfig"
+	ResourceAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting                            string = "azure.subscription.sqlService.server.advancedThreatProtectionSetting"
+	ResourceAzureSubscriptionSqlServiceServerDevOpsAuditingSetting                                      string = "azure.subscription.sqlService.server.devOpsAuditingSetting"
+	ResourceAzureSubscriptionSqlServiceServerKey                                                        string = "azure.subscription.sqlService.server.key"
+	ResourceAzureSubscriptionSqlServiceServerOutboundFirewallRule                                       string = "azure.subscription.sqlService.server.outboundFirewallRule"
+	ResourceAzureSubscriptionSqlServiceServerFailoverGroup                                              string = "azure.subscription.sqlService.server.failoverGroup"
+	ResourceAzureSubscriptionSqlServiceServerReplicationLink                                            string = "azure.subscription.sqlService.server.replicationLink"
+	ResourceAzureSubscriptionSqlServiceVulnerabilityAssessmentScan                                      string = "azure.subscription.sqlService.vulnerabilityAssessmentScan"
+	ResourceAzureSubscriptionSqlServiceDatabaseBlobAuditingPolicy                                       string = "azure.subscription.sqlService.database.blobAuditingPolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy                                      string = "azure.subscription.sqlService.database.securityAlertPolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseVulnerabilityAssessment                                  string = "azure.subscription.sqlService.database.vulnerabilityAssessment"
+	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingPolicy                                        string = "azure.subscription.sqlService.database.dataMaskingPolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingRule                                          string = "azure.subscription.sqlService.database.dataMaskingRule"
+	ResourceAzureSubscriptionSqlServiceDatabaseLedgerDigestUpload                                       string = "azure.subscription.sqlService.database.ledgerDigestUpload"
+	ResourceAzureSubscriptionSqlServiceDatabaseGeoBackupPolicy                                          string = "azure.subscription.sqlService.database.geoBackupPolicy"
+	ResourceAzureSubscriptionPostgreSqlService                                                          string = "azure.subscription.postgreSqlService"
+	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                                            string = "azure.subscription.postgreSqlService.flexibleServer"
+	ResourceAzureSubscriptionPostgreSqlServiceServer                                                    string = "azure.subscription.postgreSqlService.server"
+	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                                  string = "azure.subscription.postgreSqlService.database"
+	ResourceAzureSubscriptionSqlServiceConfiguration                                                    string = "azure.subscription.sqlService.configuration"
+	ResourceAzureSubscriptionSqlServiceFirewallrule                                                     string = "azure.subscription.sqlService.firewallrule"
+	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                               string = "azure.subscription.sqlService.virtualNetworkRule"
+	ResourceAzureSubscriptionSqlServiceManagedInstance                                                  string = "azure.subscription.sqlService.managedInstance"
+	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                          string = "azure.subscription.sqlService.managedInstance.database"
+	ResourceAzureSubscriptionMySqlService                                                               string = "azure.subscription.mySqlService"
+	ResourceAzureSubscriptionMySqlServiceServer                                                         string = "azure.subscription.mySqlService.server"
+	ResourceAzureSubscriptionMySqlServiceDatabase                                                       string = "azure.subscription.mySqlService.database"
+	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                                 string = "azure.subscription.mySqlService.flexibleServer"
+	ResourceAzureSubscriptionMySqlServiceFlexibleServerAdministrator                                    string = "azure.subscription.mySqlService.flexibleServer.administrator"
+	ResourceAzureSubscriptionCosmosDbService                                                            string = "azure.subscription.cosmosDbService"
+	ResourceAzureSubscriptionCosmosDbServiceAccount                                                     string = "azure.subscription.cosmosDbService.account"
+	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                                   string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
+	ResourceAzureSubscriptionCosmosDbServiceMongoCluster                                                string = "azure.subscription.cosmosDbService.mongoCluster"
+	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                           string = "azure.subscription.cosmosDbService.postgresqlCluster"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                                    string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                                    string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition                              string = "azure.subscription.cosmosDbService.account.cassandraRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment                              string = "azure.subscription.cosmosDbService.account.cassandraRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition                                string = "azure.subscription.cosmosDbService.account.gremlinRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountGremlinRoleAssignment                                string = "azure.subscription.cosmosDbService.account.gremlinRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition                                  string = "azure.subscription.cosmosDbService.account.tableRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountTableRoleAssignment                                  string = "azure.subscription.cosmosDbService.account.tableRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition                                string = "azure.subscription.cosmosDbService.account.mongoMIRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountMongoMIRoleAssignment                                string = "azure.subscription.cosmosDbService.account.mongoMIRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                          string = "azure.subscription.cosmosDbService.account.sqlDatabase"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer                                 string = "azure.subscription.cosmosDbService.account.sqlDatabase.container"
+	ResourceAzureSubscriptionKeyVaultService                                                            string = "azure.subscription.keyVaultService"
+	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                                  string = "azure.subscription.keyVaultService.managedHsm"
+	ResourceAzureSubscriptionKeyVaultServiceVault                                                       string = "azure.subscription.keyVaultService.vault"
+	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                           string = "azure.subscription.keyVaultService.vault.accessPolicy"
+	ResourceAzureSubscriptionKeyVaultServiceVaultNetworkAcls                                            string = "azure.subscription.keyVaultService.vault.networkAcls"
+	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                             string = "azure.subscription.keyVaultService.key.autorotation"
+	ResourceAzureSubscriptionKeyVaultServiceKey                                                         string = "azure.subscription.keyVaultService.key"
+	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                                     string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
+	ResourceAzureSubscriptionKeyVaultServiceCertificate                                                 string = "azure.subscription.keyVaultService.certificate"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicy                                           string = "azure.subscription.keyVaultService.certificate.policy"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties                              string = "azure.subscription.keyVaultService.certificate.policy.keyProperties"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters                           string = "azure.subscription.keyVaultService.certificate.policy.issuerParameters"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties                  string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
+	ResourceAzureSubscriptionKeyVaultServiceSecret                                                      string = "azure.subscription.keyVaultService.secret"
+	ResourceAzureSubscriptionMonitorService                                                             string = "azure.subscription.monitorService"
+	ResourceAzureSubscriptionMonitorServiceMetricAlert                                                  string = "azure.subscription.monitorService.metricAlert"
+	ResourceAzureSubscriptionMonitorServiceScheduledQueryRule                                           string = "azure.subscription.monitorService.scheduledQueryRule"
+	ResourceAzureSubscriptionMonitorServiceActionGroup                                                  string = "azure.subscription.monitorService.actionGroup"
+	ResourceAzureSubscriptionMonitorServiceActivityLog                                                  string = "azure.subscription.monitorService.activityLog"
+	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                           string = "azure.subscription.monitorService.applicationInsight"
+	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                                             string = "azure.subscription.monitorService.activityLog.alert"
+	ResourceAzureSubscriptionMonitorServiceActivityLogEntry                                             string = "azure.subscription.monitorService.activityLog.entry"
+	ResourceAzureSubscriptionMonitorServiceLogprofile                                                   string = "azure.subscription.monitorService.logprofile"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                            string = "azure.subscription.monitorService.diagnosticsetting"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticSettingsCategory                                   string = "azure.subscription.monitorService.diagnosticSettingsCategory"
+	ResourceAzureSubscriptionCloudDefenderService                                                       string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceApiCollection                                          string = "azure.subscription.cloudDefenderService.apiCollection"
+	ResourceAzureSubscriptionCloudDefenderServiceAlertSuppressionRule                                   string = "azure.subscription.cloudDefenderService.alertSuppressionRule"
+	ResourceAzureSubscriptionCloudDefenderServiceWorkspaceSetting                                       string = "azure.subscription.cloudDefenderService.workspaceSetting"
+	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy                                 string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
+	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine                   string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine"
+	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                            string = "azure.subscription.cloudDefenderService.secureScore"
+	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                                     string = "azure.subscription.cloudDefenderService.secureScoreControl"
+	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                           string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
+	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl                            string = "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
+	ResourceAzureSubscriptionCloudDefenderServiceAssessment                                             string = "azure.subscription.cloudDefenderService.assessment"
+	ResourceAzureSubscriptionCloudDefenderServiceAssessmentSubAssessment                                string = "azure.subscription.cloudDefenderService.assessment.subAssessment"
+	ResourceAzureSubscriptionCloudDefenderServiceAlert                                                  string = "azure.subscription.cloudDefenderService.alert"
+	ResourceAzureSubscriptionCloudDefenderServiceSettings                                               string = "azure.subscription.cloudDefenderService.settings"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                        string = "azure.subscription.cloudDefenderService.defenderForApis"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                           string = "azure.subscription.cloudDefenderService.defenderCSPM"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                                  string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers                                     string = "azure.subscription.cloudDefenderService.defenderForServers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices                                 string = "azure.subscription.cloudDefenderService.defenderForAppServices"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines                        string = "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases                                string = "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases                         string = "azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb                                    string = "azure.subscription.cloudDefenderService.defenderForCosmosDb"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts                             string = "azure.subscription.cloudDefenderService.defenderForStorageAccounts"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults                                   string = "azure.subscription.cloudDefenderService.defenderForKeyVaults"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager                             string = "azure.subscription.cloudDefenderService.defenderForResourceManager"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers                                  string = "azure.subscription.cloudDefenderService.defenderForContainers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                         string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                        string = "azure.subscription.cloudDefenderService.securityContact"
+	ResourceAzureSubscriptionAuthorizationService                                                       string = "azure.subscription.authorizationService"
+	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicy                                   string = "azure.subscription.authorizationService.roleManagementPolicy"
+	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicyRule                               string = "azure.subscription.authorizationService.roleManagementPolicy.rule"
+	ResourceAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule                                string = "azure.subscription.authorizationService.roleEligibilitySchedule"
+	ResourceAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule                                 string = "azure.subscription.authorizationService.roleAssignmentSchedule"
+	ResourceAzureSubscriptionAuthorizationServiceDenyAssignment                                         string = "azure.subscription.authorizationService.denyAssignment"
+	ResourceAzureSubscriptionAuthorizationServiceClassicAdministrator                                   string = "azure.subscription.authorizationService.classicAdministrator"
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                         string = "azure.subscription.authorizationService.roleDefinition"
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission                               string = "azure.subscription.authorizationService.roleDefinition.permission"
+	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                                         string = "azure.subscription.authorizationService.roleAssignment"
+	ResourceAzureSubscriptionManagedIdentity                                                            string = "azure.subscription.managedIdentity"
+	ResourceAzureSubscriptionAksService                                                                 string = "azure.subscription.aksService"
+	ResourceAzureSubscriptionAksServiceCluster                                                          string = "azure.subscription.aksService.cluster"
+	ResourceAzureSubscriptionAksServiceClusterAadProfile                                                string = "azure.subscription.aksService.cluster.aadProfile"
+	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                        string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
+	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                        string = "azure.subscription.aksService.cluster.advancedNetworking"
+	ResourceAzureSubscriptionAksServiceClusterIdentityBinding                                           string = "azure.subscription.aksService.cluster.identityBinding"
+	ResourceAzureSubscriptionAksServiceClusterNodePool                                                  string = "azure.subscription.aksService.cluster.nodePool"
+	ResourceAzureSubscriptionAdvisorService                                                             string = "azure.subscription.advisorService"
+	ResourceAzureSubscriptionAdvisorServiceRecommendation                                               string = "azure.subscription.advisorService.recommendation"
+	ResourceAzureSubscriptionAdvisorServiceScore                                                        string = "azure.subscription.advisorService.score"
+	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                                   string = "azure.subscription.advisorService.timeSeries"
+	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                                string = "azure.subscription.advisorService.securityScore"
+	ResourceAzureSubscriptionPolicy                                                                     string = "azure.subscription.policy"
+	ResourceAzureSubscriptionPolicyState                                                                string = "azure.subscription.policy.state"
+	ResourceAzureSubscriptionPolicyAssignment                                                           string = "azure.subscription.policy.assignment"
+	ResourceAzureSubscriptionPolicyDefinition                                                           string = "azure.subscription.policy.definition"
+	ResourceAzureSubscriptionPolicySetDefinition                                                        string = "azure.subscription.policy.setDefinition"
+	ResourceAzureSubscriptionPolicyExemption                                                            string = "azure.subscription.policy.exemption"
+	ResourceAzureSubscriptionPolicyComplianceSummary                                                    string = "azure.subscription.policy.complianceSummary"
+	ResourceAzureSubscriptionIotService                                                                 string = "azure.subscription.iotService"
+	ResourceAzureSubscriptionIotServiceIotHub                                                           string = "azure.subscription.iotService.iotHub"
+	ResourceAzureSubscriptionCacheService                                                               string = "azure.subscription.cacheService"
+	ResourceAzureSubscriptionCacheServiceRedisInstance                                                  string = "azure.subscription.cacheService.redisInstance"
+	ResourceAzureSubscriptionCacheServiceRedisInstanceFirewallRule                                      string = "azure.subscription.cacheService.redisInstance.firewallRule"
+	ResourceAzureSubscriptionCacheServiceRedisInstancePatchSchedule                                     string = "azure.subscription.cacheService.redisInstance.patchSchedule"
+	ResourceAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection                         string = "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
+	ResourceAzureSubscriptionDataFactoryService                                                         string = "azure.subscription.dataFactoryService"
+	ResourceAzureSubscriptionDataFactoryServiceFactory                                                  string = "azure.subscription.dataFactoryService.factory"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryLinkedService                                     string = "azure.subscription.dataFactoryService.factory.linkedService"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime                                string = "azure.subscription.dataFactoryService.factory.integrationRuntime"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork                             string = "azure.subscription.dataFactoryService.factory.managedVirtualNetwork"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint                            string = "azure.subscription.dataFactoryService.factory.managedPrivateEndpoint"
+	ResourceAzureSubscriptionSynapseService                                                             string = "azure.subscription.synapseService"
+	ResourceAzureSubscriptionSynapseServiceWorkspace                                                    string = "azure.subscription.synapseService.workspace"
+	ResourceAzureSubscriptionSynapseServiceWorkspaceFirewallRule                                        string = "azure.subscription.synapseService.workspace.firewallRule"
+	ResourceAzureSubscriptionSynapseServiceWorkspaceSqlPool                                             string = "azure.subscription.synapseService.workspace.sqlPool"
+	ResourceAzureSubscriptionContainerRegistryService                                                   string = "azure.subscription.containerRegistryService"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistry                                           string = "azure.subscription.containerRegistryService.registry"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSet                             string = "azure.subscription.containerRegistryService.registry.networkRuleSet"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSetIpRule                       string = "azure.subscription.containerRegistryService.registry.networkRuleSet.ipRule"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies                                   string = "azure.subscription.containerRegistryService.registry.policies"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryEncryption                                 string = "azure.subscription.containerRegistryService.registry.encryption"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryWebhook                                    string = "azure.subscription.containerRegistryService.registry.webhook"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryReplication                                string = "azure.subscription.containerRegistryService.registry.replication"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryScopeMap                                   string = "azure.subscription.containerRegistryService.registry.scopeMap"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryToken                                      string = "azure.subscription.containerRegistryService.registry.token"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryCacheRule                                  string = "azure.subscription.containerRegistryService.registry.cacheRule"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet                              string = "azure.subscription.containerRegistryService.registry.credentialSet"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistry                          string = "azure.subscription.containerRegistryService.registry.connectedRegistry"
+	ResourceAzureSubscriptionMonitorServiceWorkspace                                                    string = "azure.subscription.monitorService.workspace"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceCapping                                             string = "azure.subscription.monitorService.workspace.capping"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceFeatures                                            string = "azure.subscription.monitorService.workspace.features"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceDataExport                                          string = "azure.subscription.monitorService.workspace.dataExport"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceLinkedService                                       string = "azure.subscription.monitorService.workspace.linkedService"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceReplication                                         string = "azure.subscription.monitorService.workspace.replication"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceFailover                                            string = "azure.subscription.monitorService.workspace.failover"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceTable                                               string = "azure.subscription.monitorService.workspace.table"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceNspConfiguration                                    string = "azure.subscription.monitorService.workspace.nspConfiguration"
+	ResourceAzureSubscriptionMonitorServiceQueryPack                                                    string = "azure.subscription.monitorService.queryPack"
+	ResourceAzureSubscriptionMonitorServiceQueryPackQuery                                               string = "azure.subscription.monitorService.queryPack.query"
+	ResourceAzureSubscriptionRecoveryServicesService                                                    string = "azure.subscription.recoveryServicesService"
+	ResourceAzureSubscriptionRecoveryServicesServiceVault                                               string = "azure.subscription.recoveryServicesService.vault"
+	ResourceAzureSubscriptionRecoveryServicesServiceDeletedVault                                        string = "azure.subscription.recoveryServicesService.deletedVault"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings                               string = "azure.subscription.recoveryServicesService.vault.securitySettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultEncryption                                     string = "azure.subscription.recoveryServicesService.vault.encryption"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings                             string = "azure.subscription.recoveryServicesService.vault.monitoringSettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings                             string = "azure.subscription.recoveryServicesService.vault.redundancySettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupConfig                                   string = "azure.subscription.recoveryServicesService.vault.backupConfig"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy                                   string = "azure.subscription.recoveryServicesService.vault.backupPolicy"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem                                  string = "azure.subscription.recoveryServicesService.vault.protectedItem"
+	ResourceAzureSubscriptionFunctionsService                                                           string = "azure.subscription.functionsService"
+	ResourceAzureSubscriptionFunctionsServiceFunctionApp                                                string = "azure.subscription.functionsService.functionApp"
+	ResourceAzureSubscriptionFunctionsServiceFunctionAppAppSetting                                      string = "azure.subscription.functionsService.functionApp.appSetting"
+	ResourceAzureSubscriptionFunctionsServiceFunctionAppFunction                                        string = "azure.subscription.functionsService.functionApp.function"
+	ResourceAzureSubscriptionServiceBusService                                                          string = "azure.subscription.serviceBusService"
+	ResourceAzureSubscriptionServiceBusServiceNamespace                                                 string = "azure.subscription.serviceBusService.namespace"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRules                                     string = "azure.subscription.serviceBusService.namespace.networkRules"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule                   string = "azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceQueue                                            string = "azure.subscription.serviceBusService.namespace.queue"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceTopic                                            string = "azure.subscription.serviceBusService.namespace.topic"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceTopicSubscription                                string = "azure.subscription.serviceBusService.namespace.topic.subscription"
+	ResourceAzureSubscriptionServiceBusServiceAuthorizationRule                                         string = "azure.subscription.serviceBusService.authorizationRule"
+	ResourceAzureSubscriptionEventHubService                                                            string = "azure.subscription.eventHubService"
+	ResourceAzureSubscriptionEventHubServiceNamespace                                                   string = "azure.subscription.eventHubService.namespace"
+	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules                                       string = "azure.subscription.eventHubService.namespace.networkRules"
+	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule                     string = "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
+	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                           string = "azure.subscription.eventHubService.namespace.eventHub"
+	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                              string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
+	ResourceAzureSubscriptionEventHubServiceAuthorizationRule                                           string = "azure.subscription.eventHubService.authorizationRule"
+	ResourceAzureSubscriptionEventGridService                                                           string = "azure.subscription.eventGridService"
+	ResourceAzureSubscriptionEventGridServiceTopic                                                      string = "azure.subscription.eventGridService.topic"
+	ResourceAzureSubscriptionEventGridServiceSystemTopic                                                string = "azure.subscription.eventGridService.systemTopic"
+	ResourceAzureSubscriptionEventGridServiceDomain                                                     string = "azure.subscription.eventGridService.domain"
+	ResourceAzureSubscriptionEventGridServiceEventSubscription                                          string = "azure.subscription.eventGridService.eventSubscription"
+	ResourceAzureSubscriptionEventGridServiceNamespace                                                  string = "azure.subscription.eventGridService.namespace"
+	ResourceAzureSubscriptionDnsService                                                                 string = "azure.subscription.dnsService"
+	ResourceAzureSubscriptionDnsServiceZone                                                             string = "azure.subscription.dnsService.zone"
+	ResourceAzureSubscriptionDnsServiceZoneRecordSet                                                    string = "azure.subscription.dnsService.zone.recordSet"
+	ResourceAzureSubscriptionDnsServicePrivateZone                                                      string = "azure.subscription.dnsService.privateZone"
+	ResourceAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink                                    string = "azure.subscription.dnsService.privateZone.virtualNetworkLink"
+	ResourceAzureSubscriptionFrontDoorService                                                           string = "azure.subscription.frontDoorService"
+	ResourceAzureSubscriptionFrontDoorServiceWafPolicy                                                  string = "azure.subscription.frontDoorService.wafPolicy"
+	ResourceAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet                                    string = "azure.subscription.frontDoorService.wafPolicy.managedRuleSet"
+	ResourceAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride                   string = "azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride"
+	ResourceAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule               string = "azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule"
+	ResourceAzureSubscriptionFrontDoorServiceWafPolicyCustomRule                                        string = "azure.subscription.frontDoorService.wafPolicy.customRule"
+	ResourceAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition                          string = "azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition"
+	ResourceAzureSubscriptionFrontDoorServiceProfile                                                    string = "azure.subscription.frontDoorService.profile"
+	ResourceAzureSubscriptionFrontDoorServiceProfileSecurityPolicy                                      string = "azure.subscription.frontDoorService.profile.securityPolicy"
+	ResourceAzureSubscriptionFrontDoorServiceProfileEndpoint                                            string = "azure.subscription.frontDoorService.profile.endpoint"
+	ResourceAzureSubscriptionFrontDoorServiceProfileEndpointRoute                                       string = "azure.subscription.frontDoorService.profile.endpoint.route"
+	ResourceAzureSubscriptionFrontDoorServiceProfileCustomDomain                                        string = "azure.subscription.frontDoorService.profile.customDomain"
+	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroup                                         string = "azure.subscription.frontDoorService.profile.originGroup"
+	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin                                   string = "azure.subscription.frontDoorService.profile.originGroup.origin"
+	ResourceAzureSubscriptionContainerAppService                                                        string = "azure.subscription.containerAppService"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironment                                      string = "azure.subscription.containerAppService.managedEnvironment"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection             string = "azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig                       string = "azure.subscription.containerAppService.managedEnvironment.httpRouteConfig"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration              string = "azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent                         string = "azure.subscription.containerAppService.managedEnvironment.daprComponent"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate                           string = "azure.subscription.containerAppService.managedEnvironment.certificate"
+	ResourceAzureSubscriptionContainerAppServiceContainerApp                                            string = "azure.subscription.containerAppService.containerApp"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppContainer                                   string = "azure.subscription.containerAppService.containerApp.container"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppRevision                                    string = "azure.subscription.containerAppService.containerApp.revision"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppAuthConfig                                  string = "azure.subscription.containerAppService.containerApp.authConfig"
+	ResourceAzureSubscriptionContainerAppServiceJob                                                     string = "azure.subscription.containerAppService.job"
+	ResourceAzureSubscriptionContainerInstanceService                                                   string = "azure.subscription.containerInstanceService"
+	ResourceAzureSubscriptionContainerInstanceServiceContainerGroup                                     string = "azure.subscription.containerInstanceService.containerGroup"
+	ResourceAzureSubscriptionContainerInstanceServiceContainerGroupContainer                            string = "azure.subscription.containerInstanceService.containerGroup.container"
+	ResourceAzureSubscriptionLogicService                                                               string = "azure.subscription.logicService"
+	ResourceAzureSubscriptionLogicServiceWorkflow                                                       string = "azure.subscription.logicService.workflow"
+	ResourceAzureSubscriptionApiManagementService                                                       string = "azure.subscription.apiManagementService"
+	ResourceAzureSubscriptionApiManagementServiceService                                                string = "azure.subscription.apiManagementService.service"
+	ResourceAzureSubscriptionApiManagementServiceServiceApi                                             string = "azure.subscription.apiManagementService.service.api"
+	ResourceAzureSubscriptionApiManagementServiceServiceProduct                                         string = "azure.subscription.apiManagementService.service.product"
+	ResourceAzureSubscriptionApiManagementServiceServiceNamedValue                                      string = "azure.subscription.apiManagementService.service.namedValue"
+	ResourceAzureSubscriptionApiManagementServiceServiceSubscription                                    string = "azure.subscription.apiManagementService.service.subscription"
+	ResourceAzureSubscriptionPurviewService                                                             string = "azure.subscription.purviewService"
+	ResourceAzureSubscriptionPurviewServiceAccount                                                      string = "azure.subscription.purviewService.account"
+	ResourceAzureSubscriptionSearchService                                                              string = "azure.subscription.searchService"
+	ResourceAzureSubscriptionSearchServiceService                                                       string = "azure.subscription.searchService.service"
+	ResourceAzureSubscriptionLighthouseService                                                          string = "azure.subscription.lighthouseService"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinition                                    string = "azure.subscription.lighthouseService.registrationDefinition"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization                       string = "azure.subscription.lighthouseService.registrationDefinition.authorization"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationAssignment                                    string = "azure.subscription.lighthouseService.registrationAssignment"
+	ResourceAzureSubscriptionMachineLearningService                                                     string = "azure.subscription.machineLearningService"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspace                                            string = "azure.subscription.machineLearningService.workspace"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceManagedNetworkOutboundRule                  string = "azure.subscription.machineLearningService.workspace.managedNetworkOutboundRule"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint                              string = "azure.subscription.machineLearningService.workspace.onlineEndpoint"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment                    string = "azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint                          string = "azure.subscription.machineLearningService.workspace.serverlessEndpoint"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceCompute                                     string = "azure.subscription.machineLearningService.workspace.compute"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceModel                                       string = "azure.subscription.machineLearningService.workspace.model"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceDatastore                                   string = "azure.subscription.machineLearningService.workspace.datastore"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceConnection                                  string = "azure.subscription.machineLearningService.workspace.connection"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint                               string = "azure.subscription.machineLearningService.workspace.batchEndpoint"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment                     string = "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment"
+	ResourceAzureSubscriptionAppConfigurationService                                                    string = "azure.subscription.appConfigurationService"
+	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                                  string = "azure.subscription.appConfigurationService.configurationStore"
+	ResourceAzureSubscriptionCognitiveServicesService                                                   string = "azure.subscription.cognitiveServicesService"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                            string = "azure.subscription.cognitiveServicesService.account"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountVirtualNetworkRule                          string = "azure.subscription.cognitiveServicesService.account.virtualNetworkRule"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountUserOwnedStorage                            string = "azure.subscription.cognitiveServicesService.account.userOwnedStorage"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountNetworkInjection                            string = "azure.subscription.cognitiveServicesService.account.networkInjection"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                                  string = "azure.subscription.cognitiveServicesService.account.deployment"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountProject                                     string = "azure.subscription.cognitiveServicesService.account.project"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountProjectConnection                           string = "azure.subscription.cognitiveServicesService.account.project.connection"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountConnection                                  string = "azure.subscription.cognitiveServicesService.account.connection"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                                   string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter                      string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                           string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                                    string = "azure.subscription.cognitiveServicesService.account.raiTopic"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountModel                                       string = "azure.subscription.cognitiveServicesService.account.model"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklist                                string = "azure.subscription.cognitiveServicesService.account.raiBlocklist"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiBlocklistItem                            string = "azure.subscription.cognitiveServicesService.account.raiBlocklist.item"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountEncryptionScope                             string = "azure.subscription.cognitiveServicesService.account.encryptionScope"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountCapabilityHost                              string = "azure.subscription.cognitiveServicesService.account.capabilityHost"
+	ResourceAzureSubscriptionSentinelService                                                            string = "azure.subscription.sentinelService"
+	ResourceAzureSubscriptionSentinelServiceWorkspace                                                   string = "azure.subscription.sentinelService.workspace"
+	ResourceAzureSubscriptionSentinelServiceAlertRule                                                   string = "azure.subscription.sentinelService.alertRule"
+	ResourceAzureSubscriptionSentinelServiceIncident                                                    string = "azure.subscription.sentinelService.incident"
+	ResourceAzureSubscriptionSentinelServiceWatchlist                                                   string = "azure.subscription.sentinelService.watchlist"
+	ResourceAzureSubscriptionSentinelServiceAutomationRule                                              string = "azure.subscription.sentinelService.automationRule"
+	ResourceAzureSubscriptionSignalRService                                                             string = "azure.subscription.signalRService"
+	ResourceAzureSubscriptionSignalRServiceSignalR                                                      string = "azure.subscription.signalRService.signalR"
+	ResourceAzureSubscriptionWebPubSubService                                                           string = "azure.subscription.webPubSubService"
+	ResourceAzureSubscriptionWebPubSubServiceWebPubSub                                                  string = "azure.subscription.webPubSubService.webPubSub"
+	ResourceAzureSubscriptionKustoService                                                               string = "azure.subscription.kustoService"
+	ResourceAzureSubscriptionKustoServiceCluster                                                        string = "azure.subscription.kustoService.cluster"
+	ResourceAzureSubscriptionKustoServiceClusterDatabase                                                string = "azure.subscription.kustoService.cluster.database"
+	ResourceAzureSubscriptionKustoServiceClusterPrincipalAssignment                                     string = "azure.subscription.kustoService.cluster.principalAssignment"
+	ResourceAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment                             string = "azure.subscription.kustoService.cluster.database.principalAssignment"
+	ResourceAzureSubscriptionKustoServiceClusterCalloutPolicy                                           string = "azure.subscription.kustoService.cluster.calloutPolicy"
+	ResourceAzureSubscriptionKustoServiceClusterPrivateEndpointConnection                               string = "azure.subscription.kustoService.cluster.privateEndpointConnection"
+	ResourceAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint                                  string = "azure.subscription.kustoService.cluster.managedPrivateEndpoint"
+	ResourceAzureSubscriptionKustoServiceClusterDatabaseDataConnection                                  string = "azure.subscription.kustoService.cluster.database.dataConnection"
+	ResourceAzureSubscriptionAutomationService                                                          string = "azure.subscription.automationService"
+	ResourceAzureSubscriptionAutomationServiceAccount                                                   string = "azure.subscription.automationService.account"
+	ResourceAzureSubscriptionAutomationServiceAccountVariable                                           string = "azure.subscription.automationService.account.variable"
+	ResourceAzureSubscriptionAutomationServiceAccountCredential                                         string = "azure.subscription.automationService.account.credential"
+	ResourceAzureSubscriptionAutomationServiceAccountCertificate                                        string = "azure.subscription.automationService.account.certificate"
+	ResourceAzureSubscriptionDesktopVirtualizationService                                               string = "azure.subscription.desktopVirtualizationService"
+	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                       string = "azure.subscription.desktopVirtualizationService.hostPool"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -910,6 +929,26 @@ func init() {
 		"azure.subscription.networkService.applicationFirewallPolicy": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicy,
+		},
+		"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet,
+		},
+		"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride,
+		},
+		"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule,
+		},
+		"azure.subscription.networkService.applicationFirewallPolicy.customRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule,
+		},
+		"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition,
 		},
 		"azure.subscription.networkService.privateEndpoint": {
 			Init:   initAzureSubscriptionNetworkServicePrivateEndpoint,
@@ -1847,6 +1886,14 @@ func init() {
 			Init:   initAzureSubscriptionSynapseServiceWorkspace,
 			Create: createAzureSubscriptionSynapseServiceWorkspace,
 		},
+		"azure.subscription.synapseService.workspace.firewallRule": {
+			// to override args, implement: initAzureSubscriptionSynapseServiceWorkspaceFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSynapseServiceWorkspaceFirewallRule,
+		},
+		"azure.subscription.synapseService.workspace.sqlPool": {
+			// to override args, implement: initAzureSubscriptionSynapseServiceWorkspaceSqlPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSynapseServiceWorkspaceSqlPool,
+		},
 		"azure.subscription.containerRegistryService": {
 			Init:   initAzureSubscriptionContainerRegistryService,
 			Create: createAzureSubscriptionContainerRegistryService,
@@ -2075,6 +2122,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionEventGridServiceDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionEventGridServiceDomain,
 		},
+		"azure.subscription.eventGridService.eventSubscription": {
+			// to override args, implement: initAzureSubscriptionEventGridServiceEventSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventGridServiceEventSubscription,
+		},
+		"azure.subscription.eventGridService.namespace": {
+			// to override args, implement: initAzureSubscriptionEventGridServiceNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventGridServiceNamespace,
+		},
 		"azure.subscription.dnsService": {
 			Init:   initAzureSubscriptionDnsService,
 			Create: createAzureSubscriptionDnsService,
@@ -2098,6 +2153,30 @@ func init() {
 		"azure.subscription.frontDoorService": {
 			Init:   initAzureSubscriptionFrontDoorService,
 			Create: createAzureSubscriptionFrontDoorService,
+		},
+		"azure.subscription.frontDoorService.wafPolicy": {
+			Init:   initAzureSubscriptionFrontDoorServiceWafPolicy,
+			Create: createAzureSubscriptionFrontDoorServiceWafPolicy,
+		},
+		"azure.subscription.frontDoorService.wafPolicy.managedRuleSet": {
+			// to override args, implement: initAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet,
+		},
+		"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride": {
+			// to override args, implement: initAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride,
+		},
+		"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule": {
+			// to override args, implement: initAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule,
+		},
+		"azure.subscription.frontDoorService.wafPolicy.customRule": {
+			// to override args, implement: initAzureSubscriptionFrontDoorServiceWafPolicyCustomRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFrontDoorServiceWafPolicyCustomRule,
+		},
+		"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition": {
+			// to override args, implement: initAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition,
 		},
 		"azure.subscription.frontDoorService.profile": {
 			// to override args, implement: initAzureSubscriptionFrontDoorServiceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2202,6 +2281,22 @@ func init() {
 		"azure.subscription.apiManagementService.service": {
 			// to override args, implement: initAzureSubscriptionApiManagementServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionApiManagementServiceService,
+		},
+		"azure.subscription.apiManagementService.service.api": {
+			// to override args, implement: initAzureSubscriptionApiManagementServiceServiceApi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionApiManagementServiceServiceApi,
+		},
+		"azure.subscription.apiManagementService.service.product": {
+			// to override args, implement: initAzureSubscriptionApiManagementServiceServiceProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionApiManagementServiceServiceProduct,
+		},
+		"azure.subscription.apiManagementService.service.namedValue": {
+			// to override args, implement: initAzureSubscriptionApiManagementServiceServiceNamedValue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionApiManagementServiceServiceNamedValue,
+		},
+		"azure.subscription.apiManagementService.service.subscription": {
+			// to override args, implement: initAzureSubscriptionApiManagementServiceServiceSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionApiManagementServiceServiceSubscription,
 		},
 		"azure.subscription.purviewService": {
 			Init:   initAzureSubscriptionPurviewService,
@@ -6582,8 +6677,92 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetManagedRuleSets()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetManagedRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet")))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetCustomRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationFirewallPolicy.customRule")))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetExclusions()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.networkService.applicationFirewallPolicy.gateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetGateways()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway")))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleSetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).GetRuleSetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleSetVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).GetRuleSetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).GetRuleGroupOverrides()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride")))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.computedDisabledRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).GetComputedDisabledRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.ruleGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).GetRuleGroupName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.disablesEntireGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).GetDisablesEntireGroup()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).GetRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule")))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.ruleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).GetRuleId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).GetSensitivity()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.ruleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetRuleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.rateLimitThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetRateLimitThreshold()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.rateLimitDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetRateLimitDuration()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchConditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetMatchConditions()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition")))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.groupByUserSession": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GetGroupByUserSession()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.operator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).GetOperator()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.negate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).GetNegate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.matchValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).GetMatchValues()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.matchVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).GetMatchVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.transforms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).GetTransforms()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.networkService.privateEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetId()).ToDataRes(types.String)
@@ -14628,6 +14807,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.synapseService.workspace.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
+	"azure.subscription.synapseService.workspace.firewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.synapseService.workspace.firewallRule")))
+	},
+	"azure.subscription.synapseService.workspace.sqlPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetSqlPools()).ToDataRes(types.Array(types.Resource("azure.subscription.synapseService.workspace.sqlPool")))
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.startIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).GetStartIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.endIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).GetEndIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.allowsAllIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).GetAllowsAllIpv4()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.allowsAzureServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).GetAllowsAzureServices()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.collation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetCollation()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.maxSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetMaxSizeBytes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.createMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetCreateMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetCreationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.transparentDataEncryptionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetTransparentDataEncryptionStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.auditingState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetAuditingState()).ToDataRes(types.String)
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.auditingRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).GetAuditingRetentionDays()).ToDataRes(types.Int)
+	},
 	"azure.subscription.containerRegistryService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerRegistryService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -16092,6 +16340,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridService).GetDomains()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.domain")))
 	},
+	"azure.subscription.eventGridService.namespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridService).GetNamespaces()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.namespace")))
+	},
 	"azure.subscription.eventGridService.topic.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetId()).ToDataRes(types.String)
 	},
@@ -16140,6 +16391,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.topic.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.eventGridService.topic.eventSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetEventSubscriptions()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.eventSubscription")))
+	},
 	"azure.subscription.eventGridService.systemTopic.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetId()).ToDataRes(types.String)
 	},
@@ -16169,6 +16423,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.eventGridService.systemTopic.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.eventGridService.systemTopic.eventSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetEventSubscriptions()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.eventSubscription")))
 	},
 	"azure.subscription.eventGridService.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetId()).ToDataRes(types.String)
@@ -16224,6 +16481,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.domain.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.eventGridService.domain.eventSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetEventSubscriptions()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.eventSubscription")))
+	},
+	"azure.subscription.eventGridService.eventSubscription.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.topicId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetTopicId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetDestinationType()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.destinationEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetDestinationEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.deliveryWithResourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetDeliveryWithResourceIdentity()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventGridService.eventSubscription.eventDeliverySchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetEventDeliverySchema()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.eventSubscription.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetFilter()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.eventGridService.eventSubscription.retryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetRetryPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.eventGridService.eventSubscription.deadLetterDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetDeadLetterDestination()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.eventGridService.eventSubscription.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.eventGridService.eventSubscription.expirationTimeUtc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).GetExpirationTimeUtc()).ToDataRes(types.Time)
+	},
+	"azure.subscription.eventGridService.namespace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.eventGridService.namespace.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.skuCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetSkuCapacity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.eventGridService.namespace.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.minimumTlsVersionAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetMinimumTlsVersionAllowed()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.eventGridService.namespace.topicSpacesState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetTopicSpacesState()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.maximumClientSessionsPerAuthenticationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetMaximumClientSessionsPerAuthenticationName()).ToDataRes(types.Int)
+	},
+	"azure.subscription.eventGridService.namespace.maximumSessionExpiryInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetMaximumSessionExpiryInHours()).ToDataRes(types.Int)
+	},
+	"azure.subscription.eventGridService.namespace.topicSpacesHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetTopicSpacesHostname()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.routeTopicResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetRouteTopicResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.isZoneRedundant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetIsZoneRedundant()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventGridService.namespace.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.namespace.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.dnsService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -16274,6 +16627,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.dnsService.zone.recordSet.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.dnsService.zone.recordSet.cnameTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).GetCnameTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.dnsService.zone.recordSet.targetAzureService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).GetTargetAzureService()).ToDataRes(types.String)
+	},
+	"azure.subscription.dnsService.zone.recordSet.targetResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).GetTargetResourceId()).ToDataRes(types.String)
 	},
 	"azure.subscription.dnsService.privateZone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsServicePrivateZone).GetId()).ToDataRes(types.String)
@@ -16329,6 +16691,153 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.frontDoorService.profiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorService).GetProfiles()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.profile")))
 	},
+	"azure.subscription.frontDoorService.wafPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorService).GetWafPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.wafPolicy")))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetSku()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.requestBodyCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetRequestBodyCheck()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customBlockResponseStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetCustomBlockResponseStatusCode()).ToDataRes(types.Int)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.redirectUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetRedirectUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.javascriptChallengeExpirationInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetJavascriptChallengeExpirationInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.logScrubbingState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetLogScrubbingState()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.logScrubbingRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetLogScrubbingRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.resourceState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetResourceState()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetManagedRules()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.wafPolicy.managedRuleSet")))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetCustomRules()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.wafPolicy.customRule")))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.frontendEndpointIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetFrontendEndpointIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.securityPolicyIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetSecurityPolicyIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.routingRuleIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetRoutingRuleIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleSetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).GetRuleSetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleSetVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).GetRuleSetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleSetAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).GetRuleSetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).GetRuleGroupOverrides()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride")))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).GetExclusions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.ruleGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).GetRuleGroupName()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.disablesEntireGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).GetDisablesEntireGroup()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).GetRules()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule")))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).GetExclusions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.ruleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetRuleId()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.enabledState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetEnabledState()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.exclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetExclusions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.ruleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetRuleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.enabledState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetEnabledState()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.rateLimitThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetRateLimitThreshold()).ToDataRes(types.Int)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.rateLimitDurationInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetRateLimitDurationInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.groupBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetGroupBy()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchConditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GetMatchConditions()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition")))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.matchVariable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).GetMatchVariable()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).GetSelector()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.operator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).GetOperator()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.negate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).GetNegate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.matchValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).GetMatchValues()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.transforms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).GetTransforms()).ToDataRes(types.Array(types.String))
+	},
 	"azure.subscription.frontDoorService.profile.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetId()).ToDataRes(types.String)
 	},
@@ -16382,6 +16891,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.frontDoorService.profile.securityPolicy.wafPolicyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetWafPolicyId()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.wafPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetWafPolicy()).ToDataRes(types.Resource("azure.subscription.frontDoorService.wafPolicy"))
 	},
 	"azure.subscription.frontDoorService.profile.securityPolicy.associations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetAssociations()).ToDataRes(types.Array(types.Dict))
@@ -17420,6 +17932,150 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.apiManagementService.service.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.apiManagementService.service.apis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetApis()).ToDataRes(types.Array(types.Resource("azure.subscription.apiManagementService.service.api")))
+	},
+	"azure.subscription.apiManagementService.service.products": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetProducts()).ToDataRes(types.Array(types.Resource("azure.subscription.apiManagementService.service.product")))
+	},
+	"azure.subscription.apiManagementService.service.namedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetNamedValues()).ToDataRes(types.Array(types.Resource("azure.subscription.apiManagementService.service.namedValue")))
+	},
+	"azure.subscription.apiManagementService.service.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetSubscriptions()).ToDataRes(types.Array(types.Resource("azure.subscription.apiManagementService.service.subscription")))
+	},
+	"azure.subscription.apiManagementService.service.policyXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPolicyXml()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetPath()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.apiManagementService.service.api.serviceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetServiceUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.subscriptionRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetSubscriptionRequired()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.api.subscriptionKeyHeaderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetSubscriptionKeyHeaderName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.subscriptionKeyQueryParamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetSubscriptionKeyQueryParamName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.apiType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetApiType()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.apiRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetApiRevision()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.apiVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetApiVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.api.isCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetIsCurrent()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.api.isOnline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetIsOnline()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.api.authenticationSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetAuthenticationSettings()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.apiManagementService.service.api.policyXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).GetPolicyXml()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.subscriptionRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetSubscriptionRequired()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.product.approvalRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetApprovalRequired()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.product.subscriptionsLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetSubscriptionsLimit()).ToDataRes(types.Int)
+	},
+	"azure.subscription.apiManagementService.service.product.terms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetTerms()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.product.policyXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).GetPolicyXml()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.namedValue.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.namedValue.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.namedValue.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.namedValue.secret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).GetSecret()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.namedValue.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.apiManagementService.service.namedValue.keyVault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).GetKeyVault()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.apiManagementService.service.subscription.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.subscription.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.subscription.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.subscription.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.subscription.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetOwnerId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.subscription.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.subscription.allowTracing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetAllowTracing()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.subscription.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.apiManagementService.service.subscription.startDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetStartDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.apiManagementService.service.subscription.expirationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).GetExpirationDate()).ToDataRes(types.Time)
 	},
 	"azure.subscription.purviewService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPurviewService).GetSubscriptionId()).ToDataRes(types.String)
@@ -25511,8 +26167,140 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).ManagedRuleSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).ManagedRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).CustomRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationFirewallPolicy.gateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).Gateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleSetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).RuleSetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleSetVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).RuleSetVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).RuleGroupOverrides, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.computedDisabledRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet).ComputedDisabledRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.ruleGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).RuleGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.disablesEntireGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).DisablesEntireGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.ruleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).RuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule).Sensitivity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.ruleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).RuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.rateLimitThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).RateLimitThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.rateLimitDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).RateLimitDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchConditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).MatchConditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.groupByUserSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule).GroupByUserSession, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.operator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).Operator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.negate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).Negate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.matchValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).MatchValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.matchVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).MatchVariables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition.transforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition).Transforms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.privateEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37175,6 +37963,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSynapseServiceWorkspace).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.synapseService.workspace.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspace).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspace).SqlPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.startIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).StartIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.endIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).EndIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.allowsAllIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).AllowsAllIpv4, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.firewallRule.allowsAzureServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule).AllowsAzureServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.collation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).Collation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.maxSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).MaxSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.createMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).CreateMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.transparentDataEncryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).TransparentDataEncryptionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.auditingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).AuditingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.synapseService.workspace.sqlPool.auditingRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool).AuditingRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.containerRegistryService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerRegistryService).__id, ok = v.Value.(string)
 		return
@@ -39343,6 +40231,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridService).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventGridService.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridService).Namespaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventGridService.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceTopic).__id, ok = v.Value.(string)
 		return
@@ -39411,6 +40303,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridServiceTopic).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventGridService.topic.eventSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).EventSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventGridService.systemTopic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).__id, ok = v.Value.(string)
 		return
@@ -39453,6 +40349,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventGridService.systemTopic.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.eventSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).EventSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventGridService.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39529,6 +40429,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventGridService.domain.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceDomain).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.eventSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).EventSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.topicId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).TopicId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.destinationEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).DestinationEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.deliveryWithResourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).DeliveryWithResourceIdentity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.eventDeliverySchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).EventDeliverySchema, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).Filter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.retryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).RetryPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.deadLetterDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).DeadLetterDestination, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.eventSubscription.expirationTimeUtc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceEventSubscription).ExpirationTimeUtc, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.skuCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).SkuCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.minimumTlsVersionAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).MinimumTlsVersionAllowed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.inboundIpRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.topicSpacesState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).TopicSpacesState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.maximumClientSessionsPerAuthenticationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).MaximumClientSessionsPerAuthenticationName, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.maximumSessionExpiryInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).MaximumSessionExpiryInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.topicSpacesHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).TopicSpacesHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.routeTopicResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).RouteTopicResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.isZoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).IsZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.dnsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39609,6 +40645,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.dnsService.zone.recordSet.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dnsService.zone.recordSet.cnameTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).CnameTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dnsService.zone.recordSet.targetAzureService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).TargetAzureService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dnsService.zone.recordSet.targetResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDnsServiceZoneRecordSet).TargetResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.dnsService.privateZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39695,6 +40743,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionFrontDoorService).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.frontDoorService.wafPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorService).WafPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Sku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.requestBodyCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).RequestBodyCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customBlockResponseStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).CustomBlockResponseStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.redirectUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).RedirectUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.javascriptChallengeExpirationInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).JavascriptChallengeExpirationInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.logScrubbingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).LogScrubbingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.logScrubbingRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).LogScrubbingRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.resourceState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).ResourceState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).ManagedRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).CustomRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.frontendEndpointIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).FrontendEndpointIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.securityPolicyIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).SecurityPolicyIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.routingRuleIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).RoutingRuleIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleSetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).RuleSetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleSetVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).RuleSetVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleSetAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).RuleSetAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).RuleGroupOverrides, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.ruleGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).RuleGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.disablesEntireGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).DisablesEntireGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.ruleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).RuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.enabledState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).EnabledState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.ruleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).RuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.enabledState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).EnabledState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.rateLimitThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).RateLimitThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.rateLimitDurationInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).RateLimitDurationInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.groupBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).GroupBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchConditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule).MatchConditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.matchVariable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).MatchVariable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).Selector, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.operator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).Operator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.negate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).Negate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.matchValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).MatchValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition.transforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition).Transforms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.frontDoorService.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceProfile).__id, ok = v.Value.(string)
 		return
@@ -39773,6 +41041,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.frontDoorService.profile.securityPolicy.wafPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).WafPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.wafPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).WafPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionFrontDoorServiceWafPolicy](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.profile.securityPolicy.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41253,6 +42525,214 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.apiManagementService.service.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionApiManagementServiceService).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.apis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Apis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.products": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Products, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).NamedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.policyXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PolicyXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.serviceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).ServiceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.subscriptionRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).SubscriptionRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.subscriptionKeyHeaderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).SubscriptionKeyHeaderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.subscriptionKeyQueryParamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).SubscriptionKeyQueryParamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.apiType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).ApiType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.apiRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).ApiRevision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.apiVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).ApiVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.isCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).IsCurrent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.isOnline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).IsOnline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.authenticationSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).AuthenticationSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.api.policyXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceApi).PolicyXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.subscriptionRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).SubscriptionRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.approvalRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).ApprovalRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.subscriptionsLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).SubscriptionsLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.terms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).Terms, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.product.policyXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceProduct).PolicyXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.secret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).Secret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.namedValue.keyVault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceNamedValue).KeyVault, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.allowTracing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).AllowTracing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.startDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).StartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.subscription.expirationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceServiceSubscription).ExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.purviewService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58661,7 +60141,7 @@ func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetProperties() *plugin.TV
 type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyInternal
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	Location               plugin.TValue[string]
@@ -58677,6 +60157,9 @@ type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy struct {
 	FileUploadLimitInMb    plugin.TValue[int64]
 	CustomRulesCount       plugin.TValue[int64]
 	ManagedRuleSets        plugin.TValue[[]any]
+	ManagedRules           plugin.TValue[[]any]
+	CustomRules            plugin.TValue[[]any]
+	Exclusions             plugin.TValue[[]any]
 	Gateways               plugin.TValue[[]any]
 }
 
@@ -58777,6 +60260,42 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetManaged
 	return &c.ManagedRuleSets
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetManagedRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy", c.__id, "managedRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetCustomRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy", c.__id, "customRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetExclusions() *plugin.TValue[[]any] {
+	return &c.Exclusions
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetGateways() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Gateways, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -58791,6 +60310,362 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetGateway
 
 		return c.gateways()
 	})
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet for the azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet resource
+type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetInternal
+	RuleSetType           plugin.TValue[string]
+	RuleSetVersion        plugin.TValue[string]
+	RuleGroupOverrides    plugin.TValue[[]any]
+	ComputedDisabledRules plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet) MqlName() string {
+	return "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet) GetRuleSetType() *plugin.TValue[string] {
+	return &c.RuleSetType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet) GetRuleSetVersion() *plugin.TValue[string] {
+	return &c.RuleSetVersion
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet) GetRuleGroupOverrides() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleGroupOverrides, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet", c.__id, "ruleGroupOverrides")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleGroupOverrides()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet) GetComputedDisabledRules() *plugin.TValue[[]any] {
+	return &c.ComputedDisabledRules
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride for the azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride resource
+type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideInternal
+	RuleGroupName       plugin.TValue[string]
+	DisablesEntireGroup plugin.TValue[bool]
+	Rules               plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride) MqlName() string {
+	return "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride) GetRuleGroupName() *plugin.TValue[string] {
+	return &c.RuleGroupName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride) GetDisablesEntireGroup() *plugin.TValue[bool] {
+	return &c.DisablesEntireGroup
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule for the azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule resource
+type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRuleInternal it will be used here
+	RuleId      plugin.TValue[string]
+	State       plugin.TValue[string]
+	Action      plugin.TValue[string]
+	Sensitivity plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule) MqlName() string {
+	return "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule) GetRuleId() *plugin.TValue[string] {
+	return &c.RuleId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverrideRule) GetSensitivity() *plugin.TValue[string] {
+	return &c.Sensitivity
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule for the azure.subscription.networkService.applicationFirewallPolicy.customRule resource
+type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleInternal
+	Name               plugin.TValue[string]
+	Priority           plugin.TValue[int64]
+	RuleType           plugin.TValue[string]
+	Action             plugin.TValue[string]
+	State              plugin.TValue[string]
+	RateLimitThreshold plugin.TValue[int64]
+	RateLimitDuration  plugin.TValue[string]
+	MatchConditions    plugin.TValue[[]any]
+	GroupByUserSession plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.customRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) MqlName() string {
+	return "azure.subscription.networkService.applicationFirewallPolicy.customRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetRuleType() *plugin.TValue[string] {
+	return &c.RuleType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetRateLimitThreshold() *plugin.TValue[int64] {
+	return &c.RateLimitThreshold
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetRateLimitDuration() *plugin.TValue[string] {
+	return &c.RateLimitDuration
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetMatchConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MatchConditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.customRule", c.__id, "matchConditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.matchConditions()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRule) GetGroupByUserSession() *plugin.TValue[[]any] {
+	return &c.GroupByUserSession
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition for the azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition resource
+type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchConditionInternal it will be used here
+	Operator       plugin.TValue[string]
+	Negate         plugin.TValue[bool]
+	MatchValues    plugin.TValue[[]any]
+	MatchVariables plugin.TValue[[]any]
+	Transforms     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) MqlName() string {
+	return "azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) GetOperator() *plugin.TValue[string] {
+	return &c.Operator
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) GetNegate() *plugin.TValue[bool] {
+	return &c.Negate
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) GetMatchValues() *plugin.TValue[[]any] {
+	return &c.MatchValues
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) GetMatchVariables() *plugin.TValue[[]any] {
+	return &c.MatchVariables
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicyCustomRuleMatchCondition) GetTransforms() *plugin.TValue[[]any] {
+	return &c.Transforms
 }
 
 // mqlAzureSubscriptionNetworkServicePrivateEndpoint for the azure.subscription.networkService.privateEndpoint resource
@@ -86819,6 +88694,8 @@ type mqlAzureSubscriptionSynapseServiceWorkspace struct {
 	CmkKey                      plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
 	UserAssignedIdentities      plugin.TValue[[]any]
 	PrivateEndpointConnections  plugin.TValue[[]any]
+	FirewallRules               plugin.TValue[[]any]
+	SqlPools                    plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionSynapseServiceWorkspace creates a new instance of this resource
@@ -86983,6 +88860,227 @@ func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetPrivateEndpointConnecti
 		}
 
 		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetFirewallRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.synapseService.workspace", c.__id, "firewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetSqlPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SqlPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.synapseService.workspace", c.__id, "sqlPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sqlPools()
+	})
+}
+
+// mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule for the azure.subscription.synapseService.workspace.firewallRule resource
+type mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRuleInternal it will be used here
+	Name                plugin.TValue[string]
+	StartIpAddress      plugin.TValue[string]
+	EndIpAddress        plugin.TValue[string]
+	ProvisioningState   plugin.TValue[string]
+	AllowsAllIpv4       plugin.TValue[bool]
+	AllowsAzureServices plugin.TValue[bool]
+}
+
+// createAzureSubscriptionSynapseServiceWorkspaceFirewallRule creates a new instance of this resource
+func createAzureSubscriptionSynapseServiceWorkspaceFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.synapseService.workspace.firewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) MqlName() string {
+	return "azure.subscription.synapseService.workspace.firewallRule"
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) GetStartIpAddress() *plugin.TValue[string] {
+	return &c.StartIpAddress
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) GetEndIpAddress() *plugin.TValue[string] {
+	return &c.EndIpAddress
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) GetAllowsAllIpv4() *plugin.TValue[bool] {
+	return &c.AllowsAllIpv4
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceFirewallRule) GetAllowsAzureServices() *plugin.TValue[bool] {
+	return &c.AllowsAzureServices
+}
+
+// mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool for the azure.subscription.synapseService.workspace.sqlPool resource
+type mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionSynapseServiceWorkspaceSqlPoolInternal
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Location                        plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+	SkuName                         plugin.TValue[string]
+	SkuTier                         plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	Collation                       plugin.TValue[string]
+	MaxSizeBytes                    plugin.TValue[int64]
+	CreateMode                      plugin.TValue[string]
+	CreationDate                    plugin.TValue[*time.Time]
+	ProvisioningState               plugin.TValue[string]
+	TransparentDataEncryptionStatus plugin.TValue[string]
+	AuditingState                   plugin.TValue[string]
+	AuditingRetentionDays           plugin.TValue[int64]
+}
+
+// createAzureSubscriptionSynapseServiceWorkspaceSqlPool creates a new instance of this resource
+func createAzureSubscriptionSynapseServiceWorkspaceSqlPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.synapseService.workspace.sqlPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) MqlName() string {
+	return "azure.subscription.synapseService.workspace.sqlPool"
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetCollation() *plugin.TValue[string] {
+	return &c.Collation
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetMaxSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxSizeBytes
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetCreateMode() *plugin.TValue[string] {
+	return &c.CreateMode
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetTransparentDataEncryptionStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TransparentDataEncryptionStatus, func() (string, error) {
+		return c.transparentDataEncryptionStatus()
+	})
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetAuditingState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditingState, func() (string, error) {
+		return c.auditingState()
+	})
+}
+
+func (c *mqlAzureSubscriptionSynapseServiceWorkspaceSqlPool) GetAuditingRetentionDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AuditingRetentionDays, func() (int64, error) {
+		return c.auditingRetentionDays()
 	})
 }
 
@@ -92827,6 +94925,7 @@ type mqlAzureSubscriptionEventGridService struct {
 	Topics         plugin.TValue[[]any]
 	SystemTopics   plugin.TValue[[]any]
 	Domains        plugin.TValue[[]any]
+	Namespaces     plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionEventGridService creates a new instance of this resource
@@ -92918,6 +95017,22 @@ func (c *mqlAzureSubscriptionEventGridService) GetDomains() *plugin.TValue[[]any
 	})
 }
 
+func (c *mqlAzureSubscriptionEventGridService) GetNamespaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Namespaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService", c.__id, "namespaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.namespaces()
+	})
+}
+
 // mqlAzureSubscriptionEventGridServiceTopic for the azure.subscription.eventGridService.topic resource
 type mqlAzureSubscriptionEventGridServiceTopic struct {
 	MqlRuntime *plugin.Runtime
@@ -92939,6 +95054,7 @@ type mqlAzureSubscriptionEventGridServiceTopic struct {
 	IdentityType                   plugin.TValue[string]
 	PrivateEndpointConnectionCount plugin.TValue[int64]
 	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
+	EventSubscriptions             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionEventGridServiceTopic creates a new instance of this resource
@@ -93054,21 +95170,38 @@ func (c *mqlAzureSubscriptionEventGridServiceTopic) GetSystemMetadata() *plugin.
 	})
 }
 
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetEventSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventSubscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService.topic", c.__id, "eventSubscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventSubscriptions()
+	})
+}
+
 // mqlAzureSubscriptionEventGridServiceSystemTopic for the azure.subscription.eventGridService.systemTopic resource
 type mqlAzureSubscriptionEventGridServiceSystemTopic struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionEventGridServiceSystemTopicInternal
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Location          plugin.TValue[string]
-	Tags              plugin.TValue[map[string]any]
-	ProvisioningState plugin.TValue[string]
-	Source            plugin.TValue[string]
-	TopicType         plugin.TValue[string]
-	MetricResourceId  plugin.TValue[string]
-	IdentityType      plugin.TValue[string]
-	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Location           plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+	ProvisioningState  plugin.TValue[string]
+	Source             plugin.TValue[string]
+	TopicType          plugin.TValue[string]
+	MetricResourceId   plugin.TValue[string]
+	IdentityType       plugin.TValue[string]
+	SystemMetadata     plugin.TValue[*mqlAzureSubscriptionSystemData]
+	EventSubscriptions plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionEventGridServiceSystemTopic creates a new instance of this resource
@@ -93160,6 +95293,22 @@ func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetSystemMetadata() *p
 	})
 }
 
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetEventSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventSubscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService.systemTopic", c.__id, "eventSubscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventSubscriptions()
+	})
+}
+
 // mqlAzureSubscriptionEventGridServiceDomain for the azure.subscription.eventGridService.domain resource
 type mqlAzureSubscriptionEventGridServiceDomain struct {
 	MqlRuntime *plugin.Runtime
@@ -93183,6 +95332,7 @@ type mqlAzureSubscriptionEventGridServiceDomain struct {
 	IdentityType                         plugin.TValue[string]
 	PrivateEndpointConnectionCount       plugin.TValue[int64]
 	SystemMetadata                       plugin.TValue[*mqlAzureSubscriptionSystemData]
+	EventSubscriptions                   plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionEventGridServiceDomain creates a new instance of this resource
@@ -93294,6 +95444,267 @@ func (c *mqlAzureSubscriptionEventGridServiceDomain) GetSystemMetadata() *plugin
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService.domain", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetEventSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventSubscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService.domain", c.__id, "eventSubscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventSubscriptions()
+	})
+}
+
+// mqlAzureSubscriptionEventGridServiceEventSubscription for the azure.subscription.eventGridService.eventSubscription resource
+type mqlAzureSubscriptionEventGridServiceEventSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionEventGridServiceEventSubscriptionInternal it will be used here
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	ProvisioningState            plugin.TValue[string]
+	TopicId                      plugin.TValue[string]
+	DestinationType              plugin.TValue[string]
+	DestinationEndpoint          plugin.TValue[string]
+	DeliveryWithResourceIdentity plugin.TValue[bool]
+	EventDeliverySchema          plugin.TValue[string]
+	Filter                       plugin.TValue[any]
+	RetryPolicy                  plugin.TValue[any]
+	DeadLetterDestination        plugin.TValue[any]
+	Labels                       plugin.TValue[[]any]
+	ExpirationTimeUtc            plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionEventGridServiceEventSubscription creates a new instance of this resource
+func createAzureSubscriptionEventGridServiceEventSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventGridServiceEventSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventGridService.eventSubscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) MqlName() string {
+	return "azure.subscription.eventGridService.eventSubscription"
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetTopicId() *plugin.TValue[string] {
+	return &c.TopicId
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetDestinationEndpoint() *plugin.TValue[string] {
+	return &c.DestinationEndpoint
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetDeliveryWithResourceIdentity() *plugin.TValue[bool] {
+	return &c.DeliveryWithResourceIdentity
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetEventDeliverySchema() *plugin.TValue[string] {
+	return &c.EventDeliverySchema
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetFilter() *plugin.TValue[any] {
+	return &c.Filter
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetRetryPolicy() *plugin.TValue[any] {
+	return &c.RetryPolicy
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetDeadLetterDestination() *plugin.TValue[any] {
+	return &c.DeadLetterDestination
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceEventSubscription) GetExpirationTimeUtc() *plugin.TValue[*time.Time] {
+	return &c.ExpirationTimeUtc
+}
+
+// mqlAzureSubscriptionEventGridServiceNamespace for the azure.subscription.eventGridService.namespace resource
+type mqlAzureSubscriptionEventGridServiceNamespace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionEventGridServiceNamespaceInternal
+	Id                                         plugin.TValue[string]
+	Name                                       plugin.TValue[string]
+	Location                                   plugin.TValue[string]
+	Tags                                       plugin.TValue[map[string]any]
+	SkuName                                    plugin.TValue[string]
+	SkuCapacity                                plugin.TValue[int64]
+	ProvisioningState                          plugin.TValue[string]
+	PublicNetworkAccess                        plugin.TValue[string]
+	MinimumTlsVersionAllowed                   plugin.TValue[string]
+	InboundIpRules                             plugin.TValue[[]any]
+	TopicSpacesState                           plugin.TValue[string]
+	MaximumClientSessionsPerAuthenticationName plugin.TValue[int64]
+	MaximumSessionExpiryInHours                plugin.TValue[int64]
+	TopicSpacesHostname                        plugin.TValue[string]
+	RouteTopicResourceId                       plugin.TValue[string]
+	IsZoneRedundant                            plugin.TValue[bool]
+	IdentityType                               plugin.TValue[string]
+	SystemMetadata                             plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionEventGridServiceNamespace creates a new instance of this resource
+func createAzureSubscriptionEventGridServiceNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventGridServiceNamespace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventGridService.namespace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) MqlName() string {
+	return "azure.subscription.eventGridService.namespace"
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetSkuCapacity() *plugin.TValue[int64] {
+	return &c.SkuCapacity
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetMinimumTlsVersionAllowed() *plugin.TValue[string] {
+	return &c.MinimumTlsVersionAllowed
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetInboundIpRules() *plugin.TValue[[]any] {
+	return &c.InboundIpRules
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetTopicSpacesState() *plugin.TValue[string] {
+	return &c.TopicSpacesState
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetMaximumClientSessionsPerAuthenticationName() *plugin.TValue[int64] {
+	return &c.MaximumClientSessionsPerAuthenticationName
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetMaximumSessionExpiryInHours() *plugin.TValue[int64] {
+	return &c.MaximumSessionExpiryInHours
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetTopicSpacesHostname() *plugin.TValue[string] {
+	return &c.TopicSpacesHostname
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetRouteTopicResourceId() *plugin.TValue[string] {
+	return &c.RouteTopicResourceId
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetIsZoneRedundant() *plugin.TValue[bool] {
+	return &c.IsZoneRedundant
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService.namespace", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}
@@ -93490,12 +95901,15 @@ type mqlAzureSubscriptionDnsServiceZoneRecordSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionDnsServiceZoneRecordSetInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Ttl        plugin.TValue[int64]
-	Fqdn       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Ttl                plugin.TValue[int64]
+	Fqdn               plugin.TValue[string]
+	Properties         plugin.TValue[any]
+	CnameTarget        plugin.TValue[string]
+	TargetAzureService plugin.TValue[string]
+	TargetResourceId   plugin.TValue[string]
 }
 
 // createAzureSubscriptionDnsServiceZoneRecordSet creates a new instance of this resource
@@ -93557,6 +95971,18 @@ func (c *mqlAzureSubscriptionDnsServiceZoneRecordSet) GetFqdn() *plugin.TValue[s
 
 func (c *mqlAzureSubscriptionDnsServiceZoneRecordSet) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionDnsServiceZoneRecordSet) GetCnameTarget() *plugin.TValue[string] {
+	return &c.CnameTarget
+}
+
+func (c *mqlAzureSubscriptionDnsServiceZoneRecordSet) GetTargetAzureService() *plugin.TValue[string] {
+	return &c.TargetAzureService
+}
+
+func (c *mqlAzureSubscriptionDnsServiceZoneRecordSet) GetTargetResourceId() *plugin.TValue[string] {
+	return &c.TargetResourceId
 }
 
 // mqlAzureSubscriptionDnsServicePrivateZone for the azure.subscription.dnsService.privateZone resource
@@ -93770,6 +96196,7 @@ type mqlAzureSubscriptionFrontDoorService struct {
 	// optional: if you define mqlAzureSubscriptionFrontDoorServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
 	Profiles       plugin.TValue[[]any]
+	WafPolicies    plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionFrontDoorService creates a new instance of this resource
@@ -93827,6 +96254,556 @@ func (c *mqlAzureSubscriptionFrontDoorService) GetProfiles() *plugin.TValue[[]an
 
 		return c.profiles()
 	})
+}
+
+func (c *mqlAzureSubscriptionFrontDoorService) GetWafPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WafPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService", c.__id, "wafPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.wafPolicies()
+	})
+}
+
+// mqlAzureSubscriptionFrontDoorServiceWafPolicy for the azure.subscription.frontDoorService.wafPolicy resource
+type mqlAzureSubscriptionFrontDoorServiceWafPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionFrontDoorServiceWafPolicyInternal
+	Id                                     plugin.TValue[string]
+	Name                                   plugin.TValue[string]
+	Location                               plugin.TValue[string]
+	Tags                                   plugin.TValue[map[string]any]
+	Sku                                    plugin.TValue[string]
+	Mode                                   plugin.TValue[string]
+	Enabled                                plugin.TValue[bool]
+	RequestBodyCheck                       plugin.TValue[bool]
+	CustomBlockResponseStatusCode          plugin.TValue[int64]
+	RedirectUrl                            plugin.TValue[string]
+	JavascriptChallengeExpirationInMinutes plugin.TValue[int64]
+	LogScrubbingState                      plugin.TValue[string]
+	LogScrubbingRules                      plugin.TValue[[]any]
+	ProvisioningState                      plugin.TValue[string]
+	ResourceState                          plugin.TValue[string]
+	ManagedRules                           plugin.TValue[[]any]
+	CustomRules                            plugin.TValue[[]any]
+	FrontendEndpointIds                    plugin.TValue[[]any]
+	SecurityPolicyIds                      plugin.TValue[[]any]
+	RoutingRuleIds                         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFrontDoorServiceWafPolicy creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceWafPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceWafPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.wafPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) MqlName() string {
+	return "azure.subscription.frontDoorService.wafPolicy"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetSku() *plugin.TValue[string] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetRequestBodyCheck() *plugin.TValue[bool] {
+	return &c.RequestBodyCheck
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetCustomBlockResponseStatusCode() *plugin.TValue[int64] {
+	return &c.CustomBlockResponseStatusCode
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetRedirectUrl() *plugin.TValue[string] {
+	return &c.RedirectUrl
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetJavascriptChallengeExpirationInMinutes() *plugin.TValue[int64] {
+	return &c.JavascriptChallengeExpirationInMinutes
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetLogScrubbingState() *plugin.TValue[string] {
+	return &c.LogScrubbingState
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetLogScrubbingRules() *plugin.TValue[[]any] {
+	return &c.LogScrubbingRules
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetResourceState() *plugin.TValue[string] {
+	return &c.ResourceState
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetManagedRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.wafPolicy", c.__id, "managedRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetCustomRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.wafPolicy", c.__id, "customRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetFrontendEndpointIds() *plugin.TValue[[]any] {
+	return &c.FrontendEndpointIds
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetSecurityPolicyIds() *plugin.TValue[[]any] {
+	return &c.SecurityPolicyIds
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetRoutingRuleIds() *plugin.TValue[[]any] {
+	return &c.RoutingRuleIds
+}
+
+// mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet for the azure.subscription.frontDoorService.wafPolicy.managedRuleSet resource
+type mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetInternal
+	RuleSetType        plugin.TValue[string]
+	RuleSetVersion     plugin.TValue[string]
+	RuleSetAction      plugin.TValue[string]
+	RuleGroupOverrides plugin.TValue[[]any]
+	Exclusions         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.managedRuleSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) MqlName() string {
+	return "azure.subscription.frontDoorService.wafPolicy.managedRuleSet"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) GetRuleSetType() *plugin.TValue[string] {
+	return &c.RuleSetType
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) GetRuleSetVersion() *plugin.TValue[string] {
+	return &c.RuleSetVersion
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) GetRuleSetAction() *plugin.TValue[string] {
+	return &c.RuleSetAction
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) GetRuleGroupOverrides() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleGroupOverrides, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.managedRuleSet", c.__id, "ruleGroupOverrides")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleGroupOverrides()
+	})
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSet) GetExclusions() *plugin.TValue[[]any] {
+	return &c.Exclusions
+}
+
+// mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride for the azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride resource
+type mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideInternal
+	RuleGroupName       plugin.TValue[string]
+	DisablesEntireGroup plugin.TValue[bool]
+	Rules               plugin.TValue[[]any]
+	Exclusions          plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride) MqlName() string {
+	return "azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride) GetRuleGroupName() *plugin.TValue[string] {
+	return &c.RuleGroupName
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride) GetDisablesEntireGroup() *plugin.TValue[bool] {
+	return &c.DisablesEntireGroup
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverride) GetExclusions() *plugin.TValue[[]any] {
+	return &c.Exclusions
+}
+
+// mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule for the azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule resource
+type mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRuleInternal it will be used here
+	RuleId       plugin.TValue[string]
+	EnabledState plugin.TValue[string]
+	Action       plugin.TValue[string]
+	Exclusions   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) MqlName() string {
+	return "azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetRuleId() *plugin.TValue[string] {
+	return &c.RuleId
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetEnabledState() *plugin.TValue[string] {
+	return &c.EnabledState
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetExclusions() *plugin.TValue[[]any] {
+	return &c.Exclusions
+}
+
+// mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule for the azure.subscription.frontDoorService.wafPolicy.customRule resource
+type mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleInternal
+	Name                       plugin.TValue[string]
+	Priority                   plugin.TValue[int64]
+	RuleType                   plugin.TValue[string]
+	Action                     plugin.TValue[string]
+	EnabledState               plugin.TValue[string]
+	RateLimitThreshold         plugin.TValue[int64]
+	RateLimitDurationInMinutes plugin.TValue[int64]
+	GroupBy                    plugin.TValue[[]any]
+	MatchConditions            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFrontDoorServiceWafPolicyCustomRule creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceWafPolicyCustomRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.customRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) MqlName() string {
+	return "azure.subscription.frontDoorService.wafPolicy.customRule"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetRuleType() *plugin.TValue[string] {
+	return &c.RuleType
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetEnabledState() *plugin.TValue[string] {
+	return &c.EnabledState
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetRateLimitThreshold() *plugin.TValue[int64] {
+	return &c.RateLimitThreshold
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetRateLimitDurationInMinutes() *plugin.TValue[int64] {
+	return &c.RateLimitDurationInMinutes
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetGroupBy() *plugin.TValue[[]any] {
+	return &c.GroupBy
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRule) GetMatchConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MatchConditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.customRule", c.__id, "matchConditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.matchConditions()
+	})
+}
+
+// mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition for the azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition resource
+type mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchConditionInternal it will be used here
+	MatchVariable plugin.TValue[string]
+	Selector      plugin.TValue[string]
+	Operator      plugin.TValue[string]
+	Negate        plugin.TValue[bool]
+	MatchValues   plugin.TValue[[]any]
+	Transforms    plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) MqlName() string {
+	return "azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) GetMatchVariable() *plugin.TValue[string] {
+	return &c.MatchVariable
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) GetSelector() *plugin.TValue[string] {
+	return &c.Selector
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) GetOperator() *plugin.TValue[string] {
+	return &c.Operator
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) GetNegate() *plugin.TValue[bool] {
+	return &c.Negate
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) GetMatchValues() *plugin.TValue[[]any] {
+	return &c.MatchValues
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyCustomRuleMatchCondition) GetTransforms() *plugin.TValue[[]any] {
+	return &c.Transforms
 }
 
 // mqlAzureSubscriptionFrontDoorServiceProfile for the azure.subscription.frontDoorService.profile resource
@@ -94012,6 +96989,7 @@ type mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy struct {
 	Name              plugin.TValue[string]
 	PolicyType        plugin.TValue[string]
 	WafPolicyId       plugin.TValue[string]
+	WafPolicy         plugin.TValue[*mqlAzureSubscriptionFrontDoorServiceWafPolicy]
 	Associations      plugin.TValue[[]any]
 	ProvisioningState plugin.TValue[string]
 	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -94068,6 +97046,22 @@ func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetPolicyTyp
 
 func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetWafPolicyId() *plugin.TValue[string] {
 	return &c.WafPolicyId
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetWafPolicy() *plugin.TValue[*mqlAzureSubscriptionFrontDoorServiceWafPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionFrontDoorServiceWafPolicy](&c.WafPolicy, func() (*mqlAzureSubscriptionFrontDoorServiceWafPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.profile.securityPolicy", c.__id, "wafPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy), nil
+			}
+		}
+
+		return c.wafPolicy()
+	})
 }
 
 func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetAssociations() *plugin.TValue[[]any] {
@@ -97078,6 +100072,11 @@ type mqlAzureSubscriptionApiManagementServiceService struct {
 	PublicIpAddress                plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
 	CreatedAt                      plugin.TValue[*time.Time]
 	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Apis                           plugin.TValue[[]any]
+	Products                       plugin.TValue[[]any]
+	NamedValues                    plugin.TValue[[]any]
+	Subscriptions                  plugin.TValue[[]any]
+	PolicyXml                      plugin.TValue[string]
 }
 
 // createAzureSubscriptionApiManagementServiceService creates a new instance of this resource
@@ -97367,6 +100366,451 @@ func (c *mqlAzureSubscriptionApiManagementServiceService) GetSystemMetadata() *p
 
 		return c.systemMetadata()
 	})
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetApis() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Apis, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService.service", c.__id, "apis")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apis()
+	})
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetProducts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Products, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService.service", c.__id, "products")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.products()
+	})
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetNamedValues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NamedValues, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService.service", c.__id, "namedValues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.namedValues()
+	})
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService.service", c.__id, "subscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subscriptions()
+	})
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPolicyXml() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PolicyXml, func() (string, error) {
+		return c.policyXml()
+	})
+}
+
+// mqlAzureSubscriptionApiManagementServiceServiceApi for the azure.subscription.apiManagementService.service.api resource
+type mqlAzureSubscriptionApiManagementServiceServiceApi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionApiManagementServiceServiceApiInternal
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	DisplayName                   plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	Path                          plugin.TValue[string]
+	Protocols                     plugin.TValue[[]any]
+	ServiceUrl                    plugin.TValue[string]
+	SubscriptionRequired          plugin.TValue[bool]
+	SubscriptionKeyHeaderName     plugin.TValue[string]
+	SubscriptionKeyQueryParamName plugin.TValue[string]
+	ApiType                       plugin.TValue[string]
+	ApiRevision                   plugin.TValue[string]
+	ApiVersion                    plugin.TValue[string]
+	IsCurrent                     plugin.TValue[bool]
+	IsOnline                      plugin.TValue[bool]
+	AuthenticationSettings        plugin.TValue[any]
+	PolicyXml                     plugin.TValue[string]
+}
+
+// createAzureSubscriptionApiManagementServiceServiceApi creates a new instance of this resource
+func createAzureSubscriptionApiManagementServiceServiceApi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionApiManagementServiceServiceApi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.apiManagementService.service.api", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) MqlName() string {
+	return "azure.subscription.apiManagementService.service.api"
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetProtocols() *plugin.TValue[[]any] {
+	return &c.Protocols
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetServiceUrl() *plugin.TValue[string] {
+	return &c.ServiceUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetSubscriptionRequired() *plugin.TValue[bool] {
+	return &c.SubscriptionRequired
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetSubscriptionKeyHeaderName() *plugin.TValue[string] {
+	return &c.SubscriptionKeyHeaderName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetSubscriptionKeyQueryParamName() *plugin.TValue[string] {
+	return &c.SubscriptionKeyQueryParamName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetApiType() *plugin.TValue[string] {
+	return &c.ApiType
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetApiRevision() *plugin.TValue[string] {
+	return &c.ApiRevision
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetApiVersion() *plugin.TValue[string] {
+	return &c.ApiVersion
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetIsCurrent() *plugin.TValue[bool] {
+	return &c.IsCurrent
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetIsOnline() *plugin.TValue[bool] {
+	return &c.IsOnline
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetAuthenticationSettings() *plugin.TValue[any] {
+	return &c.AuthenticationSettings
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceApi) GetPolicyXml() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PolicyXml, func() (string, error) {
+		return c.policyXml()
+	})
+}
+
+// mqlAzureSubscriptionApiManagementServiceServiceProduct for the azure.subscription.apiManagementService.service.product resource
+type mqlAzureSubscriptionApiManagementServiceServiceProduct struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionApiManagementServiceServiceProductInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	State                plugin.TValue[string]
+	SubscriptionRequired plugin.TValue[bool]
+	ApprovalRequired     plugin.TValue[bool]
+	SubscriptionsLimit   plugin.TValue[int64]
+	Terms                plugin.TValue[string]
+	PolicyXml            plugin.TValue[string]
+}
+
+// createAzureSubscriptionApiManagementServiceServiceProduct creates a new instance of this resource
+func createAzureSubscriptionApiManagementServiceServiceProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionApiManagementServiceServiceProduct{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.apiManagementService.service.product", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) MqlName() string {
+	return "azure.subscription.apiManagementService.service.product"
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetSubscriptionRequired() *plugin.TValue[bool] {
+	return &c.SubscriptionRequired
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetApprovalRequired() *plugin.TValue[bool] {
+	return &c.ApprovalRequired
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetSubscriptionsLimit() *plugin.TValue[int64] {
+	return &c.SubscriptionsLimit
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetTerms() *plugin.TValue[string] {
+	return &c.Terms
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceProduct) GetPolicyXml() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PolicyXml, func() (string, error) {
+		return c.policyXml()
+	})
+}
+
+// mqlAzureSubscriptionApiManagementServiceServiceNamedValue for the azure.subscription.apiManagementService.service.namedValue resource
+type mqlAzureSubscriptionApiManagementServiceServiceNamedValue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionApiManagementServiceServiceNamedValueInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Secret      plugin.TValue[bool]
+	Tags        plugin.TValue[[]any]
+	KeyVault    plugin.TValue[any]
+}
+
+// createAzureSubscriptionApiManagementServiceServiceNamedValue creates a new instance of this resource
+func createAzureSubscriptionApiManagementServiceServiceNamedValue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionApiManagementServiceServiceNamedValue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.apiManagementService.service.namedValue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) MqlName() string {
+	return "azure.subscription.apiManagementService.service.namedValue"
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) GetSecret() *plugin.TValue[bool] {
+	return &c.Secret
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceNamedValue) GetKeyVault() *plugin.TValue[any] {
+	return &c.KeyVault
+}
+
+// mqlAzureSubscriptionApiManagementServiceServiceSubscription for the azure.subscription.apiManagementService.service.subscription resource
+type mqlAzureSubscriptionApiManagementServiceServiceSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionApiManagementServiceServiceSubscriptionInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Scope          plugin.TValue[string]
+	OwnerId        plugin.TValue[string]
+	State          plugin.TValue[string]
+	AllowTracing   plugin.TValue[bool]
+	CreatedDate    plugin.TValue[*time.Time]
+	StartDate      plugin.TValue[*time.Time]
+	ExpirationDate plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionApiManagementServiceServiceSubscription creates a new instance of this resource
+func createAzureSubscriptionApiManagementServiceServiceSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionApiManagementServiceServiceSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.apiManagementService.service.subscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) MqlName() string {
+	return "azure.subscription.apiManagementService.service.subscription"
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetAllowTracing() *plugin.TValue[bool] {
+	return &c.AllowTracing
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetStartDate() *plugin.TValue[*time.Time] {
+	return &c.StartDate
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceServiceSubscription) GetExpirationDate() *plugin.TValue[*time.Time] {
+	return &c.ExpirationDate
 }
 
 // mqlAzureSubscriptionPurviewService for the azure.subscription.purviewService resource

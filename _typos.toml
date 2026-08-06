@@ -94,6 +94,10 @@ bussiness = "bussiness"
 # Databricks Go SDK type name GetPrivateAccesRequest (missing the second "s").
 # The SDK's own spelling, so references to it cannot be renamed.
 acces = "acces"
+# Azure Go SDK field armnetwork.MatchCondition.NegationConditon (missing the
+# "i"). Azure's own spelling in both the SDK and the REST contract, so reads of
+# it cannot be renamed.
+conditon = "conditon"
 # Pre-existing misspellings in MQL schema fields / exported Go identifiers.
 # Renaming these would break the schema or API, so they are baselined.
 appliable = "appliable"
