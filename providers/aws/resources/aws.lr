@@ -30823,7 +30823,7 @@ private aws.vpclattice.targetGroup @defaults("name type protocol port") {
   // VPC the targets live in, null for a LAMBDA target group
   vpc() aws.vpc
   // Services routing traffic to this target group
-  serviceArns []string
+  services() []aws.vpclattice.service
   // When the target group was created
   createdAt time
   // When the target group was last updated

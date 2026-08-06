@@ -36154,8 +36154,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpclattice.targetGroup.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeTargetGroup).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
-	"aws.vpclattice.targetGroup.serviceArns": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpclatticeTargetGroup).GetServiceArns()).ToDataRes(types.Array(types.String))
+	"aws.vpclattice.targetGroup.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetServices()).ToDataRes(types.Array(types.Resource("aws.vpclattice.service")))
 	},
 	"aws.vpclattice.targetGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpclatticeTargetGroup).GetCreatedAt()).ToDataRes(types.Time)
@@ -81699,8 +81699,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpclatticeTargetGroup).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
-	"aws.vpclattice.targetGroup.serviceArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpclatticeTargetGroup).ServiceArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.vpclattice.targetGroup.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpclattice.targetGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -198570,7 +198570,7 @@ func (c *mqlAwsVpclattice) GetTargetGroups() *plugin.TValue[[]any] {
 type mqlAwsVpclatticeServiceNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsVpclatticeServiceNetworkInternal it will be used here
+	mqlAwsVpclatticeServiceNetworkInternal
 	Arn                        plugin.TValue[string]
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
@@ -199069,7 +199069,7 @@ type mqlAwsVpclatticeTargetGroup struct {
 	Port          plugin.TValue[int64]
 	IpAddressType plugin.TValue[string]
 	Vpc           plugin.TValue[*mqlAwsVpc]
-	ServiceArns   plugin.TValue[[]any]
+	Services      plugin.TValue[[]any]
 	CreatedAt     plugin.TValue[*time.Time]
 	LastUpdatedAt plugin.TValue[*time.Time]
 }
@@ -199163,8 +199163,20 @@ func (c *mqlAwsVpclatticeTargetGroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
-func (c *mqlAwsVpclatticeTargetGroup) GetServiceArns() *plugin.TValue[[]any] {
-	return &c.ServiceArns
+func (c *mqlAwsVpclatticeTargetGroup) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.targetGroup", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
 }
 
 func (c *mqlAwsVpclatticeTargetGroup) GetCreatedAt() *plugin.TValue[*time.Time] {

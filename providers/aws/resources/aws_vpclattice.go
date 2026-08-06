@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsVpclattice) id() (string, error) {
@@ -113,23 +112,44 @@ func (a *mqlAwsVpclattice) getServiceNetworks(conn *connection.AwsConnection) []
 	return tasks
 }
 
-// authType comes from GetServiceNetwork, which the list response does not carry.
-// It is the field that decides whether callers are authenticated at all, so it
-// is worth the extra call when read.
-func (a *mqlAwsVpclatticeServiceNetwork) authType() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.VpcLattice(a.Region.Data)
+type mqlAwsVpclatticeServiceNetworkInternal struct {
+	detailOnce sync.Once
+	detail     *vpclattice.GetServiceNetworkOutput
+	detailErr  error
+}
 
-	resp, err := svc.GetServiceNetwork(context.Background(), &vpclattice.GetServiceNetworkInput{
-		ServiceNetworkIdentifier: &a.Id.Data,
-	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return "", nil
+// networkDetail fetches GetServiceNetwork once and shares it. Only authType is
+// read from it today, but the list response carries none of that call's fields,
+// so any second one (sharingConfig, for instance) would otherwise cost another
+// round trip per service network.
+func (a *mqlAwsVpclatticeServiceNetwork) networkDetail() (*vpclattice.GetServiceNetworkOutput, error) {
+	a.detailOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.VpcLattice(a.Region.Data)
+		resp, err := svc.GetServiceNetwork(context.Background(), &vpclattice.GetServiceNetworkInput{
+			ServiceNetworkIdentifier: &a.Id.Data,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				a.detail = &vpclattice.GetServiceNetworkOutput{}
+				return
+			}
+			a.detailErr = err
+			return
 		}
+		a.detail = resp
+	})
+	return a.detail, a.detailErr
+}
+
+// authType decides whether callers of the service network are authenticated at
+// all, and the list response does not carry it.
+func (a *mqlAwsVpclatticeServiceNetwork) authType() (string, error) {
+	detail, err := a.networkDetail()
+	if err != nil {
 		return "", err
 	}
-	return string(resp.AuthType), nil
+	return string(detail.AuthType), nil
 }
 
 // authPolicy returns the raw auth policy document. A service network with no
@@ -483,10 +503,6 @@ func (a *mqlAwsVpclattice) getTargetGroups(conn *connection.AwsConnection) []*jo
 					return nil, err
 				}
 				for _, tg := range page.Items {
-					serviceArns := []any{}
-					for _, svcArn := range tg.ServiceArns {
-						serviceArns = append(serviceArns, svcArn)
-					}
 					mqlTg, err := CreateResource(a.MqlRuntime, ResourceAwsVpclatticeTargetGroup,
 						map[string]*llx.RawData{
 							"arn":           llx.StringDataPtr(tg.Arn),
@@ -498,14 +514,15 @@ func (a *mqlAwsVpclattice) getTargetGroups(conn *connection.AwsConnection) []*jo
 							"protocol":      llx.StringData(string(tg.Protocol)),
 							"port":          llx.IntDataDefault(tg.Port, 0),
 							"ipAddressType": llx.StringData(string(tg.IpAddressType)),
-							"serviceArns":   llx.ArrayData(serviceArns, types.String),
 							"createdAt":     llx.TimeDataPtr(tg.CreatedAt),
 							"lastUpdatedAt": llx.TimeDataPtr(tg.LastUpdatedAt),
 						})
 					if err != nil {
 						return nil, err
 					}
-					mqlTg.(*mqlAwsVpclatticeTargetGroup).cacheVpcId = convert.ToValue(tg.VpcIdentifier)
+					internal := mqlTg.(*mqlAwsVpclatticeTargetGroup)
+					internal.cacheVpcId = convert.ToValue(tg.VpcIdentifier)
+					internal.cacheServiceArns = tg.ServiceArns
 					res = append(res, mqlTg)
 				}
 			}
@@ -517,7 +534,49 @@ func (a *mqlAwsVpclattice) getTargetGroups(conn *connection.AwsConnection) []*jo
 }
 
 type mqlAwsVpclatticeTargetGroupInternal struct {
-	cacheVpcId string
+	cacheVpcId       string
+	cacheServiceArns []string
+}
+
+// services resolves the services routing traffic to this target group. A target
+// group can be shared by several services, so this is the reverse of walking
+// service listeners and is what shows a backend's full set of callers.
+//
+// aws.vpclattice.service has no by-ARN init, so these match against the
+// account's service list rather than being constructed from the ARN alone --
+// building them directly would yield resources with every field but arn unset.
+// The list is enumerated once and cached on the aws.vpclattice singleton.
+func (a *mqlAwsVpclatticeTargetGroup) services() ([]any, error) {
+	wanted := map[string]struct{}{}
+	for _, svcArn := range a.cacheServiceArns {
+		if svcArn != "" {
+			wanted[svcArn] = struct{}{}
+		}
+	}
+	if len(wanted) == 0 {
+		return []any{}, nil
+	}
+
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsVpclattice, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	services := obj.(*mqlAwsVpclattice).GetServices()
+	if services.Error != nil {
+		return nil, services.Error
+	}
+
+	res := []any{}
+	for _, s := range services.Data {
+		svc, ok := s.(*mqlAwsVpclatticeService)
+		if !ok {
+			continue
+		}
+		if _, found := wanted[svc.Arn.Data]; found {
+			res = append(res, svc)
+		}
+	}
+	return res, nil
 }
 
 // vpc is null for a LAMBDA target group, which has no VPC of its own.
