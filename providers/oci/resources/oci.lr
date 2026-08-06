@@ -214,17 +214,20 @@ private oci.identity.domain.user @defaults("userName active mfaStatus") {
   // or YUBICO_OTP. Empty when the account is not enrolled.
   preferredAuthenticationFactor string
   // When multi-factor authentication was enrolled
-  mfaEnabledOn string
+  mfaEnabledOn time
   // Whether the account is locked out
   isLocked bool
   // Consecutive failed login attempts
   loginAttempts int
   // Most recent successful login
-  lastSuccessfulLogin string
+  //
+  // Null for an account that has never signed in, which is a different
+  // state from one that signed in long ago.
+  lastSuccessfulLogin time
   // Previous successful login
-  previousSuccessfulLogin string
+  previousSuccessfulLogin time
   // Most recent failed login
-  lastFailedLogin string
+  lastFailedLogin time
   // Credential types the account is permitted to hold
   //
   // Keyed by capability name, each mapping to whether the account may use

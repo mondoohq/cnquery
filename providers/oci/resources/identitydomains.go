@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -114,6 +115,11 @@ type mqlOciIdentityDomainInternal struct {
 	// The domain's own SCIM endpoint. Every sub-collection is served from
 	// here rather than from a regional endpoint.
 	cacheUrl string
+
+	// Every sub-collection accessor needs a client for this domain, so it is
+	// built once rather than per accessor.
+	clientLock   sync.Mutex
+	cachedClient *identitydomains.IdentityDomainsClient
 }
 
 func (o *mqlOciIdentityDomain) id() (string, error) {
@@ -125,11 +131,23 @@ func (o *mqlOciIdentityDomain) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciIdentityDomain) domainClient() (*identitydomains.IdentityDomainsClient, error) {
+	o.clientLock.Lock()
+	defer o.clientLock.Unlock()
+	if o.cachedClient != nil {
+		return o.cachedClient, nil
+	}
+
 	if o.cacheUrl == "" {
 		return nil, errors.New("identity domain has no endpoint url: " + o.Id.Data)
 	}
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return conn.IdentityDomainsClient(o.cacheUrl)
+	client, err := conn.IdentityDomainsClient(o.cacheUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	o.cachedClient = client
+	return o.cachedClient, nil
 }
 
 func (o *mqlOciIdentityDomain) users() ([]any, error) {
@@ -152,7 +170,7 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 
 		users = append(users, response.Users.Resources...)
 
-		next, more := ociScimNextIndex(startIndex, len(response.Users.Resources), response.Users.TotalResults)
+		next, more := ociScimNextIndex(startIndex, len(response.Users.Resources), response.Users.TotalResults, ociScimPageSize)
 		if !more {
 			break
 		}
@@ -174,24 +192,25 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 		}
 
 		var (
-			mfaStatus, preferredFactor, mfaEnabledOn string
+			mfaStatus, preferredFactor               string
+			mfaEnabledOn                             *time.Time
 			isLocked                                 bool
 			loginAttempts                            int64
-			lastSuccessful, prevSuccessful, lastFail string
+			lastSuccessful, prevSuccessful, lastFail *time.Time
 			isFederated                              bool
 		)
 
 		if mfa := user.UrnIetfParamsScimSchemasOracleIdcsExtensionMfaUser; mfa != nil {
 			mfaStatus = string(mfa.MfaStatus)
 			preferredFactor = string(mfa.PreferredAuthenticationFactor)
-			mfaEnabledOn = stringValue(mfa.MfaEnabledOn)
+			mfaEnabledOn = ociScimTime(mfa.MfaEnabledOn)
 		}
 
 		if state := user.UrnIetfParamsScimSchemasOracleIdcsExtensionUserStateUser; state != nil {
 			loginAttempts = int64(intValue(state.LoginAttempts))
-			lastSuccessful = stringValue(state.LastSuccessfulLoginDate)
-			prevSuccessful = stringValue(state.PreviousSuccessfulLoginDate)
-			lastFail = stringValue(state.LastFailedLoginDate)
+			lastSuccessful = ociScimTime(state.LastSuccessfulLoginDate)
+			prevSuccessful = ociScimTime(state.PreviousSuccessfulLoginDate)
+			lastFail = ociScimTime(state.LastFailedLoginDate)
 			if state.Locked != nil {
 				isLocked = boolValue(state.Locked.On)
 			}
@@ -227,12 +246,12 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 			"isFederated":                   llx.BoolData(isFederated),
 			"mfaStatus":                     llx.StringData(mfaStatus),
 			"preferredAuthenticationFactor": llx.StringData(preferredFactor),
-			"mfaEnabledOn":                  llx.StringData(mfaEnabledOn),
+			"mfaEnabledOn":                  llx.TimeDataPtr(mfaEnabledOn),
 			"isLocked":                      llx.BoolData(isLocked),
 			"loginAttempts":                 llx.IntData(loginAttempts),
-			"lastSuccessfulLogin":           llx.StringData(lastSuccessful),
-			"previousSuccessfulLogin":       llx.StringData(prevSuccessful),
-			"lastFailedLogin":               llx.StringData(lastFail),
+			"lastSuccessfulLogin":           llx.TimeDataPtr(lastSuccessful),
+			"previousSuccessfulLogin":       llx.TimeDataPtr(prevSuccessful),
+			"lastFailedLogin":               llx.TimeDataPtr(lastFail),
 			"capabilities":                  llx.MapData(capabilities, types.Bool),
 			"groups":                        llx.ArrayData(groups, types.Dict),
 			"created":                       llx.TimeDataPtr(ociScimCreatedAt(user.Meta)),
@@ -266,7 +285,7 @@ func (o *mqlOciIdentityDomain) groups() ([]any, error) {
 
 		groups = append(groups, response.Groups.Resources...)
 
-		next, more := ociScimNextIndex(startIndex, len(response.Groups.Resources), response.Groups.TotalResults)
+		next, more := ociScimNextIndex(startIndex, len(response.Groups.Resources), response.Groups.TotalResults, ociScimPageSize)
 		if !more {
 			break
 		}
@@ -321,7 +340,7 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 
 		policies = append(policies, response.PasswordPolicies.Resources...)
 
-		next, more := ociScimNextIndex(startIndex, len(response.PasswordPolicies.Resources), response.PasswordPolicies.TotalResults)
+		next, more := ociScimNextIndex(startIndex, len(response.PasswordPolicies.Resources), response.PasswordPolicies.TotalResults, ociScimPageSize)
 		if !more {
 			break
 		}
@@ -435,7 +454,7 @@ func (o *mqlOciIdentityDomain) apps() ([]any, error) {
 
 		apps = append(apps, response.Apps.Resources...)
 
-		next, more := ociScimNextIndex(startIndex, len(response.Apps.Resources), response.Apps.TotalResults)
+		next, more := ociScimNextIndex(startIndex, len(response.Apps.Resources), response.Apps.TotalResults, ociScimPageSize)
 		if !more {
 			break
 		}
@@ -478,7 +497,11 @@ func (o *mqlOciIdentityDomain) apps() ([]any, error) {
 // A page that comes back empty always terminates the loop: without that guard a
 // service reporting a total larger than it will actually return - or a page
 // truncated for any reason - would spin forever.
-func ociScimNextIndex(startIndex int, returned int, total *int) (int, bool) {
+//
+// pageSize is passed in rather than read from the package constant so the
+// short-page heuristic below stays correct if a caller ever requests a
+// different size.
+func ociScimNextIndex(startIndex int, returned int, total *int, pageSize int) (int, bool) {
 	if returned == 0 {
 		return 0, false
 	}
@@ -486,7 +509,7 @@ func ociScimNextIndex(startIndex int, returned int, total *int) (int, bool) {
 	if total == nil {
 		// No total to compare against: keep going only while pages come back
 		// full, since a short page means the collection is exhausted.
-		return next, returned >= ociScimPageSize
+		return next, returned >= pageSize
 	}
 	if next > *total {
 		return 0, false
@@ -508,18 +531,30 @@ func ociPrimaryEmail(emails []identitydomains.UserEmails) (string, bool) {
 	return stringValue(emails[0].Value), boolValue(emails[0].Verified)
 }
 
-// ociScimCreatedAt pulls the creation timestamp out of a SCIM meta block.
-func ociScimCreatedAt(meta *identitydomains.Meta) *time.Time {
-	if meta == nil || meta.Created == nil {
+// ociScimTime parses an RFC3339 timestamp carried as a SCIM string field.
+//
+// Returns nil for an absent or unparseable value. Nil is the right answer for
+// both: an account that has never signed in has no lastSuccessfulLoginDate at
+// all, and that is a distinct state from having signed in long ago - which is
+// exactly the distinction a stale-account query needs. A malformed timestamp is
+// not worth failing the whole listing over.
+func ociScimTime(value *string) *time.Time {
+	if value == nil || *value == "" {
 		return nil
 	}
-	parsed, err := time.Parse(time.RFC3339, *meta.Created)
+	parsed, err := time.Parse(time.RFC3339, *value)
 	if err != nil {
-		// SCIM timestamps are RFC3339, but a malformed one is not worth
-		// failing the whole listing over.
 		return nil
 	}
 	return &parsed
+}
+
+// ociScimCreatedAt pulls the creation timestamp out of a SCIM meta block.
+func ociScimCreatedAt(meta *identitydomains.Meta) *time.Time {
+	if meta == nil {
+		return nil
+	}
+	return ociScimTime(meta.Created)
 }
 
 // ociGroupDescription reads a group's description, which SCIM carries on an

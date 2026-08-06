@@ -46,13 +46,29 @@ func TestOciScimNextIndex(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			next, more := ociScimNextIndex(tt.startIndex, tt.returned, tt.total)
+			next, more := ociScimNextIndex(tt.startIndex, tt.returned, tt.total, ociScimPageSize)
 			assert.Equal(t, tt.wantMore, more, "more")
 			if tt.wantMore {
 				assert.Equal(t, tt.wantNext, next, "next")
 			}
 		})
 	}
+}
+
+// TestOciScimNextIndexHonorsPageSize pins the short-page heuristic to the
+// pageSize argument rather than the package constant, which is the whole reason
+// it is passed in.
+func TestOciScimNextIndexHonorsPageSize(t *testing.T) {
+	// 50 returned against a page size of 50 is a full page: more may follow.
+	next, more := ociScimNextIndex(1, 50, nil, 50)
+	assert.True(t, more)
+	assert.Equal(t, 51, next)
+
+	// The same 50 against a page size of 200 is a short page: the collection
+	// is exhausted. Reading the constant instead of the argument would get
+	// this wrong.
+	_, more = ociScimNextIndex(1, 50, nil, 200)
+	assert.False(t, more)
 }
 
 // TestOciScimNextIndexTerminates walks the loop the way the listers do and
@@ -71,7 +87,7 @@ func TestOciScimNextIndexTerminates(t *testing.T) {
 				returned := min(remaining, ociScimPageSize)
 				seen += returned
 
-				next, more := ociScimNextIndex(startIndex, returned, &total)
+				next, more := ociScimNextIndex(startIndex, returned, &total, ociScimPageSize)
 				if !more {
 					break
 				}

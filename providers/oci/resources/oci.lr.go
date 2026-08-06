@@ -1301,7 +1301,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlOciIdentityDomainUser).GetPreferredAuthenticationFactor()).ToDataRes(types.String)
 	},
 	"oci.identity.domain.user.mfaEnabledOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityDomainUser).GetMfaEnabledOn()).ToDataRes(types.String)
+		return (r.(*mqlOciIdentityDomainUser).GetMfaEnabledOn()).ToDataRes(types.Time)
 	},
 	"oci.identity.domain.user.isLocked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDomainUser).GetIsLocked()).ToDataRes(types.Bool)
@@ -1310,13 +1310,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlOciIdentityDomainUser).GetLoginAttempts()).ToDataRes(types.Int)
 	},
 	"oci.identity.domain.user.lastSuccessfulLogin": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityDomainUser).GetLastSuccessfulLogin()).ToDataRes(types.String)
+		return (r.(*mqlOciIdentityDomainUser).GetLastSuccessfulLogin()).ToDataRes(types.Time)
 	},
 	"oci.identity.domain.user.previousSuccessfulLogin": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityDomainUser).GetPreviousSuccessfulLogin()).ToDataRes(types.String)
+		return (r.(*mqlOciIdentityDomainUser).GetPreviousSuccessfulLogin()).ToDataRes(types.Time)
 	},
 	"oci.identity.domain.user.lastFailedLogin": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityDomainUser).GetLastFailedLogin()).ToDataRes(types.String)
+		return (r.(*mqlOciIdentityDomainUser).GetLastFailedLogin()).ToDataRes(types.Time)
 	},
 	"oci.identity.domain.user.capabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDomainUser).GetCapabilities()).ToDataRes(types.Map(types.String, types.Bool))
@@ -8568,7 +8568,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"oci.identity.domain.user.mfaEnabledOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityDomainUser).MfaEnabledOn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlOciIdentityDomainUser).MfaEnabledOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.identity.domain.user.isLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8580,15 +8580,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"oci.identity.domain.user.lastSuccessfulLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityDomainUser).LastSuccessfulLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlOciIdentityDomainUser).LastSuccessfulLogin, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.identity.domain.user.previousSuccessfulLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityDomainUser).PreviousSuccessfulLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlOciIdentityDomainUser).PreviousSuccessfulLogin, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.identity.domain.user.lastFailedLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityDomainUser).LastFailedLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlOciIdentityDomainUser).LastFailedLogin, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.identity.domain.user.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19428,12 +19428,12 @@ type mqlOciIdentityDomainUser struct {
 	IsFederated                   plugin.TValue[bool]
 	MfaStatus                     plugin.TValue[string]
 	PreferredAuthenticationFactor plugin.TValue[string]
-	MfaEnabledOn                  plugin.TValue[string]
+	MfaEnabledOn                  plugin.TValue[*time.Time]
 	IsLocked                      plugin.TValue[bool]
 	LoginAttempts                 plugin.TValue[int64]
-	LastSuccessfulLogin           plugin.TValue[string]
-	PreviousSuccessfulLogin       plugin.TValue[string]
-	LastFailedLogin               plugin.TValue[string]
+	LastSuccessfulLogin           plugin.TValue[*time.Time]
+	PreviousSuccessfulLogin       plugin.TValue[*time.Time]
+	LastFailedLogin               plugin.TValue[*time.Time]
 	Capabilities                  plugin.TValue[map[string]any]
 	Groups                        plugin.TValue[[]any]
 	Created                       plugin.TValue[*time.Time]
@@ -19523,7 +19523,7 @@ func (c *mqlOciIdentityDomainUser) GetPreferredAuthenticationFactor() *plugin.TV
 	return &c.PreferredAuthenticationFactor
 }
 
-func (c *mqlOciIdentityDomainUser) GetMfaEnabledOn() *plugin.TValue[string] {
+func (c *mqlOciIdentityDomainUser) GetMfaEnabledOn() *plugin.TValue[*time.Time] {
 	return &c.MfaEnabledOn
 }
 
@@ -19535,15 +19535,15 @@ func (c *mqlOciIdentityDomainUser) GetLoginAttempts() *plugin.TValue[int64] {
 	return &c.LoginAttempts
 }
 
-func (c *mqlOciIdentityDomainUser) GetLastSuccessfulLogin() *plugin.TValue[string] {
+func (c *mqlOciIdentityDomainUser) GetLastSuccessfulLogin() *plugin.TValue[*time.Time] {
 	return &c.LastSuccessfulLogin
 }
 
-func (c *mqlOciIdentityDomainUser) GetPreviousSuccessfulLogin() *plugin.TValue[string] {
+func (c *mqlOciIdentityDomainUser) GetPreviousSuccessfulLogin() *plugin.TValue[*time.Time] {
 	return &c.PreviousSuccessfulLogin
 }
 
-func (c *mqlOciIdentityDomainUser) GetLastFailedLogin() *plugin.TValue[string] {
+func (c *mqlOciIdentityDomainUser) GetLastFailedLogin() *plugin.TValue[*time.Time] {
 	return &c.LastFailedLogin
 }
 
