@@ -3425,6 +3425,10 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 	var maxRequestBodySizeInKb, fileUploadLimitInMb *int64
 	customRulesCount := int64(0)
 	managedRuleSets := []any{}
+	exclusions, err := wafExclusionsToDicts(policyManagedRules(waf))
+	if err != nil {
+		return nil, err
+	}
 	if p := waf.Properties; p != nil {
 		enabled = wafPolicyEnabled(p.PolicySettings)
 		if ps := p.PolicySettings; ps != nil {
@@ -3477,6 +3481,7 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 		"fileUploadLimitInMb":    llx.IntDataPtr(fileUploadLimitInMb),
 		"customRulesCount":       llx.IntData(customRulesCount),
 		"managedRuleSets":        llx.ArrayData(managedRuleSets, types.Dict),
+		"exclusions":             llx.ArrayData(exclusions, types.Dict),
 	}
 
 	mqlWaf, err := CreateResource(runtime, "azure.subscription.networkService.applicationFirewallPolicy", args)
@@ -3484,7 +3489,17 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 		return nil, err
 	}
 
-	return mqlWaf.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy), nil
+	// Hold the rule documents so the typed customRules() and managedRules()
+	// trees can be built without re-fetching the policy.
+	policy := mqlWaf.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy)
+	if p := waf.Properties; p != nil {
+		policy.cacheCustomRules = p.CustomRules
+		if p.ManagedRules != nil {
+			policy.cacheManagedRuleSets = p.ManagedRules.ManagedRuleSets
+		}
+	}
+
+	return policy, nil
 }
 
 func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway) (*mqlAzureSubscriptionNetworkServiceApplicationGateway, error) {

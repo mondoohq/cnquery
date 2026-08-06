@@ -3984,13 +3984,177 @@ azure.subscription.networkService.applicationFirewallPolicy @defaults("id name l
   customRulesCount int
   // Managed rule sets applied by the policy
   //
-  // Each entry carries the `ruleSetType` (e.g. "OWASP",
-  // "Microsoft_DefaultRuleSet", "Microsoft_BotManagerRuleSet") and its
-  // `ruleSetVersion`, the core inputs for "is a current managed ruleset
-  // attached" audits.
-  managedRuleSets []dict
+  // Deprecated in favor of managedRules, which exposes the same rule sets
+  // along with the rule group overrides that disable individual rules
+  // inside them. Each entry here carries only the `ruleSetType` (e.g.
+  // "OWASP", "Microsoft_DefaultRuleSet", "Microsoft_BotManagerRuleSet")
+  // and its `ruleSetVersion`.
+  managedRuleSets @maturity("deprecated") []dict
+  // Managed rule sets applied by the policy, with their overrides
+  //
+  // A policy can report Prevention mode and a current rule set while
+  // individual rules inside it are turned off through a rule group
+  // override, which is how a WAF that looks correctly configured stops
+  // blocking a specific attack class. Reading the overrides is what
+  // separates "a managed rule set is attached" from "the managed rules
+  // are actually enforcing".
+  managedRules() []azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet
+  // Custom rules evaluated before the managed rule sets
+  //
+  // Custom rules take precedence over managed rules, so an Allow rule
+  // here bypasses the managed rule sets entirely for anything it matches.
+  // Ordered by priority, lowest first, which is Azure's evaluation order.
+  customRules() []azure.subscription.networkService.applicationFirewallPolicy.customRule
+  // Request parts excluded from managed rule evaluation
+  //
+  // Each entry carries `matchVariable` (the request collection to skip,
+  // for example RequestHeaderNames or RequestArgNames), `selector`, and
+  // `selectorMatchOperator`. A broad exclusion (an Equals-Any selector
+  // over a whole collection) silently removes that request part from
+  // inspection for every managed rule.
+  exclusions []dict
   // List of associated application gateways
   gateways() []azure.subscription.networkService.applicationGateway
+}
+
+// Managed rule set applied by a web application firewall policy
+//
+// One managed rule set attached to a firewall policy, identified by
+// `ruleSetType` and `ruleSetVersion` (for example "OWASP" 3.2, or
+// "Microsoft_DefaultRuleSet" 2.1). The rule group overrides carry the
+// per-rule exceptions applied to it, which is where individual
+// protections get disabled without changing the policy's mode or its
+// rule set version.
+private azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet @defaults("ruleSetType ruleSetVersion") {
+  // Rule set type (for example "OWASP", "Microsoft_DefaultRuleSet", or "Microsoft_BotManagerRuleSet")
+  ruleSetType string
+  // Rule set version
+  ruleSetVersion string
+  // Per-group overrides applied to this rule set
+  ruleGroupOverrides() []azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride
+  // Rule groups Azure computed as fully disabled for this rule set
+  //
+  // Each entry carries a `ruleGroupName` and the `rules` disabled within
+  // it, as resolved by Azure rather than as written in the policy.
+  computedDisabledRules []dict
+}
+
+// Rule group override within a managed rule set
+//
+// Overrides applied to one named group of a managed rule set (for
+// example "REQUEST-942-APPLICATION-ATTACK-SQLI"). When `rules` is empty
+// every rule in the group is disabled, which is the widest form of this
+// override and the easiest to miss.
+private azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride @defaults("ruleGroupName") {
+  // Name of the overridden rule group
+  ruleGroupName string
+  // Whether the override disables the entire rule group
+  //
+  // True when no individual rules are listed, which Azure interprets as
+  // disabling every rule in the group rather than none.
+  disablesEntireGroup bool
+  // Individual rule overrides within the group
+  rules() []azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule
+}
+
+// Individual managed rule override
+//
+// An override applied to one rule of a managed rule set, selected by
+// `ruleId` (for example "942100"). The `state` says whether the rule is
+// still evaluated and `action` replaces what the rule does when it
+// matches, so an override can neutralize a rule either by disabling it
+// or by downgrading it from blocking to logging.
+private azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride.rule @defaults("ruleId state action") {
+  // Identifier of the overridden rule (for example "942100")
+  ruleId string
+  // Whether the rule is still evaluated
+  //
+  // One of "Enabled" or "Disabled". Azure defaults an override with no
+  // explicit state to Disabled, so an empty value here means the rule is
+  // off.
+  state string
+  // Action that replaces the rule's own when it matches
+  //
+  // One of "Allow", "Block", "Log", "JSChallenge", or empty to keep the
+  // rule set's action. "Log" downgrades a blocking rule to detection
+  // only while the policy as a whole still reports Prevention mode.
+  action string
+  // Override sensitivity applied when the rule matches (anomaly-scoring rule sets)
+  sensitivity string
+}
+
+// Custom rule on a web application firewall policy
+//
+// A rule authored on the policy itself, evaluated ahead of the managed
+// rule sets in ascending `priority` order. The first custom rule whose
+// match conditions all hold decides the request, so an Allow rule with
+// permissive conditions and a low priority number takes precedence over
+// every managed protection. Rate limit rules additionally carry
+// `rateLimitThreshold` and `rateLimitDuration`.
+private azure.subscription.networkService.applicationFirewallPolicy.customRule @defaults("name priority action ruleType state") {
+  // Rule name, unique within the policy
+  name string
+  // Evaluation order, lowest first
+  priority int
+  // Rule type
+  //
+  // One of "MatchRule", "RateLimitRule", or "Invalid".
+  ruleType string
+  // Action taken when every match condition holds
+  //
+  // One of "Allow", "Block", "Log", or "JSChallenge". An "Allow" rule
+  // short-circuits the managed rule sets for matching requests, and a
+  // "Log" rule records without blocking.
+  action string
+  // Whether the rule is evaluated
+  //
+  // One of "Enabled" or "Disabled". Azure defaults an unspecified state
+  // to Enabled.
+  state string
+  // Requests allowed per rate limit window, for rate limit rules
+  rateLimitThreshold int
+  // Length of the rate limit window, for rate limit rules (for example "OneMin")
+  rateLimitDuration string
+  // Conditions that must all hold for the rule to apply
+  matchConditions() []azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition
+  // Session grouping clauses used by rate limit rules
+  //
+  // Each entry carries a `variableName` naming what the rate limit
+  // counts per, such as ClientAddr, GeoLocation, or None.
+  groupByUserSession []dict
+}
+
+// Match condition of a firewall policy custom rule
+//
+// One condition of a custom rule: the request parts named in
+// `matchVariables` are compared to `matchValues` using `operator`, after
+// the listed `transforms` are applied. A condition whose operator is
+// "Any", or whose values include a catch-all, matches every request, so
+// pairing that with an Allow action on the parent rule disables the
+// firewall for the traffic it covers.
+private azure.subscription.networkService.applicationFirewallPolicy.customRule.matchCondition @defaults("operator negate") {
+  // Comparison operator
+  //
+  // One of "IPMatch", "Equal", "Any", "Contains", "BeginsWith",
+  // "EndsWith", "LessThan", "GreaterThan", "LessThanOrEqual",
+  // "GreaterThanOrEqual", "Regex", or "GeoMatch". "Any" matches
+  // unconditionally.
+  operator string
+  // Whether the condition's result is inverted
+  negate bool
+  // Values the request parts are compared against
+  //
+  // Empty for the "Any" operator, which needs no values.
+  matchValues []string
+  // Request parts inspected by the condition
+  //
+  // Each entry carries a `variableName` (for example RemoteAddr,
+  // RequestHeaders, RequestUri, QueryString, or RequestBody) and an
+  // optional `selector` naming a single element when the variable is a
+  // collection.
+  matchVariables []dict
+  // Transforms applied before comparison (for example "Lowercase", "UrlDecode", or "Trim")
+  transforms []string
 }
 
 // Azure network private endpoint
@@ -11556,6 +11720,93 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Private endpoint connections to the workspace
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // IP firewall rules governing access to the workspace endpoints
+  //
+  // Rules are additive and apply to the workspace's SQL and development
+  // endpoints. A rule spanning the entire IPv4 range leaves those
+  // endpoints reachable from anywhere on the internet regardless of
+  // publicNetworkAccess, which is what allowsAllIpv4 identifies.
+  firewallRules() []azure.subscription.synapseService.workspace.firewallRule
+  // Dedicated SQL pools in the workspace
+  sqlPools() []azure.subscription.synapseService.workspace.sqlPool
+}
+
+// Synapse workspace IP firewall rule
+//
+// A single allowed IP range on a Synapse workspace, selected by `name`.
+// Rules are additive, so the workspace's exposure is the union of every
+// rule. The two derived flags distinguish the two ranges that look alike
+// but mean very different things: a rule covering all of IPv4, and the
+// start-equals-end 0.0.0.0 rule Azure uses to mean "allow Azure
+// services".
+private azure.subscription.synapseService.workspace.firewallRule @defaults("name startIpAddress endIpAddress") {
+  // Rule name
+  name string
+  // First address of the allowed range
+  startIpAddress string
+  // Last address of the allowed range
+  endIpAddress string
+  // Provisioning state of the rule
+  provisioningState string
+  // Whether the rule allows the entire IPv4 address space
+  //
+  // True when the range spans 0.0.0.0 to 255.255.255.255, which makes the
+  // workspace endpoints reachable from any address on the internet.
+  allowsAllIpv4 bool
+  // Whether the rule is the "allow Azure services" rule
+  //
+  // True for the 0.0.0.0 to 0.0.0.0 range, which Azure interprets not as a
+  // single host but as permission for Azure-internal services to reach the
+  // workspace. It is far narrower than allowsAllIpv4 and the two are
+  // commonly confused.
+  allowsAzureServices bool
+}
+
+// Synapse dedicated SQL pool
+//
+// A provisioned SQL pool (formerly SQL Data Warehouse) inside a Synapse
+// workspace, selected by `name`. Carries the pool's size and lifecycle
+// state along with the two controls a data-warehouse audit turns on:
+// whether data at rest is encrypted, and whether database activity is
+// being recorded.
+private azure.subscription.synapseService.workspace.sqlPool @defaults("name status skuName") {
+  // Full resource ID of the pool
+  id string
+  // Pool name
+  name string
+  // Pool location
+  location string
+  // Pool tags
+  tags map[string]string
+  // Performance level of the pool (for example "DW100c")
+  skuName string
+  // Service tier of the pool
+  skuTier string
+  // Current status of the pool (for example "Online", "Paused", or "Scaling")
+  status string
+  // Database collation
+  collation string
+  // Maximum size of the pool in bytes
+  maxSizeBytes int
+  // How the pool was created (for example "Default", "Restore", or "Recovery")
+  createMode string
+  // When the pool was created
+  creationDate time
+  // Provisioning state of the pool
+  provisioningState string
+  // Transparent data encryption state
+  //
+  // One of "Enabled" or "Disabled", or empty when the setting could not be
+  // read. Disabled leaves the pool's data files unencrypted at rest.
+  transparentDataEncryptionStatus() string
+  // Auditing state of the pool
+  //
+  // One of "Enabled" or "Disabled", or empty when no auditing policy is
+  // configured. Without auditing there is no record of queries against the
+  // warehouse.
+  auditingState() string
+  // Days audit records are retained, or 0 for unlimited retention
+  auditingRetentionDays() int
 }
 
 // Azure Container Registry service
@@ -12997,6 +13248,8 @@ private azure.subscription.eventGridService {
   systemTopics() []azure.subscription.eventGridService.systemTopic
   // Event Grid domains in the subscription
   domains() []azure.subscription.eventGridService.domain
+  // Event Grid namespaces in the subscription
+  namespaces() []azure.subscription.eventGridService.namespace
 }
 
 // Azure Event Grid custom topic
@@ -13041,6 +13294,8 @@ azure.subscription.eventGridService.topic @defaults("name location publicNetwork
   privateEndpointConnectionCount int
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // Event subscriptions delivering this topic's events
+  eventSubscriptions() []azure.subscription.eventGridService.eventSubscription
 }
 
 // Azure Event Grid system topic
@@ -13073,6 +13328,8 @@ azure.subscription.eventGridService.systemTopic @defaults("name location topicTy
   identityType string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // Event subscriptions delivering this system topic's events
+  eventSubscriptions() []azure.subscription.eventGridService.eventSubscription
 }
 
 // Azure Event Grid domain
@@ -13120,6 +13377,126 @@ azure.subscription.eventGridService.domain @defaults("name location publicNetwor
   identityType string
   // Number of private endpoint connections to the domain
   privateEndpointConnectionCount int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+  // Event subscriptions delivering this domain's events
+  eventSubscriptions() []azure.subscription.eventGridService.eventSubscription
+}
+
+// Azure Event Grid event subscription
+//
+// Delivery rule attached to a topic, system topic, or domain: it decides
+// which events are forwarded and, more importantly, where they go. The
+// `destinationType` and `destinationEndpoint` fields name the sink, which
+// is the question an audit asks of event routing, because a webhook
+// pointing outside the tenant is an egress path for whatever the source
+// resource emits. `deliveryWithResourceIdentity` says whether delivery
+// authenticates as a managed identity rather than with a shared key or an
+// unauthenticated call.
+private azure.subscription.eventGridService.eventSubscription @defaults("name destinationType destinationEndpoint provisioningState") {
+  // Full resource ID of the event subscription
+  id string
+  // Event subscription name
+  name string
+  // Provisioning state
+  provisioningState string
+  // ARM ID of the topic, system topic, domain, or resource events come from
+  topicId string
+  // Kind of sink events are delivered to
+  //
+  // One of "WebHook", "EventHub", "StorageQueue", "ServiceBusQueue",
+  // "ServiceBusTopic", "AzureFunction", "HybridConnection",
+  // "PartnerDestination", or "MonitorAlert". A "WebHook" destination is
+  // an arbitrary HTTPS endpoint and is the only one that can point outside
+  // Azure entirely.
+  destinationType string
+  // Where events are delivered
+  //
+  // For a webhook this is the endpoint base URL: Azure withholds the query
+  // string, which is where a webhook's shared secret lives, so the value is
+  // safe to record but incomplete as a URL. For the Azure-native
+  // destinations this is the sink's ARM resource ID.
+  destinationEndpoint string
+  // Whether delivery authenticates as a managed identity
+  //
+  // False means delivery uses the destination's shared key, or no
+  // credential at all for a webhook, and so cannot be governed by RBAC.
+  deliveryWithResourceIdentity bool
+  // Schema events are delivered in ("EventGridSchema", "CustomInputSchema", or "CloudEventSchemaV1_0")
+  eventDeliverySchema string
+  // Filter selecting which events are delivered
+  //
+  // Carries `includedEventTypes`, `subjectBeginsWith`, `subjectEndsWith`,
+  // `isSubjectCaseSensitive`, `enableAdvancedFilteringOnArrays`, and
+  // `advancedFilters`. An absent or empty filter forwards every event the
+  // source produces.
+  filter dict
+  // Retry behavior for failed deliveries
+  //
+  // Carries `maxDeliveryAttempts` and `eventTimeToLiveInMinutes`.
+  retryPolicy dict
+  // Storage destination that receives events which could not be delivered
+  //
+  // Carries the dead-letter sink's `endpointType` and `resourceId`. Empty
+  // when no dead-letter destination is configured, in which case
+  // undeliverable events are dropped without a record.
+  deadLetterDestination dict
+  // Labels applied to the event subscription
+  labels []string
+  // When the event subscription stops delivering, or null when it does not expire
+  expirationTimeUtc time
+}
+
+// Azure Event Grid namespace
+//
+// Namespace hosting the MQTT broker and the namespace topics used by
+// pub/sub messaging, a separate surface from the classic topics and
+// domains above. Its publish and subscribe access is governed by
+// `publicNetworkAccess`, `inboundIpRules`, and `minimumTlsVersionAllowed`,
+// while `topicSpacesState` says whether the MQTT broker is turned on at
+// all: an enabled broker reachable from the internet accepts client
+// connections from anywhere the IP rules permit.
+azure.subscription.eventGridService.namespace @defaults("name location publicNetworkAccess topicSpacesState") {
+  // Namespace resource ID
+  id string
+  // Namespace name
+  name string
+  // Namespace location
+  location string
+  // Namespace tags
+  tags map[string]string
+  // SKU name (for example "Standard")
+  skuName string
+  // Provisioned throughput units
+  skuCapacity int
+  // Provisioning state
+  provisioningState string
+  // Public network access setting ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Minimum TLS version accepted from clients ("1.0", "1.1", "1.2")
+  minimumTlsVersionAllowed string
+  // Inbound IP rules; each entry has ipMask and action ("Allow")
+  //
+  // Only consulted when publicNetworkAccess is "Enabled". An empty list
+  // with public access enabled permits every source address.
+  inboundIpRules []dict
+  // Whether the MQTT broker is enabled ("Enabled" or "Disabled")
+  topicSpacesState string
+  // Maximum simultaneous client sessions per authentication name
+  //
+  // Defaults to 1. A high limit lets one leaked client credential support
+  // many concurrent connections.
+  maximumClientSessionsPerAuthenticationName int
+  // Maximum client session lifetime, in hours
+  maximumSessionExpiryInHours int
+  // Endpoint clients connect to for MQTT, or empty when the broker is off
+  topicSpacesHostname string
+  // ARM ID of the Event Grid topic that topic-space events are routed to
+  routeTopicResourceId string
+  // Whether the namespace is zone redundant
+  isZoneRedundant bool
+  // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
+  identityType string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -13183,6 +13560,36 @@ private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
   // srvRecords, txtRecords, caaRecords, and soaRecord. Also carries
   // fqdn, TTL, metadata, provisioningState, and targetResource.
   properties dict
+  // Hostname a CNAME record points at
+  //
+  // Empty for every record type other than CNAME. Normalized to lower
+  // case without a trailing dot, so it compares directly against the
+  // hostname fields Azure resources report (a web app's defaultHostName,
+  // a public IP's fqdn, a Traffic Manager profile's fqdn).
+  cnameTarget string
+  // Azure service that owns the CNAME target's hostname
+  //
+  // Derived from the target's DNS suffix: "App Service" for
+  // azurewebsites.net, "Storage" for blob.core.windows.net, "Traffic
+  // Manager" for trafficmanager.net, "Front Door" for azurefd.net, and so
+  // on. Empty when the target is not an Azure-owned hostname.
+  //
+  // A CNAME pointing at an Azure service hostname that no longer has a
+  // resource behind it can be claimed by anyone who creates a resource
+  // with that name, which is a subdomain takeover. Compare this against
+  // the matching resource list (for example the web apps' defaultHostName
+  // values) to find records whose target no longer exists. Note that a
+  // target may legitimately live in a subscription this scan cannot see,
+  // so an unmatched record is a lead to confirm rather than a conclusion.
+  targetAzureService string
+  // ARM ID of the Azure resource an alias record set points at
+  //
+  // Alias record sets track an Azure resource (a public IP, Traffic
+  // Manager profile, or Front Door endpoint) instead of a fixed value,
+  // and Azure removes the record automatically when that resource goes
+  // away. Empty for an ordinary record set. A non-empty value means this
+  // record cannot be left dangling.
+  targetResourceId string
 }
 
 // Azure Private DNS zone
@@ -13241,6 +13648,227 @@ private azure.subscription.frontDoorService {
   subscriptionId string
   // List of Front Door and CDN profiles
   profiles() []azure.subscription.frontDoorService.profile
+  // Front Door web application firewall policies in the subscription
+  //
+  // These are Microsoft.Network/FrontDoorWebApplicationFirewallPolicies, a
+  // different resource type from the Application Gateway firewall policies
+  // under networkService.applicationFirewallPolicy, with their own rule
+  // shape. A Front Door profile reaches the policy protecting it through
+  // the security policy binding it.
+  wafPolicies() []azure.subscription.frontDoorService.wafPolicy
+}
+
+// Azure Front Door web application firewall policy
+//
+// Firewall policy attached to a Front Door profile through a security
+// policy, governing the requests Front Door forwards to its origins. The
+// `mode` field decides whether matching requests are blocked or only
+// logged, and the managed rule sets and custom rules carry what is
+// actually enforced: a policy in Prevention mode with a current rule set
+// can still pass an attack class through, if a rule group override
+// disabled the rules that would have caught it or a custom Allow rule
+// matched first.
+azure.subscription.frontDoorService.wafPolicy @defaults("name mode enabled sku") {
+  // Full resource ID of the policy
+  id string
+  // Policy name
+  name string
+  // Policy location
+  location string
+  // Policy tags
+  tags map[string]string
+  // Front Door tier the policy applies to
+  //
+  // One of "Classic_AzureFrontDoor", "Standard_AzureFrontDoor", or
+  // "Premium_AzureFrontDoor". Managed rule sets and bot protection
+  // require the Premium tier, so a Standard policy enforces only its
+  // custom rules.
+  sku string
+  // Enforcement mode
+  //
+  // "Prevention" blocks matching requests; "Detection" only logs them, so
+  // a policy in Detection mode provides visibility and no protection.
+  mode string
+  // Whether the policy is enabled
+  enabled bool
+  // Whether managed rules inspect the request body
+  requestBodyCheck bool
+  // Status code returned when the policy blocks a request
+  customBlockResponseStatusCode int
+  // URL clients are redirected to when a rule's action is redirect
+  redirectUrl string
+  // JavaScript challenge cookie lifetime, in minutes (Premium tier)
+  javascriptChallengeExpirationInMinutes int
+  // Log scrubbing state, which removes matched fields from firewall logs
+  //
+  // One of "Enabled" or "Disabled", or empty when no scrubbing is
+  // configured. Scrubbing protects sensitive values but also removes them
+  // from the record an investigation would rely on.
+  logScrubbingState string
+  // Fields removed from firewall logs by log scrubbing
+  //
+  // Each entry carries a `matchVariable` naming the request part scrubbed,
+  // with `selector`, `selectorMatchOperator`, and `state`.
+  logScrubbingRules []dict
+  // Provisioning state
+  provisioningState string
+  // Resource state of the policy (for example "Enabled", "Disabled", or "Deleting")
+  resourceState string
+  // Managed rule sets applied by the policy, with their overrides and exclusions
+  managedRules() []azure.subscription.frontDoorService.wafPolicy.managedRuleSet
+  // Custom rules evaluated before the managed rule sets
+  //
+  // Ordered by priority, lowest first. A custom Allow rule takes
+  // precedence over every managed rule for the requests it matches.
+  customRules() []azure.subscription.frontDoorService.wafPolicy.customRule
+  // Front Door Classic frontend endpoints the policy is attached to
+  //
+  // ARM IDs of classic Front Door frontend endpoints. Standard and
+  // Premium profiles bind policies through a security policy instead, so
+  // this is empty for them.
+  frontendEndpointIds []string
+  // ARM IDs of the security policies that bind this policy to a profile
+  securityPolicyIds []string
+  // ARM IDs of the Front Door Classic routing rules the policy applies to
+  routingRuleIds []string
+}
+
+// Managed rule set applied by a Front Door firewall policy
+//
+// One managed rule set on a Front Door policy, identified by
+// `ruleSetType` and `ruleSetVersion` (for example
+// "Microsoft_DefaultRuleSet" 2.1 or "Microsoft_BotManagerRuleSet" 1.0).
+// The `ruleSetAction` sets what the whole set does on a match, and the
+// group overrides and exclusions carry the exceptions applied to it.
+private azure.subscription.frontDoorService.wafPolicy.managedRuleSet @defaults("ruleSetType ruleSetVersion ruleSetAction") {
+  // Rule set type (for example "Microsoft_DefaultRuleSet" or "Microsoft_BotManagerRuleSet")
+  ruleSetType string
+  // Rule set version
+  ruleSetVersion string
+  // Action applied when any rule in the set matches
+  //
+  // One of "Block", "Log", or "Redirect", or empty to use each rule's own
+  // action. "Log" turns the entire set into detection only while the
+  // policy still reports Prevention mode.
+  ruleSetAction string
+  // Per-group overrides applied to this rule set
+  ruleGroupOverrides() []azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride
+  // Request parts excluded from every rule in this set
+  //
+  // Each entry carries `matchVariable`, `selector`, and
+  // `selectorMatchOperator`. An exclusion at set level removes the named
+  // request part from inspection by all of the set's rules.
+  exclusions []dict
+}
+
+// Rule group override within a Front Door managed rule set
+//
+// Overrides applied to one named rule group of the set. When `rules` is
+// empty every rule in the group is disabled, which is the widest form of
+// this override.
+private azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride @defaults("ruleGroupName") {
+  // Name of the overridden rule group
+  ruleGroupName string
+  // Whether the override disables the entire rule group
+  //
+  // True when no individual rules are listed, which Azure interprets as
+  // disabling every rule in the group.
+  disablesEntireGroup bool
+  // Individual rule overrides within the group
+  rules() []azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule
+  // Request parts excluded from every rule in this group
+  exclusions []dict
+}
+
+// Individual managed rule override in a Front Door policy
+//
+// An override applied to one rule of a managed rule set, selected by
+// `ruleId`. Azure defaults an override with no explicit state to
+// Disabled, so an override that names a rule and says nothing else turns
+// that rule off.
+private azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule @defaults("ruleId enabledState action") {
+  // Identifier of the overridden rule
+  ruleId string
+  // Whether the rule is still evaluated
+  //
+  // One of "Enabled" or "Disabled". An empty value means Disabled, which
+  // is Azure's default for an override.
+  enabledState string
+  // Action that replaces the rule's own when it matches
+  //
+  // One of "Allow", "Block", "Log", "Redirect", or "AnomalyScoring", or
+  // empty to keep the rule's own action.
+  action string
+  // Request parts excluded from this rule only
+  exclusions []dict
+}
+
+// Custom rule on a Front Door firewall policy
+//
+// A rule authored on the policy, evaluated ahead of the managed rule sets
+// in ascending `priority` order. Rate limit rules carry
+// `rateLimitThreshold` and `rateLimitDurationInMinutes` and group their
+// counters by the variables in `groupBy`.
+private azure.subscription.frontDoorService.wafPolicy.customRule @defaults("name priority action ruleType enabledState") {
+  // Rule name
+  name string
+  // Evaluation order, lowest first
+  priority int
+  // Rule type
+  //
+  // One of "MatchRule" or "RateLimitRule".
+  ruleType string
+  // Action taken when every match condition holds
+  //
+  // One of "Allow", "Block", "Log", "Redirect", or "AnomalyScoring". An
+  // "Allow" rule short-circuits the managed rule sets for matching
+  // requests.
+  action string
+  // Whether the rule is evaluated
+  //
+  // One of "Enabled" or "Disabled". Azure defaults an unspecified state
+  // to Enabled.
+  enabledState string
+  // Requests allowed per client within the window, for rate limit rules
+  rateLimitThreshold int
+  // Length of the rate limit window in minutes, for rate limit rules
+  rateLimitDurationInMinutes int
+  // Variables the rate limit counter is grouped by
+  //
+  // Each entry carries a `variableName`, such as SocketAddr, GeoLocation,
+  // or None.
+  groupBy []dict
+  // Conditions that must all hold for the rule to apply
+  matchConditions() []azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition
+}
+
+// Match condition of a Front Door custom rule
+//
+// One condition of a custom rule: the request part named by
+// `matchVariable` is compared to `matchValues` using `operator`, after
+// the listed `transforms`. An "Any" operator matches every request, so an
+// Allow rule built on one disables the firewall for the traffic it covers.
+private azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition @defaults("matchVariable operator negate") {
+  // Request part inspected by the condition
+  //
+  // One of "RemoteAddr", "RequestMethod", "QueryString", "PostArgs",
+  // "RequestUri", "RequestHeader", "RequestBody", "Cookies", or
+  // "SocketAddr".
+  matchVariable string
+  // Element of the request part to inspect, when it is a collection
+  selector string
+  // Comparison operator
+  //
+  // One of "Any", "IPMatch", "GeoMatch", "Equal", "Contains",
+  // "LessThan", "GreaterThan", "LessThanOrEqual", "GreaterThanOrEqual",
+  // "BeginsWith", "EndsWith", or "RegEx". "Any" matches unconditionally.
+  operator string
+  // Whether the condition's result is inverted
+  negate bool
+  // Values the request part is compared against
+  matchValues []string
+  // Transforms applied before comparison (for example "Lowercase", "UrlDecode", or "Trim")
+  transforms []string
 }
 
 // Azure Front Door / CDN profile
@@ -13296,7 +13924,15 @@ private azure.subscription.frontDoorService.profile.securityPolicy @defaults("id
   // Security policy type (e.g. "WebApplicationFirewall")
   policyType string
   // ARM resource ID of the associated WAF policy (empty if none is associated)
-  wafPolicyId string
+  //
+  // Deprecated in favor of wafPolicy, which resolves the same policy and
+  // exposes its mode, managed rule sets, and custom rules.
+  wafPolicyId @maturity("deprecated") string
+  // Firewall policy this security policy binds to the profile
+  //
+  // Null when the security policy associates no firewall policy, which
+  // leaves the domains and path patterns in associations unprotected.
+  wafPolicy() azure.subscription.frontDoorService.wafPolicy
   // Domains and path patterns the WAF policy protects
   //
   // Each entry has `domains` (a list of domain references, each carrying an
@@ -14268,6 +14904,192 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   createdAt time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // APIs published through the gateway
+  apis() []azure.subscription.apiManagementService.service.api
+  // Products that group APIs for subscription
+  products() []azure.subscription.apiManagementService.service.product
+  // Named values available to policy expressions
+  namedValues() []azure.subscription.apiManagementService.service.namedValue
+  // Subscriptions issuing keys against the gateway
+  subscriptions() []azure.subscription.apiManagementService.service.subscription
+  // Policy applied to every API on the gateway, as raw XML
+  //
+  // The global policy is the outermost scope in the policy chain, so
+  // inbound authentication placed here covers every API. Empty when no
+  // global policy is set, which means each API is responsible for its own
+  // authentication.
+  policyXml() string
+}
+
+// API published through an API Management gateway
+//
+// A single API exposed by the gateway, selected by `name` (the API's
+// identifier, not its display name). The `subscriptionRequired` field
+// says whether a caller needs a subscription key at all, and `policyXml`
+// carries the policy that runs for this API, which is where token
+// validation is enforced. An API with no subscription requirement and no
+// validating policy is anonymously callable.
+private azure.subscription.apiManagementService.service.api @defaults("name displayName path protocols") {
+  // Full resource ID of the API
+  id string
+  // API identifier used in resource paths
+  name string
+  // Display name
+  displayName string
+  // API description
+  description string
+  // URL suffix the API is served under, relative to the gateway URL
+  path string
+  // Protocols the API accepts
+  //
+  // Each entry is "http", "https", "ws", or "wss". A list including
+  // "http" or "ws" serves the API without transport encryption.
+  protocols []string
+  // Backend URL the gateway forwards requests to
+  serviceUrl string
+  // Whether callers must present a subscription key
+  //
+  // False makes the API callable without a key. That is only safe when
+  // the policy enforces another form of authentication, so read this
+  // together with policyXml.
+  subscriptionRequired bool
+  // Name of the header carrying the subscription key
+  subscriptionKeyHeaderName string
+  // Name of the query parameter carrying the subscription key
+  //
+  // A key accepted in the query string is written to logs and browser
+  // history far more readily than one in a header.
+  subscriptionKeyQueryParamName string
+  // API type (for example "http", "soap", "websocket", "graphql", or "grpc")
+  apiType string
+  // API revision
+  apiRevision string
+  // API version
+  apiVersion string
+  // Whether this revision is the one currently served
+  isCurrent bool
+  // Whether the API is accessible through the developer portal
+  isOnline bool
+  // Authorization server or scope configuration for the API
+  //
+  // Carries the OAuth 2.0 or OpenID Connect settings declared on the API,
+  // with keys such as `authorizationServerId`, `scope`, and
+  // `openidProviderId`. Declaring a server documents the intended scheme
+  // but does not itself enforce it; the policy does.
+  authenticationSettings dict
+  // Policy applied to this API, as raw XML
+  //
+  // Empty when the API defines no policy of its own, in which case only
+  // the gateway's global policy applies. The presence of an inbound
+  // token-validating element here (for example validate-jwt) is what
+  // makes a keyless API safe.
+  policyXml() string
+}
+
+// Product grouping APIs in an API Management gateway
+//
+// A product bundles APIs and defines the terms callers get them under,
+// selected by `name`. `subscriptionRequired` and `approvalRequired`
+// together decide whether anyone can self-serve a working key: a
+// published product that requires a subscription but no approval issues
+// keys to any developer who asks.
+private azure.subscription.apiManagementService.service.product @defaults("name displayName state") {
+  // Full resource ID of the product
+  id string
+  // Product identifier used in resource paths
+  name string
+  // Display name
+  displayName string
+  // Product description
+  description string
+  // Whether the product is visible in the developer portal
+  //
+  // One of "published" or "notPublished". A published product is
+  // discoverable by developers.
+  state string
+  // Whether a subscription is required to call the product's APIs
+  //
+  // False publishes the product's APIs anonymously.
+  subscriptionRequired bool
+  // Whether an administrator must approve each subscription
+  //
+  // False lets any developer obtain a working key without review. Only
+  // meaningful when subscriptionRequired is true.
+  approvalRequired bool
+  // Maximum simultaneous subscriptions per user, or 0 when unlimited
+  subscriptionsLimit int
+  // Terms presented to developers before subscribing
+  terms string
+  // Policy applied to every API in this product, as raw XML
+  policyXml() string
+}
+
+// Named value in an API Management gateway
+//
+// A value policies refer to by name, selected by `name`. The value itself
+// is deliberately not exposed. What matters for an audit is `secret`,
+// which says whether the value is stored encrypted, and `keyVault`, which
+// says whether it is held in Key Vault rather than in the gateway
+// configuration: a secret kept inline is readable by anyone who can read
+// the service configuration and is not rotated with the rest of the
+// estate.
+private azure.subscription.apiManagementService.service.namedValue @defaults("name displayName secret") {
+  // Full resource ID of the named value
+  id string
+  // Named value identifier used in resource paths
+  name string
+  // Display name used in policy expressions
+  displayName string
+  // Whether the value is stored encrypted
+  secret bool
+  // Tags applied to the named value
+  tags []string
+  // Key Vault source of the value
+  //
+  // Carries `secretIdentifier` (the Key Vault secret URL),
+  // `identityClientId` (the identity used to read it), and
+  // `lastStatus`. Empty when the value is stored in the gateway
+  // configuration instead of Key Vault.
+  keyVault dict
+}
+
+// Subscription issuing keys against an API Management gateway
+//
+// A subscription grants a caller keys for a product or API, selected by
+// `name`. `scope` says what the keys reach, `state` whether they work,
+// and `allowTracing` whether holders can request verbose request traces,
+// which expose backend URLs, headers, and policy evaluation detail.
+private azure.subscription.apiManagementService.service.subscription @defaults("name displayName state scope") {
+  // Full resource ID of the subscription
+  id string
+  // Subscription identifier used in resource paths
+  name string
+  // Display name
+  displayName string
+  // ARM ID of the product, API, or gateway the keys are scoped to
+  //
+  // A subscription scoped to the whole gateway rather than a single
+  // product grants its holder every API at once.
+  scope string
+  // Owner of the subscription, as a user resource ID
+  ownerId string
+  // State of the subscription
+  //
+  // One of "active", "suspended", "submitted", "rejected", "cancelled", or
+  // "expired". Only "active" subscriptions have working keys.
+  state string
+  // Whether the subscription's holder may request request-level tracing
+  //
+  // Tracing returns backend URLs, headers, and policy evaluation detail to
+  // the caller, so leaving it enabled outside of debugging leaks gateway
+  // internals.
+  allowTracing bool
+  // When the subscription was created
+  createdDate time
+  // When the subscription starts being valid
+  startDate time
+  // When the subscription expires
+  expirationDate time
 }
 
 // Microsoft Purview

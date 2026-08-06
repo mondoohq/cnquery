@@ -1,10 +1,17 @@
 {
   "provider": "azure",
   "version": "13.33.7",
-  "generated_at": "2026-08-06T15:48:20+02:00",
+  "generated_at": "2026-08-06T15:52:18+02:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
-    "Microsoft.Apimanagement/service/read",
+    "Microsoft.ApiManagement/service/apis/policies/read",
+    "Microsoft.ApiManagement/service/apis/read",
+    "Microsoft.ApiManagement/service/namedValues/read",
+    "Microsoft.ApiManagement/service/policies/read",
+    "Microsoft.ApiManagement/service/products/policies/read",
+    "Microsoft.ApiManagement/service/products/read",
+    "Microsoft.ApiManagement/service/read",
+    "Microsoft.ApiManagement/service/subscriptions/read",
     "Microsoft.App/containerApps/authConfigs/read",
     "Microsoft.App/containerApps/read",
     "Microsoft.App/containerApps/revisions/read",
@@ -115,12 +122,16 @@
     "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments/read",
     "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
     "Microsoft.DocumentDB/mongoClusters/read",
+    "Microsoft.EventGrid/domains/eventSubscriptions/read",
+    "Microsoft.EventGrid/domains/read",
+    "Microsoft.EventGrid/namespaces/read",
+    "Microsoft.EventGrid/systemTopics/eventSubscriptions/read",
+    "Microsoft.EventGrid/systemTopics/read",
+    "Microsoft.EventGrid/topics/eventSubscriptions/read",
+    "Microsoft.EventGrid/topics/read",
     "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
     "Microsoft.EventHub/namespaces/eventhubs/read",
     "Microsoft.EventHub/namespaces/read",
-    "Microsoft.Eventgrid/domains/read",
-    "Microsoft.Eventgrid/systemTopics/read",
-    "Microsoft.Eventgrid/topics/read",
     "Microsoft.HybridCompute/machines/extensions/read",
     "Microsoft.HybridCompute/machines/read",
     "Microsoft.Insights/actionGroups/read",
@@ -177,6 +188,7 @@
     "Microsoft.Network/expressRoutePorts/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
+    "Microsoft.Network/frontdoorWebApplicationFirewallPolicies/read",
     "Microsoft.Network/groups/read",
     "Microsoft.Network/iPAllocations/read",
     "Microsoft.Network/iPGroups/read",
@@ -310,7 +322,11 @@
     "Microsoft.Storage/storageAccounts/queueServices/queues/read",
     "Microsoft.Storage/storageAccounts/read",
     "Microsoft.Storage/storageAccounts/tableServices/tables/read",
+    "Microsoft.Synapse/workspaces/firewallRules/read",
     "Microsoft.Synapse/workspaces/read",
+    "Microsoft.Synapse/workspaces/sqlPools/auditingSettings/read",
+    "Microsoft.Synapse/workspaces/sqlPools/read",
+    "Microsoft.Synapse/workspaces/sqlPools/transparentDataEncryption/read",
     "Microsoft.Web/certificates/read",
     "Microsoft.Web/hostingEnvironments/read",
     "Microsoft.Web/serverfarms/read",
@@ -326,10 +342,52 @@
       "source_file": "advisor.go"
     },
     {
-      "permission": "Microsoft.Apimanagement/service/read",
-      "service": "Microsoft.Apimanagement",
+      "permission": "Microsoft.ApiManagement/service/apis/policies/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "Get",
+      "source_file": "apimanagement_depth.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/apis/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "NewListByServicePager",
+      "source_file": "apimanagement_depth.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/namedValues/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "NewListByServicePager",
+      "source_file": "apimanagement_depth.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/policies/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "Get",
+      "source_file": "apimanagement_depth.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/products/policies/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "Get",
+      "source_file": "apimanagement_depth.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/products/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "NewListByServicePager",
+      "source_file": "apimanagement_depth.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/read",
+      "service": "Microsoft.ApiManagement",
       "action": "NewListPager",
       "source_file": "apimanagement.go"
+    },
+    {
+      "permission": "Microsoft.ApiManagement/service/subscriptions/read",
+      "service": "Microsoft.ApiManagement",
+      "action": "NewListPager",
+      "source_file": "apimanagement_depth.go"
     },
     {
       "permission": "Microsoft.App/containerApps/authConfigs/read",
@@ -1010,6 +1068,48 @@
       "source_file": "cosmosdb.go"
     },
     {
+      "permission": "Microsoft.EventGrid/domains/eventSubscriptions/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListPager",
+      "source_file": "eventgrid_subscriptions.go"
+    },
+    {
+      "permission": "Microsoft.EventGrid/domains/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "eventgrid.go"
+    },
+    {
+      "permission": "Microsoft.EventGrid/namespaces/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "eventgrid_subscriptions.go"
+    },
+    {
+      "permission": "Microsoft.EventGrid/systemTopics/eventSubscriptions/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListBySystemTopicPager",
+      "source_file": "eventgrid_subscriptions.go"
+    },
+    {
+      "permission": "Microsoft.EventGrid/systemTopics/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "eventgrid.go"
+    },
+    {
+      "permission": "Microsoft.EventGrid/topics/eventSubscriptions/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListPager",
+      "source_file": "eventgrid_subscriptions.go"
+    },
+    {
+      "permission": "Microsoft.EventGrid/topics/read",
+      "service": "Microsoft.EventGrid",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "eventgrid.go"
+    },
+    {
       "permission": "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
       "service": "Microsoft.EventHub",
       "action": "NewListByEventHubPager",
@@ -1026,24 +1126,6 @@
       "service": "Microsoft.EventHub",
       "action": "NewListAuthorizationRulesPager",
       "source_file": "eventhub.go"
-    },
-    {
-      "permission": "Microsoft.Eventgrid/domains/read",
-      "service": "Microsoft.Eventgrid",
-      "action": "NewListBySubscriptionPager",
-      "source_file": "eventgrid.go"
-    },
-    {
-      "permission": "Microsoft.Eventgrid/systemTopics/read",
-      "service": "Microsoft.Eventgrid",
-      "action": "NewListBySubscriptionPager",
-      "source_file": "eventgrid.go"
-    },
-    {
-      "permission": "Microsoft.Eventgrid/topics/read",
-      "service": "Microsoft.Eventgrid",
-      "action": "NewListBySubscriptionPager",
-      "source_file": "eventgrid.go"
     },
     {
       "permission": "Microsoft.HybridCompute/machines/extensions/read",
@@ -1398,6 +1480,12 @@
       "service": "Microsoft.Network",
       "action": "NewListPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/frontdoorWebApplicationFirewallPolicies/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "frontdoor_waf.go"
     },
     {
       "permission": "Microsoft.Network/groups/read",
@@ -2246,10 +2334,34 @@
       "source_file": "storage_extras.go"
     },
     {
+      "permission": "Microsoft.Synapse/workspaces/firewallRules/read",
+      "service": "Microsoft.Synapse",
+      "action": "NewListByWorkspacePager",
+      "source_file": "synapse_security.go"
+    },
+    {
       "permission": "Microsoft.Synapse/workspaces/read",
       "service": "Microsoft.Synapse",
       "action": "NewListPager",
       "source_file": "synapse.go"
+    },
+    {
+      "permission": "Microsoft.Synapse/workspaces/sqlPools/auditingSettings/read",
+      "service": "Microsoft.Synapse",
+      "action": "Get",
+      "source_file": "synapse_security.go"
+    },
+    {
+      "permission": "Microsoft.Synapse/workspaces/sqlPools/read",
+      "service": "Microsoft.Synapse",
+      "action": "NewListByWorkspacePager",
+      "source_file": "synapse_security.go"
+    },
+    {
+      "permission": "Microsoft.Synapse/workspaces/sqlPools/transparentDataEncryption/read",
+      "service": "Microsoft.Synapse",
+      "action": "Get",
+      "source_file": "synapse_security.go"
     },
     {
       "permission": "Microsoft.Web/certificates/read",
