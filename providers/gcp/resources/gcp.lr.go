@@ -17754,6 +17754,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.networkConnectivityService.hub.routingVpcs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetRoutingVpcs()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.networkConnectivityService.hub.routingVpcNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetRoutingVpcNetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.network")))
+	},
 	"gcp.project.networkConnectivityService.hub.routeTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetRouteTables()).ToDataRes(types.Array(types.String))
 	},
@@ -17775,8 +17778,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.networkConnectivityService.spoke.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetDescription()).ToDataRes(types.String)
 	},
+	"gcp.project.networkConnectivityService.spoke.hubName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetHubName()).ToDataRes(types.String)
+	},
 	"gcp.project.networkConnectivityService.spoke.hub": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetHub()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetHub()).ToDataRes(types.Resource("gcp.project.networkConnectivityService.hub"))
 	},
 	"gcp.project.networkConnectivityService.spoke.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetGroup()).ToDataRes(types.String)
@@ -40814,6 +40820,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectNetworkConnectivityServiceHub).RoutingVpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.networkConnectivityService.hub.routingVpcNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).RoutingVpcNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.networkConnectivityService.hub.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectNetworkConnectivityServiceHub).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -40846,8 +40856,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.networkConnectivityService.spoke.hubName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).HubName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.networkConnectivityService.spoke.hub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Hub, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Hub, ok = plugin.RawToTValue[*mqlGcpProjectNetworkConnectivityServiceHub](v.Value, v.Error)
 		return
 	},
 	"gcp.project.networkConnectivityService.spoke.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -95412,18 +95426,19 @@ func (c *mqlGcpProjectNetworkConnectivityService) GetSpokes() *plugin.TValue[[]a
 type mqlGcpProjectNetworkConnectivityServiceHub struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectNetworkConnectivityServiceHubInternal it will be used here
-	Name         plugin.TValue[string]
-	Description  plugin.TValue[string]
-	UniqueId     plugin.TValue[string]
-	State        plugin.TValue[string]
-	PolicyMode   plugin.TValue[string]
-	RoutingVpcs  plugin.TValue[[]any]
-	RouteTables  plugin.TValue[[]any]
-	SpokeSummary plugin.TValue[any]
-	Labels       plugin.TValue[map[string]any]
-	CreateTime   plugin.TValue[*time.Time]
-	UpdateTime   plugin.TValue[*time.Time]
+	mqlGcpProjectNetworkConnectivityServiceHubInternal
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	UniqueId           plugin.TValue[string]
+	State              plugin.TValue[string]
+	PolicyMode         plugin.TValue[string]
+	RoutingVpcs        plugin.TValue[[]any]
+	RoutingVpcNetworks plugin.TValue[[]any]
+	RouteTables        plugin.TValue[[]any]
+	SpokeSummary       plugin.TValue[any]
+	Labels             plugin.TValue[map[string]any]
+	CreateTime         plugin.TValue[*time.Time]
+	UpdateTime         plugin.TValue[*time.Time]
 }
 
 // createGcpProjectNetworkConnectivityServiceHub creates a new instance of this resource
@@ -95487,6 +95502,22 @@ func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetRoutingVpcs() *plugin.TV
 	return &c.RoutingVpcs
 }
 
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetRoutingVpcNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoutingVpcNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkConnectivityService.hub", c.__id, "routingVpcNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routingVpcNetworks()
+	})
+}
+
 func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetRouteTables() *plugin.TValue[[]any] {
 	return &c.RouteTables
 }
@@ -95511,10 +95542,11 @@ func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetUpdateTime() *plugin.TVa
 type mqlGcpProjectNetworkConnectivityServiceSpoke struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectNetworkConnectivityServiceSpokeInternal it will be used here
+	mqlGcpProjectNetworkConnectivityServiceSpokeInternal
 	Name                           plugin.TValue[string]
 	Description                    plugin.TValue[string]
-	Hub                            plugin.TValue[string]
+	HubName                        plugin.TValue[string]
+	Hub                            plugin.TValue[*mqlGcpProjectNetworkConnectivityServiceHub]
 	Group                          plugin.TValue[string]
 	SpokeType                      plugin.TValue[string]
 	State                          plugin.TValue[string]
@@ -95574,8 +95606,24 @@ func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetDescription() *plugin.
 	return &c.Description
 }
 
-func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetHub() *plugin.TValue[string] {
-	return &c.Hub
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetHubName() *plugin.TValue[string] {
+	return &c.HubName
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetHub() *plugin.TValue[*mqlGcpProjectNetworkConnectivityServiceHub] {
+	return plugin.GetOrCompute[*mqlGcpProjectNetworkConnectivityServiceHub](&c.Hub, func() (*mqlGcpProjectNetworkConnectivityServiceHub, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkConnectivityService.spoke", c.__id, "hub")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectNetworkConnectivityServiceHub), nil
+			}
+		}
+
+		return c.hub()
+	})
 }
 
 func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetGroup() *plugin.TValue[string] {

@@ -28,6 +28,18 @@ type mqlGcpProjectNetworkConnectivityServiceInternal struct {
 	serviceErr     error
 }
 
+type mqlGcpProjectNetworkConnectivityServiceHubInternal struct {
+	// routingVpcUris are the network self-links from the hub's routing VPCs,
+	// kept so routingVpcNetworks() resolves them without re-parsing the dict.
+	routingVpcUris []string
+}
+
+type mqlGcpProjectNetworkConnectivityServiceSpokeInternal struct {
+	// projectId is the project the spoke was listed under, needed to reach the
+	// hub list when resolving hub().
+	projectId string
+}
+
 func (g *mqlGcpProject) networkConnectivity() (*mqlGcpProjectNetworkConnectivityService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -172,6 +184,12 @@ func (g *mqlGcpProjectNetworkConnectivityService) hubs() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		routingVpcUris := make([]string, 0, len(hub.GetRoutingVpcs()))
+		for _, v := range hub.GetRoutingVpcs() {
+			if uri := v.GetUri(); uri != "" {
+				routingVpcUris = append(routingVpcUris, uri)
+			}
+		}
 		spokeSummary, err := protoToDict(hub.GetSpokeSummary())
 		if err != nil {
 			return nil, err
@@ -193,9 +211,32 @@ func (g *mqlGcpProjectNetworkConnectivityService) hubs() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlHub.(*mqlGcpProjectNetworkConnectivityServiceHub).routingVpcUris = routingVpcUris
 		res = append(res, mqlHub)
 	}
 
+	return res, nil
+}
+
+// routingVpcNetworks resolves the networks the hub routes traffic through, so a
+// review can follow the fabric into the subnets and firewall rules of the
+// networks actually carrying it.
+func (g *mqlGcpProjectNetworkConnectivityServiceHub) routingVpcNetworks() ([]any, error) {
+	res := make([]any, 0, len(g.routingVpcUris))
+	for _, uri := range g.routingVpcUris {
+		net, err := getNetworkByUrl(uri, g.MqlRuntime)
+		if err != nil {
+			// A routing VPC can live in another project the caller cannot read.
+			// Skip it rather than failing the whole list; the raw uri stays
+			// available in routingVpcs.
+			log.Debug().Err(err).Str("network", uri).Msg("could not resolve hub routing VPC network")
+			continue
+		}
+		if net == nil {
+			continue
+		}
+		res = append(res, net)
+	}
 	return res, nil
 }
 
@@ -268,7 +309,7 @@ func (g *mqlGcpProjectNetworkConnectivityService) spokes() ([]any, error) {
 		mqlSpoke, err := CreateResource(g.MqlRuntime, "gcp.project.networkConnectivityService.spoke", map[string]*llx.RawData{
 			"name":                           llx.StringData(spoke.GetName()),
 			"description":                    llx.StringData(spoke.GetDescription()),
-			"hub":                            llx.StringData(spoke.GetHub()),
+			"hubName":                        llx.StringData(spoke.GetHub()),
 			"group":                          llx.StringData(spoke.GetGroup()),
 			"spokeType":                      llx.StringData(spoke.GetSpokeType().String()),
 			"state":                          llx.StringData(spoke.GetState().String()),
@@ -285,8 +326,52 @@ func (g *mqlGcpProjectNetworkConnectivityService) spokes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlSpoke.(*mqlGcpProjectNetworkConnectivityServiceSpoke).projectId = projectId
 		res = append(res, mqlSpoke)
 	}
 
 	return res, nil
+}
+
+// hub resolves the hub the spoke is attached to, so a spoke leads to the other
+// spokes it has been made mutually reachable with.
+//
+// Resolution goes through the project's hub list rather than a per-spoke Get:
+// the list is fetched once and cached on the service resource, so N spokes cost
+// one call rather than N.
+func (g *mqlGcpProjectNetworkConnectivityServiceSpoke) hub() (*mqlGcpProjectNetworkConnectivityServiceHub, error) {
+	if g.HubName.Error != nil {
+		return nil, g.HubName.Error
+	}
+	hubName := g.HubName.Data
+	if hubName == "" || g.projectId == "" {
+		g.Hub.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	svc, err := NewResource(g.MqlRuntime, "gcp.project.networkConnectivityService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	hubs := svc.(*mqlGcpProjectNetworkConnectivityService).GetHubs()
+	if hubs.Error != nil {
+		return nil, hubs.Error
+	}
+	for _, raw := range hubs.Data {
+		h, ok := raw.(*mqlGcpProjectNetworkConnectivityServiceHub)
+		if !ok || h == nil {
+			continue
+		}
+		if h.Name.Error == nil && h.Name.Data == hubName {
+			return h, nil
+		}
+	}
+
+	// A spoke can be attached to a hub in another project, which the
+	// project-scoped list does not contain.
+	g.Hub.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }

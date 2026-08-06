@@ -4280,6 +4280,7 @@ gcp.project.networkConnectivityService.hub.labels 13.34.2
 gcp.project.networkConnectivityService.hub.name 13.34.2
 gcp.project.networkConnectivityService.hub.policyMode 13.34.2
 gcp.project.networkConnectivityService.hub.routeTables 13.34.2
+gcp.project.networkConnectivityService.hub.routingVpcNetworks 13.34.2
 gcp.project.networkConnectivityService.hub.routingVpcs 13.34.2
 gcp.project.networkConnectivityService.hub.spokeSummary 13.34.2
 gcp.project.networkConnectivityService.hub.state 13.34.2
@@ -4292,6 +4293,7 @@ gcp.project.networkConnectivityService.spoke.createTime 13.34.2
 gcp.project.networkConnectivityService.spoke.description 13.34.2
 gcp.project.networkConnectivityService.spoke.group 13.34.2
 gcp.project.networkConnectivityService.spoke.hub 13.34.2
+gcp.project.networkConnectivityService.spoke.hubName 13.34.2
 gcp.project.networkConnectivityService.spoke.labels 13.34.2
 gcp.project.networkConnectivityService.spoke.linkedInterconnectAttachments 13.34.2
 gcp.project.networkConnectivityService.spoke.linkedRouterApplianceInstances 13.34.2

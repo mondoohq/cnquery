@@ -17017,6 +17017,11 @@ private gcp.project.networkConnectivityService.hub @defaults("name state policyM
   //
   // Each entry holds `uri` (the VPC network) and `requiredForNewSiteToSiteDataTransferSpokes`.
   routingVpcs []dict
+  // Networks the hub routes traffic through, resolved to the network resources
+  //
+  // Lets a review follow the hub into the subnets and firewall rules of the
+  // networks carrying its traffic. A network the caller cannot read is omitted.
+  routingVpcNetworks() []gcp.project.computeService.network
   // Route tables the hub maintains
   routeTables []string
   // Counts of attached spokes by state and type
@@ -17038,13 +17043,19 @@ private gcp.project.networkConnectivityService.hub @defaults("name state policyM
 // `linkedRouterApplianceInstances` fields identify what is attached, exactly one
 // of which is populated per spoke, and `spokeType` reports which. Selected by
 // the full resource name.
-private gcp.project.networkConnectivityService.spoke @defaults("name spokeType state hub") {
+private gcp.project.networkConnectivityService.spoke @defaults("name spokeType state hubName") {
   // Full resource name of the spoke
   name string
   // Human-readable description of the spoke
   description string
+  // Full resource name of the hub the spoke is attached to
+  hubName string
   // Hub the spoke is attached to
-  hub string
+  //
+  // Resolves hubName to the hub resource, so a spoke leads to the other spokes
+  // it has been made mutually reachable with. Null when the hub is in another
+  // project or the caller cannot read it.
+  hub() gcp.project.networkConnectivityService.hub
   // Spoke group the spoke belongs to
   group string
   // Kind of resource attached by this spoke

@@ -97,7 +97,10 @@ func TestGcpNetworkBoundaryQueriesCompile(t *testing.T) {
 		`gcp.folders.where(id == "123").list { firewallPolicies { shortName rules { action } } }`,
 		// Network Connectivity Center hubs and spokes
 		`gcp.project.networkConnectivity.hubs { name state policyMode routingVpcs spokeSummary }`,
-		`gcp.project.networkConnectivity.spokes { name spokeType state hub linkedVpcNetwork }`,
+		`gcp.project.networkConnectivity.spokes { name spokeType state hubName linkedVpcNetwork }`,
+		// typed edges: spoke to its hub, hub to the networks it routes through
+		`gcp.project.networkConnectivity.spokes { hub { name policyMode } }`,
+		`gcp.project.networkConnectivity.hubs { routingVpcNetworks { name autoCreateSubnetworks } }`,
 		// connectivity tests and their verdicts
 		`gcp.project.networkManagement.connectivityTests { name result verifyTime protocol bypassFirewallChecks }`,
 		`gcp.project.networkManagement.connectivityTests.where(result == "REACHABLE") { source destination reachabilityDetails }`,
