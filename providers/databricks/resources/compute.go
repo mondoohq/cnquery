@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -190,39 +191,83 @@ func (r *mqlDatabricks) clusters() ([]any, error) {
 
 	out := []any{}
 	for i := range clusters {
-		c := clusters[i]
-		res, err := CreateResource(r.MqlRuntime, "databricks.cluster", map[string]*llx.RawData{
-			"__id":                       llx.StringData("databricks.cluster/" + c.ClusterId),
-			"id":                         llx.StringData(c.ClusterId),
-			"clusterName":                llx.StringData(c.ClusterName),
-			"state":                      llx.StringData(string(c.State)),
-			"dataSecurityMode":           llx.StringData(string(c.DataSecurityMode)),
-			"singleUserName":             llx.StringData(c.SingleUserName),
-			"sparkVersion":               llx.StringData(c.SparkVersion),
-			"runtimeEngine":              llx.StringData(string(c.RuntimeEngine)),
-			"sparkConf":                  llx.MapData(strMap(c.SparkConf), types.String),
-			"sparkEnvVars":               llx.MapData(strMap(c.SparkEnvVars), types.String),
-			"localDiskEncryptionEnabled": llx.BoolData(c.EnableLocalDiskEncryption),
-			"autoterminationMinutes":     llx.IntData(c.AutoterminationMinutes),
-			"creatorUserName":            llx.StringData(c.CreatorUserName),
-			"customTags":                 llx.MapData(strMap(c.CustomTags), types.String),
-			"initScripts":                llx.ArrayData(initScriptsToDict(c.InitScripts), types.Dict),
-			"dockerImageUrl":             llx.StringData(dockerImageUrl(c.DockerImage)),
-			"sshPublicKeys":              llx.ArrayData(strSlice(c.SshPublicKeys), types.String),
-			"dependencyMode":             llx.StringData(string(c.DependencyMode)),
-			"googleServiceAccount":       llx.StringData(googleServiceAccount(c.GcpAttributes)),
-		})
+		mqlCluster, err := newMqlDatabricksCluster(r.MqlRuntime, clusters[i])
 		if err != nil {
 			return nil, err
-		}
-		mqlCluster := res.(*mqlDatabricksCluster)
-		mqlCluster.cachePolicyId = c.PolicyId
-		if c.AwsAttributes != nil {
-			mqlCluster.cacheInstanceProfileArn = c.AwsAttributes.InstanceProfileArn
 		}
 		out = append(out, mqlCluster)
 	}
 	return out, nil
+}
+
+// newMqlDatabricksCluster maps a cluster to its resource. Shared by the list
+// path and the init lookup so a cluster hydrated by id carries the same fields
+// as a listed one.
+func newMqlDatabricksCluster(runtime *plugin.Runtime, c compute.ClusterDetails) (*mqlDatabricksCluster, error) {
+	res, err := CreateResource(runtime, "databricks.cluster", map[string]*llx.RawData{
+		"__id":                       llx.StringData("databricks.cluster/" + c.ClusterId),
+		"id":                         llx.StringData(c.ClusterId),
+		"clusterName":                llx.StringData(c.ClusterName),
+		"state":                      llx.StringData(string(c.State)),
+		"dataSecurityMode":           llx.StringData(string(c.DataSecurityMode)),
+		"singleUserName":             llx.StringData(c.SingleUserName),
+		"sparkVersion":               llx.StringData(c.SparkVersion),
+		"runtimeEngine":              llx.StringData(string(c.RuntimeEngine)),
+		"sparkConf":                  llx.MapData(strMap(c.SparkConf), types.String),
+		"sparkEnvVars":               llx.MapData(strMap(c.SparkEnvVars), types.String),
+		"localDiskEncryptionEnabled": llx.BoolData(c.EnableLocalDiskEncryption),
+		"autoterminationMinutes":     llx.IntData(c.AutoterminationMinutes),
+		"creatorUserName":            llx.StringData(c.CreatorUserName),
+		"customTags":                 llx.MapData(strMap(c.CustomTags), types.String),
+		"initScripts":                llx.ArrayData(initScriptsToDict(c.InitScripts), types.Dict),
+		"dockerImageUrl":             llx.StringData(dockerImageUrl(c.DockerImage)),
+		"sshPublicKeys":              llx.ArrayData(strSlice(c.SshPublicKeys), types.String),
+		"dependencyMode":             llx.StringData(string(c.DependencyMode)),
+		"googleServiceAccount":       llx.StringData(googleServiceAccount(c.GcpAttributes)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlCluster := res.(*mqlDatabricksCluster)
+	mqlCluster.cachePolicyId = c.PolicyId
+	if c.AwsAttributes != nil {
+		mqlCluster.cacheInstanceProfileArn = c.AwsAttributes.InstanceProfileArn
+	}
+	return mqlCluster, nil
+}
+
+// initDatabricksCluster resolves a single cluster by id so references from a job
+// task can hydrate a full cluster from just its id.
+func initDatabricksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	idRaw, ok := args["id"]
+	if !ok {
+		return args, nil, nil
+	}
+	id, _ := idRaw.Value.(string)
+	if id == "" {
+		return nil, nil, fmt.Errorf("databricks.cluster requires a non-empty id")
+	}
+
+	ws, err := workspaceClient(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	cluster, err := ws.Clusters.GetByClusterId(context.Background(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	if cluster == nil {
+		return nil, nil, fmt.Errorf("databricks.cluster with id %q not found", id)
+	}
+
+	res, err := newMqlDatabricksCluster(runtime, *cluster)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
 }
 
 func (r *mqlDatabricksCluster) policy() (*mqlDatabricksClusterPolicy, error) {
@@ -258,16 +303,7 @@ func (r *mqlDatabricksCluster) instanceProfile() (*mqlDatabricksInstanceProfile,
 		r.InstanceProfile.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := CreateResource(r.MqlRuntime, "databricks.instanceProfile", map[string]*llx.RawData{
-		"__id":                  llx.StringData("databricks.instanceProfile/" + p.InstanceProfileArn),
-		"instanceProfileArn":    llx.StringData(p.InstanceProfileArn),
-		"iamRoleArn":            llx.StringData(p.IamRoleArn),
-		"isMetaInstanceProfile": llx.BoolData(p.IsMetaInstanceProfile),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlDatabricksInstanceProfile), nil
+	return newMqlDatabricksInstanceProfile(r.MqlRuntime, p)
 }
 
 func (r *mqlDatabricks) warehouses() ([]any, error) {
