@@ -50,6 +50,34 @@ func TestGcpEffectiveAccessQueriesCompile(t *testing.T) {
 	}
 }
 
+// The credential-visibility resources surface credentials and elevation paths
+// that no other collection in the provider reaches, so their query shapes are
+// pinned here too.
+func TestGcpCredentialVisibilityQueriesCompile(t *testing.T) {
+	gcpSchema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "gcp"})
+
+	queries := []string{
+		// HMAC keys, including the accessor back to the account they authenticate as
+		`gcp.project.storage.hmacKeys { accessId state timeCreated serviceAccountEmail }`,
+		`gcp.project.storage.hmacKeys.where(state == "ACTIVE") { serviceAccount { email } }`,
+		// Log Router settings at each level of the hierarchy
+		`gcp.project.logging.settings { disableDefaultSink storageLocation kmsKeyName }`,
+		`gcp.organization.logging.settings.disableDefaultSink`,
+		`gcp.folders.where(id == "123").list { logging { settings { disableDefaultSink } } }`,
+		// Privileged Access Manager entitlements and grants
+		`gcp.project.privilegedAccessManager.entitlements { name state grantedRoles requiresApproval eligiblePrincipals }`,
+		`gcp.project.privilegedAccessManager.entitlements.where(requiresApproval == false) { grantedRoles eligiblePrincipals }`,
+		`gcp.project.privilegedAccessManager.grants { requester state requestedDuration externallyModified auditTrail }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(gcpSchema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}
+
 // A named argument that is not a declared field must be rejected rather than
 // silently ignored, which is what makes the field declarations load-bearing.
 func TestGcpEffectiveAccessRejectsUnknownArgument(t *testing.T) {

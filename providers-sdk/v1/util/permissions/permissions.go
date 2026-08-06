@@ -1406,6 +1406,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// logging.cmekSettings.get permission (verified against GCP testable
 		// permissions at project and organization scope).
 		"Projects.GetCmekSettings": "logging.settings.get",
+		// GetSettings is a separate endpoint from GetCmekSettings and is governed
+		// by the same permission. It exists per container type, and the generic
+		// derivation would yield "logging.projects.getsettings" and friends.
+		"Projects.GetSettings":      "logging.settings.get",
+		"Folders.GetSettings":       "logging.settings.get",
+		"Organizations.GetSettings": "logging.settings.get",
 		// Log-based metrics list under the "logMetrics" resource; the generic
 		// derivation from Projects.Metrics.List yields the non-existent
 		// "logging.metrics.list".

@@ -289,6 +289,8 @@ var validatedGCPPermissions = []string{
 	"privateca.certificateTemplates.list",
 	"privateca.certificates.list",
 	"pubsub.schemas.get",
+	"privilegedaccessmanager.entitlements.list",
+	"privilegedaccessmanager.grants.list",
 	"pubsub.schemas.list",
 	"redis.backups.list",
 	"redis.clusters.list",
@@ -321,6 +323,7 @@ var validatedGCPPermissions = []string{
 	"storage.buckets.getIamPolicy",
 	"storage.buckets.list",
 	"storage.buckets.listEffectiveTags",
+	"storage.hmacKeys.list",
 	"workflows.workflows.list",
 }
 
