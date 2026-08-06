@@ -40,6 +40,8 @@ require (
 	cloud.google.com/go/memorystore v1.3.0
 	cloud.google.com/go/modelarmor v1.2.0
 	cloud.google.com/go/monitoring v1.30.0
+	cloud.google.com/go/networkconnectivity v1.28.0
+	cloud.google.com/go/networkmanagement v1.30.0
 	cloud.google.com/go/orgpolicy v1.20.0
 	cloud.google.com/go/privilegedaccessmanager v1.1.0
 	cloud.google.com/go/pubsub/v2 v2.6.1

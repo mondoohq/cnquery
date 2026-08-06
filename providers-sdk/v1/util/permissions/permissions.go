@@ -1220,6 +1220,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// regionInstanceGroups permission namespace in GCP IAM.
 		"InstanceGroups.ListInstances":       "compute.instanceGroups.list",
 		"RegionInstanceGroups.ListInstances": "compute.instanceGroups.list",
+		// Reading a project's Shared VPC position is governed by
+		// compute.projects.get; there are no getXpnHost or getXpnResources
+		// permissions, and the generic derivation lowercases the method name into
+		// "compute.projects.getxpnhost".
+		"Projects.GetXpnHost":      "compute.projects.get",
+		"Projects.GetXpnResources": "compute.projects.get",
 	},
 	"recommender": {
 		// recommender.recommendations.list is not a real permission; the Recommender

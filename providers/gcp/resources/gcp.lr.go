@@ -18,6 +18,7 @@ import (
 const (
 	ResourceGcpOrganization                                                            string = "gcp.organization"
 	ResourceGcpOrganizationRole                                                        string = "gcp.organization.role"
+	ResourceGcpHierarchicalFirewallPolicy                                              string = "gcp.hierarchicalFirewallPolicy"
 	ResourceGcpOrganizationPrincipalAccessBoundaryPolicy                               string = "gcp.organization.principalAccessBoundaryPolicy"
 	ResourceGcpOrganizationPolicyBinding                                               string = "gcp.organization.policyBinding"
 	ResourceGcpOrganizationNetworkSecurityProfile                                      string = "gcp.organization.networkSecurityProfile"
@@ -457,6 +458,11 @@ const (
 	ResourceGcpProjectAssetServiceResource                                             string = "gcp.project.assetService.resource"
 	ResourceGcpProjectAssetServiceIamPolicy                                            string = "gcp.project.assetService.iamPolicy"
 	ResourceGcpProjectAssetServiceWhoCan                                               string = "gcp.project.assetService.whoCan"
+	ResourceGcpProjectNetworkConnectivityService                                       string = "gcp.project.networkConnectivityService"
+	ResourceGcpProjectNetworkConnectivityServiceHub                                    string = "gcp.project.networkConnectivityService.hub"
+	ResourceGcpProjectNetworkConnectivityServiceSpoke                                  string = "gcp.project.networkConnectivityService.spoke"
+	ResourceGcpProjectNetworkManagementService                                         string = "gcp.project.networkManagementService"
+	ResourceGcpProjectNetworkManagementServiceConnectivityTest                         string = "gcp.project.networkManagementService.connectivityTest"
 	ResourceGcpProjectPrivilegedAccessManagerService                                   string = "gcp.project.privilegedAccessManagerService"
 	ResourceGcpProjectPrivilegedAccessManagerServiceEntitlement                        string = "gcp.project.privilegedAccessManagerService.entitlement"
 	ResourceGcpProjectPrivilegedAccessManagerServiceGrant                              string = "gcp.project.privilegedAccessManagerService.grant"
@@ -503,6 +509,10 @@ func init() {
 		"gcp.organization.role": {
 			// to override args, implement: initGcpOrganizationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpOrganizationRole,
+		},
+		"gcp.hierarchicalFirewallPolicy": {
+			// to override args, implement: initGcpHierarchicalFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpHierarchicalFirewallPolicy,
 		},
 		"gcp.organization.principalAccessBoundaryPolicy": {
 			// to override args, implement: initGcpOrganizationPrincipalAccessBoundaryPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2260,6 +2270,26 @@ func init() {
 			Init:   initGcpProjectAssetServiceWhoCan,
 			Create: createGcpProjectAssetServiceWhoCan,
 		},
+		"gcp.project.networkConnectivityService": {
+			Init:   initGcpProjectNetworkConnectivityService,
+			Create: createGcpProjectNetworkConnectivityService,
+		},
+		"gcp.project.networkConnectivityService.hub": {
+			// to override args, implement: initGcpProjectNetworkConnectivityServiceHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkConnectivityServiceHub,
+		},
+		"gcp.project.networkConnectivityService.spoke": {
+			// to override args, implement: initGcpProjectNetworkConnectivityServiceSpoke(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkConnectivityServiceSpoke,
+		},
+		"gcp.project.networkManagementService": {
+			Init:   initGcpProjectNetworkManagementService,
+			Create: createGcpProjectNetworkManagementService,
+		},
+		"gcp.project.networkManagementService.connectivityTest": {
+			// to override args, implement: initGcpProjectNetworkManagementServiceConnectivityTest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkManagementServiceConnectivityTest,
+		},
 		"gcp.project.privilegedAccessManagerService": {
 			Init:   initGcpProjectPrivilegedAccessManagerService,
 			Create: createGcpProjectPrivilegedAccessManagerService,
@@ -2544,6 +2574,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.customRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetCustomRoles()).ToDataRes(types.Array(types.Resource("gcp.organization.role")))
 	},
+	"gcp.organization.firewallPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetFirewallPolicies()).ToDataRes(types.Array(types.Resource("gcp.hierarchicalFirewallPolicy")))
+	},
 	"gcp.organization.principalAccessBoundaryPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetPrincipalAccessBoundaryPolicies()).ToDataRes(types.Array(types.Resource("gcp.organization.principalAccessBoundaryPolicy")))
 	},
@@ -2582,6 +2615,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.role.grantsServiceAccountImpersonation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationRole).GetGrantsServiceAccountImpersonation()).ToDataRes(types.Bool)
+	},
+	"gcp.hierarchicalFirewallPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.hierarchicalFirewallPolicy.shortName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetShortName()).ToDataRes(types.String)
+	},
+	"gcp.hierarchicalFirewallPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.hierarchicalFirewallPolicy.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetParent()).ToDataRes(types.String)
+	},
+	"gcp.hierarchicalFirewallPolicy.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.hierarchicalFirewallPolicy.ruleTupleCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetRuleTupleCount()).ToDataRes(types.Int)
+	},
+	"gcp.hierarchicalFirewallPolicy.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetFingerprint()).ToDataRes(types.String)
+	},
+	"gcp.hierarchicalFirewallPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.hierarchicalFirewallPolicy.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetAssociations()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.hierarchicalFirewallPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpHierarchicalFirewallPolicy).GetRules()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewallPolicy.rule")))
 	},
 	"gcp.organization.principalAccessBoundaryPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationPrincipalAccessBoundaryPolicy).GetName()).ToDataRes(types.String)
@@ -3249,6 +3312,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.folder.essentialContacts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetEssentialContacts()).ToDataRes(types.Array(types.Resource("gcp.essentialContact")))
 	},
+	"gcp.folder.firewallPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolder).GetFirewallPolicies()).ToDataRes(types.Array(types.Resource("gcp.hierarchicalFirewallPolicy")))
+	},
 	"gcp.projects.parentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjects).GetParentId()).ToDataRes(types.String)
 	},
@@ -3320,6 +3386,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.privilegedAccessManager": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetPrivilegedAccessManager()).ToDataRes(types.Resource("gcp.project.privilegedAccessManagerService"))
+	},
+	"gcp.project.networkConnectivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetNetworkConnectivity()).ToDataRes(types.Resource("gcp.project.networkConnectivityService"))
+	},
+	"gcp.project.networkManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetNetworkManagement()).ToDataRes(types.Resource("gcp.project.networkManagementService"))
 	},
 	"gcp.project.gke": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetGke()).ToDataRes(types.Resource("gcp.project.gkeService"))
@@ -3815,6 +3887,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.projectSerialPortEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetProjectSerialPortEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.isSharedVpcHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetIsSharedVpcHost()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.isSharedVpcServiceProject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetIsSharedVpcServiceProject()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.sharedVpcHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetSharedVpcHost()).ToDataRes(types.Resource("gcp.project"))
+	},
+	"gcp.project.computeService.sharedVpcServiceProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetSharedVpcServiceProjects()).ToDataRes(types.Array(types.Resource("gcp.project")))
 	},
 	"gcp.project.computeService.address.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetId()).ToDataRes(types.String)
@@ -17643,6 +17727,150 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.assetService.whoCan.fullyExplored": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAssetServiceWhoCan).GetFullyExplored()).ToDataRes(types.Bool)
 	},
+	"gcp.project.networkConnectivityService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.hubs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityService).GetHubs()).ToDataRes(types.Array(types.Resource("gcp.project.networkConnectivityService.hub")))
+	},
+	"gcp.project.networkConnectivityService.spokes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityService).GetSpokes()).ToDataRes(types.Array(types.Resource("gcp.project.networkConnectivityService.spoke")))
+	},
+	"gcp.project.networkConnectivityService.hub.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.hub.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.hub.uniqueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetUniqueId()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.hub.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.hub.policyMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetPolicyMode()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.hub.routingVpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetRoutingVpcs()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.networkConnectivityService.hub.routingVpcNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetRoutingVpcNetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.network")))
+	},
+	"gcp.project.networkConnectivityService.hub.routeTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetRouteTables()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.networkConnectivityService.hub.spokeSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetSpokeSummary()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkConnectivityService.hub.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkConnectivityService.hub.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkConnectivityService.hub.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceHub).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkConnectivityService.spoke.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.hubName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetHubName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.hub": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetHub()).ToDataRes(types.Resource("gcp.project.networkConnectivityService.hub"))
+	},
+	"gcp.project.networkConnectivityService.spoke.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetGroup()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.spokeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetSpokeType()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.reasons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetReasons()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedVpcNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetLinkedVpcNetwork()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedVpnTunnels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetLinkedVpnTunnels()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedInterconnectAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetLinkedInterconnectAttachments()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedRouterApplianceInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetLinkedRouterApplianceInstances()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkConnectivityService.spoke.uniqueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetUniqueId()).ToDataRes(types.String)
+	},
+	"gcp.project.networkConnectivityService.spoke.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkConnectivityService.spoke.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkConnectivityService.spoke.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkManagementService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.networkManagementService.connectivityTests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementService).GetConnectivityTests()).ToDataRes(types.Array(types.Resource("gcp.project.networkManagementService.connectivityTest")))
+	},
+	"gcp.project.networkManagementService.connectivityTest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkManagementService.connectivityTest.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkManagementService.connectivityTest.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkManagementService.connectivityTest.result": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetResult()).ToDataRes(types.String)
+	},
+	"gcp.project.networkManagementService.connectivityTest.verifyTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetVerifyTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkManagementService.connectivityTest.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetProtocol()).ToDataRes(types.String)
+	},
+	"gcp.project.networkManagementService.connectivityTest.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetSource()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkManagementService.connectivityTest.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetDestination()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkManagementService.connectivityTest.bypassFirewallChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetBypassFirewallChecks()).ToDataRes(types.Bool)
+	},
+	"gcp.project.networkManagementService.connectivityTest.reachabilityDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetReachabilityDetails()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkManagementService.connectivityTest.probingDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetProbingDetails()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkManagementService.connectivityTest.relatedProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetRelatedProjects()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.networkManagementService.connectivityTest.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkManagementService.connectivityTest.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkManagementService.connectivityTest.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).GetUpdateTime()).ToDataRes(types.Time)
+	},
 	"gcp.project.privilegedAccessManagerService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPrivilegedAccessManagerService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -18580,6 +18808,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrganization).CustomRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.organization.firewallPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).FirewallPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.organization.principalAccessBoundaryPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).PrincipalAccessBoundaryPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -18634,6 +18866,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.role.grantsServiceAccountImpersonation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganizationRole).GrantsServiceAccountImpersonation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.shortName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).ShortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.ruleTupleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).RuleTupleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.hierarchicalFirewallPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpHierarchicalFirewallPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.organization.principalAccessBoundaryPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19608,6 +19884,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpFolder).EssentialContacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.folder.firewallPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolder).FirewallPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.projects.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjects).__id, ok = v.Value.(string)
 		return
@@ -19710,6 +19990,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.privilegedAccessManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).PrivilegedAccessManager, ok = plugin.RawToTValue[*mqlGcpProjectPrivilegedAccessManagerService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).NetworkConnectivity, ok = plugin.RawToTValue[*mqlGcpProjectNetworkConnectivityService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).NetworkManagement, ok = plugin.RawToTValue[*mqlGcpProjectNetworkManagementService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gke": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20398,6 +20686,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.projectSerialPortEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).ProjectSerialPortEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.isSharedVpcHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).IsSharedVpcHost, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.isSharedVpcServiceProject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).IsSharedVpcServiceProject, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.sharedVpcHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).SharedVpcHost, ok = plugin.RawToTValue[*mqlGcpProject](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.sharedVpcServiceProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).SharedVpcServiceProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40472,6 +40776,218 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectAssetServiceWhoCan).FullyExplored, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.networkConnectivityService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkConnectivityService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityService).Hubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spokes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityService).Spokes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.uniqueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).UniqueId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.policyMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).PolicyMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.routingVpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).RoutingVpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.routingVpcNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).RoutingVpcNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.spokeSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).SpokeSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.hub.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceHub).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.hubName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).HubName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.hub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Hub, ok = plugin.RawToTValue[*mqlGcpProjectNetworkConnectivityServiceHub](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.spokeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).SpokeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.reasons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Reasons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedVpcNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).LinkedVpcNetwork, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedVpnTunnels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).LinkedVpnTunnels, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedInterconnectAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).LinkedInterconnectAttachments, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.linkedRouterApplianceInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).LinkedRouterApplianceInstances, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.uniqueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).UniqueId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkConnectivityService.spoke.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkConnectivityServiceSpoke).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkManagementService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementService).ConnectivityTests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.result": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Result, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.verifyTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).VerifyTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Destination, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.bypassFirewallChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).BypassFirewallChecks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.reachabilityDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).ReachabilityDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.probingDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).ProbingDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.relatedProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).RelatedProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkManagementService.connectivityTest.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkManagementServiceConnectivityTest).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.privilegedAccessManagerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPrivilegedAccessManagerService).__id, ok = v.Value.(string)
 		return
@@ -41744,6 +42260,7 @@ type mqlGcpOrganization struct {
 	NetworkSecurityProfiles         plugin.TValue[[]any]
 	NetworkSecurityProfileGroups    plugin.TValue[[]any]
 	CustomRoles                     plugin.TValue[[]any]
+	FirewallPolicies                plugin.TValue[[]any]
 	PrincipalAccessBoundaryPolicies plugin.TValue[[]any]
 	PolicyBindings                  plugin.TValue[[]any]
 	Logging                         plugin.TValue[*mqlGcpOrganizationLoggingService]
@@ -42139,6 +42656,22 @@ func (c *mqlGcpOrganization) GetCustomRoles() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpOrganization) GetFirewallPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "firewallPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallPolicies()
+	})
+}
+
 func (c *mqlGcpOrganization) GetPrincipalAccessBoundaryPolicies() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.PrincipalAccessBoundaryPolicies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -42293,6 +42826,112 @@ func (c *mqlGcpOrganizationRole) GetGrantsIamPolicyManagement() *plugin.TValue[b
 func (c *mqlGcpOrganizationRole) GetGrantsServiceAccountImpersonation() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.GrantsServiceAccountImpersonation, func() (bool, error) {
 		return c.grantsServiceAccountImpersonation()
+	})
+}
+
+// mqlGcpHierarchicalFirewallPolicy for the gcp.hierarchicalFirewallPolicy resource
+type mqlGcpHierarchicalFirewallPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpHierarchicalFirewallPolicyInternal
+	Name           plugin.TValue[string]
+	ShortName      plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Parent         plugin.TValue[string]
+	SelfLink       plugin.TValue[string]
+	RuleTupleCount plugin.TValue[int64]
+	Fingerprint    plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
+	Associations   plugin.TValue[[]any]
+	Rules          plugin.TValue[[]any]
+}
+
+// createGcpHierarchicalFirewallPolicy creates a new instance of this resource
+func createGcpHierarchicalFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpHierarchicalFirewallPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.hierarchicalFirewallPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) MqlName() string {
+	return "gcp.hierarchicalFirewallPolicy"
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetShortName() *plugin.TValue[string] {
+	return &c.ShortName
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetParent() *plugin.TValue[string] {
+	return &c.Parent
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetRuleTupleCount() *plugin.TValue[int64] {
+	return &c.RuleTupleCount
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetAssociations() *plugin.TValue[[]any] {
+	return &c.Associations
+}
+
+func (c *mqlGcpHierarchicalFirewallPolicy) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.hierarchicalFirewallPolicy", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
 	})
 }
 
@@ -44401,6 +45040,7 @@ type mqlGcpFolder struct {
 	AuditConfig          plugin.TValue[[]any]
 	Logging              plugin.TValue[*mqlGcpFolderLoggingService]
 	EssentialContacts    plugin.TValue[[]any]
+	FirewallPolicies     plugin.TValue[[]any]
 }
 
 // createGcpFolder creates a new instance of this resource
@@ -44632,6 +45272,22 @@ func (c *mqlGcpFolder) GetEssentialContacts() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpFolder) GetFirewallPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder", c.__id, "firewallPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallPolicies()
+	})
+}
+
 // mqlGcpProjects for the gcp.projects resource
 type mqlGcpProjects struct {
 	MqlRuntime *plugin.Runtime
@@ -44741,6 +45397,8 @@ type mqlGcpProject struct {
 	Recommendations          plugin.TValue[[]any]
 	Insights                 plugin.TValue[[]any]
 	PrivilegedAccessManager  plugin.TValue[*mqlGcpProjectPrivilegedAccessManagerService]
+	NetworkConnectivity      plugin.TValue[*mqlGcpProjectNetworkConnectivityService]
+	NetworkManagement        plugin.TValue[*mqlGcpProjectNetworkManagementService]
 	Gke                      plugin.TValue[*mqlGcpProjectGkeService]
 	Compute                  plugin.TValue[*mqlGcpProjectComputeService]
 	Pubsub                   plugin.TValue[*mqlGcpProjectPubsubService]
@@ -45080,6 +45738,38 @@ func (c *mqlGcpProject) GetPrivilegedAccessManager() *plugin.TValue[*mqlGcpProje
 		}
 
 		return c.privilegedAccessManager()
+	})
+}
+
+func (c *mqlGcpProject) GetNetworkConnectivity() *plugin.TValue[*mqlGcpProjectNetworkConnectivityService] {
+	return plugin.GetOrCompute[*mqlGcpProjectNetworkConnectivityService](&c.NetworkConnectivity, func() (*mqlGcpProjectNetworkConnectivityService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "networkConnectivity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectNetworkConnectivityService), nil
+			}
+		}
+
+		return c.networkConnectivity()
+	})
+}
+
+func (c *mqlGcpProject) GetNetworkManagement() *plugin.TValue[*mqlGcpProjectNetworkManagementService] {
+	return plugin.GetOrCompute[*mqlGcpProjectNetworkManagementService](&c.NetworkManagement, func() (*mqlGcpProjectNetworkManagementService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "networkManagement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectNetworkManagementService), nil
+			}
+		}
+
+		return c.networkManagement()
 	})
 }
 
@@ -46740,6 +47430,10 @@ type mqlGcpProjectComputeService struct {
 	ProjectOsLoginEnabled      plugin.TValue[bool]
 	ProjectBlockProjectSshKeys plugin.TValue[bool]
 	ProjectSerialPortEnabled   plugin.TValue[bool]
+	IsSharedVpcHost            plugin.TValue[bool]
+	IsSharedVpcServiceProject  plugin.TValue[bool]
+	SharedVpcHost              plugin.TValue[*mqlGcpProject]
+	SharedVpcServiceProjects   plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeService creates a new instance of this resource
@@ -47450,6 +48144,50 @@ func (c *mqlGcpProjectComputeService) GetProjectBlockProjectSshKeys() *plugin.TV
 func (c *mqlGcpProjectComputeService) GetProjectSerialPortEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ProjectSerialPortEnabled, func() (bool, error) {
 		return c.projectSerialPortEnabled()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetIsSharedVpcHost() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsSharedVpcHost, func() (bool, error) {
+		return c.isSharedVpcHost()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetIsSharedVpcServiceProject() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsSharedVpcServiceProject, func() (bool, error) {
+		return c.isSharedVpcServiceProject()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetSharedVpcHost() *plugin.TValue[*mqlGcpProject] {
+	return plugin.GetOrCompute[*mqlGcpProject](&c.SharedVpcHost, func() (*mqlGcpProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "sharedVpcHost")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProject), nil
+			}
+		}
+
+		return c.sharedVpcHost()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetSharedVpcServiceProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedVpcServiceProjects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "sharedVpcServiceProjects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sharedVpcServiceProjects()
 	})
 }
 
@@ -94599,6 +95337,526 @@ func (c *mqlGcpProjectAssetServiceWhoCan) GetFullyExplored() *plugin.TValue[bool
 	return plugin.GetOrCompute[bool](&c.FullyExplored, func() (bool, error) {
 		return c.fullyExplored()
 	})
+}
+
+// mqlGcpProjectNetworkConnectivityService for the gcp.project.networkConnectivityService resource
+type mqlGcpProjectNetworkConnectivityService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectNetworkConnectivityServiceInternal
+	ProjectId plugin.TValue[string]
+	Hubs      plugin.TValue[[]any]
+	Spokes    plugin.TValue[[]any]
+}
+
+// createGcpProjectNetworkConnectivityService creates a new instance of this resource
+func createGcpProjectNetworkConnectivityService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkConnectivityService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkConnectivityService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkConnectivityService) MqlName() string {
+	return "gcp.project.networkConnectivityService"
+}
+
+func (c *mqlGcpProjectNetworkConnectivityService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkConnectivityService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectNetworkConnectivityService) GetHubs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hubs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkConnectivityService", c.__id, "hubs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hubs()
+	})
+}
+
+func (c *mqlGcpProjectNetworkConnectivityService) GetSpokes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Spokes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkConnectivityService", c.__id, "spokes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.spokes()
+	})
+}
+
+// mqlGcpProjectNetworkConnectivityServiceHub for the gcp.project.networkConnectivityService.hub resource
+type mqlGcpProjectNetworkConnectivityServiceHub struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectNetworkConnectivityServiceHubInternal
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	UniqueId           plugin.TValue[string]
+	State              plugin.TValue[string]
+	PolicyMode         plugin.TValue[string]
+	RoutingVpcs        plugin.TValue[[]any]
+	RoutingVpcNetworks plugin.TValue[[]any]
+	RouteTables        plugin.TValue[[]any]
+	SpokeSummary       plugin.TValue[any]
+	Labels             plugin.TValue[map[string]any]
+	CreateTime         plugin.TValue[*time.Time]
+	UpdateTime         plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkConnectivityServiceHub creates a new instance of this resource
+func createGcpProjectNetworkConnectivityServiceHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkConnectivityServiceHub{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkConnectivityService.hub", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) MqlName() string {
+	return "gcp.project.networkConnectivityService.hub"
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetUniqueId() *plugin.TValue[string] {
+	return &c.UniqueId
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetPolicyMode() *plugin.TValue[string] {
+	return &c.PolicyMode
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetRoutingVpcs() *plugin.TValue[[]any] {
+	return &c.RoutingVpcs
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetRoutingVpcNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoutingVpcNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkConnectivityService.hub", c.__id, "routingVpcNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routingVpcNetworks()
+	})
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetRouteTables() *plugin.TValue[[]any] {
+	return &c.RouteTables
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetSpokeSummary() *plugin.TValue[any] {
+	return &c.SpokeSummary
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceHub) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectNetworkConnectivityServiceSpoke for the gcp.project.networkConnectivityService.spoke resource
+type mqlGcpProjectNetworkConnectivityServiceSpoke struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectNetworkConnectivityServiceSpokeInternal
+	Name                           plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	HubName                        plugin.TValue[string]
+	Hub                            plugin.TValue[*mqlGcpProjectNetworkConnectivityServiceHub]
+	Group                          plugin.TValue[string]
+	SpokeType                      plugin.TValue[string]
+	State                          plugin.TValue[string]
+	Reasons                        plugin.TValue[[]any]
+	LinkedVpcNetwork               plugin.TValue[any]
+	LinkedVpnTunnels               plugin.TValue[any]
+	LinkedInterconnectAttachments  plugin.TValue[any]
+	LinkedRouterApplianceInstances plugin.TValue[any]
+	UniqueId                       plugin.TValue[string]
+	Labels                         plugin.TValue[map[string]any]
+	CreateTime                     plugin.TValue[*time.Time]
+	UpdateTime                     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkConnectivityServiceSpoke creates a new instance of this resource
+func createGcpProjectNetworkConnectivityServiceSpoke(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkConnectivityServiceSpoke{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkConnectivityService.spoke", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) MqlName() string {
+	return "gcp.project.networkConnectivityService.spoke"
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetHubName() *plugin.TValue[string] {
+	return &c.HubName
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetHub() *plugin.TValue[*mqlGcpProjectNetworkConnectivityServiceHub] {
+	return plugin.GetOrCompute[*mqlGcpProjectNetworkConnectivityServiceHub](&c.Hub, func() (*mqlGcpProjectNetworkConnectivityServiceHub, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkConnectivityService.spoke", c.__id, "hub")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectNetworkConnectivityServiceHub), nil
+			}
+		}
+
+		return c.hub()
+	})
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetSpokeType() *plugin.TValue[string] {
+	return &c.SpokeType
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetReasons() *plugin.TValue[[]any] {
+	return &c.Reasons
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetLinkedVpcNetwork() *plugin.TValue[any] {
+	return &c.LinkedVpcNetwork
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetLinkedVpnTunnels() *plugin.TValue[any] {
+	return &c.LinkedVpnTunnels
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetLinkedInterconnectAttachments() *plugin.TValue[any] {
+	return &c.LinkedInterconnectAttachments
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetLinkedRouterApplianceInstances() *plugin.TValue[any] {
+	return &c.LinkedRouterApplianceInstances
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetUniqueId() *plugin.TValue[string] {
+	return &c.UniqueId
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectNetworkConnectivityServiceSpoke) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectNetworkManagementService for the gcp.project.networkManagementService resource
+type mqlGcpProjectNetworkManagementService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectNetworkManagementServiceInternal
+	ProjectId         plugin.TValue[string]
+	ConnectivityTests plugin.TValue[[]any]
+}
+
+// createGcpProjectNetworkManagementService creates a new instance of this resource
+func createGcpProjectNetworkManagementService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkManagementService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkManagementService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkManagementService) MqlName() string {
+	return "gcp.project.networkManagementService"
+}
+
+func (c *mqlGcpProjectNetworkManagementService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkManagementService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectNetworkManagementService) GetConnectivityTests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectivityTests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkManagementService", c.__id, "connectivityTests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectivityTests()
+	})
+}
+
+// mqlGcpProjectNetworkManagementServiceConnectivityTest for the gcp.project.networkManagementService.connectivityTest resource
+type mqlGcpProjectNetworkManagementServiceConnectivityTest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkManagementServiceConnectivityTestInternal it will be used here
+	Name                 plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Result               plugin.TValue[string]
+	VerifyTime           plugin.TValue[*time.Time]
+	Protocol             plugin.TValue[string]
+	Source               plugin.TValue[any]
+	Destination          plugin.TValue[any]
+	BypassFirewallChecks plugin.TValue[bool]
+	ReachabilityDetails  plugin.TValue[any]
+	ProbingDetails       plugin.TValue[any]
+	RelatedProjects      plugin.TValue[[]any]
+	Labels               plugin.TValue[map[string]any]
+	CreateTime           plugin.TValue[*time.Time]
+	UpdateTime           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkManagementServiceConnectivityTest creates a new instance of this resource
+func createGcpProjectNetworkManagementServiceConnectivityTest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkManagementServiceConnectivityTest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkManagementService.connectivityTest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) MqlName() string {
+	return "gcp.project.networkManagementService.connectivityTest"
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetResult() *plugin.TValue[string] {
+	return &c.Result
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetVerifyTime() *plugin.TValue[*time.Time] {
+	return &c.VerifyTime
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetSource() *plugin.TValue[any] {
+	return &c.Source
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetDestination() *plugin.TValue[any] {
+	return &c.Destination
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetBypassFirewallChecks() *plugin.TValue[bool] {
+	return &c.BypassFirewallChecks
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetReachabilityDetails() *plugin.TValue[any] {
+	return &c.ReachabilityDetails
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetProbingDetails() *plugin.TValue[any] {
+	return &c.ProbingDetails
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetRelatedProjects() *plugin.TValue[[]any] {
+	return &c.RelatedProjects
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectNetworkManagementServiceConnectivityTest) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }
 
 // mqlGcpProjectPrivilegedAccessManagerService for the gcp.project.privilegedAccessManagerService resource

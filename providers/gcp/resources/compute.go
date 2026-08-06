@@ -480,6 +480,9 @@ type mqlGcpProjectComputeServiceInternal struct {
 	machineTypeIndexOnce sync.Once
 	machineTypeIndex     map[string]*mqlGcpProjectComputeServiceMachineType
 	machineTypeIndexErr  error
+	// sharedVpcState caches the project's Shared VPC topology; see
+	// compute_shared_vpc.go.
+	sharedVpcState sharedVpcState
 }
 
 // machineTypeByZoneAndName resolves a machine type from the project's

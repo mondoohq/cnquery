@@ -102,6 +102,8 @@ gcp.organization @defaults("name") {
   networkSecurityProfileGroups() []gcp.organization.networkSecurityProfileGroup
   // Custom IAM roles defined at the organization level
   customRoles() []gcp.organization.role
+  // Hierarchical firewall policies defined on the organization, which override every project rule below it
+  firewallPolicies() []gcp.hierarchicalFirewallPolicy
   // Principal access boundary policies defined in the organization
   principalAccessBoundaryPolicies() []gcp.organization.principalAccessBoundaryPolicy
   // Policy bindings that put boundary policies into effect against principal sets
@@ -145,6 +147,43 @@ private gcp.organization.role @defaults("title name") {
   // implicitDelegation, the permissions that enable acting as a service
   // account and escalating privilege.
   grantsServiceAccountImpersonation() bool
+}
+
+// Hierarchical firewall policy
+//
+// Firewall policy attached to an organization or a folder rather than to a
+// network. Its rules are evaluated before any project-level rule and cannot be
+// overridden from inside a project, so a permissive rule here silently defeats
+// every firewall rule below it and a project-scoped firewall review cannot see
+// it. The `associations` field lists the nodes the policy is attached to, and an
+// unassociated policy has no effect regardless of its rules. The `shortName` is
+// the human-readable identifier and `name` the generated numeric one used in API
+// paths. Selected by the generated name.
+private gcp.hierarchicalFirewallPolicy @defaults("shortName parent ruleTupleCount") {
+  // Generated numeric identifier of the policy, used in API paths
+  name string
+  // Human-readable name given to the policy
+  shortName string
+  // Human-readable description of the policy
+  description string
+  // Node the policy is defined on (organizations/{id} or folders/{id})
+  parent string
+  // Server-defined URL for the resource
+  selfLink string
+  // Total count of all firewall policy rule tuples in the policy
+  ruleTupleCount int
+  // Fingerprint for optimistic concurrency control
+  fingerprint string
+  // Creation timestamp
+  created time
+  // Nodes the policy is attached to
+  //
+  // Each entry holds `name`, `attachmentTarget` (the organization, folder, or
+  // network the policy is enforced on), `firewallPolicyId`, `shortName`, and
+  // `displayName`. A policy with no associations enforces nothing.
+  associations []dict
+  // Rules the policy enforces, evaluated ahead of any project-level rule
+  rules() []gcp.project.computeService.firewallPolicy.rule
 }
 
 // Principal access boundary policy
@@ -875,6 +914,8 @@ private gcp.folder @defaults("name") {
   logging() gcp.folder.loggingService
   // Essential Contacts configured at the folder level for security, technical, and other notification categories
   essentialContacts() []gcp.essentialContact
+  // Hierarchical firewall policies defined on the folder, which override project rules below it
+  firewallPolicies() []gcp.hierarchicalFirewallPolicy
 }
 
 // Google Cloud (GCP) projects
@@ -947,6 +988,10 @@ gcp.project @defaults("name number") {
   insights() []gcp.insight
   // Privileged Access Manager configuration, the just-in-time elevation paths into the project
   privilegedAccessManager() gcp.project.privilegedAccessManagerService
+  // Network Connectivity Center hubs and spokes, the transitive connectivity fabric
+  networkConnectivity() gcp.project.networkConnectivityService
+  // Network Management connectivity tests, the empirical reachability evidence
+  networkManagement() gcp.project.networkManagementService
   // GCP GKE resources
   gke() gcp.project.gkeService
   // GCP Compute resources for the project
@@ -1427,6 +1472,29 @@ private gcp.project.computeService {
   projectBlockProjectSshKeys() bool
   // Whether serial port access is enabled project-wide (project commonInstanceMetadata item 'serial-port-enable' is TRUE)
   projectSerialPortEnabled() bool
+  // Whether this project is a Shared VPC host project, lending its networks to other projects
+  //
+  // A host project's subnets and firewall rules govern workloads that live in
+  // other projects, so its network configuration has a blast radius wider than
+  // its own resource list suggests.
+  isSharedVpcHost() bool
+  // Whether this project is a Shared VPC service project, using another project's networks
+  //
+  // A service project's workloads sit on subnets and behind firewall rules it
+  // does not own, so reviewing this project's own networks in isolation misses
+  // the controls that actually apply to them.
+  isSharedVpcServiceProject() bool
+  // Host project whose Shared VPC networks this project uses
+  //
+  // Null when the project is not a service project. Resolves to the project that
+  // owns the networks, subnets, and firewall rules governing this project's
+  // workloads.
+  sharedVpcHost() gcp.project
+  // Service projects attached to this project's Shared VPC networks
+  //
+  // Empty unless this project is a host. Each entry is a project whose workloads
+  // this project's network configuration governs.
+  sharedVpcServiceProjects() []gcp.project
 }
 
 // Google Cloud (GCP) Compute Engine static IP address
@@ -16897,6 +16965,234 @@ private gcp.project.assetService.whoCan @defaults("permission resource principal
   // principal lists are incomplete and an empty result is not proof of no
   // access.
   fullyExplored() bool
+}
+
+// ============================================================
+// Network Connectivity Center
+// ============================================================
+
+// Google Cloud (GCP) Network Connectivity Center
+//
+// Network Connectivity Center configuration for the project. `hubs` are the
+// central connectivity fabrics and `spokes` the networks and tunnels attached to
+// them. A hub makes every attached spoke mutually reachable, so it creates
+// transitive paths between networks that share no direct peering, and a review
+// that walks only VPC peerings and firewall rules will not find them.
+private gcp.project.networkConnectivityService {
+  // Project ID
+  projectId string
+  // Connectivity hubs defined in the project
+  hubs() []gcp.project.networkConnectivityService.hub
+  // Spokes attached to hubs, each a network or tunnel joined to the fabric
+  spokes() []gcp.project.networkConnectivityService.spoke
+}
+
+// Network Connectivity Center hub
+//
+// Central fabric that joins its spokes into one connectivity domain. Every
+// network attached as a spoke becomes reachable from every other spoke on the
+// same hub, which is connectivity no VPC peering or firewall rule records, so a
+// hub is an authorization boundary in its own right. The `routingVpcs` field
+// lists the networks the hub routes through, `spokeSummary` counts what is
+// attached, and `policyMode` reports whether spoke-to-spoke traffic is governed
+// by a preset topology. Selected by the full resource name.
+private gcp.project.networkConnectivityService.hub @defaults("name state policyMode") {
+  // Full resource name of the hub
+  name string
+  // Human-readable description of the hub
+  description string
+  // Server-generated unique identifier
+  uniqueId string
+  // State of the hub
+  //
+  // One of CREATING, ACTIVE, DELETING, ACCEPTING, REJECTING, UPDATING,
+  // INACTIVE, OBSOLETE, FAILED, or STATE_UNSPECIFIED.
+  state string
+  // Routing mode applied to traffic between spokes
+  //
+  // One of PRESET, CUSTOM, or POLICY_MODE_UNSPECIFIED. PRESET applies the
+  // built-in mesh topology, in which every spoke reaches every other spoke.
+  policyMode string
+  // Networks the hub routes traffic through
+  //
+  // Each entry holds `uri` (the VPC network) and `requiredForNewSiteToSiteDataTransferSpokes`.
+  routingVpcs []dict
+  // Networks the hub routes traffic through, resolved to the network resources
+  //
+  // Lets a review follow the hub into the subnets and firewall rules of the
+  // networks carrying its traffic. A network the caller cannot read is omitted.
+  routingVpcNetworks() []gcp.project.computeService.network
+  // Route tables the hub maintains
+  routeTables []string
+  // Counts of attached spokes by state and type
+  spokeSummary dict
+  // User-assigned labels
+  labels map[string]string
+  // Time the hub was created
+  createTime time
+  // Time the hub was last updated
+  updateTime time
+}
+
+// Network Connectivity Center spoke
+//
+// Network, tunnel, or appliance attached to a hub. Attaching a spoke makes it
+// reachable from every other spoke on the same hub, so the spoke list is the
+// list of networks a hub has joined together. The `linkedVpcNetwork`,
+// `linkedVpnTunnels`, `linkedInterconnectAttachments`, and
+// `linkedRouterApplianceInstances` fields identify what is attached, exactly one
+// of which is populated per spoke, and `spokeType` reports which. Selected by
+// the full resource name.
+private gcp.project.networkConnectivityService.spoke @defaults("name spokeType state hubName") {
+  // Full resource name of the spoke
+  name string
+  // Human-readable description of the spoke
+  description string
+  // Full resource name of the hub the spoke is attached to
+  hubName string
+  // Hub the spoke is attached to
+  //
+  // Resolves hubName to the hub resource, so a spoke leads to the other spokes
+  // it has been made mutually reachable with. Null when the hub is in another
+  // project or the caller cannot read it.
+  hub() gcp.project.networkConnectivityService.hub
+  // Spoke group the spoke belongs to
+  group string
+  // Kind of resource attached by this spoke
+  //
+  // One of VPC_NETWORK, VPN_TUNNEL, INTERCONNECT_ATTACHMENT,
+  // ROUTER_APPLIANCE, PRODUCER_VPC_NETWORK, or SPOKE_TYPE_UNSPECIFIED.
+  spokeType string
+  // State of the spoke
+  //
+  // One of CREATING, ACTIVE, DELETING, ACCEPTING, REJECTING, UPDATING,
+  // INACTIVE, OBSOLETE, FAILED, or STATE_UNSPECIFIED. Only an ACTIVE spoke
+  // carries traffic.
+  state string
+  // Reasons the spoke is in its current state
+  //
+  // Each entry holds `code`, `message`, and `userDetails`. Populated when the
+  // spoke is inactive or pending review, for example while a hub administrator
+  // has not yet accepted it.
+  reasons []dict
+  // VPC network attached by this spoke
+  //
+  // Holds `uri` (the network), `excludeExportRanges`, and
+  // `includeExportRanges`. Populated only for a VPC_NETWORK spoke.
+  linkedVpcNetwork dict
+  // VPN tunnels attached by this spoke
+  //
+  // Holds `uris` (the tunnels), `siteToSiteDataTransfer`, and `vpcNetwork`.
+  // Populated only for a VPN_TUNNEL spoke.
+  linkedVpnTunnels dict
+  // Interconnect attachments attached by this spoke
+  //
+  // Holds `uris` (the attachments), `siteToSiteDataTransfer`, and
+  // `vpcNetwork`. Populated only for an INTERCONNECT_ATTACHMENT spoke.
+  linkedInterconnectAttachments dict
+  // Router appliance instances attached by this spoke
+  //
+  // Holds `instances` (each with `virtualMachine` and `ipAddress`),
+  // `siteToSiteDataTransfer`, and `vpcNetwork`. Populated only for a
+  // ROUTER_APPLIANCE spoke.
+  linkedRouterApplianceInstances dict
+  // Server-generated unique identifier
+  uniqueId string
+  // User-assigned labels
+  labels map[string]string
+  // Time the spoke was created
+  createTime time
+  // Time the spoke was last updated
+  updateTime time
+}
+
+// ============================================================
+// Network Management
+// ============================================================
+
+// Google Cloud (GCP) Network Management
+//
+// Network Management configuration for the project. `connectivityTests` holds
+// the reachability tests defined against the project's network, each recording
+// whether a specific path is actually open according to the configuration Google
+// itself evaluates.
+private gcp.project.networkManagementService {
+  // Project ID
+  projectId string
+  // Connectivity tests defined in the project
+  connectivityTests() []gcp.project.networkManagementService.connectivityTest
+}
+
+// Network Management connectivity test
+//
+// Reachability test between two endpoints, evaluated by Google against the live
+// network configuration. Where a firewall or route review infers whether a path
+// is open, `reachabilityDetails` reports the answer Google's own analysis
+// reaches, including the trace of every rule and route the packet was matched
+// against. The `source` and `destination` fields describe the endpoints and
+// `protocol` the traffic tested. Selected by the full resource name.
+//
+// A test records the verdict as of `verifyTime`, so a stale test can describe a
+// path that has since changed; `bypassFirewallChecks` reports a test configured
+// to skip firewall evaluation, whose result says nothing about whether firewall
+// rules admit the traffic.
+private gcp.project.networkManagementService.connectivityTest @defaults("name result protocol") {
+  // Full resource name of the test
+  name string
+  // Human-readable display name of the test
+  displayName string
+  // Human-readable description of the test
+  description string
+  // Result of the most recent evaluation
+  //
+  // One of REACHABLE, UNREACHABLE, AMBIGUOUS, UNDETERMINED, or
+  // RESULT_UNSPECIFIED. AMBIGUOUS means at least one path reaches the
+  // destination and at least one does not.
+  result string
+  // Time the result was determined
+  //
+  // The verdict describes the configuration as of this time, not as of the
+  // query, so an old value means the test may no longer reflect the network.
+  verifyTime time
+  // IP protocol tested (e.g. TCP, UDP, ICMP)
+  protocol string
+  // Source endpoint of the test
+  //
+  // Holds whichever of `ipAddress`, `port`, `instance`, `forwardingRule`,
+  // `gkeMasterCluster`, `cloudSqlInstance`, `cloudFunction`, `appEngineVersion`,
+  // `cloudRunRevision`, `network`, `networkType`, `projectId`, and
+  // `redisInstance` identify the origin.
+  source dict
+  // Destination endpoint of the test
+  //
+  // Holds the same keys as `source`, identifying the target of the traffic.
+  destination dict
+  // Whether the test was configured to skip firewall evaluation
+  //
+  // When true the result reports routing reachability only and is not evidence
+  // that firewall rules admit the traffic.
+  bypassFirewallChecks bool
+  // Full evaluation detail of the most recent run
+  //
+  // Holds `result`, `verifyTime`, an `error` when the analysis could not
+  // complete, and `traces`: the step-by-step path the analysis followed,
+  // naming each firewall rule, route, and forwarding rule the packet was
+  // matched against. This is what explains a verdict.
+  reachabilityDetails dict
+  // Live-probe results, when the test was configured to send packets
+  //
+  // Holds `result`, `verifyTime`, `abortCause`, `sentProbeCount`,
+  // `successfulProbeCount`, `endpointInfo`, `probingLatency`, and
+  // `destinationEgressLocation`. Empty for a configuration-only test.
+  probingDetails dict
+  // Other projects the test traverses
+  relatedProjects []string
+  // User-assigned labels
+  labels map[string]string
+  // Time the test was created
+  createTime time
+  // Time the test was last updated
+  updateTime time
 }
 
 // ============================================================

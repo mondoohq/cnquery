@@ -61,6 +61,8 @@ const (
 	service_clouddomains        = "domains.googleapis.com"
 	service_cloudasset          = "cloudasset.googleapis.com"
 	service_pam                 = "privilegedaccessmanager.googleapis.com"
+	service_networkconnectivity = "networkconnectivity.googleapis.com"
+	service_networkmanagement   = "networkmanagement.googleapis.com"
 )
 
 func serviceName(name string) string {
