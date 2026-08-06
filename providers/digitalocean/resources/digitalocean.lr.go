@@ -712,6 +712,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.droplet.nextBackupWindowEnd": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetNextBackupWindowEnd()).ToDataRes(types.Time)
 	},
+	"digitalocean.droplet.backupPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetBackupPlan()).ToDataRes(types.String)
+	},
+	"digitalocean.droplet.backupWeekday": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetBackupWeekday()).ToDataRes(types.String)
+	},
+	"digitalocean.droplet.backupHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetBackupHour()).ToDataRes(types.Int)
+	},
+	"digitalocean.droplet.backupWindowLengthHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetBackupWindowLengthHours()).ToDataRes(types.Int)
+	},
+	"digitalocean.droplet.backupRetentionPeriodDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetBackupRetentionPeriodDays()).ToDataRes(types.Int)
+	},
 	"digitalocean.droplet.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetBackups()).ToDataRes(types.Array(types.Resource("digitalocean.image")))
 	},
@@ -3581,6 +3596,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.droplet.nextBackupWindowEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDroplet).NextBackupWindowEnd, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.droplet.backupPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).BackupPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.droplet.backupWeekday": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).BackupWeekday, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.droplet.backupHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).BackupHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.droplet.backupWindowLengthHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).BackupWindowLengthHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.droplet.backupRetentionPeriodDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).BackupRetentionPeriodDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"digitalocean.droplet.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8072,38 +8107,43 @@ type mqlDigitaloceanDroplet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDigitaloceanDropletInternal
-	Id                    plugin.TValue[int64]
-	Name                  plugin.TValue[string]
-	Memory                plugin.TValue[int64]
-	Vcpus                 plugin.TValue[int64]
-	Disk                  plugin.TValue[int64]
-	Region                plugin.TValue[string]
-	Size                  plugin.TValue[string]
-	DropletSize           plugin.TValue[*mqlDigitaloceanSize]
-	GpuPartitionMode      plugin.TValue[string]
-	Status                plugin.TValue[string]
-	Locked                plugin.TValue[bool]
-	CreatedAt             plugin.TValue[*time.Time]
-	PublicIpv4            plugin.TValue[string]
-	PrivateIpv4           plugin.TValue[string]
-	PublicIpv6            plugin.TValue[string]
-	Tags                  plugin.TValue[[]any]
-	VpcUuid               plugin.TValue[string]
-	Vpc                   plugin.TValue[*mqlDigitaloceanVpc]
-	Features              plugin.TValue[[]any]
-	BackupsEnabled        plugin.TValue[bool]
-	MonitoringEnabled     plugin.TValue[bool]
-	Image                 plugin.TValue[any]
-	BaseImage             plugin.TValue[*mqlDigitaloceanImage]
-	Firewalls             plugin.TValue[[]any]
-	MissingFirewall       plugin.TValue[bool]
-	Exposure              plugin.TValue[*mqlDigitaloceanNetworkExposure]
-	Volumes               plugin.TValue[[]any]
-	Kernel                plugin.TValue[any]
-	NextBackupWindowStart plugin.TValue[*time.Time]
-	NextBackupWindowEnd   plugin.TValue[*time.Time]
-	Backups               plugin.TValue[[]any]
-	Snapshots             plugin.TValue[[]any]
+	Id                        plugin.TValue[int64]
+	Name                      plugin.TValue[string]
+	Memory                    plugin.TValue[int64]
+	Vcpus                     plugin.TValue[int64]
+	Disk                      plugin.TValue[int64]
+	Region                    plugin.TValue[string]
+	Size                      plugin.TValue[string]
+	DropletSize               plugin.TValue[*mqlDigitaloceanSize]
+	GpuPartitionMode          plugin.TValue[string]
+	Status                    plugin.TValue[string]
+	Locked                    plugin.TValue[bool]
+	CreatedAt                 plugin.TValue[*time.Time]
+	PublicIpv4                plugin.TValue[string]
+	PrivateIpv4               plugin.TValue[string]
+	PublicIpv6                plugin.TValue[string]
+	Tags                      plugin.TValue[[]any]
+	VpcUuid                   plugin.TValue[string]
+	Vpc                       plugin.TValue[*mqlDigitaloceanVpc]
+	Features                  plugin.TValue[[]any]
+	BackupsEnabled            plugin.TValue[bool]
+	MonitoringEnabled         plugin.TValue[bool]
+	Image                     plugin.TValue[any]
+	BaseImage                 plugin.TValue[*mqlDigitaloceanImage]
+	Firewalls                 plugin.TValue[[]any]
+	MissingFirewall           plugin.TValue[bool]
+	Exposure                  plugin.TValue[*mqlDigitaloceanNetworkExposure]
+	Volumes                   plugin.TValue[[]any]
+	Kernel                    plugin.TValue[any]
+	NextBackupWindowStart     plugin.TValue[*time.Time]
+	NextBackupWindowEnd       plugin.TValue[*time.Time]
+	BackupPlan                plugin.TValue[string]
+	BackupWeekday             plugin.TValue[string]
+	BackupHour                plugin.TValue[int64]
+	BackupWindowLengthHours   plugin.TValue[int64]
+	BackupRetentionPeriodDays plugin.TValue[int64]
+	Backups                   plugin.TValue[[]any]
+	Snapshots                 plugin.TValue[[]any]
 }
 
 // createDigitaloceanDroplet creates a new instance of this resource
@@ -8335,6 +8375,36 @@ func (c *mqlDigitaloceanDroplet) GetNextBackupWindowStart() *plugin.TValue[*time
 
 func (c *mqlDigitaloceanDroplet) GetNextBackupWindowEnd() *plugin.TValue[*time.Time] {
 	return &c.NextBackupWindowEnd
+}
+
+func (c *mqlDigitaloceanDroplet) GetBackupPlan() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BackupPlan, func() (string, error) {
+		return c.backupPlan()
+	})
+}
+
+func (c *mqlDigitaloceanDroplet) GetBackupWeekday() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BackupWeekday, func() (string, error) {
+		return c.backupWeekday()
+	})
+}
+
+func (c *mqlDigitaloceanDroplet) GetBackupHour() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.BackupHour, func() (int64, error) {
+		return c.backupHour()
+	})
+}
+
+func (c *mqlDigitaloceanDroplet) GetBackupWindowLengthHours() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.BackupWindowLengthHours, func() (int64, error) {
+		return c.backupWindowLengthHours()
+	})
+}
+
+func (c *mqlDigitaloceanDroplet) GetBackupRetentionPeriodDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.BackupRetentionPeriodDays, func() (int64, error) {
+		return c.backupRetentionPeriodDays()
+	})
 }
 
 func (c *mqlDigitaloceanDroplet) GetBackups() *plugin.TValue[[]any] {

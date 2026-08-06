@@ -74,6 +74,14 @@ type mqlDigitaloceanInternal struct {
 	sizeIndexOnce sync.Once
 	sizeIndex     map[string]*mqlDigitaloceanSize
 	sizeIndexErr  error
+
+	// backupPolicyIndex maps droplet id to its automated-backup schedule.
+	// Droplets without a policy are absent from the map rather than
+	// present with a zero value, so callers can tell "no policy" from
+	// "policy with zero retention". See digitalocean_droplet_backup.go.
+	backupPolicyIndexOnce sync.Once
+	backupPolicyIndex     map[int64]dropletBackupPolicy
+	backupPolicyIndexErr  error
 }
 
 // partnerAttachmentByID resolves a partner attachment by its ID from the
