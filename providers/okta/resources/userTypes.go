@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
@@ -101,7 +102,7 @@ func initOktaUserType(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return nil, nil, err
 	}
 	if item == nil {
-		return nil, nil, nil
+		return nil, nil, fmt.Errorf("okta.userType with id %q not found", id)
 	}
 
 	entry, err := decodeOktaUserType(item)
