@@ -701,6 +701,18 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   availableIpAddressCount int
   // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
   internetGatewayBlockMode string
+  // Whether the subnet is a public subnet
+  //
+  // True when the subnet's effective route table sends a default route
+  // (`0.0.0.0/0` or `::/0`) to an internet gateway, which is what makes
+  // instances in it reachable from the internet rather than only from inside
+  // the VPC. The route must be active, so a blackholed route does not count.
+  // False when the subnet blocks internet gateway traffic through
+  // internetGatewayBlockMode, since block-bidirectional and block-ingress both
+  // stop inbound traffic regardless of the route. The effective route table is
+  // the one explicitly associated with the subnet, or the VPC main route table
+  // when the subnet has no explicit association.
+  isPublic() bool
   // Tags on the subnet
   tags map[string]string
   // Route table associated with this subnet
@@ -17680,6 +17692,15 @@ private aws.vpc.natgateway {
   arn() string
   // State of the NAT gateway (pending, failed, available, deleting, or deleted)
   state string
+  // Whether the gateway provides public or private connectivity
+  //
+  // Either `public`, meaning the gateway sends traffic to the internet through
+  // an internet gateway and carries an elastic IP, or `private`, meaning it
+  // only routes to other VPCs and on-premises networks and never reaches the
+  // internet. A private NAT gateway in a subnet that also has an internet
+  // gateway route is a configuration worth flagging, since the egress path is
+  // narrower than the subnet suggests.
+  connectivityType string
   // Tags for the NAT gateway
   tags map[string]string
   // VPC associated with the NAT gateway
@@ -18032,6 +18053,52 @@ private aws.ec2.transitgateway.routeTable @defaults("id state") {
   tags map[string]string
   // Region where the route table exists
   region string
+  // Routes in the route table
+  //
+  // Every destination the route table can forward to, static and propagated
+  // alike, with the attachments each destination resolves to. This is the
+  // reachability substrate for traffic crossing the transit gateway: a route
+  // here is what lets one attached VPC, VPN, or Direct Connect gateway reach
+  // another, so an unexpected destination is a lateral-movement path between
+  // networks that are otherwise separate.
+  routes() []aws.ec2.transitgateway.routeTable.route
+  // Attachments associated with the route table
+  //
+  // The attachments whose outbound traffic this route table controls. An
+  // attachment is associated with at most one route table, so this is the set
+  // of networks that resolve destinations through the routes above.
+  associatedAttachments() []aws.ec2.transitgateway.attachment
+  // Attachments whose routes propagate into the route table
+  //
+  // The attachments with propagation enabled, meaning their VPC CIDRs and
+  // learned prefixes are installed into this route table automatically.
+  // Attachments whose propagation is disabled are excluded, so this reflects
+  // what actually reaches the table rather than what is merely attached.
+  propagatingAttachments() []aws.ec2.transitgateway.attachment
+}
+
+// Route in an Amazon EC2 transit gateway route table
+//
+// A single destination in a transit gateway route table, and the attachments
+// traffic for that destination is forwarded to. The `type` field distinguishes
+// a route added by hand from one learned through propagation, and `state`
+// separates a live route from a blackhole route that silently discards
+// matching traffic.
+private aws.ec2.transitgateway.routeTable.route @defaults("destinationCidrBlock type state") {
+  // Unique ID for this route (route table ID + destination)
+  id string
+  // CIDR block used for the destination match
+  destinationCidrBlock string
+  // Managed prefix list used for the destination match
+  managedPrefixList() aws.ec2.managedPrefixList
+  // State of the route: pending, active, blackhole, deleting, or deleted
+  state string
+  // How the route was added: static or propagated
+  type string
+  // Attachments the route forwards matching traffic to
+  attachments() []aws.ec2.transitgateway.attachment
+  // ID of the route table announcement that created the route, empty if none
+  routeTableAnnouncementId string
 }
 
 // Amazon EC2 DHCP options set
