@@ -237,6 +237,7 @@ const (
 	ResourceAwsElbTargetgroupAttributes                                         string = "aws.elb.targetgroup.attributes"
 	ResourceAwsElbLoadbalancer                                                  string = "aws.elb.loadbalancer"
 	ResourceAwsNetworkExposure                                                  string = "aws.network.exposure"
+	ResourceAwsNetworkEffectiveIngress                                          string = "aws.network.effectiveIngress"
 	ResourceAwsElbListener                                                      string = "aws.elb.listener"
 	ResourceAwsElbListenerRule                                                  string = "aws.elb.listener.rule"
 	ResourceAwsElbLoadbalancerAttribute                                         string = "aws.elb.loadbalancer.attribute"
@@ -1856,6 +1857,10 @@ func init() {
 		"aws.network.exposure": {
 			// to override args, implement: initAwsNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsNetworkExposure,
+		},
+		"aws.network.effectiveIngress": {
+			// to override args, implement: initAwsNetworkEffectiveIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkEffectiveIngress,
 		},
 		"aws.elb.listener": {
 			// to override args, implement: initAwsElbListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11828,6 +11833,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup.ippermission")))
+	},
+	"aws.network.effectiveIngress.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetSource()).ToDataRes(types.String)
+	},
+	"aws.network.effectiveIngress.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.network.effectiveIngress.fromPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetFromPort()).ToDataRes(types.Int)
+	},
+	"aws.network.effectiveIngress.toPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetToPort()).ToDataRes(types.Int)
+	},
+	"aws.network.effectiveIngress.securityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.network.effectiveIngress.securityGroupRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetSecurityGroupRule()).ToDataRes(types.Resource("aws.ec2.securitygroup.ippermission"))
+	},
+	"aws.network.effectiveIngress.networkAclVerdict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetNetworkAclVerdict()).ToDataRes(types.String)
+	},
+	"aws.network.effectiveIngress.networkAclEntry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetNetworkAclEntry()).ToDataRes(types.Resource("aws.ec2.networkacl.entry"))
+	},
+	"aws.network.effectiveIngress.reachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkEffectiveIngress).GetReachable()).ToDataRes(types.Bool)
 	},
 	"aws.elb.listener.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetArn()).ToDataRes(types.String)
@@ -22941,6 +22973,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkacl.entry.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetIsPublic()).ToDataRes(types.Bool)
 	},
+	"aws.ec2.networkacl.entry.isShadowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclEntry).GetIsShadowed()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetId()).ToDataRes(types.String)
 	},
@@ -24435,6 +24470,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkinterface.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.ec2.networkinterface.effectiveIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetEffectiveIngress()).ToDataRes(types.Array(types.Resource("aws.network.effectiveIngress")))
+	},
 	"aws.ec2.networkinterface.ipv6Native": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetIpv6Native()).ToDataRes(types.Bool)
 	},
@@ -24788,6 +24826,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.securitygroup.isAttachedToNetworkInterface": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetIsAttachedToNetworkInterface()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.securitygroup.isUnused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Securitygroup).GetIsUnused()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.securitygroup.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
@@ -46060,6 +46101,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.network.effectiveIngress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.network.effectiveIngress.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.fromPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).FromPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.toPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).ToPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.securityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).SecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.securityGroupRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).SecurityGroupRule, ok = plugin.RawToTValue[*mqlAwsEc2SecuritygroupIppermission](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.networkAclVerdict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).NetworkAclVerdict, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.networkAclEntry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).NetworkAclEntry, ok = plugin.RawToTValue[*mqlAwsEc2NetworkaclEntry](v.Value, v.Error)
+		return
+	},
+	"aws.network.effectiveIngress.reachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkEffectiveIngress).Reachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.elb.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbListener).__id, ok = v.Value.(string)
 		return
@@ -62260,6 +62341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2NetworkaclEntry).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.networkacl.entry.isShadowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclEntry).IsShadowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2NetworkaclEntry).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -64428,6 +64513,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Networkinterface).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.networkinterface.effectiveIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).EffectiveIngress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.networkinterface.ipv6Native": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkinterface).Ipv6Native, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -64938,6 +65027,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.isAttachedToNetworkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Securitygroup).IsAttachedToNetworkInterface, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.isUnused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Securitygroup).IsUnused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -108395,6 +108488,90 @@ func (c *mqlAwsNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
 	return &c.OpenIngressRules
 }
 
+// mqlAwsNetworkEffectiveIngress for the aws.network.effectiveIngress resource
+type mqlAwsNetworkEffectiveIngress struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsNetworkEffectiveIngressInternal it will be used here
+	Source            plugin.TValue[string]
+	Protocol          plugin.TValue[string]
+	FromPort          plugin.TValue[int64]
+	ToPort            plugin.TValue[int64]
+	SecurityGroup     plugin.TValue[*mqlAwsEc2Securitygroup]
+	SecurityGroupRule plugin.TValue[*mqlAwsEc2SecuritygroupIppermission]
+	NetworkAclVerdict plugin.TValue[string]
+	NetworkAclEntry   plugin.TValue[*mqlAwsEc2NetworkaclEntry]
+	Reachable         plugin.TValue[bool]
+}
+
+// createAwsNetworkEffectiveIngress creates a new instance of this resource
+func createAwsNetworkEffectiveIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkEffectiveIngress{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.network.effectiveIngress", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) MqlName() string {
+	return "aws.network.effectiveIngress"
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetFromPort() *plugin.TValue[int64] {
+	return &c.FromPort
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetToPort() *plugin.TValue[int64] {
+	return &c.ToPort
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return &c.SecurityGroup
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetSecurityGroupRule() *plugin.TValue[*mqlAwsEc2SecuritygroupIppermission] {
+	return &c.SecurityGroupRule
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetNetworkAclVerdict() *plugin.TValue[string] {
+	return &c.NetworkAclVerdict
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetNetworkAclEntry() *plugin.TValue[*mqlAwsEc2NetworkaclEntry] {
+	return &c.NetworkAclEntry
+}
+
+func (c *mqlAwsNetworkEffectiveIngress) GetReachable() *plugin.TValue[bool] {
+	return &c.Reachable
+}
+
 // mqlAwsElbListener for the aws.elb.listener resource
 type mqlAwsElbListener struct {
 	MqlRuntime *plugin.Runtime
@@ -150055,7 +150232,7 @@ func (c *mqlAwsEc2NetworkaclAssociation) GetSubnet() *plugin.TValue[*mqlAwsVpcSu
 type mqlAwsEc2NetworkaclEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEc2NetworkaclEntryInternal it will be used here
+	mqlAwsEc2NetworkaclEntryInternal
 	Egress        plugin.TValue[bool]
 	RuleAction    plugin.TValue[string]
 	RuleNumber    plugin.TValue[int64]
@@ -150064,6 +150241,7 @@ type mqlAwsEc2NetworkaclEntry struct {
 	CidrBlock     plugin.TValue[string]
 	Ipv6CidrBlock plugin.TValue[string]
 	IsPublic      plugin.TValue[bool]
+	IsShadowed    plugin.TValue[bool]
 	Id            plugin.TValue[string]
 }
 
@@ -150147,6 +150325,12 @@ func (c *mqlAwsEc2NetworkaclEntry) GetIpv6CidrBlock() *plugin.TValue[string] {
 func (c *mqlAwsEc2NetworkaclEntry) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
+	})
+}
+
+func (c *mqlAwsEc2NetworkaclEntry) GetIsShadowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsShadowed, func() (bool, error) {
+		return c.isShadowed()
 	})
 }
 
@@ -155167,6 +155351,7 @@ type mqlAwsEc2Networkinterface struct {
 	Tags                plugin.TValue[map[string]any]
 	AvailabilityZone    plugin.TValue[string]
 	SecurityGroups      plugin.TValue[[]any]
+	EffectiveIngress    plugin.TValue[[]any]
 	Ipv6Native          plugin.TValue[bool]
 	MacAddress          plugin.TValue[string]
 	PrivateDnsName      plugin.TValue[string]
@@ -155298,6 +155483,22 @@ func (c *mqlAwsEc2Networkinterface) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEc2Networkinterface) GetEffectiveIngress() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveIngress, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "effectiveIngress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveIngress()
 	})
 }
 
@@ -156296,6 +156497,7 @@ type mqlAwsEc2Securitygroup struct {
 	Region                       plugin.TValue[string]
 	OwnerId                      plugin.TValue[string]
 	IsAttachedToNetworkInterface plugin.TValue[bool]
+	IsUnused                     plugin.TValue[bool]
 	NetworkInterfaces            plugin.TValue[[]any]
 	Instances                    plugin.TValue[[]any]
 	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
@@ -156424,6 +156626,12 @@ func (c *mqlAwsEc2Securitygroup) GetOwnerId() *plugin.TValue[string] {
 func (c *mqlAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsAttachedToNetworkInterface, func() (bool, error) {
 		return c.isAttachedToNetworkInterface()
+	})
+}
+
+func (c *mqlAwsEc2Securitygroup) GetIsUnused() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsUnused, func() (bool, error) {
+		return c.isUnused()
 	})
 }
 

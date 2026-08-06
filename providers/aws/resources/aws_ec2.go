@@ -467,6 +467,9 @@ func (a *mqlAwsEc2Networkacl) entries() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Back-reference so an entry can compare itself against its siblings,
+		// which is what shadowing depends on.
+		mqlAclEntry.(*mqlAwsEc2NetworkaclEntry).parentAcl = a
 		res = append(res, mqlAclEntry)
 	}
 
@@ -4514,39 +4517,46 @@ func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
 	return res.(*mqlAwsEc2InstanceExposure), nil
 }
 
-// naclAllProtocols is the network ACL protocol number meaning "all protocols".
-const naclAllProtocols = "-1"
-
 // naclIngressRule is the shape of a network ACL inbound rule needed to decide
-// public reachability. Protocol and port range are part of that decision:
-// network ACLs are evaluated per packet, so a rule only shadows a
+// public reachability. Protocol, source range, and port range are all part of
+// that decision: network ACLs are evaluated per packet, so a rule only shadows a
 // higher-numbered rule for the traffic it actually matches.
 type naclIngressRule struct {
 	ruleNumber int
 	allow      bool
 	public     bool   // source is 0.0.0.0/0 or ::/0
 	protocol   string // "-1" means all protocols
-	fromPort   int64
-	toPort     int64
+	// cidr is the rule's source range. An empty value means the source was not
+	// recorded and the rule is treated as matching any source.
+	cidr     string
+	fromPort int64
+	toPort   int64
 	// allPorts is true when the rule carries no port range, which for a network
 	// ACL means every port for the protocol.
 	allPorts bool
 }
 
+// ports returns the rule's port span.
+func (r naclIngressRule) ports() portRange {
+	if r.allPorts {
+		return portRange{all: true}
+	}
+	return newPortRange(r.fromPort, r.toPort)
+}
+
 // covers reports whether r matches every packet that other matches, i.e.
 // whether a lower-numbered r fully shadows other.
+//
+// The source range is part of this: an IPv4 and an IPv6 rule never match the
+// same packet, so a deny on 0.0.0.0/0 does not shadow an allow on ::/0.
 func (r naclIngressRule) covers(other naclIngressRule) bool {
-	if r.protocol != naclAllProtocols && r.protocol != other.protocol {
+	if !protocolCovers(r.protocol, other.protocol) {
 		return false
 	}
-	if r.allPorts {
-		return true
-	}
-	if other.allPorts {
-		// other spans every port; a bounded range cannot shadow it
+	if !cidrCovers(r.cidr, other.cidr) {
 		return false
 	}
-	return r.fromPort <= other.fromPort && r.toPort >= other.toPort
+	return r.ports().covers(other.ports())
 }
 
 // naclAllowsPublicIngress reports whether a network ACL permits inbound traffic
@@ -4606,21 +4616,7 @@ func networkAclAllowsPublicIngress(nacl *mqlAwsEc2Networkacl) (bool, error) {
 		if !ok || entry.Egress.Data {
 			continue
 		}
-		rule := naclIngressRule{
-			ruleNumber: int(entry.RuleNumber.Data),
-			allow:      strings.EqualFold(entry.RuleAction.Data, "allow"),
-			public:     cidrEntryIsPublic(entry.CidrBlock.Data, entry.Ipv6CidrBlock.Data),
-			protocol:   entry.Protocol.Data,
-			allPorts:   true,
-		}
-		// portRange is populated as a creation arg, so this reads cached data
-		// rather than triggering a fetch. Its absence means "all ports".
-		if pr := entry.PortRange.Data; pr != nil {
-			rule.fromPort = pr.From.Data
-			rule.toPort = pr.To.Data
-			rule.allPorts = false
-		}
-		rules = append(rules, rule)
+		rules = append(rules, naclEntryRule(entry))
 	}
 	return naclAllowsPublicIngress(rules), nil
 }

@@ -6689,6 +6689,49 @@ private aws.network.exposure @defaults("internetReachable publiclyAccessible") {
   openIngressRules []aws.ec2.securitygroup.ippermission
 }
 
+// Inbound reachability of a network interface after security group and network ACL evaluation
+//
+// One security group ingress rule, narrowed to a single source range, paired
+// with the subnet network ACL's decision on that traffic. A security group can
+// permit traffic that the network ACL then drops, so neither resource alone
+// answers whether a port is reachable. The `reachable` field combines both, and
+// `networkAclVerdict` explains the network ACL half of the decision.
+private aws.network.effectiveIngress @defaults("reachable protocol fromPort toPort source") {
+  // Source range the security group rule permits
+  source string
+  // IP protocol the rule covers: tcp, udp, icmp, icmpv6, a protocol number, or -1 for all protocols
+  protocol string
+  // Start of the port range, -1 when the protocol carries no port concept
+  fromPort int
+  // End of the port range, -1 when the protocol carries no port concept
+  toPort int
+  // Security group whose ingress rule permits this traffic
+  securityGroup aws.ec2.securitygroup
+  // Security group ingress rule that permits this traffic
+  securityGroupRule aws.ec2.securitygroup.ippermission
+  // Network ACL decision on this traffic
+  //
+  // One of `allow` (the first matching inbound entry permits the whole range),
+  // `deny` (the first matching entry denies the whole range, or nothing matches
+  // and the implicit final deny applies), `partial` (the first matching entry
+  // covers only part of the range, so the remainder falls through to
+  // later entries and needs reading by hand), or `unknown` (the network ACL
+  // could not be read).
+  networkAclVerdict string
+  // First network ACL inbound entry matching this traffic
+  //
+  // Null when no entry matches, so the implicit final deny applies, and when the
+  // network ACL could not be read.
+  networkAclEntry aws.ec2.networkacl.entry
+  // Whether the traffic can reach the interface
+  //
+  // True when a security group permits the traffic and the network ACL does not
+  // deny all of it. A `partial` verdict counts as reachable, because some of the
+  // range does get through. An `unknown` verdict also counts as reachable, so a
+  // failed network ACL read never reports an interface as protected.
+  reachable bool
+}
+
 // AWS ELB listener
 private aws.elb.listener @defaults("arn port protocol") {
   // ARN for the listener
@@ -17835,6 +17878,14 @@ private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portR
   // True when the entry matches every IPv4 address (`0.0.0.0/0`) or every IPv6
   // address (`::/0`).
   isPublic() bool
+  // Whether an earlier entry makes this one unreachable
+  //
+  // True when a lower-numbered entry in the same direction matches every packet
+  // this entry would match, so this entry can never be the first match and has
+  // no effect on traffic. Rule number alone does not establish this: a narrow
+  // deny in front of a broad allow shadows only its own protocol, source range,
+  // and ports, leaving the rest of the allow in force.
+  isShadowed() bool
   // ID for the ACL entry rule
   id string
 }
@@ -19171,6 +19222,15 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   availabilityZone string
   // Security groups associated with the network interface
   securityGroups() []aws.ec2.securitygroup
+  // Inbound traffic that reaches the interface after both filters are applied
+  //
+  // Every ingress rule across the attached security groups, expanded to one
+  // entry per source range, with the subnet network ACL's decision on it. This
+  // is what tells a world-open security group rule that a network ACL blocks
+  // apart from one that is genuinely reachable. Rules whose source is a
+  // security group reference or a managed prefix list are not included, since
+  // neither resolves to a source range a network ACL can be evaluated against.
+  effectiveIngress() []aws.network.effectiveIngress
   // Whether this is an IPv6 only network interface
   ipv6Native bool
   // MAC address of the network interface
@@ -19470,6 +19530,14 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   ownerId string
   // Whether the security group is attached to Amazon Elastic Compute Cloud
   isAttachedToNetworkInterface() bool
+  // Whether nothing depends on the security group
+  //
+  // True when the group is attached to no network interface and no other
+  // security group in the same region references it from a rule. Attachment
+  // alone does not settle this: a group with no interfaces of its own is still
+  // load-bearing when another group's rule allows traffic from it, and deleting
+  // it would change that group's meaning.
+  isUnused() bool
   // Network interfaces this security group is attached to
   networkInterfaces() []aws.ec2.networkinterface
   // EC2 instances this security group is attached to, resolved through their network interfaces
