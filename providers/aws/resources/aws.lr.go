@@ -8032,6 +8032,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.notebookinstance.details": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetDetails()).ToDataRes(types.Resource("aws.sagemaker.notebookinstancedetails"))
 	},
+	"aws.sagemaker.notebookinstance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.sagemaker.notebookinstance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetRegion()).ToDataRes(types.String)
 	},
@@ -14127,6 +14130,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.service.networkConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetNetworkConfiguration()).ToDataRes(types.Resource("aws.ecs.service.networkConfiguration"))
+	},
+	"aws.ecs.service.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.ecs.service.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -25339,6 +25345,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.publicAccessCidrs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetPublicAccessCidrs()).ToDataRes(types.Array(types.String))
 	},
+	"aws.eks.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.eks.cluster.accessEntries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAccessEntries()).ToDataRes(types.Array(types.Resource("aws.eks.accessEntry")))
 	},
@@ -27669,6 +27678,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apprunner.service.isPubliclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApprunnerService).GetIsPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.apprunner.service.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.apprunner.service.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApprunnerService).GetIpAddressType()).ToDataRes(types.String)
@@ -40625,6 +40637,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerNotebookinstance).Details, ok = plugin.RawToTValue[*mqlAwsSagemakerNotebookinstancedetails](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.notebookinstance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -49487,6 +49503,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.service.networkConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsService).NetworkConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsServiceNetworkConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.service.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65817,6 +65837,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksCluster).PublicAccessCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.eks.cluster.accessEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).AccessEntries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -69143,6 +69167,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apprunner.service.isPubliclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApprunnerService).IsPubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.apprunner.service.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94271,6 +94299,7 @@ type mqlAwsSagemakerNotebookinstance struct {
 	Arn                        plugin.TValue[string]
 	Name                       plugin.TValue[string]
 	Details                    plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
+	Exposure                   plugin.TValue[*mqlAwsNetworkExposure]
 	Region                     plugin.TValue[string]
 	Tags                       plugin.TValue[map[string]any]
 	CloudformationStack        plugin.TValue[*mqlAwsCloudformationStack]
@@ -94343,6 +94372,22 @@ func (c *mqlAwsSagemakerNotebookinstance) GetDetails() *plugin.TValue[*mqlAwsSag
 		}
 
 		return c.details()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.notebookinstance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -116991,6 +117036,7 @@ type mqlAwsEcsService struct {
 	LaunchType                    plugin.TValue[string]
 	DeploymentConfiguration       plugin.TValue[*mqlAwsEcsServiceDeploymentConfiguration]
 	NetworkConfiguration          plugin.TValue[*mqlAwsEcsServiceNetworkConfiguration]
+	Exposure                      plugin.TValue[*mqlAwsNetworkExposure]
 	Tags                          plugin.TValue[map[string]any]
 	CreatedAt                     plugin.TValue[*time.Time]
 	CreatedBy                     plugin.TValue[string]
@@ -117142,6 +117188,22 @@ func (c *mqlAwsEcsService) GetNetworkConfiguration() *plugin.TValue[*mqlAwsEcsSe
 		}
 
 		return c.networkConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsService) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -158570,6 +158632,7 @@ type mqlAwsEksCluster struct {
 	EndpointPublicAccess    plugin.TValue[bool]
 	EndpointPrivateAccess   plugin.TValue[bool]
 	PublicAccessCidrs       plugin.TValue[[]any]
+	Exposure                plugin.TValue[*mqlAwsNetworkExposure]
 	AccessEntries           plugin.TValue[[]any]
 	FargateProfiles         plugin.TValue[[]any]
 	PodIdentityAssociations plugin.TValue[[]any]
@@ -158829,6 +158892,22 @@ func (c *mqlAwsEksCluster) GetEndpointPrivateAccess() *plugin.TValue[bool] {
 func (c *mqlAwsEksCluster) GetPublicAccessCidrs() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.PublicAccessCidrs, func() ([]any, error) {
 		return c.publicAccessCidrs()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -166714,6 +166793,7 @@ type mqlAwsApprunnerService struct {
 	EgressType                 plugin.TValue[string]
 	VpcConnector               plugin.TValue[*mqlAwsApprunnerVpcConnector]
 	IsPubliclyAccessible       plugin.TValue[bool]
+	Exposure                   plugin.TValue[*mqlAwsNetworkExposure]
 	IpAddressType              plugin.TValue[string]
 	ObservabilityConfiguration plugin.TValue[*mqlAwsApprunnerObservabilityConfiguration]
 	AutoScalingConfiguration   plugin.TValue[*mqlAwsApprunnerAutoScalingConfiguration]
@@ -166861,6 +166941,22 @@ func (c *mqlAwsApprunnerService) GetVpcConnector() *plugin.TValue[*mqlAwsApprunn
 func (c *mqlAwsApprunnerService) GetIsPubliclyAccessible() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPubliclyAccessible, func() (bool, error) {
 		return c.isPubliclyAccessible()
+	})
+}
+
+func (c *mqlAwsApprunnerService) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.service", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
