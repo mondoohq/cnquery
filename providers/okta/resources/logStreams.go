@@ -34,7 +34,7 @@ func (o *mqlOkta) logStreams() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.LogStreamAPI.ListLogStreams(ctx).Execute()
+	slice, resp, err := client.LogStreamAPI.ListLogStreams(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}

@@ -147,7 +147,7 @@ func (o *mqlOktaPolicy) id() (string, error) {
 	return "okta.policy/" + o.Id.Data, o.Id.Error
 }
 
-func (o mqlOktaPolicy) rules() ([]any, error) {
+func (o *mqlOktaPolicy) rules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 

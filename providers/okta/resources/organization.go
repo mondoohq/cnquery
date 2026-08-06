@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -31,6 +33,9 @@ func initOktaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	settings, _, err := client.OrgSettingAPI.GetOrgSettings(ctx).Execute()
 	if err != nil {
 		return nil, nil, err
+	}
+	if settings == nil {
+		return nil, nil, errors.New("failed to read Okta org settings: empty response")
 	}
 
 	args["id"] = llx.StringData(oktaStr(settings.Id))
@@ -72,27 +77,58 @@ func (o *mqlOktaOrganization) optOutCommunicationEmails() (bool, error) {
 }
 
 func (o *mqlOktaOrganization) billingContact() (*mqlOktaUser, error) {
-	return o.contactUser("BILLING")
+	usr, err := o.contactUser("BILLING")
+	if err != nil {
+		return nil, err
+	}
+	if usr == nil {
+		o.BillingContact.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return usr, nil
 }
 
 func (o *mqlOktaOrganization) technicalContact() (*mqlOktaUser, error) {
-	return o.contactUser("TECHNICAL")
+	usr, err := o.contactUser("TECHNICAL")
+	if err != nil {
+		return nil, err
+	}
+	if usr == nil {
+		o.TechnicalContact.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return usr, nil
 }
 
+// contactUser resolves the okta.user behind one of the org's contact slots.
+// Designating a contact is optional: Okta answers 404 when the slot is empty
+// and can answer 200 with no user id at all. Both mean "no contact", reported
+// as a null field rather than failing the whole okta.organization query.
 func (o *mqlOktaOrganization) contactUser(contactType string) (*mqlOktaUser, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
 	ctx := context.Background()
-	contactUser, _, err := client.OrgSettingAPI.GetOrgContactUser(ctx, contactType).Execute()
+	contact, resp, err := client.OrgSettingAPI.GetOrgContactUser(ctx, contactType).Execute()
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
-	uid := oktaStr(contactUser.UserId)
+	if contact == nil {
+		return nil, nil
+	}
+
+	uid := oktaStr(contact.UserId)
+	if uid == "" {
+		return nil, nil
+	}
 
 	usr, _, err := client.UserAPI.GetUser(ctx, uid).Execute()
 	if err != nil {
 		return nil, err
+	}
+	if usr == nil {
+		return nil, nil
 	}
 
 	return newMqlOktaUser(o.MqlRuntime, usr)

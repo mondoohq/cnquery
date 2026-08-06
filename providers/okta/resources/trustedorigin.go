@@ -79,5 +79,5 @@ func newMqlOktaTrustedOrigin(runtime *plugin.Runtime, entry *okta.TrustedOrigin)
 }
 
 func (o *mqlOktaTrustedOrigin) id() (string, error) {
-	return "okta.trustedOriogin/" + o.Id.Data, o.Id.Error
+	return "okta.trustedOrigin/" + o.Id.Data, o.Id.Error
 }
