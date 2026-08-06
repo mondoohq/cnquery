@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -254,11 +255,12 @@ func (a *mqlAwsEc2ApplicationStatusCheckStatus) instance() (*mqlAwsEc2Instance, 
 		a.Instance.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	// initAwsEc2Instance resolves by arn only, so build it from the instance id
+	// rather than passing the id through.
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	instanceArn := fmt.Sprintf(ec2InstanceArnPattern, a.cacheRegion, conn.AccountId(), a.cacheInstanceId)
 	mqlInstance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
-		map[string]*llx.RawData{
-			"instanceId": llx.StringData(a.cacheInstanceId),
-			"region":     llx.StringData(a.cacheRegion),
-		})
+		map[string]*llx.RawData{"arn": llx.StringData(instanceArn)})
 	if err != nil {
 		return nil, err
 	}
