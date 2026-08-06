@@ -570,6 +570,9 @@ func (r *mqlStackitSecretsManagerInstance) users() ([]any, error) {
 	for i := range users {
 		u := &users[i]
 		args := map[string]*llx.RawData{
+			// the user id is only unique within its instance, so the cache key
+			// has to carry the instance it belongs to
+			"__id":        llx.StringData(qualifiedId("stackit.secretsManager.user", r.Id.Data, u.GetId())),
 			"id":          llx.StringData(u.GetId()),
 			"username":    llx.StringData(u.GetUsername()),
 			"description": llx.StringData(u.GetDescription()),
@@ -585,10 +588,6 @@ func (r *mqlStackitSecretsManagerInstance) users() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
-}
-
-func (r *mqlStackitSecretsManagerUser) id() (string, error) {
-	return "stackit.secretsManager.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
 }
 
 func (r *mqlStackitSecretsManagerUser) instance() (*mqlStackitSecretsManagerInstance, error) {
@@ -849,6 +848,9 @@ func (r *mqlStackitPostgresFlexInstance) users() ([]any, error) {
 	for i := range items {
 		u := &items[i]
 		res, err := CreateResource(r.MqlRuntime, "stackit.postgresFlex.instance.user", map[string]*llx.RawData{
+			// the user id is only unique within its instance, so the cache key
+			// has to carry the instance it belongs to
+			"__id":     llx.StringData(qualifiedId("stackit.postgresFlex.instance.user", r.Id.Data, u.GetId())),
 			"id":       llx.StringData(u.GetId()),
 			"username": llx.StringData(u.GetUsername()),
 		})
@@ -861,10 +863,6 @@ func (r *mqlStackitPostgresFlexInstance) users() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
-}
-
-func (r *mqlStackitPostgresFlexInstanceUser) id() (string, error) {
-	return "stackit.postgresFlex.instance.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
 }
 
 func (r *mqlStackitPostgresFlexInstanceUser) fetchDetail() (*postgresflex.UserResponse, error) {
@@ -945,6 +943,9 @@ func (r *mqlStackitMongoDbFlexInstance) users() ([]any, error) {
 	for i := range items {
 		u := &items[i]
 		res, err := CreateResource(r.MqlRuntime, "stackit.mongoDbFlex.instance.user", map[string]*llx.RawData{
+			// the user id is only unique within its instance, so the cache key
+			// has to carry the instance it belongs to
+			"__id":     llx.StringData(qualifiedId("stackit.mongoDbFlex.instance.user", r.Id.Data, u.GetId())),
 			"id":       llx.StringData(u.GetId()),
 			"username": llx.StringData(u.GetUsername()),
 		})
@@ -957,10 +958,6 @@ func (r *mqlStackitMongoDbFlexInstance) users() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
-}
-
-func (r *mqlStackitMongoDbFlexInstanceUser) id() (string, error) {
-	return "stackit.mongoDbFlex.instance.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
 }
 
 func (r *mqlStackitMongoDbFlexInstanceUser) fetchDetail() (*mongodbflex.InstanceResponseUser, error) {
@@ -1049,6 +1046,9 @@ func (r *mqlStackitSqlServerFlexInstance) users() ([]any, error) {
 	for i := range items {
 		u := &items[i]
 		res, err := CreateResource(r.MqlRuntime, "stackit.sqlServerFlex.instance.user", map[string]*llx.RawData{
+			// the user id is only unique within its instance, so the cache key
+			// has to carry the instance it belongs to
+			"__id":     llx.StringData(qualifiedId("stackit.sqlServerFlex.instance.user", r.Id.Data, u.GetId())),
 			"id":       llx.StringData(u.GetId()),
 			"username": llx.StringData(u.GetUsername()),
 		})
@@ -1061,10 +1061,6 @@ func (r *mqlStackitSqlServerFlexInstance) users() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
-}
-
-func (r *mqlStackitSqlServerFlexInstanceUser) id() (string, error) {
-	return "stackit.sqlServerFlex.instance.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
 }
 
 // fetchDetail loads the user record. The SQLServer Flex response model also

@@ -175,7 +175,17 @@ func (r *mqlStackitServiceAccount) federatedIdentityProviders() ([]any, error) {
 			})
 		}
 
+		// the SDK marks the id optional, so fall back to the name, which is
+		// unique per service account
+		key := fip.GetId()
+		if key == "" {
+			key = fip.GetName()
+		}
+
 		args := map[string]*llx.RawData{
+			// the provider is only unique within its service account, so the
+			// cache key has to carry the account it belongs to
+			"__id":       llx.StringData(qualifiedId("stackit.serviceAccount.federatedIdentityProvider", r.Email.Data, key)),
 			"id":         llx.StringData(fip.GetId()),
 			"name":       llx.StringData(fip.GetName()),
 			"issuer":     llx.StringData(fip.GetIssuer()),
@@ -193,17 +203,6 @@ func (r *mqlStackitServiceAccount) federatedIdentityProviders() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
-}
-
-// id qualifies the provider UUID with the service account it belongs to. The
-// SDK marks the id optional, so fall back to the name, which is unique per
-// service account.
-func (r *mqlStackitServiceAccountFederatedIdentityProvider) id() (string, error) {
-	key := r.Id.Data
-	if key == "" {
-		key = r.Name.Data
-	}
-	return "stackit.serviceAccount.federatedIdentityProvider/" + r.cacheServiceAccountEmail + "/" + key, nil
 }
 
 func (r *mqlStackitServiceAccountFederatedIdentityProvider) serviceAccount() (*mqlStackitServiceAccount, error) {

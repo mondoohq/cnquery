@@ -11723,12 +11723,7 @@ func createStackitPostgresFlexInstanceUser(runtime *plugin.Runtime, args map[str
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.postgresFlex.instance.user", res.__id)
@@ -11997,12 +11992,7 @@ func createStackitMongoDbFlexInstanceUser(runtime *plugin.Runtime, args map[stri
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.mongoDbFlex.instance.user", res.__id)
@@ -12272,12 +12262,7 @@ func createStackitSqlServerFlexInstanceUser(runtime *plugin.Runtime, args map[st
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.sqlServerFlex.instance.user", res.__id)
@@ -13436,12 +13421,7 @@ func createStackitSecretsManagerUser(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.secretsManager.user", res.__id)
@@ -14483,12 +14463,7 @@ func createStackitServiceAccountFederatedIdentityProvider(runtime *plugin.Runtim
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.serviceAccount.federatedIdentityProvider", res.__id)
@@ -15506,12 +15481,7 @@ func createStackitKmsWrappingKey(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("stackit.kms.wrappingKey", res.__id)

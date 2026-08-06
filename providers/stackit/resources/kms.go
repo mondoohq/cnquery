@@ -212,7 +212,16 @@ func (r *mqlStackitKmsKeyRing) wrappingKeys() ([]any, error) {
 		wk := &items[i]
 		createdAt, ok1 := wk.GetCreatedAtOk()
 		expiresAt, ok2 := wk.GetExpiresAtOk()
+		// the response carries the key ring, but the listing is already scoped
+		// to one, so fall back to it rather than lose the qualifier
+		keyRingId := wk.GetKeyRingId()
+		if keyRingId == "" {
+			keyRingId = r.Id.Data
+		}
 		args := map[string]*llx.RawData{
+			// the wrapping key id is only unique within its key ring, so the
+			// cache key has to carry the ring it belongs to
+			"__id":        llx.StringData(qualifiedId("stackit.kms.wrappingKey", keyRingId, wk.GetId())),
 			"id":          llx.StringData(wk.GetId()),
 			"displayName": llx.StringData(wk.GetDisplayName()),
 			"description": llx.StringData(wk.GetDescription()),
@@ -230,15 +239,11 @@ func (r *mqlStackitKmsKeyRing) wrappingKeys() ([]any, error) {
 			return nil, err
 		}
 		if mwk, ok := res.(*mqlStackitKmsWrappingKey); ok {
-			mwk.cacheKeyRingId = wk.GetKeyRingId()
+			mwk.cacheKeyRingId = keyRingId
 		}
 		out = append(out, res)
 	}
 	return out, nil
-}
-
-func (r *mqlStackitKmsWrappingKey) id() (string, error) {
-	return "stackit.kms.wrappingKey/" + r.cacheKeyRingId + "/" + r.Id.Data, nil
 }
 
 func (r *mqlStackitKmsWrappingKey) keyRing() (*mqlStackitKmsKeyRing, error) {

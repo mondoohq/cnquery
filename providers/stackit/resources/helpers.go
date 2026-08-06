@@ -256,6 +256,16 @@ func markNull[T any](field *plugin.TValue[*T]) (*T, error) {
 	return nil, nil
 }
 
+// qualifiedId builds the cache key for a resource whose own id is only unique
+// within its parent, such as a database user inside an instance or a wrapping
+// key inside a key ring. Pass the result as the "__id" argument to
+// CreateResource: an id() method cannot do this job, because it runs inside
+// CreateResource, before the parent can be recorded on the returned resource,
+// and would silently produce the same key for every parent.
+func qualifiedId(resource, parent, id string) string {
+	return resource + "/" + parent + "/" + id
+}
+
 // idArg pulls a single string arg out of an init args map.
 func idArg(args map[string]*llx.RawData, key string) (string, bool) {
 	v, ok := args[key]
