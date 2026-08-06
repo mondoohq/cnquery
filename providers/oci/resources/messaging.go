@@ -1,0 +1,646 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"sync"
+
+	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/oracle/oci-go-sdk/v65/managedkafka"
+	"github.com/oracle/oci-go-sdk/v65/queue"
+	"github.com/oracle/oci-go-sdk/v65/streaming"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+// ----- Streaming -----
+
+func (o *mqlOciStreaming) id() (string, error) {
+	return "oci.streaming", nil
+}
+
+func (o *mqlOciStreaming) streams() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	regions, err := ociRegionsFor(o.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	return ociRunCompartmentRegionPool(conn, regions,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			client, err := conn.StreamAdminClient(region)
+			if err != nil {
+				return nil, err
+			}
+
+			streams := []streaming.StreamSummary{}
+			var page *string
+			for {
+				response, err := client.ListStreams(ctx, streaming.ListStreamsRequest{
+					CompartmentId: common.String(compartmentID),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				streams = append(streams, response.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			res := make([]any, 0, len(streams))
+			for i := range streams {
+				s := streams[i]
+
+				mqlStream, err := CreateResource(o.MqlRuntime, "oci.streaming.stream", map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(s.Id),
+					"name":             llx.StringDataPtr(s.Name),
+					"partitions":       llx.IntDataDefault(s.Partitions, 0),
+					"messagesEndpoint": llx.StringDataPtr(s.MessagesEndpoint),
+					"state":            llx.StringData(string(s.LifecycleState)),
+					"created":          sdkTimeData(s.TimeCreated),
+					"freeformTags":     llx.MapData(strMapToAny(s.FreeformTags), types.String),
+					"definedTags":      llx.MapData(definedTagsToAny(s.DefinedTags), types.Any),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlStreamTyped := mqlStream.(*mqlOciStreamingStream)
+				mqlStreamTyped.cacheCompartmentId = stringValue(s.CompartmentId)
+				mqlStreamTyped.cacheStreamPoolId = stringValue(s.StreamPoolId)
+				res = append(res, mqlStreamTyped)
+			}
+
+			return res, nil
+		})
+}
+
+func (o *mqlOciStreaming) streamPools() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	regions, err := ociRegionsFor(o.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	return ociRunCompartmentRegionPool(conn, regions,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			client, err := conn.StreamAdminClient(region)
+			if err != nil {
+				return nil, err
+			}
+
+			pools := []streaming.StreamPoolSummary{}
+			var page *string
+			for {
+				response, err := client.ListStreamPools(ctx, streaming.ListStreamPoolsRequest{
+					CompartmentId: common.String(compartmentID),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				pools = append(pools, response.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			res := make([]any, 0, len(pools))
+			for i := range pools {
+				p := pools[i]
+
+				mqlPool, err := CreateResource(o.MqlRuntime, "oci.streaming.streamPool", map[string]*llx.RawData{
+					"id":                 llx.StringDataPtr(p.Id),
+					"name":               llx.StringDataPtr(p.Name),
+					"isPrivate":          llx.BoolData(boolValue(p.IsPrivate)),
+					"securityAttributes": llx.MapData(definedTagsToAny(p.SecurityAttributes), types.Dict),
+					"state":              llx.StringData(string(p.LifecycleState)),
+					"created":            sdkTimeData(p.TimeCreated),
+					"freeformTags":       llx.MapData(strMapToAny(p.FreeformTags), types.String),
+					"definedTags":        llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlPoolTyped := mqlPool.(*mqlOciStreamingStreamPool)
+				mqlPoolTyped.cacheCompartmentId = stringValue(p.CompartmentId)
+				mqlPoolTyped.cacheRegion = region
+				res = append(res, mqlPoolTyped)
+			}
+
+			return res, nil
+		})
+}
+
+type mqlOciStreamingStreamInternal struct {
+	cacheCompartmentId string
+	cacheStreamPoolId  string
+}
+
+func (o *mqlOciStreamingStream) id() (string, error) {
+	return "oci.streaming.stream/" + o.Id.Data, nil
+}
+
+func (o *mqlOciStreamingStream) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciStreamingStream) streamPool() (*mqlOciStreamingStreamPool, error) {
+	if o.cacheStreamPoolId == "" {
+		o.StreamPool.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.streaming.streamPool", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheStreamPoolId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciStreamingStreamPool), nil
+}
+
+// The pool listing reports only isPrivate and lifecycle. Encryption, the
+// private-endpoint placement and the Kafka settings are detail-only, so they
+// share one fetch.
+type mqlOciStreamingStreamPoolInternal struct {
+	cacheCompartmentId string
+	cacheRegion        string
+
+	detailLock    sync.Mutex
+	detailFetched bool
+	detail        *streaming.StreamPool
+}
+
+func (o *mqlOciStreamingStreamPool) id() (string, error) {
+	return "oci.streaming.streamPool/" + o.Id.Data, nil
+}
+
+func (o *mqlOciStreamingStreamPool) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
+	o.detailLock.Lock()
+	defer o.detailLock.Unlock()
+	if o.detailFetched {
+		return o.detail, nil
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	client, err := conn.StreamAdminClient(o.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetStreamPool(context.Background(), streaming.GetStreamPoolRequest{
+		StreamPoolId: common.String(o.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	o.detail = &response.StreamPool
+	o.detailFetched = true
+	return o.detail, nil
+}
+
+func (o *mqlOciStreamingStreamPool) endpointFqdn() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	return stringValue(detail.EndpointFqdn), nil
+}
+
+func (o *mqlOciStreamingStreamPool) subnet() (*mqlOciNetworkSubnet, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail.PrivateEndpointSettings == nil {
+		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveOciSubnet(o.MqlRuntime, stringValue(detail.PrivateEndpointSettings.SubnetId), &o.Subnet)
+}
+
+func (o *mqlOciStreamingStreamPool) securityGroups() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail.PrivateEndpointSettings == nil {
+		return []any{}, nil
+	}
+	return resolveOciSecurityGroups(o.MqlRuntime, stringsToAny(detail.PrivateEndpointSettings.NsgIds))
+}
+
+func (o *mqlOciStreamingStreamPool) privateEndpointIp() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.PrivateEndpointSettings == nil {
+		return "", nil
+	}
+	return stringValue(detail.PrivateEndpointSettings.PrivateEndpointIp), nil
+}
+
+func (o *mqlOciStreamingStreamPool) encryptionKey() (*mqlOciKmsKey, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	return resolveOciKmsKey(o.MqlRuntime, ociCustomEncryptionKeyId(detail.CustomEncryptionKey), &o.EncryptionKey)
+}
+
+func (o *mqlOciStreamingStreamPool) encryptionKeyState() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.CustomEncryptionKey == nil {
+		return string(streaming.CustomEncryptionKeyKeyStateNone), nil
+	}
+	return string(detail.CustomEncryptionKey.KeyState), nil
+}
+
+func (o *mqlOciStreamingStreamPool) kafkaSettings() (any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail.KafkaSettings == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(detail.KafkaSettings)
+}
+
+// ociCustomEncryptionKeyId pulls the KMS key OCID out of a stream pool's
+// encryption block. A NONE key state means Oracle-managed encryption, which
+// carries no customer key to resolve.
+func ociCustomEncryptionKeyId(key *streaming.CustomEncryptionKey) string {
+	if key == nil {
+		return ""
+	}
+	return stringValue(key.KmsKeyId)
+}
+
+// ----- Queue -----
+
+func (o *mqlOciQueue) id() (string, error) {
+	return "oci.queue", nil
+}
+
+func (o *mqlOciQueue) queues() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	regions, err := ociRegionsFor(o.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	return ociRunCompartmentRegionPool(conn, regions,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			client, err := conn.QueueAdminClient(region)
+			if err != nil {
+				return nil, err
+			}
+
+			queues := []queue.QueueSummary{}
+			var page *string
+			for {
+				response, err := client.ListQueues(ctx, queue.ListQueuesRequest{
+					CompartmentId: common.String(compartmentID),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				queues = append(queues, response.QueueCollection.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			res := make([]any, 0, len(queues))
+			for i := range queues {
+				q := queues[i]
+
+				capabilities := make([]string, 0, len(q.Capabilities))
+				for _, c := range q.Capabilities {
+					capabilities = append(capabilities, string(c))
+				}
+
+				mqlQueue, err := CreateResource(o.MqlRuntime, "oci.queue.queue", map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(q.Id),
+					"name":             llx.StringDataPtr(q.DisplayName),
+					"messagesEndpoint": llx.StringDataPtr(q.MessagesEndpoint),
+					"capabilities":     llx.ArrayData(stringsToAny(capabilities), types.String),
+					"state":            llx.StringData(string(q.LifecycleState)),
+					"stateDetails":     llx.StringDataPtr(q.LifecycleDetails),
+					"created":          sdkTimeData(q.TimeCreated),
+					"updated":          sdkTimeData(q.TimeUpdated),
+					"freeformTags":     llx.MapData(strMapToAny(q.FreeformTags), types.String),
+					"definedTags":      llx.MapData(definedTagsToAny(q.DefinedTags), types.Any),
+					"systemTags":       llx.MapData(definedTagsToAny(q.SystemTags), types.Dict),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlQueueTyped := mqlQueue.(*mqlOciQueueQueue)
+				mqlQueueTyped.cacheCompartmentId = stringValue(q.CompartmentId)
+				mqlQueueTyped.cacheRegion = region
+				res = append(res, mqlQueueTyped)
+			}
+
+			return res, nil
+		})
+}
+
+// The queue listing omits the encryption key and every timer, so all five
+// detail-backed fields share one fetch.
+type mqlOciQueueQueueInternal struct {
+	cacheCompartmentId string
+	cacheRegion        string
+
+	detailLock    sync.Mutex
+	detailFetched bool
+	detail        *queue.Queue
+}
+
+func (o *mqlOciQueueQueue) id() (string, error) {
+	return "oci.queue.queue/" + o.Id.Data, nil
+}
+
+func (o *mqlOciQueueQueue) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
+	o.detailLock.Lock()
+	defer o.detailLock.Unlock()
+	if o.detailFetched {
+		return o.detail, nil
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	client, err := conn.QueueAdminClient(o.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetQueue(context.Background(), queue.GetQueueRequest{
+		QueueId: common.String(o.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	o.detail = &response.Queue
+	o.detailFetched = true
+	return o.detail, nil
+}
+
+func (o *mqlOciQueueQueue) encryptionKey() (*mqlOciKmsKey, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	return resolveOciKmsKey(o.MqlRuntime, stringValue(detail.CustomEncryptionKeyId), &o.EncryptionKey)
+}
+
+func (o *mqlOciQueueQueue) retentionInSeconds() (int64, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return 0, err
+	}
+	return intValue(detail.RetentionInSeconds), nil
+}
+
+func (o *mqlOciQueueQueue) visibilityInSeconds() (int64, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return 0, err
+	}
+	return intValue(detail.VisibilityInSeconds), nil
+}
+
+func (o *mqlOciQueueQueue) timeoutInSeconds() (int64, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return 0, err
+	}
+	return intValue(detail.TimeoutInSeconds), nil
+}
+
+func (o *mqlOciQueueQueue) deadLetterQueueDeliveryCount() (int64, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return 0, err
+	}
+	return intValue(detail.DeadLetterQueueDeliveryCount), nil
+}
+
+// ----- Managed Kafka -----
+
+func (o *mqlOciKafka) id() (string, error) {
+	return "oci.kafka", nil
+}
+
+func (o *mqlOciKafka) clusters() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	regions, err := ociRegionsFor(o.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	return ociRunCompartmentRegionPool(conn, regions,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			client, err := conn.KafkaClusterClient(region)
+			if err != nil {
+				return nil, err
+			}
+
+			clusters := []managedkafka.KafkaClusterSummary{}
+			var page *string
+			for {
+				response, err := client.ListKafkaClusters(ctx, managedkafka.ListKafkaClustersRequest{
+					CompartmentId: common.String(compartmentID),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				clusters = append(clusters, response.KafkaClusterCollection.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			res := make([]any, 0, len(clusters))
+			for i := range clusters {
+				c := clusters[i]
+
+				var brokerShape map[string]any
+				if c.BrokerShape != nil {
+					brokerShape, err = convert.JsonToDict(c.BrokerShape)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				mqlCluster, err := CreateResource(o.MqlRuntime, "oci.kafka.cluster", map[string]*llx.RawData{
+					"id":                   llx.StringDataPtr(c.Id),
+					"name":                 llx.StringDataPtr(c.DisplayName),
+					"kafkaVersion":         llx.StringDataPtr(c.KafkaVersion),
+					"clusterType":          llx.StringData(string(c.ClusterType)),
+					"coordinationType":     llx.StringData(string(c.CoordinationType)),
+					"brokerShape":          llx.DictData(brokerShape),
+					"clusterConfigId":      llx.StringDataPtr(c.ClusterConfigId),
+					"clusterConfigVersion": llx.IntDataDefault(c.ClusterConfigVersion, 0),
+					"state":                llx.StringData(string(c.LifecycleState)),
+					"stateDetails":         llx.StringDataPtr(c.LifecycleDetails),
+					"created":              sdkTimeData(c.TimeCreated),
+					"updated":              sdkTimeData(c.TimeUpdated),
+					"freeformTags":         llx.MapData(strMapToAny(c.FreeformTags), types.String),
+					"definedTags":          llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
+					"systemTags":           llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlClusterTyped := mqlCluster.(*mqlOciKafkaCluster)
+				mqlClusterTyped.cacheCompartmentId = stringValue(c.CompartmentId)
+				mqlClusterTyped.cacheRegion = region
+				mqlClusterTyped.cacheSubnetIds = ociKafkaAccessSubnetIds(c.AccessSubnets)
+				res = append(res, mqlClusterTyped)
+			}
+
+			return res, nil
+		})
+}
+
+// ociKafkaAccessSubnetIds flattens the cluster's access-subnet sets into a
+// single OCID list. The service groups subnets into sets, but for reachability
+// the distinction does not matter: any subnet in any set can reach the cluster.
+func ociKafkaAccessSubnetIds(sets []managedkafka.SubnetSet) []string {
+	ids := []string{}
+	for i := range sets {
+		ids = append(ids, sets[i].Subnets...)
+	}
+	return ids
+}
+
+// The bootstrap URLs and the superuser secret are detail-only.
+type mqlOciKafkaClusterInternal struct {
+	cacheCompartmentId string
+	cacheRegion        string
+	cacheSubnetIds     []string
+
+	detailLock    sync.Mutex
+	detailFetched bool
+	detail        *managedkafka.KafkaCluster
+}
+
+func (o *mqlOciKafkaCluster) id() (string, error) {
+	return "oci.kafka.cluster/" + o.Id.Data, nil
+}
+
+func (o *mqlOciKafkaCluster) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciKafkaCluster) subnets() ([]any, error) {
+	res := make([]any, 0, len(o.cacheSubnetIds))
+	for _, id := range o.cacheSubnetIds {
+		if id == "" {
+			continue
+		}
+		subnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			// A subnet we cannot resolve must not take the rest of the list
+			// with it, matching resolveOciSecurityGroups.
+			continue
+		}
+		res = append(res, subnet)
+	}
+	return res, nil
+}
+
+func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
+	o.detailLock.Lock()
+	defer o.detailLock.Unlock()
+	if o.detailFetched {
+		return o.detail, nil
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	client, err := conn.KafkaClusterClient(o.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.GetKafkaCluster(context.Background(), managedkafka.GetKafkaClusterRequest{
+		KafkaClusterId: common.String(o.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	o.detail = &response.KafkaCluster
+	o.detailFetched = true
+	return o.detail, nil
+}
+
+func (o *mqlOciKafkaCluster) bootstrapUrls() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	if len(detail.KafkaBootstrapUrls) == 0 {
+		return []any{}, nil
+	}
+	return convert.JsonToDictSlice(detail.KafkaBootstrapUrls)
+}
+
+func (o *mqlOciKafkaCluster) superuserSecret() (*mqlOciVaultSecret, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	if stringValue(detail.SecretId) == "" {
+		o.SuperuserSecret.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.vault.secret", map[string]*llx.RawData{
+		"id": llx.StringData(stringValue(detail.SecretId)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciVaultSecret), nil
+}

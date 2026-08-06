@@ -21,6 +21,12 @@ const (
 	ResourceOciRegion                                                string = "oci.region"
 	ResourceOciCompartment                                           string = "oci.compartment"
 	ResourceOciIdentity                                              string = "oci.identity"
+	ResourceOciIdentityDomain                                        string = "oci.identity.domain"
+	ResourceOciIdentityDomainUser                                    string = "oci.identity.domain.user"
+	ResourceOciIdentityDomainGroup                                   string = "oci.identity.domain.group"
+	ResourceOciIdentityDomainPasswordPolicy                          string = "oci.identity.domain.passwordPolicy"
+	ResourceOciIdentityDomainAuthenticationFactorSettings            string = "oci.identity.domain.authenticationFactorSettings"
+	ResourceOciIdentityDomainApp                                     string = "oci.identity.domain.app"
 	ResourceOciIdentityUser                                          string = "oci.identity.user"
 	ResourceOciIdentityMfaDevice                                     string = "oci.identity.mfaDevice"
 	ResourceOciIdentityApiKey                                        string = "oci.identity.apiKey"
@@ -109,6 +115,16 @@ const (
 	ResourceOciNetworkLoadBalancerListener                           string = "oci.networkLoadBalancer.listener"
 	ResourceOciNetworkLoadBalancerBackendSet                         string = "oci.networkLoadBalancer.backendSet"
 	ResourceOciNetworkLoadBalancerBackend                            string = "oci.networkLoadBalancer.backend"
+	ResourceOciResourceManager                                       string = "oci.resourceManager"
+	ResourceOciResourceManagerStack                                  string = "oci.resourceManager.stack"
+	ResourceOciResourceManagerJob                                    string = "oci.resourceManager.job"
+	ResourceOciStreaming                                             string = "oci.streaming"
+	ResourceOciStreamingStream                                       string = "oci.streaming.stream"
+	ResourceOciStreamingStreamPool                                   string = "oci.streaming.streamPool"
+	ResourceOciQueue                                                 string = "oci.queue"
+	ResourceOciQueueQueue                                            string = "oci.queue.queue"
+	ResourceOciKafka                                                 string = "oci.kafka"
+	ResourceOciKafkaCluster                                          string = "oci.kafka.cluster"
 	ResourceOciMysql                                                 string = "oci.mysql"
 	ResourceOciMysqlDbSystem                                         string = "oci.mysql.dbSystem"
 	ResourceOciPostgresql                                            string = "oci.postgresql"
@@ -234,6 +250,30 @@ func init() {
 		"oci.identity": {
 			// to override args, implement: initOciIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciIdentity,
+		},
+		"oci.identity.domain": {
+			// to override args, implement: initOciIdentityDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomain,
+		},
+		"oci.identity.domain.user": {
+			// to override args, implement: initOciIdentityDomainUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainUser,
+		},
+		"oci.identity.domain.group": {
+			// to override args, implement: initOciIdentityDomainGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainGroup,
+		},
+		"oci.identity.domain.passwordPolicy": {
+			// to override args, implement: initOciIdentityDomainPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainPasswordPolicy,
+		},
+		"oci.identity.domain.authenticationFactorSettings": {
+			// to override args, implement: initOciIdentityDomainAuthenticationFactorSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainAuthenticationFactorSettings,
+		},
+		"oci.identity.domain.app": {
+			// to override args, implement: initOciIdentityDomainApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainApp,
 		},
 		"oci.identity.user": {
 			Init:   initOciIdentityUser,
@@ -586,6 +626,46 @@ func init() {
 		"oci.networkLoadBalancer.backend": {
 			// to override args, implement: initOciNetworkLoadBalancerBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetworkLoadBalancerBackend,
+		},
+		"oci.resourceManager": {
+			// to override args, implement: initOciResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciResourceManager,
+		},
+		"oci.resourceManager.stack": {
+			// to override args, implement: initOciResourceManagerStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciResourceManagerStack,
+		},
+		"oci.resourceManager.job": {
+			// to override args, implement: initOciResourceManagerJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciResourceManagerJob,
+		},
+		"oci.streaming": {
+			// to override args, implement: initOciStreaming(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciStreaming,
+		},
+		"oci.streaming.stream": {
+			// to override args, implement: initOciStreamingStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciStreamingStream,
+		},
+		"oci.streaming.streamPool": {
+			// to override args, implement: initOciStreamingStreamPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciStreamingStreamPool,
+		},
+		"oci.queue": {
+			// to override args, implement: initOciQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciQueue,
+		},
+		"oci.queue.queue": {
+			// to override args, implement: initOciQueueQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciQueueQueue,
+		},
+		"oci.kafka": {
+			// to override args, implement: initOciKafka(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciKafka,
+		},
+		"oci.kafka.cluster": {
+			// to override args, implement: initOciKafkaCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciKafkaCluster,
 		},
 		"oci.mysql": {
 			// to override args, implement: initOciMysql(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1123,6 +1203,300 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.authenticationPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentity).GetAuthenticationPolicy()).ToDataRes(types.Resource("oci.identity.authenticationPolicy"))
+	},
+	"oci.identity.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentity).GetDomains()).ToDataRes(types.Array(types.Resource("oci.identity.domain")))
+	},
+	"oci.identity.domain.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.identity.domain.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.licenseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetLicenseType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.homeRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetHomeRegion()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.replicaRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetReplicaRegions()).ToDataRes(types.Array(types.String))
+	},
+	"oci.identity.domain.isHiddenOnLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetIsHiddenOnLogin()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetUsers()).ToDataRes(types.Array(types.Resource("oci.identity.domain.user")))
+	},
+	"oci.identity.domain.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetGroups()).ToDataRes(types.Array(types.Resource("oci.identity.domain.group")))
+	},
+	"oci.identity.domain.passwordPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetPasswordPolicies()).ToDataRes(types.Array(types.Resource("oci.identity.domain.passwordPolicy")))
+	},
+	"oci.identity.domain.authenticationFactorSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetAuthenticationFactorSettings()).ToDataRes(types.Resource("oci.identity.domain.authenticationFactorSettings"))
+	},
+	"oci.identity.domain.apps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetApps()).ToDataRes(types.Array(types.Resource("oci.identity.domain.app")))
+	},
+	"oci.identity.domain.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetState()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.identity.domain.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.identity.domain.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetUserName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetActive()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.user.userType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetUserType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.primaryEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetPrimaryEmail()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.primaryEmailVerified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetPrimaryEmailVerified()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.user.emails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetEmails()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.identity.domain.user.isFederated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetIsFederated()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.user.mfaStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetMfaStatus()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.preferredAuthenticationFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetPreferredAuthenticationFactor()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.user.mfaEnabledOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetMfaEnabledOn()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.user.isLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetIsLocked()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.user.loginAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetLoginAttempts()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.user.lastSuccessfulLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetLastSuccessfulLogin()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.user.previousSuccessfulLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetPreviousSuccessfulLogin()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.user.lastFailedLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetLastFailedLogin()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.user.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetCapabilities()).ToDataRes(types.Map(types.String, types.Bool))
+	},
+	"oci.identity.domain.user.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.identity.domain.user.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainUser).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.group.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.group.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.group.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.group.memberCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetMemberCount()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.group.isRequestable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetIsRequestable()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.group.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.passwordPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.passwordPolicy.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.passwordPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.passwordPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.passwordPolicy.minLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinLength()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.maxLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMaxLength()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minAlphas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinAlphas()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minNumerals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinNumerals()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minAlphaNumerals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinAlphaNumerals()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minSpecialChars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinSpecialChars()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.maxSpecialChars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMaxSpecialChars()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minLowerCase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinLowerCase()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minUpperCase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinUpperCase()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minUniqueChars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinUniqueChars()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.maxRepeatedChars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMaxRepeatedChars()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.passwordExpiresAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetPasswordExpiresAfter()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.passwordExpireWarning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetPasswordExpireWarning()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.minPasswordAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMinPasswordAge()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.numPasswordsInHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetNumPasswordsInHistory()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.maxIncorrectAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetMaxIncorrectAttempts()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.lockoutDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetLockoutDuration()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.passwordPolicy.dictionaryWordDisallowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetDictionaryWordDisallowed()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.passwordPolicy.userNameDisallowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetUserNameDisallowed()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.passwordPolicy.firstNameDisallowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetFirstNameDisallowed()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.passwordPolicy.lastNameDisallowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetLastNameDisallowed()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.passwordPolicy.startsWithAlphabet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetStartsWithAlphabet()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.passwordPolicy.disallowedSubstrings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPasswordPolicy).GetDisallowedSubstrings()).ToDataRes(types.Array(types.String))
+	},
+	"oci.identity.domain.authenticationFactorSettings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.authenticationFactorSettings.smsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetSmsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.emailEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetEmailEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.totpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetTotpEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.pushEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetPushEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.phoneCallEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetPhoneCallEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.fidoAuthenticatorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetFidoAuthenticatorEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.yubicoOtpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetYubicoOtpEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.securityQuestionsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetSecurityQuestionsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.bypassCodeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetBypassCodeEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.authenticationFactorSettings.mfaEnrollmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetMfaEnrollmentType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.authenticationFactorSettings.mfaEnabledCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainAuthenticationFactorSettings).GetMfaEnabledCategory()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetActive()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.app.isOAuthClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetIsOAuthClient()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.app.isOAuthResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetIsOAuthResource()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.app.clientType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetClientType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.allowedGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetAllowedGrants()).ToDataRes(types.Array(types.String))
+	},
+	"oci.identity.domain.app.landingPageUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetLandingPageUrl()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.app.isWebTierPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainApp).GetIsWebTierPolicy()).ToDataRes(types.Bool)
 	},
 	"oci.identity.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityUser).GetId()).ToDataRes(types.String)
@@ -3440,6 +3814,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.audit.event.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetPrincipalId()).ToDataRes(types.String)
 	},
+	"oci.audit.event.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetPrincipal()).ToDataRes(types.Resource("oci.identity.user"))
+	},
 	"oci.audit.event.authType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetAuthType()).ToDataRes(types.String)
 	},
@@ -3448,6 +3825,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.audit.event.callerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetCallerId()).ToDataRes(types.String)
+	},
+	"oci.audit.event.caller": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAuditEvent).GetCaller()).ToDataRes(types.Resource("oci.identity.user"))
 	},
 	"oci.audit.event.ipAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAuditEvent).GetIpAddress()).ToDataRes(types.String)
@@ -3517,6 +3897,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.serviceConnectorHub.connector.targetKind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetKind()).ToDataRes(types.String)
+	},
+	"oci.serviceConnectorHub.connector.targetBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetBucket()).ToDataRes(types.Resource("oci.objectStorage.bucket"))
+	},
+	"oci.serviceConnectorHub.connector.targetTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetTargetTopic()).ToDataRes(types.Resource("oci.ons.topic"))
+	},
+	"oci.serviceConnectorHub.connector.sourceLogGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetSourceLogGroups()).ToDataRes(types.Array(types.Resource("oci.logging.logGroup")))
 	},
 	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciServiceConnectorHubConnector).GetTarget()).ToDataRes(types.Dict)
@@ -3968,6 +4357,276 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.networkLoadBalancer.backend.isOffline": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLoadBalancerBackend).GetIsOffline()).ToDataRes(types.Bool)
 	},
+	"oci.resourceManager.stacks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManager).GetStacks()).ToDataRes(types.Array(types.Resource("oci.resourceManager.stack")))
+	},
+	"oci.resourceManager.stack.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetId()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetName()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.resourceManager.stack.terraformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetTerraformVersion()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.driftStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDriftStatus()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.driftLastChecked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDriftLastChecked()).ToDataRes(types.Time)
+	},
+	"oci.resourceManager.stack.configSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetConfigSource()).ToDataRes(types.Dict)
+	},
+	"oci.resourceManager.stack.variableNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetVariableNames()).ToDataRes(types.Array(types.String))
+	},
+	"oci.resourceManager.stack.isThirdPartyProviderExperienceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetIsThirdPartyProviderExperienceEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.resourceManager.stack.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetJobs()).ToDataRes(types.Array(types.Resource("oci.resourceManager.job")))
+	},
+	"oci.resourceManager.stack.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetState()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.stack.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.resourceManager.stack.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.resourceManager.stack.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.resourceManager.stack.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerStack).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.resourceManager.job.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetId()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetName()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.resourceManager.job.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetOperation()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetState()).ToDataRes(types.String)
+	},
+	"oci.resourceManager.job.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.resourceManager.job.finished": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetFinished()).ToDataRes(types.Time)
+	},
+	"oci.streaming.streams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreaming).GetStreams()).ToDataRes(types.Array(types.Resource("oci.streaming.stream")))
+	},
+	"oci.streaming.streamPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreaming).GetStreamPools()).ToDataRes(types.Array(types.Resource("oci.streaming.streamPool")))
+	},
+	"oci.streaming.stream.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetId()).ToDataRes(types.String)
+	},
+	"oci.streaming.stream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetName()).ToDataRes(types.String)
+	},
+	"oci.streaming.stream.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.streaming.stream.streamPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetStreamPool()).ToDataRes(types.Resource("oci.streaming.streamPool"))
+	},
+	"oci.streaming.stream.partitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetPartitions()).ToDataRes(types.Int)
+	},
+	"oci.streaming.stream.messagesEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetMessagesEndpoint()).ToDataRes(types.String)
+	},
+	"oci.streaming.stream.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetState()).ToDataRes(types.String)
+	},
+	"oci.streaming.stream.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.streaming.stream.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.streaming.stream.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStream).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.streaming.streamPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetId()).ToDataRes(types.String)
+	},
+	"oci.streaming.streamPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetName()).ToDataRes(types.String)
+	},
+	"oci.streaming.streamPool.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.streaming.streamPool.isPrivate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetIsPrivate()).ToDataRes(types.Bool)
+	},
+	"oci.streaming.streamPool.endpointFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetEndpointFqdn()).ToDataRes(types.String)
+	},
+	"oci.streaming.streamPool.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
+	},
+	"oci.streaming.streamPool.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
+	"oci.streaming.streamPool.privateEndpointIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetPrivateEndpointIp()).ToDataRes(types.String)
+	},
+	"oci.streaming.streamPool.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetEncryptionKey()).ToDataRes(types.Resource("oci.kms.key"))
+	},
+	"oci.streaming.streamPool.encryptionKeyState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetEncryptionKeyState()).ToDataRes(types.String)
+	},
+	"oci.streaming.streamPool.kafkaSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetKafkaSettings()).ToDataRes(types.Dict)
+	},
+	"oci.streaming.streamPool.securityAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetSecurityAttributes()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.streaming.streamPool.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetState()).ToDataRes(types.String)
+	},
+	"oci.streaming.streamPool.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.streaming.streamPool.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.streaming.streamPool.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciStreamingStreamPool).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.queue.queues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueue).GetQueues()).ToDataRes(types.Array(types.Resource("oci.queue.queue")))
+	},
+	"oci.queue.queue.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetId()).ToDataRes(types.String)
+	},
+	"oci.queue.queue.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetName()).ToDataRes(types.String)
+	},
+	"oci.queue.queue.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.queue.queue.messagesEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetMessagesEndpoint()).ToDataRes(types.String)
+	},
+	"oci.queue.queue.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetEncryptionKey()).ToDataRes(types.Resource("oci.kms.key"))
+	},
+	"oci.queue.queue.retentionInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetRetentionInSeconds()).ToDataRes(types.Int)
+	},
+	"oci.queue.queue.visibilityInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetVisibilityInSeconds()).ToDataRes(types.Int)
+	},
+	"oci.queue.queue.timeoutInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetTimeoutInSeconds()).ToDataRes(types.Int)
+	},
+	"oci.queue.queue.deadLetterQueueDeliveryCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetDeadLetterQueueDeliveryCount()).ToDataRes(types.Int)
+	},
+	"oci.queue.queue.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"oci.queue.queue.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetState()).ToDataRes(types.String)
+	},
+	"oci.queue.queue.stateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetStateDetails()).ToDataRes(types.String)
+	},
+	"oci.queue.queue.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.queue.queue.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetUpdated()).ToDataRes(types.Time)
+	},
+	"oci.queue.queue.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.queue.queue.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.queue.queue.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciQueueQueue).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.kafka.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafka).GetClusters()).ToDataRes(types.Array(types.Resource("oci.kafka.cluster")))
+	},
+	"oci.kafka.cluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetId()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetName()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.kafka.cluster.kafkaVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetKafkaVersion()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.clusterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetClusterType()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.coordinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetCoordinationType()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetSubnets()).ToDataRes(types.Array(types.Resource("oci.network.subnet")))
+	},
+	"oci.kafka.cluster.bootstrapUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetBootstrapUrls()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.kafka.cluster.superuserSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetSuperuserSecret()).ToDataRes(types.Resource("oci.vault.secret"))
+	},
+	"oci.kafka.cluster.brokerShape": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetBrokerShape()).ToDataRes(types.Dict)
+	},
+	"oci.kafka.cluster.clusterConfigId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetClusterConfigId()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.clusterConfigVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetClusterConfigVersion()).ToDataRes(types.Int)
+	},
+	"oci.kafka.cluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetState()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.stateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetStateDetails()).ToDataRes(types.String)
+	},
+	"oci.kafka.cluster.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.kafka.cluster.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetUpdated()).ToDataRes(types.Time)
+	},
+	"oci.kafka.cluster.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.kafka.cluster.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.kafka.cluster.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKafkaCluster).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
 	"oci.mysql.dbSystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMysql).GetDbSystems()).ToDataRes(types.Array(types.Resource("oci.mysql.dbSystem")))
 	},
@@ -4295,8 +4954,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.goldenGate.deployment.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciGoldenGateDeployment).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
 	},
-	"oci.goldenGate.deployment.loadBalancerId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciGoldenGateDeployment).GetLoadBalancerId()).ToDataRes(types.String)
+	"oci.goldenGate.deployment.loadBalancer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciGoldenGateDeployment).GetLoadBalancer()).ToDataRes(types.Resource("oci.loadBalancer.loadBalancer"))
 	},
 	"oci.goldenGate.deployment.deploymentType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciGoldenGateDeployment).GetDeploymentType()).ToDataRes(types.String)
@@ -7772,6 +8431,422 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciIdentity).AuthenticationPolicy, ok = plugin.RawToTValue[*mqlOciIdentityAuthenticationPolicy](v.Value, v.Error)
 		return
 	},
+	"oci.identity.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentity).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.licenseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).LicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.homeRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).HomeRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.replicaRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).ReplicaRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.isHiddenOnLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).IsHiddenOnLogin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).PasswordPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).AuthenticationFactorSettings, ok = plugin.RawToTValue[*mqlOciIdentityDomainAuthenticationFactorSettings](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Apps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.userType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).UserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.primaryEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).PrimaryEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.primaryEmailVerified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).PrimaryEmailVerified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.emails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Emails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.isFederated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).IsFederated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.mfaStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).MfaStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.preferredAuthenticationFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).PreferredAuthenticationFactor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.mfaEnabledOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).MfaEnabledOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.isLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).IsLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.loginAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).LoginAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.lastSuccessfulLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).LastSuccessfulLogin, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.previousSuccessfulLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).PreviousSuccessfulLogin, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.lastFailedLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).LastFailedLogin, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Capabilities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.user.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainUser).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.memberCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).MemberCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.isRequestable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).IsRequestable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.group.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.maxLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MaxLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minAlphas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinAlphas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minNumerals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinNumerals, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minAlphaNumerals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinAlphaNumerals, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minSpecialChars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinSpecialChars, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.maxSpecialChars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MaxSpecialChars, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minLowerCase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinLowerCase, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minUpperCase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinUpperCase, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minUniqueChars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinUniqueChars, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.maxRepeatedChars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MaxRepeatedChars, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.passwordExpiresAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).PasswordExpiresAfter, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.passwordExpireWarning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).PasswordExpireWarning, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.minPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MinPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.numPasswordsInHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).NumPasswordsInHistory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.maxIncorrectAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).MaxIncorrectAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.lockoutDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).LockoutDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.dictionaryWordDisallowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).DictionaryWordDisallowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.userNameDisallowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).UserNameDisallowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.firstNameDisallowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).FirstNameDisallowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.lastNameDisallowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).LastNameDisallowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.startsWithAlphabet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).StartsWithAlphabet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.passwordPolicy.disallowedSubstrings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPasswordPolicy).DisallowedSubstrings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.smsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).SmsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.emailEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).EmailEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.totpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).TotpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.pushEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).PushEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.phoneCallEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).PhoneCallEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.fidoAuthenticatorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).FidoAuthenticatorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.yubicoOtpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).YubicoOtpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.securityQuestionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).SecurityQuestionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.bypassCodeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).BypassCodeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.mfaEnrollmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).MfaEnrollmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.authenticationFactorSettings.mfaEnabledCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainAuthenticationFactorSettings).MfaEnabledCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.app.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.isOAuthClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).IsOAuthClient, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.isOAuthResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).IsOAuthResource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.clientType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).ClientType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.allowedGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).AllowedGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.landingPageUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).LandingPageUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.app.isWebTierPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainApp).IsWebTierPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"oci.identity.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityUser).__id, ok = v.Value.(string)
 		return
@@ -11140,6 +12215,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciAuditEvent).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.audit.event.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Principal, ok = plugin.RawToTValue[*mqlOciIdentityUser](v.Value, v.Error)
+		return
+	},
 	"oci.audit.event.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAuditEvent).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -11150,6 +12229,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.audit.event.callerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAuditEvent).CallerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.audit.event.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAuditEvent).Caller, ok = plugin.RawToTValue[*mqlOciIdentityUser](v.Value, v.Error)
 		return
 	},
 	"oci.audit.event.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11250,6 +12333,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.serviceConnectorHub.connector.targetKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciServiceConnectorHubConnector).TargetKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.targetBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).TargetBucket, ok = plugin.RawToTValue[*mqlOciObjectStorageBucket](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.targetTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).TargetTopic, ok = plugin.RawToTValue[*mqlOciOnsTopic](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.sourceLogGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).SourceLogGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11916,6 +13011,406 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkLoadBalancerBackend).IsOffline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"oci.resourceManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManager).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.resourceManager.stacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManager).Stacks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.resourceManager.stack.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.terraformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).TerraformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.driftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.driftLastChecked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).DriftLastChecked, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.configSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).ConfigSource, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.variableNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).VariableNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.isThirdPartyProviderExperienceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).IsThirdPartyProviderExperienceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.stack.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerStack).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.resourceManager.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.finished": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Finished, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreaming).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.streaming.streams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreaming).Streams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreaming).StreamPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.streaming.stream.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.streamPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).StreamPool, ok = plugin.RawToTValue[*mqlOciStreamingStreamPool](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.partitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).Partitions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.messagesEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).MessagesEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.stream.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStream).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.streaming.streamPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.isPrivate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).IsPrivate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.endpointFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).EndpointFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.privateEndpointIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).PrivateEndpointIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).EncryptionKey, ok = plugin.RawToTValue[*mqlOciKmsKey](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.encryptionKeyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).EncryptionKeyState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.kafkaSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).KafkaSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.securityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).SecurityAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.streaming.streamPool.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciStreamingStreamPool).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueue).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.queue.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueue).Queues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.queue.queue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.messagesEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).MessagesEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).EncryptionKey, ok = plugin.RawToTValue[*mqlOciKmsKey](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.retentionInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).RetentionInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.visibilityInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).VisibilityInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.timeoutInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).TimeoutInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.deadLetterQueueDeliveryCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).DeadLetterQueueDeliveryCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.stateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).StateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.queue.queue.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciQueueQueue).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafka).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.kafka.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafka).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.kafka.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.kafkaVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).KafkaVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.clusterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).ClusterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.coordinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).CoordinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.bootstrapUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).BootstrapUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.superuserSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).SuperuserSecret, ok = plugin.RawToTValue[*mqlOciVaultSecret](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.brokerShape": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).BrokerShape, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.clusterConfigId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).ClusterConfigId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.clusterConfigVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).ClusterConfigVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.stateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).StateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.kafka.cluster.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKafkaCluster).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"oci.mysql.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciMysql).__id, ok = v.Value.(string)
 		return
@@ -12392,8 +13887,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciGoldenGateDeployment).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"oci.goldenGate.deployment.loadBalancerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciGoldenGateDeployment).LoadBalancerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.goldenGate.deployment.loadBalancer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciGoldenGateDeployment).LoadBalancer, ok = plugin.RawToTValue[*mqlOciLoadBalancerLoadBalancer](v.Value, v.Error)
 		return
 	},
 	"oci.goldenGate.deployment.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17541,6 +19036,7 @@ type mqlOciIdentity struct {
 	IdentityProviders    plugin.TValue[[]any]
 	NetworkSources       plugin.TValue[[]any]
 	AuthenticationPolicy plugin.TValue[*mqlOciIdentityAuthenticationPolicy]
+	Domains              plugin.TValue[[]any]
 }
 
 // createOciIdentity creates a new instance of this resource
@@ -17690,6 +19186,818 @@ func (c *mqlOciIdentity) GetAuthenticationPolicy() *plugin.TValue[*mqlOciIdentit
 
 		return c.authenticationPolicy()
 	})
+}
+
+func (c *mqlOciIdentity) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
+// mqlOciIdentityDomain for the oci.identity.domain resource
+type mqlOciIdentityDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciIdentityDomainInternal
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	Compartment                  plugin.TValue[*mqlOciCompartment]
+	Type                         plugin.TValue[string]
+	LicenseType                  plugin.TValue[string]
+	HomeRegion                   plugin.TValue[string]
+	ReplicaRegions               plugin.TValue[[]any]
+	IsHiddenOnLogin              plugin.TValue[bool]
+	Users                        plugin.TValue[[]any]
+	Groups                       plugin.TValue[[]any]
+	PasswordPolicies             plugin.TValue[[]any]
+	AuthenticationFactorSettings plugin.TValue[*mqlOciIdentityDomainAuthenticationFactorSettings]
+	Apps                         plugin.TValue[[]any]
+	State                        plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	FreeformTags                 plugin.TValue[map[string]any]
+	DefinedTags                  plugin.TValue[map[string]any]
+}
+
+// createOciIdentityDomain creates a new instance of this resource
+func createOciIdentityDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomain) MqlName() string {
+	return "oci.identity.domain"
+}
+
+func (c *mqlOciIdentityDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomain) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomain) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomain) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciIdentityDomain) GetLicenseType() *plugin.TValue[string] {
+	return &c.LicenseType
+}
+
+func (c *mqlOciIdentityDomain) GetHomeRegion() *plugin.TValue[string] {
+	return &c.HomeRegion
+}
+
+func (c *mqlOciIdentityDomain) GetReplicaRegions() *plugin.TValue[[]any] {
+	return &c.ReplicaRegions
+}
+
+func (c *mqlOciIdentityDomain) GetIsHiddenOnLogin() *plugin.TValue[bool] {
+	return &c.IsHiddenOnLogin
+}
+
+func (c *mqlOciIdentityDomain) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetPasswordPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PasswordPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "passwordPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.passwordPolicies()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetAuthenticationFactorSettings() *plugin.TValue[*mqlOciIdentityDomainAuthenticationFactorSettings] {
+	return plugin.GetOrCompute[*mqlOciIdentityDomainAuthenticationFactorSettings](&c.AuthenticationFactorSettings, func() (*mqlOciIdentityDomainAuthenticationFactorSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "authenticationFactorSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciIdentityDomainAuthenticationFactorSettings), nil
+			}
+		}
+
+		return c.authenticationFactorSettings()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetApps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Apps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "apps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apps()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciIdentityDomain) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciIdentityDomain) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciIdentityDomain) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciIdentityDomainUser for the oci.identity.domain.user resource
+type mqlOciIdentityDomainUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainUserInternal it will be used here
+	Id                            plugin.TValue[string]
+	Ocid                          plugin.TValue[string]
+	UserName                      plugin.TValue[string]
+	DisplayName                   plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	Active                        plugin.TValue[bool]
+	UserType                      plugin.TValue[string]
+	PrimaryEmail                  plugin.TValue[string]
+	PrimaryEmailVerified          plugin.TValue[bool]
+	Emails                        plugin.TValue[[]any]
+	IsFederated                   plugin.TValue[bool]
+	MfaStatus                     plugin.TValue[string]
+	PreferredAuthenticationFactor plugin.TValue[string]
+	MfaEnabledOn                  plugin.TValue[*time.Time]
+	IsLocked                      plugin.TValue[bool]
+	LoginAttempts                 plugin.TValue[int64]
+	LastSuccessfulLogin           plugin.TValue[*time.Time]
+	PreviousSuccessfulLogin       plugin.TValue[*time.Time]
+	LastFailedLogin               plugin.TValue[*time.Time]
+	Capabilities                  plugin.TValue[map[string]any]
+	Groups                        plugin.TValue[[]any]
+	Created                       plugin.TValue[*time.Time]
+}
+
+// createOciIdentityDomainUser creates a new instance of this resource
+func createOciIdentityDomainUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainUser) MqlName() string {
+	return "oci.identity.domain.user"
+}
+
+func (c *mqlOciIdentityDomainUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainUser) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainUser) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlOciIdentityDomainUser) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciIdentityDomainUser) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainUser) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlOciIdentityDomainUser) GetUserType() *plugin.TValue[string] {
+	return &c.UserType
+}
+
+func (c *mqlOciIdentityDomainUser) GetPrimaryEmail() *plugin.TValue[string] {
+	return &c.PrimaryEmail
+}
+
+func (c *mqlOciIdentityDomainUser) GetPrimaryEmailVerified() *plugin.TValue[bool] {
+	return &c.PrimaryEmailVerified
+}
+
+func (c *mqlOciIdentityDomainUser) GetEmails() *plugin.TValue[[]any] {
+	return &c.Emails
+}
+
+func (c *mqlOciIdentityDomainUser) GetIsFederated() *plugin.TValue[bool] {
+	return &c.IsFederated
+}
+
+func (c *mqlOciIdentityDomainUser) GetMfaStatus() *plugin.TValue[string] {
+	return &c.MfaStatus
+}
+
+func (c *mqlOciIdentityDomainUser) GetPreferredAuthenticationFactor() *plugin.TValue[string] {
+	return &c.PreferredAuthenticationFactor
+}
+
+func (c *mqlOciIdentityDomainUser) GetMfaEnabledOn() *plugin.TValue[*time.Time] {
+	return &c.MfaEnabledOn
+}
+
+func (c *mqlOciIdentityDomainUser) GetIsLocked() *plugin.TValue[bool] {
+	return &c.IsLocked
+}
+
+func (c *mqlOciIdentityDomainUser) GetLoginAttempts() *plugin.TValue[int64] {
+	return &c.LoginAttempts
+}
+
+func (c *mqlOciIdentityDomainUser) GetLastSuccessfulLogin() *plugin.TValue[*time.Time] {
+	return &c.LastSuccessfulLogin
+}
+
+func (c *mqlOciIdentityDomainUser) GetPreviousSuccessfulLogin() *plugin.TValue[*time.Time] {
+	return &c.PreviousSuccessfulLogin
+}
+
+func (c *mqlOciIdentityDomainUser) GetLastFailedLogin() *plugin.TValue[*time.Time] {
+	return &c.LastFailedLogin
+}
+
+func (c *mqlOciIdentityDomainUser) GetCapabilities() *plugin.TValue[map[string]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlOciIdentityDomainUser) GetGroups() *plugin.TValue[[]any] {
+	return &c.Groups
+}
+
+func (c *mqlOciIdentityDomainUser) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciIdentityDomainGroup for the oci.identity.domain.group resource
+type mqlOciIdentityDomainGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainGroupInternal it will be used here
+	Id            plugin.TValue[string]
+	Ocid          plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	Description   plugin.TValue[string]
+	MemberCount   plugin.TValue[int64]
+	IsRequestable plugin.TValue[bool]
+	Created       plugin.TValue[*time.Time]
+}
+
+// createOciIdentityDomainGroup creates a new instance of this resource
+func createOciIdentityDomainGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainGroup) MqlName() string {
+	return "oci.identity.domain.group"
+}
+
+func (c *mqlOciIdentityDomainGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainGroup) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciIdentityDomainGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainGroup) GetMemberCount() *plugin.TValue[int64] {
+	return &c.MemberCount
+}
+
+func (c *mqlOciIdentityDomainGroup) GetIsRequestable() *plugin.TValue[bool] {
+	return &c.IsRequestable
+}
+
+func (c *mqlOciIdentityDomainGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciIdentityDomainPasswordPolicy for the oci.identity.domain.passwordPolicy resource
+type mqlOciIdentityDomainPasswordPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainPasswordPolicyInternal it will be used here
+	Id                       plugin.TValue[string]
+	Ocid                     plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Description              plugin.TValue[string]
+	MinLength                plugin.TValue[int64]
+	MaxLength                plugin.TValue[int64]
+	MinAlphas                plugin.TValue[int64]
+	MinNumerals              plugin.TValue[int64]
+	MinAlphaNumerals         plugin.TValue[int64]
+	MinSpecialChars          plugin.TValue[int64]
+	MaxSpecialChars          plugin.TValue[int64]
+	MinLowerCase             plugin.TValue[int64]
+	MinUpperCase             plugin.TValue[int64]
+	MinUniqueChars           plugin.TValue[int64]
+	MaxRepeatedChars         plugin.TValue[int64]
+	PasswordExpiresAfter     plugin.TValue[int64]
+	PasswordExpireWarning    plugin.TValue[int64]
+	MinPasswordAge           plugin.TValue[int64]
+	NumPasswordsInHistory    plugin.TValue[int64]
+	MaxIncorrectAttempts     plugin.TValue[int64]
+	LockoutDuration          plugin.TValue[int64]
+	DictionaryWordDisallowed plugin.TValue[bool]
+	UserNameDisallowed       plugin.TValue[bool]
+	FirstNameDisallowed      plugin.TValue[bool]
+	LastNameDisallowed       plugin.TValue[bool]
+	StartsWithAlphabet       plugin.TValue[bool]
+	DisallowedSubstrings     plugin.TValue[[]any]
+}
+
+// createOciIdentityDomainPasswordPolicy creates a new instance of this resource
+func createOciIdentityDomainPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainPasswordPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.passwordPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) MqlName() string {
+	return "oci.identity.domain.passwordPolicy"
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinLength() *plugin.TValue[int64] {
+	return &c.MinLength
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMaxLength() *plugin.TValue[int64] {
+	return &c.MaxLength
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinAlphas() *plugin.TValue[int64] {
+	return &c.MinAlphas
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinNumerals() *plugin.TValue[int64] {
+	return &c.MinNumerals
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinAlphaNumerals() *plugin.TValue[int64] {
+	return &c.MinAlphaNumerals
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinSpecialChars() *plugin.TValue[int64] {
+	return &c.MinSpecialChars
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMaxSpecialChars() *plugin.TValue[int64] {
+	return &c.MaxSpecialChars
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinLowerCase() *plugin.TValue[int64] {
+	return &c.MinLowerCase
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinUpperCase() *plugin.TValue[int64] {
+	return &c.MinUpperCase
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinUniqueChars() *plugin.TValue[int64] {
+	return &c.MinUniqueChars
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMaxRepeatedChars() *plugin.TValue[int64] {
+	return &c.MaxRepeatedChars
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetPasswordExpiresAfter() *plugin.TValue[int64] {
+	return &c.PasswordExpiresAfter
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetPasswordExpireWarning() *plugin.TValue[int64] {
+	return &c.PasswordExpireWarning
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMinPasswordAge() *plugin.TValue[int64] {
+	return &c.MinPasswordAge
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetNumPasswordsInHistory() *plugin.TValue[int64] {
+	return &c.NumPasswordsInHistory
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetMaxIncorrectAttempts() *plugin.TValue[int64] {
+	return &c.MaxIncorrectAttempts
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetLockoutDuration() *plugin.TValue[int64] {
+	return &c.LockoutDuration
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetDictionaryWordDisallowed() *plugin.TValue[bool] {
+	return &c.DictionaryWordDisallowed
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetUserNameDisallowed() *plugin.TValue[bool] {
+	return &c.UserNameDisallowed
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetFirstNameDisallowed() *plugin.TValue[bool] {
+	return &c.FirstNameDisallowed
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetLastNameDisallowed() *plugin.TValue[bool] {
+	return &c.LastNameDisallowed
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetStartsWithAlphabet() *plugin.TValue[bool] {
+	return &c.StartsWithAlphabet
+}
+
+func (c *mqlOciIdentityDomainPasswordPolicy) GetDisallowedSubstrings() *plugin.TValue[[]any] {
+	return &c.DisallowedSubstrings
+}
+
+// mqlOciIdentityDomainAuthenticationFactorSettings for the oci.identity.domain.authenticationFactorSettings resource
+type mqlOciIdentityDomainAuthenticationFactorSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainAuthenticationFactorSettingsInternal it will be used here
+	Id                       plugin.TValue[string]
+	SmsEnabled               plugin.TValue[bool]
+	EmailEnabled             plugin.TValue[bool]
+	TotpEnabled              plugin.TValue[bool]
+	PushEnabled              plugin.TValue[bool]
+	PhoneCallEnabled         plugin.TValue[bool]
+	FidoAuthenticatorEnabled plugin.TValue[bool]
+	YubicoOtpEnabled         plugin.TValue[bool]
+	SecurityQuestionsEnabled plugin.TValue[bool]
+	BypassCodeEnabled        plugin.TValue[bool]
+	MfaEnrollmentType        plugin.TValue[string]
+	MfaEnabledCategory       plugin.TValue[string]
+}
+
+// createOciIdentityDomainAuthenticationFactorSettings creates a new instance of this resource
+func createOciIdentityDomainAuthenticationFactorSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainAuthenticationFactorSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.authenticationFactorSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) MqlName() string {
+	return "oci.identity.domain.authenticationFactorSettings"
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetSmsEnabled() *plugin.TValue[bool] {
+	return &c.SmsEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetEmailEnabled() *plugin.TValue[bool] {
+	return &c.EmailEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetTotpEnabled() *plugin.TValue[bool] {
+	return &c.TotpEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetPushEnabled() *plugin.TValue[bool] {
+	return &c.PushEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetPhoneCallEnabled() *plugin.TValue[bool] {
+	return &c.PhoneCallEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetFidoAuthenticatorEnabled() *plugin.TValue[bool] {
+	return &c.FidoAuthenticatorEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetYubicoOtpEnabled() *plugin.TValue[bool] {
+	return &c.YubicoOtpEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetSecurityQuestionsEnabled() *plugin.TValue[bool] {
+	return &c.SecurityQuestionsEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetBypassCodeEnabled() *plugin.TValue[bool] {
+	return &c.BypassCodeEnabled
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetMfaEnrollmentType() *plugin.TValue[string] {
+	return &c.MfaEnrollmentType
+}
+
+func (c *mqlOciIdentityDomainAuthenticationFactorSettings) GetMfaEnabledCategory() *plugin.TValue[string] {
+	return &c.MfaEnabledCategory
+}
+
+// mqlOciIdentityDomainApp for the oci.identity.domain.app resource
+type mqlOciIdentityDomainApp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainAppInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	DisplayName     plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Active          plugin.TValue[bool]
+	IsOAuthClient   plugin.TValue[bool]
+	IsOAuthResource plugin.TValue[bool]
+	ClientType      plugin.TValue[string]
+	AllowedGrants   plugin.TValue[[]any]
+	LandingPageUrl  plugin.TValue[string]
+	IsWebTierPolicy plugin.TValue[bool]
+}
+
+// createOciIdentityDomainApp creates a new instance of this resource
+func createOciIdentityDomainApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainApp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.app", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainApp) MqlName() string {
+	return "oci.identity.domain.app"
+}
+
+func (c *mqlOciIdentityDomainApp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainApp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainApp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomainApp) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciIdentityDomainApp) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainApp) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlOciIdentityDomainApp) GetIsOAuthClient() *plugin.TValue[bool] {
+	return &c.IsOAuthClient
+}
+
+func (c *mqlOciIdentityDomainApp) GetIsOAuthResource() *plugin.TValue[bool] {
+	return &c.IsOAuthResource
+}
+
+func (c *mqlOciIdentityDomainApp) GetClientType() *plugin.TValue[string] {
+	return &c.ClientType
+}
+
+func (c *mqlOciIdentityDomainApp) GetAllowedGrants() *plugin.TValue[[]any] {
+	return &c.AllowedGrants
+}
+
+func (c *mqlOciIdentityDomainApp) GetLandingPageUrl() *plugin.TValue[string] {
+	return &c.LandingPageUrl
+}
+
+func (c *mqlOciIdentityDomainApp) GetIsWebTierPolicy() *plugin.TValue[bool] {
+	return &c.IsWebTierPolicy
 }
 
 // mqlOciIdentityUser for the oci.identity.user resource
@@ -26429,9 +28737,11 @@ type mqlOciAuditEvent struct {
 	AvailabilityDomain plugin.TValue[string]
 	PrincipalName      plugin.TValue[string]
 	PrincipalId        plugin.TValue[string]
+	Principal          plugin.TValue[*mqlOciIdentityUser]
 	AuthType           plugin.TValue[string]
 	CallerName         plugin.TValue[string]
 	CallerId           plugin.TValue[string]
+	Caller             plugin.TValue[*mqlOciIdentityUser]
 	IpAddress          plugin.TValue[string]
 	UserAgent          plugin.TValue[string]
 	ConsoleSessionId   plugin.TValue[string]
@@ -26547,6 +28857,22 @@ func (c *mqlOciAuditEvent) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
 }
 
+func (c *mqlOciAuditEvent) GetPrincipal() *plugin.TValue[*mqlOciIdentityUser] {
+	return plugin.GetOrCompute[*mqlOciIdentityUser](&c.Principal, func() (*mqlOciIdentityUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.audit.event", c.__id, "principal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciIdentityUser), nil
+			}
+		}
+
+		return c.principal()
+	})
+}
+
 func (c *mqlOciAuditEvent) GetAuthType() *plugin.TValue[string] {
 	return &c.AuthType
 }
@@ -26557,6 +28883,22 @@ func (c *mqlOciAuditEvent) GetCallerName() *plugin.TValue[string] {
 
 func (c *mqlOciAuditEvent) GetCallerId() *plugin.TValue[string] {
 	return &c.CallerId
+}
+
+func (c *mqlOciAuditEvent) GetCaller() *plugin.TValue[*mqlOciIdentityUser] {
+	return plugin.GetOrCompute[*mqlOciIdentityUser](&c.Caller, func() (*mqlOciIdentityUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.audit.event", c.__id, "caller")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciIdentityUser), nil
+			}
+		}
+
+		return c.caller()
+	})
 }
 
 func (c *mqlOciAuditEvent) GetIpAddress() *plugin.TValue[string] {
@@ -26673,23 +29015,26 @@ type mqlOciServiceConnectorHubConnector struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciServiceConnectorHubConnectorInternal
-	Id           plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Compartment  plugin.TValue[*mqlOciCompartment]
-	State        plugin.TValue[string]
-	StateDetails plugin.TValue[string]
-	Region       plugin.TValue[string]
-	SourceKind   plugin.TValue[string]
-	Source       plugin.TValue[any]
-	TargetKind   plugin.TValue[string]
-	Target       plugin.TValue[any]
-	Tasks        plugin.TValue[[]any]
-	Created      plugin.TValue[*time.Time]
-	Updated      plugin.TValue[*time.Time]
-	FreeformTags plugin.TValue[map[string]any]
-	DefinedTags  plugin.TValue[map[string]any]
-	SystemTags   plugin.TValue[map[string]any]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Compartment     plugin.TValue[*mqlOciCompartment]
+	State           plugin.TValue[string]
+	StateDetails    plugin.TValue[string]
+	Region          plugin.TValue[string]
+	SourceKind      plugin.TValue[string]
+	Source          plugin.TValue[any]
+	TargetKind      plugin.TValue[string]
+	TargetBucket    plugin.TValue[*mqlOciObjectStorageBucket]
+	TargetTopic     plugin.TValue[*mqlOciOnsTopic]
+	SourceLogGroups plugin.TValue[[]any]
+	Target          plugin.TValue[any]
+	Tasks           plugin.TValue[[]any]
+	Created         plugin.TValue[*time.Time]
+	Updated         plugin.TValue[*time.Time]
+	FreeformTags    plugin.TValue[map[string]any]
+	DefinedTags     plugin.TValue[map[string]any]
+	SystemTags      plugin.TValue[map[string]any]
 }
 
 // createOciServiceConnectorHubConnector creates a new instance of this resource
@@ -26784,6 +29129,54 @@ func (c *mqlOciServiceConnectorHubConnector) GetSource() *plugin.TValue[any] {
 func (c *mqlOciServiceConnectorHubConnector) GetTargetKind() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.TargetKind, func() (string, error) {
 		return c.targetKind()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTargetBucket() *plugin.TValue[*mqlOciObjectStorageBucket] {
+	return plugin.GetOrCompute[*mqlOciObjectStorageBucket](&c.TargetBucket, func() (*mqlOciObjectStorageBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "targetBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciObjectStorageBucket), nil
+			}
+		}
+
+		return c.targetBucket()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetTargetTopic() *plugin.TValue[*mqlOciOnsTopic] {
+	return plugin.GetOrCompute[*mqlOciOnsTopic](&c.TargetTopic, func() (*mqlOciOnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "targetTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciOnsTopic), nil
+			}
+		}
+
+		return c.targetTopic()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetSourceLogGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceLogGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.serviceConnectorHub.connector", c.__id, "sourceLogGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceLogGroups()
 	})
 }
 
@@ -28575,6 +30968,1152 @@ func (c *mqlOciNetworkLoadBalancerBackend) GetIsOffline() *plugin.TValue[bool] {
 	return &c.IsOffline
 }
 
+// mqlOciResourceManager for the oci.resourceManager resource
+type mqlOciResourceManager struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciResourceManagerInternal it will be used here
+	Stacks plugin.TValue[[]any]
+}
+
+// createOciResourceManager creates a new instance of this resource
+func createOciResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciResourceManager{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.resourceManager", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciResourceManager) MqlName() string {
+	return "oci.resourceManager"
+}
+
+func (c *mqlOciResourceManager) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciResourceManager) GetStacks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stacks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager", c.__id, "stacks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stacks()
+	})
+}
+
+// mqlOciResourceManagerStack for the oci.resourceManager.stack resource
+type mqlOciResourceManagerStack struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciResourceManagerStackInternal
+	Id                                    plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	Compartment                           plugin.TValue[*mqlOciCompartment]
+	TerraformVersion                      plugin.TValue[string]
+	DriftStatus                           plugin.TValue[string]
+	DriftLastChecked                      plugin.TValue[*time.Time]
+	ConfigSource                          plugin.TValue[any]
+	VariableNames                         plugin.TValue[[]any]
+	IsThirdPartyProviderExperienceEnabled plugin.TValue[bool]
+	Jobs                                  plugin.TValue[[]any]
+	State                                 plugin.TValue[string]
+	Created                               plugin.TValue[*time.Time]
+	FreeformTags                          plugin.TValue[map[string]any]
+	DefinedTags                           plugin.TValue[map[string]any]
+	SystemTags                            plugin.TValue[map[string]any]
+}
+
+// createOciResourceManagerStack creates a new instance of this resource
+func createOciResourceManagerStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciResourceManagerStack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.resourceManager.stack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciResourceManagerStack) MqlName() string {
+	return "oci.resourceManager.stack"
+}
+
+func (c *mqlOciResourceManagerStack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciResourceManagerStack) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciResourceManagerStack) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciResourceManagerStack) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciResourceManagerStack) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.stack", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetTerraformVersion() *plugin.TValue[string] {
+	return &c.TerraformVersion
+}
+
+func (c *mqlOciResourceManagerStack) GetDriftStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DriftStatus, func() (string, error) {
+		return c.driftStatus()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetDriftLastChecked() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.DriftLastChecked, func() (*time.Time, error) {
+		return c.driftLastChecked()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetConfigSource() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ConfigSource, func() (any, error) {
+		return c.configSource()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetVariableNames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VariableNames, func() ([]any, error) {
+		return c.variableNames()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetIsThirdPartyProviderExperienceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsThirdPartyProviderExperienceEnabled, func() (bool, error) {
+		return c.isThirdPartyProviderExperienceEnabled()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.stack", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+func (c *mqlOciResourceManagerStack) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciResourceManagerStack) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciResourceManagerStack) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciResourceManagerStack) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciResourceManagerStack) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciResourceManagerJob for the oci.resourceManager.job resource
+type mqlOciResourceManagerJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciResourceManagerJobInternal
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Compartment plugin.TValue[*mqlOciCompartment]
+	Operation   plugin.TValue[string]
+	State       plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Finished    plugin.TValue[*time.Time]
+}
+
+// createOciResourceManagerJob creates a new instance of this resource
+func createOciResourceManagerJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciResourceManagerJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.resourceManager.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciResourceManagerJob) MqlName() string {
+	return "oci.resourceManager.job"
+}
+
+func (c *mqlOciResourceManagerJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciResourceManagerJob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciResourceManagerJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciResourceManagerJob) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.job", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciResourceManagerJob) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlOciResourceManagerJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciResourceManagerJob) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciResourceManagerJob) GetFinished() *plugin.TValue[*time.Time] {
+	return &c.Finished
+}
+
+// mqlOciStreaming for the oci.streaming resource
+type mqlOciStreaming struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciStreamingInternal it will be used here
+	Streams     plugin.TValue[[]any]
+	StreamPools plugin.TValue[[]any]
+}
+
+// createOciStreaming creates a new instance of this resource
+func createOciStreaming(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciStreaming{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.streaming", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciStreaming) MqlName() string {
+	return "oci.streaming"
+}
+
+func (c *mqlOciStreaming) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciStreaming) GetStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Streams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming", c.__id, "streams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streams()
+	})
+}
+
+func (c *mqlOciStreaming) GetStreamPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StreamPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming", c.__id, "streamPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streamPools()
+	})
+}
+
+// mqlOciStreamingStream for the oci.streaming.stream resource
+type mqlOciStreamingStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciStreamingStreamInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	StreamPool       plugin.TValue[*mqlOciStreamingStreamPool]
+	Partitions       plugin.TValue[int64]
+	MessagesEndpoint plugin.TValue[string]
+	State            plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciStreamingStream creates a new instance of this resource
+func createOciStreamingStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciStreamingStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.streaming.stream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciStreamingStream) MqlName() string {
+	return "oci.streaming.stream"
+}
+
+func (c *mqlOciStreamingStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciStreamingStream) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciStreamingStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciStreamingStream) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.stream", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciStreamingStream) GetStreamPool() *plugin.TValue[*mqlOciStreamingStreamPool] {
+	return plugin.GetOrCompute[*mqlOciStreamingStreamPool](&c.StreamPool, func() (*mqlOciStreamingStreamPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.stream", c.__id, "streamPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciStreamingStreamPool), nil
+			}
+		}
+
+		return c.streamPool()
+	})
+}
+
+func (c *mqlOciStreamingStream) GetPartitions() *plugin.TValue[int64] {
+	return &c.Partitions
+}
+
+func (c *mqlOciStreamingStream) GetMessagesEndpoint() *plugin.TValue[string] {
+	return &c.MessagesEndpoint
+}
+
+func (c *mqlOciStreamingStream) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciStreamingStream) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciStreamingStream) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciStreamingStream) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciStreamingStreamPool for the oci.streaming.streamPool resource
+type mqlOciStreamingStreamPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciStreamingStreamPoolInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Compartment        plugin.TValue[*mqlOciCompartment]
+	IsPrivate          plugin.TValue[bool]
+	EndpointFqdn       plugin.TValue[string]
+	Subnet             plugin.TValue[*mqlOciNetworkSubnet]
+	SecurityGroups     plugin.TValue[[]any]
+	PrivateEndpointIp  plugin.TValue[string]
+	EncryptionKey      plugin.TValue[*mqlOciKmsKey]
+	EncryptionKeyState plugin.TValue[string]
+	KafkaSettings      plugin.TValue[any]
+	SecurityAttributes plugin.TValue[map[string]any]
+	State              plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	FreeformTags       plugin.TValue[map[string]any]
+	DefinedTags        plugin.TValue[map[string]any]
+}
+
+// createOciStreamingStreamPool creates a new instance of this resource
+func createOciStreamingStreamPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciStreamingStreamPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.streaming.streamPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciStreamingStreamPool) MqlName() string {
+	return "oci.streaming.streamPool"
+}
+
+func (c *mqlOciStreamingStreamPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciStreamingStreamPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciStreamingStreamPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciStreamingStreamPool) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.streamPool", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetIsPrivate() *plugin.TValue[bool] {
+	return &c.IsPrivate
+}
+
+func (c *mqlOciStreamingStreamPool) GetEndpointFqdn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointFqdn, func() (string, error) {
+		return c.endpointFqdn()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlOciNetworkSubnet](&c.Subnet, func() (*mqlOciNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.streamPool", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.streamPool", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetPrivateEndpointIp() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PrivateEndpointIp, func() (string, error) {
+		return c.privateEndpointIp()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetEncryptionKey() *plugin.TValue[*mqlOciKmsKey] {
+	return plugin.GetOrCompute[*mqlOciKmsKey](&c.EncryptionKey, func() (*mqlOciKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.streaming.streamPool", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciKmsKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetEncryptionKeyState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionKeyState, func() (string, error) {
+		return c.encryptionKeyState()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetKafkaSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.KafkaSettings, func() (any, error) {
+		return c.kafkaSettings()
+	})
+}
+
+func (c *mqlOciStreamingStreamPool) GetSecurityAttributes() *plugin.TValue[map[string]any] {
+	return &c.SecurityAttributes
+}
+
+func (c *mqlOciStreamingStreamPool) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciStreamingStreamPool) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciStreamingStreamPool) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciStreamingStreamPool) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciQueue for the oci.queue resource
+type mqlOciQueue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciQueueInternal it will be used here
+	Queues plugin.TValue[[]any]
+}
+
+// createOciQueue creates a new instance of this resource
+func createOciQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciQueue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.queue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciQueue) MqlName() string {
+	return "oci.queue"
+}
+
+func (c *mqlOciQueue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciQueue) GetQueues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Queues, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.queue", c.__id, "queues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.queues()
+	})
+}
+
+// mqlOciQueueQueue for the oci.queue.queue resource
+type mqlOciQueueQueue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciQueueQueueInternal
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Compartment                  plugin.TValue[*mqlOciCompartment]
+	MessagesEndpoint             plugin.TValue[string]
+	EncryptionKey                plugin.TValue[*mqlOciKmsKey]
+	RetentionInSeconds           plugin.TValue[int64]
+	VisibilityInSeconds          plugin.TValue[int64]
+	TimeoutInSeconds             plugin.TValue[int64]
+	DeadLetterQueueDeliveryCount plugin.TValue[int64]
+	Capabilities                 plugin.TValue[[]any]
+	State                        plugin.TValue[string]
+	StateDetails                 plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Updated                      plugin.TValue[*time.Time]
+	FreeformTags                 plugin.TValue[map[string]any]
+	DefinedTags                  plugin.TValue[map[string]any]
+	SystemTags                   plugin.TValue[map[string]any]
+}
+
+// createOciQueueQueue creates a new instance of this resource
+func createOciQueueQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciQueueQueue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.queue.queue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciQueueQueue) MqlName() string {
+	return "oci.queue.queue"
+}
+
+func (c *mqlOciQueueQueue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciQueueQueue) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciQueueQueue) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciQueueQueue) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.queue.queue", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciQueueQueue) GetMessagesEndpoint() *plugin.TValue[string] {
+	return &c.MessagesEndpoint
+}
+
+func (c *mqlOciQueueQueue) GetEncryptionKey() *plugin.TValue[*mqlOciKmsKey] {
+	return plugin.GetOrCompute[*mqlOciKmsKey](&c.EncryptionKey, func() (*mqlOciKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.queue.queue", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciKmsKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
+}
+
+func (c *mqlOciQueueQueue) GetRetentionInSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RetentionInSeconds, func() (int64, error) {
+		return c.retentionInSeconds()
+	})
+}
+
+func (c *mqlOciQueueQueue) GetVisibilityInSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VisibilityInSeconds, func() (int64, error) {
+		return c.visibilityInSeconds()
+	})
+}
+
+func (c *mqlOciQueueQueue) GetTimeoutInSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TimeoutInSeconds, func() (int64, error) {
+		return c.timeoutInSeconds()
+	})
+}
+
+func (c *mqlOciQueueQueue) GetDeadLetterQueueDeliveryCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DeadLetterQueueDeliveryCount, func() (int64, error) {
+		return c.deadLetterQueueDeliveryCount()
+	})
+}
+
+func (c *mqlOciQueueQueue) GetCapabilities() *plugin.TValue[[]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlOciQueueQueue) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciQueueQueue) GetStateDetails() *plugin.TValue[string] {
+	return &c.StateDetails
+}
+
+func (c *mqlOciQueueQueue) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciQueueQueue) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlOciQueueQueue) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciQueueQueue) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciQueueQueue) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciKafka for the oci.kafka resource
+type mqlOciKafka struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciKafkaInternal it will be used here
+	Clusters plugin.TValue[[]any]
+}
+
+// createOciKafka creates a new instance of this resource
+func createOciKafka(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciKafka{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.kafka", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciKafka) MqlName() string {
+	return "oci.kafka"
+}
+
+func (c *mqlOciKafka) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciKafka) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.kafka", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlOciKafkaCluster for the oci.kafka.cluster resource
+type mqlOciKafkaCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciKafkaClusterInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
+	KafkaVersion         plugin.TValue[string]
+	ClusterType          plugin.TValue[string]
+	CoordinationType     plugin.TValue[string]
+	Subnets              plugin.TValue[[]any]
+	BootstrapUrls        plugin.TValue[[]any]
+	SuperuserSecret      plugin.TValue[*mqlOciVaultSecret]
+	BrokerShape          plugin.TValue[any]
+	ClusterConfigId      plugin.TValue[string]
+	ClusterConfigVersion plugin.TValue[int64]
+	State                plugin.TValue[string]
+	StateDetails         plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Updated              plugin.TValue[*time.Time]
+	FreeformTags         plugin.TValue[map[string]any]
+	DefinedTags          plugin.TValue[map[string]any]
+	SystemTags           plugin.TValue[map[string]any]
+}
+
+// createOciKafkaCluster creates a new instance of this resource
+func createOciKafkaCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciKafkaCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.kafka.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciKafkaCluster) MqlName() string {
+	return "oci.kafka.cluster"
+}
+
+func (c *mqlOciKafkaCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciKafkaCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciKafkaCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciKafkaCluster) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.kafka.cluster", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciKafkaCluster) GetKafkaVersion() *plugin.TValue[string] {
+	return &c.KafkaVersion
+}
+
+func (c *mqlOciKafkaCluster) GetClusterType() *plugin.TValue[string] {
+	return &c.ClusterType
+}
+
+func (c *mqlOciKafkaCluster) GetCoordinationType() *plugin.TValue[string] {
+	return &c.CoordinationType
+}
+
+func (c *mqlOciKafkaCluster) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.kafka.cluster", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlOciKafkaCluster) GetBootstrapUrls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BootstrapUrls, func() ([]any, error) {
+		return c.bootstrapUrls()
+	})
+}
+
+func (c *mqlOciKafkaCluster) GetSuperuserSecret() *plugin.TValue[*mqlOciVaultSecret] {
+	return plugin.GetOrCompute[*mqlOciVaultSecret](&c.SuperuserSecret, func() (*mqlOciVaultSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.kafka.cluster", c.__id, "superuserSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVaultSecret), nil
+			}
+		}
+
+		return c.superuserSecret()
+	})
+}
+
+func (c *mqlOciKafkaCluster) GetBrokerShape() *plugin.TValue[any] {
+	return &c.BrokerShape
+}
+
+func (c *mqlOciKafkaCluster) GetClusterConfigId() *plugin.TValue[string] {
+	return &c.ClusterConfigId
+}
+
+func (c *mqlOciKafkaCluster) GetClusterConfigVersion() *plugin.TValue[int64] {
+	return &c.ClusterConfigVersion
+}
+
+func (c *mqlOciKafkaCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciKafkaCluster) GetStateDetails() *plugin.TValue[string] {
+	return &c.StateDetails
+}
+
+func (c *mqlOciKafkaCluster) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciKafkaCluster) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlOciKafkaCluster) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciKafkaCluster) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciKafkaCluster) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
 // mqlOciMysql for the oci.mysql resource
 type mqlOciMysql struct {
 	MqlRuntime *plugin.Runtime
@@ -29709,7 +33248,7 @@ type mqlOciGoldenGateDeployment struct {
 	DeploymentUrl        plugin.TValue[string]
 	Subnet               plugin.TValue[*mqlOciNetworkSubnet]
 	SecurityGroups       plugin.TValue[[]any]
-	LoadBalancerId       plugin.TValue[string]
+	LoadBalancer         plugin.TValue[*mqlOciLoadBalancerLoadBalancer]
 	DeploymentType       plugin.TValue[string]
 	Category             plugin.TValue[string]
 	EnvironmentType      plugin.TValue[string]
@@ -29845,8 +33384,20 @@ func (c *mqlOciGoldenGateDeployment) GetSecurityGroups() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlOciGoldenGateDeployment) GetLoadBalancerId() *plugin.TValue[string] {
-	return &c.LoadBalancerId
+func (c *mqlOciGoldenGateDeployment) GetLoadBalancer() *plugin.TValue[*mqlOciLoadBalancerLoadBalancer] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerLoadBalancer](&c.LoadBalancer, func() (*mqlOciLoadBalancerLoadBalancer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.goldenGate.deployment", c.__id, "loadBalancer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerLoadBalancer), nil
+			}
+		}
+
+		return c.loadBalancer()
+	})
 }
 
 func (c *mqlOciGoldenGateDeployment) GetDeploymentType() *plugin.TValue[string] {
