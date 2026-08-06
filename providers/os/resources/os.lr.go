@@ -181,6 +181,12 @@ const (
 	ResourceDockerContainer                               string = "docker.container"
 	ResourceContainerd                                    string = "containerd"
 	ResourceContainerdContainer                           string = "containerd.container"
+	ResourcePodman                                        string = "podman"
+	ResourcePodmanContainer                               string = "podman.container"
+	ResourcePodmanImage                                   string = "podman.image"
+	ResourcePodmanPod                                     string = "podman.pod"
+	ResourcePodmanVolume                                  string = "podman.volume"
+	ResourcePodmanNetwork                                 string = "podman.network"
 	ResourceIptables                                      string = "iptables"
 	ResourceIp6tables                                     string = "ip6tables"
 	ResourceIptablesTable                                 string = "iptables.table"
@@ -1194,6 +1200,30 @@ func init() {
 		"containerd.container": {
 			// to override args, implement: initContainerdContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createContainerdContainer,
+		},
+		"podman": {
+			// to override args, implement: initPodman(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPodman,
+		},
+		"podman.container": {
+			Init:   initPodmanContainer,
+			Create: createPodmanContainer,
+		},
+		"podman.image": {
+			Init:   initPodmanImage,
+			Create: createPodmanImage,
+		},
+		"podman.pod": {
+			Init:   initPodmanPod,
+			Create: createPodmanPod,
+		},
+		"podman.volume": {
+			Init:   initPodmanVolume,
+			Create: createPodmanVolume,
+		},
+		"podman.network": {
+			Init:   initPodmanNetwork,
+			Create: createPodmanNetwork,
 		},
 		"iptables": {
 			// to override args, implement: initIptables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6458,6 +6488,246 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"containerd.container.snapshotter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContainerdContainer).GetSnapshotter()).ToDataRes(types.String)
+	},
+	"podman.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"podman.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetVersion()).ToDataRes(types.String)
+	},
+	"podman.rootless": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetRootless()).ToDataRes(types.Bool)
+	},
+	"podman.cgroupManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetCgroupManager()).ToDataRes(types.String)
+	},
+	"podman.cgroupVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetCgroupVersion()).ToDataRes(types.String)
+	},
+	"podman.ociRuntime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetOciRuntime()).ToDataRes(types.String)
+	},
+	"podman.networkBackend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetNetworkBackend()).ToDataRes(types.String)
+	},
+	"podman.storageDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetStorageDriver()).ToDataRes(types.String)
+	},
+	"podman.seccompEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetSeccompEnabled()).ToDataRes(types.Bool)
+	},
+	"podman.seccompProfilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetSeccompProfilePath()).ToDataRes(types.String)
+	},
+	"podman.apparmorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetApparmorEnabled()).ToDataRes(types.Bool)
+	},
+	"podman.selinuxEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetSelinuxEnabled()).ToDataRes(types.Bool)
+	},
+	"podman.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetContainers()).ToDataRes(types.Array(types.Resource("podman.container")))
+	},
+	"podman.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetImages()).ToDataRes(types.Array(types.Resource("podman.image")))
+	},
+	"podman.pods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetPods()).ToDataRes(types.Array(types.Resource("podman.pod")))
+	},
+	"podman.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetVolumes()).ToDataRes(types.Array(types.Resource("podman.volume")))
+	},
+	"podman.networks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodman).GetNetworks()).ToDataRes(types.Array(types.Resource("podman.network")))
+	},
+	"podman.container.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetId()).ToDataRes(types.String)
+	},
+	"podman.container.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetName()).ToDataRes(types.String)
+	},
+	"podman.container.names": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetNames()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.imageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetImageName()).ToDataRes(types.String)
+	},
+	"podman.container.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetImageId()).ToDataRes(types.String)
+	},
+	"podman.container.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetImage()).ToDataRes(types.Resource("podman.image"))
+	},
+	"podman.container.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetState()).ToDataRes(types.String)
+	},
+	"podman.container.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetStatus()).ToDataRes(types.String)
+	},
+	"podman.container.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"podman.container.isInfra": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetIsInfra()).ToDataRes(types.Bool)
+	},
+	"podman.container.exitCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetExitCode()).ToDataRes(types.Int)
+	},
+	"podman.container.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"podman.container.pod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetPod()).ToDataRes(types.Resource("podman.pod"))
+	},
+	"podman.container.networks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetNetworks()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"podman.container.privileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetPrivileged()).ToDataRes(types.Bool)
+	},
+	"podman.container.capAdd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetCapAdd()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.capDrop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetCapDrop()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.effectiveCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetEffectiveCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.boundingCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetBoundingCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.securityOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetSecurityOptions()).ToDataRes(types.Array(types.String))
+	},
+	"podman.container.readOnlyRootfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetReadOnlyRootfs()).ToDataRes(types.Bool)
+	},
+	"podman.container.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetUser()).ToDataRes(types.String)
+	},
+	"podman.container.networkMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetNetworkMode()).ToDataRes(types.String)
+	},
+	"podman.container.pidMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetPidMode()).ToDataRes(types.String)
+	},
+	"podman.container.usernsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetUsernsMode()).ToDataRes(types.String)
+	},
+	"podman.container.restartPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanContainer).GetRestartPolicy()).ToDataRes(types.String)
+	},
+	"podman.image.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetId()).ToDataRes(types.String)
+	},
+	"podman.image.names": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetNames()).ToDataRes(types.Array(types.String))
+	},
+	"podman.image.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetRepository()).ToDataRes(types.String)
+	},
+	"podman.image.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetTag()).ToDataRes(types.String)
+	},
+	"podman.image.repoDigests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetRepoDigests()).ToDataRes(types.Array(types.String))
+	},
+	"podman.image.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetDigest()).ToDataRes(types.String)
+	},
+	"podman.image.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetSize()).ToDataRes(types.Int)
+	},
+	"podman.image.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"podman.image.os": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetOs()).ToDataRes(types.String)
+	},
+	"podman.image.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetArchitecture()).ToDataRes(types.String)
+	},
+	"podman.image.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanImage).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"podman.pod.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetId()).ToDataRes(types.String)
+	},
+	"podman.pod.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetName()).ToDataRes(types.String)
+	},
+	"podman.pod.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetStatus()).ToDataRes(types.String)
+	},
+	"podman.pod.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"podman.pod.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"podman.pod.infraContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetInfraContainer()).ToDataRes(types.Resource("podman.container"))
+	},
+	"podman.pod.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanPod).GetContainers()).ToDataRes(types.Array(types.Resource("podman.container")))
+	},
+	"podman.volume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetName()).ToDataRes(types.String)
+	},
+	"podman.volume.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetDriver()).ToDataRes(types.String)
+	},
+	"podman.volume.mountpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetMountpoint()).ToDataRes(types.String)
+	},
+	"podman.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"podman.volume.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"podman.volume.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"podman.volume.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetScope()).ToDataRes(types.String)
+	},
+	"podman.volume.anonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanVolume).GetAnonymous()).ToDataRes(types.Bool)
+	},
+	"podman.network.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetId()).ToDataRes(types.String)
+	},
+	"podman.network.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetName()).ToDataRes(types.String)
+	},
+	"podman.network.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetDriver()).ToDataRes(types.String)
+	},
+	"podman.network.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetNetworkInterface()).ToDataRes(types.String)
+	},
+	"podman.network.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetSubnets()).ToDataRes(types.Array(types.Dict))
+	},
+	"podman.network.ipv6Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetIpv6Enabled()).ToDataRes(types.Bool)
+	},
+	"podman.network.internal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetInternal()).ToDataRes(types.Bool)
+	},
+	"podman.network.dnsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetDnsEnabled()).ToDataRes(types.Bool)
+	},
+	"podman.network.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPodmanNetwork).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"iptables.tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetTables()).ToDataRes(types.Array(types.Resource("iptables.table")))
@@ -19013,6 +19283,350 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"containerd.container.snapshotter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContainerdContainer).Snapshotter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).__id, ok = v.Value.(string)
+		return
+	},
+	"podman.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.rootless": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Rootless, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.cgroupManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).CgroupManager, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.cgroupVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).CgroupVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.ociRuntime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).OciRuntime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.networkBackend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).NetworkBackend, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.storageDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).StorageDriver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.seccompEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).SeccompEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.seccompProfilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).SeccompProfilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.apparmorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).ApparmorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.selinuxEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).SelinuxEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodman).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).__id, ok = v.Value.(string)
+		return
+	},
+	"podman.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.names": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Names, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.imageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Image, ok = plugin.RawToTValue[*mqlPodmanImage](v.Value, v.Error)
+		return
+	},
+	"podman.container.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.isInfra": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).IsInfra, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.container.exitCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).ExitCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"podman.container.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"podman.container.pod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Pod, ok = plugin.RawToTValue[*mqlPodmanPod](v.Value, v.Error)
+		return
+	},
+	"podman.container.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.container.capAdd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).CapAdd, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.capDrop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).CapDrop, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.effectiveCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).EffectiveCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.boundingCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).BoundingCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.securityOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).SecurityOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.container.readOnlyRootfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).ReadOnlyRootfs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.container.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.networkMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).NetworkMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.pidMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).PidMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.usernsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).UsernsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.container.restartPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanContainer).RestartPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).__id, ok = v.Value.(string)
+		return
+	},
+	"podman.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.names": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Names, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.image.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.repoDigests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).RepoDigests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.image.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"podman.image.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"podman.image.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Os, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.image.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanImage).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"podman.pod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).__id, ok = v.Value.(string)
+		return
+	},
+	"podman.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.pod.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.pod.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.pod.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"podman.pod.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"podman.pod.infraContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).InfraContainer, ok = plugin.RawToTValue[*mqlPodmanContainer](v.Value, v.Error)
+		return
+	},
+	"podman.pod.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanPod).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"podman.volume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.volume.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.volume.mountpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Mountpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"podman.volume.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"podman.volume.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"podman.volume.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.volume.anonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanVolume).Anonymous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).__id, ok = v.Value.(string)
+		return
+	},
+	"podman.network.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.network.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.network.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.network.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).NetworkInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"podman.network.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"podman.network.ipv6Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).Ipv6Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.network.internal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).Internal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.network.dnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).DnsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"podman.network.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPodmanNetwork).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"iptables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47135,6 +47749,826 @@ func (c *mqlContainerdContainer) GetRuntime() *plugin.TValue[string] {
 
 func (c *mqlContainerdContainer) GetSnapshotter() *plugin.TValue[string] {
 	return &c.Snapshotter
+}
+
+// mqlPodman for the podman resource
+type mqlPodman struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPodmanInternal
+	Installed          plugin.TValue[bool]
+	Version            plugin.TValue[string]
+	Rootless           plugin.TValue[bool]
+	CgroupManager      plugin.TValue[string]
+	CgroupVersion      plugin.TValue[string]
+	OciRuntime         plugin.TValue[string]
+	NetworkBackend     plugin.TValue[string]
+	StorageDriver      plugin.TValue[string]
+	SeccompEnabled     plugin.TValue[bool]
+	SeccompProfilePath plugin.TValue[string]
+	ApparmorEnabled    plugin.TValue[bool]
+	SelinuxEnabled     plugin.TValue[bool]
+	Containers         plugin.TValue[[]any]
+	Images             plugin.TValue[[]any]
+	Pods               plugin.TValue[[]any]
+	Volumes            plugin.TValue[[]any]
+	Networks           plugin.TValue[[]any]
+}
+
+// createPodman creates a new instance of this resource
+func createPodman(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPodman{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("podman", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPodman) MqlName() string {
+	return "podman"
+}
+
+func (c *mqlPodman) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPodman) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlPodman) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlPodman) GetRootless() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Rootless, func() (bool, error) {
+		return c.rootless()
+	})
+}
+
+func (c *mqlPodman) GetCgroupManager() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CgroupManager, func() (string, error) {
+		return c.cgroupManager()
+	})
+}
+
+func (c *mqlPodman) GetCgroupVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CgroupVersion, func() (string, error) {
+		return c.cgroupVersion()
+	})
+}
+
+func (c *mqlPodman) GetOciRuntime() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OciRuntime, func() (string, error) {
+		return c.ociRuntime()
+	})
+}
+
+func (c *mqlPodman) GetNetworkBackend() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkBackend, func() (string, error) {
+		return c.networkBackend()
+	})
+}
+
+func (c *mqlPodman) GetStorageDriver() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageDriver, func() (string, error) {
+		return c.storageDriver()
+	})
+}
+
+func (c *mqlPodman) GetSeccompEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SeccompEnabled, func() (bool, error) {
+		return c.seccompEnabled()
+	})
+}
+
+func (c *mqlPodman) GetSeccompProfilePath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SeccompProfilePath, func() (string, error) {
+		return c.seccompProfilePath()
+	})
+}
+
+func (c *mqlPodman) GetApparmorEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ApparmorEnabled, func() (bool, error) {
+		return c.apparmorEnabled()
+	})
+}
+
+func (c *mqlPodman) GetSelinuxEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SelinuxEnabled, func() (bool, error) {
+		return c.selinuxEnabled()
+	})
+}
+
+func (c *mqlPodman) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+func (c *mqlPodman) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+func (c *mqlPodman) GetPods() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pods, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman", c.__id, "pods")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pods()
+	})
+}
+
+func (c *mqlPodman) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+func (c *mqlPodman) GetNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Networks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman", c.__id, "networks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networks()
+	})
+}
+
+// mqlPodmanContainer for the podman.container resource
+type mqlPodmanContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPodmanContainerInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Names                 plugin.TValue[[]any]
+	ImageName             plugin.TValue[string]
+	ImageId               plugin.TValue[string]
+	Image                 plugin.TValue[*mqlPodmanImage]
+	Command               plugin.TValue[[]any]
+	State                 plugin.TValue[string]
+	Status                plugin.TValue[string]
+	Labels                plugin.TValue[map[string]any]
+	IsInfra               plugin.TValue[bool]
+	ExitCode              plugin.TValue[int64]
+	CreatedAt             plugin.TValue[*time.Time]
+	Pod                   plugin.TValue[*mqlPodmanPod]
+	Networks              plugin.TValue[[]any]
+	Ports                 plugin.TValue[[]any]
+	Privileged            plugin.TValue[bool]
+	CapAdd                plugin.TValue[[]any]
+	CapDrop               plugin.TValue[[]any]
+	EffectiveCapabilities plugin.TValue[[]any]
+	BoundingCapabilities  plugin.TValue[[]any]
+	SecurityOptions       plugin.TValue[[]any]
+	ReadOnlyRootfs        plugin.TValue[bool]
+	User                  plugin.TValue[string]
+	NetworkMode           plugin.TValue[string]
+	PidMode               plugin.TValue[string]
+	UsernsMode            plugin.TValue[string]
+	RestartPolicy         plugin.TValue[string]
+}
+
+// createPodmanContainer creates a new instance of this resource
+func createPodmanContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPodmanContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("podman.container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPodmanContainer) MqlName() string {
+	return "podman.container"
+}
+
+func (c *mqlPodmanContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPodmanContainer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPodmanContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPodmanContainer) GetNames() *plugin.TValue[[]any] {
+	return &c.Names
+}
+
+func (c *mqlPodmanContainer) GetImageName() *plugin.TValue[string] {
+	return &c.ImageName
+}
+
+func (c *mqlPodmanContainer) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlPodmanContainer) GetImage() *plugin.TValue[*mqlPodmanImage] {
+	return plugin.GetOrCompute[*mqlPodmanImage](&c.Image, func() (*mqlPodmanImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman.container", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPodmanImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlPodmanContainer) GetCommand() *plugin.TValue[[]any] {
+	return &c.Command
+}
+
+func (c *mqlPodmanContainer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlPodmanContainer) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlPodmanContainer) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlPodmanContainer) GetIsInfra() *plugin.TValue[bool] {
+	return &c.IsInfra
+}
+
+func (c *mqlPodmanContainer) GetExitCode() *plugin.TValue[int64] {
+	return &c.ExitCode
+}
+
+func (c *mqlPodmanContainer) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlPodmanContainer) GetPod() *plugin.TValue[*mqlPodmanPod] {
+	return plugin.GetOrCompute[*mqlPodmanPod](&c.Pod, func() (*mqlPodmanPod, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman.container", c.__id, "pod")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPodmanPod), nil
+			}
+		}
+
+		return c.pod()
+	})
+}
+
+func (c *mqlPodmanContainer) GetNetworks() *plugin.TValue[[]any] {
+	return &c.Networks
+}
+
+func (c *mqlPodmanContainer) GetPorts() *plugin.TValue[[]any] {
+	return &c.Ports
+}
+
+func (c *mqlPodmanContainer) GetPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Privileged, func() (bool, error) {
+		return c.privileged()
+	})
+}
+
+func (c *mqlPodmanContainer) GetCapAdd() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapAdd, func() ([]any, error) {
+		return c.capAdd()
+	})
+}
+
+func (c *mqlPodmanContainer) GetCapDrop() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapDrop, func() ([]any, error) {
+		return c.capDrop()
+	})
+}
+
+func (c *mqlPodmanContainer) GetEffectiveCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveCapabilities, func() ([]any, error) {
+		return c.effectiveCapabilities()
+	})
+}
+
+func (c *mqlPodmanContainer) GetBoundingCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BoundingCapabilities, func() ([]any, error) {
+		return c.boundingCapabilities()
+	})
+}
+
+func (c *mqlPodmanContainer) GetSecurityOptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityOptions, func() ([]any, error) {
+		return c.securityOptions()
+	})
+}
+
+func (c *mqlPodmanContainer) GetReadOnlyRootfs() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReadOnlyRootfs, func() (bool, error) {
+		return c.readOnlyRootfs()
+	})
+}
+
+func (c *mqlPodmanContainer) GetUser() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.User, func() (string, error) {
+		return c.user()
+	})
+}
+
+func (c *mqlPodmanContainer) GetNetworkMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkMode, func() (string, error) {
+		return c.networkMode()
+	})
+}
+
+func (c *mqlPodmanContainer) GetPidMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PidMode, func() (string, error) {
+		return c.pidMode()
+	})
+}
+
+func (c *mqlPodmanContainer) GetUsernsMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UsernsMode, func() (string, error) {
+		return c.usernsMode()
+	})
+}
+
+func (c *mqlPodmanContainer) GetRestartPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestartPolicy, func() (string, error) {
+		return c.restartPolicy()
+	})
+}
+
+// mqlPodmanImage for the podman.image resource
+type mqlPodmanImage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPodmanImageInternal it will be used here
+	Id           plugin.TValue[string]
+	Names        plugin.TValue[[]any]
+	Repository   plugin.TValue[string]
+	Tag          plugin.TValue[string]
+	RepoDigests  plugin.TValue[[]any]
+	Digest       plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	Labels       plugin.TValue[map[string]any]
+	Os           plugin.TValue[string]
+	Architecture plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+}
+
+// createPodmanImage creates a new instance of this resource
+func createPodmanImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPodmanImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("podman.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPodmanImage) MqlName() string {
+	return "podman.image"
+}
+
+func (c *mqlPodmanImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPodmanImage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPodmanImage) GetNames() *plugin.TValue[[]any] {
+	return &c.Names
+}
+
+func (c *mqlPodmanImage) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlPodmanImage) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlPodmanImage) GetRepoDigests() *plugin.TValue[[]any] {
+	return &c.RepoDigests
+}
+
+func (c *mqlPodmanImage) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlPodmanImage) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlPodmanImage) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlPodmanImage) GetOs() *plugin.TValue[string] {
+	return &c.Os
+}
+
+func (c *mqlPodmanImage) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
+func (c *mqlPodmanImage) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlPodmanPod for the podman.pod resource
+type mqlPodmanPod struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPodmanPodInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Status         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	Labels         plugin.TValue[map[string]any]
+	InfraContainer plugin.TValue[*mqlPodmanContainer]
+	Containers     plugin.TValue[[]any]
+}
+
+// createPodmanPod creates a new instance of this resource
+func createPodmanPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPodmanPod{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("podman.pod", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPodmanPod) MqlName() string {
+	return "podman.pod"
+}
+
+func (c *mqlPodmanPod) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPodmanPod) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPodmanPod) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPodmanPod) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlPodmanPod) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlPodmanPod) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlPodmanPod) GetInfraContainer() *plugin.TValue[*mqlPodmanContainer] {
+	return plugin.GetOrCompute[*mqlPodmanContainer](&c.InfraContainer, func() (*mqlPodmanContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman.pod", c.__id, "infraContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPodmanContainer), nil
+			}
+		}
+
+		return c.infraContainer()
+	})
+}
+
+func (c *mqlPodmanPod) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("podman.pod", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+// mqlPodmanVolume for the podman.volume resource
+type mqlPodmanVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPodmanVolumeInternal it will be used here
+	Name       plugin.TValue[string]
+	Driver     plugin.TValue[string]
+	Mountpoint plugin.TValue[string]
+	CreatedAt  plugin.TValue[*time.Time]
+	Labels     plugin.TValue[map[string]any]
+	Options    plugin.TValue[map[string]any]
+	Scope      plugin.TValue[string]
+	Anonymous  plugin.TValue[bool]
+}
+
+// createPodmanVolume creates a new instance of this resource
+func createPodmanVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPodmanVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("podman.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPodmanVolume) MqlName() string {
+	return "podman.volume"
+}
+
+func (c *mqlPodmanVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPodmanVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPodmanVolume) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlPodmanVolume) GetMountpoint() *plugin.TValue[string] {
+	return &c.Mountpoint
+}
+
+func (c *mqlPodmanVolume) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlPodmanVolume) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlPodmanVolume) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+func (c *mqlPodmanVolume) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlPodmanVolume) GetAnonymous() *plugin.TValue[bool] {
+	return &c.Anonymous
+}
+
+// mqlPodmanNetwork for the podman.network resource
+type mqlPodmanNetwork struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPodmanNetworkInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Driver           plugin.TValue[string]
+	NetworkInterface plugin.TValue[string]
+	Subnets          plugin.TValue[[]any]
+	Ipv6Enabled      plugin.TValue[bool]
+	Internal         plugin.TValue[bool]
+	DnsEnabled       plugin.TValue[bool]
+	CreatedAt        plugin.TValue[*time.Time]
+}
+
+// createPodmanNetwork creates a new instance of this resource
+func createPodmanNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPodmanNetwork{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("podman.network", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPodmanNetwork) MqlName() string {
+	return "podman.network"
+}
+
+func (c *mqlPodmanNetwork) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPodmanNetwork) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPodmanNetwork) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPodmanNetwork) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlPodmanNetwork) GetNetworkInterface() *plugin.TValue[string] {
+	return &c.NetworkInterface
+}
+
+func (c *mqlPodmanNetwork) GetSubnets() *plugin.TValue[[]any] {
+	return &c.Subnets
+}
+
+func (c *mqlPodmanNetwork) GetIpv6Enabled() *plugin.TValue[bool] {
+	return &c.Ipv6Enabled
+}
+
+func (c *mqlPodmanNetwork) GetInternal() *plugin.TValue[bool] {
+	return &c.Internal
+}
+
+func (c *mqlPodmanNetwork) GetDnsEnabled() *plugin.TValue[bool] {
+	return &c.DnsEnabled
+}
+
+func (c *mqlPodmanNetwork) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlIptables for the iptables resource
