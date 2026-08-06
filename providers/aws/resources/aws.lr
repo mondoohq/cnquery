@@ -737,8 +737,22 @@ private aws.vpc.endpoint @defaults("id type region") {
   policyDocument string
   // Parsed statements from the endpoint policy
   policyStatements() []aws.iam.policyStatement
-  // Subnets for the (interface) endpoint
-  subnets []string
+  // Whether the endpoint policy leaves access unrestricted
+  //
+  // True when an Allow statement grants a wildcard action or a wildcard
+  // resource, which is what the default endpoint policy does. An unrestricted
+  // endpoint lets anything in the VPC that can route to it reach any resource
+  // the service offers, including buckets and tables in other accounts, so the
+  // endpoint stops being a boundary and becomes an egress path. A restrictive
+  // policy naming specific resources and principals is what makes an endpoint
+  // a control.
+  hasWildcardPolicy() bool
+  // Subnet IDs for the (interface) endpoint
+  //
+  // Deprecated in favor of `subnetRefs`.
+  subnets @maturity("deprecated") []string
+  // Subnets the (interface) endpoint places network interfaces in
+  subnetRefs() []aws.vpc.subnet
   // Whether to associate a private hosted zone with the specified VPC
   privateDnsEnabled bool
   // VPC endpoint state

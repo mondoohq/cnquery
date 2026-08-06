@@ -10573,6 +10573,7 @@ aws.vpc.endpoint 11.15.2
 aws.vpc.endpoint.arn 13.44.1
 aws.vpc.endpoint.createdAt 11.15.2
 aws.vpc.endpoint.dnsEntries 13.6.3
+aws.vpc.endpoint.hasWildcardPolicy 13.52.2
 aws.vpc.endpoint.id 11.15.2
 aws.vpc.endpoint.ipAddressType 13.6.3
 aws.vpc.endpoint.networkInterfaces 13.6.3
@@ -10586,6 +10587,7 @@ aws.vpc.endpoint.routeTables 13.6.3
 aws.vpc.endpoint.securityGroups 13.6.3
 aws.vpc.endpoint.serviceName 11.15.2
 aws.vpc.endpoint.state 11.15.2
+aws.vpc.endpoint.subnetRefs 13.52.2
 aws.vpc.endpoint.subnets 11.15.2
 aws.vpc.endpoint.tags 13.6.3
 aws.vpc.endpoint.type 11.15.2
