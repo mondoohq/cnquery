@@ -94,12 +94,24 @@ func pipelineClusterSpecFields(c pipelines.PipelineCluster) clusterSpecFields {
 	return f
 }
 
+// clusterSpecID composes the cache key of a compute definition from the owning
+// job, task, or pipeline and the key the definition is registered under.
+// Compute declared inline on a task has no key of its own, so it is named for
+// what it is rather than left as a trailing separator, which keeps the id
+// self-describing even if a future caller shares a prefix.
+func clusterSpecID(idPrefix string, key string) string {
+	if key == "" {
+		key = "inline"
+	}
+	return idPrefix + "/clusterSpec/" + key
+}
+
 // newMqlDatabricksClusterSpec maps a compute definition to its resource. The id
 // prefix identifies the owning job task or pipeline, which together with the key
 // keeps every specification in a scan distinct.
 func newMqlDatabricksClusterSpec(runtime *plugin.Runtime, idPrefix string, f clusterSpecFields) (*mqlDatabricksClusterSpec, error) {
 	res, err := CreateResource(runtime, "databricks.clusterSpec", map[string]*llx.RawData{
-		"__id":                       llx.StringData(idPrefix + "/clusterSpec/" + f.key),
+		"__id":                       llx.StringData(clusterSpecID(idPrefix, f.key)),
 		"key":                        llx.StringData(f.key),
 		"sparkVersion":               llx.StringData(f.sparkVersion),
 		"dataSecurityMode":           llx.StringData(f.dataSecurityMode),

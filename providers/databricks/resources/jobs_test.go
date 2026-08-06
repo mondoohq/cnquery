@@ -198,6 +198,15 @@ func TestTaskTypeOf(t *testing.T) {
 		{name: "run job", task: jobs.Task{RunJobTask: &jobs.RunJobTask{}}, want: "run_job"},
 		{name: "condition", task: jobs.Task{ConditionTask: &jobs.ConditionTask{}}, want: "condition"},
 		{name: "for each", task: jobs.Task{ForEachTask: &jobs.ForEachTask{}}, want: "for_each"},
+		{name: "dbt cloud", task: jobs.Task{DbtCloudTask: &jobs.DbtCloudTask{}}, want: "dbt_cloud"},
+		{name: "dbt platform", task: jobs.Task{DbtPlatformTask: &jobs.DbtPlatformTask{}}, want: "dbt_platform"},
+		{name: "python operator", task: jobs.Task{PythonOperatorTask: &jobs.PythonOperatorTask{}}, want: "python_operator"},
+		{name: "dashboard", task: jobs.Task{DashboardTask: &jobs.DashboardTask{}}, want: "dashboard"},
+		{name: "power bi", task: jobs.Task{PowerBiTask: &jobs.PowerBiTask{}}, want: "power_bi"},
+		{name: "alert", task: jobs.Task{AlertTask: &jobs.AlertTask{}}, want: "alert"},
+		{name: "clean rooms notebook", task: jobs.Task{CleanRoomsNotebookTask: &jobs.CleanRoomsNotebookTask{}}, want: "clean_rooms_notebook"},
+		{name: "ai runtime", task: jobs.Task{AiRuntimeTask: &jobs.AiRuntimeTask{}}, want: "ai_runtime"},
+		{name: "gen ai compute", task: jobs.Task{GenAiComputeTask: &jobs.GenAiComputeTask{}}, want: "gen_ai_compute"},
 		// A task carrying no work field at all is a kind this SDK version does
 		// not model. Reporting empty is honest; guessing a type would be worse
 		// than admitting the gap.

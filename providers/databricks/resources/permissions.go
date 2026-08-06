@@ -49,25 +49,29 @@ func principalOf(ac iam.AccessControlResponse) (name string, kind string) {
 	return "", ""
 }
 
-// mqlDatabricksPermissions fetches the workspace access control list of a single
-// object and maps it to one databricks.permission per principal and permission
-// level. The API returns the levels of a principal grouped under that principal,
-// but each level carries its own inheritance, so keeping them grouped would lose
-// which level is direct and which comes from a parent.
-func mqlDatabricksPermissions(runtime *plugin.Runtime, objectType string, objectId string) ([]any, error) {
-	ws, err := workspaceClient(runtime)
-	if err != nil {
-		return nil, err
-	}
+// permissionRecord is one principal's hold on one permission level, flattened
+// out of the grouped shape the API returns.
+type permissionRecord struct {
+	id                  string
+	principal           string
+	principalType       string
+	displayName         string
+	permissionLevel     string
+	inherited           bool
+	inheritedFromObject []string
+	objectType          string
+	objectId            string
+}
 
-	perms, err := ws.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), objectType, objectId)
-	if err != nil {
-		return nil, err
-	}
-
-	out := []any{}
+// flattenObjectPermissions maps an access control list to one record per
+// principal and permission level. The API groups a principal's levels under that
+// principal, but each level carries its own inheritance, so keeping them grouped
+// would lose which level is direct and which comes from a parent. An entry that
+// names no principal is dropped rather than reported as held by "".
+func flattenObjectPermissions(objectType string, objectId string, perms *iam.ObjectPermissions) []permissionRecord {
+	out := []permissionRecord{}
 	if perms == nil {
-		return out, nil
+		return out
 	}
 
 	for i := range perms.AccessControlList {
@@ -80,22 +84,60 @@ func mqlDatabricksPermissions(runtime *plugin.Runtime, objectType string, object
 		for j := range ac.AllPermissions {
 			p := ac.AllPermissions[j]
 			level := string(p.PermissionLevel)
-			res, err := CreateResource(runtime, "databricks.permission", map[string]*llx.RawData{
-				"__id":                llx.StringData("databricks.permission/" + objectType + "/" + objectId + "/" + principal + "/" + level),
-				"principal":           llx.StringData(principal),
-				"principalType":       llx.StringData(kind),
-				"displayName":         llx.StringData(ac.DisplayName),
-				"permissionLevel":     llx.StringData(level),
-				"inherited":           llx.BoolData(p.Inherited),
-				"inheritedFromObject": llx.ArrayData(strSlice(p.InheritedFromObject), types.String),
-				"objectType":          llx.StringData(objectType),
-				"objectId":            llx.StringData(objectId),
-			})
-			if err != nil {
-				return nil, err
+			// An entry with no level grants nothing, and since the level is what
+			// makes a record's id unique, two such entries for one principal
+			// would collide in the cache and the second would be dropped without
+			// a trace. Dropping them here is deliberate and total.
+			if level == "" {
+				continue
 			}
-			out = append(out, res)
+			out = append(out, permissionRecord{
+				id:                  "databricks.permission/" + objectType + "/" + objectId + "/" + principal + "/" + level,
+				principal:           principal,
+				principalType:       kind,
+				displayName:         ac.DisplayName,
+				permissionLevel:     level,
+				inherited:           p.Inherited,
+				inheritedFromObject: p.InheritedFromObject,
+				objectType:          objectType,
+				objectId:            objectId,
+			})
 		}
+	}
+	return out
+}
+
+// mqlDatabricksPermissions fetches the workspace access control list of a single
+// object and maps it to one databricks.permission per principal and permission
+// level.
+func mqlDatabricksPermissions(runtime *plugin.Runtime, objectType string, objectId string) ([]any, error) {
+	ws, err := workspaceClient(runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	perms, err := ws.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), objectType, objectId)
+	if err != nil {
+		return nil, err
+	}
+
+	out := []any{}
+	for _, rec := range flattenObjectPermissions(objectType, objectId, perms) {
+		res, err := CreateResource(runtime, "databricks.permission", map[string]*llx.RawData{
+			"__id":                llx.StringData(rec.id),
+			"principal":           llx.StringData(rec.principal),
+			"principalType":       llx.StringData(rec.principalType),
+			"displayName":         llx.StringData(rec.displayName),
+			"permissionLevel":     llx.StringData(rec.permissionLevel),
+			"inherited":           llx.BoolData(rec.inherited),
+			"inheritedFromObject": llx.ArrayData(strSlice(rec.inheritedFromObject), types.String),
+			"objectType":          llx.StringData(rec.objectType),
+			"objectId":            llx.StringData(rec.objectId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
 	}
 	return out, nil
 }
