@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -14,37 +15,160 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// mqlVercelTeamInternal caches the organization root team id, which is only
+// present on the team payload and is resolved on demand by orgRootTeam.
+type mqlVercelTeamInternal struct {
+	cacheOrgRootTeamID string
+}
+
 type teamRecord struct {
-	ID                                 string         `json:"id"`
-	Slug                               string         `json:"slug"`
-	Name                               string         `json:"name"`
-	Avatar                             string         `json:"avatar"`
-	CreatedAt                          flexTime       `json:"createdAt"`
-	Saml                               *samlRecord    `json:"saml"`
-	SensitiveEnvironmentVariablePolicy *string        `json:"sensitiveEnvironmentVariablePolicy"`
-	RemoteCaching                      *remoteCaching `json:"remoteCaching"`
+	ID                                 string             `json:"id"`
+	Slug                               string             `json:"slug"`
+	Name                               string             `json:"name"`
+	Avatar                             string             `json:"avatar"`
+	CreatedAt                          flexTime           `json:"createdAt"`
+	UpdatedAt                          flexTime           `json:"updatedAt"`
+	CreatorID                          string             `json:"creatorId"`
+	Billing                            *billingRecord     `json:"billing"`
+	ParentID                           string             `json:"parentId"`
+	OrgRootTeamID                      string             `json:"orgRootTeamId"`
+	Saml                               *samlRecord        `json:"saml"`
+	EmailDomain                        *string            `json:"emailDomain"`
+	InviteCode                         string             `json:"inviteCode"`
+	DpAccessRequestsMode               *string            `json:"dpAccessRequestsMode"`
+	RequireVerifiedCommits             *bool              `json:"requireVerifiedCommits"`
+	DisableRepositoryDispatchEvents    *bool              `json:"disableRepositoryDispatchEvents"`
+	StrictDeploymentProtection         *strictSetting     `json:"strictDeploymentProtectionSettings"`
+	StrictPasswordProtection           *strictSetting     `json:"strictPasswordProtectionSettings"`
+	StrictShareableLinks               *strictSetting     `json:"strictShareableLinks"`
+	DefaultDeploymentProtection        *defaultProtection `json:"defaultDeploymentProtection"`
+	DefaultRoles                       *defaultRoles      `json:"defaultRoles"`
+	DeploymentPolicy                   map[string]any     `json:"deploymentPolicy"`
+	DefaultExpirationSettings          *expirationRecord  `json:"defaultExpirationSettings"`
+	SensitiveEnvironmentVariablePolicy *string            `json:"sensitiveEnvironmentVariablePolicy"`
+	HideIPAddresses                    *bool              `json:"hideIpAddresses"`
+	HideIPAddressesInLogDrains         *bool              `json:"hideIpAddressesInLogDrains"`
+	RemoteCaching                      *remoteCaching     `json:"remoteCaching"`
+	Connect                            *connectRecord     `json:"connect"`
+	EnablePreviewFeedback              *string            `json:"enablePreviewFeedback"`
+	EnableProductionFeedback           *string            `json:"enableProductionFeedback"`
+	PreviewDeploymentSuffix            *string            `json:"previewDeploymentSuffix"`
+	StagingPrefix                      string             `json:"stagingPrefix"`
+	PersonalAccessTokensInvalidatedAt  flexTime           `json:"personalAccessTokensInvalidatedAt"`
+	AppTokensInvalidatedAt             flexTime           `json:"appTokensInvalidatedAt"`
+	APIKeysInvalidatedAt               flexTime           `json:"apiKeysInvalidatedAt"`
+	IntegrationTokensInvalidatedAt     flexTime           `json:"integrationTokensInvalidatedAt"`
+}
+
+type billingRecord struct {
+	Plan string `json:"plan"`
 }
 
 type samlRecord struct {
-	Enforced bool              `json:"enforced"`
-	Roles    map[string]string `json:"roles"`
+	Enforced   bool              `json:"enforced"`
+	Roles      map[string]string `json:"roles"`
+	Connection *samlConnection   `json:"connection"`
+	Directory  *samlConnection   `json:"directory"`
+}
+
+// samlConnection covers both the SAML connection and the Directory Sync
+// connection, which Vercel returns with the same shape.
+type samlConnection struct {
+	Type        string   `json:"type"`
+	State       string   `json:"state"`
+	Status      string   `json:"status"`
+	SyncState   string   `json:"syncState"`
+	ConnectedAt flexTime `json:"connectedAt"`
+	LastSynced  flexTime `json:"lastSyncedAt"`
+}
+
+type strictSetting struct {
+	Enabled bool `json:"enabled"`
+}
+
+type defaultProtection struct {
+	PasswordProtection *deploymentTypeHolder `json:"passwordProtection"`
+	SsoProtection      *deploymentTypeHolder `json:"ssoProtection"`
+}
+
+type defaultRoles struct {
+	TeamRoles       []string `json:"teamRoles"`
+	TeamPermissions []string `json:"teamPermissions"`
+}
+
+// expirationRecord is the deployment retention policy, returned both as a team
+// default and as the enforced policy on a project.
+type expirationRecord struct {
+	ExpirationDays           *int64 `json:"expirationDays"`
+	ExpirationDaysProduction *int64 `json:"expirationDaysProduction"`
+	ExpirationDaysCanceled   *int64 `json:"expirationDaysCanceled"`
+	ExpirationDaysErrored    *int64 `json:"expirationDaysErrored"`
+	DeploymentsToKeep        *int64 `json:"deploymentsToKeep"`
 }
 
 type remoteCaching struct {
 	Enabled *bool `json:"enabled"`
 }
 
+type connectRecord struct {
+	Enabled *bool `json:"enabled"`
+}
+
+// strictEnabled reports whether an owner-only guardrail is switched on,
+// treating an absent setting as off.
+func strictEnabled(s *strictSetting) bool {
+	return s != nil && s.Enabled
+}
+
 func newVercelTeam(runtime *plugin.Runtime, rec *teamRecord) (*mqlVercelTeam, error) {
 	samlEnforced := false
 	samlRoles := map[string]any{}
+	var samlConn, samlDir *samlConnection
 	if rec.Saml != nil {
 		samlEnforced = rec.Saml.Enforced
 		samlRoles = mapStrToAny(rec.Saml.Roles)
+		samlConn = rec.Saml.Connection
+		samlDir = rec.Saml.Directory
 	}
 
-	remoteCachingEnabled := false
-	if rec.RemoteCaching != nil && rec.RemoteCaching.Enabled != nil {
-		remoteCachingEnabled = *rec.RemoteCaching.Enabled
+	var samlType, samlState, samlStatus *string
+	var samlConnectedAt *time.Time
+	if samlConn != nil {
+		samlType, samlState, samlStatus = &samlConn.Type, &samlConn.State, &samlConn.Status
+		samlConnectedAt = samlConn.ConnectedAt.Time()
+	}
+
+	var dirType, dirState *string
+	var dirConnectedAt, dirLastSynced *time.Time
+	if samlDir != nil {
+		dirType = &samlDir.Type
+		dirConnectedAt = samlDir.ConnectedAt.Time()
+		dirLastSynced = samlDir.LastSynced.Time()
+		if samlDir.SyncState != "" {
+			dirState = &samlDir.SyncState
+		}
+	}
+
+	var defaultPasswordType, defaultSsoType *string
+	if rec.DefaultDeploymentProtection != nil {
+		defaultPasswordType = holderType(rec.DefaultDeploymentProtection.PasswordProtection)
+		defaultSsoType = holderType(rec.DefaultDeploymentProtection.SsoProtection)
+	}
+
+	defaultTeamRoles, defaultTeamPermissions := []any{}, []any{}
+	if rec.DefaultRoles != nil {
+		defaultTeamRoles = strSliceToAny(rec.DefaultRoles.TeamRoles)
+		defaultTeamPermissions = strSliceToAny(rec.DefaultRoles.TeamPermissions)
+	}
+
+	deploymentPolicy := any(nil)
+	if rec.DeploymentPolicy != nil {
+		deploymentPolicy = rec.DeploymentPolicy
+	}
+
+	exp := rec.DefaultExpirationSettings
+	if exp == nil {
+		exp = &expirationRecord{}
 	}
 
 	res, err := CreateResource(runtime, "vercel.team", map[string]*llx.RawData{
@@ -53,15 +177,86 @@ func newVercelTeam(runtime *plugin.Runtime, rec *teamRecord) (*mqlVercelTeam, er
 		"name":                               llx.StringData(rec.Name),
 		"avatar":                             llx.StringData(rec.Avatar),
 		"createdAt":                          llx.TimeDataPtr(rec.CreatedAt.Time()),
+		"updatedAt":                          llx.TimeDataPtr(rec.UpdatedAt.Time()),
+		"creatorId":                          llx.StringData(rec.CreatorID),
+		"billingPlan":                        llx.StringData(billingPlan(rec.Billing)),
+		"organizationId":                     llx.StringData(rec.ParentID),
 		"samlEnforced":                       llx.BoolData(samlEnforced),
 		"samlRoles":                          llx.MapData(samlRoles, types.String),
-		"sensitiveEnvironmentVariablePolicy": llx.StringDataPtr(rec.SensitiveEnvironmentVariablePolicy),
-		"remoteCachingEnabled":               llx.BoolData(remoteCachingEnabled),
+		"samlConnectionType":                 llx.StringDataPtr(samlType),
+		"samlConnectionState":                llx.StringDataPtr(samlState),
+		"samlConnectionStatus":               llx.StringDataPtr(samlStatus),
+		"samlConnectedAt":                    llx.TimeDataPtr(samlConnectedAt),
+		"directorySyncType":                  llx.StringDataPtr(dirType),
+		"directorySyncState":                 llx.StringDataPtr(dirState),
+		"directorySyncConnectedAt":           llx.TimeDataPtr(dirConnectedAt),
+		"directoryLastSyncedAt":              llx.TimeDataPtr(dirLastSynced),
+		"emailDomain":                        llx.StringDataPtr(rec.EmailDomain),
+		"inviteCodeConfigured":               llx.BoolData(rec.InviteCode != ""),
+		"dpAccessRequestsMode":               llx.StringDataPtr(rec.DpAccessRequestsMode),
+		"requireVerifiedCommits":             llx.BoolData(rec.RequireVerifiedCommits != nil && *rec.RequireVerifiedCommits),
+		"disableRepositoryDispatchEvents":    llx.BoolData(rec.DisableRepositoryDispatchEvents != nil && *rec.DisableRepositoryDispatchEvents),
+		"strictDeploymentProtectionSettings": llx.BoolData(strictEnabled(rec.StrictDeploymentProtection)),
+		"strictPasswordProtectionSettings":   llx.BoolData(strictEnabled(rec.StrictPasswordProtection)),
+		"strictShareableLinks":               llx.BoolData(strictEnabled(rec.StrictShareableLinks)),
+		"defaultPasswordProtectionDeploymentType": llx.StringDataPtr(defaultPasswordType),
+		"defaultSsoProtectionDeploymentType":      llx.StringDataPtr(defaultSsoType),
+		"defaultTeamRoles":                        llx.ArrayData(defaultTeamRoles, types.String),
+		"defaultTeamPermissions":                  llx.ArrayData(defaultTeamPermissions, types.String),
+		"deploymentPolicy":                        llx.DictData(deploymentPolicy),
+		"defaultExpirationDays":                   llx.IntData(intPtrOrZero(exp.ExpirationDays)),
+		"defaultExpirationDaysProduction":         llx.IntData(intPtrOrZero(exp.ExpirationDaysProduction)),
+		"defaultExpirationDaysCanceled":           llx.IntData(intPtrOrZero(exp.ExpirationDaysCanceled)),
+		"defaultExpirationDaysErrored":            llx.IntData(intPtrOrZero(exp.ExpirationDaysErrored)),
+		"defaultDeploymentsToKeep":                llx.IntData(intPtrOrZero(exp.DeploymentsToKeep)),
+		"sensitiveEnvironmentVariablePolicy":      llx.StringDataPtr(rec.SensitiveEnvironmentVariablePolicy),
+		"hideIpAddresses":                         llx.BoolData(rec.HideIPAddresses != nil && *rec.HideIPAddresses),
+		"hideIpAddressesInLogDrains":              llx.BoolData(rec.HideIPAddressesInLogDrains != nil && *rec.HideIPAddressesInLogDrains),
+		"remoteCachingEnabled":                    llx.BoolData(rec.RemoteCaching != nil && rec.RemoteCaching.Enabled != nil && *rec.RemoteCaching.Enabled),
+		"secureComputeEnabled":                    llx.BoolData(rec.Connect != nil && rec.Connect.Enabled != nil && *rec.Connect.Enabled),
+		"enablePreviewFeedback":                   llx.StringDataPtr(rec.EnablePreviewFeedback),
+		"enableProductionFeedback":                llx.StringDataPtr(rec.EnableProductionFeedback),
+		"previewDeploymentSuffix":                 llx.StringDataPtr(rec.PreviewDeploymentSuffix),
+		"stagingPrefix":                           llx.StringData(rec.StagingPrefix),
+		"personalAccessTokensInvalidatedAt":       llx.TimeDataPtr(rec.PersonalAccessTokensInvalidatedAt.Time()),
+		"appTokensInvalidatedAt":                  llx.TimeDataPtr(rec.AppTokensInvalidatedAt.Time()),
+		"apiKeysInvalidatedAt":                    llx.TimeDataPtr(rec.APIKeysInvalidatedAt.Time()),
+		"integrationTokensInvalidatedAt":          llx.TimeDataPtr(rec.IntegrationTokensInvalidatedAt.Time()),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlVercelTeam), nil
+
+	team := res.(*mqlVercelTeam)
+	team.cacheOrgRootTeamID = rec.OrgRootTeamID
+	return team, nil
+}
+
+// billingPlan returns the subscribed plan, or an empty string when the billing
+// object is absent. The plan gates several team settings, so callers use it to
+// tell "not available on this plan" apart from "switched off".
+func billingPlan(b *billingRecord) string {
+	if b == nil {
+		return ""
+	}
+	return b.Plan
+}
+
+// orgRootTeam resolves the organization's root billing team. Comparing it to
+// this team's own id identifies the root team itself.
+func (c *mqlVercelTeam) orgRootTeam() (*mqlVercelTeam, error) {
+	if c.cacheOrgRootTeamID == "" {
+		c.OrgRootTeam.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	team, err := NewResource(c.MqlRuntime, "vercel.team", map[string]*llx.RawData{
+		"id": llx.StringData(c.cacheOrgRootTeamID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return team.(*mqlVercelTeam), nil
 }
 
 // initVercelTeam resolves the team a query targets: an explicit id argument, the
@@ -116,13 +311,23 @@ func (c *mqlVercelTeam) id() (string, error) {
 // --- team members ---------------------------------------------------------
 
 type memberRecord struct {
-	UID       string   `json:"uid"`
-	Email     string   `json:"email"`
-	Username  string   `json:"username"`
-	Name      string   `json:"name"`
-	Role      string   `json:"role"`
-	Confirmed bool     `json:"confirmed"`
-	CreatedAt flexTime `json:"createdAt"`
+	UID               string      `json:"uid"`
+	Email             string      `json:"email"`
+	Username          string      `json:"username"`
+	Name              string      `json:"name"`
+	Role              string      `json:"role"`
+	TeamRoles         []string    `json:"teamRoles"`
+	TeamPermissions   []string    `json:"teamPermissions"`
+	JoinedFrom        *joinedFrom `json:"joinedFrom"`
+	Confirmed         bool        `json:"confirmed"`
+	AccessRequestedAt flexTime    `json:"accessRequestedAt"`
+	CreatedAt         flexTime    `json:"createdAt"`
+}
+
+// joinedFrom records the route a member took into the team, which distinguishes
+// an identity-provider provisioned member from one who followed an invite link.
+type joinedFrom struct {
+	Origin string `json:"origin"`
 }
 
 func (c *mqlVercelTeam) members() ([]any, error) {
@@ -138,15 +343,24 @@ func (c *mqlVercelTeam) members() ([]any, error) {
 	var res []any
 	for i := range records {
 		rec := records[i]
+		var joinedOrigin *string
+		if rec.JoinedFrom != nil && rec.JoinedFrom.Origin != "" {
+			joinedOrigin = &rec.JoinedFrom.Origin
+		}
+
 		member, err := CreateResource(c.MqlRuntime, "vercel.team.member", map[string]*llx.RawData{
-			"__id":      llx.StringData(c.Id.Data + "/" + rec.UID),
-			"uid":       llx.StringData(rec.UID),
-			"email":     llx.StringData(rec.Email),
-			"username":  llx.StringData(rec.Username),
-			"name":      llx.StringData(rec.Name),
-			"role":      llx.StringData(rec.Role),
-			"confirmed": llx.BoolData(rec.Confirmed),
-			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"__id":              llx.StringData(c.Id.Data + "/" + rec.UID),
+			"uid":               llx.StringData(rec.UID),
+			"email":             llx.StringData(rec.Email),
+			"username":          llx.StringData(rec.Username),
+			"name":              llx.StringData(rec.Name),
+			"role":              llx.StringData(rec.Role),
+			"teamRoles":         llx.ArrayData(strSliceToAny(rec.TeamRoles), types.String),
+			"teamPermissions":   llx.ArrayData(strSliceToAny(rec.TeamPermissions), types.String),
+			"joinedFromOrigin":  llx.StringDataPtr(joinedOrigin),
+			"confirmed":         llx.BoolData(rec.Confirmed),
+			"accessRequestedAt": llx.TimeDataPtr(rec.AccessRequestedAt.Time()),
+			"createdAt":         llx.TimeDataPtr(rec.CreatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err
@@ -154,6 +368,86 @@ func (c *mqlVercelTeam) members() ([]any, error) {
 		res = append(res, member)
 	}
 	return res, nil
+}
+
+// --- shared environment variables -----------------------------------------
+
+type sharedEnvRecord struct {
+	ID                           string   `json:"id"`
+	Key                          string   `json:"key"`
+	Type                         string   `json:"type"`
+	Target                       []string `json:"target"`
+	ApplyToAllCustomEnvironments *bool    `json:"applyToAllCustomEnvironments"`
+	CustomEnvironmentIDs         []string `json:"customEnvironmentIds"`
+	Decrypted                    *bool    `json:"decrypted"`
+	Comment                      *string  `json:"comment"`
+	ProjectIDs                   []string `json:"projectId"`
+	CreatedBy                    *string  `json:"createdBy"`
+	UpdatedBy                    *string  `json:"updatedBy"`
+	LastEditedByDisplayName      *string  `json:"lastEditedByDisplayName"`
+	CreatedAt                    flexTime `json:"createdAt"`
+	UpdatedAt                    flexTime `json:"updatedAt"`
+}
+
+// sharedEnvironmentVariables lists the variables defined once on the team and
+// injected into every project linked to them. Values are never requested: the
+// list endpoint does not return them, and the per-variable decrypt endpoint is
+// deliberately not called.
+func (c *mqlVercelTeam) sharedEnvironmentVariables() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
+	records, err := connection.GetPaged[sharedEnvRecord](context.Background(), conn, "/v1/env", connection.TeamQuery(c.Id.Data), "data")
+	if err != nil {
+		// Shared environment variables are a paid-plan feature; treat an absent
+		// or forbidden collection as empty rather than failing the scan.
+		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	var res []any
+	for i := range records {
+		rec := records[i]
+		variable, err := CreateResource(c.MqlRuntime, "vercel.team.sharedEnvironmentVariable", map[string]*llx.RawData{
+			"id":                           llx.StringData(rec.ID),
+			"key":                          llx.StringData(rec.Key),
+			"type":                         llx.StringData(rec.Type),
+			"target":                       llx.ArrayData(strSliceToAny(rec.Target), types.String),
+			"applyToAllCustomEnvironments": llx.BoolData(rec.ApplyToAllCustomEnvironments != nil && *rec.ApplyToAllCustomEnvironments),
+			"customEnvironmentIds":         llx.ArrayData(strSliceToAny(rec.CustomEnvironmentIDs), types.String),
+			"decrypted":                    llx.BoolData(rec.Decrypted != nil && *rec.Decrypted),
+			"comment":                      llx.StringDataPtr(rec.Comment),
+			"createdBy":                    llx.StringDataPtr(rec.CreatedBy),
+			"updatedBy":                    llx.StringDataPtr(rec.UpdatedBy),
+			"lastEditedByDisplayName":      llx.StringDataPtr(rec.LastEditedByDisplayName),
+			"createdAt":                    llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"updatedAt":                    llx.TimeDataPtr(rec.UpdatedAt.Time()),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlVar := variable.(*mqlVercelTeamSharedEnvironmentVariable)
+		mqlVar.teamID = c.Id.Data
+		mqlVar.cacheProjectIDs = rec.ProjectIDs
+		res = append(res, variable)
+	}
+	return res, nil
+}
+
+func (c *mqlVercelTeamSharedEnvironmentVariable) id() (string, error) {
+	return c.Id.Data, c.Id.Error
+}
+
+// mqlVercelTeamSharedEnvironmentVariableInternal caches the linked project ids
+// so projects() can resolve them without re-reading the variable list.
+type mqlVercelTeamSharedEnvironmentVariableInternal struct {
+	teamID          string
+	cacheProjectIDs []string
+}
+
+func (c *mqlVercelTeamSharedEnvironmentVariable) projects() ([]any, error) {
+	return resolveProjectRefs(c.MqlRuntime, c.teamID, c.cacheProjectIDs)
 }
 
 // --- team domains ---------------------------------------------------------

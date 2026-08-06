@@ -117,6 +117,112 @@ func TestGetPagedSinglePageNoPagination(t *testing.T) {
 	}
 }
 
+func TestGetPagedStopsOnNonAdvancingCursor(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		// An endpoint that reports a cursor but ignores the until parameter
+		// would loop forever without the non-advancing guard.
+		io.WriteString(w, `{"items":[{"id":"a"}],"pagination":{"next":100}}`)
+	}))
+	defer srv.Close()
+
+	got, err := GetPaged[pagedItem](context.Background(), testConn(srv), "/things", nil, "items")
+	if err != nil {
+		t.Fatalf("GetPaged: %v", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected the cursor to stop advancing after 2 requests, got %d", calls)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expected 2 items, got %d", len(got))
+	}
+}
+
+func TestGetPagedFromFollowsTokenCursor(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		switch r.URL.Query().Get("from") {
+		case "":
+			io.WriteString(w, `{"projects":[{"id":"a"}],"pagination":{"count":1,"next":"tok-2"}}`)
+		case "tok-2":
+			io.WriteString(w, `{"projects":[{"id":"b"}],"pagination":{"count":1,"next":null}}`)
+		default:
+			t.Errorf("unexpected from cursor: %q", r.URL.Query().Get("from"))
+		}
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedFrom[pagedItem](context.Background(), testConn(srv), "/v10/projects", nil, "projects")
+	if err != nil {
+		t.Fatalf("GetPagedFrom: %v", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected 2 page requests, got %d", calls)
+	}
+	if len(got) != 2 || got[0].ID != "a" || got[1].ID != "b" {
+		t.Fatalf("expected items a,b; got %v", got)
+	}
+}
+
+func TestGetPagedFromAcceptsNumericCursor(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The same endpoint may page with a timestamp instead of a token.
+		switch r.URL.Query().Get("from") {
+		case "":
+			io.WriteString(w, `{"projects":[{"id":"a"}],"pagination":{"next":1700000000000}}`)
+		case "1700000000000":
+			io.WriteString(w, `{"projects":[{"id":"b"}],"pagination":{"next":null}}`)
+		default:
+			t.Errorf("unexpected from cursor: %q", r.URL.Query().Get("from"))
+		}
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedFrom[pagedItem](context.Background(), testConn(srv), "/v10/projects", nil, "projects")
+	if err != nil {
+		t.Fatalf("GetPagedFrom: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expected 2 items, got %d", len(got))
+	}
+}
+
+func TestGetPagedFromStopsOnNonAdvancingCursor(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		io.WriteString(w, `{"projects":[{"id":"a"}],"pagination":{"next":"same-token"}}`)
+	}))
+	defer srv.Close()
+
+	if _, err := GetPagedFrom[pagedItem](context.Background(), testConn(srv), "/v10/projects", nil, "projects"); err != nil {
+		t.Fatalf("GetPagedFrom: %v", err)
+	}
+	if calls != 2 {
+		t.Fatalf("expected the cursor to stop advancing after 2 requests, got %d", calls)
+	}
+}
+
+func TestCursorValue(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{"opaque token", `"tok-abc"`, "tok-abc"},
+		{"numeric timestamp", `1700000000000`, "1700000000000"},
+		{"unusable object", `{"a":1}`, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := cursorValue([]byte(tc.raw)); got != tc.want {
+				t.Errorf("cursorValue(%s) = %q, want %q", tc.raw, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGetPagedMissingKeyReturnsEmpty(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, `{"other":[{"id":"x"}]}`)
