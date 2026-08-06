@@ -342,9 +342,21 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 			return nil, nil
 		}
 	}
-	policyId := g.Id.Data
-	res := make([]any, 0, len(g.cacheRules))
-	for _, r := range g.cacheRules {
+	return mqlFirewallPolicyRules(g.MqlRuntime, g.Id.Data, g.cacheRules)
+}
+
+// mqlFirewallPolicyRules maps firewall policy rules onto MQL resources.
+//
+// Network firewall policies (attached to a project's network) and hierarchical
+// firewall policies (attached to an organization or folder) carry the same rule
+// type, so both share this mapping. policyId qualifies the generated rule ids so
+// rules from two policies cannot collide in the resource cache.
+func mqlFirewallPolicyRules(runtime *plugin.Runtime, policyId string, rules []*compute.FirewallPolicyRule) ([]any, error) {
+	res := make([]any, 0, len(rules))
+	for _, r := range rules {
+		if r == nil {
+			continue
+		}
 		match, _ := convert.JsonToDict(r.Match)
 
 		var srcIpRanges, destIpRanges, srcAddressGroups, destAddressGroups []any
@@ -379,7 +391,7 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 			targetSecureTags[t.Name] = t.State
 		}
 
-		mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewallPolicy.rule", map[string]*llx.RawData{
+		mqlRule, err := CreateResource(runtime, "gcp.project.computeService.firewallPolicy.rule", map[string]*llx.RawData{
 			"id":                    llx.StringData(fmt.Sprintf("%s/rule/%d", policyId, r.Priority)),
 			"priority":              llx.IntData(int64(r.Priority)),
 			"action":                llx.StringData(r.Action),

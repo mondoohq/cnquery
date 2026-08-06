@@ -124,6 +124,10 @@ cloud.google.com/go/modelarmor v1.2.0 h1:mWy10uAVL37hg/272ur+5Zr/sTdI7xd+44NhAf2
 cloud.google.com/go/modelarmor v1.2.0/go.mod h1:jbktTK1YEQY9z8JJVEUjgRv6zbs+l8gp+15o+znPF5Q=
 cloud.google.com/go/monitoring v1.30.0 h1:r/d+JUbyKmJ8b07iznuKfzVzrIXTWxHQ3lBRm3x2LlY=
 cloud.google.com/go/monitoring v1.30.0/go.mod h1:htlUR0QWVMrjFzZmN4LGnMAve9xB/eduwjmINxVZ8RM=
+cloud.google.com/go/networkconnectivity v1.28.0 h1:kd3rzFnJNotvr8MsLE/iuZOUtiSRdJicTvLKWpKrk/8=
+cloud.google.com/go/networkconnectivity v1.28.0/go.mod h1:pCnczH2W/cnLSlnsnN+VzBoXlM81ZoUGuuacFBGThyw=
+cloud.google.com/go/networkmanagement v1.30.0 h1:LqYm91vSQk3NM6fHjthseRh4xrDvhXIWQBsQY/Ksus8=
+cloud.google.com/go/networkmanagement v1.30.0/go.mod h1:3SBf5T7jyGzw5jqJWE7TUDRhIl2E029jggbeoFEgt5E=
 cloud.google.com/go/orgpolicy v1.20.0 h1:kpVcE/OsC5aAzHCsAiuQSg3+s6ILzgPTuPZyS7n7ejA=
 cloud.google.com/go/orgpolicy v1.20.0/go.mod h1:9LHqEGx5P5dhansdKTNIEXpM+QbebAIOs66+HUID4aQ=
 cloud.google.com/go/osconfig v1.22.0 h1:r5lzneR9GNixJ96lZ6oIfJK9Cd5sKpnzZJe1LcGZf4w=

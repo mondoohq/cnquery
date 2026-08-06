@@ -80,6 +80,37 @@ func TestGcpCredentialVisibilityQueriesCompile(t *testing.T) {
 	}
 }
 
+// The network-boundary resources describe connectivity that a per-project
+// network review cannot reach: rules enforced from above the project, networks
+// owned by another project, and fabrics that join networks without a peering.
+func TestGcpNetworkBoundaryQueriesCompile(t *testing.T) {
+	gcpSchema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "gcp"})
+
+	queries := []string{
+		// Shared VPC, both directions plus the typed edges
+		`gcp.project.compute { isSharedVpcHost isSharedVpcServiceProject }`,
+		`gcp.project.compute.sharedVpcHost { id }`,
+		`gcp.project.compute.sharedVpcServiceProjects { id }`,
+		// hierarchical firewall policies at organization and folder scope
+		`gcp.organization.firewallPolicies { shortName parent ruleTupleCount associations }`,
+		`gcp.organization.firewallPolicies.where(ruleTupleCount > 0) { rules { action direction srcIpRanges } }`,
+		`gcp.folders.where(id == "123").list { firewallPolicies { shortName rules { action } } }`,
+		// Network Connectivity Center hubs and spokes
+		`gcp.project.networkConnectivity.hubs { name state policyMode routingVpcs spokeSummary }`,
+		`gcp.project.networkConnectivity.spokes { name spokeType state hub linkedVpcNetwork }`,
+		// connectivity tests and their verdicts
+		`gcp.project.networkManagement.connectivityTests { name result verifyTime protocol bypassFirewallChecks }`,
+		`gcp.project.networkManagement.connectivityTests.where(result == "REACHABLE") { source destination reachabilityDetails }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(gcpSchema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}
+
 // A named argument that is not a declared field must be rejected rather than
 // silently ignored, which is what makes the field declarations load-bearing.
 func TestGcpEffectiveAccessRejectsUnknownArgument(t *testing.T) {
