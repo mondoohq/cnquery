@@ -14,6 +14,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -185,6 +186,235 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, mqlInstance)
+	}
+
+	return res, nil
+}
+
+// problems lists every finding Cloud Guard has raised. The listing is
+// deliberately unfiltered: `lifecycleDetail` is exposed as a field so callers
+// decide whether they care about OPEN findings only or also want the
+// RESOLVED and DISMISSED history. Filtering to OPEN here would make a
+// dismissed-but-unfixed finding indistinguishable from one that never existed.
+func (o *mqlOciCloudGuard) problems() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	homeRegion, err := o.getHomeRegion()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := conn.CloudGuardClient(homeRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	problems := []cloudguard.ProblemSummary{}
+	var page *string
+	for {
+		response, err := client.ListProblems(ctx, cloudguard.ListProblemsRequest{
+			CompartmentId: common.String(conn.TenantID()),
+			// Problems are raised against resources in sub-compartments, so
+			// without the subtree flag the tenancy root reports almost none.
+			CompartmentIdInSubtree: common.Bool(true),
+			// ACCESSIBLE degrades to the compartments the caller can read
+			// instead of failing the whole listing on the first one it cannot.
+			AccessLevel: cloudguard.ListProblemsAccessLevelAccessible,
+			Page:        page,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		problems = append(problems, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(problems))
+	for i := range problems {
+		problem := problems[i]
+
+		var riskScore float64
+		if problem.RiskScore != nil {
+			riskScore = *problem.RiskScore
+		}
+
+		mqlProblem, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.problem", map[string]*llx.RawData{
+			"id":              llx.StringDataPtr(problem.Id),
+			"riskLevel":       llx.StringData(string(problem.RiskLevel)),
+			"riskScore":       llx.FloatData(riskScore),
+			"detectorRuleId":  llx.StringDataPtr(problem.DetectorRuleId),
+			"detector":        llx.StringData(string(problem.DetectorId)),
+			"resourceId":      llx.StringDataPtr(problem.ResourceId),
+			"resourceName":    llx.StringDataPtr(problem.ResourceName),
+			"resourceType":    llx.StringDataPtr(problem.ResourceType),
+			"labels":          llx.ArrayData(stringsToAny(problem.Labels), types.String),
+			"state":           llx.StringData(string(problem.LifecycleState)),
+			"lifecycleDetail": llx.StringData(string(problem.LifecycleDetail)),
+			"region":          llx.StringDataPtr(problem.Region),
+			"regions":         llx.ArrayData(stringsToAny(problem.Regions), types.String),
+			"firstDetected":   sdkTimeData(problem.TimeFirstDetected),
+			"lastDetected":    sdkTimeData(problem.TimeLastDetected),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlProblemTyped := mqlProblem.(*mqlOciCloudGuardProblem)
+		mqlProblemTyped.cacheCompartmentId = stringValue(problem.CompartmentId)
+		mqlProblemTyped.cacheTargetId = stringValue(problem.TargetId)
+		res = append(res, mqlProblemTyped)
+	}
+
+	return res, nil
+}
+
+type mqlOciCloudGuardProblemInternal struct {
+	cacheCompartmentId string
+	cacheTargetId      string
+}
+
+func (o *mqlOciCloudGuardProblem) id() (string, error) {
+	return "oci.cloudGuard.problem/" + o.Id.Data, nil
+}
+
+func (o *mqlOciCloudGuardProblem) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciCloudGuardProblem) target() (*mqlOciCloudGuardTarget, error) {
+	if o.cacheTargetId == "" {
+		o.Target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	// Targets are not individually addressable by OCID through an init, so
+	// match against the already-cached target listing rather than issuing a
+	// per-problem lookup.
+	obj, err := CreateResource(o.MqlRuntime, "oci.cloudGuard", nil)
+	if err != nil {
+		return nil, err
+	}
+	rawTargets := obj.(*mqlOciCloudGuard).GetTargets()
+	if rawTargets.Error != nil {
+		return nil, rawTargets.Error
+	}
+
+	for _, raw := range rawTargets.Data {
+		t, ok := raw.(*mqlOciCloudGuardTarget)
+		if ok && t.Id.Data == o.cacheTargetId {
+			return t, nil
+		}
+	}
+
+	o.Target.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	obj, err := CreateResource(o.MqlRuntime, "oci.cloudGuard", nil)
+	if err != nil {
+		return nil, err
+	}
+	homeRegion, err := obj.(*mqlOciCloudGuard).getHomeRegion()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := conn.CloudGuardClient(homeRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	rules := []cloudguard.DetectorRecipeDetectorRuleSummary{}
+	var page *string
+	for {
+		response, err := client.ListDetectorRecipeDetectorRules(ctx, cloudguard.ListDetectorRecipeDetectorRulesRequest{
+			DetectorRecipeId: common.String(o.Id.Data),
+			CompartmentId:    common.String(o.CompartmentID.Data),
+			Page:             page,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		rules = append(rules, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(rules))
+	for i := range rules {
+		rule := rules[i]
+
+		// Every field that decides whether the rule actually fires lives in
+		// DetectorDetails. A nil block means the API returned the rule without
+		// its configuration, so report it as disabled-unknown rather than
+		// defaulting isEnabled to false, which would read as an authoritative
+		// "this detection is off".
+		var (
+			isEnabled              bool
+			riskLevel              string
+			problemThreshold       int64
+			labels                 []string
+			isConfigurationAllowed bool
+			configurations         []any
+		)
+		if rule.DetectorDetails != nil {
+			isEnabled = boolValue(rule.DetectorDetails.IsEnabled)
+			riskLevel = string(rule.DetectorDetails.RiskLevel)
+			if rule.DetectorDetails.ProblemThreshold != nil {
+				problemThreshold = int64(*rule.DetectorDetails.ProblemThreshold)
+			}
+			labels = rule.DetectorDetails.Labels
+			isConfigurationAllowed = boolValue(rule.DetectorDetails.IsConfigurationAllowed)
+
+			configurations, err = convert.JsonToDictSlice(rule.DetectorDetails.Configurations)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		managedListTypes := make([]string, 0, len(rule.ManagedListTypes))
+		for _, t := range rule.ManagedListTypes {
+			managedListTypes = append(managedListTypes, string(t))
+		}
+
+		mqlRule, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.detectorRule", map[string]*llx.RawData{
+			"__id":                   llx.StringData(o.Id.Data + "/" + stringValue(rule.Id)),
+			"id":                     llx.StringDataPtr(rule.Id),
+			"detector":               llx.StringData(string(rule.Detector)),
+			"name":                   llx.StringDataPtr(rule.DisplayName),
+			"description":            llx.StringDataPtr(rule.Description),
+			"recommendation":         llx.StringDataPtr(rule.Recommendation),
+			"serviceType":            llx.StringDataPtr(rule.ServiceType),
+			"resourceType":           llx.StringDataPtr(rule.ResourceType),
+			"isEnabled":              llx.BoolData(isEnabled),
+			"riskLevel":              llx.StringData(riskLevel),
+			"problemThreshold":       llx.IntData(problemThreshold),
+			"labels":                 llx.ArrayData(stringsToAny(labels), types.String),
+			"configurations":         llx.ArrayData(configurations, types.Dict),
+			"isConfigurationAllowed": llx.BoolData(isConfigurationAllowed),
+			"isCloneable":            llx.BoolData(boolValue(rule.IsCloneable)),
+			"managedListTypes":       llx.ArrayData(stringsToAny(managedListTypes), types.String),
+			"state":                  llx.StringData(string(rule.LifecycleState)),
+			"created":                sdkTimeData(rule.TimeCreated),
+			"updated":                sdkTimeData(rule.TimeUpdated),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
 	}
 
 	return res, nil

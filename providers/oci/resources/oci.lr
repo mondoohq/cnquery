@@ -2128,7 +2128,9 @@ private oci.events.rule @defaults("name") {
 // monitors, `detectorRecipes` the curated detector rule sets,
 // `securityZones` and `securityZoneRecipes` the security-zone
 // enforcement scopes, and `securityPolicies` the individual policies
-// that compose those recipes.
+// that compose those recipes. `problems` carries the findings Cloud
+// Guard has actually raised, each with its risk level, affected
+// resource, and triage state.
 oci.cloudGuard {
   // Whether Cloud Guard is enabled
   status() bool
@@ -2138,6 +2140,8 @@ oci.cloudGuard {
   selfManageResources() bool
   // Cloud Guard targets (monitored compartments/resources)
   targets() []oci.cloudGuard.target
+  // Problems (security findings) Cloud Guard has raised across the tenancy
+  problems() []oci.cloudGuard.problem
   // Cloud Guard detector recipes
   detectorRecipes() []oci.cloudGuard.detectorRecipe
   // Cloud Guard security zones
@@ -2202,12 +2206,125 @@ private oci.cloudGuard.detectorRecipe @defaults("name") {
   state string
   // Detector recipe creation time
   created time
+  // Detector rules in the recipe, each with its enabled state and risk level
+  rules() []oci.cloudGuard.detectorRule
   // System tags
   //
   // Tags applied automatically by Oracle, keyed by namespace. The
   // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Cloud Guard detector rule
+//
+// Single detection rule inside a detector recipe, and the switch that
+// decides whether Cloud Guard looks for that condition at all. `isEnabled`
+// reports whether the rule is active in the recipe and `riskLevel` the
+// severity it assigns to matches, so a rule that is present but disabled,
+// or downgraded to a lower risk level, is visible rather than silently
+// absent from findings. `configurations` carries the rule's tunable
+// parameters, `labels` its classification tags, and `problemThreshold` the
+// count that must be reached before a problem is raised. `recommendation`
+// is the remediation guidance Cloud Guard shows for matches.
+private oci.cloudGuard.detectorRule @defaults("name isEnabled riskLevel") {
+  // Detector rule identifier
+  id string
+  // Detector this rule belongs to
+  //
+  // For example: IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR,
+  // IAAS_THREAT_DETECTOR, IAAS_LOG_INSIGHT_DETECTOR,
+  // IAAS_INSTANCE_SECURITY_DETECTOR, or IAAS_CONTAINER_SECURITY_DETECTOR.
+  detector string
+  // Detector rule display name
+  name string
+  // Detector rule description
+  description string
+  // Remediation guidance shown for problems this rule raises
+  recommendation string
+  // OCI service the rule inspects
+  serviceType string
+  // Resource type the rule inspects
+  resourceType string
+  // Whether the rule is enabled in the recipe
+  isEnabled bool
+  // Risk level assigned to problems this rule raises (CRITICAL, HIGH, MEDIUM, LOW, MINOR)
+  riskLevel string
+  // Number of matches required before a problem is raised
+  problemThreshold int
+  // Classification labels attached to the rule
+  labels []string
+  // Tunable parameters for the rule
+  //
+  // Each entry has `configKey`, `name`, `value`, `dataType`, and for
+  // multi-valued settings a `values` list whose entries carry `name`,
+  // `value`, and `listType`.
+  configurations []dict
+  // Whether the rule's configuration may be changed
+  isConfigurationAllowed bool
+  // Whether the rule can be cloned into a customer-managed recipe
+  isCloneable bool
+  // Managed list types the rule accepts (e.g., CIDR_BLOCK, USERS, GROUPS, RESOURCE_OCID)
+  managedListTypes []string
+  // Detector rule lifecycle state (e.g., CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detector rule creation time
+  created time
+  // Detector rule last-update time
+  updated time
+}
+
+// Oracle Cloud Infrastructure (OCI) Cloud Guard problem
+//
+// Security finding Cloud Guard has raised against a monitored resource.
+// `riskLevel` and `riskScore` grade the finding, `resourceId`,
+// `resourceName`, and `resourceType` identify what it was raised against,
+// and `detectorRuleId` names the rule that fired. `lifecycleDetail` is the
+// triage state (OPEN, RESOLVED, DISMISSED, or DELETED), which distinguishes
+// a finding still awaiting action from one an operator has already closed
+// or waived. `firstDetected` and `lastDetected` bound how long the
+// condition has persisted, and `labels` carries the rule's classification
+// tags. Problems are reported from the Cloud Guard reporting region and
+// cover every compartment in the tenancy subtree.
+private oci.cloudGuard.problem @defaults("resourceName riskLevel lifecycleDetail") {
+  // Problem OCID
+  id string
+  // Compartment containing the resource the problem was raised against
+  compartment() oci.compartment
+  // Risk level assigned to the problem (CRITICAL, HIGH, MEDIUM, LOW, MINOR)
+  riskLevel string
+  // Numeric risk score for the problem
+  riskScore float
+  // Identifier of the detector rule that raised the problem
+  detectorRuleId string
+  // Detector that raised the problem
+  //
+  // For example: IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR,
+  // IAAS_THREAT_DETECTOR, IAAS_LOG_INSIGHT_DETECTOR,
+  // IAAS_INSTANCE_SECURITY_DETECTOR, or IAAS_CONTAINER_SECURITY_DETECTOR.
+  detector string
+  // OCID of the resource the problem was raised against
+  resourceId string
+  // Name of the resource the problem was raised against
+  resourceName string
+  // Type of the resource the problem was raised against
+  resourceType string
+  // Cloud Guard target that reported the problem
+  target() oci.cloudGuard.target
+  // Classification labels attached to the problem
+  labels []string
+  // Problem record lifecycle state (ACTIVE, INACTIVE)
+  state string
+  // Triage state of the problem (OPEN, RESOLVED, DISMISSED, DELETED)
+  lifecycleDetail string
+  // Region the problem was detected in
+  region string
+  // Every region the problem applies to, for problems spanning more than one
+  regions []string
+  // When the problem was first detected
+  firstDetected time
+  // When the problem was most recently detected
+  lastDetected time
 }
 
 // Oracle Cloud Infrastructure (OCI) Cloud Guard security zone
