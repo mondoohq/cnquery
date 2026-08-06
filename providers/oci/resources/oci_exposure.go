@@ -577,6 +577,109 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	return res.(*mqlOciNetworkExposure), nil
 }
 
+// exposure breaks down whether the network load balancer is reachable from the
+// internet. The shape mirrors the Load Balancer path - a public IP, at least
+// one listener, and a subnet that both permits internet ingress and routes to
+// an internet gateway, with the network security group or security list
+// admitting inbound from any address - but a network load balancer sits on a
+// single subnet rather than a list, so there is exactly one gate to evaluate.
+func (n *mqlOciNetworkLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, error) {
+	id := n.GetId()
+	if id.Error != nil {
+		return nil, id.Error
+	}
+
+	isPrivate := n.GetIsPrivate()
+	if isPrivate.Error != nil {
+		return nil, isPrivate.Error
+	}
+
+	ips := n.GetIpAddresses()
+	if ips.Error != nil {
+		return nil, ips.Error
+	}
+	hasPublicIp := false
+	if !isPrivate.Data {
+		for _, e := range ips.Data {
+			if d, ok := e.(map[string]any); ok {
+				if pub, _ := d["isPublic"].(bool); pub {
+					hasPublicIp = true
+					break
+				}
+			}
+		}
+	}
+
+	listeners := n.GetListeners()
+	if listeners.Error != nil {
+		return nil, listeners.Error
+	}
+	hasListener := len(listeners.Data) > 0
+
+	nsgs := n.GetSecurityGroups()
+	if nsgs.Error != nil {
+		return nil, nsgs.Error
+	}
+	nsgOpenRules, securityGroupAllowsIngress, err := ociCollectOpenNsgRules(nsgs.Data)
+	if err != nil {
+		return nil, err
+	}
+	openRules := append([]any{}, nsgOpenRules...)
+
+	subnetVal := n.GetSubnet()
+	if subnetVal.Error != nil {
+		return nil, subnetVal.Error
+	}
+
+	gates := make([]ociSubnetGate, 0, 1)
+	hasRouteToInternet := false
+	securityListAllowsIngress := false
+	if subnet := subnetVal.Data; subnet != nil {
+		prohibit := subnet.GetProhibitInternetIngress()
+		if prohibit.Error != nil {
+			return nil, prohibit.Error
+		}
+		reaches, err := ociSubnetReachesInternet(subnet)
+		if err != nil {
+			return nil, err
+		}
+		hasRouteToInternet = reaches
+
+		sls := subnet.GetSecurityLists()
+		if sls.Error != nil {
+			return nil, sls.Error
+		}
+		slOpenRules, slAllows, err := ociCollectOpenSecurityListRules(sls.Data)
+		if err != nil {
+			return nil, err
+		}
+		openRules = append(openRules, slOpenRules...)
+		securityListAllowsIngress = slAllows
+
+		gates = append(gates, ociSubnetGate{
+			prohibitsIngress:   prohibit.Data,
+			routesToInternet:   reaches,
+			securityListAllows: slAllows,
+		})
+	}
+
+	internetReachable := hasPublicIp && hasListener && ociAnySubnetAdmitsInternet(gates, len(nsgOpenRules))
+
+	res, err := CreateResource(n.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
+		"__id":                       llx.StringData("oci.networkLoadBalancer.loadBalancer/" + id.Data + "/exposure"),
+		"internetReachable":          llx.BoolData(internetReachable),
+		"hasPublicIp":                llx.BoolData(hasPublicIp),
+		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
+		"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
+		"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
+		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciNetworkExposure), nil
+}
+
 // internetReachable reports whether the autonomous database listener is
 // reachable from the public internet: it has a public endpoint (no private
 // endpoint) and either access control is disabled or its allow-list admits any
