@@ -3175,6 +3175,442 @@ private oci.networkLoadBalancer.backend @defaults("name port") {
   isOffline bool
 }
 
+// Oracle Cloud Infrastructure (OCI) MySQL HeatWave
+//
+// Managed MySQL database systems in the tenancy. Each system reports
+// where it sits on the network, how it encrypts data at rest, whether
+// TLS is served from a customer certificate or a service-generated one,
+// and its backup retention, which together cover the standard
+// data-at-rest and data-in-transit questions for a managed database.
+// `accessMode` and `databaseMode` report whether the system is accepting
+// unrestricted traffic and whether it is writable.
+oci.mysql {
+  // MySQL database systems
+  dbSystems() []oci.mysql.dbSystem
+}
+
+// Oracle Cloud Infrastructure (OCI) MySQL database system
+//
+// Single managed MySQL system, keyed by its OCID. `encryptionKey`
+// resolves the customer-managed KMS key protecting data at rest, and is
+// null when the system uses Oracle-managed encryption:
+// `encryptionKeyGenerationType` distinguishes the two. `tlsCertificateType`
+// reports whether TLS is served from a BYOC certificate or a
+// service-generated one. `subnet` and `securityGroups` place the system
+// on the network, and `endpoints` lists the addresses it answers on with
+// the read/write modes each accepts.
+private oci.mysql.dbSystem @defaults("name version state") {
+  // Database system OCID
+  id string
+  // Display name
+  name string
+  // Description
+  description string
+  // Compartment containing the database system
+  compartment() oci.compartment
+  // MySQL server version
+  version string
+  // Shape name
+  shape string
+  // Whether the database accepts writes (READ_WRITE) or is read-only (READ_ONLY)
+  databaseMode string
+  // Whether the database accepts unrestricted traffic (UNRESTRICTED) or is restricted to administrators (RESTRICTED)
+  accessMode string
+  // Whether the system is deployed across availability domains for high availability
+  isHighlyAvailable bool
+  // Whether a HeatWave analytics cluster is attached
+  isHeatWaveClusterAttached bool
+  // Whether crash recovery is enabled (ENABLED, DISABLED)
+  crashRecovery string
+  // Whether Database Management is enabled for the system (ENABLED, DISABLED)
+  databaseManagement string
+  // Subnet the database system is attached to
+  subnet() oci.network.subnet
+  // Network security groups attached to the database system
+  securityGroups() []oci.network.networkSecurityGroup
+  // Addresses the database system answers on
+  //
+  // Each entry has an `ipAddress`, `hostname`, `port` and `portX`, an
+  // `ipAddressVersion`, a `status`, the `modes` the endpoint accepts
+  // (READ, WRITE), and a `resourceType` of DBSYSTEM, READ_REPLICA,
+  // LOAD_BALANCER, or READ_ENDPOINT.
+  endpoints []dict
+  // How the data-at-rest encryption key is managed (SYSTEM, BYOK)
+  encryptionKeyGenerationType() string
+  // Customer-managed KMS key protecting data at rest
+  //
+  // Null when `encryptionKeyGenerationType` is SYSTEM, meaning the system
+  // is encrypted with an Oracle-managed key.
+  encryptionKey() oci.kms.key
+  // How the TLS certificate is provided (SYSTEM, BYOC)
+  tlsCertificateType() string
+  // Certificate served for TLS connections, when a customer certificate is configured
+  tlsCertificate() oci.certificates.certificate
+  // Automatic backup policy
+  //
+  // Has `isEnabled`, `retentionInDays`, `windowStartTime`, a `softDelete`
+  // flag, a `pitrPolicy` block for point-in-time recovery, and
+  // `copyPolicies` for cross-region backup copies.
+  backupPolicy dict
+  // Policy applied to backups and automatic backups when the system is deleted
+  //
+  // Has `automaticBackupRetention`, `finalBackup`, and
+  // `isDeleteProtected`, which together decide whether deleting the
+  // system also destroys its recovery points.
+  deletionPolicy dict
+  // Availability domain the system is placed in
+  availabilityDomain string
+  // Fault domain the system is placed in
+  faultDomain string
+  // Lifecycle state (CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Database with PostgreSQL
+//
+// Managed PostgreSQL database systems in the tenancy. PostgreSQL systems
+// are always deployed into a customer subnet with no public endpoint, so
+// the exposure question is which subnet and which network security
+// groups rather than public versus private. Each system reports its
+// backup policy, its admin username, and whether a reader endpoint is
+// published alongside the primary.
+oci.postgresql {
+  // PostgreSQL database systems
+  dbSystems() []oci.postgresql.dbSystem
+}
+
+// Oracle Cloud Infrastructure (OCI) PostgreSQL database system
+//
+// Single managed PostgreSQL system, keyed by its OCID. `subnet` and
+// `securityGroups` place it on the network and are the only controls on
+// who can reach it. `managementPolicy` carries the backup retention and
+// maintenance window, `storageDetails` the storage configuration
+// including whether the volume is encrypted with a customer-managed key,
+// and `systemRole` distinguishes a standalone system from a primary or
+// one of its standbys.
+private oci.postgresql.dbSystem @defaults("name dbVersion state") {
+  // Database system OCID
+  id string
+  // Display name
+  name string
+  // Description
+  description() string
+  // Compartment containing the database system
+  compartment() oci.compartment
+  // PostgreSQL server version
+  dbVersion string
+  // Shape name
+  shape string
+  // Deployment type (OCI_OPTIMIZED_STORAGE)
+  systemType string
+  // Role in a disaster-recovery topology (STANDALONE_DB_SYSTEM, PRIMARY_DB_SYSTEM, WARM_STANDBY_DB_SYSTEM, PILOT_LIGHT_DB_SYSTEM)
+  systemRole() string
+  // Number of database instances in the system
+  instanceCount int
+  // OCPUs allocated per instance
+  instanceOcpuCount int
+  // Memory allocated per instance, in GB
+  instanceMemorySizeInGBs int
+  // Administrator user name created with the system
+  adminUsername() string
+  // Subnet the database system is attached to
+  subnet() oci.network.subnet
+  // Network security groups attached to the database system
+  securityGroups() []oci.network.networkSecurityGroup
+  // Private IP address of the primary database endpoint
+  primaryEndpointPrivateIp() string
+  // Whether a separate read-only endpoint is published
+  isReaderEndpointEnabled() bool
+  // Storage configuration
+  //
+  // Has `systemType`, `isRegionallyDurable`, `availabilityDomain`, and
+  // `iops`. For an encrypted volume it also carries the KMS `kmsKeyId`.
+  storageDetails() dict
+  // Backup and maintenance policy
+  //
+  // Has a `backupPolicy` block with the retention schedule (`kind` of
+  // DAILY, WEEKLY, MONTHLY, or NONE, plus `retentionDays` and the
+  // scheduled time) and a `maintenanceWindowStart`.
+  managementPolicy() dict
+  // Database configuration applied to the system
+  configId string
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
+  state string
+  // Detail explaining the current lifecycle state, for FAILED systems
+  stateDetails string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) NoSQL Database
+//
+// NoSQL tables in the tenancy. Tables report their lifecycle state,
+// throughput and storage limits, and whether they are replicated across
+// regions, which is what determines where the data physically resides.
+// `isAutoReclaimable` marks always-free tables that OCI deletes
+// automatically after a period of inactivity, and `timeOfExpiration`
+// when that will happen.
+oci.nosql {
+  // NoSQL tables
+  tables() []oci.nosql.table
+}
+
+// Oracle Cloud Infrastructure (OCI) NoSQL table
+private oci.nosql.table @defaults("name state") {
+  // Table OCID
+  id string
+  // Table name
+  name string
+  // Compartment containing the table
+  compartment() oci.compartment
+  // Throughput and storage limits
+  //
+  // Has `maxReadUnits`, `maxWriteUnits`, `maxStorageInGBs`, and a
+  // `capacityMode` of PROVISIONED or ON_DEMAND.
+  tableLimits dict
+  // Whether the table is replicated across regions
+  isMultiRegion bool
+  // Whether the table is reclaimed automatically after a period of inactivity
+  //
+  // True for always-free tables, which OCI deletes on the
+  // `timeOfExpiration` date unless they are used again.
+  isAutoReclaimable bool
+  // When an auto-reclaimable table will be deleted
+  timeOfExpiration time
+  // Whether the table schema can still be changed (MUTABLE, FROZEN)
+  //
+  // A frozen schema is required before a table can be replicated across
+  // regions.
+  schemaState string
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Search with OpenSearch
+//
+// OpenSearch clusters in the tenancy. `securityMode` is the field that
+// decides whether the cluster authenticates its callers at all: a
+// cluster in DISABLED mode serves every request unauthenticated to
+// anything that can reach it on the network, PERMISSIVE accepts both
+// authenticated and unauthenticated requests, and only ENFORCING
+// requires credentials. Combined with the subnet placement in `subnet`,
+// that determines who can read the indexed data.
+oci.opensearch {
+  // OpenSearch clusters
+  clusters() []oci.opensearch.cluster
+}
+
+// Oracle Cloud Infrastructure (OCI) OpenSearch cluster
+//
+// Single OpenSearch cluster, keyed by its OCID. Beyond `securityMode`,
+// `securityMasterUserName` names the built-in administrator when
+// security is on, and `outboundClusterConfig` reports whether the
+// cluster is configured to reach out to other clusters through
+// cross-cluster search. `securityAttributes` carries the Zero Trust
+// Packet Routing attributes applied to the cluster.
+private oci.opensearch.cluster @defaults("name softwareVersion securityMode state") {
+  // Cluster OCID
+  id string
+  // Display name
+  name string
+  // Compartment containing the cluster
+  compartment() oci.compartment
+  // OpenSearch version
+  softwareVersion string
+  // Whether the cluster requires authentication (DISABLED, PERMISSIVE, ENFORCING)
+  //
+  // DISABLED serves every request unauthenticated. PERMISSIVE accepts
+  // both authenticated and unauthenticated requests, so it does not
+  // enforce access control either. Only ENFORCING requires credentials.
+  securityMode string
+  // Built-in administrator user name, when security is enabled
+  securityMasterUserName() string
+  // VCN the cluster is deployed into
+  vcn() oci.network.vcn
+  // Subnet the cluster is deployed into
+  subnet() oci.network.subnet
+  // Fully-qualified domain name of the OpenSearch API endpoint
+  opensearchFqdn() string
+  // Private IP address of the OpenSearch API endpoint
+  opensearchPrivateIp() string
+  // Fully-qualified domain name of the OpenSearch Dashboards endpoint
+  opendashboardFqdn() string
+  // Private IP address of the OpenSearch Dashboards endpoint
+  opendashboardPrivateIp() string
+  // Cross-cluster search configuration
+  //
+  // Has `isEnabled` and a `outboundClusters` list, each entry carrying
+  // the remote cluster's `displayName`, `seedClusterId`, `mode`, and
+  // whether it `isSkipUnavailable`.
+  outboundClusterConfig dict
+  // Backup policy
+  //
+  // Has `isEnabled`, a `retentionInDays`, and the cron `scheduleTime`
+  // the snapshot runs on.
+  backupPolicy dict
+  // Total storage allocated to the cluster, in GB
+  totalStorageGB int
+  // Availability domains the cluster is distributed across
+  availabilityDomains []string
+  // Zero Trust Packet Routing security attributes applied to the cluster
+  securityAttributes map[string]dict
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail explaining the current lifecycle state, for FAILED clusters
+  stateDetails string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) GoldenGate
+//
+// GoldenGate data-replication deployments in the tenancy. A deployment
+// runs a web console and REST API that hold the credentials for every
+// source and target database it replicates between, so `isPublic` - and
+// the `publicIpAddress` that accompanies it - is the field that decides
+// whether that console is reachable from the internet. `subnet` and
+// `securityGroups` govern reachability for private deployments.
+oci.goldenGate {
+  // GoldenGate deployments
+  deployments() []oci.goldenGate.deployment
+}
+
+// Oracle Cloud Infrastructure (OCI) GoldenGate deployment
+//
+// Single GoldenGate deployment, keyed by its OCID. `deploymentUrl` is
+// the console and REST endpoint, published on `publicIpAddress` when
+// `isPublic` is set and on `privateIpAddress` otherwise.
+// `isLatestVersion` reports whether the deployment is running the
+// current GoldenGate release, which is the patch-currency signal for a
+// component that brokers database credentials. `securityAttributes`
+// carries the Zero Trust Packet Routing attributes applied to the
+// deployment.
+private oci.goldenGate.deployment @defaults("name isPublic state") {
+  // Deployment OCID
+  id string
+  // Display name
+  name string
+  // Description
+  description string
+  // Compartment containing the deployment
+  compartment() oci.compartment
+  // Whether the deployment console and REST API are reachable from the internet
+  isPublic bool
+  // Public IP address of the deployment, when it is public
+  publicIpAddress string
+  // Private IP address of the deployment
+  privateIpAddress string
+  // Fully-qualified domain name of the deployment
+  fqdn string
+  // URL of the deployment console and REST API
+  deploymentUrl string
+  // Subnet the deployment is attached to
+  subnet() oci.network.subnet
+  // Network security groups attached to the deployment
+  securityGroups() []oci.network.networkSecurityGroup
+  // Load balancer fronting the deployment
+  loadBalancerId string
+  // Deployment type
+  //
+  // One of OGG, DATABASE_ORACLE, BIGDATA, DATABASE_MICROSOFT_SQLSERVER,
+  // DATABASE_MYSQL, DATABASE_POSTGRESQL, DATABASE_DB2ZOS, GGSA, or
+  // DATA_TRANSFORMS.
+  deploymentType string
+  // Deployment category (DATA_REPLICATION, STREAM_ANALYTICS, DATA_TRANSFORMS)
+  category string
+  // Environment type (PRODUCTION, DEVELOPMENT_OR_TESTING)
+  environmentType string
+  // License model (LICENSE_INCLUDED, BRING_YOUR_OWN_LICENSE)
+  licenseModel string
+  // Whether the deployment runs the latest available GoldenGate version
+  isLatestVersion bool
+  // Whether CPU auto-scaling is enabled
+  isAutoScalingEnabled bool
+  // OCPUs allocated to the deployment
+  cpuCoreCount int
+  // Zero Trust Packet Routing security attributes applied to the deployment
+  securityAttributes map[string]dict
+  // Lifecycle state
+  //
+  // One of CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED,
+  // FAILED, NEEDS_ATTENTION, IN_PROGRESS, CANCELING, CANCELED,
+  // SUCCEEDED, or WAITING.
+  state string
+  // Detailed lifecycle sub-state
+  //
+  // One of RECOVERING, STARTING, STOPPING, MOVING, UPGRADING, RESTORING,
+  // BACKUP_IN_PROGRESS, or ROLLBACK_IN_PROGRESS.
+  lifecycleSubState string
+  // Detail explaining the current lifecycle state, for FAILED deployments
+  stateDetails string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
 // Oracle Cloud Infrastructure (OCI) DNS
 //
 // DNS zones hosted in the tenancy and the traffic-management policies
