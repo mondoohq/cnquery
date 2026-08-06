@@ -193,8 +193,12 @@ func (o *mqlOciServiceConnectorHubConnector) targetBucket() (*mqlOciObjectStorag
 
 	// OCI keys a bucket on namespace+name rather than on its OCID, so both
 	// have to come from the target block; an OCID alone cannot be resolved.
+	// Both are therefore required: resolving with an empty namespace would
+	// build the cache key "oci.objectStorage.bucket//<name>", which every
+	// namespace-less bucket would share, so a malformed target would collide
+	// rather than report nothing.
 	target, ok := detail.Target.(sch.ObjectStorageTargetDetailsResponse)
-	if !ok || stringValue(target.BucketName) == "" {
+	if !ok || stringValue(target.BucketName) == "" || stringValue(target.Namespace) == "" {
 		o.TargetBucket.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

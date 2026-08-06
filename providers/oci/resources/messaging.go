@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/managedkafka"
@@ -181,7 +182,7 @@ type mqlOciStreamingStreamPoolInternal struct {
 	cacheRegion        string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *streaming.StreamPool
 }
 
@@ -194,9 +195,13 @@ func (o *mqlOciStreamingStreamPool) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -214,7 +219,7 @@ func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
 	}
 
 	o.detail = &response.StreamPool
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 
@@ -382,7 +387,7 @@ type mqlOciQueueQueueInternal struct {
 	cacheRegion        string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *queue.Queue
 }
 
@@ -395,9 +400,13 @@ func (o *mqlOciQueueQueue) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -415,7 +424,7 @@ func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
 	}
 
 	o.detail = &response.Queue
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 
@@ -560,7 +569,7 @@ type mqlOciKafkaClusterInternal struct {
 	cacheSubnetIds     []string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *managedkafka.KafkaCluster
 }
 
@@ -592,9 +601,13 @@ func (o *mqlOciKafkaCluster) subnets() ([]any, error) {
 }
 
 func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -612,7 +625,7 @@ func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
 	}
 
 	o.detail = &response.KafkaCluster
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 

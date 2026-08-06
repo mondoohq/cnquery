@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -118,8 +119,13 @@ type mqlOciIdentityDomainInternal struct {
 
 	// Every sub-collection accessor needs a client for this domain, so it is
 	// built once rather than per accessor.
+	//
+	// An atomic.Pointer rather than a plain one, for the same reason the
+	// detail flags elsewhere are atomic.Bool: domainClient reads it before
+	// taking the lock, and an unsynchronized pointer read racing the write
+	// inside the lock is a data race.
 	clientLock   sync.Mutex
-	cachedClient *identitydomains.IdentityDomainsClient
+	cachedClient atomic.Pointer[identitydomains.IdentityDomainsClient]
 }
 
 func (o *mqlOciIdentityDomain) id() (string, error) {
@@ -131,10 +137,16 @@ func (o *mqlOciIdentityDomain) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciIdentityDomain) domainClient() (*identitydomains.IdentityDomainsClient, error) {
+	// Fast path: five sub-collection accessors share this client, so after the
+	// first the rest should not queue on the mutex to read a cached pointer.
+	if client := o.cachedClient.Load(); client != nil {
+		return client, nil
+	}
+
 	o.clientLock.Lock()
 	defer o.clientLock.Unlock()
-	if o.cachedClient != nil {
-		return o.cachedClient, nil
+	if client := o.cachedClient.Load(); client != nil {
+		return client, nil
 	}
 
 	if o.cacheUrl == "" {
@@ -146,8 +158,8 @@ func (o *mqlOciIdentityDomain) domainClient() (*identitydomains.IdentityDomainsC
 		return nil, err
 	}
 
-	o.cachedClient = client
-	return o.cachedClient, nil
+	o.cachedClient.Store(client)
+	return client, nil
 }
 
 func (o *mqlOciIdentityDomain) users() ([]any, error) {

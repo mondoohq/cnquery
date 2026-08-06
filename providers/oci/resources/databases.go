@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
@@ -142,7 +143,7 @@ type mqlOciMysqlDbSystemInternal struct {
 	cacheRegion        string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *mysql.DbSystem
 }
 
@@ -155,9 +156,13 @@ func (o *mqlOciMysqlDbSystem) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciMysqlDbSystem) getDetail() (*mysql.DbSystem, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -175,7 +180,7 @@ func (o *mqlOciMysqlDbSystem) getDetail() (*mysql.DbSystem, error) {
 	}
 
 	o.detail = &response.DbSystem
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 
@@ -338,7 +343,7 @@ type mqlOciPostgresqlDbSystemInternal struct {
 	cacheRegion        string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *psql.DbSystem
 }
 
@@ -351,9 +356,13 @@ func (o *mqlOciPostgresqlDbSystem) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciPostgresqlDbSystem) getDetail() (*psql.DbSystem, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -371,7 +380,7 @@ func (o *mqlOciPostgresqlDbSystem) getDetail() (*psql.DbSystem, error) {
 	}
 
 	o.detail = &response.DbSystem
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 
@@ -654,7 +663,7 @@ type mqlOciOpensearchClusterInternal struct {
 	cacheRegion        string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *opensearch.OpensearchCluster
 }
 
@@ -667,9 +676,13 @@ func (o *mqlOciOpensearchCluster) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciOpensearchCluster) getDetail() (*opensearch.OpensearchCluster, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -687,7 +700,7 @@ func (o *mqlOciOpensearchCluster) getDetail() (*opensearch.OpensearchCluster, er
 	}
 
 	o.detail = &response.OpensearchCluster
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 
@@ -851,7 +864,7 @@ type mqlOciGoldenGateDeploymentInternal struct {
 	cacheRegion         string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *goldengate.Deployment
 }
 
@@ -882,9 +895,13 @@ func (o *mqlOciGoldenGateDeployment) loadBalancer() (*mqlOciLoadBalancerLoadBala
 }
 
 func (o *mqlOciGoldenGateDeployment) getDetail() (*goldengate.Deployment, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -902,7 +919,7 @@ func (o *mqlOciGoldenGateDeployment) getDetail() (*goldengate.Deployment, error)
 	}
 
 	o.detail = &response.Deployment
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 

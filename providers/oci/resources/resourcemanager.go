@@ -7,6 +7,7 @@ import (
 	"context"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -90,7 +91,7 @@ type mqlOciResourceManagerStackInternal struct {
 	cacheRegion        string
 
 	detailLock    sync.Mutex
-	detailFetched bool
+	detailFetched atomic.Bool
 	detail        *resourcemanager.Stack
 }
 
@@ -103,9 +104,13 @@ func (o *mqlOciResourceManagerStack) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciResourceManagerStack) getDetail() (*resourcemanager.Stack, error) {
+	if o.detailFetched.Load() {
+		return o.detail, nil
+	}
+
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
-	if o.detailFetched {
+	if o.detailFetched.Load() {
 		return o.detail, nil
 	}
 
@@ -123,7 +128,7 @@ func (o *mqlOciResourceManagerStack) getDetail() (*resourcemanager.Stack, error)
 	}
 
 	o.detail = &response.Stack
-	o.detailFetched = true
+	o.detailFetched.Store(true)
 	return o.detail, nil
 }
 
