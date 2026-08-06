@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -88,9 +89,19 @@ func initOktaUserType(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		// Bare resource construction (no id) is a valid empty state.
 		return args, nil, nil
 	}
+
+	// Supplying an id but supplying a bad one is different from not supplying
+	// one. okta.userType is private, so the only callers are this provider's own
+	// accessors, which guard for an empty cached id before resolving. Reaching
+	// here with a non-string or empty id means one of them regressed, and
+	// falling through would hide that as a husk resource whose fields surface
+	// much later as "primitive with no type information".
 	id, ok := idArg.Value.(string)
-	if !ok || id == "" {
-		return args, nil, nil
+	if !ok {
+		return nil, nil, fmt.Errorf("okta.userType id must be a string, got %T", idArg.Value)
+	}
+	if id == "" {
+		return nil, nil, errors.New("okta.userType id must not be empty")
 	}
 
 	conn := runtime.Connection.(*connection.OktaConnection)
