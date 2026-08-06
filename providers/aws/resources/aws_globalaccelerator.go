@@ -202,6 +202,10 @@ func newMqlAwsGlobalacceleratorEndpointGroup(runtime *plugin.Runtime, group gaty
 	return mqlGroup, nil
 }
 
+// elasticIpAllocationPrefix identifies an elastic IP allocation ID in an
+// endpoint group's polymorphic endpoint IDs.
+const elasticIpAllocationPrefix = "eipalloc-"
+
 type mqlAwsGlobalacceleratorEndpointGroupInternal struct {
 	// cacheEndpointIds holds the raw endpoint identifiers, which are polymorphic:
 	// a load balancer ARN, an EC2 instance ID, or an elastic IP allocation ID.
@@ -229,11 +233,53 @@ func (a *mqlAwsGlobalacceleratorEndpointGroup) loadBalancers() ([]any, error) {
 	return res, nil
 }
 
+// elasticIps resolves the endpoints that are elastic IPs.
+//
+// An endpoint carries the allocation ID (eipalloc-...), but aws.ec2.eip is keyed
+// on region plus public IP, so there is no by-allocation-id lookup to call.
+// Matching against the account's elastic IPs instead costs one enumeration,
+// which the runtime caches on the aws.ec2 singleton and shares with every other
+// reader of that list.
+func (a *mqlAwsGlobalacceleratorEndpointGroup) elasticIps() ([]any, error) {
+	wanted := map[string]struct{}{}
+	for _, endpointId := range a.cacheEndpointIds {
+		if strings.HasPrefix(endpointId, elasticIpAllocationPrefix) {
+			wanted[endpointId] = struct{}{}
+		}
+	}
+	if len(wanted) == 0 {
+		return []any{}, nil
+	}
+
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsEc2, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	eips := obj.(*mqlAwsEc2).GetEips()
+	if eips.Error != nil {
+		return nil, eips.Error
+	}
+
+	res := []any{}
+	for _, e := range eips.Data {
+		eip, ok := e.(*mqlAwsEc2Eip)
+		if !ok {
+			continue
+		}
+		if _, found := wanted[eip.AllocationId.Data]; found {
+			res = append(res, eip)
+		}
+	}
+	return res, nil
+}
+
 // instances resolves the endpoints that are EC2 instances.
 //
 // initAwsEc2Instance resolves by ARN only, so the bare instance ID the endpoint
 // carries is combined with the endpoint group's region (the region its endpoints
-// live in) and the connection's account to build one.
+// live in) and the connection's account to build one. An empty region yields an
+// ARN with no region, which initAwsEc2Instance handles by falling back to its
+// cross-region lookup, so the instance still resolves.
 func (a *mqlAwsGlobalacceleratorEndpointGroup) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}

@@ -2683,7 +2683,7 @@ aws.directconnect.virtualInterface.siteLinkEnabled 13.52.2
 aws.directconnect.virtualInterface.state 13.52.2
 aws.directconnect.virtualInterface.tags 13.52.2
 aws.directconnect.virtualInterface.type 13.52.2
-aws.directconnect.virtualInterface.virtualGatewayId 13.52.2
+aws.directconnect.virtualInterface.virtualGateway 13.52.2
 aws.directconnect.virtualInterface.vlan 13.52.2
 aws.directconnect.virtualInterfaces 13.52.2
 aws.directoryservice 11.15.6
@@ -3331,6 +3331,7 @@ aws.ec2.egressOnlyInternetGateway.region 13.6.3
 aws.ec2.egressOnlyInternetGateway.tags 13.6.3
 aws.ec2.egressOnlyInternetGateways 13.6.3
 aws.ec2.eip 11.15.2
+aws.ec2.eip.allocationId 13.52.2
 aws.ec2.eip.attached 11.15.2
 aws.ec2.eip.instance 11.15.2
 aws.ec2.eip.networkInterface 13.6.3
@@ -5629,6 +5630,7 @@ aws.globalaccelerator.accelerator.tags 13.52.2
 aws.globalaccelerator.accelerators 13.52.2
 aws.globalaccelerator.endpointGroup 13.52.2
 aws.globalaccelerator.endpointGroup.arn 13.52.2
+aws.globalaccelerator.endpointGroup.elasticIps 13.52.2
 aws.globalaccelerator.endpointGroup.endpoints 13.52.2
 aws.globalaccelerator.endpointGroup.healthCheckIntervalSeconds 13.52.2
 aws.globalaccelerator.endpointGroup.healthCheckPath 13.52.2

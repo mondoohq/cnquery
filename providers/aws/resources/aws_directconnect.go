@@ -196,7 +196,6 @@ func newMqlAwsDirectconnectVirtualInterface(runtime *plugin.Runtime, region stri
 			"customerAddress":     llx.StringDataPtr(vif.CustomerAddress),
 			"bgpPeers":            llx.ArrayData(bgpPeers, types.Any),
 			"routeFilterPrefixes": llx.ArrayData(prefixes, types.String),
-			"virtualGatewayId":    llx.StringDataPtr(vif.VirtualGatewayId),
 			"mtu":                 llx.IntDataDefault(vif.Mtu, 0),
 			"jumboFrameCapable":   llx.BoolDataPtr(vif.JumboFrameCapable),
 			"siteLinkEnabled":     llx.BoolDataPtr(vif.SiteLinkEnabled),
@@ -208,6 +207,7 @@ func newMqlAwsDirectconnectVirtualInterface(runtime *plugin.Runtime, region stri
 	internal := mqlVif.(*mqlAwsDirectconnectVirtualInterface)
 	internal.cacheConnectionId = convert.ToValue(vif.ConnectionId)
 	internal.cacheGatewayId = convert.ToValue(vif.DirectConnectGatewayId)
+	internal.cacheVirtualGatewayId = convert.ToValue(vif.VirtualGatewayId)
 	return mqlVif, nil
 }
 
@@ -262,8 +262,25 @@ func (a *mqlAwsDirectconnect) gateways() ([]any, error) {
 }
 
 type mqlAwsDirectconnectVirtualInterfaceInternal struct {
-	cacheConnectionId string
-	cacheGatewayId    string
+	cacheConnectionId     string
+	cacheGatewayId        string
+	cacheVirtualGatewayId string
+}
+
+// virtualGateway resolves the virtual private gateway the interface attaches to.
+// A virtual interface attaches either to a Direct Connect gateway or to a virtual
+// private gateway, so this is null whenever gateway() is set instead.
+func (a *mqlAwsDirectconnectVirtualInterface) virtualGateway() (*mqlAwsVpcVpnGateway, error) {
+	if a.cacheVirtualGatewayId == "" {
+		a.VirtualGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcVpnGateway,
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheVirtualGatewayId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcVpnGateway), nil
 }
 
 // directConnectSingleton returns the account-wide aws.directconnect resource, so

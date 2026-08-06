@@ -22849,6 +22849,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
+	"aws.ec2.eip.allocationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetAllocationId()).ToDataRes(types.String)
+	},
 	"aws.ec2.eip.attached": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetAttached()).ToDataRes(types.Bool)
 	},
@@ -36297,6 +36300,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.globalaccelerator.endpointGroup.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
 	},
+	"aws.globalaccelerator.endpointGroup.elasticIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlobalacceleratorEndpointGroup).GetElasticIps()).ToDataRes(types.Array(types.Resource("aws.ec2.eip")))
+	},
 	"aws.directconnect.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnect).GetConnections()).ToDataRes(types.Array(types.Resource("aws.directconnect.connection")))
 	},
@@ -36411,8 +36417,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.directconnect.virtualInterface.gateway": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectVirtualInterface).GetGateway()).ToDataRes(types.Resource("aws.directconnect.gateway"))
 	},
-	"aws.directconnect.virtualInterface.virtualGatewayId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDirectconnectVirtualInterface).GetVirtualGatewayId()).ToDataRes(types.String)
+	"aws.directconnect.virtualInterface.virtualGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetVirtualGateway()).ToDataRes(types.Resource("aws.vpc.vpnGateway"))
 	},
 	"aws.directconnect.virtualInterface.mtu": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectVirtualInterface).GetMtu()).ToDataRes(types.Int)
@@ -62592,6 +62598,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Eip).PublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.eip.allocationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).AllocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.attached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).Attached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -82134,6 +82144,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlobalacceleratorEndpointGroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.globalaccelerator.endpointGroup.elasticIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlobalacceleratorEndpointGroup).ElasticIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.directconnect.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectconnect).__id, ok = v.Value.(string)
 		return
@@ -82298,8 +82312,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDirectconnectVirtualInterface).Gateway, ok = plugin.RawToTValue[*mqlAwsDirectconnectGateway](v.Value, v.Error)
 		return
 	},
-	"aws.directconnect.virtualInterface.virtualGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDirectconnectVirtualInterface).VirtualGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.directconnect.virtualInterface.virtualGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).VirtualGateway, ok = plugin.RawToTValue[*mqlAwsVpcVpnGateway](v.Value, v.Error)
 		return
 	},
 	"aws.directconnect.virtualInterface.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -150721,6 +150735,7 @@ type mqlAwsEc2Eip struct {
 	__id       string
 	mqlAwsEc2EipInternal
 	PublicIp                plugin.TValue[string]
+	AllocationId            plugin.TValue[string]
 	Attached                plugin.TValue[bool]
 	Instance                plugin.TValue[*mqlAwsEc2Instance]
 	NetworkInterfaceId      plugin.TValue[string]
@@ -150771,6 +150786,10 @@ func (c *mqlAwsEc2Eip) MqlID() string {
 
 func (c *mqlAwsEc2Eip) GetPublicIp() *plugin.TValue[string] {
 	return &c.PublicIp
+}
+
+func (c *mqlAwsEc2Eip) GetAllocationId() *plugin.TValue[string] {
+	return &c.AllocationId
 }
 
 func (c *mqlAwsEc2Eip) GetAttached() *plugin.TValue[bool] {
@@ -200004,6 +200023,7 @@ type mqlAwsGlobalacceleratorEndpointGroup struct {
 	Endpoints                  plugin.TValue[[]any]
 	LoadBalancers              plugin.TValue[[]any]
 	Instances                  plugin.TValue[[]any]
+	ElasticIps                 plugin.TValue[[]any]
 }
 
 // createAwsGlobalacceleratorEndpointGroup creates a new instance of this resource
@@ -200112,6 +200132,22 @@ func (c *mqlAwsGlobalacceleratorEndpointGroup) GetInstances() *plugin.TValue[[]a
 		}
 
 		return c.instances()
+	})
+}
+
+func (c *mqlAwsGlobalacceleratorEndpointGroup) GetElasticIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ElasticIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.globalaccelerator.endpointGroup", c.__id, "elasticIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.elasticIps()
 	})
 }
 
@@ -200382,7 +200418,7 @@ type mqlAwsDirectconnectVirtualInterface struct {
 	BgpPeers            plugin.TValue[[]any]
 	RouteFilterPrefixes plugin.TValue[[]any]
 	Gateway             plugin.TValue[*mqlAwsDirectconnectGateway]
-	VirtualGatewayId    plugin.TValue[string]
+	VirtualGateway      plugin.TValue[*mqlAwsVpcVpnGateway]
 	Mtu                 plugin.TValue[int64]
 	JumboFrameCapable   plugin.TValue[bool]
 	SiteLinkEnabled     plugin.TValue[bool]
@@ -200514,8 +200550,20 @@ func (c *mqlAwsDirectconnectVirtualInterface) GetGateway() *plugin.TValue[*mqlAw
 	})
 }
 
-func (c *mqlAwsDirectconnectVirtualInterface) GetVirtualGatewayId() *plugin.TValue[string] {
-	return &c.VirtualGatewayId
+func (c *mqlAwsDirectconnectVirtualInterface) GetVirtualGateway() *plugin.TValue[*mqlAwsVpcVpnGateway] {
+	return plugin.GetOrCompute[*mqlAwsVpcVpnGateway](&c.VirtualGateway, func() (*mqlAwsVpcVpnGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directconnect.virtualInterface", c.__id, "virtualGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcVpnGateway), nil
+			}
+		}
+
+		return c.virtualGateway()
+	})
 }
 
 func (c *mqlAwsDirectconnectVirtualInterface) GetMtu() *plugin.TValue[int64] {

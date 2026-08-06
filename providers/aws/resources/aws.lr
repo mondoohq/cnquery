@@ -17735,6 +17735,12 @@ aws.ec2 {
 private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   // Public IP address of the EIP
   publicIp string
+  // Allocation ID of the address
+  //
+  // The handle other services reference an elastic IP by, for example a Global
+  // Accelerator endpoint. Present on every VPC elastic IP whether or not it is
+  // associated with a network interface.
+  allocationId string
   // Whether the Elastic IP is associated with a network interface or instance
   attached bool
   // EC2 instance associated with the EIP
@@ -30931,13 +30937,15 @@ private aws.globalaccelerator.endpointGroup @defaults("arn region trafficDialPer
   //
   // Each entry carries `EndpointId` (a load balancer ARN, EC2 instance ID, or
   // elastic IP allocation ID), `Weight`, `HealthState`, `HealthReason`, and
-  // `ClientIPPreservationEnabled`. See loadBalancers and instances for the
-  // endpoints resolved to resources.
+  // `ClientIPPreservationEnabled`. Every endpoint kind is also resolved to a
+  // resource: see loadBalancers, instances, and elasticIps.
   endpoints []dict
   // Load balancers this endpoint group sends traffic to
   loadBalancers() []aws.elb.loadbalancer
   // EC2 instances this endpoint group sends traffic to
   instances() []aws.ec2.instance
+  // Elastic IPs this endpoint group sends traffic to
+  elasticIps() []aws.ec2.eip
 }
 
 // AWS Direct Connect
@@ -31057,8 +31065,8 @@ private aws.directconnect.virtualInterface @defaults("id name type state vlan") 
   routeFilterPrefixes []string
   // Direct Connect gateway the virtual interface attaches to, null when it attaches to a virtual private gateway
   gateway() aws.directconnect.gateway
-  // Virtual private gateway the virtual interface attaches to, empty when it attaches to a Direct Connect gateway
-  virtualGatewayId string
+  // Virtual private gateway the virtual interface attaches to, null when it attaches to a Direct Connect gateway
+  virtualGateway() aws.vpc.vpnGateway
   // Maximum transmission unit of the virtual interface, either 1500 or 9001
   mtu int
   // Whether the virtual interface supports jumbo frames

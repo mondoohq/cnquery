@@ -83,6 +83,7 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		// `attached` unconditionally true and `where(attached == false)` empty.
 		attached := add.AssociationId != nil
 		args["publicIp"] = llx.StringDataPtr(add.PublicIp)
+		args["allocationId"] = llx.StringDataPtr(add.AllocationId)
 		args["attached"] = llx.BoolData(attached) // this is false if allocationId is null and true otherwise
 		args["networkInterfaceId"] = llx.StringDataPtr(add.NetworkInterfaceId)
 		args["networkInterfaceOwnerId"] = llx.StringDataPtr(add.NetworkInterfaceOwnerId)
@@ -207,6 +208,7 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 				attached := add.AssociationId != nil
 				args := map[string]*llx.RawData{
 					"publicIp":                llx.StringDataPtr(add.PublicIp),
+					"allocationId":            llx.StringDataPtr(add.AllocationId),
 					"attached":                llx.BoolData(attached), // this is false if allocationId is null and true otherwise
 					"networkInterfaceId":      llx.StringDataPtr(add.NetworkInterfaceId),
 					"networkInterfaceOwnerId": llx.StringDataPtr(add.NetworkInterfaceOwnerId),
