@@ -6,7 +6,9 @@ package resources
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func (r *mqlDatabricks) globalInitScripts() ([]any, error) {
@@ -55,17 +57,27 @@ func (r *mqlDatabricks) instanceProfiles() ([]any, error) {
 
 	out := []any{}
 	for i := range profiles {
-		p := profiles[i]
-		res, err := CreateResource(r.MqlRuntime, "databricks.instanceProfile", map[string]*llx.RawData{
-			"__id":                  llx.StringData("databricks.instanceProfile/" + p.InstanceProfileArn),
-			"instanceProfileArn":    llx.StringData(p.InstanceProfileArn),
-			"iamRoleArn":            llx.StringData(p.IamRoleArn),
-			"isMetaInstanceProfile": llx.BoolData(p.IsMetaInstanceProfile),
-		})
+		res, err := newMqlDatabricksInstanceProfile(r.MqlRuntime, profiles[i])
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// newMqlDatabricksInstanceProfile maps an instance profile to its resource,
+// shared by the list path and by every compute definition that resolves the
+// profile it assumes.
+func newMqlDatabricksInstanceProfile(runtime *plugin.Runtime, p compute.InstanceProfile) (*mqlDatabricksInstanceProfile, error) {
+	res, err := CreateResource(runtime, "databricks.instanceProfile", map[string]*llx.RawData{
+		"__id":                  llx.StringData("databricks.instanceProfile/" + p.InstanceProfileArn),
+		"instanceProfileArn":    llx.StringData(p.InstanceProfileArn),
+		"iamRoleArn":            llx.StringData(p.IamRoleArn),
+		"isMetaInstanceProfile": llx.BoolData(p.IsMetaInstanceProfile),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDatabricksInstanceProfile), nil
 }

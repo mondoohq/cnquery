@@ -65,6 +65,10 @@ databricks {
   registeredModels() []databricks.registeredModel
   // Customer-managed encryption keys registered in the account
   customerManagedKeys() []databricks.customerManagedKey
+  // Jobs defined in the workspace
+  jobs() []databricks.job
+  // Delta Live Tables pipelines defined in the workspace
+  pipelines() []databricks.pipeline
 }
 
 // Databricks workspace
@@ -396,6 +400,8 @@ databricks.clusterPolicy @defaults("name maxClustersPerUser") {
   isDefault bool
   // Login name of the user that created the policy
   creatorUserName string
+  // Workspace access control list of the cluster policy
+  permissions() []databricks.permission
 }
 
 // Databricks compute cluster
@@ -465,6 +471,8 @@ databricks.cluster @defaults("clusterName dataSecurityMode state") {
   policy() databricks.clusterPolicy
   // AWS instance profile the cluster nodes assume
   instanceProfile() databricks.instanceProfile
+  // Workspace access control list of the cluster
+  permissions() []databricks.permission
 }
 
 // Databricks SQL warehouse
@@ -494,6 +502,8 @@ databricks.warehouse @defaults("name warehouseType state") {
   autoStopMinutes int
   // Login name of the user that created the warehouse
   creatorName string
+  // Workspace access control list of the warehouse
+  permissions() []databricks.permission
 }
 
 // Unity Catalog catalog
@@ -767,6 +777,8 @@ databricks.servingEndpoint @defaults("name state task") {
   servedEntities() []databricks.servingEndpoint.servedEntity
   // AI Gateway governance configured on the endpoint
   aiGateway() databricks.servingEndpoint.gatewayConfig
+  // Workspace access control list of the endpoint
+  permissions() []databricks.permission
 }
 
 // Served entity behind a model serving endpoint
@@ -1038,4 +1050,339 @@ databricks.customerManagedKey @defaults("id useCases creationTime") {
   keyRegion string
   // Resource id of the GCP KMS key, empty for non-GCP keys
   kmsKeyId string
+}
+
+// Workspace access control entry
+//
+// A single permission level held by one principal on one workspace object such
+// as a cluster, cluster policy, SQL warehouse, job, pipeline, or model serving
+// endpoint. Workspace access control is separate from Unity Catalog privileges,
+// which are covered by databricks.grant, and governs who may view, run, attach
+// to, restart, or manage an object rather than who may read its data. Covers
+// the principal and its kind, the permission level, and whether the level is
+// held directly or comes from a parent object.
+databricks.permission @defaults("principal permissionLevel objectType") {
+  // Name of the principal holding the permission
+  //
+  // The user name for a user, the display name for a group, or the application
+  // id for a service principal.
+  principal string
+  // Kind of principal holding the permission
+  //
+  // One of USER, GROUP, or SERVICE_PRINCIPAL.
+  principalType string
+  // Display name of the principal, empty when the API returns none
+  displayName string
+  // Permission level held on the object
+  //
+  // The available levels depend on the object type. Common levels include
+  // IS_OWNER, CAN_MANAGE, CAN_MANAGE_RUN, CAN_RESTART, CAN_ATTACH_TO,
+  // CAN_USE, CAN_VIEW, and CAN_RUN.
+  permissionLevel string
+  // Whether the level comes from a parent object rather than this object
+  inherited bool
+  // Parent objects the level is inherited from, empty for a direct assignment
+  inheritedFromObject []string
+  // Access control object type the permission applies to
+  //
+  // The path segment the workspace permissions API uses, such as clusters,
+  // cluster-policies, jobs, pipelines, sql/warehouses, or serving-endpoints.
+  objectType string
+  // Identifier of the object the permission applies to
+  objectId string
+}
+
+// Compute specification of a job or pipeline
+//
+// The cluster definition a job task or pipeline creates for each run, as
+// opposed to a long-lived cluster in databricks.cluster. Covers the access mode
+// that decides whether the compute can reach Unity Catalog data, the Spark
+// configuration and environment variables that may carry secrets, the init
+// scripts and container image the compute boots, the cloud identity it assumes,
+// and the cluster policy constraining it.
+private databricks.clusterSpec @defaults("key dataSecurityMode sparkVersion") {
+  // Key the specification is registered under
+  //
+  // The job cluster key for a job cluster or the label for a pipeline cluster,
+  // empty for compute declared inline on a single task.
+  key string
+  // Databricks Runtime version the compute boots
+  sparkVersion string
+  // Access mode governing which identities and data the compute can reach
+  //
+  // Values include SINGLE_USER, USER_ISOLATION, LEGACY_TABLE_ACL,
+  // LEGACY_PASSTHROUGH, LEGACY_SINGLE_USER, LEGACY_SINGLE_USER_STANDARD,
+  // DATA_SECURITY_MODE_AUTO, DATA_SECURITY_MODE_DEDICATED,
+  // DATA_SECURITY_MODE_STANDARD, and NONE, which disables Unity Catalog
+  // access. Empty when the compute does not set one.
+  dataSecurityMode string
+  // Identity a single-user compute runs as, empty on other access modes
+  singleUserName string
+  // Execution engine, PHOTON or STANDARD
+  runtimeEngine string
+  // Instance type of the worker nodes
+  nodeTypeId string
+  // Fixed worker count, 0 when the compute autoscales or runs single-node
+  numWorkers int
+  // Spark configuration entries set on the compute
+  sparkConf map[string]string
+  // Environment variables set on the compute
+  sparkEnvVars map[string]string
+  // Custom tags applied to the compute and its cloud resources
+  customTags map[string]string
+  // Whether local disks are encrypted at rest
+  localDiskEncryptionEnabled bool
+  // Init scripts run on every node at startup
+  //
+  // One entry per script in configured order, each with a type of workspace,
+  // volumes, s3, abfss, gcs, dbfs, or file, and the destination path. S3
+  // entries also carry region, endpoint, and enableEncryption.
+  initScripts []dict
+  // Custom container image the compute boots, empty for a stock runtime
+  dockerImageUrl string
+  // SSH public keys authorized on the compute nodes
+  sshPublicKeys []string
+  // GCP service account the compute impersonates, empty off GCP
+  googleServiceAccount string
+  // Cluster policy constraining the compute
+  policy() databricks.clusterPolicy
+  // AWS instance profile the compute assumes
+  instanceProfile() databricks.instanceProfile
+}
+
+// Databricks job
+//
+// A job in the workspace, keyed by the numeric jobId. A job runs one or more
+// tasks on a schedule or trigger under a single fixed identity, which makes it
+// the main scheduled code-execution surface of a workspace. Covers the identity
+// the job runs as, the schedule and its pause state, the concurrency and
+// timeout limits, the Git remote that task source is pulled from, the
+// notification targets that receive run outcomes, whether the job is managed by
+// a deployment bundle, and the workspace access control list. Select a job by
+// id, for example `databricks.jobs.where(id == 620813104278135)`.
+databricks.job @defaults("name runAs format") {
+  // Numeric job identifier
+  id int
+  // Job name
+  name string
+  // Job description, empty when none is set
+  description string
+  // When the job was created
+  createdTime time
+  // User who created the job
+  creatorUserName string
+  // Identity every run of the job executes as
+  //
+  // The user name, service principal application id, or group name the job runs
+  // as. Defaults to the creator when the job sets no explicit identity, so a job
+  // created by a workspace admin runs with that admin's access until it is
+  // changed.
+  runAs string
+  // Kind of identity the job runs as
+  //
+  // One of USER, SERVICE_PRINCIPAL, or GROUP.
+  runAsType string
+  // Task layout of the job, SINGLE_TASK or MULTI_TASK
+  format string
+  // Whether the job definition can be edited, UI_LOCKED or EDITABLE
+  editMode string
+  // Maximum number of runs that may execute concurrently
+  maxConcurrentRuns int
+  // Run timeout in seconds, 0 when the job has no timeout
+  timeoutSeconds int
+  // Tags applied to the job
+  tags map[string]string
+  // Quartz cron expression driving the schedule, empty when unscheduled
+  scheduleCronExpression string
+  // Java timezone id the schedule is evaluated in, empty when unscheduled
+  scheduleTimezoneId string
+  // Whether the schedule is paused, PAUSED or UNPAUSED
+  //
+  // Empty when the job carries no schedule.
+  schedulePauseStatus string
+  // Whether continuous execution is paused, PAUSED or UNPAUSED
+  //
+  // Empty when the job does not run continuously.
+  continuousPauseStatus string
+  // Performance target for serverless runs, empty when unset
+  performanceTarget string
+  // How the job is managed, BUNDLE or SYSTEM_MANAGED
+  //
+  // Empty for a job defined directly in the workspace. A bundle-managed job is
+  // redeployed from source, so changes made in the workspace are transient.
+  deploymentKind string
+  // Identifier of the deployment managing the job, empty when not managed
+  deploymentId string
+  // Workspace path the job definition lives under, empty when none is set
+  parentPath string
+  // URL of the Git repository task source is pulled from
+  //
+  // Empty when every task reads its source from the workspace instead. A job
+  // sourced from Git executes whatever the referenced branch, tag, or commit
+  // holds at run time.
+  gitUrl string
+  // Git hosting provider, such as gitHub, gitLab, or bitbucketCloud
+  gitProvider string
+  // Git branch the source is pulled from, empty when pinned to a tag or commit
+  gitBranch string
+  // Git tag the source is pinned to, empty when unused
+  gitTag string
+  // Git commit the source is pinned to, empty when unused
+  gitCommit string
+  // Email addresses notified about run outcomes
+  //
+  // The union of the addresses configured across the start, success, failure,
+  // duration-warning, and streaming-backlog events.
+  notificationEmails []string
+  // Identifiers of the notification destinations webhooks are sent to
+  //
+  // The union of the destination ids configured across every run event. Each id
+  // resolves to a workspace notification destination such as a Slack, Microsoft
+  // Teams, PagerDuty, or generic webhook target.
+  webhookNotificationIds []string
+  // Tasks the job runs
+  tasks() []databricks.job.task
+  // Reusable compute definitions shared by the job's tasks
+  jobClusters() []databricks.clusterSpec
+  // Workspace access control list of the job
+  permissions() []databricks.permission
+}
+
+// Task of a Databricks job
+//
+// A single unit of work within a job, selected by taskKey. Covers what the task
+// executes and where that code comes from, whether it runs on a long-lived
+// cluster or on compute created for the run, the libraries it installs, and the
+// tasks it depends on.
+private databricks.job.task @defaults("taskKey taskType") {
+  // Key identifying the task within its job
+  taskKey string
+  // Task description, empty when none is set
+  description string
+  // Kind of work the task performs
+  //
+  // Derived from the task definition. Values include notebook, spark_jar,
+  // spark_python, spark_submit, pipeline, sql, dbt, dbt_cloud, dbt_platform,
+  // python_wheel, python_operator, run_job, condition, for_each, dashboard,
+  // power_bi, alert, clean_rooms_notebook, ai_runtime, and gen_ai_compute.
+  // Empty when the task uses a kind this provider does not yet model.
+  taskType string
+  // Whether the task is disabled and skipped by every run
+  disabled bool
+  // Workspace or Git path of the notebook the task runs
+  //
+  // Empty for tasks that do not run a notebook.
+  notebookPath string
+  // Where notebook source is read from, WORKSPACE or GIT
+  //
+  // Empty for tasks that do not run a notebook.
+  notebookSource string
+  // Main class of the JAR the task runs, empty for other task kinds
+  sparkJarMainClass string
+  // Path of the Python file the task runs, empty for other task kinds
+  sparkPythonFile string
+  // Parameters passed to spark-submit, empty for other task kinds
+  //
+  // A spark-submit task bypasses the notebook and JAR entry points, so these
+  // parameters can carry arbitrary driver and executor configuration.
+  sparkSubmitParameters []string
+  // dbt commands the task runs, empty for other task kinds
+  dbtCommands []string
+  // Libraries installed on the compute before the task runs
+  //
+  // One entry per library, each with a type of jar, egg, whl, pypi, maven,
+  // cran, or requirements. Maven, PyPI, and CRAN entries carry the coordinate
+  // and the repository they are fetched from; the others carry the path.
+  libraries []dict
+  // Keys of the tasks that must finish before this one starts
+  dependsOn []string
+  // Maximum number of retries after a failed run
+  maxRetries int
+  // Run timeout in seconds, 0 when the task has no timeout
+  timeoutSeconds int
+  // Key of the job cluster the task runs on, empty when it does not use one
+  jobClusterKey string
+  // Long-lived cluster the task runs on
+  existingCluster() databricks.cluster
+  // Compute created for each run of the task
+  newCluster() databricks.clusterSpec
+  // Pipeline the task triggers
+  pipeline() databricks.pipeline
+}
+
+// Delta Live Tables pipeline
+//
+// A declarative data-processing pipeline in the workspace, keyed by pipelineId.
+// A pipeline runs its libraries as code on compute it creates, which makes it
+// the second scheduled execution surface of a workspace alongside
+// databricks.job. Covers the identity the pipeline runs as, whether it
+// publishes into Unity Catalog or into a storage location outside it, the
+// runtime channel and edition, whether it runs in development mode, the
+// libraries it executes, the compute it creates, and the workspace access
+// control list. Select a pipeline by id, for example
+// `databricks.pipelines.where(id == "a1b2c3d4-0000-1111-2222-333344445555")`.
+databricks.pipeline @defaults("name state runAs") {
+  // Unique pipeline identifier
+  id string
+  // Pipeline name
+  name string
+  // Current lifecycle state, such as IDLE, RUNNING, DEPLOYING, or FAILED
+  state string
+  // Health of the most recent update, HEALTHY or UNHEALTHY
+  health string
+  // User who created the pipeline
+  creatorUserName string
+  // Identity every update of the pipeline executes as
+  //
+  // The user name or service principal application id the pipeline runs as.
+  // Defaults to the creator when the pipeline sets no explicit identity.
+  runAs string
+  // Unity Catalog catalog the pipeline publishes into
+  //
+  // Empty when the pipeline publishes to the legacy Hive metastore instead, in
+  // which case its output sits outside Unity Catalog governance.
+  catalog() string
+  // Schema the pipeline publishes into, empty when none is set
+  schema() string
+  // Legacy target schema the pipeline publishes into, empty when none is set
+  target() string
+  // Root storage location for pipeline data and logs
+  //
+  // Empty when the pipeline stores its data under a Unity Catalog managed
+  // location. A value pointing at DBFS keeps pipeline output outside Unity
+  // Catalog governance.
+  storage() string
+  // Workspace path the pipeline source is rooted at, empty when none is set
+  rootPath() string
+  // Release channel of the runtime, CURRENT or PREVIEW
+  channel() string
+  // Product edition, such as CORE, PRO, or ADVANCED
+  edition() string
+  // Whether Photon acceleration is enabled
+  photon() bool
+  // Whether the pipeline runs in development mode
+  //
+  // A development pipeline reuses its compute between updates and skips
+  // retries, so it is not intended for production workloads.
+  development() bool
+  // Whether the pipeline runs on serverless compute
+  serverless() bool
+  // Whether the pipeline runs continuously rather than on triggered updates
+  continuous() bool
+  // Configuration entries passed to the pipeline
+  //
+  // These become Spark configuration on the pipeline compute and are a common
+  // place for connection settings to be stored in plain text.
+  configuration() map[string]string
+  // Tags applied to the pipeline
+  tags() map[string]string
+  // Libraries the pipeline executes
+  //
+  // One entry per library, each with a type of notebook, file, jar, whl, maven,
+  // or glob, and the path or coordinate it resolves to.
+  libraries() []dict
+  // Compute definitions the pipeline creates for its updates
+  clusters() []databricks.clusterSpec
+  // Workspace access control list of the pipeline
+  permissions() []databricks.permission
 }
