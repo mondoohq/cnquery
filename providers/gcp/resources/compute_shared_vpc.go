@@ -31,6 +31,12 @@ type sharedVpcTopology struct {
 
 // sharedVpcState caches the resolved topology on the compute service resource.
 // Both booleans and both accessors read from one pair of API calls.
+//
+// This uses double-check locking rather than the sync.Once that the
+// service-enabled gates use. The two shapes mark different jobs: sync.Once for a
+// gate that mirrors the provider-wide convention in asset.go and its siblings,
+// double-check locking with an atomic flag for a lazily fetched data cache, which
+// is what the whoCan analysis and effective org policy caches also use.
 type sharedVpcState struct {
 	topology *sharedVpcTopology
 	err      error
