@@ -532,7 +532,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) appProfiles() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Bigtable app profiles")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}

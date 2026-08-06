@@ -126,7 +126,7 @@ func (g *mqlGcpProjectDlpService) inspectTemplates() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP inspect templates")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -201,7 +201,7 @@ func (g *mqlGcpProjectDlpService) deidentifyTemplates() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP deidentify templates")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -276,7 +276,7 @@ func (g *mqlGcpProjectDlpService) jobTriggers() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP job triggers")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -372,7 +372,7 @@ func (g *mqlGcpProjectDlpService) storedInfoTypes() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP stored info types")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -501,7 +501,7 @@ func (g *mqlGcpProjectDlpService) dlpJobs() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP jobs")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -768,7 +768,7 @@ func (g *mqlGcpProjectDlpService) projectDataProfiles() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP project data profiles")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -843,7 +843,7 @@ func (g *mqlGcpProjectDlpService) tableDataProfiles() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP table data profiles")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -981,7 +981,7 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP table data profiles for column profile enumeration")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
@@ -1089,7 +1089,7 @@ func (g *mqlGcpProjectDlpService) fileStoreDataProfiles() ([]any, error) {
 		if err != nil {
 			if isGRPCSkippable(err) {
 				log.Warn().Err(err).Msg("could not list DLP file-store data profiles")
-				return nil, nil
+				break
 			}
 			return nil, err
 		}
