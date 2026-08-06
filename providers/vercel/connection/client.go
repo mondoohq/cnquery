@@ -131,9 +131,31 @@ func GetPaged[T any](ctx context.Context, c *VercelConnection, path string, quer
 
 	var results []T
 	for {
+		sent := query.Get("until")
+
 		body, err := c.do(ctx, path, query)
 		if err != nil {
 			return nil, err
+		}
+
+		var pg struct {
+			Pagination *pagination `json:"pagination"`
+		}
+		if err := json.Unmarshal(body, &pg); err != nil {
+			return nil, fmt.Errorf("vercel API %s: decode pagination: %w", path, err)
+		}
+
+		next := ""
+		if pg.Pagination != nil && pg.Pagination.Next != nil {
+			next = strconv.FormatInt(*pg.Pagination.Next, 10)
+		}
+
+		// An endpoint that reports a next cursor but ignores the until
+		// parameter answers every request with the first page. Detect that by
+		// the cursor we sent coming straight back, and drop the response
+		// instead of appending the same records a second time.
+		if sent != "" && next == sent {
+			break
 		}
 
 		var envelope map[string]json.RawMessage
@@ -149,19 +171,87 @@ func GetPaged[T any](ctx context.Context, c *VercelConnection, path string, quer
 			results = append(results, page...)
 		}
 
+		if next == "" {
+			break
+		}
+		query.Set("until", next)
+	}
+
+	return results, nil
+}
+
+// GetPagedFrom follows the continuation-token pagination used by the newer list
+// endpoints, where the next cursor is passed back as the from parameter and may
+// arrive as either an opaque string token or a numeric timestamp.
+func GetPagedFrom[T any](ctx context.Context, c *VercelConnection, path string, query url.Values, key string) ([]T, error) {
+	if query == nil {
+		query = url.Values{}
+	}
+
+	var results []T
+	for {
+		sent := query.Get("from")
+
+		body, err := c.do(ctx, path, query)
+		if err != nil {
+			return nil, err
+		}
+
 		var pg struct {
-			Pagination *pagination `json:"pagination"`
+			Pagination *struct {
+				Next json.RawMessage `json:"next"`
+			} `json:"pagination"`
 		}
 		if err := json.Unmarshal(body, &pg); err != nil {
 			return nil, fmt.Errorf("vercel API %s: decode pagination: %w", path, err)
 		}
-		if pg.Pagination == nil || pg.Pagination.Next == nil {
+
+		next := ""
+		if pg.Pagination != nil && len(pg.Pagination.Next) > 0 && !isJSONNull(pg.Pagination.Next) {
+			next = cursorValue(pg.Pagination.Next)
+		}
+
+		// As in GetPaged, a cursor echoed straight back means the endpoint
+		// ignored it and replayed the first page, so the records are already
+		// held and must not be appended twice.
+		if sent != "" && next == sent {
 			break
 		}
-		query.Set("until", strconv.FormatInt(*pg.Pagination.Next, 10))
+
+		var envelope map[string]json.RawMessage
+		if err := json.Unmarshal(body, &envelope); err != nil {
+			return nil, fmt.Errorf("vercel API %s: decode response: %w", path, err)
+		}
+
+		if raw, ok := envelope[key]; ok && len(raw) > 0 && !isJSONNull(raw) {
+			var page []T
+			if err := json.Unmarshal(raw, &page); err != nil {
+				return nil, fmt.Errorf("vercel API %s: decode %q: %w", path, key, err)
+			}
+			results = append(results, page...)
+		}
+
+		if next == "" {
+			break
+		}
+		query.Set("from", next)
 	}
 
 	return results, nil
+}
+
+// cursorValue renders a continuation cursor as the string form the from
+// parameter expects, accepting either a quoted token or a bare number.
+func cursorValue(raw json.RawMessage) string {
+	var token string
+	if err := json.Unmarshal(raw, &token); err == nil {
+		return token
+	}
+	var num int64
+	if err := json.Unmarshal(raw, &num); err == nil {
+		return strconv.FormatInt(num, 10)
+	}
+	return ""
 }
 
 func isJSONNull(raw json.RawMessage) bool {

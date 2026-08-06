@@ -16,13 +16,21 @@ import (
 )
 
 // mqlVercelProjectInternal caches the team a project belongs to so project-scoped
-// API calls (environment variables, deployments, firewall) can pass teamId.
+// API calls (environment variables, deployments, firewall) can pass teamId, and
+// the Secure Compute attachments returned inline with the project so
+// connectConfigurations avoids a second API call.
 type mqlVercelProjectInternal struct {
-	teamID string
+	teamID              string
+	cacheConnectConfigs []connectConfigRecord
 }
 
 type deploymentTypeHolder struct {
 	DeploymentType string `json:"deploymentType"`
+}
+
+type passportRecord struct {
+	DeploymentType string `json:"deploymentType"`
+	ConnectorID    string `json:"connectorId"`
 }
 
 type trustedIpsRecord struct {
@@ -42,28 +50,93 @@ type cronsRecord struct {
 	Definitions []map[string]any `json:"definitions"`
 }
 
+type gitProviderOptions struct {
+	CreateDeployments               *string `json:"createDeployments"`
+	RequireVerifiedCommits          *bool   `json:"requireVerifiedCommits"`
+	DisableRepositoryDispatchEvents *bool   `json:"disableRepositoryDispatchEvents"`
+}
+
+type gitCommentsRecord struct {
+	OnCommit      *bool `json:"onCommit"`
+	OnPullRequest *bool `json:"onPullRequest"`
+}
+
+type resourceConfigRecord struct {
+	FunctionDefaultRegions    []string `json:"functionDefaultRegions"`
+	FunctionDefaultTimeout    *int64   `json:"functionDefaultTimeout"`
+	FunctionDefaultMemoryType *string  `json:"functionDefaultMemoryType"`
+	BuildMachineType          *string  `json:"buildMachineType"`
+	BuildMachineSelection     *string  `json:"buildMachineSelection"`
+}
+
+type staticIpsRecord struct {
+	Enabled *bool    `json:"enabled"`
+	Builds  *bool    `json:"builds"`
+	Regions []string `json:"regions"`
+}
+
+type connectConfigRecord struct {
+	ConnectConfigurationID string      `json:"connectConfigurationId"`
+	EnvID                  string      `json:"envId"`
+	DC                     string      `json:"dc"`
+	Passive                *bool       `json:"passive"`
+	BuildsEnabled          *bool       `json:"buildsEnabled"`
+	AWS                    *connectAWS `json:"aws"`
+}
+
+type connectAWS struct {
+	SubnetIDs []string `json:"subnetIds"`
+}
+
 type projectRecord struct {
-	ID                   string                `json:"id"`
-	Name                 string                `json:"name"`
-	Framework            *string               `json:"framework"`
-	NodeVersion          string                `json:"nodeVersion"`
-	RootDirectory        *string               `json:"rootDirectory"`
-	BuildCommand         *string               `json:"buildCommand"`
-	DevCommand           *string               `json:"devCommand"`
-	InstallCommand       *string               `json:"installCommand"`
-	OutputDirectory      *string               `json:"outputDirectory"`
-	PublicSource         *bool                 `json:"publicSource"`
-	AutoExposeSystemEnvs *bool                 `json:"autoExposeSystemEnvs"`
-	GitForkProtection    *bool                 `json:"gitForkProtection"`
-	GitLFS               *bool                 `json:"gitLFS"`
-	Live                 *bool                 `json:"live"`
-	CreatedAt            flexTime              `json:"createdAt"`
-	UpdatedAt            flexTime              `json:"updatedAt"`
-	SsoProtection        *deploymentTypeHolder `json:"ssoProtection"`
-	PasswordProtection   *deploymentTypeHolder `json:"passwordProtection"`
-	TrustedIps           *trustedIpsRecord     `json:"trustedIps"`
-	Link                 *projectLink          `json:"link"`
-	Crons                *cronsRecord          `json:"crons"`
+	ID                                   string                `json:"id"`
+	Name                                 string                `json:"name"`
+	Framework                            *string               `json:"framework"`
+	NodeVersion                          string                `json:"nodeVersion"`
+	RootDirectory                        *string               `json:"rootDirectory"`
+	BuildCommand                         *string               `json:"buildCommand"`
+	DevCommand                           *string               `json:"devCommand"`
+	InstallCommand                       *string               `json:"installCommand"`
+	OutputDirectory                      *string               `json:"outputDirectory"`
+	CommandForIgnoringBuildStep          *string               `json:"commandForIgnoringBuildStep"`
+	PublicSource                         *bool                 `json:"publicSource"`
+	AutoExposeSystemEnvs                 *bool                 `json:"autoExposeSystemEnvs"`
+	GitForkProtection                    *bool                 `json:"gitForkProtection"`
+	GitLFS                               *bool                 `json:"gitLFS"`
+	Live                                 *bool                 `json:"live"`
+	Paused                               *bool                 `json:"paused"`
+	Tier                                 string                `json:"tier"`
+	CreatedAt                            flexTime              `json:"createdAt"`
+	UpdatedAt                            flexTime              `json:"updatedAt"`
+	SsoProtection                        *deploymentTypeHolder `json:"ssoProtection"`
+	PasswordProtection                   *deploymentTypeHolder `json:"passwordProtection"`
+	Passport                             *passportRecord       `json:"passport"`
+	TrustedIps                           *trustedIpsRecord     `json:"trustedIps"`
+	TrustedSources                       map[string]any        `json:"trustedSources"`
+	OidcTokenConfig                      map[string]any        `json:"oidcTokenConfig"`
+	DeploymentPolicy                     map[string]any        `json:"deploymentPolicy"`
+	RollingRelease                       map[string]any        `json:"rollingRelease"`
+	DeploymentExpiration                 *expirationRecord     `json:"deploymentExpiration"`
+	DirectoryListing                     *bool                 `json:"directoryListing"`
+	SourceFilesOutsideRootDirectory      *bool                 `json:"sourceFilesOutsideRootDirectory"`
+	CustomerSupportCodeVisibility        *bool                 `json:"customerSupportCodeVisibility"`
+	ServerlessFunctionZeroConfigFailover *bool                 `json:"serverlessFunctionZeroConfigFailover"`
+	AutoAssignCustomDomains              *bool                 `json:"autoAssignCustomDomains"`
+	ServerlessFunctionRegion             string                `json:"serverlessFunctionRegion"`
+	ResourceConfig                       *resourceConfigRecord `json:"resourceConfig"`
+	StaticIps                            *staticIpsRecord      `json:"staticIps"`
+	ConnectConfigurations                []connectConfigRecord `json:"connectConfigurations"`
+	SkewProtectionBoundaryAt             flexTime              `json:"skewProtectionBoundaryAt"`
+	SkewProtectionMaxAge                 *int64                `json:"skewProtectionMaxAge"`
+	SkewProtectionAllowedDomains         []string              `json:"skewProtectionAllowedDomains"`
+	TransferStartedAt                    flexTime              `json:"transferStartedAt"`
+	TransferCompletedAt                  flexTime              `json:"transferCompletedAt"`
+	TransferToAccountID                  string                `json:"transferToAccountId"`
+	TransferredFromAccountID             string                `json:"transferredFromAccountId"`
+	GitProviderOptions                   *gitProviderOptions   `json:"gitProviderOptions"`
+	GitComments                          *gitCommentsRecord    `json:"gitComments"`
+	Link                                 *projectLink          `json:"link"`
+	Crons                                *cronsRecord          `json:"crons"`
 }
 
 func holderType(h *deploymentTypeHolder) *string {
@@ -71,6 +144,21 @@ func holderType(h *deploymentTypeHolder) *string {
 		return nil
 	}
 	return &h.DeploymentType
+}
+
+// boolPtrOrFalse dereferences an optional flag, treating an absent value as
+// off. Vercel omits most boolean settings when they are at their default.
+func boolPtrOrFalse(v *bool) bool {
+	return v != nil && *v
+}
+
+// dictOrNil passes a decoded JSON object through as a dict value, preserving a
+// null when the API omitted the object entirely.
+func dictOrNil(m map[string]any) any {
+	if m == nil {
+		return nil
+	}
+	return m
 }
 
 func newVercelProject(runtime *plugin.Runtime, teamID string, rec *projectRecord) (*mqlVercelProject, error) {
@@ -93,6 +181,39 @@ func newVercelProject(runtime *plugin.Runtime, teamID string, rec *projectRecord
 	cronJobs := []any{}
 	if rec.Crons != nil {
 		cronJobs = dictSliceToAny(rec.Crons.Definitions)
+	}
+
+	var passportType, passportConnector *string
+	if rec.Passport != nil {
+		passportType, passportConnector = &rec.Passport.DeploymentType, &rec.Passport.ConnectorID
+	}
+
+	var gitCreateDeployments *string
+	var gitRequireVerified, gitDisableDispatch *bool
+	if rec.GitProviderOptions != nil {
+		gitCreateDeployments = rec.GitProviderOptions.CreateDeployments
+		gitRequireVerified = rec.GitProviderOptions.RequireVerifiedCommits
+		gitDisableDispatch = rec.GitProviderOptions.DisableRepositoryDispatchEvents
+	}
+
+	var gitOnCommit, gitOnPullRequest *bool
+	if rec.GitComments != nil {
+		gitOnCommit, gitOnPullRequest = rec.GitComments.OnCommit, rec.GitComments.OnPullRequest
+	}
+
+	resourceConfig := rec.ResourceConfig
+	if resourceConfig == nil {
+		resourceConfig = &resourceConfigRecord{}
+	}
+
+	staticIps := rec.StaticIps
+	if staticIps == nil {
+		staticIps = &staticIpsRecord{}
+	}
+
+	exp := rec.DeploymentExpiration
+	if exp == nil {
+		exp = &expirationRecord{}
 	}
 
 	res, err := CreateResource(runtime, "vercel.project", map[string]*llx.RawData{
@@ -122,18 +243,63 @@ func newVercelProject(runtime *plugin.Runtime, teamID string, rec *projectRecord
 		"repositoryName":                   llx.StringDataPtr(repoName),
 		"productionBranch":                 llx.StringDataPtr(productionBranch),
 		"cronJobs":                         llx.ArrayData(cronJobs, types.Dict),
+
+		"trustedSources":                       llx.DictData(dictOrNil(rec.TrustedSources)),
+		"passportDeploymentType":               llx.StringDataPtr(passportType),
+		"passportConnectorId":                  llx.StringDataPtr(passportConnector),
+		"oidcTokenConfig":                      llx.DictData(dictOrNil(rec.OidcTokenConfig)),
+		"requireVerifiedCommits":               llx.BoolData(boolPtrOrFalse(gitRequireVerified)),
+		"gitCreateDeployments":                 llx.StringDataPtr(gitCreateDeployments),
+		"disableRepositoryDispatchEvents":      llx.BoolData(boolPtrOrFalse(gitDisableDispatch)),
+		"gitCommentsOnCommit":                  llx.BoolData(boolPtrOrFalse(gitOnCommit)),
+		"gitCommentsOnPullRequest":             llx.BoolData(boolPtrOrFalse(gitOnPullRequest)),
+		"deploymentPolicy":                     llx.DictData(dictOrNil(rec.DeploymentPolicy)),
+		"directoryListing":                     llx.BoolData(boolPtrOrFalse(rec.DirectoryListing)),
+		"sourceFilesOutsideRootDirectory":      llx.BoolData(boolPtrOrFalse(rec.SourceFilesOutsideRootDirectory)),
+		"customerSupportCodeVisibility":        llx.BoolData(boolPtrOrFalse(rec.CustomerSupportCodeVisibility)),
+		"paused":                               llx.BoolData(boolPtrOrFalse(rec.Paused)),
+		"serverlessFunctionZeroConfigFailover": llx.BoolData(boolPtrOrFalse(rec.ServerlessFunctionZeroConfigFailover)),
+		"autoAssignCustomDomains":              llx.BoolData(boolPtrOrFalse(rec.AutoAssignCustomDomains)),
+		"commandForIgnoringBuildStep":          llx.StringDataPtr(rec.CommandForIgnoringBuildStep),
+		"serverlessFunctionRegion":             llx.StringData(rec.ServerlessFunctionRegion),
+		"functionDefaultRegions":               llx.ArrayData(strSliceToAny(resourceConfig.FunctionDefaultRegions), types.String),
+		"functionDefaultTimeout":               llx.IntData(intPtrOrZero(resourceConfig.FunctionDefaultTimeout)),
+		"functionDefaultMemoryType":            llx.StringDataPtr(resourceConfig.FunctionDefaultMemoryType),
+		"buildMachineType":                     llx.StringDataPtr(resourceConfig.BuildMachineType),
+		"buildMachineSelection":                llx.StringDataPtr(resourceConfig.BuildMachineSelection),
+		"staticIpsEnabled":                     llx.BoolData(boolPtrOrFalse(staticIps.Enabled)),
+		"staticIpsForBuilds":                   llx.BoolData(boolPtrOrFalse(staticIps.Builds)),
+		"staticIpsRegions":                     llx.ArrayData(strSliceToAny(staticIps.Regions), types.String),
+		"expirationDays":                       llx.IntData(intPtrOrZero(exp.ExpirationDays)),
+		"expirationDaysProduction":             llx.IntData(intPtrOrZero(exp.ExpirationDaysProduction)),
+		"expirationDaysCanceled":               llx.IntData(intPtrOrZero(exp.ExpirationDaysCanceled)),
+		"expirationDaysErrored":                llx.IntData(intPtrOrZero(exp.ExpirationDaysErrored)),
+		"deploymentsToKeep":                    llx.IntData(intPtrOrZero(exp.DeploymentsToKeep)),
+		"skewProtectionBoundaryAt":             llx.TimeDataPtr(rec.SkewProtectionBoundaryAt.Time()),
+		"skewProtectionMaxAge":                 llx.IntData(intPtrOrZero(rec.SkewProtectionMaxAge)),
+		"skewProtectionAllowedDomains":         llx.ArrayData(strSliceToAny(rec.SkewProtectionAllowedDomains), types.String),
+		"rollingRelease":                       llx.DictData(dictOrNil(rec.RollingRelease)),
+		"tier":                                 llx.StringData(rec.Tier),
+		"transferStartedAt":                    llx.TimeDataPtr(rec.TransferStartedAt.Time()),
+		"transferCompletedAt":                  llx.TimeDataPtr(rec.TransferCompletedAt.Time()),
+		"transferToAccountId":                  llx.StringData(rec.TransferToAccountID),
+		"transferredFromAccountId":             llx.StringData(rec.TransferredFromAccountID),
 	})
 	if err != nil {
 		return nil, err
 	}
 	project := res.(*mqlVercelProject)
+	project.cacheConnectConfigs = rec.ConnectConfigurations
 	project.teamID = teamID
 	return project, nil
 }
 
 func (c *mqlVercelTeam) projects() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
-	records, err := connection.GetPaged[projectRecord](context.Background(), conn, "/v9/projects", connection.TeamQuery(c.Id.Data), "projects")
+	// v10 is the current list endpoint and the only one that returns the
+	// project security settings below; it pages with a continuation token
+	// passed back as from, not the until cursor the older endpoints use.
+	records, err := connection.GetPagedFrom[projectRecord](context.Background(), conn, "/v10/projects", connection.TeamQuery(c.Id.Data), "projects")
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +364,36 @@ func initVercelProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 func (c *mqlVercelProject) id() (string, error) {
 	return c.Id.Data, c.Id.Error
+}
+
+// connectConfigurations reports the Secure Compute networks the project runs
+// in. The attachments arrive inline with the project payload, so this builds
+// them from the cached records rather than making another call.
+func (c *mqlVercelProject) connectConfigurations() ([]any, error) {
+	res := []any{}
+	for i := range c.cacheConnectConfigs {
+		rec := c.cacheConnectConfigs[i]
+
+		subnetIDs := []any{}
+		if rec.AWS != nil {
+			subnetIDs = strSliceToAny(rec.AWS.SubnetIDs)
+		}
+
+		cfg, err := CreateResource(c.MqlRuntime, "vercel.project.connectConfiguration", map[string]*llx.RawData{
+			"__id":                   llx.StringData(c.Id.Data + "/connect/" + rec.ConnectConfigurationID + "/" + rec.EnvID),
+			"connectConfigurationId": llx.StringData(rec.ConnectConfigurationID),
+			"envId":                  llx.StringData(rec.EnvID),
+			"dc":                     llx.StringData(rec.DC),
+			"passive":                llx.BoolData(boolPtrOrFalse(rec.Passive)),
+			"buildsEnabled":          llx.BoolData(boolPtrOrFalse(rec.BuildsEnabled)),
+			"awsSubnetIds":           llx.ArrayData(subnetIDs, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, cfg)
+	}
+	return res, nil
 }
 
 // resolveProjectRefs resolves a list of project ids into typed vercel.project

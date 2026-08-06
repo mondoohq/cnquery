@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -24,8 +26,36 @@ type mqlVercelFirewallInternal struct {
 type firewallConfig struct {
 	FirewallEnabled bool                 `json:"firewallEnabled"`
 	ManagedRules    any                  `json:"managedRules"`
+	CRS             any                  `json:"crs"`
+	BotIDEnabled    *bool                `json:"botIdEnabled"`
+	LogHeaders      logHeaders           `json:"logHeaders"`
+	Version         *int64               `json:"version"`
+	UpdatedAt       flexTime             `json:"updatedAt"`
 	Rules           []firewallRuleRecord `json:"rules"`
 	IPs             []firewallIPRecord   `json:"ips"`
+}
+
+// logHeaders decodes the recorded-header setting, which Vercel returns either as
+// a list of header names or as the string "*" meaning every header.
+type logHeaders struct {
+	values []string
+}
+
+func (l *logHeaders) UnmarshalJSON(b []byte) error {
+	if s := strings.TrimSpace(string(b)); s == "null" || s == "" {
+		return nil
+	}
+	var list []string
+	if err := json.Unmarshal(b, &list); err == nil {
+		l.values = list
+		return nil
+	}
+	var single string
+	if err := json.Unmarshal(b, &single); err != nil {
+		return err
+	}
+	l.values = []string{single}
+	return nil
 }
 
 type firewallRuleRecord struct {
@@ -84,11 +114,20 @@ func (p *mqlVercelProject) firewall() (*mqlVercelFirewall, error) {
 	if managed == nil {
 		managed = map[string]any{}
 	}
+	crs := cfg.CRS
+	if crs == nil {
+		crs = map[string]any{}
+	}
 
 	res, err := CreateResource(p.MqlRuntime, "vercel.firewall", map[string]*llx.RawData{
 		"__id":            llx.StringData(p.Id.Data + "/firewall"),
 		"enabled":         llx.BoolData(cfg.FirewallEnabled),
 		"managedRulesets": llx.DictData(managed),
+		"coreRuleSet":     llx.DictData(crs),
+		"botIdEnabled":    llx.BoolData(cfg.BotIDEnabled != nil && *cfg.BotIDEnabled),
+		"logHeaders":      llx.ArrayData(strSliceToAny(cfg.LogHeaders.values), types.String),
+		"configVersion":   llx.IntData(intPtrOrZero(cfg.Version)),
+		"updatedAt":       llx.TimeDataPtr(cfg.UpdatedAt.Time()),
 	})
 	if err != nil {
 		return nil, err
@@ -100,6 +139,113 @@ func (p *mqlVercelProject) firewall() (*mqlVercelFirewall, error) {
 	fw.cacheRules = cfg.Rules
 	fw.cacheIPs = cfg.IPs
 	return fw, nil
+}
+
+// --- system bypass --------------------------------------------------------
+
+type bypassRuleRecord struct {
+	ID            string   `json:"Id"`
+	IP            string   `json:"Ip"`
+	Domain        string   `json:"Domain"`
+	Action        string   `json:"Action"`
+	IsProjectRule *bool    `json:"IsProjectRule"`
+	Note          *string  `json:"Note"`
+	ActorID       string   `json:"ActorId"`
+	ExpiresAt     flexTime `json:"ExpiresAt"`
+	CreatedAt     flexTime `json:"CreatedAt"`
+	UpdatedAt     flexTime `json:"UpdatedAt"`
+}
+
+// bypassRules lists the entries that skip firewall evaluation for a source
+// address and hostname. The endpoint uses PascalCase keys and an offset cursor
+// of its own rather than the shared pagination envelope, so it pages here.
+func (f *mqlVercelFirewall) bypassRules() ([]any, error) {
+	conn := f.MqlRuntime.Connection.(*connection.VercelConnection)
+
+	records, err := f.fetchBypassRules(conn)
+	if err != nil {
+		// System bypass is gated with the rest of the configurable firewall;
+		// treat an absent or forbidden list as empty rather than failing.
+		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range records {
+		rec := records[i]
+		rule, err := CreateResource(f.MqlRuntime, "vercel.firewall.bypassRule", map[string]*llx.RawData{
+			"id":            llx.StringData(rec.ID),
+			"ip":            llx.StringData(rec.IP),
+			"domain":        llx.StringData(rec.Domain),
+			"action":        llx.StringData(rec.Action),
+			"projectScoped": llx.BoolData(rec.IsProjectRule != nil && *rec.IsProjectRule),
+			"note":          llx.StringDataPtr(rec.Note),
+			"actorId":       llx.StringData(rec.ActorID),
+			"expiresAt":     llx.TimeDataPtr(rec.ExpiresAt.Time()),
+			"createdAt":     llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"updatedAt":     llx.TimeDataPtr(rec.UpdatedAt.Time()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, rule)
+	}
+	return res, nil
+}
+
+// fetchBypassRules walks the offset cursor, which carries the id of the last
+// item returned rather than a page number.
+func (f *mqlVercelFirewall) fetchBypassRules(conn *connection.VercelConnection) ([]bypassRuleRecord, error) {
+	query := connection.TeamQuery(f.teamID)
+	query.Set("projectId", f.projectID)
+	query.Set("limit", "256")
+
+	var all []bypassRuleRecord
+	for {
+		var page struct {
+			Result     []bypassRuleRecord `json:"result"`
+			Pagination *struct {
+				ID string `json:"Id"`
+			} `json:"pagination"`
+		}
+		if err := conn.Get(context.Background(), "/v1/security/firewall/bypass", query, &page); err != nil {
+			return nil, err
+		}
+		all = append(all, page.Result...)
+
+		if page.Pagination == nil || page.Pagination.ID == "" || query.Get("offset") == page.Pagination.ID {
+			break
+		}
+		query.Set("offset", page.Pagination.ID)
+	}
+	return all, nil
+}
+
+func (c *mqlVercelFirewallBypassRule) id() (string, error) {
+	return c.Id.Data, c.Id.Error
+}
+
+// attackAnomalies reports traffic Vercel flagged as an attack over the last
+// day. The endpoint returns an empty object rather than an empty list when
+// nothing was flagged.
+func (f *mqlVercelFirewall) attackAnomalies() ([]any, error) {
+	conn := f.MqlRuntime.Connection.(*connection.VercelConnection)
+
+	query := connection.TeamQuery(f.teamID)
+	query.Set("projectId", f.projectID)
+
+	var resp struct {
+		Anomalies []map[string]any `json:"anomalies"`
+	}
+	if err := conn.Get(context.Background(), "/v1/security/firewall/attack-status", query, &resp); err != nil {
+		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	return dictSliceToAny(resp.Anomalies), nil
 }
 
 func (f *mqlVercelFirewall) rules() ([]any, error) {
