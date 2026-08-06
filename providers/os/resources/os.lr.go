@@ -241,6 +241,10 @@ const (
 	ResourceSelinux                                       string = "selinux"
 	ResourceSelinuxBoolean                                string = "selinux.boolean"
 	ResourceSelinuxModule                                 string = "selinux.module"
+	ResourcePolkit                                        string = "polkit"
+	ResourcePolkitAction                                  string = "polkit.action"
+	ResourcePolkitRule                                    string = "polkit.rule"
+	ResourcePolkitLocalAuthorityRule                      string = "polkit.localAuthorityRule"
 	ResourceModprobe                                      string = "modprobe"
 	ResourceModprobeInstall                               string = "modprobe.install"
 	ResourceModprobeRemove                                string = "modprobe.remove"
@@ -1426,6 +1430,22 @@ func init() {
 		"selinux.module": {
 			// to override args, implement: initSelinuxModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSelinuxModule,
+		},
+		"polkit": {
+			// to override args, implement: initPolkit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPolkit,
+		},
+		"polkit.action": {
+			// to override args, implement: initPolkitAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPolkitAction,
+		},
+		"polkit.rule": {
+			// to override args, implement: initPolkitRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPolkitRule,
+		},
+		"polkit.localAuthorityRule": {
+			// to override args, implement: initPolkitLocalAuthorityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPolkitLocalAuthorityRule,
 		},
 		"modprobe": {
 			Init:   initModprobe,
@@ -7384,6 +7404,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"selinux.module.priority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSelinuxModule).GetPriority()).ToDataRes(types.Int)
+	},
+	"polkit.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkit).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"polkit.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkit).GetVersion()).ToDataRes(types.String)
+	},
+	"polkit.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkit).GetActions()).ToDataRes(types.Array(types.Resource("polkit.action")))
+	},
+	"polkit.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkit).GetRules()).ToDataRes(types.Array(types.Resource("polkit.rule")))
+	},
+	"polkit.localAuthorityRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkit).GetLocalAuthorityRules()).ToDataRes(types.Array(types.Resource("polkit.localAuthorityRule")))
+	},
+	"polkit.adminIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkit).GetAdminIdentities()).ToDataRes(types.Array(types.String))
+	},
+	"polkit.action.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetId()).ToDataRes(types.String)
+	},
+	"polkit.action.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetDescription()).ToDataRes(types.String)
+	},
+	"polkit.action.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetMessage()).ToDataRes(types.String)
+	},
+	"polkit.action.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetVendor()).ToDataRes(types.String)
+	},
+	"polkit.action.vendorUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetVendorUrl()).ToDataRes(types.String)
+	},
+	"polkit.action.iconName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetIconName()).ToDataRes(types.String)
+	},
+	"polkit.action.allowAny": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetAllowAny()).ToDataRes(types.String)
+	},
+	"polkit.action.allowInactive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetAllowInactive()).ToDataRes(types.String)
+	},
+	"polkit.action.allowActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetAllowActive()).ToDataRes(types.String)
+	},
+	"polkit.action.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"polkit.action.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitAction).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"polkit.rule.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitRule).GetOrder()).ToDataRes(types.Int)
+	},
+	"polkit.rule.adminRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitRule).GetAdminRule()).ToDataRes(types.Bool)
+	},
+	"polkit.rule.actionIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitRule).GetActionIds()).ToDataRes(types.Array(types.String))
+	},
+	"polkit.rule.results": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitRule).GetResults()).ToDataRes(types.Array(types.String))
+	},
+	"polkit.rule.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitRule).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"polkit.localAuthorityRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetName()).ToDataRes(types.String)
+	},
+	"polkit.localAuthorityRule.identities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetIdentities()).ToDataRes(types.Array(types.String))
+	},
+	"polkit.localAuthorityRule.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetActions()).ToDataRes(types.Array(types.String))
+	},
+	"polkit.localAuthorityRule.resultAny": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetResultAny()).ToDataRes(types.String)
+	},
+	"polkit.localAuthorityRule.resultInactive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetResultInactive()).ToDataRes(types.String)
+	},
+	"polkit.localAuthorityRule.resultActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetResultActive()).ToDataRes(types.String)
+	},
+	"polkit.localAuthorityRule.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPolkitLocalAuthorityRule).GetFile()).ToDataRes(types.Resource("file"))
 	},
 	"modprobe.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlModprobe).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -20237,6 +20344,138 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"selinux.module.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSelinuxModule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"polkit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).__id, ok = v.Value.(string)
+		return
+	},
+	"polkit.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"polkit.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).LocalAuthorityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.adminIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkit).AdminIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).__id, ok = v.Value.(string)
+		return
+	},
+	"polkit.action.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.vendorUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).VendorUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.iconName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).IconName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.allowAny": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).AllowAny, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.allowInactive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).AllowInactive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.allowActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).AllowActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.action.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"polkit.action.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitAction).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"polkit.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitRule).__id, ok = v.Value.(string)
+		return
+	},
+	"polkit.rule.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitRule).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"polkit.rule.adminRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitRule).AdminRule, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"polkit.rule.actionIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitRule).ActionIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.rule.results": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitRule).Results, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.rule.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitRule).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).__id, ok = v.Value.(string)
+		return
+	},
+	"polkit.localAuthorityRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.identities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).Identities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.resultAny": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).ResultAny, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.resultInactive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).ResultInactive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.resultActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).ResultActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"polkit.localAuthorityRule.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPolkitLocalAuthorityRule).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
 	},
 	"modprobe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51704,6 +51943,354 @@ func (c *mqlSelinuxModule) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlSelinuxModule) GetPriority() *plugin.TValue[int64] {
 	return &c.Priority
+}
+
+// mqlPolkit for the polkit resource
+type mqlPolkit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPolkitInternal it will be used here
+	Installed           plugin.TValue[bool]
+	Version             plugin.TValue[string]
+	Actions             plugin.TValue[[]any]
+	Rules               plugin.TValue[[]any]
+	LocalAuthorityRules plugin.TValue[[]any]
+	AdminIdentities     plugin.TValue[[]any]
+}
+
+// createPolkit creates a new instance of this resource
+func createPolkit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPolkit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("polkit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPolkit) MqlName() string {
+	return "polkit"
+}
+
+func (c *mqlPolkit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPolkit) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlPolkit) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlPolkit) GetActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Actions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("polkit", c.__id, "actions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actions()
+	})
+}
+
+func (c *mqlPolkit) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("polkit", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlPolkit) GetLocalAuthorityRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LocalAuthorityRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("polkit", c.__id, "localAuthorityRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.localAuthorityRules()
+	})
+}
+
+func (c *mqlPolkit) GetAdminIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdminIdentities, func() ([]any, error) {
+		return c.adminIdentities()
+	})
+}
+
+// mqlPolkitAction for the polkit.action resource
+type mqlPolkitAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPolkitActionInternal it will be used here
+	Id            plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Message       plugin.TValue[string]
+	Vendor        plugin.TValue[string]
+	VendorUrl     plugin.TValue[string]
+	IconName      plugin.TValue[string]
+	AllowAny      plugin.TValue[string]
+	AllowInactive plugin.TValue[string]
+	AllowActive   plugin.TValue[string]
+	Annotations   plugin.TValue[map[string]any]
+	File          plugin.TValue[*mqlFile]
+}
+
+// createPolkitAction creates a new instance of this resource
+func createPolkitAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPolkitAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("polkit.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPolkitAction) MqlName() string {
+	return "polkit.action"
+}
+
+func (c *mqlPolkitAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPolkitAction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPolkitAction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlPolkitAction) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+func (c *mqlPolkitAction) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlPolkitAction) GetVendorUrl() *plugin.TValue[string] {
+	return &c.VendorUrl
+}
+
+func (c *mqlPolkitAction) GetIconName() *plugin.TValue[string] {
+	return &c.IconName
+}
+
+func (c *mqlPolkitAction) GetAllowAny() *plugin.TValue[string] {
+	return &c.AllowAny
+}
+
+func (c *mqlPolkitAction) GetAllowInactive() *plugin.TValue[string] {
+	return &c.AllowInactive
+}
+
+func (c *mqlPolkitAction) GetAllowActive() *plugin.TValue[string] {
+	return &c.AllowActive
+}
+
+func (c *mqlPolkitAction) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlPolkitAction) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+// mqlPolkitRule for the polkit.rule resource
+type mqlPolkitRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPolkitRuleInternal it will be used here
+	Order     plugin.TValue[int64]
+	AdminRule plugin.TValue[bool]
+	ActionIds plugin.TValue[[]any]
+	Results   plugin.TValue[[]any]
+	File      plugin.TValue[*mqlFile]
+}
+
+// createPolkitRule creates a new instance of this resource
+func createPolkitRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPolkitRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("polkit.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPolkitRule) MqlName() string {
+	return "polkit.rule"
+}
+
+func (c *mqlPolkitRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPolkitRule) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlPolkitRule) GetAdminRule() *plugin.TValue[bool] {
+	return &c.AdminRule
+}
+
+func (c *mqlPolkitRule) GetActionIds() *plugin.TValue[[]any] {
+	return &c.ActionIds
+}
+
+func (c *mqlPolkitRule) GetResults() *plugin.TValue[[]any] {
+	return &c.Results
+}
+
+func (c *mqlPolkitRule) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+// mqlPolkitLocalAuthorityRule for the polkit.localAuthorityRule resource
+type mqlPolkitLocalAuthorityRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPolkitLocalAuthorityRuleInternal it will be used here
+	Name           plugin.TValue[string]
+	Identities     plugin.TValue[[]any]
+	Actions        plugin.TValue[[]any]
+	ResultAny      plugin.TValue[string]
+	ResultInactive plugin.TValue[string]
+	ResultActive   plugin.TValue[string]
+	File           plugin.TValue[*mqlFile]
+}
+
+// createPolkitLocalAuthorityRule creates a new instance of this resource
+func createPolkitLocalAuthorityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPolkitLocalAuthorityRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("polkit.localAuthorityRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPolkitLocalAuthorityRule) MqlName() string {
+	return "polkit.localAuthorityRule"
+}
+
+func (c *mqlPolkitLocalAuthorityRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetIdentities() *plugin.TValue[[]any] {
+	return &c.Identities
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetResultAny() *plugin.TValue[string] {
+	return &c.ResultAny
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetResultInactive() *plugin.TValue[string] {
+	return &c.ResultInactive
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetResultActive() *plugin.TValue[string] {
+	return &c.ResultActive
+}
+
+func (c *mqlPolkitLocalAuthorityRule) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
 }
 
 // mqlModprobe for the modprobe resource
