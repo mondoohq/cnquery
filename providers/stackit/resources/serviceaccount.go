@@ -9,6 +9,7 @@ import (
 	serviceaccount "github.com/stackitcloud/stackit-sdk-go/services/serviceaccount/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (r *mqlStackit) serviceAccounts() ([]any, error) {
@@ -131,6 +132,91 @@ func (r *mqlStackitServiceAccount) keys() ([]any, error) {
 		out = append(out, serviceAccountKeyEntry(&items[i]))
 	}
 	return out, nil
+}
+
+// mqlStackitServiceAccountFederatedIdentityProviderInternal caches the owning
+// service account's email so the back-reference resolves without the schema
+// repeating it as a raw field.
+type mqlStackitServiceAccountFederatedIdentityProviderInternal struct {
+	cacheServiceAccountEmail string
+}
+
+func (r *mqlStackitServiceAccount) federatedIdentityProviders() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ServiceAccount()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListFederatedIdentityProviders(bgctx(), r.ProjectId.Data, r.Email.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		// A service account with federation never configured answers 404
+		// rather than an empty list.
+		if isNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetResourcesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		fip := &items[i]
+		createdAt, ok1 := fip.GetCreatedAtOk()
+		updatedAt, ok2 := fip.GetUpdatedAtOk()
+
+		assertions := make([]any, 0, len(fip.GetAssertions()))
+		for _, a := range fip.GetAssertions() {
+			assertions = append(assertions, map[string]any{
+				"item":     a.GetItem(),
+				"operator": a.GetOperator(),
+				"value":    a.GetValue(),
+			})
+		}
+
+		args := map[string]*llx.RawData{
+			"id":         llx.StringData(fip.GetId()),
+			"name":       llx.StringData(fip.GetName()),
+			"issuer":     llx.StringData(fip.GetIssuer()),
+			"assertions": llx.ArrayData(assertions, types.Dict),
+			"createdAt":  llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
+			"updatedAt":  llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.serviceAccount.federatedIdentityProvider", args)
+		if err != nil {
+			return nil, err
+		}
+		if mfip, ok := res.(*mqlStackitServiceAccountFederatedIdentityProvider); ok {
+			mfip.cacheServiceAccountEmail = r.Email.Data
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// id qualifies the provider UUID with the service account it belongs to. The
+// SDK marks the id optional, so fall back to the name, which is unique per
+// service account.
+func (r *mqlStackitServiceAccountFederatedIdentityProvider) id() (string, error) {
+	key := r.Id.Data
+	if key == "" {
+		key = r.Name.Data
+	}
+	return "stackit.serviceAccount.federatedIdentityProvider/" + r.cacheServiceAccountEmail + "/" + key, nil
+}
+
+func (r *mqlStackitServiceAccountFederatedIdentityProvider) serviceAccount() (*mqlStackitServiceAccount, error) {
+	if r.cacheServiceAccountEmail == "" {
+		return markNull[mqlStackitServiceAccount](&r.ServiceAccount)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.serviceAccount", map[string]*llx.RawData{
+		"email": llx.StringData(r.cacheServiceAccountEmail),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitServiceAccount), nil
 }
 
 // serviceAccountKeyEntry maps a service-account key record into a dict-native

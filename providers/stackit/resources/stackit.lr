@@ -394,6 +394,18 @@ private stackit.image @defaults("id name status diskFormat") {
   updatedAt time
   // User-defined labels
   labels map[string]string
+  // Projects the image is explicitly shared with
+  //
+  // Project IDs that can boot servers from this image. Empty when the image
+  // is not shared, and empty for a public image, whose reach comes from
+  // scope rather than an explicit share list.
+  sharedWithProjects() []string
+  // Whether the image is shared with every project in the parent organization
+  //
+  // True widens the image to the whole organization rather than the projects
+  // named in sharedWithProjects, so anything baked into it (credentials,
+  // agents, unpatched packages) spreads with it.
+  sharedWithOrganization() bool
 }
 
 // STACKIT project network
@@ -964,6 +976,19 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   // each node pool. Keys may carry a domain prefix separated by a slash and
   // values may be empty.
   labels map[string]string
+  // Reachability of the kube-apiserver
+  //
+  // One of PUBLIC, where the control plane answers on the internet, or SNA,
+  // where it answers only from inside the attached STACKIT network. Empty
+  // when the cluster predates the setting. A PUBLIC control plane is only as
+  // restricted as apiServerAclEnabled and apiServerAclAllowedCidrs make it.
+  controlPlaneAccessScope string
+  // End of support for the control-plane Kubernetes version
+  //
+  // Date after which STACKIT stops supporting the Kubernetes minor version
+  // the control plane runs. Null when no end of support has been announced
+  // for that version.
+  kubernetesExpirationDate time
   // STACKIT network the cluster is attached to
   networkRef() stackit.network
 }
@@ -1011,6 +1036,18 @@ private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum
   allowSystemComponents bool
   // Kubernetes version running on this node pool, when it differs from the control plane
   kubernetesVersion string
+  // End of support for the node operating-system image
+  //
+  // Date after which STACKIT stops supporting the machine image version the
+  // pool's nodes boot from. Null when no end of support has been announced.
+  // Nodes past this date keep running but stop receiving image updates.
+  osExpirationDate time
+  // End of support for the pool's Kubernetes version
+  //
+  // Date after which STACKIT stops supporting the Kubernetes version running
+  // on the pool, which can differ from the control-plane date when the pool
+  // is pinned to an older version. Null when none has been announced.
+  kubernetesExpirationDate time
 }
 
 // STACKIT Object Storage namespace
@@ -1413,6 +1450,33 @@ private stackit.postgresFlex.instance @defaults("id name version status") {
   // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
   // internet-reachable.
   internetReachable() bool
+  // Database users defined on the instance
+  users() []stackit.postgresFlex.instance.user
+}
+
+// STACKIT Postgres Flex database user
+//
+// Database login on a Postgres Flex instance, keyed by its UUID `id`. The
+// `roles` a user holds decide what it can do once connected, so pairing
+// them with the instance `acl` gives both halves of the access question:
+// who can reach the database and what they may do there. Reading `roles`,
+// `host`, or `port` fetches the user record on demand; `username` comes
+// from the instance listing.
+private stackit.postgresFlex.instance.user @defaults("username roles") {
+  // User UUID
+  id string
+  // Login name
+  username string
+  // Roles granted to the user
+  //
+  // PostgreSQL role names, for example login, createdb, or a role conferring
+  // superuser rights. A user holding a broad role can act well beyond the
+  // schema it was provisioned for.
+  roles() []string
+  // Host the user is permitted to connect from
+  host() string
+  // Port the user connects on
+  port() int
 }
 
 // STACKIT MongoDB Flex namespace
@@ -1468,6 +1532,35 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
   // internet-reachable.
   internetReachable() bool
+  // Database users defined on the instance
+  users() []stackit.mongoDbFlex.instance.user
+}
+
+// STACKIT MongoDB Flex database user
+//
+// Database login on a MongoDB Flex instance, keyed by its UUID `id`. The
+// `roles` a user holds decide what it can do once connected, so pairing them
+// with the instance `acl` gives both halves of the access question: who can
+// reach the database and what they may do there. Reading `roles`,
+// `database`, `host`, or `port` fetches the user record on demand;
+// `username` comes from the instance listing.
+private stackit.mongoDbFlex.instance.user @defaults("username roles") {
+  // User UUID
+  id string
+  // Login name
+  username string
+  // Roles granted to the user
+  //
+  // MongoDB role names, for example read, readWrite, or a cluster-wide
+  // administrative role. Roles scoped beyond the user's own database widen
+  // what a stolen credential reaches.
+  roles() []string
+  // Database the user authenticates against
+  database() string
+  // Host the user is permitted to connect from
+  host() string
+  // Port the user connects on
+  port() int
 }
 
 // STACKIT SQLServer Flex namespace
@@ -1528,6 +1621,35 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
   // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
   // internet-reachable.
   internetReachable() bool
+  // Database users defined on the instance
+  users() []stackit.sqlServerFlex.instance.user
+}
+
+// STACKIT SQLServer Flex database user
+//
+// Database login on a SQLServer Flex instance, keyed by its UUID `id`. The
+// `roles` a user holds decide what it can do once connected, so pairing them
+// with the instance `acl` gives both halves of the access question: who can
+// reach the database and what they may do there. Reading `roles`,
+// `defaultDatabase`, `host`, or `port` fetches the user record on demand;
+// `username` comes from the instance listing.
+private stackit.sqlServerFlex.instance.user @defaults("username roles") {
+  // User UUID
+  id string
+  // Login name
+  username string
+  // Roles granted to the user
+  //
+  // SQL Server role names, for example db_datareader, db_datawriter, or
+  // db_owner. A user in an owner or server-level role can change the schema
+  // and the permissions of other users.
+  roles() []string
+  // Database the user connects to by default
+  defaultDatabase() string
+  // Host the user is permitted to connect from
+  host() string
+  // Port the user connects on
+  port() int
 }
 
 // STACKIT OpenSearch namespace
@@ -1922,6 +2044,30 @@ private stackit.secretsManager.instance @defaults("id name state") {
   creationFinishedAt time
   // ACL CIDRs allowed to connect
   acls() []string
+  // Users that hold credentials on the instance
+  users() []stackit.secretsManager.user
+}
+
+// STACKIT Secrets Manager user
+//
+// Credentialed principal on a Secrets Manager instance, keyed by its UUID
+// `id`. The `write` flag separates read-only consumers from principals that
+// can create, change, and delete secrets, which is the split least-privilege
+// reviews turn on. Pair it with the instance `acls` to see both who may
+// authenticate and from where.
+private stackit.secretsManager.user @defaults("username write") {
+  // User UUID
+  id string
+  // Username the credential authenticates as
+  username string
+  // Free-text description recorded when the user was created
+  description string
+  // Whether the user may create, modify, and delete secrets
+  //
+  // False for a read-only user that can only fetch secrets.
+  write bool
+  // Secrets Manager instance the user authenticates against
+  instance() stackit.secretsManager.instance
 }
 
 // STACKIT Observability namespace
@@ -1968,6 +2114,29 @@ private stackit.observability.instance @defaults("id name status planName") {
   parameters() dict
   // Whether the instance can be updated
   isUpdatable() bool
+  // CIDR blocks permitted to reach the instance endpoints
+  //
+  // Empty when no ACL is configured, which leaves the Prometheus, Alertmanager,
+  // and Grafana endpoints reachable from any address that can authenticate.
+  acl() []string
+  // Whether Grafana serves dashboards to unauthenticated viewers
+  //
+  // True exposes every dashboard and the metrics behind it to anyone who
+  // reaches the Grafana URL, subject only to acl.
+  grafanaPublicReadAccess() bool
+  // Whether Grafana logins are authenticated through STACKIT SSO
+  grafanaUseStackitSso() bool
+  // Whether a generic OAuth provider is configured for Grafana logins
+  //
+  // An alternative to STACKIT SSO. The provider's client secret is
+  // deliberately not exposed.
+  grafanaGenericOauthEnabled() bool
+  // Whether the generic OAuth provider may grant Grafana admin
+  //
+  // True lets the external provider's role mapping hand out Grafana
+  // administrator rights, so a compromised or loosely scoped provider
+  // becomes an admin path into the instance.
+  grafanaGenericOauthAllowAssignAdmin() bool
 }
 
 // STACKIT Telemetry namespace
@@ -2217,6 +2386,43 @@ private stackit.serviceAccount @defaults("email projectId") {
   // Each entry has `id`, `keyType`, `keyAlgorithm`, `keyOrigin`,
   // `active`, `createdAt`, and `validUntil`.
   keys() []dict
+  // External identity providers trusted to obtain credentials for this account
+  federatedIdentityProviders() []stackit.serviceAccount.federatedIdentityProvider
+}
+
+// Federated identity provider trusted by a STACKIT service account
+//
+// External OIDC issuer allowed to exchange its own tokens for credentials
+// belonging to one service account, together with the claim conditions a
+// presented token must satisfy. Keyed by its UUID `id`. Where `keys` and
+// `accessTokens` show credentials that already exist, this shows who can
+// mint new ones without holding any: a workload outside STACKIT that
+// satisfies the assertions gets whatever the service account can do.
+private stackit.serviceAccount.federatedIdentityProvider @defaults("name issuer") {
+  // Provider UUID
+  id string
+  // Provider name
+  name string
+  // OIDC issuer URL whose tokens are accepted
+  //
+  // Identifies the external token authority, for example a CI system's OIDC
+  // endpoint or another cloud's identity service.
+  issuer string
+  // Claim conditions a presented token must satisfy
+  //
+  // Every assertion must match before a token is exchanged. Each entry has
+  // `item` (the claim inspected, for example sub or repository), `operator`
+  // (the comparison applied), and `value` (the expected claim value). A short
+  // or loosely matching assertion list widens which external workloads can
+  // take on the service account, so the count and specificity of these
+  // entries is what an access review reads.
+  assertions []dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Service account the provider can obtain credentials for
+  serviceAccount() stackit.serviceAccount
 }
 
 
@@ -2506,6 +2712,44 @@ private stackit.kms.keyRing @defaults("id displayName state") {
   createdAt time
   // Keys inside this key ring
   keys() []stackit.kms.key
+  // Wrapping keys used to import external key material into the ring
+  wrappingKeys() []stackit.kms.wrappingKey
+}
+
+// STACKIT KMS wrapping key
+//
+// Public key used to encrypt externally generated key material before
+// importing it into a key ring, keyed by its UUID `id`. Unlike the keys it
+// protects, a wrapping key carries an `expiresAt` and stops being usable
+// after it, so a ring whose import path depends on an expired or
+// soon-expiring wrapping key cannot take new material. The `algorithm`
+// and `protection` describe the wrapping primitive and where the private
+// half is held.
+private stackit.kms.wrappingKey @defaults("displayName state expiresAt") {
+  // Wrapping key UUID
+  id string
+  // Display name
+  displayName string
+  // Description (free text)
+  description string
+  // Wrapping algorithm (for example rsa_4096_oaep_sha256)
+  algorithm string
+  // Purpose the wrapping key serves (for example symmetric_key, asymmetric_key)
+  purpose string
+  // Protection level backing the private half (software, hsm)
+  protection string
+  // Access scope (PUBLIC, SNA)
+  accessScope string
+  // Lifecycle state (active, creating, deleted, …)
+  state string
+  // Expiration, after which the wrapping key can no longer wrap material
+  expiresAt time
+  // Creation timestamp
+  createdAt time
+  // PEM-encoded public half used to wrap key material
+  publicKey string
+  // Key ring the wrapping key belongs to
+  keyRing() stackit.kms.keyRing
 }
 
 // STACKIT KMS key
@@ -2544,6 +2788,31 @@ private stackit.kms.key @defaults("id displayName state purpose") {
   createdAt time
   // Scheduled deletion timestamp (nil unless the key is in PENDING_DELETION)
   deletionDate time
+  // Versions of the key
+  versions() []stackit.kms.key.version
+}
+
+// STACKIT KMS key version
+//
+// One generation of key material under a KMS key. Rotation creates a new
+// version and leaves the previous ones in place to decrypt existing
+// ciphertext, so the newest version's `createdAt` is what a key-age or
+// rotation-interval check reads, and `disabled` plus `state` tell you which
+// generations can still be used. `destroyDate` is set only once a version
+// has been scheduled for destruction.
+private stackit.kms.key.version @defaults("number state disabled") {
+  // Version number, increasing with each rotation
+  number int
+  // Lifecycle state (active, creating, destroyed, …)
+  state string
+  // Whether the version has been disabled and can no longer be used
+  disabled bool
+  // When the version's key material was created
+  createdAt time
+  // Scheduled destruction timestamp, null unless destruction was requested
+  destroyDate time
+  // PEM-encoded public half, for asymmetric keys only
+  publicKey string
 }
 
 // STACKIT IAM namespace

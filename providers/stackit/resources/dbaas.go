@@ -543,6 +543,67 @@ func (r *mqlStackitSecretsManagerInstance) acls() ([]any, error) {
 	return out, nil
 }
 
+// mqlStackitSecretsManagerUserInternal caches the owning instance id so the
+// back-reference resolves without the schema repeating it as a raw field.
+type mqlStackitSecretsManagerUserInternal struct {
+	cacheInstanceId string
+}
+
+// users lists the instance's credentialed principals. The SDK's User model
+// also carries the user's password; it is deliberately not mapped into the
+// resource, since a scan result is not a place to reproduce a credential.
+func (r *mqlStackitSecretsManagerInstance) users() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.SecretsManager()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListUsers(bgctx(), c.ProjectID(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	users, _ := resp.GetUsersOk()
+	out := make([]any, 0, len(users))
+	for i := range users {
+		u := &users[i]
+		args := map[string]*llx.RawData{
+			"id":          llx.StringData(u.GetId()),
+			"username":    llx.StringData(u.GetUsername()),
+			"description": llx.StringData(u.GetDescription()),
+			"write":       llx.BoolData(u.GetWrite()),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.secretsManager.user", args)
+		if err != nil {
+			return nil, err
+		}
+		if mu, ok := res.(*mqlStackitSecretsManagerUser); ok {
+			mu.cacheInstanceId = r.Id.Data
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitSecretsManagerUser) id() (string, error) {
+	return "stackit.secretsManager.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitSecretsManagerUser) instance() (*mqlStackitSecretsManagerInstance, error) {
+	if r.cacheInstanceId == "" {
+		return markNull[mqlStackitSecretsManagerInstance](&r.Instance)
+	}
+	res, err := NewResource(r.MqlRuntime, "stackit.secretsManager.instance", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheInstanceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitSecretsManagerInstance), nil
+}
+
 // ------------------------- Observability -------------------------
 //
 // The list endpoint returns id/name/status/planName/serviceName only.
@@ -553,6 +614,12 @@ type mqlStackitObservabilityInstanceInternal struct {
 	fetched atomic.Bool
 	detail  *observability.GetInstanceResponse
 	lock    sync.Mutex
+
+	// Grafana configuration comes from a separate endpoint, so it gets its
+	// own guard rather than sharing the instance-detail one.
+	grafanaFetched atomic.Bool
+	grafana        *observability.GrafanaConfigs
+	grafanaLock    sync.Mutex
 }
 
 func (r *mqlStackitObservability) instances() ([]any, error) {
@@ -653,6 +720,415 @@ func (r *mqlStackitObservabilityInstance) isUpdatable() (bool, error) {
 		return false, err
 	}
 	return d.GetIsUpdatable(), nil
+}
+
+func (r *mqlStackitObservabilityInstance) acl() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.Observability()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListACL(bgctx(), r.Id.Data, c.ProjectID()).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	acl, _ := resp.GetAclOk()
+	return strSlice(acl), nil
+}
+
+// fetchGrafana pulls the instance's Grafana configuration once and caches it
+// for the lifetime of this resource, so the four Grafana fields share a
+// single API call. Double-check locked like fetchDetail.
+//
+// The response also carries the generic OAuth provider's client secret. Only
+// the posture flags are lifted onto the resource; the secret is left behind.
+func (r *mqlStackitObservabilityInstance) fetchGrafana() (*observability.GrafanaConfigs, error) {
+	if r.grafanaFetched.Load() {
+		return r.grafana, nil
+	}
+	r.grafanaLock.Lock()
+	defer r.grafanaLock.Unlock()
+	if r.grafanaFetched.Load() {
+		return r.grafana, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.Observability()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetGrafanaConfigs(bgctx(), r.Id.Data, c.ProjectID()).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			r.grafanaFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	r.grafana = resp
+	r.grafanaFetched.Store(true)
+	return r.grafana, nil
+}
+
+func (r *mqlStackitObservabilityInstance) grafanaPublicReadAccess() (bool, error) {
+	g, err := r.fetchGrafana()
+	if err != nil || g == nil {
+		return false, err
+	}
+	return g.GetPublicReadAccess(), nil
+}
+
+func (r *mqlStackitObservabilityInstance) grafanaUseStackitSso() (bool, error) {
+	g, err := r.fetchGrafana()
+	if err != nil || g == nil {
+		return false, err
+	}
+	return g.GetUseStackitSso(), nil
+}
+
+func (r *mqlStackitObservabilityInstance) grafanaGenericOauthEnabled() (bool, error) {
+	g, err := r.fetchGrafana()
+	if err != nil || g == nil {
+		return false, err
+	}
+	oauth, ok := g.GetGenericOauthOk()
+	if !ok || oauth == nil {
+		return false, nil
+	}
+	return oauth.GetEnabled(), nil
+}
+
+func (r *mqlStackitObservabilityInstance) grafanaGenericOauthAllowAssignAdmin() (bool, error) {
+	g, err := r.fetchGrafana()
+	if err != nil || g == nil {
+		return false, err
+	}
+	oauth, ok := g.GetGenericOauthOk()
+	if !ok || oauth == nil {
+		return false, nil
+	}
+	return oauth.GetAllowAssignGrafanaAdmin(), nil
+}
+
+// ------------------------- Flex database users -------------------------
+//
+// Each Flex engine lists its users with id/username only; roles, host, port,
+// and the default database need a per-user GetUser call, so they are computed
+// fields behind a cached fetch. A query that only reads usernames therefore
+// costs one call per instance, not one per user.
+//
+// The three engines take the same five string arguments in DIFFERENT orders:
+// postgresflex is (projectId, region, instanceId[, userId]) while mongodbflex
+// and sqlserverflex are (projectId, instanceId[, userId], region). Swapping
+// them still compiles.
+
+type mqlStackitPostgresFlexInstanceUserInternal struct {
+	cacheInstanceId string
+	fetched         atomic.Bool
+	detail          *postgresflex.UserResponse
+	lock            sync.Mutex
+}
+
+func (r *mqlStackitPostgresFlexInstance) users() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.PostgresFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListUsers(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		u := &items[i]
+		res, err := CreateResource(r.MqlRuntime, "stackit.postgresFlex.instance.user", map[string]*llx.RawData{
+			"id":       llx.StringData(u.GetId()),
+			"username": llx.StringData(u.GetUsername()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if mu, ok := res.(*mqlStackitPostgresFlexInstanceUser); ok {
+			mu.cacheInstanceId = r.Id.Data
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitPostgresFlexInstanceUser) id() (string, error) {
+	return "stackit.postgresFlex.instance.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitPostgresFlexInstanceUser) fetchDetail() (*postgresflex.UserResponse, error) {
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.PostgresFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetUser(bgctx(), c.ProjectID(), c.Region(), r.cacheInstanceId, r.Id.Data).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			r.fetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	if item, ok := resp.GetItemOk(); ok {
+		r.detail = item
+	}
+	r.fetched.Store(true)
+	return r.detail, nil
+}
+
+func (r *mqlStackitPostgresFlexInstanceUser) roles() ([]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return []any{}, err
+	}
+	return strSlice(d.GetRoles()), nil
+}
+
+func (r *mqlStackitPostgresFlexInstanceUser) host() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetHost(), nil
+}
+
+func (r *mqlStackitPostgresFlexInstanceUser) port() (int64, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.GetPort(), nil
+}
+
+type mqlStackitMongoDbFlexInstanceUserInternal struct {
+	cacheInstanceId string
+	fetched         atomic.Bool
+	detail          *mongodbflex.InstanceResponseUser
+	lock            sync.Mutex
+}
+
+func (r *mqlStackitMongoDbFlexInstance) users() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.MongoDbFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListUsers(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		u := &items[i]
+		res, err := CreateResource(r.MqlRuntime, "stackit.mongoDbFlex.instance.user", map[string]*llx.RawData{
+			"id":       llx.StringData(u.GetId()),
+			"username": llx.StringData(u.GetUsername()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if mu, ok := res.(*mqlStackitMongoDbFlexInstanceUser); ok {
+			mu.cacheInstanceId = r.Id.Data
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstanceUser) id() (string, error) {
+	return "stackit.mongoDbFlex.instance.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstanceUser) fetchDetail() (*mongodbflex.InstanceResponseUser, error) {
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.MongoDbFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetUser(bgctx(), c.ProjectID(), r.cacheInstanceId, r.Id.Data, c.Region()).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			r.fetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	if item, ok := resp.GetItemOk(); ok {
+		r.detail = item
+	}
+	r.fetched.Store(true)
+	return r.detail, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstanceUser) roles() ([]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return []any{}, err
+	}
+	return strSlice(d.GetRoles()), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstanceUser) database() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetDatabase(), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstanceUser) host() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetHost(), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstanceUser) port() (int64, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.GetPort(), nil
+}
+
+type mqlStackitSqlServerFlexInstanceUserInternal struct {
+	cacheInstanceId string
+	fetched         atomic.Bool
+	detail          *sqlserverflex.UserResponseUser
+	lock            sync.Mutex
+}
+
+func (r *mqlStackitSqlServerFlexInstance) users() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.SqlServerFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListUsers(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		u := &items[i]
+		res, err := CreateResource(r.MqlRuntime, "stackit.sqlServerFlex.instance.user", map[string]*llx.RawData{
+			"id":       llx.StringData(u.GetId()),
+			"username": llx.StringData(u.GetUsername()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		if mu, ok := res.(*mqlStackitSqlServerFlexInstanceUser); ok {
+			mu.cacheInstanceId = r.Id.Data
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitSqlServerFlexInstanceUser) id() (string, error) {
+	return "stackit.sqlServerFlex.instance.user/" + r.cacheInstanceId + "/" + r.Id.Data, nil
+}
+
+// fetchDetail loads the user record. The SQLServer Flex response model also
+// carries the user's password and a ready-to-use connection URI; neither is
+// mapped onto the resource.
+func (r *mqlStackitSqlServerFlexInstanceUser) fetchDetail() (*sqlserverflex.UserResponseUser, error) {
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.SqlServerFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.GetUser(bgctx(), c.ProjectID(), r.cacheInstanceId, r.Id.Data, c.Region()).Execute()
+	if err != nil {
+		if isAccessDenied(err) {
+			r.fetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	if item, ok := resp.GetItemOk(); ok {
+		r.detail = item
+	}
+	r.fetched.Store(true)
+	return r.detail, nil
+}
+
+func (r *mqlStackitSqlServerFlexInstanceUser) roles() ([]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return []any{}, err
+	}
+	return strSlice(d.GetRoles()), nil
+}
+
+func (r *mqlStackitSqlServerFlexInstanceUser) defaultDatabase() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetDefaultDatabase(), nil
+}
+
+func (r *mqlStackitSqlServerFlexInstanceUser) host() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetHost(), nil
+}
+
+func (r *mqlStackitSqlServerFlexInstanceUser) port() (int64, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.GetPort(), nil
 }
 
 // ------------------------- DBaaS init functions -------------------------
