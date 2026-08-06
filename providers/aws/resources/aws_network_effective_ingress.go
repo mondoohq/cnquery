@@ -4,9 +4,11 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -168,6 +170,13 @@ func securityGroupRuleSources(perm *mqlAwsEc2SecuritygroupIppermission) ([]strin
 // The network ACL applies at the subnet boundary, so all rules are evaluated
 // against the same entry list.
 func (a *mqlAwsEc2Networkinterface) effectiveIngress() ([]any, error) {
+	// The interface ID is part of every row's cache key. An empty one would make
+	// rows from different interfaces with matching rules collide and silently
+	// replace each other, so fail loudly instead.
+	if a.Id.Data == "" {
+		return nil, errors.New("cannot evaluate effective ingress: network interface has no id")
+	}
+
 	sgs := a.GetSecurityGroups()
 	if sgs.Error != nil {
 		return nil, sgs.Error
@@ -313,8 +322,66 @@ func (a *mqlAwsEc2NetworkaclEntry) isShadowed() (bool, error) {
 	return false, nil
 }
 
+// mqlAwsEc2Internal memoizes which security groups are referenced by other
+// security groups' rules.
+//
+// Answering that for one group means walking every rule in the account, and
+// isUnused asks it once per group, so deriving it per group would be quadratic in
+// the number of groups. Building the whole reference map once and sharing it
+// through the runtime-cached aws.ec2 singleton makes a full
+// `aws.ec2.securityGroups { isUnused }` sweep a single pass instead.
+type mqlAwsEc2Internal struct {
+	securityGroupRefsOnce sync.Once
+	// securityGroupRefs maps a referenced group ID to the IDs of the groups whose
+	// rules reference it. The referencing IDs are kept rather than collapsed to a
+	// boolean so a group that only references itself is not counted as used.
+	securityGroupRefs    map[string][]string
+	securityGroupRefsErr error
+}
+
+// securityGroupReferences returns the map of referenced group ID to referencing
+// group IDs, computing it once per runtime.
+func (a *mqlAwsEc2) securityGroupReferences() (map[string][]string, error) {
+	a.securityGroupRefsOnce.Do(func() {
+		refs := map[string][]string{}
+		groups := a.GetSecurityGroups()
+		if groups.Error != nil {
+			a.securityGroupRefsErr = groups.Error
+			return
+		}
+		for _, g := range groups.Data {
+			sg, ok := g.(*mqlAwsEc2Securitygroup)
+			if !ok {
+				continue
+			}
+			for _, perms := range []*plugin.TValue[[]any]{sg.GetIpPermissions(), sg.GetIpPermissionsEgress()} {
+				if perms.Error != nil {
+					a.securityGroupRefsErr = perms.Error
+					return
+				}
+				for _, p := range perms.Data {
+					perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
+					if !ok {
+						continue
+					}
+					pairs := perm.GetUserIdGroupPairs()
+					if pairs.Error != nil {
+						a.securityGroupRefsErr = pairs.Error
+						return
+					}
+					for _, referenced := range userIdGroupPairIds(pairs.Data) {
+						refs[referenced] = append(refs[referenced], sg.Id.Data)
+					}
+				}
+			}
+		}
+		a.securityGroupRefs = refs
+	})
+	return a.securityGroupRefs, a.securityGroupRefsErr
+}
+
 // isUnused reports whether nothing depends on the security group: it is attached
-// to no network interface and no other group in the region references it.
+// to no network interface and no other group references it.
 func (a *mqlAwsEc2Securitygroup) isUnused() (bool, error) {
 	attached := a.GetIsAttachedToNetworkInterface()
 	if attached.Error != nil {
@@ -324,65 +391,41 @@ func (a *mqlAwsEc2Securitygroup) isUnused() (bool, error) {
 		return false, nil
 	}
 
-	referenced, err := a.isReferencedByAnotherSecurityGroup()
-	if err != nil {
-		return false, err
-	}
-	return !referenced, nil
-}
-
-// isReferencedByAnotherSecurityGroup reports whether any other security group in
-// the account allows traffic from this one. Such a group is load-bearing even
-// with no network interfaces of its own.
-func (a *mqlAwsEc2Securitygroup) isReferencedByAnotherSecurityGroup() (bool, error) {
 	obj, err := CreateResource(a.MqlRuntime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return false, err
 	}
-	groups := obj.(*mqlAwsEc2).GetSecurityGroups()
-	if groups.Error != nil {
-		return false, groups.Error
+	refs, err := obj.(*mqlAwsEc2).securityGroupReferences()
+	if err != nil {
+		return false, err
 	}
 
-	selfId := a.Id.Data
-	for _, g := range groups.Data {
-		sg, ok := g.(*mqlAwsEc2Securitygroup)
-		if !ok || sg.Id.Data == selfId {
-			continue
-		}
-		for _, perms := range []*plugin.TValue[[]any]{sg.GetIpPermissions(), sg.GetIpPermissionsEgress()} {
-			if perms.Error != nil {
-				return false, perms.Error
-			}
-			for _, p := range perms.Data {
-				perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
-				if !ok {
-					continue
-				}
-				pairs := perm.GetUserIdGroupPairs()
-				if pairs.Error != nil {
-					return false, pairs.Error
-				}
-				if userIdGroupPairsReference(pairs.Data, selfId) {
-					return true, nil
-				}
-			}
-		}
-	}
-	return false, nil
+	return !referencedByOtherGroup(refs, a.Id.Data), nil
 }
 
-// userIdGroupPairsReference reports whether a rule's security group references
-// include the given group ID.
-func userIdGroupPairsReference(pairs []any, groupId string) bool {
+// referencedByOtherGroup reports whether any group other than groupId itself
+// references it. A group referencing only itself is still unused: nothing else
+// depends on it, so deleting it changes no other group's meaning.
+func referencedByOtherGroup(refs map[string][]string, groupId string) bool {
+	for _, referencingId := range refs[groupId] {
+		if referencingId != groupId {
+			return true
+		}
+	}
+	return false
+}
+
+// userIdGroupPairIds returns the security group IDs a rule's references name.
+func userIdGroupPairIds(pairs []any) []string {
+	ids := []string{}
 	for _, raw := range pairs {
 		pair, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if id, ok := pair["GroupId"].(string); ok && id == groupId {
-			return true
+		if id, ok := pair["GroupId"].(string); ok && id != "" {
+			ids = append(ids, id)
 		}
 	}
-	return false
+	return ids
 }

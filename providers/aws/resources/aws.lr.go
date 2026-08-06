@@ -148930,7 +148930,7 @@ func (c *mqlAwsSsmInstance) GetSourceLocation() *plugin.TValue[string] {
 type mqlAwsEc2 struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEc2Internal it will be used here
+	mqlAwsEc2Internal
 	SecurityGroups                   plugin.TValue[[]any]
 	Instances                        plugin.TValue[[]any]
 	EbsEncryptionByDefault           plugin.TValue[map[string]any]

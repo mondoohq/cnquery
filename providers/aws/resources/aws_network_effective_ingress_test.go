@@ -179,16 +179,39 @@ func TestVerdictIsReachable(t *testing.T) {
 	assert.False(t, verdictIsReachable(naclVerdictDeny))
 }
 
-func TestUserIdGroupPairsReference(t *testing.T) {
+func TestUserIdGroupPairIds(t *testing.T) {
 	pairs := []any{
 		map[string]any{"GroupId": "sg-aaa", "UserId": "123456789012"},
 		map[string]any{"GroupId": "sg-bbb"},
 	}
-	assert.True(t, userIdGroupPairsReference(pairs, "sg-aaa"))
-	assert.True(t, userIdGroupPairsReference(pairs, "sg-bbb"))
-	assert.False(t, userIdGroupPairsReference(pairs, "sg-ccc"))
-	assert.False(t, userIdGroupPairsReference([]any{}, "sg-aaa"))
+	assert.Equal(t, []string{"sg-aaa", "sg-bbb"}, userIdGroupPairIds(pairs))
+	assert.Equal(t, []string{}, userIdGroupPairIds([]any{}))
 
-	// Malformed entries are skipped rather than panicking.
-	assert.False(t, userIdGroupPairsReference([]any{"not-a-map", nil, map[string]any{"GroupId": 42}}, "sg-aaa"))
+	// Malformed entries are skipped rather than panicking, and an empty GroupId
+	// is not a reference.
+	assert.Equal(t, []string{}, userIdGroupPairIds([]any{
+		"not-a-map",
+		nil,
+		map[string]any{"GroupId": 42},
+		map[string]any{"GroupId": ""},
+		map[string]any{"UserId": "123456789012"},
+	}))
+}
+
+func TestReferencedByOtherGroup(t *testing.T) {
+	refs := map[string][]string{
+		"sg-self":  {"sg-self"},
+		"sg-used":  {"sg-self", "sg-other"},
+		"sg-mixed": {"sg-mixed", "sg-other"},
+	}
+
+	// The common "allow from myself" group is still unused when nothing else
+	// points at it.
+	assert.False(t, referencedByOtherGroup(refs, "sg-self"))
+	assert.True(t, referencedByOtherGroup(refs, "sg-used"))
+	assert.True(t, referencedByOtherGroup(refs, "sg-mixed"), "a self-reference does not mask a real one")
+
+	assert.False(t, referencedByOtherGroup(refs, "sg-absent"))
+	assert.False(t, referencedByOtherGroup(map[string][]string{}, "sg-any"))
+	assert.False(t, referencedByOtherGroup(nil, "sg-any"))
 }
