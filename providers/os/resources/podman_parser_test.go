@@ -180,6 +180,166 @@ func TestParsePodmanVolumes(t *testing.T) {
 	assert.False(t, entries[0].Anonymous)
 }
 
+// captured from "podman images --format json" on Podman 6. The second record is
+// a dangling image, which podman reports with the "<none>" sentinel and no names.
+const podmanTestImages = `[
+  {
+    "Id": "8ce27058e51034510c145f57b370ef9df424693c82c57e86af500b141be2ccc8",
+    "ParentId": "8807a786fd2b5b04b9950007e1e8854de282eacbb30c1561669a2929a2e3ddfd",
+    "RepoDigests": ["localhost/mql-os-verify@sha256:177b1f25aaa28928f54ce9463fa1a2abf207c1b83bc12ecf0bf168fa13d6850a"],
+    "Size": 214938349,
+    "Labels": {"io.buildah.version": "1.44.0"},
+    "Containers": 0,
+    "Arch": "arm64",
+    "Digest": "sha256:177b1f25aaa28928f54ce9463fa1a2abf207c1b83bc12ecf0bf168fa13d6850a",
+    "IsManifestList": false,
+    "Names": ["localhost/mql-os-verify:latest"],
+    "Os": "linux",
+    "Created": 1786027416,
+    "CreatedAt": "2026-08-06T14:43:36Z",
+    "Repository": "localhost/mql-os-verify",
+    "Tag": "latest"
+  },
+  {
+    "Id": "e3977ed107958c94428d68db2d417e44880767cb33ab3c78fd9eafca2399f113",
+    "RepoDigests": [],
+    "Size": 213218571,
+    "Labels": {"io.buildah.version": "1.44.0"},
+    "Dangling": true,
+    "Arch": "arm64",
+    "Digest": "sha256:005b1330211ad742f4edfb3914be2a6f8b71eb12828d864943e05cc4ba281c40",
+    "Os": "linux",
+    "Created": 1786026911,
+    "CreatedAt": "2026-08-06T14:35:11Z",
+    "Repository": "<none>",
+    "Tag": "<none>"
+  }
+]`
+
+func TestParsePodmanImages(t *testing.T) {
+	entries, err := parsePodmanImages(podmanTestImages)
+	require.NoError(t, err)
+	require.Len(t, entries, 2)
+
+	tagged := entries[0]
+	assert.Equal(t, "8ce27058e51034510c145f57b370ef9df424693c82c57e86af500b141be2ccc8", tagged.ID)
+	assert.Equal(t, []string{"localhost/mql-os-verify:latest"}, tagged.Names)
+	assert.Equal(t, "localhost/mql-os-verify", tagged.Repository)
+	assert.Equal(t, "latest", tagged.Tag)
+	assert.Equal(t, "sha256:177b1f25aaa28928f54ce9463fa1a2abf207c1b83bc12ecf0bf168fa13d6850a", tagged.Digest)
+	assert.Equal(t, []string{"localhost/mql-os-verify@sha256:177b1f25aaa28928f54ce9463fa1a2abf207c1b83bc12ecf0bf168fa13d6850a"}, tagged.RepoDigests)
+	assert.Equal(t, int64(214938349), tagged.Size)
+	assert.Equal(t, map[string]string{"io.buildah.version": "1.44.0"}, tagged.Labels)
+	assert.Equal(t, "linux", tagged.Os)
+	// podman spells the architecture "Arch", unlike every other list command
+	assert.Equal(t, "arm64", tagged.Architecture)
+	assert.Equal(t, int64(1786027416), tagged.Created)
+
+	dangling := entries[1]
+	assert.Equal(t, "e3977ed107958c94428d68db2d417e44880767cb33ab3c78fd9eafca2399f113", dangling.ID)
+	assert.Empty(t, dangling.Names)
+}
+
+func TestParsePodmanImages_EmptyOutput(t *testing.T) {
+	for _, out := range []string{"", "  \n", "null", "[]"} {
+		entries, err := parsePodmanImages(out)
+		require.NoError(t, err, out)
+		assert.Empty(t, entries, out)
+	}
+}
+
+// captured from "podman pod ps --format json" on Podman 6
+const podmanTestPods = `[
+  {
+    "Cgroup": "user.slice",
+    "Containers": [
+      {"Id": "ed818215b9ec3f1d9406254590a10f9dc8ac67d2d23f3c97cc372ea32fc18640", "Names": "2521b4ff96c5-infra", "Status": "created", "RestartCount": 0}
+    ],
+    "Created": "2026-08-06T13:09:22.73838403-07:00",
+    "Id": "2521b4ff96c5c138f1750030e0f86a31c966382739e1de5133550992bba964d1",
+    "InfraId": "ed818215b9ec3f1d9406254590a10f9dc8ac67d2d23f3c97cc372ea32fc18640",
+    "Name": "mql-fixture-pod",
+    "Namespace": "",
+    "Networks": ["podman"],
+    "Status": "Created",
+    "Labels": {"app": "db"}
+  }
+]`
+
+func TestParsePodmanPods(t *testing.T) {
+	entries, err := parsePodmanPods(podmanTestPods)
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+
+	entry := entries[0]
+	assert.Equal(t, "2521b4ff96c5c138f1750030e0f86a31c966382739e1de5133550992bba964d1", entry.ID)
+	assert.Equal(t, "mql-fixture-pod", entry.Name)
+	assert.Equal(t, "Created", entry.Status)
+	// the infra container id is spelled "InfraId", not "InfraID"
+	assert.Equal(t, "ed818215b9ec3f1d9406254590a10f9dc8ac67d2d23f3c97cc372ea32fc18640", entry.InfraID)
+	assert.Equal(t, map[string]string{"app": "db"}, entry.Labels)
+
+	// pods carry an RFC 3339 timestamp with an offset, not a unix epoch
+	created := podmanParseTime(entry.Created)
+	require.NotNil(t, created)
+	assert.Equal(t, 2026, created.Year())
+	assert.Equal(t, time.August, created.Month())
+}
+
+func TestParsePodmanPods_EmptyOutput(t *testing.T) {
+	for _, out := range []string{"", "  \n", "null", "[]"} {
+		entries, err := parsePodmanPods(out)
+		require.NoError(t, err, out)
+		assert.Empty(t, entries, out)
+	}
+}
+
+func TestPodmanImageRepoTag(t *testing.T) {
+	tests := []struct {
+		title      string
+		entry      podmanImageEntry
+		repository string
+		tag        string
+	}{
+		{
+			"reported by podman",
+			podmanImageEntry{Repository: "localhost/mql-os-verify", Tag: "latest", Names: []string{"localhost/mql-os-verify:latest"}},
+			"localhost/mql-os-verify", "latest",
+		},
+		{
+			// a dangling image has no reference, and the sentinel must not surface
+			// as a repository literally named "<none>"
+			"dangling",
+			podmanImageEntry{Repository: podmanNone, Tag: podmanNone},
+			"", "",
+		},
+		{
+			"untagged but still named",
+			podmanImageEntry{Repository: podmanNone, Tag: podmanNone, Names: []string{"docker.io/library/debian:13"}},
+			"docker.io/library/debian", "13",
+		},
+		{
+			// older podman omits the fields entirely and only reports names
+			"derived from the first reference",
+			podmanImageEntry{Names: []string{"registry.local:5000/app:1.2", "registry.local:5000/app:latest"}},
+			"registry.local:5000/app", "1.2",
+		},
+		{
+			"nothing to report",
+			podmanImageEntry{},
+			"", "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.title, func(t *testing.T) {
+			repository, tag := podmanImageRepoTag(test.entry)
+			assert.Equal(t, test.repository, repository)
+			assert.Equal(t, test.tag, tag)
+		})
+	}
+}
+
 func TestPodmanSplitReference(t *testing.T) {
 	tests := []struct {
 		title      string

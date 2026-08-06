@@ -222,6 +222,30 @@ func podmanPrimaryName(names []string) string {
 	return names[0]
 }
 
+// podmanNone is what podman prints in place of a value it has none of. It is a
+// display sentinel, so it never reaches a field a query can read.
+const podmanNone = "<none>"
+
+// podmanImageRepoTag resolves the repository and tag of an image. Podman reports
+// an untagged image as the "<none>" sentinel rather than as an empty field, and
+// omits both fields entirely on some versions, in which case the first reference
+// the image is tagged with carries the same information.
+func podmanImageRepoTag(entry podmanImageEntry) (repository string, tag string) {
+	repository = entry.Repository
+	tag = entry.Tag
+	if repository == podmanNone {
+		repository = ""
+	}
+	if tag == podmanNone {
+		tag = ""
+	}
+
+	if repository == "" && len(entry.Names) > 0 {
+		repository, tag = podmanSplitReference(entry.Names[0])
+	}
+	return repository, tag
+}
+
 // podmanSplitReference splits an image reference into its repository and tag.
 // A reference pinned by digest has no tag, and the digest stays with the
 // repository so the reference can still be matched as written.

@@ -178,47 +178,11 @@ func (p *mqlPodman) containers() ([]any, error) {
 }
 
 func (p *mqlPodman) images() ([]any, error) {
-	out, err := runPodman(p.MqlRuntime, "images", "--format", "json")
-	if err != nil {
-		return nil, err
-	}
-
-	entries, err := parsePodmanImages(out)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]any, 0, len(entries))
-	for i := range entries {
-		resource, err := newPodmanImageResource(p.MqlRuntime, entries[i])
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, resource)
-	}
-	return res, nil
+	return listPodmanImages(p.MqlRuntime)
 }
 
 func (p *mqlPodman) pods() ([]any, error) {
-	out, err := runPodman(p.MqlRuntime, "pod", "ps", "--format", "json")
-	if err != nil {
-		return nil, err
-	}
-
-	entries, err := parsePodmanPods(out)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]any, 0, len(entries))
-	for i := range entries {
-		resource, err := newPodmanPodResource(p.MqlRuntime, entries[i])
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, resource)
-	}
-	return res, nil
+	return listPodmanPods(p.MqlRuntime)
 }
 
 func (p *mqlPodman) volumes() ([]any, error) {
@@ -579,12 +543,33 @@ func (i *mqlPodmanImage) id() (string, error) {
 	return "podman.image/" + i.Id.Data, nil
 }
 
-func newPodmanImageResource(runtime *plugin.Runtime, entry podmanImageEntry) (plugin.Resource, error) {
-	repository := entry.Repository
-	tag := entry.Tag
-	if repository == "" && len(entry.Names) > 0 {
-		repository, tag = podmanSplitReference(entry.Names[0])
+func listPodmanImages(runtime *plugin.Runtime, filters ...string) ([]any, error) {
+	args := []string{"images", "--format", "json"}
+	args = append(args, filters...)
+
+	out, err := runPodman(runtime, args...)
+	if err != nil {
+		return nil, err
 	}
+
+	entries, err := parsePodmanImages(out)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(entries))
+	for i := range entries {
+		resource, err := newPodmanImageResource(runtime, entries[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resource)
+	}
+	return res, nil
+}
+
+func newPodmanImageResource(runtime *plugin.Runtime, entry podmanImageEntry) (plugin.Resource, error) {
+	repository, tag := podmanImageRepoTag(entry)
 
 	return CreateResource(runtime, "podman.image", map[string]*llx.RawData{
 		"__id":         llx.StringData("podman.image/" + entry.ID),
@@ -616,24 +601,14 @@ func initPodmanImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, errors.New("cannot look for a podman image with an empty id")
 	}
 
-	out, err := runPodman(runtime, "images", "--format", "json")
+	images, err := listPodmanImages(runtime, "--filter", "id="+id)
 	if err != nil {
 		return nil, nil, err
 	}
-	entries, err := parsePodmanImages(out)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for i := range entries {
-		if entries[i].ID != id {
-			continue
+	for _, image := range images {
+		if i, ok := image.(*mqlPodmanImage); ok && i.Id.Data == id {
+			return nil, i, nil
 		}
-		resource, err := newPodmanImageResource(runtime, entries[i])
-		if err != nil {
-			return nil, nil, err
-		}
-		return nil, resource, nil
 	}
 
 	return nil, nil, fmt.Errorf("podman.image with id %q not found", id)
@@ -649,6 +624,31 @@ type mqlPodmanPodInternal struct {
 
 func (p *mqlPodmanPod) id() (string, error) {
 	return "podman.pod/" + p.Id.Data, nil
+}
+
+func listPodmanPods(runtime *plugin.Runtime, filters ...string) ([]any, error) {
+	args := []string{"pod", "ps", "--format", "json"}
+	args = append(args, filters...)
+
+	out, err := runPodman(runtime, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := parsePodmanPods(out)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(entries))
+	for i := range entries {
+		resource, err := newPodmanPodResource(runtime, entries[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resource)
+	}
+	return res, nil
 }
 
 func newPodmanPodResource(runtime *plugin.Runtime, entry podmanPodEntry) (plugin.Resource, error) {
@@ -683,24 +683,14 @@ func initPodmanPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return nil, nil, errors.New("cannot look for a podman pod with an empty id")
 	}
 
-	out, err := runPodman(runtime, "pod", "ps", "--format", "json")
+	pods, err := listPodmanPods(runtime, "--filter", "id="+id)
 	if err != nil {
 		return nil, nil, err
 	}
-	entries, err := parsePodmanPods(out)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for i := range entries {
-		if entries[i].ID != id {
-			continue
+	for _, pod := range pods {
+		if p, ok := pod.(*mqlPodmanPod); ok && p.Id.Data == id {
+			return nil, p, nil
 		}
-		resource, err := newPodmanPodResource(runtime, entries[i])
-		if err != nil {
-			return nil, nil, err
-		}
-		return nil, resource, nil
 	}
 
 	return nil, nil, fmt.Errorf("podman.pod with id %q not found", id)
