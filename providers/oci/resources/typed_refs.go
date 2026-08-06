@@ -43,6 +43,40 @@ func resolveOciVault(runtime *plugin.Runtime, id string, field *plugin.TValue[*m
 	return res.(*mqlOciKmsVault), nil
 }
 
+// resolveOciKmsKey resolves a typed KMS key resource from a key OCID. Returns
+// (nil, nil) and marks the field as null when the OCID is empty, which is what
+// a service using Oracle-managed encryption reports: there is no customer key
+// to point at, and a null key is the signal that no customer key is in use.
+func resolveOciKmsKey(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciKmsKey]) (*mqlOciKmsKey, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "oci.kms.key", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciKmsKey), nil
+}
+
+// resolveOciSubnet resolves a typed subnet resource from a subnet OCID.
+// Returns (nil, nil) and marks the field as null when the OCID is empty.
+func resolveOciSubnet(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciNetworkSubnet]) (*mqlOciNetworkSubnet, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "oci.network.subnet", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciNetworkSubnet), nil
+}
+
 // resolveOciSecurityGroups resolves a list of typed network security group
 // resources from a list of NSG OCIDs. Empty list returns ([], nil).
 func resolveOciSecurityGroups(runtime *plugin.Runtime, ids []any) ([]any, error) {

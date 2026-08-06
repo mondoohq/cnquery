@@ -5,11 +5,14 @@ package resources
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/audit"
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -226,4 +229,35 @@ func (o *mqlOciAuditEvent) id() (string, error) {
 
 func (o *mqlOciAuditEvent) compartment() (*mqlOciCompartment, error) {
 	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciAuditEvent) principal() (*mqlOciIdentityUser, error) {
+	return resolveOciAuditUser(o.MqlRuntime, o.PrincipalId.Data, &o.Principal)
+}
+
+func (o *mqlOciAuditEvent) caller() (*mqlOciIdentityUser, error) {
+	return resolveOciAuditUser(o.MqlRuntime, o.CallerId.Data, &o.Caller)
+}
+
+// resolveOciAuditUser resolves an audit event's principal OCID to an IAM user.
+//
+// Audit records the acting principal whatever it was, so the OCID here is
+// routinely not a user at all - an instance principal, a service principal, or
+// a user deleted since the call. None of those are errors, and none should
+// take the surrounding query down, so anything that is not a live user OCID
+// reports null. The raw OCID stays available on principalId and callerId.
+func resolveOciAuditUser(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciIdentityUser]) (*mqlOciIdentityUser, error) {
+	if !strings.HasPrefix(id, "ocid1.user.") {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "oci.identity.user", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		log.Debug().Err(err).Str("user", id).Msg("skipping unresolvable oci audit principal")
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res.(*mqlOciIdentityUser), nil
 }

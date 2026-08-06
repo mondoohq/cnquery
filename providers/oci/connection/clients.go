@@ -31,17 +31,27 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/functions"
 	"github.com/oracle/oci-go-sdk/v65/generativeai"
 	"github.com/oracle/oci-go-sdk/v65/generativeaiagent"
+	"github.com/oracle/oci-go-sdk/v65/goldengate"
 	"github.com/oracle/oci-go-sdk/v65/identity"
+	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/oracle/oci-go-sdk/v65/logging"
+	"github.com/oracle/oci-go-sdk/v65/managedkafka"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
+	"github.com/oracle/oci-go-sdk/v65/mysql"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
+	"github.com/oracle/oci-go-sdk/v65/nosql"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
+	"github.com/oracle/oci-go-sdk/v65/opensearch"
+	"github.com/oracle/oci-go-sdk/v65/psql"
+	"github.com/oracle/oci-go-sdk/v65/queue"
 	"github.com/oracle/oci-go-sdk/v65/redis"
+	"github.com/oracle/oci-go-sdk/v65/resourcemanager"
 	"github.com/oracle/oci-go-sdk/v65/sch"
+	"github.com/oracle/oci-go-sdk/v65/streaming"
 	"github.com/oracle/oci-go-sdk/v65/vault"
 	"github.com/oracle/oci-go-sdk/v65/vulnerabilityscanning"
 	"github.com/oracle/oci-go-sdk/v65/waf"
@@ -170,6 +180,104 @@ func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient
 
 func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+// IdentityDomainsClient builds a client for one identity domain.
+//
+// Unlike every other client here this one is not addressed by region. Each
+// identity domain publishes its own endpoint, returned as the domain's `url`,
+// and the SCIM API is served only from there - which is exactly why the legacy
+// IAM client cannot reach past the default domain.
+func (c *OciConnection) IdentityDomainsClient(endpoint string) (*identitydomains.IdentityDomainsClient, error) {
+	if endpoint == "" {
+		return nil, errors.New("an identity domain endpoint is required")
+	}
+	client, err := identitydomains.NewIdentityDomainsClientWithConfigurationProvider(c.config, endpoint)
+	if err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func (c *OciConnection) ResourceManagerClient(region string) (*resourcemanager.ResourceManagerClient, error) {
+	client, err := resourcemanager.NewResourceManagerClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) StreamAdminClient(region string) (*streaming.StreamAdminClient, error) {
+	client, err := streaming.NewStreamAdminClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) QueueAdminClient(region string) (*queue.QueueAdminClient, error) {
+	client, err := queue.NewQueueAdminClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) KafkaClusterClient(region string) (*managedkafka.KafkaClusterClient, error) {
+	client, err := managedkafka.NewKafkaClusterClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) MysqlDbSystemClient(region string) (*mysql.DbSystemClient, error) {
+	client, err := mysql.NewDbSystemClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) PostgresqlClient(region string) (*psql.PostgresqlClient, error) {
+	client, err := psql.NewPostgresqlClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) NosqlClient(region string) (*nosql.NosqlClient, error) {
+	client, err := nosql.NewNosqlClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) OpensearchClusterClient(region string) (*opensearch.OpensearchClusterClient, error) {
+	client, err := opensearch.NewOpensearchClusterClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) GoldenGateClient(region string) (*goldengate.GoldenGateClient, error) {
+	client, err := goldengate.NewGoldenGateClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
