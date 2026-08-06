@@ -84,6 +84,107 @@ func TestExtractPowerBiEnvelope(t *testing.T) {
 	}
 }
 
+func TestExtractPowerBiEnvelopeIsCaseInsensitive(t *testing.T) {
+	// the widely-shared-artifacts endpoints answer with a lower-case
+	// "artifactAccessEntities". PowerShell property access was case-insensitive,
+	// so a Go map lookup that is not would silently return an empty list.
+	tests := []struct {
+		name     string
+		body     string
+		envelope string
+	}{
+		{name: "documented casing", body: `{"artifactAccessEntities":[{"artifactId":"1"}]}`, envelope: "artifactAccessEntities"},
+		{name: "asking with other casing", body: `{"artifactAccessEntities":[{"artifactId":"1"}]}`, envelope: "ArtifactAccessEntities"},
+		{name: "service using other casing", body: `{"ArtifactAccessEntities":[{"artifactId":"1"}]}`, envelope: "artifactAccessEntities"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			raw, err := extractPowerBiEnvelope([]byte(test.body), test.envelope)
+			require.NoError(t, err)
+			assert.Equal(t, `[{"artifactId":"1"}]`, string(raw))
+		})
+	}
+}
+
+func TestExtractPowerBiEnvelopeFallbackOrder(t *testing.T) {
+	// tenant settings are documented under "value"; "tenantSettings" is only a
+	// fallback and must not win when both are present
+	body := []byte(`{"value":[{"settingName":"right"}],"tenantSettings":[{"settingName":"wrong"}]}`)
+	raw, err := extractPowerBiEnvelope(body, "value", "tenantSettings")
+	require.NoError(t, err)
+	assert.Contains(t, string(raw), "right")
+	assert.NotContains(t, string(raw), "wrong")
+
+	// and the fallback still resolves when the first name is absent
+	raw, err = extractPowerBiEnvelope([]byte(`{"tenantSettings":[{"settingName":"only"}]}`), "value", "tenantSettings")
+	require.NoError(t, err)
+	assert.Contains(t, string(raw), "only")
+
+	// none present is an empty result, not an error
+	raw, err = extractPowerBiEnvelope([]byte(`{"@odata.context":"ctx"}`), "value", "tenantSettings")
+	require.NoError(t, err)
+	assert.Empty(t, raw)
+}
+
+func TestPowerBiGetFollowsContinuation(t *testing.T) {
+	// both the Fabric tenant settings endpoint and the widely-shared-artifacts
+	// endpoints chunk their results; taking only the first chunk reports a
+	// partial list as the whole tenant
+	var srv *httptest.Server
+	var calls int
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		switch calls {
+		case 1:
+			fmt.Fprintf(w, `{"value":[{"settingName":"s1"}],"continuationToken":"t1","continuationUri":%q}`, srv.URL+"/chunk2")
+		case 2:
+			fmt.Fprintf(w, `{"value":[{"settingName":"s2"}],"continuationToken":"t2","continuationUri":%q}`, srv.URL+"/chunk3")
+		default:
+			fmt.Fprint(w, `{"value":[{"settingName":"s3"}]}`)
+		}
+	}))
+	defer srv.Close()
+
+	raw, err := powerBiGet(context.Background(), "tok", srv.URL, "value")
+	require.NoError(t, err)
+
+	var got []powerBiTenantSetting
+	require.NoError(t, json.Unmarshal(raw, &got))
+	require.Len(t, got, 3)
+	assert.Equal(t, "s1", got[0].SettingName)
+	assert.Equal(t, "s3", got[2].SettingName)
+	assert.Equal(t, 3, calls)
+}
+
+func TestPowerBiGetRejectsRepeatedContinuation(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"value":[{"id":"a"}],"continuationUri":%q}`, srv.URL+"/same")
+	}))
+	defer srv.Close()
+
+	_, err := powerBiGet(context.Background(), "tok", srv.URL, "value")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "same continuation link")
+}
+
+func TestPowerBiGetStopsWithoutContinuation(t *testing.T) {
+	// a continuation token with no uri cannot be re-encoded reliably, so the
+	// walk stops rather than looping on the same chunk
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		fmt.Fprint(w, `{"value":[{"id":"a"}],"continuationToken":"t1"}`)
+	}))
+	defer srv.Close()
+
+	raw, err := powerBiGet(context.Background(), "tok", srv.URL, "value")
+	require.NoError(t, err)
+	assert.Equal(t, 1, calls)
+	assert.JSONEq(t, `[{"id":"a"}]`, string(raw))
+}
+
 func TestPowerBiGet(t *testing.T) {
 	t.Run("sends bearer token and extracts envelope", func(t *testing.T) {
 		var gotAuth, gotAccept string
