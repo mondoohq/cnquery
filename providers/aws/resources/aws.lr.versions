@@ -472,6 +472,7 @@ aws.apprunner.service.autoScalingConfiguration 13.26.3
 aws.apprunner.service.createdAt 13.26.3
 aws.apprunner.service.deletedAt 13.26.3
 aws.apprunner.service.egressType 13.26.3
+aws.apprunner.service.exposure 13.52.2
 aws.apprunner.service.healthCheckConfiguration 13.26.3
 aws.apprunner.service.instanceCpu 13.26.3
 aws.apprunner.service.instanceMemory 13.26.3
@@ -4109,6 +4110,7 @@ aws.ecs.service.deploymentController 13.29.1
 aws.ecs.service.desiredCount 11.15.2
 aws.ecs.service.enableEcsManagedTags 11.15.2
 aws.ecs.service.enableExecuteCommand 11.15.2
+aws.ecs.service.exposure 13.52.2
 aws.ecs.service.healthCheckGracePeriodSeconds 11.15.2
 aws.ecs.service.iamRole 13.29.1
 aws.ecs.service.launchType 11.15.2
@@ -4415,6 +4417,7 @@ aws.eks.cluster.encryptionResources 13.12.1
 aws.eks.cluster.endpoint 11.15.2
 aws.eks.cluster.endpointPrivateAccess 11.15.2
 aws.eks.cluster.endpointPublicAccess 11.15.2
+aws.eks.cluster.exposure 13.52.2
 aws.eks.cluster.fargateProfiles 13.6.3
 aws.eks.cluster.health 13.12.1
 aws.eks.cluster.iamRole 11.15.2
@@ -9499,6 +9502,7 @@ aws.sagemaker.notebookinstance.cloudformationStack 13.39.2
 aws.sagemaker.notebookinstance.createdAt 11.16.1
 aws.sagemaker.notebookinstance.defaultCodeRepository 13.12.0
 aws.sagemaker.notebookinstance.details 11.15.2
+aws.sagemaker.notebookinstance.exposure 13.52.2
 aws.sagemaker.notebookinstance.instanceType 13.12.0
 aws.sagemaker.notebookinstance.lastModifiedAt 11.16.1
 aws.sagemaker.notebookinstance.lifecycleConfigName 13.12.0

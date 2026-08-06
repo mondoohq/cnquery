@@ -3386,6 +3386,14 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   name string
   // Details about the notebook
   details() aws.sagemaker.notebookinstancedetails
+  // Internet exposure of the notebook instance
+  //
+  // Combines the direct-internet-access setting with the security groups the
+  // instance runs behind. A notebook with direct internet access reaches the
+  // internet through a SageMaker-managed path outside the VPC, which is how a
+  // notebook holding credentials and training data becomes an exfiltration
+  // route.
+  exposure() aws.network.exposure
   // Region where the notebook instance exists
   region string
   // Tags for the notebook instance
@@ -9078,6 +9086,14 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   deploymentConfiguration() aws.ecs.service.deploymentConfiguration
   // Network configuration for the service
   networkConfiguration() aws.ecs.service.networkConfiguration
+  // Internet exposure of tasks the service runs
+  //
+  // Combines the awsvpc public-IP assignment with the security groups the tasks
+  // launch with. A service that assigns public IPs puts every task it starts
+  // directly on the internet, so the security groups are the only filter left.
+  // Null for a service using host or bridge networking, where the container
+  // instance decides reachability instead.
+  exposure() aws.network.exposure
   // Tags associated with the service
   tags map[string]string
   // Creation timestamp of the service
@@ -20099,6 +20115,13 @@ aws.eks.cluster @defaults("arn version status") {
   endpointPrivateAccess() bool
   // CIDR blocks allowed to access the public Kubernetes API endpoint
   publicAccessCidrs() []string
+  // Internet exposure of the Kubernetes API server endpoint
+  //
+  // Combines the public-endpoint setting with the cluster security groups. Read
+  // it together with `publicAccessCidrs`: that field narrows a public endpoint
+  // to specific source ranges, so a cluster reporting internetReachable may
+  // still answer only a short allow-list rather than the whole internet.
+  exposure() aws.network.exposure
   // List of EKS access entries for RBAC
   accessEntries() []aws.eks.accessEntry
   // List of EKS Fargate profiles
@@ -22296,6 +22319,13 @@ private aws.apprunner.service @defaults("serviceName status region") {
   vpcConnector() aws.apprunner.vpcConnector
   // Whether the service is reachable from the public internet
   isPubliclyAccessible() bool
+  // Internet exposure of the service endpoint
+  //
+  // App Runner services are not gated by security groups on the inbound side, so
+  // this reduces to the public-accessibility setting. It exists so an App Runner
+  // service answers the same exposure query as the rest of the account's
+  // internet-facing resources.
+  exposure() aws.network.exposure
   // IP address type of the service: IPV4 or DUAL_STACK
   ipAddressType() string
   // Observability configuration bound to the service when observability is enabled, null otherwise
