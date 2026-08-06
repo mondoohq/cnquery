@@ -1,0 +1,537 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package services
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"path"
+	"sort"
+	"strings"
+
+	"github.com/coreos/go-systemd/unit"
+	"github.com/spf13/afero"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+)
+
+// SystemdUnit carries the execution and confinement settings of a systemd unit.
+type SystemdUnit struct {
+	Name          string
+	Description   string
+	Installed     bool
+	FragmentPath  string
+	LoadState     string
+	ActiveState   string
+	SubState      string
+	UnitFileState string
+	Type          string
+	ExecStart     string
+
+	User        string
+	Group       string
+	DynamicUser bool
+	UMask       string
+
+	NoNewPrivileges         bool
+	ProtectSystem           string
+	ProtectHome             string
+	PrivateTmp              bool
+	PrivateDevices          bool
+	PrivateNetwork          bool
+	PrivateUsers            bool
+	ProtectKernelTunables   bool
+	ProtectKernelModules    bool
+	ProtectKernelLogs       bool
+	ProtectControlGroups    string
+	ProtectClock            bool
+	ProtectHostname         bool
+	ProtectProc             string
+	ProcSubset              string
+	RestrictSUIDSGID        bool
+	RestrictRealtime        bool
+	RestrictNamespaces      string
+	RestrictAddressFamilies string
+	LockPersonality         bool
+	MemoryDenyWriteExecute  bool
+	RemoveIPC               bool
+	KeyringMode             string
+
+	CapabilityBoundingSet   []string
+	AmbientCapabilities     []string
+	SystemCallFilter        []string
+	SystemCallArchitectures string
+	ReadWritePaths          []string
+	ReadOnlyPaths           []string
+	InaccessiblePaths       []string
+}
+
+// systemdUnitShowProperties are the properties fetched for a unit. Naming them
+// explicitly keeps the output small enough to request every unit in one call.
+const systemdUnitShowProperties = "Id,Description,FragmentPath,LoadState,ActiveState,SubState,UnitFileState,Type," +
+	"ExecStart,User,Group,DynamicUser,UMask,NoNewPrivileges,ProtectSystem,ProtectHome,PrivateTmp,PrivateDevices," +
+	"PrivateNetwork,PrivateUsers,ProtectKernelTunables,ProtectKernelModules,ProtectKernelLogs,ProtectControlGroups," +
+	"ProtectClock,ProtectHostname,ProtectProc,ProcSubset,RestrictSUIDSGID,RestrictRealtime,RestrictNamespaces," +
+	"RestrictAddressFamilies,LockPersonality,MemoryDenyWriteExecute,RemoveIPC,KeyringMode,CapabilityBoundingSet," +
+	"AmbientCapabilities,SystemCallFilter,SystemCallArchitectures,ReadWritePaths,ReadOnlyPaths,InaccessiblePaths"
+
+// systemdUnitShowChunk bounds how many units go into one systemctl invocation,
+// so a host with a very large unit set cannot build a command line past what the
+// shell accepts.
+const systemdUnitShowChunk = 60
+
+// SystemdUnitLister can list and look up systemd units with their confinement
+// settings.
+type SystemdUnitLister interface {
+	List() ([]*SystemdUnit, error)
+	Get(name string) (*SystemdUnit, error)
+}
+
+// ResolveSystemdUnitManager returns a command-based manager when the connection
+// can run commands, otherwise one reading unit files from the filesystem.
+func ResolveSystemdUnitManager(conn shared.Connection) SystemdUnitLister {
+	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return &SystemdFSUnitManager{Fs: conn.FileSystem()}
+	}
+	return &SystemdUnitManager{conn: conn}
+}
+
+// SystemdUnitManager reads unit settings through systemctl, which reports the
+// values in effect after drop-ins have been merged.
+type SystemdUnitManager struct {
+	conn shared.Connection
+}
+
+func (m *SystemdUnitManager) List() ([]*SystemdUnit, error) {
+	cmd, err := m.conn.RunCommand("systemctl list-unit-files --type service --all")
+	if err != nil {
+		return nil, err
+	}
+
+	names, err := parseSystemdUnitFileNames(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	if len(names) == 0 {
+		return []*SystemdUnit{}, nil
+	}
+
+	res := make([]*SystemdUnit, 0, len(names))
+	for start := 0; start < len(names); start += systemdUnitShowChunk {
+		end := min(start+systemdUnitShowChunk, len(names))
+
+		chunk := names[start:end]
+		showCmd, err := m.conn.RunCommand(buildSystemdUnitShowCommand(chunk))
+		if err != nil {
+			return nil, err
+		}
+
+		records, err := parseSystemdShowRecords(showCmd.Stdout)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, record := range records {
+			if u := systemdUnitFromProperties(record); u != nil {
+				res = append(res, u)
+			}
+		}
+	}
+
+	return res, nil
+}
+
+func (m *SystemdUnitManager) Get(name string) (*SystemdUnit, error) {
+	cmd, err := m.conn.RunCommand(buildSystemdUnitShowCommand([]string{name}))
+	if err != nil {
+		return nil, err
+	}
+
+	records, err := parseSystemdShowRecords(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	if len(records) == 0 {
+		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, name)
+	}
+
+	u := systemdUnitFromProperties(records[0])
+	if u == nil {
+		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, name)
+	}
+
+	// systemctl answers for a name it does not know with a synthetic record, so
+	// the load state is what says whether the unit exists
+	if u.LoadState == "not-found" || u.LoadState == "" {
+		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, name)
+	}
+
+	return u, nil
+}
+
+func buildSystemdUnitShowCommand(units []string) string {
+	args := []string{"systemctl", "show", "--property=" + systemdUnitShowProperties}
+	args = append(args, units...)
+
+	escaped := make([]string, len(args))
+	for i := range args {
+		escaped[i] = shared.ShellEscape(args[i])
+	}
+	return strings.Join(escaped, " ")
+}
+
+// parseSystemdUnitFileNames reads the unit names out of
+// "systemctl list-unit-files" output.
+func parseSystemdUnitFileNames(input io.Reader) ([]string, error) {
+	content, err := io.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+
+	names := []string{}
+	lines := strings.Split(string(content), "\n")
+	if len(lines) < 2 {
+		return names, nil
+	}
+
+	for _, line := range lines[1:] {
+		if strings.Contains(line, "unit files listed.") {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		if !strings.HasSuffix(fields[0], ".service") {
+			continue
+		}
+		names = append(names, fields[0])
+	}
+
+	return names, nil
+}
+
+// parseSystemdShowRecords splits "systemctl show" output into one property map
+// per unit. Records are separated by an empty line when more than one unit is
+// requested. A repeated key is joined with a newline, matching how a unit can
+// carry several ExecStart lines.
+func parseSystemdShowRecords(input io.Reader) ([]map[string]string, error) {
+	records := []map[string]string{}
+	current := map[string]string{}
+
+	flush := func() {
+		if len(current) > 0 {
+			records = append(records, current)
+			current = map[string]string{}
+		}
+	}
+
+	scanner := bufio.NewScanner(input)
+	// a unit can carry long values, so allow more than the default line budget
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" {
+			flush()
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		if existing, seen := current[key]; seen {
+			current[key] = existing + "\n" + value
+		} else {
+			current[key] = value
+		}
+	}
+	flush()
+
+	return records, scanner.Err()
+}
+
+// systemdUnitFromProperties maps a property record onto a unit, returning nil
+// when the record names no unit.
+func systemdUnitFromProperties(props map[string]string) *SystemdUnit {
+	name := props["Id"]
+	if name == "" {
+		return nil
+	}
+
+	return &SystemdUnit{
+		Name:          name,
+		Description:   props["Description"],
+		Installed:     props["LoadState"] != "not-found" && props["LoadState"] != "",
+		FragmentPath:  props["FragmentPath"],
+		LoadState:     props["LoadState"],
+		ActiveState:   props["ActiveState"],
+		SubState:      props["SubState"],
+		UnitFileState: props["UnitFileState"],
+		Type:          props["Type"],
+		ExecStart:     parseSystemdExecStart(props["ExecStart"]),
+
+		User:        props["User"],
+		Group:       props["Group"],
+		DynamicUser: parseSystemdBool(props["DynamicUser"]),
+		UMask:       props["UMask"],
+
+		NoNewPrivileges:         parseSystemdBool(props["NoNewPrivileges"]),
+		ProtectSystem:           props["ProtectSystem"],
+		ProtectHome:             props["ProtectHome"],
+		PrivateTmp:              parseSystemdBool(props["PrivateTmp"]),
+		PrivateDevices:          parseSystemdBool(props["PrivateDevices"]),
+		PrivateNetwork:          parseSystemdBool(props["PrivateNetwork"]),
+		PrivateUsers:            parseSystemdBool(props["PrivateUsers"]),
+		ProtectKernelTunables:   parseSystemdBool(props["ProtectKernelTunables"]),
+		ProtectKernelModules:    parseSystemdBool(props["ProtectKernelModules"]),
+		ProtectKernelLogs:       parseSystemdBool(props["ProtectKernelLogs"]),
+		ProtectControlGroups:    props["ProtectControlGroups"],
+		ProtectClock:            parseSystemdBool(props["ProtectClock"]),
+		ProtectHostname:         parseSystemdBool(props["ProtectHostname"]),
+		ProtectProc:             props["ProtectProc"],
+		ProcSubset:              props["ProcSubset"],
+		RestrictSUIDSGID:        parseSystemdBool(props["RestrictSUIDSGID"]),
+		RestrictRealtime:        parseSystemdBool(props["RestrictRealtime"]),
+		RestrictNamespaces:      props["RestrictNamespaces"],
+		RestrictAddressFamilies: props["RestrictAddressFamilies"],
+		LockPersonality:         parseSystemdBool(props["LockPersonality"]),
+		MemoryDenyWriteExecute:  parseSystemdBool(props["MemoryDenyWriteExecute"]),
+		RemoveIPC:               parseSystemdBool(props["RemoveIPC"]),
+		KeyringMode:             props["KeyringMode"],
+
+		CapabilityBoundingSet:   splitSystemdList(props["CapabilityBoundingSet"]),
+		AmbientCapabilities:     splitSystemdList(props["AmbientCapabilities"]),
+		SystemCallFilter:        splitSystemdList(props["SystemCallFilter"]),
+		SystemCallArchitectures: props["SystemCallArchitectures"],
+		ReadWritePaths:          splitSystemdList(props["ReadWritePaths"]),
+		ReadOnlyPaths:           splitSystemdList(props["ReadOnlyPaths"]),
+		InaccessiblePaths:       splitSystemdList(props["InaccessiblePaths"]),
+	}
+}
+
+// parseSystemdBool reads a systemd boolean. systemctl normalizes to yes/no,
+// while a unit file accepts several spellings.
+func parseSystemdBool(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "yes", "true", "on", "1":
+		return true
+	}
+	return false
+}
+
+// splitSystemdList splits a whitespace-separated property value. systemctl wraps
+// some list values in braces, which are not part of the entries.
+func splitSystemdList(value string) []string {
+	value = strings.TrimSpace(value)
+	value = strings.TrimPrefix(value, "{")
+	value = strings.TrimSuffix(value, "}")
+
+	fields := strings.Fields(value)
+	res := make([]string, 0, len(fields))
+	for _, field := range fields {
+		if field == "" {
+			continue
+		}
+		res = append(res, field)
+	}
+	return res
+}
+
+// parseSystemdExecStart reduces an ExecStart property to the command line it
+// runs. systemctl reports it as a structured value like
+// "{ path=/usr/sbin/sshd ; argv[]=/usr/sbin/sshd -D ; ... }", where argv[] holds
+// the command as invoked.
+func parseSystemdExecStart(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	// only the first ExecStart line is the command; later ones are extra
+	if idx := strings.IndexByte(value, '\n'); idx >= 0 {
+		value = strings.TrimSpace(value[:idx])
+	}
+
+	if !strings.Contains(value, "argv[]=") {
+		return value
+	}
+
+	// drop the braces delimiting the structure before splitting on the field
+	// separator, so a closing brace cannot end up attached to the last field and
+	// an argument that itself ends in a brace survives
+	if strings.HasPrefix(value, "{") && strings.HasSuffix(value, "}") {
+		value = strings.TrimSpace(value[1 : len(value)-1])
+	}
+
+	for _, part := range strings.Split(value, ";") {
+		part = strings.TrimSpace(part)
+		if argv, ok := strings.CutPrefix(part, "argv[]="); ok {
+			return strings.TrimSpace(argv)
+		}
+	}
+
+	return value
+}
+
+// SystemdFSUnitManager reads unit settings from unit files. It is used when
+// command execution is not available, such as an image scan. Runtime state is not
+// knowable from the filesystem and is left empty.
+type SystemdFSUnitManager struct {
+	Fs afero.Fs
+}
+
+func (m *SystemdFSUnitManager) List() ([]*SystemdUnit, error) {
+	seen := map[string]bool{}
+	res := []*SystemdUnit{}
+
+	for _, searchPath := range systemdUnitSearchPath {
+		entries, err := afero.ReadDir(m.Fs, searchPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, err
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".service") {
+				continue
+			}
+			// the search path is ordered by precedence, so the first copy wins
+			if seen[entry.Name()] {
+				continue
+			}
+			seen[entry.Name()] = true
+
+			u, err := m.readUnit(entry.Name(), path.Join(searchPath, entry.Name()))
+			if err != nil {
+				continue
+			}
+			res = append(res, u)
+		}
+	}
+
+	return res, nil
+}
+
+func (m *SystemdFSUnitManager) Get(name string) (*SystemdUnit, error) {
+	for _, searchPath := range systemdUnitSearchPath {
+		unitPath := path.Join(searchPath, name)
+		if _, err := m.Fs.Stat(unitPath); err != nil {
+			continue
+		}
+		return m.readUnit(name, unitPath)
+	}
+	return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, name)
+}
+
+func (m *SystemdFSUnitManager) readUnit(name string, unitPath string) (*SystemdUnit, error) {
+	props := map[string]string{"Id": name}
+
+	if lr, ok := m.Fs.(afero.LinkReader); ok {
+		linkPath, err := lr.ReadlinkIfPossible(unitPath)
+		if err == nil && linkPath == "/dev/null" {
+			props["LoadState"] = "masked"
+			props["UnitFileState"] = "masked"
+			return systemdUnitFromProperties(props), nil
+		}
+	}
+
+	props["LoadState"] = "loaded"
+	props["FragmentPath"] = unitPath
+
+	// the unit file first, then its drop-ins in name order, so a later value
+	// overrides an earlier one the way systemd merges them
+	if err := m.foldUnitFile(props, unitPath); err != nil {
+		return nil, err
+	}
+	for _, dropIn := range m.dropInFiles(name) {
+		if err := m.foldUnitFile(props, dropIn); err != nil {
+			continue
+		}
+	}
+
+	return systemdUnitFromProperties(props), nil
+}
+
+// foldUnitFile reads the [Unit] and [Service] settings of one file into props.
+func (m *SystemdFSUnitManager) foldUnitFile(props map[string]string, unitPath string) error {
+	f, err := m.Fs.Open(unitPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	opts, err := unit.Deserialize(f)
+	if err != nil {
+		return err
+	}
+
+	for _, opt := range opts {
+		switch opt.Section {
+		case "Unit":
+			if opt.Name == "Description" {
+				props["Description"] = opt.Value
+			}
+		case "Service":
+			// an empty assignment resets a list setting, so it clears what came
+			// before rather than appending to it
+			if opt.Value == "" {
+				delete(props, opt.Name)
+				continue
+			}
+			if existing, seen := props[opt.Name]; seen && systemdListProperty(opt.Name) {
+				props[opt.Name] = existing + " " + opt.Value
+				continue
+			}
+			props[opt.Name] = opt.Value
+		}
+	}
+
+	return nil
+}
+
+// dropInFiles returns the drop-in files for a unit, in the order systemd reads
+// them.
+func (m *SystemdFSUnitManager) dropInFiles(name string) []string {
+	res := []string{}
+
+	for _, searchPath := range systemdUnitSearchPath {
+		dir := path.Join(searchPath, name+".d")
+		entries, err := afero.ReadDir(m.Fs, dir)
+		if err != nil {
+			continue
+		}
+
+		names := []string{}
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".conf") {
+				continue
+			}
+			names = append(names, entry.Name())
+		}
+		sort.Strings(names)
+
+		for _, dropIn := range names {
+			res = append(res, path.Join(dir, dropIn))
+		}
+	}
+
+	return res
+}
+
+// systemdListProperty reports whether a setting accumulates across assignments
+// rather than being replaced by the last one.
+func systemdListProperty(name string) bool {
+	switch name {
+	case "CapabilityBoundingSet", "AmbientCapabilities", "SystemCallFilter",
+		"ReadWritePaths", "ReadOnlyPaths", "InaccessiblePaths", "RestrictAddressFamilies":
+		return true
+	}
+	return false
+}
