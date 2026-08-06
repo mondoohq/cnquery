@@ -60,23 +60,8 @@ func ParseAixNetstat(r io.Reader) ([]AixPort, error) {
 			continue
 		}
 
-		// Locate the protocol column. This skips both header lines and the
-		// optional leading PCB/ADDR column of `netstat -Aan`.
-		protoIdx := -1
-		var proto string
-		for i, f := range fields {
-			if m := reAixProto.FindStringSubmatch(f); m != nil {
-				protoIdx = i
-				proto = m[1]
-				if m[2] == "" {
-					proto += "4"
-				} else {
-					proto += m[2]
-				}
-				break
-			}
-		}
-		if protoIdx < 0 {
+		protoIdx, proto, ok := findAixProto(fields)
+		if !ok {
 			continue
 		}
 
@@ -108,6 +93,31 @@ func ParseAixNetstat(r io.Reader) ([]AixPort, error) {
 	}
 
 	return res, nil
+}
+
+// findAixProto locates the protocol column in a netstat row and normalises the
+// protocol to an address family suffix. The column is found by pattern rather
+// than by index because `netstat -Aan` prefixes every row with a PCB address
+// while `netstat -an` does not.
+//
+// ok is false when the row carries no protocol column, which is how header
+// lines are skipped.
+func findAixProto(fields []string) (int, string, bool) {
+	for i, f := range fields {
+		m := reAixProto.FindStringSubmatch(f)
+		if m == nil {
+			continue
+		}
+
+		proto := m[1]
+		if m[2] == "" {
+			proto += "4"
+		} else {
+			proto += m[2]
+		}
+		return i, proto, true
+	}
+	return 0, "", false
 }
 
 // splitAixAddress splits a BSD-style `address.port` endpoint. `v6` is the row's
