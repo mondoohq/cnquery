@@ -30650,3 +30650,186 @@ private aws.appflow.connectorProfile @defaults("arn name connectorType connectio
   // Time the connector profile was last updated
   lastUpdatedAt time
 }
+
+// Amazon VPC Lattice
+//
+// Service networks, the services published into them, and the target groups
+// traffic lands on. VPC Lattice joins VPCs at the application layer rather than
+// the network layer, so a service reachable through a service network is
+// reachable regardless of VPC peering, route tables, or security groups. The
+// control that replaces them is the auth policy, which makes `authType` and the
+// policy documents the fields that decide who can call what.
+aws.vpclattice {
+  // Service networks in the account
+  serviceNetworks() []aws.vpclattice.serviceNetwork
+  // Services in the account
+  services() []aws.vpclattice.service
+  // Target groups in the account
+  targetGroups() []aws.vpclattice.targetGroup
+}
+
+// Amazon VPC Lattice service network
+//
+// A logical boundary joining VPCs and services so they can call each other
+// without VPC peering. `authType` decides whether callers are authenticated at
+// all: `NONE` means every client that can reach the network may invoke any
+// service in it, with only the per-service policy left as a control. When it is
+// `AWS_IAM`, the auth policy in `authPolicy` decides which principals and
+// actions are permitted, and `hasWildcardAuthPolicy` flags a policy that grants
+// broadly.
+private aws.vpclattice.serviceNetwork @defaults("name authType region") {
+  // Amazon Resource Name (ARN) of the service network
+  arn string
+  // ID of the service network
+  id string
+  // Name of the service network
+  name string
+  // Region the service network exists in
+  region string
+  // Whether callers are authenticated: AWS_IAM or NONE
+  authType() string
+  // Number of services associated with the service network
+  numberOfAssociatedServices int
+  // Number of VPCs associated with the service network
+  numberOfAssociatedVpcs int
+  // When the service network was created
+  createdAt time
+  // When the service network was last updated
+  lastUpdatedAt time
+  // Raw auth policy document, empty when the service network has none
+  authPolicy() string
+  // Parsed statements from the auth policy
+  authPolicyStatements() []aws.iam.policyStatement
+  // Whether an Allow statement in the auth policy grants a wildcard action or resource
+  hasWildcardAuthPolicy() bool
+  // VPCs associated with the service network
+  vpcAssociations() []aws.vpclattice.serviceNetwork.vpcAssociation
+  // Tags on the service network
+  tags() map[string]string
+}
+
+// Association between an Amazon VPC Lattice service network and a VPC
+//
+// Joins a VPC to a service network, letting every client in that VPC reach the
+// services published into it. Each association is a lateral path between
+// otherwise separate networks, so the set of associated VPCs is the blast radius
+// of the service network.
+private aws.vpclattice.serviceNetwork.vpcAssociation @defaults("id status") {
+  // Amazon Resource Name (ARN) of the association
+  arn string
+  // ID of the association
+  id string
+  // State of the association: CREATE_IN_PROGRESS, ACTIVE, UPDATE_IN_PROGRESS, DELETE_IN_PROGRESS, CREATE_FAILED, DELETE_FAILED, or UPDATE_FAILED
+  status string
+  // VPC joined to the service network
+  vpc() aws.vpc
+  // Account or principal that created the association
+  createdBy string
+  // Whether private DNS is enabled for the association
+  privateDnsEnabled bool
+  // When the association was created
+  createdAt time
+}
+
+// Amazon VPC Lattice service
+//
+// An application published into one or more service networks. As with the
+// service network, `authType` of `NONE` means callers are unauthenticated and
+// the service answers anything that can route to it. A service can also carry
+// its own auth policy, which is evaluated in addition to the network's.
+private aws.vpclattice.service @defaults("name authType status") {
+  // Amazon Resource Name (ARN) of the service
+  arn string
+  // ID of the service
+  id string
+  // Name of the service
+  name string
+  // Region the service exists in
+  region string
+  // State of the service: CREATE_IN_PROGRESS, ACTIVE, DELETE_IN_PROGRESS, CREATE_FAILED, or DELETE_FAILED
+  status string
+  // Whether callers are authenticated: AWS_IAM or NONE
+  authType() string
+  // Custom domain name for the service, empty when it uses the generated name
+  customDomainName() string
+  // Generated DNS name for the service
+  //
+  // Keys are `domainName` (the hostname clients resolve) and `hostedZoneId`.
+  dnsEntry() dict
+  // ACM certificate for the custom domain, null when the service uses the generated name
+  certificate() aws.acm.certificate
+  // When the service was created
+  createdAt time
+  // When the service was last updated
+  lastUpdatedAt time
+  // Raw auth policy document, empty when the service has none
+  authPolicy() string
+  // Parsed statements from the auth policy
+  authPolicyStatements() []aws.iam.policyStatement
+  // Whether an Allow statement in the auth policy grants a wildcard action or resource
+  hasWildcardAuthPolicy() bool
+  // Listeners that accept traffic for the service
+  listeners() []aws.vpclattice.listener
+  // Tags on the service
+  tags() map[string]string
+}
+
+// Amazon VPC Lattice listener
+//
+// A port and protocol a service accepts traffic on. `protocol` distinguishes
+// plaintext HTTP from HTTPS and TLS_PASSTHROUGH, so a listener carrying
+// application traffic over HTTP inside a service network is visible here.
+private aws.vpclattice.listener @defaults("name protocol port") {
+  // Amazon Resource Name (ARN) of the listener
+  arn string
+  // ID of the listener
+  id string
+  // Name of the listener
+  name string
+  // Protocol the listener accepts: HTTP, HTTPS, or TLS_PASSTHROUGH
+  protocol string
+  // Port the listener accepts traffic on
+  port int
+  // When the listener was created
+  createdAt time
+  // When the listener was last updated
+  lastUpdatedAt time
+  // Tags on the listener
+  tags() map[string]string
+}
+
+// Amazon VPC Lattice target group
+//
+// The backends a service routes requests to. `type` names what the targets are
+// (`IP`, `LAMBDA`, `INSTANCE`, or `ALB`), and `vpc` is the VPC they live in,
+// which is how a service network reaches into a specific network.
+private aws.vpclattice.targetGroup @defaults("name type protocol port") {
+  // Amazon Resource Name (ARN) of the target group
+  arn string
+  // ID of the target group
+  id string
+  // Name of the target group
+  name string
+  // Region the target group exists in
+  region string
+  // Type of target: IP, LAMBDA, INSTANCE, or ALB
+  type string
+  // State of the target group: CREATE_IN_PROGRESS, ACTIVE, DELETE_IN_PROGRESS, CREATE_FAILED, or DELETE_FAILED
+  status string
+  // Protocol used to route traffic to targets: HTTP, HTTPS, or TCP
+  protocol string
+  // Port targets receive traffic on
+  port int
+  // IP address family of the targets: IPV4 or IPV6
+  ipAddressType string
+  // VPC the targets live in, null for a LAMBDA target group
+  vpc() aws.vpc
+  // Services routing traffic to this target group
+  services() []aws.vpclattice.service
+  // When the target group was created
+  createdAt time
+  // When the target group was last updated
+  lastUpdatedAt time
+  // Tags on the target group
+  tags() map[string]string
+}

@@ -639,6 +639,7 @@ func awsConnectionMethodToService(method string) string {
 		"autoscaling":              "autoscaling",
 		"backup":                   "backup",
 		"datasync":                 "datasync",
+		"vpclattice":               "vpclattice",
 		"appflow":                  "appflow",
 		"codebuild":                "codebuild",
 		"emr":                      "emr",

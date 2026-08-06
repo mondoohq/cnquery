@@ -361,6 +361,8 @@ github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.38.4 h1:IcEJV3Ci+QIrShtU
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.38.4/go.mod h1:4Gy71DdUbjdNtIZhMAkScCEBKX856eG3lZoUCQJ1oRM=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.75.4 h1:WpScSd3iV7iT86gP0e7u+4aMGkdfen4jfCtoM4KFiFU=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.75.4/go.mod h1:fnZIe+WqKklcLVuZaHVVr+OieEFWVgIbJtIdOz6628s=
+github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.5 h1:MYTOPMWy6a0zO3LxEAJbh/6FebfIRRjmR/CUgj3raLs=
+github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.5/go.mod h1:7AHfzbcrbB4ZrwONKrCNdvIwTpyoGL+2CGSNYx1+wko=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.3 h1:aDRkETcPq7jtupyOABA3hh5Y6Ps5Sgi5dQXut/oNpSo=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.3/go.mod h1:8V3DHeMdprcpwSAHoAtgZSOqn7r0QKG1F4z7bCYOr7I=
 github.com/aws/aws-sdk-go-v2/service/workdocs v1.33.4 h1:2cFNMjwCBkjfq49q4k3/xHvU+O6jCJ9oNknt6ODALjk=
