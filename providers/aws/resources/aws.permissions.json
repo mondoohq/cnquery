@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-06T16:17:34+02:00",
+  "generated_at": "2026-08-06T17:01:47+02:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -272,6 +272,8 @@
     "dynamodb:ListTables",
     "dynamodb:ListTagsOfResource",
     "ec2:DescribeAddresses",
+    "ec2:DescribeApplicationStatus",
+    "ec2:DescribeApplicationStatusChecks",
     "ec2:DescribeCapacityReservations",
     "ec2:DescribeClientVpnEndpoints",
     "ec2:DescribeCustomerGateways",
@@ -471,6 +473,7 @@
     "glue:GetConnections",
     "glue:GetCrawlers",
     "glue:GetDataCatalogEncryptionSettings",
+    "glue:GetDataCatalogExportConfiguration",
     "glue:GetDatabases",
     "glue:GetJobs",
     "glue:GetResourcePolicies",
@@ -962,6 +965,7 @@
     "storagegateway:ListVolumes",
     "timestream-influxdb:GetDbCluster",
     "timestream-influxdb:GetDbInstance",
+    "timestream-influxdb:ListDbBackups",
     "timestream-influxdb:ListDbClusters",
     "timestream-influxdb:ListDbInstances",
     "timestream-influxdb:ListTagsForResource",
@@ -1005,6 +1009,7 @@
     "workspaces-web:ListTrustStores",
     "workspaces-web:ListUserAccessLoggingSettings",
     "workspaces-web:ListUserSettings",
+    "workspaces:DescribeClientProperties",
     "workspaces:DescribeIpGroups",
     "workspaces:DescribeTags",
     "workspaces:DescribeWorkspaceBundles",
@@ -2659,6 +2664,18 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ec2:DescribeApplicationStatus",
+      "service": "ec2",
+      "action": "DescribeApplicationStatus",
+      "source_file": "aws_ec2_application_status_check.go"
+    },
+    {
+      "permission": "ec2:DescribeApplicationStatusChecks",
+      "service": "ec2",
+      "action": "DescribeApplicationStatusChecks",
+      "source_file": "aws_ec2_application_status_check.go"
+    },
+    {
       "permission": "ec2:DescribeCapacityReservations",
       "service": "ec2",
       "action": "DescribeCapacityReservations",
@@ -3922,6 +3939,12 @@
       "permission": "glue:GetDataCatalogEncryptionSettings",
       "service": "glue",
       "action": "GetDataCatalogEncryptionSettings",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetDataCatalogExportConfiguration",
+      "service": "glue",
+      "action": "GetDataCatalogExportConfiguration",
       "source_file": "aws_glue.go"
     },
     {
@@ -7009,6 +7032,12 @@
       "source_file": "aws_timestream_influxdb.go"
     },
     {
+      "permission": "timestream-influxdb:ListDbBackups",
+      "service": "timestream-influxdb",
+      "action": "ListDbBackups",
+      "source_file": "aws_timestream_influxdb.go"
+    },
+    {
       "permission": "timestream-influxdb:ListDbClusters",
       "service": "timestream-influxdb",
       "action": "ListDbClusters",
@@ -7265,6 +7294,12 @@
       "service": "workspaces-web",
       "action": "ListUserSettings",
       "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces:DescribeClientProperties",
+      "service": "workspaces",
+      "action": "DescribeClientProperties",
+      "source_file": "aws_workspaces.go"
     },
     {
       "permission": "workspaces:DescribeIpGroups",

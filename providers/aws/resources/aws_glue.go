@@ -730,6 +730,86 @@ func (a *mqlAwsGlue) catalogEncryptionSettings() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsGlue) catalogExportEncryptionSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getCatalogExportEncryptionSettings(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGlue) getCatalogExportEncryptionSettings(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("glue>getCatalogExportEncryptionSettings>calling aws with region %s", region)
+
+			svc := conn.Glue(region)
+			ctx := context.Background()
+
+			resp, err := svc.GetDataCatalogExportConfiguration(ctx, &glue.GetDataCatalogExportConfigurationInput{})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return jobpool.JobResult([]any{}), nil
+				}
+				return nil, err
+			}
+			// A region with no export configuration returns no entry rather than
+			// one reporting empty encryption, so absence is not read as "no key".
+			if resp.EncryptionConfiguration == nil {
+				return jobpool.JobResult([]any{}), nil
+			}
+
+			mqlSettings, err := CreateResource(a.MqlRuntime, "aws.glue.catalogExportEncryption",
+				map[string]*llx.RawData{
+					"__id":         llx.StringData("aws.glue.catalogExportEncryption/" + region),
+					"region":       llx.StringData(region),
+					"sseAlgorithm": llx.StringDataPtr(resp.EncryptionConfiguration.SseAlgorithm),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlSettings.(*mqlAwsGlueCatalogExportEncryption).cacheKmsKeyArn = resp.EncryptionConfiguration.KmsKeyArn
+
+			return jobpool.JobResult([]any{mqlSettings}), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsGlueCatalogExportEncryptionInternal struct {
+	cacheKmsKeyArn *string
+}
+
+func (a *mqlAwsGlueCatalogExportEncryption) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func (a *mqlAwsGlue) getCatalogEncryptionSettings(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()

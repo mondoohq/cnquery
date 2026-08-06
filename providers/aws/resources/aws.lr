@@ -1492,6 +1492,18 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   //
   // Deprecated in favor of `encryptionType` and `kmsKey()`.
   encryptionConfiguration @maturity("deprecated") dict
+  // Whether the firewall forwards traffic without preserving the original source IP
+  //
+  // When true the firewall rewrites the source address, so rules downstream of
+  // the firewall see the firewall endpoint rather than the originating host.
+  noSourcePreservation bool
+  // NAT gateways the firewall forwards traffic through
+  natGateways() []aws.vpc.natgateway
+  // Listener ports and protocols the firewall proxies
+  //
+  // One entry per configured listener, each with `port` and `type`. Empty when
+  // the firewall does not run any proxy listeners.
+  proxyListeners []dict
   // Readiness of the firewall to handle traffic (READY, PROVISIONING, DELETING)
   status() string
   // Configuration sync state summary across all Availability Zones (IN_SYNC, PENDING, CAPACITY_CONSTRAINED)
@@ -17729,6 +17741,105 @@ aws.ec2 {
   instanceConnectEndpoints() []aws.ec2.instanceConnectEndpoint
   // List of VPC IP Address Manager (IPAM) installations across the account
   ipams() []aws.ec2.ipam
+  // List of application status checks across the account
+  applicationStatusChecks() []aws.ec2.applicationStatusCheck
+}
+
+// EC2 application status check
+//
+// Health check EC2 runs against an application on your instances, beyond the
+// instance and system reachability checks. Each check carries the probe
+// definition (protocol, port, path, interval, timeout, and the success and
+// failure thresholds that decide when state flips), the grace period new
+// instances get before results count, and the tag associations that select
+// which instances it applies to. `statuses` reports the current per-instance
+// result, so a query can find applications reporting impaired or checks whose
+// results are suppressed. The `id` field selects a single check, for example
+// `aws.ec2.applicationStatusCheck(id: "asc-01234567890abcdef")`.
+private aws.ec2.applicationStatusCheck @defaults("id protocol port aggregation") {
+  // Identifier of the application status check
+  id string
+  // Region the check is defined in
+  region string
+  // Network protocol the probe uses
+  //
+  // One of http or https.
+  protocol string
+  // Port the probe connects to
+  port int
+  // Request path the probe requests
+  path string
+  // Additional probe paths, each with its `source` and `destinations`
+  healthCheckPaths []dict
+  // HTTP status codes counted as a success
+  //
+  // A matcher such as "200" or a range such as "200-299". Empty for tcp probes.
+  statusCodeMatcher string
+  // Seconds between probes
+  interval int
+  // Seconds the probe waits for a response before recording a failure
+  timeout int
+  // Consecutive successes required before the application is reported healthy
+  successThreshold int
+  // Consecutive failures required before the application is reported impaired
+  failureThreshold int
+  // Seconds a newly launched instance is given before probe results count
+  initializationGracePeriodSeconds int
+  // Whether this check counts toward the rolled-up application status
+  //
+  // One of included or excluded.
+  aggregation string
+  // Network interface index the probe targets
+  deviceIndex int
+  // Address scope the probe connects over
+  //
+  // Currently always private.
+  ipScope string
+  // IP version the probe connects over
+  //
+  // One of ipv4 or ipv6.
+  ipVersion string
+  // Tag key/value pairs selecting the instances this check applies to
+  targetTags map[string]string
+  // Time the check was created
+  createdAt time
+  // Time the check was last modified
+  lastUpdatedAt time
+  // Resource tags
+  tags map[string]string
+  // Current per-instance results for this check
+  statuses() []aws.ec2.applicationStatusCheck.status
+}
+
+// Per-instance result of an EC2 application status check
+private aws.ec2.applicationStatusCheck.status @defaults("status statusSince") {
+  // Instance the result is reported for
+  instance() aws.ec2.instance
+  // Current result of the check on this instance
+  //
+  // One of passed, failed, initializing, insufficient-data, or not-applicable.
+  status string
+  // Rolled-up application status across every check on this instance
+  //
+  // One of ok, impaired, initializing, insufficient-data, not-applicable, or
+  // suppressed.
+  applicationStatus string
+  // Whether this check counts toward the rolled-up application status
+  //
+  // One of included or excluded.
+  aggregation string
+  // Reason code reported for the current result
+  reasonCode string
+  // Protocol the reported reason relates to
+  reasonProtocol string
+  // HTTP status code the probe last received
+  reasonStatusCode int
+  // Time the current status was first reported
+  statusSince time
+  // Time the status was last evaluated
+  statusTimestamp time
+  // Time the check result was last updated
+  checkUpdateTime time
 }
 
 // Amazon Elastic IP (EIP)
@@ -18905,6 +19016,26 @@ private aws.inspector.coverage {
   statusCode string
   // Type of coverage finding
   scanType string
+  // Depth of scanning applied to the resource
+  //
+  // One of EC2_SSM_AGENT_BASED, EC2_AGENTLESS, or EC2_HYBRID.
+  scanMode string
+  // Cloud platform hosting the covered resource
+  //
+  // One of AWS, AZURE, or GCP. Inspector can scan resources outside AWS, so
+  // this distinguishes them from resources in the scanned AWS account.
+  provider string
+  // Account, subscription, or project ID that owns the resource on its provider
+  providerAccountId string
+  // Organization ID that owns the resource on its provider
+  providerOrgId string
+  // Partition the resource belongs to on its provider
+  providerPartition string
+  // Region the resource lives in on its provider
+  //
+  // Reports the provider's own region name, which for a non-AWS resource does
+  // not match `region` (the region whose Inspector reported the coverage).
+  providerRegion string
   // Region where it was found
   region string
   // Details about the EC2 instance associated with the finding
@@ -22927,6 +23058,15 @@ private aws.workspaces.directory @defaults("directoryId directoryName state regi
   subnetIds @maturity("deprecated") []string
   // Subnets the directory uses
   subnets() []aws.vpc.subnet
+  // Which WorkSpaces clients users may connect from
+  //
+  // One of ALL_CLIENTS or WEB_ONLY_CLIENTS. WEB_ONLY_CLIENTS restricts users to
+  // the browser client, so no desktop client can hold cached credentials.
+  clientExperiencePolicy() string
+  // Whether users may reconnect without re-entering their credentials
+  clientReconnectEnabled() bool
+  // Whether the WorkSpaces client uploads diagnostic logs to AWS
+  clientLogUploadEnabled() bool
   // Resource tags
   tags() map[string]string
   // AWS region
@@ -23818,6 +23958,51 @@ aws.timestream.influxdb @defaults("instances clusters") {
   instances() []aws.timestream.influxdb.instance
   // List of InfluxDB clusters
   clusters() []aws.timestream.influxdb.cluster
+  // List of InfluxDB backups
+  backups() []aws.timestream.influxdb.backup
+}
+
+// Timestream for InfluxDB backup
+//
+// Point-in-time backup of an InfluxDB instance or cluster, covering when it was
+// taken, whether it was scheduled or on-demand, when it expires, and the KMS
+// key protecting it. Backups report the database resource they came from
+// through `dbInstance`, so a query can tell which instances have recent
+// successful backups and which have none.
+private aws.timestream.influxdb.backup @defaults("name status type createdAt") {
+  // ARN of the backup
+  arn string
+  // Identifier of the backup
+  id string
+  // Name of the backup
+  name string
+  // Region the backup lives in
+  region string
+  // Status of the backup
+  //
+  // One of CREATING, READY, DELETING, or FAILED.
+  status string
+  // How the backup was triggered
+  //
+  // One of ON_DEMAND, DAILY, WEEKLY, MONTHLY, CONTINUOUS, or CUSTOM_SCHEDULE.
+  type string
+  // Database engine the backup was taken from
+  //
+  // One of TIMESTREAM_INFLUXDB or INFLUXDB.
+  engineType string
+  // Deployment shape of the source database
+  //
+  // One of SINGLE_AZ, WITH_MULTIAZ_STANDBY, DB_INSTANCE, DB_CLUSTER, or
+  // MULTI_NODE_READ_REPLICAS.
+  deploymentType string
+  // Time the backup was created
+  createdAt time
+  // Time the backup expires and is removed
+  expiresAfter time
+  // InfluxDB instance the backup was taken from
+  dbInstance() aws.timestream.influxdb.instance
+  // KMS key encrypting the backup
+  kmsKey() aws.kms.key
 }
 
 // Amazon Timestream for InfluxDB instance
@@ -24082,6 +24267,8 @@ aws.glue @defaults("crawlers") {
   //
   // Each entry: {EncryptionAtRest: {CatalogEncryptionMode: DISABLED|SSE-KMS|SSE-KMS-WITH-SERVICE-ROLE, SseAwsKmsKeyId, CatalogEncryptionServiceRole}, ConnectionPasswordEncryption: {ReturnConnectionPasswordEncrypted: bool, AwsKmsKeyId}, region}. A CatalogEncryptionMode of DISABLED means Data Catalog metadata is not encrypted at rest.
   catalogEncryptionSettings() []dict
+  // Data Catalog export encryption configuration per region
+  catalogExportEncryptionSettings() []aws.glue.catalogExportEncryption
   // List of Glue workflows
   workflows() []aws.glue.workflow
   // List of Glue connections (catalog-stored data store connection definitions)
@@ -24236,6 +24423,24 @@ private aws.glue.job @defaults("name region") {
 // bookmark state are encrypted, including which KMS key is used.
 // Selected by `name`, for example
 // `aws.glue.securityConfigurations.where(name == "prod-sec")`.
+// Glue Data Catalog export encryption configuration
+//
+// Encryption applied when the Data Catalog is exported out of Glue, reported
+// per region. `sseAlgorithm` gives the server-side encryption scheme and
+// `kmsKey` the customer-managed key when one is in use. A region with no
+// configuration returns no entry, which means exports are not encrypted with a
+// key you control.
+private aws.glue.catalogExportEncryption @defaults("region sseAlgorithm") {
+  // Region the configuration applies to
+  region string
+  // Server-side encryption algorithm applied to Data Catalog exports
+  //
+  // One of SSE-S3 or SSE-KMS. Empty when export encryption is not configured.
+  sseAlgorithm string
+  // KMS key encrypting Data Catalog exports
+  kmsKey() aws.kms.key
+}
+
 private aws.glue.securityConfiguration @defaults("name") {
   // Name of the security configuration
   name string
