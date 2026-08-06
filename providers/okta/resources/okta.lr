@@ -58,6 +58,18 @@ okta {
   deviceAssurancePolicies() []okta.deviceAssurancePolicy
   // Security events providers feeding shared security signals to the org
   securityEventsProviders() []okta.securityEventsProvider
+  // User types defining the profile schema variants accounts can carry
+  userTypes() []okta.userType
+  // Attribute mappings that move profile data between applications and Okta
+  profileMappings() []okta.profileMapping
+  // Pools of on-premises Okta agents connecting the org to internal directories
+  agentPools() []okta.agentPool
+  // Custom mail domains the org sends end-user email from
+  emailDomains() []okta.emailDomain
+  // Custom SMTP servers configured to deliver org email
+  emailServers() []okta.emailServer
+  // Realms that partition users into separately administered populations
+  realms() []okta.realm
 }
 
 // Okta Organization
@@ -1661,4 +1673,240 @@ private okta.securityEventsProvider @defaults("name type status") {
   // Dict with keys `issuer`, `jwks_url`, and `well_known_url` identifying the
   // provider's security event stream and its signing keys.
   settings dict
+}
+
+// Okta User Type
+//
+// Profile schema variant that determines which attributes an account
+// carries. Every org has a built-in default type, and additional types give
+// contractors, partners, or service accounts a different profile shape.
+// `default` identifies the built-in type, `createdBy` and `lastUpdatedBy`
+// resolve to the administrators who introduced and last changed it, and
+// `name` is the value that profile mappings and the `typeId` field on
+// `okta.user` reference.
+private okta.userType @defaults("name displayName") {
+  // Unique identifier of the user type
+  id string
+  // Internal name of the user type
+  name string
+  // Name of the user type as shown in the admin console
+  displayName string
+  // Description of the user type
+  description string
+  // Whether this is the org's built-in default user type
+  default bool
+  // Timestamp when the user type was created
+  created time
+  // Timestamp when the user type was last updated
+  lastUpdated time
+  // Administrator who created the user type
+  createdBy() okta.user
+  // Administrator who last updated the user type
+  lastUpdatedBy() okta.user
+}
+
+// Okta Profile Mapping
+//
+// Attribute mapping that moves profile data between an application and the
+// Okta user profile. Mappings are how values arriving from an external
+// identity source populate Okta attributes, so auditing them shows which
+// attributes an upstream source is allowed to set and whether those writes
+// happen on every update or only when the account is created. `sourceType`
+// and `targetType` give the direction, `application` and `userType` resolve
+// the two sides of the mapping, and `properties` carries the per-attribute
+// expressions with their push behavior.
+private okta.profileMapping @defaults("sourceName targetName") {
+  // Unique identifier of the profile mapping
+  id string
+  // Identifier of the mapping source
+  sourceId string
+  // Name of the mapping source
+  sourceName string
+  // Type of the mapping source
+  //
+  // Either `user` when the source is an Okta user type, or `appuser` when it
+  // is an application user profile.
+  sourceType string
+  // Identifier of the mapping target
+  targetId string
+  // Name of the mapping target
+  targetName string
+  // Type of the mapping target
+  //
+  // Either `user` when the target is an Okta user type, or `appuser` when it
+  // is an application user profile.
+  targetType string
+  // Application on the application side of the mapping
+  application() okta.application
+  // User type on the Okta side of the mapping
+  userType() okta.userType
+  // Per-attribute mapping expressions
+  //
+  // Dict keyed by target attribute name. Each value carries `expression`, the
+  // source expression evaluated to produce the attribute, and `pushStatus`,
+  // which is PUSH when the attribute is written on both create and update, or
+  // DONT_PUSH when it is written only on create.
+  properties() dict
+}
+
+// Okta Agent Pool
+//
+// Group of on-premises Okta agents connecting the org to an internal
+// directory or network. Agent pools carry the patch posture of that
+// on-premises footprint: every agent reports the software `version` it runs,
+// whether that version is the latest generally available release, its
+// operational state, and when it last reached Okta. Auditing pools surfaces
+// agents running outdated software and agents that have stopped connecting.
+// Select a pool by its `name`.
+private okta.agentPool @defaults("name type operationalStatus") {
+  // Unique identifier of the agent pool
+  id string
+  // Display name of the agent pool
+  name string
+  // Type of agent monitored by the pool
+  //
+  // One of AD, IWA, LDAP, MFA, OPP, RADIUS, or RUM.
+  type string
+  // Operational status of the pool
+  //
+  // One of ACTIVE, INACTIVE, DEGRADED, or UNKNOWN.
+  operationalStatus string
+  // Agents enrolled in the pool
+  agents []okta.agentPool.agent
+}
+
+// Okta On-Premises Agent
+//
+// Individual agent enrolled in an agent pool. The `version` and
+// `isLatestGAedVersion` fields together report whether the agent runs
+// current software, `lastConnection` shows when it last reached Okta, and
+// `updateStatus` reports where it stands in the auto-update process.
+private okta.agentPool.agent @defaults("name version operationalStatus") {
+  // Unique identifier of the agent
+  id string
+  // Display name of the agent
+  name string
+  // Type of the agent
+  //
+  // One of AD, IWA, LDAP, MFA, OPP, RADIUS, or RUM.
+  type string
+  // Version of the agent software
+  version string
+  // Whether the agent runs the latest generally available version
+  isLatestGAedVersion bool
+  // Timestamp when the agent last connected to Okta
+  lastConnection time
+  // Operational status of the agent
+  //
+  // One of ACTIVE, INACTIVE, DEGRADED, or UNKNOWN.
+  operationalStatus string
+  // Status of the agent within the auto-update process
+  updateStatus string
+  // Message describing the agent's current update state
+  updateMessage string
+  // Whether the agent is hidden in the admin console
+  isHidden bool
+}
+
+// Okta Email Domain
+//
+// Custom mail domain the org sends end-user email from, in place of Okta's
+// default sender domain. Recipients see this domain on password resets and
+// MFA enrollment mail, so its validation state matters: `validationStatus`
+// reports whether Okta has verified ownership of the domain, and
+// `dnsValidationRecords` lists the DNS records that prove it. The `userName`
+// and `displayName` fields form the From address on outbound mail.
+private okta.emailDomain @defaults("domain validationStatus") {
+  // Unique identifier of the email domain
+  id string
+  // Mail domain configured for the org
+  domain string
+  // Subdomain used to validate ownership of the mail domain
+  validationSubdomain string
+  // Validation state of the mail domain
+  //
+  // One of NOT_STARTED, IN_PROGRESS, VERIFIED, COMPLETED, or ERROR.
+  validationStatus string
+  // Display name used in the From address of outbound mail
+  displayName string
+  // Local part of the From address of outbound mail
+  userName string
+  // DNS records proving ownership of the mail domain
+  //
+  // List of dicts with keys `fqdn`, `recordType`, and `verificationValue`.
+  dnsValidationRecords []dict
+}
+
+// Okta Email Server
+//
+// Custom SMTP server the org routes outbound mail through instead of Okta's
+// own mail infrastructure. The `enabled` field reports whether mail is
+// actually flowing through it, and `host`, `port`, and `username` describe
+// where it delivers. The SMTP password is not returned by the API and is not
+// exposed here.
+private okta.emailServer @defaults("alias host enabled") {
+  // Unique identifier of the SMTP server configuration
+  id string
+  // Name of the SMTP server as shown in the admin console
+  alias string
+  // Whether the org routes outbound mail through this server
+  enabled bool
+  // Hostname or IP address of the SMTP server
+  host string
+  // Port the SMTP server listens on
+  port int
+  // Username used to authenticate to the SMTP server
+  username string
+}
+
+// Okta Realm
+//
+// Population of users administered separately from the rest of the org.
+// Realms partition accounts so delegated administrators manage only their
+// own population, which makes the realm boundary an access-control boundary.
+// `isDefault` identifies the realm accounts land in when no assignment
+// applies, and `realmType` distinguishes a realm holding external partner
+// users from an ordinary one.
+private okta.realm @defaults("name realmType") {
+  // Unique identifier of the realm
+  id string
+  // Name of the realm
+  name string
+  // Type of the realm
+  //
+  // Either DEFAULT for an ordinary realm, or PARTNER for a realm holding
+  // external partner users.
+  realmType string
+  // Whether this is the org's default realm
+  isDefault bool
+  // Timestamp when the realm was created
+  created time
+  // Timestamp when the realm was last updated
+  lastUpdated time
+}
+
+// Okta Rate Limit Settings
+//
+// Organization-wide handling of API rate limits. The
+// `perClientDefaultMode` field reports whether Okta enforces per-client
+// limits, logs violations without enforcing them, or does neither, which
+// determines whether one misbehaving OAuth client can exhaust the org's
+// capacity for everyone. `adminNotificationsEnabled` and `warningThreshold`
+// report whether administrators are told before a limit is reached and at
+// what percentage of the limit that warning fires.
+okta.rateLimitSettings @defaults("perClientDefaultMode warningThreshold") {
+  // Default enforcement mode for per-client rate limits
+  //
+  // One of ENFORCE (enforce the limit and log the violation), PREVIEW (log
+  // the violation without enforcing), or DISABLE (neither).
+  perClientDefaultMode string
+  // Per-use-case overrides of the default enforcement mode
+  //
+  // Dict keyed by use case, with keys `LOGIN_PAGE`, `OAUTH2_AUTHORIZE`, and
+  // `OIE_APP_INTENT`. Each value is one of ENFORCE, PREVIEW, or DISABLE.
+  useCaseModeOverrides dict
+  // Whether administrators are notified as rate limits are approached
+  adminNotificationsEnabled bool
+  // Percentage of a rate limit at which a warning notification fires
+  warningThreshold int
 }
