@@ -120,6 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.75.4
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.3
 	github.com/aws/aws-sdk-go-v2/service/workdocs v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.73.1

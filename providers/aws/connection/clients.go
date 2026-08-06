@@ -118,6 +118,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/workdocs"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
@@ -196,6 +197,10 @@ func (t *AwsConnection) Ec2(region string) *ec2.Client {
 
 func (t *AwsConnection) Wafv2(region string) *wafv2.Client {
 	return regionalClient(t, "wafv2", region, wafv2.NewFromConfig)
+}
+
+func (t *AwsConnection) VpcLattice(region string) *vpclattice.Client {
+	return regionalClient(t, "vpclattice", region, vpclattice.NewFromConfig)
 }
 
 func (t *AwsConnection) Ecs(region string) *ecs.Client {

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-06T08:18:04+02:00",
+  "generated_at": "2026-08-06T16:17:34+02:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -965,6 +965,15 @@
     "transfer:ListServers",
     "transfer:ListWebApps",
     "transfer:ListWorkflows",
+    "vpclattice:GetAuthPolicy",
+    "vpclattice:GetService",
+    "vpclattice:GetServiceNetwork",
+    "vpclattice:ListListeners",
+    "vpclattice:ListServiceNetworkVpcAssociations",
+    "vpclattice:ListServiceNetworks",
+    "vpclattice:ListServices",
+    "vpclattice:ListTagsForResource",
+    "vpclattice:ListTargetGroups",
     "wafv2:GetIPSet",
     "wafv2:GetLoggingConfiguration",
     "wafv2:GetRegexPatternSet",
@@ -7009,6 +7018,60 @@
       "service": "transfer",
       "action": "ListWorkflows",
       "source_file": "aws_transfer.go"
+    },
+    {
+      "permission": "vpclattice:GetAuthPolicy",
+      "service": "vpclattice",
+      "action": "GetAuthPolicy",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:GetService",
+      "service": "vpclattice",
+      "action": "GetService",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:GetServiceNetwork",
+      "service": "vpclattice",
+      "action": "GetServiceNetwork",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:ListListeners",
+      "service": "vpclattice",
+      "action": "ListListeners",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:ListServiceNetworkVpcAssociations",
+      "service": "vpclattice",
+      "action": "ListServiceNetworkVpcAssociations",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:ListServiceNetworks",
+      "service": "vpclattice",
+      "action": "ListServiceNetworks",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:ListServices",
+      "service": "vpclattice",
+      "action": "ListServices",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:ListTagsForResource",
+      "service": "vpclattice",
+      "action": "ListTagsForResource",
+      "source_file": "aws_vpclattice.go"
+    },
+    {
+      "permission": "vpclattice:ListTargetGroups",
+      "service": "vpclattice",
+      "action": "ListTargetGroups",
+      "source_file": "aws_vpclattice.go"
     },
     {
       "permission": "wafv2:GetIPSet",

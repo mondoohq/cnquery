@@ -969,6 +969,12 @@ const (
 	ResourceAwsAppflow                                                          string = "aws.appflow"
 	ResourceAwsAppflowFlow                                                      string = "aws.appflow.flow"
 	ResourceAwsAppflowConnectorProfile                                          string = "aws.appflow.connectorProfile"
+	ResourceAwsVpclattice                                                       string = "aws.vpclattice"
+	ResourceAwsVpclatticeServiceNetwork                                         string = "aws.vpclattice.serviceNetwork"
+	ResourceAwsVpclatticeServiceNetworkVpcAssociation                           string = "aws.vpclattice.serviceNetwork.vpcAssociation"
+	ResourceAwsVpclatticeService                                                string = "aws.vpclattice.service"
+	ResourceAwsVpclatticeListener                                               string = "aws.vpclattice.listener"
+	ResourceAwsVpclatticeTargetGroup                                            string = "aws.vpclattice.targetGroup"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -4786,6 +4792,30 @@ func init() {
 		"aws.appflow.connectorProfile": {
 			// to override args, implement: initAwsAppflowConnectorProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppflowConnectorProfile,
+		},
+		"aws.vpclattice": {
+			// to override args, implement: initAwsVpclattice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpclattice,
+		},
+		"aws.vpclattice.serviceNetwork": {
+			// to override args, implement: initAwsVpclatticeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpclatticeServiceNetwork,
+		},
+		"aws.vpclattice.serviceNetwork.vpcAssociation": {
+			// to override args, implement: initAwsVpclatticeServiceNetworkVpcAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpclatticeServiceNetworkVpcAssociation,
+		},
+		"aws.vpclattice.service": {
+			// to override args, implement: initAwsVpclatticeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpclatticeService,
+		},
+		"aws.vpclattice.listener": {
+			// to override args, implement: initAwsVpclatticeListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpclatticeListener,
+		},
+		"aws.vpclattice.targetGroup": {
+			// to override args, implement: initAwsVpclatticeTargetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpclatticeTargetGroup,
 		},
 	}
 }
@@ -35952,6 +35982,186 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appflow.connectorProfile.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppflowConnectorProfile).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.serviceNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclattice).GetServiceNetworks()).ToDataRes(types.Array(types.Resource("aws.vpclattice.serviceNetwork")))
+	},
+	"aws.vpclattice.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclattice).GetServices()).ToDataRes(types.Array(types.Resource("aws.vpclattice.service")))
+	},
+	"aws.vpclattice.targetGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclattice).GetTargetGroups()).ToDataRes(types.Array(types.Resource("aws.vpclattice.targetGroup")))
+	},
+	"aws.vpclattice.serviceNetwork.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetName()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetAuthType()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.numberOfAssociatedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetNumberOfAssociatedServices()).ToDataRes(types.Int)
+	},
+	"aws.vpclattice.serviceNetwork.numberOfAssociatedVpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetNumberOfAssociatedVpcs()).ToDataRes(types.Int)
+	},
+	"aws.vpclattice.serviceNetwork.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.serviceNetwork.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.serviceNetwork.authPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetAuthPolicy()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.authPolicyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetAuthPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.vpclattice.serviceNetwork.hasWildcardAuthPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetHasWildcardAuthPolicy()).ToDataRes(types.Bool)
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetVpcAssociations()).ToDataRes(types.Array(types.Resource("aws.vpclattice.serviceNetwork.vpcAssociation")))
+	},
+	"aws.vpclattice.serviceNetwork.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetwork).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.privateDnsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetPrivateDnsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.service.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetName()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetAuthType()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.customDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetCustomDomainName()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.dnsEntry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetDnsEntry()).ToDataRes(types.Dict)
+	},
+	"aws.vpclattice.service.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
+	"aws.vpclattice.service.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.service.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.service.authPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetAuthPolicy()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.service.authPolicyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetAuthPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.vpclattice.service.hasWildcardAuthPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetHasWildcardAuthPolicy()).ToDataRes(types.Bool)
+	},
+	"aws.vpclattice.service.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetListeners()).ToDataRes(types.Array(types.Resource("aws.vpclattice.listener")))
+	},
+	"aws.vpclattice.service.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeService).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpclattice.listener.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.listener.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.listener.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetName()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.listener.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.listener.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.vpclattice.listener.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.listener.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeListener).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.targetGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetType()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.vpclattice.targetGroup.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.vpclattice.targetGroup.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.vpclattice.targetGroup.serviceArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetServiceArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpclattice.targetGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpclattice.targetGroup.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpclatticeTargetGroup).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
 }
 
@@ -81235,6 +81445,270 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appflow.connectorProfile.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppflowConnectorProfile).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclattice).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpclattice.serviceNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclattice).ServiceNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclattice).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclattice).TargetGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.numberOfAssociatedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).NumberOfAssociatedServices, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.numberOfAssociatedVpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).NumberOfAssociatedVpcs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.authPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).AuthPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.authPolicyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).AuthPolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.hasWildcardAuthPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).HasWildcardAuthPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).VpcAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetwork).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.privateDnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).PrivateDnsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.serviceNetwork.vpcAssociation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeServiceNetworkVpcAssociation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpclattice.service.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.customDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).CustomDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.dnsEntry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).DnsEntry, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Certificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.authPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).AuthPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.authPolicyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).AuthPolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.hasWildcardAuthPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).HasWildcardAuthPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.service.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeService).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpclattice.listener.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.listener.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeListener).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpclattice.targetGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.serviceArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).ServiceArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpclattice.targetGroup.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpclatticeTargetGroup).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -197994,5 +198468,709 @@ func (c *mqlAwsAppflowConnectorProfile) GetCreatedAt() *plugin.TValue[*time.Time
 }
 
 func (c *mqlAwsAppflowConnectorProfile) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+// mqlAwsVpclattice for the aws.vpclattice resource
+type mqlAwsVpclattice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVpclatticeInternal it will be used here
+	ServiceNetworks plugin.TValue[[]any]
+	Services        plugin.TValue[[]any]
+	TargetGroups    plugin.TValue[[]any]
+}
+
+// createAwsVpclattice creates a new instance of this resource
+func createAwsVpclattice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpclattice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpclattice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpclattice) MqlName() string {
+	return "aws.vpclattice"
+}
+
+func (c *mqlAwsVpclattice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpclattice) GetServiceNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice", c.__id, "serviceNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceNetworks()
+	})
+}
+
+func (c *mqlAwsVpclattice) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
+func (c *mqlAwsVpclattice) GetTargetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TargetGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice", c.__id, "targetGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targetGroups()
+	})
+}
+
+// mqlAwsVpclatticeServiceNetwork for the aws.vpclattice.serviceNetwork resource
+type mqlAwsVpclatticeServiceNetwork struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVpclatticeServiceNetworkInternal it will be used here
+	Arn                        plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	AuthType                   plugin.TValue[string]
+	NumberOfAssociatedServices plugin.TValue[int64]
+	NumberOfAssociatedVpcs     plugin.TValue[int64]
+	CreatedAt                  plugin.TValue[*time.Time]
+	LastUpdatedAt              plugin.TValue[*time.Time]
+	AuthPolicy                 plugin.TValue[string]
+	AuthPolicyStatements       plugin.TValue[[]any]
+	HasWildcardAuthPolicy      plugin.TValue[bool]
+	VpcAssociations            plugin.TValue[[]any]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAwsVpclatticeServiceNetwork creates a new instance of this resource
+func createAwsVpclatticeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpclatticeServiceNetwork{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpclattice.serviceNetwork", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) MqlName() string {
+	return "aws.vpclattice.serviceNetwork"
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetAuthType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthType, func() (string, error) {
+		return c.authType()
+	})
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetNumberOfAssociatedServices() *plugin.TValue[int64] {
+	return &c.NumberOfAssociatedServices
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetNumberOfAssociatedVpcs() *plugin.TValue[int64] {
+	return &c.NumberOfAssociatedVpcs
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetAuthPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthPolicy, func() (string, error) {
+		return c.authPolicy()
+	})
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetAuthPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthPolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.serviceNetwork", c.__id, "authPolicyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authPolicyStatements()
+	})
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetHasWildcardAuthPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardAuthPolicy, func() (bool, error) {
+		return c.hasWildcardAuthPolicy()
+	})
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetVpcAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcAssociations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.serviceNetwork", c.__id, "vpcAssociations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcAssociations()
+	})
+}
+
+func (c *mqlAwsVpclatticeServiceNetwork) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsVpclatticeServiceNetworkVpcAssociation for the aws.vpclattice.serviceNetwork.vpcAssociation resource
+type mqlAwsVpclatticeServiceNetworkVpcAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsVpclatticeServiceNetworkVpcAssociationInternal
+	Arn               plugin.TValue[string]
+	Id                plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAwsVpc]
+	CreatedBy         plugin.TValue[string]
+	PrivateDnsEnabled plugin.TValue[bool]
+	CreatedAt         plugin.TValue[*time.Time]
+}
+
+// createAwsVpclatticeServiceNetworkVpcAssociation creates a new instance of this resource
+func createAwsVpclatticeServiceNetworkVpcAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpclatticeServiceNetworkVpcAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpclattice.serviceNetwork.vpcAssociation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) MqlName() string {
+	return "aws.vpclattice.serviceNetwork.vpcAssociation"
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.serviceNetwork.vpcAssociation", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetPrivateDnsEnabled() *plugin.TValue[bool] {
+	return &c.PrivateDnsEnabled
+}
+
+func (c *mqlAwsVpclatticeServiceNetworkVpcAssociation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlAwsVpclatticeService for the aws.vpclattice.service resource
+type mqlAwsVpclatticeService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsVpclatticeServiceInternal
+	Arn                   plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Status                plugin.TValue[string]
+	AuthType              plugin.TValue[string]
+	CustomDomainName      plugin.TValue[string]
+	DnsEntry              plugin.TValue[any]
+	Certificate           plugin.TValue[*mqlAwsAcmCertificate]
+	CreatedAt             plugin.TValue[*time.Time]
+	LastUpdatedAt         plugin.TValue[*time.Time]
+	AuthPolicy            plugin.TValue[string]
+	AuthPolicyStatements  plugin.TValue[[]any]
+	HasWildcardAuthPolicy plugin.TValue[bool]
+	Listeners             plugin.TValue[[]any]
+	Tags                  plugin.TValue[map[string]any]
+}
+
+// createAwsVpclatticeService creates a new instance of this resource
+func createAwsVpclatticeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpclatticeService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpclattice.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpclatticeService) MqlName() string {
+	return "aws.vpclattice.service"
+}
+
+func (c *mqlAwsVpclatticeService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpclatticeService) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpclatticeService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpclatticeService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsVpclatticeService) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpclatticeService) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsVpclatticeService) GetAuthType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthType, func() (string, error) {
+		return c.authType()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetCustomDomainName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CustomDomainName, func() (string, error) {
+		return c.customDomainName()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetDnsEntry() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DnsEntry, func() (any, error) {
+		return c.dnsEntry()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.Certificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.service", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpclatticeService) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsVpclatticeService) GetAuthPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthPolicy, func() (string, error) {
+		return c.authPolicy()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetAuthPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthPolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.service", c.__id, "authPolicyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authPolicyStatements()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetHasWildcardAuthPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardAuthPolicy, func() (bool, error) {
+		return c.hasWildcardAuthPolicy()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.service", c.__id, "listeners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.listeners()
+	})
+}
+
+func (c *mqlAwsVpclatticeService) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsVpclatticeListener for the aws.vpclattice.listener resource
+type mqlAwsVpclatticeListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVpclatticeListenerInternal it will be used here
+	Arn           plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Protocol      plugin.TValue[string]
+	Port          plugin.TValue[int64]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastUpdatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsVpclatticeListener creates a new instance of this resource
+func createAwsVpclatticeListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpclatticeListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpclattice.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpclatticeListener) MqlName() string {
+	return "aws.vpclattice.listener"
+}
+
+func (c *mqlAwsVpclatticeListener) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpclatticeListener) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpclatticeListener) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpclatticeListener) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsVpclatticeListener) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsVpclatticeListener) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsVpclatticeListener) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpclatticeListener) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+// mqlAwsVpclatticeTargetGroup for the aws.vpclattice.targetGroup resource
+type mqlAwsVpclatticeTargetGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsVpclatticeTargetGroupInternal
+	Arn           plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Protocol      plugin.TValue[string]
+	Port          plugin.TValue[int64]
+	IpAddressType plugin.TValue[string]
+	Vpc           plugin.TValue[*mqlAwsVpc]
+	ServiceArns   plugin.TValue[[]any]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastUpdatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsVpclatticeTargetGroup creates a new instance of this resource
+func createAwsVpclatticeTargetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpclatticeTargetGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpclattice.targetGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) MqlName() string {
+	return "aws.vpclattice.targetGroup"
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpclattice.targetGroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetServiceArns() *plugin.TValue[[]any] {
+	return &c.ServiceArns
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpclatticeTargetGroup) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.LastUpdatedAt
 }
