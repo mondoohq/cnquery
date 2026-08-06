@@ -106,6 +106,12 @@ func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 }
 
 func (r *mqlPython) id() (string, error) {
+	// The path has to be part of the ID. Without it every python(path: ...)
+	// shares one cache key, so the first one scanned wins and every later
+	// lookup -- with a completely different path -- gets handed its packages.
+	if r.Path.Data != "" {
+		return "python/" + r.Path.Data, nil
+	}
 	return "python", nil
 }
 
@@ -216,11 +222,23 @@ func pythonPackageDetailsWithDependenciesToResource(
 func collectPythonPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []string) ([]python.PackageDetails, error) {
 	allResults := []python.PackageDetails{}
 
+	// The default paths overlap: /opt/homebrew/lib/python3.11 is matched by both
+	// "/opt/*/lib/python*" and "/opt/homebrew/lib/python*". Without this set the
+	// directory is scanned once per matching pattern and every package inside it
+	// is reported that many times, which inflates the inventory and emits one
+	// duplicate SBOM entry and vulnerability finding per extra match.
+	seen := map[string]struct{}{}
+
 	err := fsutil.WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
 		log.Debug().Str("filepath", walkPath).Msg("found matching python path")
 		packageDirs := []string{"site-packages", "dist-packages"}
 		for _, packageDir := range packageDirs {
 			pythonPackageDir := filepath.Join(walkPath, packageDir)
+			if _, ok := seen[pythonPackageDir]; ok {
+				continue
+			}
+			seen[pythonPackageDir] = struct{}{}
+
 			results, err := collectPythonPackages(runtime, fs, pythonPackageDir)
 			if err != nil {
 				// Skip this directory rather than abandoning the whole search.
@@ -302,8 +320,15 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([
 				}
 			}
 			if !foundMeta {
-				// nothing to process (happens when we've traversed a directory
-				// containing the actual python source files)
+				// A .dist-info / .egg-info directory with no METADATA or PKG-INFO
+				// is an incomplete install: the metadata was removed in a later
+				// container image layer, or the install was interrupted. The
+				// directory name still identifies the package, so report it from
+				// that rather than dropping it from the inventory.
+				if ppd := pythonPackageFromDirName(dEntry.Name(), filepath.Join(path, dEntry.Name())); ppd != nil {
+					ppd.IsLeaf = requestedPackage
+					allResults = append(allResults, *ppd)
+				}
 				continue
 			}
 		}
@@ -323,8 +348,13 @@ func collectPythonPackages(runtime *plugin.Runtime, fs afero.Fs, path string) ([
 			return nil, content.Error
 		}
 		ppd, err := wheelegg.ParseMIME(strings.NewReader(content.Data), pythonPackageFilepath)
-		if err != nil {
-			continue
+		if err != nil || ppd.Name == "" {
+			// Unparsable or nameless metadata -- fall back to the identity in the
+			// directory name so a corrupt file does not erase the package.
+			ppd = pythonPackageFromDirName(dEntry.Name(), filepath.Join(path, dEntry.Name()))
+			if ppd == nil {
+				continue
+			}
 		}
 		ppd.IsLeaf = requestedPackage
 
@@ -391,8 +421,40 @@ func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails) (pl
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
 		return nil, err
 	}
-	r.(*mqlPythonPackage).deps = ppd.Dependencies
+	pkg := r.(*mqlPythonPackage)
+	pkg.deps = ppd.Dependencies
+	pkg.siteDir = pythonPackageSiteDir(ppd.File)
 	return r, nil
+}
+
+// pythonPackageFromDirName builds package details from a ".dist-info" /
+// ".egg-info" entry name when its metadata file cannot be read. It returns nil
+// when the name carries no usable identity.
+func pythonPackageFromDirName(entry string, file string) *python.PackageDetails {
+	name, version := wheelegg.ParseDistInfoName(entry)
+	if name == "" {
+		return nil
+	}
+	return &python.PackageDetails{
+		Name:    name,
+		Version: version,
+		File:    file,
+		Purl:    python.NewPackageUrl(name, version),
+		Cpes:    python.NewCpes(name, version),
+	}
+}
+
+// pythonPackageSiteDir returns the directory a package was installed into, so
+// dependencies can be resolved among its siblings. For an installed package the
+// metadata path is "<site>/<name>.dist-info/METADATA", so the site directory is
+// two levels up; for a bare ".egg-info" file, and for packages read out of a
+// manifest such as requirements.txt, it is the file's own directory.
+func pythonPackageSiteDir(file string) string {
+	dir := filepath.Dir(file)
+	if base := filepath.Base(dir); strings.HasSuffix(base, ".dist-info") || strings.HasSuffix(base, ".egg-info") {
+		return filepath.Dir(dir)
+	}
+	return dir
 }
 
 func (r *mqlPythonPackage) id() (string, error) {
@@ -435,6 +497,9 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 type mqlPythonPackageInternal struct {
 	deps []string
+	// siteDir is the directory this package was installed into. Dependencies are
+	// resolved among its siblings only -- see dependencies().
+	siteDir string
 }
 
 func (r *mqlPythonPackage) dependencies() ([]any, error) {
@@ -448,13 +513,21 @@ func (r *mqlPythonPackage) dependencies() ([]any, error) {
 		return nil, pkgs.Error
 	}
 
+	// A dependency has to be resolved within the environment that declares it. An
+	// asset commonly carries the same package in several environments -- a venv
+	// per application, one site-packages per interpreter version -- and matching
+	// on name alone returns every one of them. That both inflates the list and
+	// silently answers questions about the wrong environment: a check asserting
+	// "this app pulls in a patched certifi" would pass on some other venv's copy.
 	deps := []any{}
 	for _, dep := range r.deps {
-		for i, pyPkgDetails := range pkgs.Data {
-			if pyPkgDetails.(*mqlPythonPackage).Name.Data == dep {
-				depRes := pkgs.Data[i]
-				deps = append(deps, depRes)
+		for i := range pkgs.Data {
+			candidate := pkgs.Data[i].(*mqlPythonPackage)
+			if candidate.Name.Data != dep || candidate.siteDir != r.siteDir {
+				continue
 			}
+			deps = append(deps, pkgs.Data[i])
+			break
 		}
 	}
 	return deps, nil
@@ -596,14 +669,17 @@ func mergePythonPackages(primary, secondary []python.PackageDetails) []python.Pa
 	if len(secondary) == 0 {
 		return primary
 	}
+	// Compare normalized names: installed metadata and manifests spell the same
+	// project differently ("ruamel.yaml" vs "ruamel-yaml"), so a plain lowercase
+	// key reports one project twice.
 	seen := make(map[string]bool, len(primary))
 	for _, p := range primary {
-		seen[strings.ToLower(p.Name)] = true
+		seen[python.NormalizeName(p.Name)] = true
 	}
 	for _, p := range secondary {
-		if !seen[strings.ToLower(p.Name)] {
+		if !seen[python.NormalizeName(p.Name)] {
 			primary = append(primary, p)
-			seen[strings.ToLower(p.Name)] = true
+			seen[python.NormalizeName(p.Name)] = true
 		}
 	}
 	return primary
