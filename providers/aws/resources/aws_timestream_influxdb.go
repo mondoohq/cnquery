@@ -572,8 +572,8 @@ func (a *mqlAwsTimestreamInfluxdbBackup) kmsKey() (*mqlAwsKmsKey, error) {
 // backup can point at the instance it was taken from without listing every
 // instance in the region.
 func initAwsTimestreamInfluxdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// region is a lookup hint, not a schema field, so remove it before any
-	// fallthrough hands args back to the runtime.
+	// region selects the regional client for the lookup. It is also a field on
+	// the resource, so it can stay in args when the lookup falls through.
 	var region string
 	if r := args["region"]; r != nil {
 		region, _ = r.Value.(string)

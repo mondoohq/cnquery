@@ -179,24 +179,24 @@ func (a *mqlAwsEc2ApplicationStatusCheck) statuses() ([]any, error) {
 			}
 			return nil, err
 		}
-		if resp.ApplicationStatuses == nil {
-			break
-		}
-
-		for _, inst := range resp.ApplicationStatuses.Instances {
-			if inst.ApplicationStatus == nil {
-				continue
-			}
-			overall := string(inst.ApplicationStatus.Status)
-			for _, detail := range inst.ApplicationStatus.Details {
-				if convert.ToValue(detail.ApplicationStatusCheckId) != a.Id.Data {
+		// a page can carry no statuses and still continue, so only the token
+		// decides whether there is more to read
+		if resp.ApplicationStatuses != nil {
+			for _, inst := range resp.ApplicationStatuses.Instances {
+				if inst.ApplicationStatus == nil {
 					continue
 				}
-				mqlStatus, err := a.newStatus(inst, detail, overall)
-				if err != nil {
-					return nil, err
+				overall := string(inst.ApplicationStatus.Status)
+				for _, detail := range inst.ApplicationStatus.Details {
+					if convert.ToValue(detail.ApplicationStatusCheckId) != a.Id.Data {
+						continue
+					}
+					mqlStatus, err := a.newStatus(inst, detail, overall)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlStatus)
 				}
-				res = append(res, mqlStatus)
 			}
 		}
 
