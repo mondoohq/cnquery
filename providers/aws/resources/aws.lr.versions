@@ -3639,6 +3639,7 @@ aws.ec2.networkacl.entry.egress 11.15.2
 aws.ec2.networkacl.entry.id 11.15.2
 aws.ec2.networkacl.entry.ipv6CidrBlock 11.15.2
 aws.ec2.networkacl.entry.isPublic 13.33.2
+aws.ec2.networkacl.entry.isShadowed 13.52.2
 aws.ec2.networkacl.entry.portRange 11.15.2
 aws.ec2.networkacl.entry.portrange 11.15.2
 aws.ec2.networkacl.entry.portrange.from 11.15.2
@@ -3659,6 +3660,7 @@ aws.ec2.networkinterface.availabilityZone 11.15.2
 aws.ec2.networkinterface.deleteOnTermination 13.15.2
 aws.ec2.networkinterface.description 11.15.2
 aws.ec2.networkinterface.deviceIndex 13.15.2
+aws.ec2.networkinterface.effectiveIngress 13.52.2
 aws.ec2.networkinterface.elasticIp 13.15.2
 aws.ec2.networkinterface.id 11.15.2
 aws.ec2.networkinterface.instance 13.15.2
@@ -3716,6 +3718,7 @@ aws.ec2.securitygroup.ippermission.prefixLists 13.23.2
 aws.ec2.securitygroup.ippermission.toPort 11.15.2
 aws.ec2.securitygroup.ippermission.userIdGroupPairs 11.15.2
 aws.ec2.securitygroup.isAttachedToNetworkInterface 11.15.2
+aws.ec2.securitygroup.isUnused 13.52.2
 aws.ec2.securitygroup.managedBy 13.37.1
 aws.ec2.securitygroup.name 11.15.2
 aws.ec2.securitygroup.networkInterfaces 13.37.1
@@ -7439,6 +7442,16 @@ aws.neptuneAnalytics.graph.statusReason 13.18.1
 aws.neptuneAnalytics.graph.tags 13.18.1
 aws.neptuneAnalytics.graph.vectorSearchDimension 13.18.1
 aws.neptuneAnalytics.graphs 13.18.1
+aws.network.effectiveIngress 13.52.2
+aws.network.effectiveIngress.fromPort 13.52.2
+aws.network.effectiveIngress.networkAclEntry 13.52.2
+aws.network.effectiveIngress.networkAclVerdict 13.52.2
+aws.network.effectiveIngress.protocol 13.52.2
+aws.network.effectiveIngress.reachable 13.52.2
+aws.network.effectiveIngress.securityGroup 13.52.2
+aws.network.effectiveIngress.securityGroupRule 13.52.2
+aws.network.effectiveIngress.source 13.52.2
+aws.network.effectiveIngress.toPort 13.52.2
 aws.network.exposure 13.37.1
 aws.network.exposure.internetReachable 13.37.1
 aws.network.exposure.openIngressRules 13.37.1
