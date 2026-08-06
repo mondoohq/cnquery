@@ -122,6 +122,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/machinelearning/armmachine
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/machinelearning/armmachinelearning/v4 v4.0.0/go.mod h1:nivJvZio5SHpEASAk8LKIueqs7zEHU+iRLKWbx3Xi10=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managedservices/armmanagedservices v0.7.0 h1:dwmV8G0tLD17J+LcTirpFmNKvZBLLuErtGR0h6h8n2c=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managedservices/armmanagedservices v0.7.0/go.mod h1:UmV8UnyCQ+05EvopWqF6CQsFWI5FWcp/AXGVkJguv9E=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managementgroups/armmanagementgroups v1.2.0 h1:akP6VpxJGgQRpDR1P462piz/8OhYLRCreDj48AyNabc=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managementgroups/armmanagementgroups v1.2.0/go.mod h1:8wzvopPfyZYPaQUoKW87Zfdul7jmJMDfp/k7YY3oJyA=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mongocluster/armmongocluster v1.2.0 h1:CRwl8O5YMdbQQ1MJ2ojHtTxaqesztdoBfFFcYVfv+Nc=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mongocluster/armmongocluster v1.2.0/go.mod h1:3AVoXQskcMH6BK+RamT0WKc6x3HJxvm05J3N61hOySs=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor v0.13.0 h1:c7r8eBbYWf2JbQFinuEbHsqq+ukY1tVIgAxt0uND2Fo=
@@ -156,6 +158,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments v
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments v1.0.0/go.mod h1:fewgRjNVE84QVVh798sIMFb7gPXPp7NmnekGnboSnXk=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments/v2 v2.0.0 h1:beUtRjpgxW6I8oyB/8bZ98+NojDTgcokBj+EiXdDqjg=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments/v2 v2.0.0/go.mod h1:q9iTxbauRZ9g68KsZ2NpPh/7aC7m7f91AI3gHSTCgr4=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armlocks v1.2.0 h1:CMp8GwmUfS/Stg5KBgduD8rPIk9GNj1HMaID/gUAJYg=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armlocks v1.2.0/go.mod h1:GE1wqa9Ny9eZ8wHtHqbCE7mMsFfVbdEY0itmzYV8JEg=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armpolicy v1.0.0 h1:FKYUd0TZfjjWtdk7LR+6rI64yNY1gMe9rNV40Y2Fh4o=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armpolicy v1.0.0/go.mod h1:w987ZDGBg74HZu5sAqaBEhDTlvlJlxPggIhBiDviYhE=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0 h1:Dd+RhdJn0OTtVGaeDLZpcumkIVCtA/3/Fo42+eoYvVM=

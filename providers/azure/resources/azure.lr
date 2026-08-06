@@ -10,9 +10,136 @@ option go_package = "go.mondoo.com/mql/v13/providers/azure/resources"
 // subscription is exposed as `azure.subscription`, and every Azure
 // service-specific accessor (Compute, Storage, Network, Key Vault,
 // Cosmos DB, Monitor, Defender for Cloud, AKS, and so on) is reached
-// through that subscription.
+// through that subscription. Tenant-wide structures that sit above any
+// single subscription are reached here instead: managementGroups walks
+// the governance hierarchy the tenant's subscriptions hang from.
 azure {
+  // Management groups in the tenant
+  //
+  // Every management group the credential can read, in no particular
+  // order, including the tenant root group. Management groups are the
+  // governance containers above subscriptions, so this is where a role
+  // assignment or policy assignment made at a management group scope
+  // gets a name, a position in the hierarchy, and a measurable blast
+  // radius. Empty when the credential has no Microsoft.Management read
+  // access, which is common for service principals scoped to a single
+  // subscription.
+  managementGroups() []azure.managementGroup
 }
+
+// Azure management group
+//
+// Governance container that groups subscriptions and other management
+// groups, and the scope at which tenant-wide role assignments, policy
+// assignments, and deny assignments are made. The `name` field is the
+// group's identifier as it appears in scope paths (a GUID or a chosen
+// short name), and selects the group, for example
+// `azure.managementGroup(name: "mg-production")`. Role assignments and
+// policy assignments made at this exact scope are reachable here, along
+// with the child groups and subscriptions that inherit them, so a grant
+// high in the hierarchy can be attributed to the group that carries it
+// and weighed against everything underneath.
+azure.managementGroup @defaults("name displayName subscriptionCount") {
+  // Full resource ID of the management group
+  id string
+  // Management group identifier used in scope paths
+  name string
+  // Human-readable display name
+  displayName string
+  // Tenant that owns the management group
+  tenantId string
+  // Whether this is the tenant root group
+  //
+  // The root group's name equals the tenant ID and it has no parent.
+  // Every subscription in the tenant sits underneath it, so an
+  // assignment here is the widest possible grant.
+  isRoot bool
+  // Parent management group, or null for the tenant root group
+  parent() azure.managementGroup
+  // Direct child management groups
+  children() []azure.managementGroup
+  // Subscription IDs that are direct children of this management group
+  //
+  // Direct children only. Subscriptions nested under a child management
+  // group are reached through children.
+  subscriptionIds []string
+  // Total number of subscriptions at or below this management group
+  //
+  // Counts subscriptions underneath the whole subtree, not only direct
+  // children, which is the blast radius of a role or policy assignment
+  // made at this scope.
+  subscriptionCount int
+  // Role assignments made at this management group scope
+  //
+  // Assignments whose scope is exactly this group, not ones it inherits
+  // from a parent or ones made further down. Because a grant here is
+  // inherited by every subscription in the subtree, pair this with
+  // subscriptionCount to weigh its reach.
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
+  // Policy assignments made at this management group scope
+  //
+  // Assignments whose scope is exactly this group. Resolved from the
+  // connected subscription's assignment list, so only assignments that
+  // the subscription inherits are visible here; a sibling branch of the
+  // hierarchy the subscription does not sit under will report none.
+  policyAssignments() []azure.subscription.policy.assignment
+}
+
+// Microsoft Entra principal
+//
+// Directory object behind a role assignment: the user, group, service
+// principal, application, or device that a grant was made to. Carries
+// the display name and type that an object ID alone does not, plus the
+// application identity behind a service principal (appId, the home
+// tenant in appOwnerTenantId, and whether it is a managed identity or a
+// registered application), and whether the account is still enabled.
+// This is what turns "some object ID holds Owner" into an attributable
+// finding, and it distinguishes a grant to a managed identity from one
+// to a human or to an application owned by an outside tenant.
+private azure.entraPrincipal @defaults("displayName principalType") {
+  // Object ID of the directory object
+  id string
+  // Display name
+  displayName string
+  // Kind of directory object
+  //
+  // One of "user", "group", "servicePrincipal", "application",
+  // "device", or "" when Microsoft Graph returned a type this provider
+  // does not model.
+  principalType string
+  // User principal name, for users
+  userPrincipalName string
+  // Application (client) ID, for service principals and applications
+  appId string
+  // Tenant that owns the application behind a service principal
+  //
+  // Differs from the subscription's tenant for a multi-tenant
+  // application or a Microsoft first-party service, so a grant to a
+  // principal whose home tenant is not yours is a cross-tenant grant.
+  // Empty for users, groups, and devices.
+  appOwnerTenantId string
+  // Service principal subtype
+  //
+  // One of "Application" (a registered app), "ManagedIdentity" (an
+  // Azure resource identity), or "Legacy". Empty for object types other
+  // than service principals. Distinguishes a workload identity from a
+  // human-facing application registration.
+  servicePrincipalType string
+  // Whether the account is enabled
+  //
+  // Null for object types that carry no enabled state, such as groups.
+  // A disabled account holding a privileged role is a dormant grant
+  // that re-arms the moment the account is re-enabled.
+  accountEnabled bool
+  // Whether the group can be assigned Microsoft Entra roles
+  //
+  // Only meaningful for groups. A role-assignable group is a privilege
+  // escalation path, because whoever can add members to it can grant
+  // themselves the group's roles.
+  isAssignableToRole bool
+}
+
+
 
 // Azure subscription
 //
@@ -58,6 +185,22 @@ azure.subscription @defaults ("name") {
   resourceGroups() []azure.subscription.resourcegroup
   // Subscription-scoped Azure Resource Manager deployments
   deployments() []azure.subscription.deployment
+  // Management group ancestry of the subscription
+  //
+  // The chain of management groups the subscription sits under, nearest
+  // parent first and the tenant root group last. This is the set of
+  // scopes whose role and policy assignments the subscription inherits.
+  // Empty when the credential has no Microsoft.Management read access.
+  managementGroups() []azure.managementGroup
+  // Resource locks in the subscription
+  //
+  // Every management lock at or below the subscription scope, including
+  // locks on resource groups and on individual resources. A lock is the
+  // control that stops a resource being deleted or modified regardless
+  // of RBAC, so this is how you confirm that vaults, backup vaults, and
+  // storage holding retained data cannot be removed by an operator or an
+  // attacker who has gained write access.
+  locks() []azure.subscription.lock
   // Compute resources in the subscription
   compute() azure.subscription.computeService
   // Batch resources in the subscription
@@ -197,6 +340,49 @@ private azure.subscription.resourcegroup @defaults("name location") {
   provisioningState string
   // Azure Resource Manager deployments in the resource group
   deployments() []azure.subscription.deployment
+  // Resource locks at or below this resource group
+  //
+  // Includes locks on the group itself and on the resources inside it.
+  // Resolved from the subscription's lock list, so this costs no
+  // additional API call.
+  locks() []azure.subscription.lock
+}
+
+// Azure resource lock
+//
+// Management lock that blocks deletion, or all modification, of the
+// scope it is applied to. Locks sit outside RBAC: they apply to every
+// principal including subscription owners, which makes them the last
+// line of defense for data that must survive a compromised or mistaken
+// operator. The `level` field says which operations are blocked and
+// `scope` says what the lock protects, so an audit can check that
+// backup vaults, recovery services vaults, key vaults, and storage
+// holding retained data all carry one.
+private azure.subscription.lock @defaults("name level scope") {
+  // Full resource ID of the lock
+  id string
+  // Lock name
+  name string
+  // Lock resource type
+  type string
+  // Operations the lock blocks
+  //
+  // One of "CanNotDelete" (the scope can be read and modified but not
+  // deleted), "ReadOnly" (the scope can only be read, which also blocks
+  // deletion), or "NotSpecified". ReadOnly is the stronger of the two
+  // and can break operations that write resource state.
+  level string
+  // Notes recorded on the lock explaining why it exists
+  notes string
+  // Application IDs of the lock owners
+  owners []string
+  // Resource ID the lock applies to
+  //
+  // The subscription, resource group, or resource the lock protects,
+  // derived by stripping the lock's own provider path from its ID. A
+  // subscription-level lock reports the subscription ID, so a lock's
+  // reach is read from how deep this path goes.
+  scope string
 }
 
 // Azure resource
@@ -10024,6 +10210,34 @@ private azure.subscription.authorizationService.roleDefinition @defaults ("name 
   scopes []string
   // Permissions that are attached to the role definition
   permissions() []azure.subscription.authorizationService.roleDefinition.permission
+  // Whether the role can grant roles, and so escalate its own privileges
+  //
+  // True when the role's allowed actions cover
+  // `Microsoft.Authorization/roleAssignments/write`,
+  // `Microsoft.Authorization/roleDefinitions/write`, or
+  // `Microsoft.Authorization/elevateAccess/action` (directly or via a
+  // wildcard) and no notActions entry takes that action back. A
+  // principal holding such a role can assign itself any other role at
+  // the same scope, so its effective privilege is Owner no matter what
+  // the role is called. Built-in Owner and User Access Administrator
+  // both report true, as does any custom role that reaches those
+  // actions.
+  isPrivilegeEscalating() bool
+  // Whether the role grants wildcard control-plane actions
+  //
+  // True when any allowed action contains a `*`. A bare `*` is full
+  // control at the assigned scope. A narrower pattern such as
+  // `Microsoft.Compute/*` still grants every action in that namespace,
+  // including actions Azure adds after the role was written, so the
+  // role's privilege grows over time without anyone editing it.
+  hasWildcardActions() bool
+  // Whether the role grants data-plane access
+  //
+  // True when the role allows any dataActions. Control-plane actions
+  // govern a resource's configuration; data actions reach its contents
+  // (blob bytes, queue messages, key material), so a role granting them
+  // exposes stored data rather than only settings.
+  grantsDataAccess() bool
 }
 
 // Azure role definition permission
@@ -10058,6 +10272,17 @@ private azure.subscription.authorizationService.roleAssignment  @defaults("princ
   createdAt time
   updatedAt time
   role() azure.subscription.authorizationService.roleDefinition
+  // Microsoft Entra principal the role was assigned to
+  //
+  // Resolves principalId against the directory, giving the grant a name,
+  // an object type, and (for service principals) the application and
+  // home tenant behind it. Null when the object no longer exists, which
+  // marks the assignment as an orphaned grant to a deleted principal.
+  // Requires the credential to hold Microsoft Graph directory read
+  // access; without it this reports an error rather than reporting no
+  // principal, since the latter would silently understate who holds
+  // access.
+  principal() azure.entraPrincipal
 }
 
 // Azure managed identity

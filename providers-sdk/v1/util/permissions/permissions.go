@@ -1832,6 +1832,10 @@ var azureServiceToARMMap = map[string]string{
 	"appcontainers":         "Microsoft.App",
 	"containerinstance":     "Microsoft.ContainerInstance",
 	"machinelearning":       "Microsoft.MachineLearningServices",
+	// The SDK package is armmanagementgroups but the ARM namespace is
+	// Microsoft.Management; without this the default branch would emit
+	// "Microsoft.Managementgroups", which is not a real provider.
+	"managementgroups": "Microsoft.Management",
 }
 
 func azureServiceToARM(service string) string {
@@ -1871,6 +1875,17 @@ var azureMethodPermissionOverrides = map[string]string{
 	"TableResources.NewListTableRoleDefinitionsPager":         "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
 	"MongoMIResources.NewListMongoMIRoleAssignmentsPager":     "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleAssignments/read",
 	"MongoMIResources.NewListMongoMIRoleDefinitionsPager":     "Microsoft.DocumentDB/databaseAccounts/mongoMIRoleDefinitions/read",
+
+	// armlocks lives under the resourcemanager/resources directory, so the
+	// service derives to Microsoft.Resources; locks are actually governed by
+	// Microsoft.Authorization. The service key cannot be remapped because
+	// armresources, armdeployments, armsubscriptions and armpolicy legitimately
+	// share it.
+	"ManagementLocks.NewListAtSubscriptionLevelPager": "Microsoft.Authorization/locks/read",
+
+	// The entities listing walks the management group hierarchy; the governing
+	// permission is on managementGroups, not on an "entities" resource type.
+	"Entities.NewListPager": "Microsoft.Management/managementGroups/read",
 }
 
 // azurePermissionOverrides maps generated permission strings to the correct

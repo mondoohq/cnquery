@@ -17,9 +17,12 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceAzure                                                                                     string = "azure"
+	ResourceAzureManagementGroup                                                                      string = "azure.managementGroup"
+	ResourceAzureEntraPrincipal                                                                       string = "azure.entraPrincipal"
 	ResourceAzureSubscription                                                                         string = "azure.subscription"
 	ResourceAzureSubscriptionWebServiceFunction                                                       string = "azure.subscription.webService.function"
 	ResourceAzureSubscriptionResourcegroup                                                            string = "azure.subscription.resourcegroup"
+	ResourceAzureSubscriptionLock                                                                     string = "azure.subscription.lock"
 	ResourceAzureSubscriptionResource                                                                 string = "azure.subscription.resource"
 	ResourceAzureSubscriptionSystemData                                                               string = "azure.subscription.systemData"
 	ResourceAzureSubscriptionDeployment                                                               string = "azure.subscription.deployment"
@@ -512,6 +515,14 @@ func init() {
 			// to override args, implement: initAzure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzure,
 		},
+		"azure.managementGroup": {
+			Init:   initAzureManagementGroup,
+			Create: createAzureManagementGroup,
+		},
+		"azure.entraPrincipal": {
+			// to override args, implement: initAzureEntraPrincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureEntraPrincipal,
+		},
 		"azure.subscription": {
 			Init:   initAzureSubscription,
 			Create: createAzureSubscription,
@@ -523,6 +534,10 @@ func init() {
 		"azure.subscription.resourcegroup": {
 			// to override args, implement: initAzureSubscriptionResourcegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionResourcegroup,
+		},
+		"azure.subscription.lock": {
+			// to override args, implement: initAzureSubscriptionLock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionLock,
 		},
 		"azure.subscription.resource": {
 			// to override args, implement: initAzureSubscriptionResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2523,6 +2538,69 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"azure.managementGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzure).GetManagementGroups()).ToDataRes(types.Array(types.Resource("azure.managementGroup")))
+	},
+	"azure.managementGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.managementGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.managementGroup.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.managementGroup.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.managementGroup.isRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetIsRoot()).ToDataRes(types.Bool)
+	},
+	"azure.managementGroup.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetParent()).ToDataRes(types.Resource("azure.managementGroup"))
+	},
+	"azure.managementGroup.children": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetChildren()).ToDataRes(types.Array(types.Resource("azure.managementGroup")))
+	},
+	"azure.managementGroup.subscriptionIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetSubscriptionIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.managementGroup.subscriptionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetSubscriptionCount()).ToDataRes(types.Int)
+	},
+	"azure.managementGroup.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
+	},
+	"azure.managementGroup.policyAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureManagementGroup).GetPolicyAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.policy.assignment")))
+	},
+	"azure.entraPrincipal.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetId()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.userPrincipalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetUserPrincipalName()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.appId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetAppId()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.appOwnerTenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetAppOwnerTenantId()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.servicePrincipalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetServicePrincipalType()).ToDataRes(types.String)
+	},
+	"azure.entraPrincipal.accountEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetAccountEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.entraPrincipal.isAssignableToRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureEntraPrincipal).GetIsAssignableToRole()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetId()).ToDataRes(types.String)
 	},
@@ -2558,6 +2636,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetDeployments()).ToDataRes(types.Array(types.Resource("azure.subscription.deployment")))
+	},
+	"azure.subscription.managementGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetManagementGroups()).ToDataRes(types.Array(types.Resource("azure.managementGroup")))
+	},
+	"azure.subscription.locks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetLocks()).ToDataRes(types.Array(types.Resource("azure.subscription.lock")))
 	},
 	"azure.subscription.compute": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetCompute()).ToDataRes(types.Resource("azure.subscription.computeService"))
@@ -2735,6 +2819,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.resourcegroup.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResourcegroup).GetDeployments()).ToDataRes(types.Array(types.Resource("azure.subscription.deployment")))
+	},
+	"azure.subscription.resourcegroup.locks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionResourcegroup).GetLocks()).ToDataRes(types.Array(types.Resource("azure.subscription.lock")))
+	},
+	"azure.subscription.lock.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lock.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.lock.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.lock.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.lock.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetNotes()).ToDataRes(types.String)
+	},
+	"azure.subscription.lock.owners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetOwners()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.lock.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLock).GetScope()).ToDataRes(types.String)
 	},
 	"azure.subscription.resource.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResource).GetId()).ToDataRes(types.String)
@@ -13248,6 +13356,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.authorizationService.roleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleDefinition.permission")))
 	},
+	"azure.subscription.authorizationService.roleDefinition.isPrivilegeEscalating": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetIsPrivilegeEscalating()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.authorizationService.roleDefinition.hasWildcardActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetHasWildcardActions()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.authorizationService.roleDefinition.grantsDataAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GetGrantsDataAccess()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.authorizationService.roleDefinition.permission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission).GetId()).ToDataRes(types.String)
 	},
@@ -13292,6 +13409,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetRole()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
+	},
+	"azure.subscription.authorizationService.roleAssignment.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetPrincipal()).ToDataRes(types.Resource("azure.entraPrincipal"))
 	},
 	"azure.subscription.managedIdentity.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionManagedIdentity).GetName()).ToDataRes(types.String)
@@ -19603,6 +19723,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzure).__id, ok = v.Value.(string)
 		return
 	},
+	"azure.managementGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzure).ManagementGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.managementGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.isRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).IsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).Parent, ok = plugin.RawToTValue[*mqlAzureManagementGroup](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.children": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).Children, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.subscriptionIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).SubscriptionIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.subscriptionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).SubscriptionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.managementGroup.policyAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureManagementGroup).PolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.entraPrincipal.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.userPrincipalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).UserPrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.appId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.appOwnerTenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).AppOwnerTenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.servicePrincipalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).ServicePrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.accountEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).AccountEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.entraPrincipal.isAssignableToRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureEntraPrincipal).IsAssignableToRole, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).__id, ok = v.Value.(string)
 		return
@@ -19653,6 +19865,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.managementGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).ManagementGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.locks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).Locks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.compute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19897,6 +20117,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.resourcegroup.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionResourcegroup).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.resourcegroup.locks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionResourcegroup).Locks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.lock.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lock.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLock).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35075,6 +35331,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.authorizationService.roleDefinition.isPrivilegeEscalating": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).IsPrivilegeEscalating, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleDefinition.hasWildcardActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).HasWildcardActions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleDefinition.grantsDataAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition).GrantsDataAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.authorizationService.roleDefinition.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission).__id, ok = v.Value.(string)
 		return
@@ -35141,6 +35409,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Role, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).Principal, ok = plugin.RawToTValue[*mqlAzureEntraPrincipal](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.managedIdentity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44324,6 +44596,7 @@ type mqlAzure struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureInternal
+	ManagementGroups plugin.TValue[[]any]
 }
 
 // createAzure creates a new instance of this resource
@@ -44358,6 +44631,248 @@ func (c *mqlAzure) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAzure) GetManagementGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagementGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure", c.__id, "managementGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managementGroups()
+	})
+}
+
+// mqlAzureManagementGroup for the azure.managementGroup resource
+type mqlAzureManagementGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureManagementGroupInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	TenantId          plugin.TValue[string]
+	IsRoot            plugin.TValue[bool]
+	Parent            plugin.TValue[*mqlAzureManagementGroup]
+	Children          plugin.TValue[[]any]
+	SubscriptionIds   plugin.TValue[[]any]
+	SubscriptionCount plugin.TValue[int64]
+	RoleAssignments   plugin.TValue[[]any]
+	PolicyAssignments plugin.TValue[[]any]
+}
+
+// createAzureManagementGroup creates a new instance of this resource
+func createAzureManagementGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureManagementGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.managementGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureManagementGroup) MqlName() string {
+	return "azure.managementGroup"
+}
+
+func (c *mqlAzureManagementGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureManagementGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureManagementGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureManagementGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureManagementGroup) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureManagementGroup) GetIsRoot() *plugin.TValue[bool] {
+	return &c.IsRoot
+}
+
+func (c *mqlAzureManagementGroup) GetParent() *plugin.TValue[*mqlAzureManagementGroup] {
+	return plugin.GetOrCompute[*mqlAzureManagementGroup](&c.Parent, func() (*mqlAzureManagementGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.managementGroup", c.__id, "parent")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureManagementGroup), nil
+			}
+		}
+
+		return c.parent()
+	})
+}
+
+func (c *mqlAzureManagementGroup) GetChildren() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Children, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.managementGroup", c.__id, "children")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.children()
+	})
+}
+
+func (c *mqlAzureManagementGroup) GetSubscriptionIds() *plugin.TValue[[]any] {
+	return &c.SubscriptionIds
+}
+
+func (c *mqlAzureManagementGroup) GetSubscriptionCount() *plugin.TValue[int64] {
+	return &c.SubscriptionCount
+}
+
+func (c *mqlAzureManagementGroup) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.managementGroup", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
+	})
+}
+
+func (c *mqlAzureManagementGroup) GetPolicyAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.managementGroup", c.__id, "policyAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyAssignments()
+	})
+}
+
+// mqlAzureEntraPrincipal for the azure.entraPrincipal resource
+type mqlAzureEntraPrincipal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureEntraPrincipalInternal it will be used here
+	Id                   plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	PrincipalType        plugin.TValue[string]
+	UserPrincipalName    plugin.TValue[string]
+	AppId                plugin.TValue[string]
+	AppOwnerTenantId     plugin.TValue[string]
+	ServicePrincipalType plugin.TValue[string]
+	AccountEnabled       plugin.TValue[bool]
+	IsAssignableToRole   plugin.TValue[bool]
+}
+
+// createAzureEntraPrincipal creates a new instance of this resource
+func createAzureEntraPrincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureEntraPrincipal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.entraPrincipal", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureEntraPrincipal) MqlName() string {
+	return "azure.entraPrincipal"
+}
+
+func (c *mqlAzureEntraPrincipal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureEntraPrincipal) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureEntraPrincipal) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureEntraPrincipal) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAzureEntraPrincipal) GetUserPrincipalName() *plugin.TValue[string] {
+	return &c.UserPrincipalName
+}
+
+func (c *mqlAzureEntraPrincipal) GetAppId() *plugin.TValue[string] {
+	return &c.AppId
+}
+
+func (c *mqlAzureEntraPrincipal) GetAppOwnerTenantId() *plugin.TValue[string] {
+	return &c.AppOwnerTenantId
+}
+
+func (c *mqlAzureEntraPrincipal) GetServicePrincipalType() *plugin.TValue[string] {
+	return &c.ServicePrincipalType
+}
+
+func (c *mqlAzureEntraPrincipal) GetAccountEnabled() *plugin.TValue[bool] {
+	return &c.AccountEnabled
+}
+
+func (c *mqlAzureEntraPrincipal) GetIsAssignableToRole() *plugin.TValue[bool] {
+	return &c.IsAssignableToRole
+}
+
 // mqlAzureSubscription for the azure.subscription resource
 type mqlAzureSubscription struct {
 	MqlRuntime *plugin.Runtime
@@ -44375,6 +44890,8 @@ type mqlAzureSubscription struct {
 	Resources             plugin.TValue[[]any]
 	ResourceGroups        plugin.TValue[[]any]
 	Deployments           plugin.TValue[[]any]
+	ManagementGroups      plugin.TValue[[]any]
+	Locks                 plugin.TValue[[]any]
 	Compute               plugin.TValue[*mqlAzureSubscriptionComputeService]
 	Batch                 plugin.TValue[*mqlAzureSubscriptionBatchService]
 	Databricks            plugin.TValue[*mqlAzureSubscriptionDatabricksService]
@@ -44540,6 +45057,38 @@ func (c *mqlAzureSubscription) GetDeployments() *plugin.TValue[[]any] {
 		}
 
 		return c.deployments()
+	})
+}
+
+func (c *mqlAzureSubscription) GetManagementGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagementGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "managementGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managementGroups()
+	})
+}
+
+func (c *mqlAzureSubscription) GetLocks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Locks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "locks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.locks()
 	})
 }
 
@@ -45362,6 +45911,7 @@ type mqlAzureSubscriptionResourcegroup struct {
 	ManagedBy         plugin.TValue[string]
 	ProvisioningState plugin.TValue[string]
 	Deployments       plugin.TValue[[]any]
+	Locks             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionResourcegroup creates a new instance of this resource
@@ -45443,6 +45993,96 @@ func (c *mqlAzureSubscriptionResourcegroup) GetDeployments() *plugin.TValue[[]an
 
 		return c.deployments()
 	})
+}
+
+func (c *mqlAzureSubscriptionResourcegroup) GetLocks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Locks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.resourcegroup", c.__id, "locks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.locks()
+	})
+}
+
+// mqlAzureSubscriptionLock for the azure.subscription.lock resource
+type mqlAzureSubscriptionLock struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionLockInternal it will be used here
+	Id     plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Type   plugin.TValue[string]
+	Level  plugin.TValue[string]
+	Notes  plugin.TValue[string]
+	Owners plugin.TValue[[]any]
+	Scope  plugin.TValue[string]
+}
+
+// createAzureSubscriptionLock creates a new instance of this resource
+func createAzureSubscriptionLock(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLock{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.lock", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLock) MqlName() string {
+	return "azure.subscription.lock"
+}
+
+func (c *mqlAzureSubscriptionLock) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLock) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionLock) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionLock) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionLock) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlAzureSubscriptionLock) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlAzureSubscriptionLock) GetOwners() *plugin.TValue[[]any] {
+	return &c.Owners
+}
+
+func (c *mqlAzureSubscriptionLock) GetScope() *plugin.TValue[string] {
+	return &c.Scope
 }
 
 // mqlAzureSubscriptionResource for the azure.subscription.resource resource
@@ -80897,7 +81537,7 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetSystemMetad
 type mqlAzureSubscriptionAuthorizationService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionAuthorizationServiceInternal it will be used here
+	mqlAzureSubscriptionAuthorizationServiceInternal
 	SubscriptionId           plugin.TValue[string]
 	Roles                    plugin.TValue[[]any]
 	RoleAssignments          plugin.TValue[[]any]
@@ -81708,12 +82348,15 @@ type mqlAzureSubscriptionAuthorizationServiceRoleDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionAuthorizationServiceRoleDefinitionInternal
-	Id          plugin.TValue[string]
-	Description plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Type        plugin.TValue[string]
-	Scopes      plugin.TValue[[]any]
-	Permissions plugin.TValue[[]any]
+	Id                    plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Scopes                plugin.TValue[[]any]
+	Permissions           plugin.TValue[[]any]
+	IsPrivilegeEscalating plugin.TValue[bool]
+	HasWildcardActions    plugin.TValue[bool]
+	GrantsDataAccess      plugin.TValue[bool]
 }
 
 // createAzureSubscriptionAuthorizationServiceRoleDefinition creates a new instance of this resource
@@ -81781,6 +82424,24 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetPermissions(
 		}
 
 		return c.permissions()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetIsPrivilegeEscalating() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPrivilegeEscalating, func() (bool, error) {
+		return c.isPrivilegeEscalating()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetHasWildcardActions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardActions, func() (bool, error) {
+		return c.hasWildcardActions()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetGrantsDataAccess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GrantsDataAccess, func() (bool, error) {
+		return c.grantsDataAccess()
 	})
 }
 
@@ -81863,6 +82524,7 @@ type mqlAzureSubscriptionAuthorizationServiceRoleAssignment struct {
 	CreatedAt     plugin.TValue[*time.Time]
 	UpdatedAt     plugin.TValue[*time.Time]
 	Role          plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+	Principal     plugin.TValue[*mqlAzureEntraPrincipal]
 }
 
 // createAzureSubscriptionAuthorizationServiceRoleAssignment creates a new instance of this resource
@@ -81946,6 +82608,22 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetRole() *plug
 		}
 
 		return c.role()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetPrincipal() *plugin.TValue[*mqlAzureEntraPrincipal] {
+	return plugin.GetOrCompute[*mqlAzureEntraPrincipal](&c.Principal, func() (*mqlAzureEntraPrincipal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService.roleAssignment", c.__id, "principal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureEntraPrincipal), nil
+			}
+		}
+
+		return c.principal()
 	})
 }
 
