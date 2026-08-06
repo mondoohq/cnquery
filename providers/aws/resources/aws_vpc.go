@@ -431,6 +431,7 @@ type mqlAwsVpcEndpointInternal struct {
 	securityGroupIdHandler
 	cacheRouteTableIds       []string
 	cacheNetworkInterfaceIds []string
+	cacheSubnetIds           []string
 	cacheEndpointId          string
 	region                   string
 	accountID                string
@@ -500,6 +501,9 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 			ep.region = a.Region.Data
 			ep.accountID = conn.AccountId()
 			ep.cacheEndpointId = convert.ToValue(endpoint.VpcEndpointId)
+			// Cached separately from the deprecated subnets field so subnetRefs
+			// does not depend on a field that is due for removal.
+			ep.cacheSubnetIds = endpoint.SubnetIds
 
 			// Cache security group ARNs
 			sgArns := make([]string, len(endpoint.Groups))
@@ -1419,6 +1423,20 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
+
+	// Reuse a subnet already listed before spending a DescribeSubnets call. The
+	// subnet ARN is its cache key, so resolving several references to subnets in
+	// one VPC costs one API call rather than one per reference.
+	cacheArn := arnValue
+	if cacheArn == "" && region != "" {
+		cacheArn = fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), subnetId)
+	}
+	if cacheArn != "" {
+		if cached, ok := runtime.Resources.Get(ResourceAwsVpcSubnet + "\x00" + cacheArn); ok {
+			return args, cached, nil
+		}
+	}
+
 	svc := conn.Ec2(region)
 	ctx := context.Background()
 	subnets, err := svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{Filters: []vpctypes.Filter{{Name: aws.String("subnet-id"), Values: []string{subnetId}}}})
@@ -2072,6 +2090,36 @@ func (a *mqlAwsVpcEndpoint) routeTables() ([]any, error) {
 		rts = append(rts, mqlRt)
 	}
 	return rts, nil
+}
+
+// subnetRefs resolves the endpoint's subnet IDs to typed subnet resources.
+func (a *mqlAwsVpcEndpoint) subnetRefs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	subnets := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		if subnetId == "" {
+			continue
+		}
+		mqlSubnet, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), subnetId)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		subnets = append(subnets, mqlSubnet)
+	}
+	return subnets, nil
+}
+
+// hasWildcardPolicy reports whether the endpoint policy leaves access
+// unrestricted, which is what the default policy AWS attaches does.
+func (a *mqlAwsVpcEndpoint) hasWildcardPolicy() (bool, error) {
+	statements := a.GetPolicyStatements()
+	if statements.Error != nil {
+		return false, statements.Error
+	}
+	return statementsAllowWildcard(statements.Data)
 }
 
 func (a *mqlAwsVpcEndpoint) networkInterfaces() ([]any, error) {

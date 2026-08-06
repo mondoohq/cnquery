@@ -5465,8 +5465,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.endpoint.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.vpc.endpoint.hasWildcardPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetHasWildcardPolicy()).ToDataRes(types.Bool)
+	},
 	"aws.vpc.endpoint.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetSubnets()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpc.endpoint.subnetRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetSubnetRefs()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.vpc.endpoint.privateDnsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetPrivateDnsEnabled()).ToDataRes(types.Bool)
@@ -36798,8 +36804,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcEndpoint).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.endpoint.hasWildcardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).HasWildcardPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.endpoint.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcEndpoint).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.subnetRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).SubnetRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.privateDnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83580,7 +83594,9 @@ type mqlAwsVpcEndpoint struct {
 	ServiceName       plugin.TValue[string]
 	PolicyDocument    plugin.TValue[string]
 	PolicyStatements  plugin.TValue[[]any]
+	HasWildcardPolicy plugin.TValue[bool]
 	Subnets           plugin.TValue[[]any]
+	SubnetRefs        plugin.TValue[[]any]
 	PrivateDnsEnabled plugin.TValue[bool]
 	State             plugin.TValue[string]
 	CreatedAt         plugin.TValue[*time.Time]
@@ -83677,8 +83693,30 @@ func (c *mqlAwsVpcEndpoint) GetPolicyStatements() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsVpcEndpoint) GetHasWildcardPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardPolicy, func() (bool, error) {
+		return c.hasWildcardPolicy()
+	})
+}
+
 func (c *mqlAwsVpcEndpoint) GetSubnets() *plugin.TValue[[]any] {
 	return &c.Subnets
+}
+
+func (c *mqlAwsVpcEndpoint) GetSubnetRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SubnetRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.endpoint", c.__id, "subnetRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnetRefs()
+	})
 }
 
 func (c *mqlAwsVpcEndpoint) GetPrivateDnsEnabled() *plugin.TValue[bool] {
