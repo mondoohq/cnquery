@@ -13,10 +13,13 @@ import (
 
 	orgpolicy "cloud.google.com/go/orgpolicy/apiv2"
 	"cloud.google.com/go/orgpolicy/apiv2/orgpolicypb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type mqlGcpProjectEffectiveOrgPolicyInternal struct {
@@ -115,6 +118,22 @@ func (g *mqlGcpProjectEffectiveOrgPolicy) fetchEffectivePolicy() (*orgpolicypb.P
 		Name: fmt.Sprintf("projects/%s/policies/%s", projectId, constraint),
 	})
 	if err != nil {
+		// A constraint with no policy anywhere in the hierarchy is reported as
+		// NotFound. That is the answer, not a failure: nothing is enforced. Erroring
+		// here would make the query fail for exactly the case an audit most wants to
+		// detect, so return a nil policy and let interpretPolicySpec yield the zero
+		// value.
+		//
+		// Only NotFound is treated this way. PermissionDenied must stay an error: a
+		// read the caller is not allowed to make would otherwise be indistinguishable
+		// from "not enforced", and a list-constraint assertion over empty
+		// allowedValues would pass vacuously. Logged at warn because a misspelled
+		// constraint name reaches this path too.
+		if status.Code(err) == codes.NotFound {
+			log.Warn().Str("project", projectId).Str("constraint", constraint).
+				Msg("no effective organization policy found for constraint; reporting it as unset")
+			return nil, nil
+		}
 		return nil, err
 	}
 	return policy, nil

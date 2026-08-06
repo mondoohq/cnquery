@@ -10606,6 +10606,12 @@ private gcp.orgPolicy @defaults("constraintName") {
 // "constraints/compute.requireOsLogin").enforced`. Boolean constraints are
 // summarized by `enforced`, list constraints by `allowedValues`,
 // `deniedValues`, `allowAll`, and `denyAll`.
+//
+// A constraint with no policy set anywhere in the hierarchy resolves to the zero
+// value (`enforced` false, empty value lists) rather than an error, since that is
+// the effective state: nothing is enforced. A constraint name that does not exist
+// resolves the same way, so confirm the name when a result looks unexpectedly
+// empty.
 private gcp.project.effectiveOrgPolicy @defaults("constraint enforced") {
   init(constraint string)
   // Project the policy is evaluated for

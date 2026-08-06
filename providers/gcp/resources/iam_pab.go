@@ -62,8 +62,10 @@ func (g *mqlGcpOrganization) principalAccessBoundaryPolicies() ([]any, error) {
 		}
 		if err != nil {
 			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Msg("could not list principal access boundary policies")
-				return nil, nil
+				// break rather than discard: an error partway through pagination
+				// should not throw away the policies the API already returned.
+				log.Warn().Err(err).Msg("could not list all principal access boundary policies")
+				break
 			}
 			return nil, err
 		}
@@ -134,8 +136,9 @@ func (g *mqlGcpOrganization) policyBindings() ([]any, error) {
 		}
 		if err != nil {
 			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Msg("could not list policy bindings")
-				return nil, nil
+				// break rather than discard: keep the bindings already returned.
+				log.Warn().Err(err).Msg("could not list all policy bindings")
+				break
 			}
 			return nil, err
 		}

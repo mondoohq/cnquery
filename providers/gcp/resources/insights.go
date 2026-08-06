@@ -216,8 +216,11 @@ func (g *mqlGcpProject) insights() ([]any, error) {
 
 				mqlInsight, err := newMqlInsight(g.MqlRuntime, item)
 				if err != nil {
+					// Mapping failures are per-insight (an unexpected resource name
+					// shape, a content value that will not convert), so skip the one
+					// item rather than abandoning the rest of this insight type.
 					log.Error().Str("parent", parent).Err(err).Msg("could not create mql insight")
-					break
+					continue
 				}
 				mux.Lock()
 				res = append(res, mqlInsight)
