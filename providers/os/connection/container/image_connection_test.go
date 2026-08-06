@@ -53,7 +53,19 @@ func cacheImageToTar(source string, filename string) error {
 		return err
 	}
 
-	return tarball.WriteToFile(filename, tag, img)
+	// Download to a temporary file and only move it into place once it is
+	// complete. Writing straight to filename means an interrupted pull (a
+	// truncated layer, a killed run) leaves a partial tar behind, and the
+	// os.Stat check above then treats that corrupt file as a valid cache on
+	// every subsequent run. The failure that produces is "unexpected EOF" from
+	// whatever later tries to read the tar, which points nowhere near the
+	// download that actually failed.
+	tmp := filename + ".partial"
+	if err := tarball.WriteToFile(tmp, tag, img); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return os.Rename(tmp, filename)
 }
 
 func cacheAlpine() error {
@@ -292,7 +304,10 @@ func TestTarSymlinkFile(t *testing.T) {
 			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
-	assert.Equal(t, nil, err, "should create tar without error")
+	// require, not assert: c is dereferenced immediately below, so continuing
+	// past a failure here segfaults the whole package rather than failing this
+	// one test.
+	require.NoError(t, err, "should create tar without error")
 
 	f, err := c.FileSystem().Open("/bin/cat")
 	assert.Nil(t, err)
@@ -324,7 +339,10 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 			tar.OPTION_FILE: centosContainerPath,
 		},
 	}, &inventory.Asset{})
-	assert.Equal(t, nil, err, "should create tar without error")
+	// require, not assert: c is dereferenced immediately below, so continuing
+	// past a failure here segfaults the whole package rather than failing this
+	// one test.
+	require.NoError(t, err, "should create tar without error")
 
 	f, err := c.FileSystem().Open("/etc/redhat-release")
 	require.NoError(t, err)

@@ -227,7 +227,14 @@ func MakeSSHKeyPair(bits int, pubKeyPath, privateKeyPath string) error {
 }
 
 func TestSftpCreate(t *testing.T) {
+	// The sftp server under test serves from the package directory, so testdata
+	// has to live at a fixed relative path rather than in t.TempDir(). Clear it
+	// first and remove it afterwards: without this the directory survives the
+	// run, and every subsequent invocation in the same working tree fails at
+	// the Mkdir below with "file exists" before testing anything.
+	require.NoError(t, os.RemoveAll("./testdata"))
 	require.NoError(t, os.Mkdir("./testdata", 0o777))
+	t.Cleanup(func() { _ = os.RemoveAll("./testdata") })
 	require.NoError(t, MakeSSHKeyPair(1024, "./testdata/id_rsa.pub", "./testdata/id_rsa"))
 
 	go RunSftpServer()
