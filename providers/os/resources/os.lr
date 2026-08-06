@@ -6016,6 +6016,88 @@ private polkit.localAuthorityRule @defaults("name resultActive") {
   file file
 }
 
+// AIDE file integrity database
+//
+// Configuration and database state of AIDE, the Advanced Intrusion Detection
+// Environment. `params` holds the settings read from the configuration,
+// `groups` the attribute group definitions, and `rules` the selection lines
+// deciding which paths are watched and which attributes are compared.
+// `database` points at the reference database the next check runs against, and
+// its modification time is the signal worth asserting on: a reference database
+// older than the last package transaction no longer describes the system, so a
+// check against it cannot detect anything that changed in between. Watch for
+// coverage removed by a negative rule, which silently drops a path from an
+// otherwise healthy configuration.
+aide @defaults("installed version") {
+  // Whether AIDE is present on the system
+  //
+  // True when a configuration file or an AIDE binary is found. Use it to guard
+  // integrity-monitoring audits on hosts that ship no AIDE at all.
+  installed() bool
+  // AIDE release reported by the aide binary
+  //
+  // Requires command execution, so it is null on backends that expose only a
+  // filesystem, such as an image scan.
+  version() string
+  // Root configuration file the settings are read from
+  configFile() file
+  // Every configuration file that contributed, including resolved includes
+  files() []file
+  // Settings from the configuration, as key-value pairs
+  //
+  // Keyed by the option name as written, for example `database_in`,
+  // `database_out`, `gzip_dbout`, and `report_url`. A `key = value` line whose
+  // key is not a recognized AIDE option is reported in `groups` instead.
+  params() map[string]string
+  // Attribute group definitions, as key-value pairs
+  //
+  // Maps each group name to its expression exactly as written, for example
+  // `NORMAL` to `R+sha512`. Referenced from a rule's `expression` and resolved
+  // into its `attributes`.
+  groups() map[string]string
+  // Selection rules deciding which paths are checked
+  rules() []aide.rule
+  // Reference database the next check compares against
+  //
+  // Resolved from `database_in`, with the `file:` prefix stripped. Null when
+  // the setting names no readable database, which is also the state before the
+  // database is initialized for the first time.
+  database() file
+  // Database a fresh initialization writes, resolved from `database_out`
+  newDatabase() file
+}
+
+// AIDE selection rule
+//
+// Single selection line from the AIDE configuration: the `path` it applies to,
+// the `attributes` compared for matching entries, and the `selection` kind
+// deciding whether the line adds or removes coverage. Macro references in the
+// path are substituted, so `path` is the location AIDE actually acts on.
+private aide.rule @defaults("path selection attributes") {
+  // Path or path pattern the rule applies to
+  path string
+  // How the line affects coverage
+  //
+  // One of `recursive` for a plain line, `equals` for a line prefixed with `=`
+  // matching the entry itself without descending into it, or `negative` for a
+  // line prefixed with `!` removing the path from the check entirely.
+  selection string
+  // Attribute expression exactly as written on the line (e.g. `R+sha512`)
+  expression string
+  // Attributes compared for entries matched by this rule
+  //
+  // Group names defined in the configuration are resolved down to the
+  // attributes they stand for, and a `-` term removes what it names. A token
+  // AIDE defines internally rather than in the configuration, such as `R` or
+  // `L`, is reported as written because its meaning depends on the AIDE
+  // release.
+  attributes []string
+  // Line number of the rule in its source file
+  lineNumber int
+  // File the rule is declared in
+  file file
+}
+
 // Kernel module configuration (modprobe.d)
 //
 // Install, remove, blacklist, options, alias, and softdep directives parsed
