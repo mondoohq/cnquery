@@ -13695,10 +13695,21 @@ azure.subscription.frontDoorService.wafPolicy @defaults("name mode enabled sku")
   requestBodyCheck bool
   // Status code returned when the policy blocks a request
   customBlockResponseStatusCode int
+  // Response body returned when the policy blocks a request
+  //
+  // Base64-encoded, as Azure stores it. Empty when the policy returns the
+  // default block page instead of an authored one.
+  customBlockResponseBody string
   // URL clients are redirected to when a rule's action is redirect
   redirectUrl string
   // JavaScript challenge cookie lifetime, in minutes (Premium tier)
   javascriptChallengeExpirationInMinutes int
+  // CAPTCHA cookie lifetime, in minutes (Premium tier)
+  //
+  // How long a client stays exempt after solving a CAPTCHA challenge. A
+  // long lifetime widens the window in which a solved challenge can be
+  // replayed from a stolen cookie.
+  captchaExpirationInMinutes int
   // Log scrubbing state, which removes matched fields from firewall logs
   //
   // One of "Enabled" or "Disabled", or empty when no scrubbing is
@@ -13796,9 +13807,16 @@ private azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOv
   enabledState string
   // Action that replaces the rule's own when it matches
   //
-  // One of "Allow", "Block", "Log", "Redirect", or "AnomalyScoring", or
-  // empty to keep the rule's own action.
+  // One of "Allow", "Block", "Log", "Redirect", "AnomalyScoring",
+  // "CAPTCHA", or "JSChallenge", or empty to keep the rule's own action.
   action string
+  // Detection sensitivity applied to the rule
+  //
+  // One of "High", "Medium", or "Low", or empty to keep the rule's own
+  // default. A higher sensitivity trips the rule on smaller traffic
+  // spikes, so an override that lowers it weakens the rule while
+  // enabledState still reports "Enabled".
+  sensitivity string
   // Request parts excluded from this rule only
   exclusions []dict
 }
@@ -13820,9 +13838,9 @@ private azure.subscription.frontDoorService.wafPolicy.customRule @defaults("name
   ruleType string
   // Action taken when every match condition holds
   //
-  // One of "Allow", "Block", "Log", "Redirect", or "AnomalyScoring". An
-  // "Allow" rule short-circuits the managed rule sets for matching
-  // requests.
+  // One of "Allow", "Block", "Log", "Redirect", "AnomalyScoring",
+  // "CAPTCHA", or "JSChallenge". An "Allow" rule short-circuits the
+  // managed rule sets for matching requests.
   action string
   // Whether the rule is evaluated
   //
@@ -13861,7 +13879,8 @@ private azure.subscription.frontDoorService.wafPolicy.customRule.matchCondition 
   //
   // One of "Any", "IPMatch", "GeoMatch", "Equal", "Contains",
   // "LessThan", "GreaterThan", "LessThanOrEqual", "GreaterThanOrEqual",
-  // "BeginsWith", "EndsWith", or "RegEx". "Any" matches unconditionally.
+  // "BeginsWith", "EndsWith", "RegEx", or "ServiceTagMatch". "Any"
+  // matches unconditionally.
   operator string
   // Whether the condition's result is inverted
   negate bool
