@@ -2,6 +2,29 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 azure 9.0.0
+azure.entraPrincipal 13.33.8
+azure.entraPrincipal.accountEnabled 13.33.8
+azure.entraPrincipal.appId 13.33.8
+azure.entraPrincipal.appOwnerTenantId 13.33.8
+azure.entraPrincipal.displayName 13.33.8
+azure.entraPrincipal.id 13.33.8
+azure.entraPrincipal.isAssignableToRole 13.33.8
+azure.entraPrincipal.principalType 13.33.8
+azure.entraPrincipal.servicePrincipalType 13.33.8
+azure.entraPrincipal.userPrincipalName 13.33.8
+azure.managementGroup 13.33.8
+azure.managementGroup.children 13.33.8
+azure.managementGroup.displayName 13.33.8
+azure.managementGroup.id 13.33.8
+azure.managementGroup.isRoot 13.33.8
+azure.managementGroup.name 13.33.8
+azure.managementGroup.parent 13.33.8
+azure.managementGroup.policyAssignments 13.33.8
+azure.managementGroup.roleAssignments 13.33.8
+azure.managementGroup.subscriptionCount 13.33.8
+azure.managementGroup.subscriptionIds 13.33.8
+azure.managementGroup.tenantId 13.33.8
+azure.managementGroups 13.33.8
 azure.subscription 11.4.28
 azure.subscription.advisor 11.4.28
 azure.subscription.advisorService 9.0.13
@@ -276,6 +299,7 @@ azure.subscription.authorizationService.roleAssignment.condition 11.2.1
 azure.subscription.authorizationService.roleAssignment.createdAt 11.2.1
 azure.subscription.authorizationService.roleAssignment.description 11.2.1
 azure.subscription.authorizationService.roleAssignment.id 11.2.1
+azure.subscription.authorizationService.roleAssignment.principal 13.33.8
 azure.subscription.authorizationService.roleAssignment.principalId 11.2.1
 azure.subscription.authorizationService.roleAssignment.principalType 13.16.2
 azure.subscription.authorizationService.roleAssignment.role 11.2.1
@@ -301,7 +325,10 @@ azure.subscription.authorizationService.roleAssignmentSchedules 13.25.1
 azure.subscription.authorizationService.roleAssignments 11.2.1
 azure.subscription.authorizationService.roleDefinition 11.4.28
 azure.subscription.authorizationService.roleDefinition.description 11.4.28
+azure.subscription.authorizationService.roleDefinition.grantsDataAccess 13.33.8
+azure.subscription.authorizationService.roleDefinition.hasWildcardActions 13.33.8
 azure.subscription.authorizationService.roleDefinition.id 11.4.28
+azure.subscription.authorizationService.roleDefinition.isPrivilegeEscalating 13.33.8
 azure.subscription.authorizationService.roleDefinition.name 11.4.28
 azure.subscription.authorizationService.roleDefinition.permission 11.4.28
 azure.subscription.authorizationService.roleDefinition.permission.allowedActions 11.4.28
@@ -2833,6 +2860,15 @@ azure.subscription.lighthouseService.registrationDefinition.provisioningState 13
 azure.subscription.lighthouseService.registrationDefinition.systemMetadata 13.24.1
 azure.subscription.lighthouseService.registrationDefinitions 13.24.1
 azure.subscription.lighthouseService.subscriptionId 13.24.1
+azure.subscription.lock 13.33.8
+azure.subscription.lock.id 13.33.8
+azure.subscription.lock.level 13.33.8
+azure.subscription.lock.name 13.33.8
+azure.subscription.lock.notes 13.33.8
+azure.subscription.lock.owners 13.33.8
+azure.subscription.lock.scope 13.33.8
+azure.subscription.lock.type 13.33.8
+azure.subscription.locks 13.33.8
 azure.subscription.logic 13.10.2
 azure.subscription.logicService 13.10.2
 azure.subscription.logicService.subscriptionId 13.10.2
@@ -3072,6 +3108,7 @@ azure.subscription.managedIdentity.principalId 11.2.1
 azure.subscription.managedIdentity.roleAssignments 11.2.1
 azure.subscription.managedIdentity.systemMetadata 13.22.1
 azure.subscription.managedIdentity.tenantId 11.2.1
+azure.subscription.managementGroups 13.33.8
 azure.subscription.monitor 9.0.0
 azure.subscription.monitorService 9.0.1
 azure.subscription.monitorService.actionGroup 13.32.1
@@ -4965,6 +5002,7 @@ azure.subscription.resourcegroup 9.0.0
 azure.subscription.resourcegroup.deployments 13.19.2
 azure.subscription.resourcegroup.id 9.0.0
 azure.subscription.resourcegroup.location 9.0.0
+azure.subscription.resourcegroup.locks 13.33.8
 azure.subscription.resourcegroup.managedBy 9.0.0
 azure.subscription.resourcegroup.name 9.0.0
 azure.subscription.resourcegroup.provisioningState 9.0.0
