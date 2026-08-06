@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -229,14 +230,20 @@ func (a *mqlAwsGlobalacceleratorEndpointGroup) loadBalancers() ([]any, error) {
 }
 
 // instances resolves the endpoints that are EC2 instances.
+//
+// initAwsEc2Instance resolves by ARN only, so the bare instance ID the endpoint
+// carries is combined with the endpoint group's region (the region its endpoints
+// live in) and the connection's account to build one.
 func (a *mqlAwsGlobalacceleratorEndpointGroup) instances() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
 	for _, endpointId := range a.cacheEndpointIds {
 		if !strings.HasPrefix(endpointId, "i-") {
 			continue
 		}
+		instanceArn := fmt.Sprintf(ec2InstanceArnPattern, a.Region.Data, conn.AccountId(), endpointId)
 		instance, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
-			map[string]*llx.RawData{"instanceId": llx.StringData(endpointId)})
+			map[string]*llx.RawData{"arn": llx.StringData(instanceArn)})
 		if err != nil {
 			log.Debug().Err(err).Str("endpoint", endpointId).Msg("cannot resolve global accelerator instance endpoint")
 			continue

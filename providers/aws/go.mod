@@ -48,6 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.61.4
 	github.com/aws/aws-sdk-go-v2/service/dax v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/detective v1.41.4
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.51.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.23.4
@@ -70,6 +71,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/fms v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.68.4
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/glue v1.152.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.85.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.58.1
@@ -156,9 +158,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.36 // indirect
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.44.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.35.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.38.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.28 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.12 // indirect
