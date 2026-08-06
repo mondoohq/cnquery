@@ -106,7 +106,306 @@ oci.identity {
   networkSources() []oci.identity.networkSource
   // Tenancy authentication policy (password strength and network restrictions)
   authenticationPolicy() oci.identity.authenticationPolicy
+  // Identity domains in the tenancy
+  //
+  // The users, groups, and policies returned by the fields above come
+  // from the legacy IAM API, which reaches only the tenancy's default
+  // domain. Any tenancy with more than one domain holds principals those
+  // fields never return, so `domains` is where the full picture lives.
+  domains() []oci.identity.domain
 }
+
+// Oracle Cloud Infrastructure (OCI) identity domain
+//
+// Identity domain, the container OCI uses for users, groups, and the
+// authentication policy applied to them. A tenancy has at least a
+// Default domain and may have many, each with its own user population,
+// password policy, and multi-factor settings, so a control verified only
+// against the default domain says nothing about the others.
+//
+// `type` separates DEFAULT, PRIMARY, SECONDARY, and the free
+// DEVELOPER-license domains. `isHiddenOnLogin` reports whether the
+// domain appears on the tenancy sign-in page. `users`, `groups`,
+// `passwordPolicies`, `authenticationFactorSettings`, and `apps` reach
+// into the domain itself through its own endpoint, which is what the
+// legacy IAM API cannot do.
+private oci.identity.domain @defaults("name type state") {
+  // Domain OCID
+  id string
+  // Domain display name
+  name string
+  // Domain description
+  description string
+  // Compartment containing the domain
+  compartment() oci.compartment
+  // Domain type (DEFAULT, PRIMARY, SECONDARY)
+  type string
+  // License type the domain runs under (e.g., free, oracle-apps-premium, premium)
+  licenseType string
+  // Region the domain is homed in
+  homeRegion string
+  // Regions the domain is replicated to
+  replicaRegions []string
+  // Whether the domain is hidden from the tenancy sign-in page
+  isHiddenOnLogin bool
+  // Users in the domain
+  users() []oci.identity.domain.user
+  // Groups in the domain
+  groups() []oci.identity.domain.group
+  // Password policies applied in the domain
+  passwordPolicies() []oci.identity.domain.passwordPolicy
+  // Multi-factor authentication settings for the domain
+  authenticationFactorSettings() oci.identity.domain.authenticationFactorSettings
+  // Applications registered in the domain
+  apps() []oci.identity.domain.app
+  // Domain lifecycle state (CREATING, ACTIVE, DELETING, INACTIVE, FAILED)
+  state string
+  // Domain creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain user
+//
+// User account inside an identity domain, keyed by its SCIM id.
+// `mfaStatus` reports whether the account is ENROLLED in multi-factor
+// authentication, UN_ENROLLED, IGNORED, or DISABLED, which is the
+// distinction the tenancy-wide `mfaActivated` flag on the legacy IAM
+// user cannot express. `isLocked` and `loginAttempts` report lockout
+// state, `lastSuccessfulLogin` and `lastFailedLogin` the account's
+// recent use, and `capabilities` which credential types the account may
+// hold. `isFederated` marks accounts sourced from an external identity
+// provider, whose passwords and MFA are governed there rather than here.
+private oci.identity.domain.user @defaults("userName active mfaStatus") {
+  // User SCIM identifier
+  id string
+  // User OCID
+  ocid string
+  // Login name
+  userName string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Whether the account is active
+  active bool
+  // Account type (EMPLOYEE, CONTRACTOR, CUSTOMER, PARTNER, SERVICE)
+  userType string
+  // Primary email address
+  primaryEmail string
+  // Whether the primary email address has been verified
+  primaryEmailVerified bool
+  // All email addresses on the account
+  //
+  // Each entry has a `value`, a `type` (work, home, recovery, other), and
+  // `primary` and `verified` flags.
+  emails []dict
+  // Whether the account is sourced from an external identity provider
+  isFederated bool
+  // Multi-factor enrollment status (ENROLLED, UN_ENROLLED, IGNORED, DISABLED)
+  mfaStatus string
+  // Preferred multi-factor method
+  //
+  // One of EMAIL, SMS, TOTP, PUSH, OFFLINETOTP, USERNAME_PASSWORD,
+  // SECURITY_QUESTIONS, VOICE, PHONE_CALL, THIRDPARTY, FIDO_AUTHENTICATOR,
+  // or YUBICO_OTP. Empty when the account is not enrolled.
+  preferredAuthenticationFactor string
+  // When multi-factor authentication was enrolled
+  mfaEnabledOn time
+  // Whether the account is locked out
+  isLocked bool
+  // Consecutive failed login attempts
+  loginAttempts int
+  // Most recent successful login
+  //
+  // Null for an account that has never signed in, which is a different
+  // state from one that signed in long ago.
+  lastSuccessfulLogin time
+  // Previous successful login
+  previousSuccessfulLogin time
+  // Most recent failed login
+  lastFailedLogin time
+  // Credential types the account is permitted to hold
+  //
+  // Keyed by capability name, each mapping to whether the account may use
+  // it: canUseApiKeys, canUseAuthTokens, canUseConsolePassword,
+  // canUseCustomerSecretKeys, canUseSmtpCredentials, canUseDbCredentials,
+  // and canUseConsole.
+  capabilities map[string]bool
+  // Groups the user belongs to
+  //
+  // Each entry has the group's `value` (its SCIM id), `display` name,
+  // `ocid`, and the `type` of membership.
+  groups []dict
+  // When the account was created
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain group
+private oci.identity.domain.group @defaults("displayName") {
+  // Group SCIM identifier
+  id string
+  // Group OCID
+  ocid string
+  // Group display name
+  displayName string
+  // Description
+  description string
+  // Number of members in the group
+  memberCount int
+  // Whether the group can be requested through an access-request workflow
+  isRequestable bool
+  // When the group was created
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain password policy
+//
+// Password rules applied to accounts in a domain. Length and composition
+// are set by `minLength`, `maxLength`, `minAlphas`, `minNumerals`,
+// `minSpecialChars`, `minLowerCase`, `minUpperCase`, and
+// `minUniqueChars`. `passwordExpiresAfter` is the maximum password age
+// in days and `numPasswordsInHistory` how many previous passwords are
+// blocked from reuse. `maxIncorrectAttempts` and `lockoutDuration`
+// govern lockout, and `dictionaryWordDisallowed`, `userNameDisallowed`,
+// `firstNameDisallowed`, and `lastNameDisallowed` block guessable
+// choices. A domain may carry several policies; the one that applies to
+// an account depends on its group membership.
+private oci.identity.domain.passwordPolicy @defaults("name minLength passwordExpiresAfter") {
+  // Password policy SCIM identifier
+  id string
+  // Password policy OCID
+  ocid string
+  // Policy name
+  name string
+  // Policy description
+  description string
+  // Minimum password length in characters
+  minLength int
+  // Maximum password length in characters
+  maxLength int
+  // Minimum alphabetic characters required
+  minAlphas int
+  // Minimum numeric characters required
+  minNumerals int
+  // Minimum alphanumeric characters required
+  minAlphaNumerals int
+  // Minimum special characters required
+  minSpecialChars int
+  // Maximum special characters permitted
+  maxSpecialChars int
+  // Minimum lowercase characters required
+  minLowerCase int
+  // Minimum uppercase characters required
+  minUpperCase int
+  // Minimum unique characters required
+  minUniqueChars int
+  // Maximum times a single character may repeat
+  maxRepeatedChars int
+  // Days before a password must be changed
+  //
+  // Zero means passwords never expire.
+  passwordExpiresAfter int
+  // Days before expiry that a warning is shown
+  passwordExpireWarning int
+  // Minimum days before a password may be changed again
+  minPasswordAge int
+  // Previous passwords blocked from reuse
+  numPasswordsInHistory int
+  // Failed attempts before the account locks
+  maxIncorrectAttempts int
+  // Minutes an account stays locked after too many failed attempts
+  lockoutDuration int
+  // Whether dictionary words are rejected
+  dictionaryWordDisallowed bool
+  // Whether the password may contain the user name
+  userNameDisallowed bool
+  // Whether the password may contain the user's first name
+  firstNameDisallowed bool
+  // Whether the password may contain the user's last name
+  lastNameDisallowed bool
+  // Whether the password must begin with a letter
+  startsWithAlphabet bool
+  // Substrings the password may not contain
+  disallowedSubstrings []string
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain multi-factor settings
+//
+// Which multi-factor authentication factors a domain permits, and how
+// enrollment is handled. Each `*Enabled` field reports whether that
+// factor may be used: a domain with only `emailEnabled` accepts a factor
+// materially weaker than one offering `fidoAuthenticatorEnabled`, so the
+// set of enabled factors is as important as whether MFA is on at all.
+// `mfaEnrollmentType` reports whether enrollment is required or optional,
+// and `bypassCodeEnabled` whether users can fall back to a bypass code.
+private oci.identity.domain.authenticationFactorSettings @defaults("mfaEnrollmentType") {
+  // Settings SCIM identifier
+  id string
+  // Whether SMS one-time passcodes may be used
+  smsEnabled bool
+  // Whether email one-time passcodes may be used
+  emailEnabled bool
+  // Whether time-based one-time passcodes may be used
+  totpEnabled bool
+  // Whether push notifications to the Oracle Mobile Authenticator may be used
+  pushEnabled bool
+  // Whether phone-call verification may be used
+  phoneCallEnabled bool
+  // Whether FIDO authenticators may be used
+  fidoAuthenticatorEnabled bool
+  // Whether Yubico OTP may be used
+  yubicoOtpEnabled bool
+  // Whether security questions may be used as a factor
+  securityQuestionsEnabled bool
+  // Whether bypass codes may be used in place of a factor
+  bypassCodeEnabled bool
+  // Whether enrollment is required or optional
+  mfaEnrollmentType string
+  // Which user category multi-factor authentication is enabled for
+  mfaEnabledCategory string
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain application
+//
+// Application registered in an identity domain. `isOAuthClient` marks
+// apps that hold client credentials and can obtain tokens, and
+// `clientType` reports whether those credentials are confidential,
+// public, or trusted, which decides whether a client secret is expected
+// to be kept private. `allowedGrants` lists the OAuth grant types the
+// app may use, so an app permitted the resource-owner password grant is
+// distinguishable from one restricted to authorization code.
+private oci.identity.domain.app @defaults("displayName isOAuthClient active") {
+  // Application SCIM identifier
+  id string
+  // Application name
+  name string
+  // Application display name
+  displayName string
+  // Description
+  description string
+  // Whether the application is active
+  active bool
+  // Whether the application is an OAuth client and can obtain tokens
+  isOAuthClient bool
+  // Whether the application is an OAuth resource server
+  isOAuthResource bool
+  // OAuth client type (confidential, public, trusted)
+  clientType string
+  // OAuth grant types the application may use
+  //
+  // For example authorization_code, implicit, client_credentials,
+  // refresh_token, password, tls_client_auth, or device_code.
+  allowedGrants []string
+  // URL the application lands on after sign-in
+  landingPageUrl string
+  // Whether a web-tier access policy is applied to the application
+  isWebTierPolicy bool
+}
+
 
 // Oracle Cloud Infrastructure (OCI) IAM user
 private oci.identity.user @defaults("name") {
