@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.34.1",
-  "generated_at": "2026-08-06T17:00:03+02:00",
+  "generated_at": "2026-08-06T17:19:21+02:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -227,6 +227,9 @@
     "monitoring.services.list",
     "monitoring.slos.list",
     "monitoring.uptimeCheckConfigs.list",
+    "networkconnectivity.hubs.list",
+    "networkconnectivity.spokes.list",
+    "networkmanagement.connectivityTests.list",
     "networksecurity.addressGroups.list",
     "networksecurity.authorizationPolicies.list",
     "networksecurity.clientTlsPolicies.list",
@@ -883,6 +886,12 @@
       "source_file": "compute_instance_groups_firewall_policies.go"
     },
     {
+      "permission": "compute.firewallPolicies.list",
+      "service": "compute",
+      "action": "FirewallPolicies.List",
+      "source_file": "firewall_policies_hierarchical.go"
+    },
+    {
       "permission": "compute.firewalls.list",
       "service": "compute",
       "action": "Firewalls.List",
@@ -983,6 +992,12 @@
       "service": "compute",
       "action": "PacketMirrorings.AggregatedList",
       "source_file": "compute_networking.go"
+    },
+    {
+      "permission": "compute.projects.get",
+      "service": "compute",
+      "action": "Projects.GetXpnHost",
+      "source_file": "compute_shared_vpc.go"
     },
     {
       "permission": "compute.projects.get",
@@ -1697,6 +1712,24 @@
       "service": "monitoring",
       "action": "UptimeCheckConfigs.List",
       "source_file": "monitoring.go"
+    },
+    {
+      "permission": "networkconnectivity.hubs.list",
+      "service": "networkconnectivity",
+      "action": "ListHubs",
+      "source_file": "network_connectivity.go"
+    },
+    {
+      "permission": "networkconnectivity.spokes.list",
+      "service": "networkconnectivity",
+      "action": "ListSpokes",
+      "source_file": "network_connectivity.go"
+    },
+    {
+      "permission": "networkmanagement.connectivityTests.list",
+      "service": "networkmanagement",
+      "action": "ListConnectivityTests",
+      "source_file": "network_management.go"
     },
     {
       "permission": "networksecurity.addressGroups.list",
