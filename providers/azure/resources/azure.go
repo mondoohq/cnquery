@@ -6,7 +6,7 @@ package resources
 import (
 	"sync"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managementgroups/armmanagementgroups"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/managementgroups/armmanagementgroups/v2"
 )
 
 // TODO: we should look into restructuring resources for v11.

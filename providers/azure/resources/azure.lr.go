@@ -16721,11 +16721,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.frontDoorService.wafPolicy.customBlockResponseStatusCode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetCustomBlockResponseStatusCode()).ToDataRes(types.Int)
 	},
+	"azure.subscription.frontDoorService.wafPolicy.customBlockResponseBody": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetCustomBlockResponseBody()).ToDataRes(types.String)
+	},
 	"azure.subscription.frontDoorService.wafPolicy.redirectUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetRedirectUrl()).ToDataRes(types.String)
 	},
 	"azure.subscription.frontDoorService.wafPolicy.javascriptChallengeExpirationInMinutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetJavascriptChallengeExpirationInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.captchaExpirationInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetCaptchaExpirationInMinutes()).ToDataRes(types.Int)
 	},
 	"azure.subscription.frontDoorService.wafPolicy.logScrubbingState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).GetLogScrubbingState()).ToDataRes(types.String)
@@ -16789,6 +16795,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetSensitivity()).ToDataRes(types.String)
 	},
 	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.exclusions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).GetExclusions()).ToDataRes(types.Array(types.Dict))
@@ -40787,12 +40796,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).CustomBlockResponseStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.frontDoorService.wafPolicy.customBlockResponseBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).CustomBlockResponseBody, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.frontDoorService.wafPolicy.redirectUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).RedirectUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.wafPolicy.javascriptChallengeExpirationInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).JavascriptChallengeExpirationInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.captchaExpirationInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicy).CaptchaExpirationInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.wafPolicy.logScrubbingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40889,6 +40906,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule).Sensitivity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -96286,8 +96307,10 @@ type mqlAzureSubscriptionFrontDoorServiceWafPolicy struct {
 	Enabled                                plugin.TValue[bool]
 	RequestBodyCheck                       plugin.TValue[bool]
 	CustomBlockResponseStatusCode          plugin.TValue[int64]
+	CustomBlockResponseBody                plugin.TValue[string]
 	RedirectUrl                            plugin.TValue[string]
 	JavascriptChallengeExpirationInMinutes plugin.TValue[int64]
+	CaptchaExpirationInMinutes             plugin.TValue[int64]
 	LogScrubbingState                      plugin.TValue[string]
 	LogScrubbingRules                      plugin.TValue[[]any]
 	ProvisioningState                      plugin.TValue[string]
@@ -96367,12 +96390,20 @@ func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetCustomBlockResponseSt
 	return &c.CustomBlockResponseStatusCode
 }
 
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetCustomBlockResponseBody() *plugin.TValue[string] {
+	return &c.CustomBlockResponseBody
+}
+
 func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetRedirectUrl() *plugin.TValue[string] {
 	return &c.RedirectUrl
 }
 
 func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetJavascriptChallengeExpirationInMinutes() *plugin.TValue[int64] {
 	return &c.JavascriptChallengeExpirationInMinutes
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetCaptchaExpirationInMinutes() *plugin.TValue[int64] {
+	return &c.CaptchaExpirationInMinutes
 }
 
 func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicy) GetLogScrubbingState() *plugin.TValue[string] {
@@ -96590,6 +96621,7 @@ type mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrid
 	RuleId       plugin.TValue[string]
 	EnabledState plugin.TValue[string]
 	Action       plugin.TValue[string]
+	Sensitivity  plugin.TValue[string]
 	Exclusions   plugin.TValue[[]any]
 }
 
@@ -96635,6 +96667,10 @@ func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOve
 
 func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetAction() *plugin.TValue[string] {
 	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetSensitivity() *plugin.TValue[string] {
+	return &c.Sensitivity
 }
 
 func (c *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOverrideRule) GetExclusions() *plugin.TValue[[]any] {

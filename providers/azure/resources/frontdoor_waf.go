@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -146,10 +146,10 @@ func frontDoorWafPolicyToMql(runtime *plugin.Runtime, policy armfrontdoor.WebApp
 		sku = string(convert.ToValue(policy.SKU.Name))
 	}
 
-	var mode, redirectURL, logScrubbingState, provisioningState, resourceState string
+	var mode, redirectURL, customBlockResponseBody, logScrubbingState, provisioningState, resourceState string
 	enabled := true
 	requestBodyCheck := false
-	var customBlockResponseStatusCode, jsChallengeExpiration *int64
+	var customBlockResponseStatusCode, jsChallengeExpiration, captchaExpiration *int64
 	logScrubbingRules := []any{}
 
 	if props := policy.Properties; props != nil {
@@ -165,6 +165,7 @@ func frontDoorWafPolicyToMql(runtime *plugin.Runtime, policy armfrontdoor.WebApp
 			// Likewise the request body check defaults to Enabled.
 			requestBodyCheck = ps.RequestBodyCheck == nil || *ps.RequestBodyCheck == armfrontdoor.PolicyRequestBodyCheckEnabled
 			redirectURL = convert.ToValue(ps.RedirectURL)
+			customBlockResponseBody = convert.ToValue(ps.CustomBlockResponseBody)
 			if ps.CustomBlockResponseStatusCode != nil {
 				v := int64(*ps.CustomBlockResponseStatusCode)
 				customBlockResponseStatusCode = &v
@@ -172,6 +173,10 @@ func frontDoorWafPolicyToMql(runtime *plugin.Runtime, policy armfrontdoor.WebApp
 			if ps.JavascriptChallengeExpirationInMinutes != nil {
 				v := int64(*ps.JavascriptChallengeExpirationInMinutes)
 				jsChallengeExpiration = &v
+			}
+			if ps.CaptchaExpirationInMinutes != nil {
+				v := int64(*ps.CaptchaExpirationInMinutes)
+				captchaExpiration = &v
 			}
 			if ls := ps.LogScrubbing; ls != nil {
 				logScrubbingState = string(convert.ToValue(ls.State))
@@ -217,8 +222,10 @@ func frontDoorWafPolicyToMql(runtime *plugin.Runtime, policy armfrontdoor.WebApp
 			"enabled":                                llx.BoolData(enabled),
 			"requestBodyCheck":                       llx.BoolData(requestBodyCheck),
 			"customBlockResponseStatusCode":          llx.IntDataPtr(customBlockResponseStatusCode),
+			"customBlockResponseBody":                llx.StringData(customBlockResponseBody),
 			"redirectUrl":                            llx.StringData(redirectURL),
 			"javascriptChallengeExpirationInMinutes": llx.IntDataPtr(jsChallengeExpiration),
+			"captchaExpirationInMinutes":             llx.IntDataPtr(captchaExpiration),
 			"logScrubbingState":                      llx.StringData(logScrubbingState),
 			"logScrubbingRules":                      llx.ArrayData(logScrubbingRules, types.Dict),
 			"provisioningState":                      llx.StringData(provisioningState),
@@ -342,6 +349,7 @@ func (a *mqlAzureSubscriptionFrontDoorServiceWafPolicyManagedRuleSetRuleGroupOve
 				"ruleId":       llx.StringData(ruleID),
 				"enabledState": llx.StringData(string(convert.ToValue(rule.EnabledState))),
 				"action":       llx.StringData(string(convert.ToValue(rule.Action))),
+				"sensitivity":  llx.StringData(string(convert.ToValue(rule.Sensitivity))),
 				"exclusions":   llx.ArrayData(exclusions, types.Dict),
 			})
 		if err != nil {

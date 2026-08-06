@@ -2598,6 +2598,8 @@ azure.subscription.frontDoorService.profiles 13.3.3
 azure.subscription.frontDoorService.subscriptionId 13.3.3
 azure.subscription.frontDoorService.wafPolicies 13.33.8
 azure.subscription.frontDoorService.wafPolicy 13.33.8
+azure.subscription.frontDoorService.wafPolicy.captchaExpirationInMinutes 13.33.8
+azure.subscription.frontDoorService.wafPolicy.customBlockResponseBody 13.33.8
 azure.subscription.frontDoorService.wafPolicy.customBlockResponseStatusCode 13.33.8
 azure.subscription.frontDoorService.wafPolicy.customRule 13.33.8
 azure.subscription.frontDoorService.wafPolicy.customRule.action 13.33.8
@@ -2634,6 +2636,7 @@ azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.r
 azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.enabledState 13.33.8
 azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.exclusions 13.33.8
 azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.ruleId 13.33.8
+azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rule.sensitivity 13.33.8
 azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.ruleGroupName 13.33.8
 azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverride.rules 13.33.8
 azure.subscription.frontDoorService.wafPolicy.managedRuleSet.ruleGroupOverrides 13.33.8
