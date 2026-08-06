@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -40,26 +41,83 @@ func newMqlMongodbatlasCluster(runtime *plugin.Runtime, pid string, c admin.Clus
 		}
 	}
 
+	// Connection strings report how clients reach the cluster. A cluster served
+	// only through a private endpoint has no standard SRV string, so these stay
+	// nil rather than empty to keep "not reachable that way" distinct from "".
+	var standardSrv, privateSrv *string
+	privateEndpoints := []any{}
+	if cs, ok := c.GetConnectionStringsOk(); ok {
+		standardSrv = cs.StandardSrv
+		privateSrv = cs.PrivateSrv
+		for _, pe := range cs.GetPrivateEndpoint() {
+			endpoints := []any{}
+			for _, ep := range pe.GetEndpoints() {
+				endpoints = append(endpoints, map[string]any{
+					"endpointId":   ep.GetEndpointId(),
+					"providerName": ep.GetProviderName(),
+					"region":       ep.GetRegion(),
+				})
+			}
+			privateEndpoints = append(privateEndpoints, map[string]any{
+				"type":                pe.GetType(),
+				"connectionString":    pe.GetConnectionString(),
+				"srvConnectionString": pe.GetSrvConnectionString(),
+				"endpoints":           endpoints,
+			})
+		}
+	}
+
+	// An employee access grant is absent unless MongoDB support currently holds
+	// access, so both fields render null in the common case.
+	var employeeGrantType *string
+	var employeeGrantExpiration *time.Time
+	if grant, ok := c.GetMongoDBEmployeeAccessGrantOk(); ok {
+		employeeGrantType = &grant.GrantType
+		employeeGrantExpiration = &grant.ExpirationTime
+	}
+
+	biConnectorEnabled := false
+	var biConnectorReadPreference *string
+	if bi, ok := c.GetBiConnectorOk(); ok {
+		biConnectorEnabled = bi.GetEnabled()
+		biConnectorReadPreference = bi.ReadPreference
+	}
+
 	res, err := CreateResource(runtime, "mongodbatlas.cluster", map[string]*llx.RawData{
-		"__id":                         llx.StringData("mongodbatlas.cluster/" + pid + "/" + c.GetName()),
-		"id":                           llx.StringData(c.GetId()),
-		"name":                         llx.StringData(c.GetName()),
-		"mongoDBMajorVersion":          llx.StringData(c.GetMongoDBMajorVersion()),
-		"mongoDBVersion":               llx.StringData(c.GetMongoDBVersion()),
-		"clusterType":                  llx.StringData(c.GetClusterType()),
-		"stateName":                    llx.StringData(c.GetStateName()),
-		"backupEnabled":                llx.BoolData(c.GetBackupEnabled()),
-		"pitEnabled":                   llx.BoolData(c.GetPitEnabled()),
-		"encryptionAtRestProvider":     llx.StringData(c.GetEncryptionAtRestProvider()),
-		"minimumEnabledTlsProtocol":    llx.StringData(tlsMin),
-		"tlsCipherConfigMode":          llx.StringData(tlsMode),
-		"redactClientLogData":          llx.BoolData(c.GetRedactClientLogData()),
-		"terminationProtectionEnabled": llx.BoolData(c.GetTerminationProtectionEnabled()),
-		"paused":                       llx.BoolData(c.GetPaused()),
-		"versionReleaseSystem":         llx.StringData(c.GetVersionReleaseSystem()),
-		"rootCertType":                 llx.StringData(c.GetRootCertType()),
-		"createDate":                   llx.TimeDataPtr(timePtr(c.GetCreateDate())),
-		"regionConfigs":                llx.ArrayData(regionConfigs, types.Dict),
+		"__id":                             llx.StringData("mongodbatlas.cluster/" + pid + "/" + c.GetName()),
+		"id":                               llx.StringData(c.GetId()),
+		"name":                             llx.StringData(c.GetName()),
+		"mongoDBMajorVersion":              llx.StringData(c.GetMongoDBMajorVersion()),
+		"mongoDBVersion":                   llx.StringData(c.GetMongoDBVersion()),
+		"clusterType":                      llx.StringData(c.GetClusterType()),
+		"stateName":                        llx.StringData(c.GetStateName()),
+		"backupEnabled":                    llx.BoolData(c.GetBackupEnabled()),
+		"pitEnabled":                       llx.BoolData(c.GetPitEnabled()),
+		"encryptionAtRestProvider":         llx.StringData(c.GetEncryptionAtRestProvider()),
+		"minimumEnabledTlsProtocol":        llx.StringData(tlsMin),
+		"tlsCipherConfigMode":              llx.StringData(tlsMode),
+		"redactClientLogData":              llx.BoolData(c.GetRedactClientLogData()),
+		"terminationProtectionEnabled":     llx.BoolData(c.GetTerminationProtectionEnabled()),
+		"paused":                           llx.BoolData(c.GetPaused()),
+		"versionReleaseSystem":             llx.StringData(c.GetVersionReleaseSystem()),
+		"rootCertType":                     llx.StringData(c.GetRootCertType()),
+		"createDate":                       llx.TimeDataPtr(timePtr(c.GetCreateDate())),
+		"regionConfigs":                    llx.ArrayData(regionConfigs, types.Dict),
+		"tags":                             llx.MapData(tagMap(c.GetTags()), types.String),
+		"standardSrvConnectionString":      llx.StringDataPtr(standardSrv),
+		"privateSrvConnectionString":       llx.StringDataPtr(privateSrv),
+		"privateEndpointConnectionStrings": llx.ArrayData(privateEndpoints, types.Dict),
+		"employeeAccessGrantType":          llx.StringDataPtr(employeeGrantType),
+		"employeeAccessGrantExpiration":    llx.TimeDataPtr(employeeGrantExpiration),
+		"featureCompatibilityVersion":      llx.StringDataPtr(c.FeatureCompatibilityVersion),
+		"featureCompatibilityVersionExpirationDate": llx.TimeDataPtr(c.FeatureCompatibilityVersionExpirationDate),
+		"biConnectorEnabled":                        llx.BoolData(biConnectorEnabled),
+		"biConnectorReadPreference":                 llx.StringDataPtr(biConnectorReadPreference),
+		"configServerManagementMode":                llx.StringDataPtr(c.ConfigServerManagementMode),
+		"configServerType":                          llx.StringDataPtr(c.ConfigServerType),
+		"replicaSetScalingStrategy":                 llx.StringDataPtr(c.ReplicaSetScalingStrategy),
+		"diskWarmingMode":                           llx.StringDataPtr(c.DiskWarmingMode),
+		"globalClusterSelfManagedSharding":          llx.BoolData(c.GetGlobalClusterSelfManagedSharding()),
 	})
 	if err != nil {
 		return nil, err

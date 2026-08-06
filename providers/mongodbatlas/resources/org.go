@@ -124,7 +124,9 @@ func (r *mqlMongodbatlas) orgUsers() ([]any, error) {
 }
 
 type mqlMongodbatlasOrgUserInternal struct {
-	cacheTeamIds []string
+	cacheUserID       string
+	cacheTeamIds      []string
+	cacheProjectRoles []admin.GroupRoleAssignment
 }
 
 func newMqlMongodbatlasOrgUser(runtime *plugin.Runtime, u admin.OrgUserResponse) (*mqlMongodbatlasOrgUser, error) {
@@ -136,13 +138,58 @@ func newMqlMongodbatlasOrgUser(runtime *plugin.Runtime, u admin.OrgUserResponse)
 		"orgMembershipStatus": llx.StringData(u.GetOrgMembershipStatus()),
 		"orgRoles":            llx.ArrayData(strSlice(roles.GetOrgRoles()), types.String),
 		"lastAuth":            llx.TimeDataPtr(timePtr(u.GetLastAuth())),
+		"createdAt":           llx.TimeDataPtr(timePtr(u.GetCreatedAt())),
+		"invitationCreatedAt": llx.TimeDataPtr(timePtr(u.GetInvitationCreatedAt())),
+		"invitationExpiresAt": llx.TimeDataPtr(timePtr(u.GetInvitationExpiresAt())),
+		"inviterUsername":     llx.StringDataPtr(u.InviterUsername),
 	})
 	if err != nil {
 		return nil, err
 	}
 	orgUser := res.(*mqlMongodbatlasOrgUser)
+	orgUser.cacheUserID = u.GetId()
 	orgUser.cacheTeamIds = u.GetTeamIds()
+	orgUser.cacheProjectRoles = roles.GetGroupRoleAssignments()
 	return orgUser, nil
+}
+
+type mqlMongodbatlasOrgUserProjectRoleInternal struct {
+	cacheGroupID string
+}
+
+// projectRoles expands the member's project-level grants, one entry per project
+// the member holds any role on. The assignments arrive with the org user
+// listing, so this costs no additional API call.
+func (r *mqlMongodbatlasOrgUser) projectRoles() ([]any, error) {
+	out := []any{}
+	for _, assignment := range r.cacheProjectRoles {
+		groupID := assignment.GetGroupId()
+		if groupID == "" {
+			continue
+		}
+		res, err := CreateResource(r.MqlRuntime, "mongodbatlas.orgUser.projectRole", map[string]*llx.RawData{
+			"__id":  llx.StringData("mongodbatlas.orgUser.projectRole/" + r.cacheUserID + "/" + groupID),
+			"roles": llx.ArrayData(strSlice(assignment.GetGroupRoles()), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		projectRole := res.(*mqlMongodbatlasOrgUserProjectRole)
+		projectRole.cacheGroupID = groupID
+		out = append(out, projectRole)
+	}
+	return out, nil
+}
+
+// project resolves the project the roles are granted on.
+func (r *mqlMongodbatlasOrgUserProjectRole) project() (*mqlMongodbatlasProject, error) {
+	proj, err := NewResource(r.MqlRuntime, "mongodbatlas.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheGroupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return proj.(*mqlMongodbatlasProject), nil
 }
 
 // orgTeamsByID lists every team in the organization once and caches them by id

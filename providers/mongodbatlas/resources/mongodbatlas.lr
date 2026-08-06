@@ -47,6 +47,10 @@ mongodbatlas {
   resourcePolicies() []mongodbatlas.resourcePolicy
   // Clusters in the project
   clusters() []mongodbatlas.cluster
+  // Flex clusters in the project
+  flexClusters() []mongodbatlas.flexCluster
+  // Cloud storage buckets that cloud backup snapshots can be exported to
+  snapshotExportBuckets() []mongodbatlas.snapshotExportBucket
   // Database users in the project
   databaseUsers() []mongodbatlas.databaseUser
   // Custom database roles defined in the project
@@ -99,7 +103,10 @@ mongodbatlas.project @defaults("name id orgId") {
 // A user account that is a member of the organization, keyed by username (the
 // login email). Covers the membership status, the organization-level roles,
 // per-project role assignments, team memberships, and the last authentication
-// time. Select a member by username, for example
+// time. A member whose orgMembershipStatus is PENDING has been invited but has
+// never signed in, and the invitation fields report when that invitation was
+// sent, when it expires, and who sent it. Select a member by username, for
+// example
 // `mongodbatlas.orgUsers.where(username == "alice@example.com")`.
 mongodbatlas.orgUser @defaults("username orgMembershipStatus") {
   // User id
@@ -110,10 +117,40 @@ mongodbatlas.orgUser @defaults("username orgMembershipStatus") {
   orgMembershipStatus string
   // Organization-level roles granted to the member
   orgRoles []string
+  // Project-level roles granted to the member, one entry per project
+  projectRoles() []mongodbatlas.orgUser.projectRole
   // Teams the member belongs to
   teams() []mongodbatlas.team
   // Time the member last authenticated
   lastAuth time
+  // Time the user account was created
+  createdAt time
+  // Time the pending invitation to the organization was sent, null once the member is active
+  invitationCreatedAt time
+  // Time the pending invitation to the organization expires, null once the member is active
+  invitationExpiresAt time
+  // Login name of the member who sent the pending invitation, null once the member is active
+  inviterUsername string
+}
+
+// Project roles held by an organization member
+//
+// The set of project-level roles one organization member holds on a single
+// project, covering the project the grant applies to and the roles held there.
+// Project roles are granted independently of organization roles, so a member
+// with no organization role can still hold GROUP_OWNER on a project. Auditing
+// these surfaces administrative grants on projects a member does not need, and
+// members whose only remaining access is a single project grant.
+private mongodbatlas.orgUser.projectRole @defaults("roles") {
+  // Project the roles apply to
+  project() mongodbatlas.project
+  // Roles granted on the project
+  //
+  // Values such as GROUP_OWNER, GROUP_CLUSTER_MANAGER, GROUP_DATA_ACCESS_ADMIN,
+  // GROUP_DATA_ACCESS_READ_WRITE, GROUP_DATA_ACCESS_READ_ONLY,
+  // GROUP_SEARCH_INDEX_EDITOR, GROUP_STREAM_PROCESSING_OWNER,
+  // GROUP_BACKUP_MANAGER, and GROUP_READ_ONLY.
+  roles []string
 }
 
 // MongoDB Atlas team
@@ -188,8 +225,13 @@ mongodbatlas.serviceAccount @defaults("name clientId") {
 // MongoDB version and release track, cluster topology, backup and
 // point-in-time-recovery state, encryption-at-rest provider, the minimum
 // enabled TLS protocol, client-log redaction, termination protection, and the
-// per-region provider and instance sizing. Select a cluster by name, for
-// example `mongodbatlas.clusters.where(name == "prod-0")`.
+// per-region provider and instance sizing. The connection strings report how
+// clients reach the cluster, over the public internet or through a peered
+// network or private endpoint, and employeeAccessGrantType reports whether
+// MongoDB support staff currently hold access to it. Flex tier deployments come
+// from a separate endpoint and appear under flexClusters instead. Select a
+// cluster by name, for example
+// `mongodbatlas.clusters.where(name == "prod-0")`.
 mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvider") {
   // Cluster id
   id string
@@ -227,8 +269,162 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   createDate time
   // Per-region configuration, each with providerName, regionName, instanceSize, nodeCount, diskSizeGB, and priority
   regionConfigs []dict
+  // Resource tags applied to the cluster
+  tags map[string]string
+  // Standard SRV connection string clients use over the public internet, null when the cluster has no public endpoint
+  standardSrvConnectionString string
+  // SRV connection string for clients reaching the cluster over a peered network, null when no peering reaches it
+  privateSrvConnectionString string
+  // Private endpoint connection strings
+  //
+  // Each entry carries type (the kind of private endpoint the provider offers),
+  // connectionString, srvConnectionString, and the endpoints backing it with
+  // their endpointId, providerName, and region. An empty list means no private
+  // endpoint reaches this cluster.
+  privateEndpointConnectionStrings []dict
+  // Level of MongoDB employee access granted to the cluster, null when no grant is active
+  //
+  // One of CLUSTER_DATABASE_LOGS, CLUSTER_INFRASTRUCTURE, or
+  // CLUSTER_INFRASTRUCTURE_AND_APP_SERVICES_SYNC_DATA. A non-null value means
+  // MongoDB support staff currently hold the named level of access to the
+  // cluster, which the organization-wide restrictEmployeeAccess setting governs.
+  employeeAccessGrantType string
+  // Time the MongoDB employee access grant expires, null when no grant is active
+  employeeAccessGrantExpiration time
+  // Feature compatibility version the cluster is pinned to, null when not pinned
+  featureCompatibilityVersion string
+  // Time the pinned feature compatibility version expires, null when not pinned
+  featureCompatibilityVersionExpirationDate time
+  // Whether the BI Connector for Atlas is enabled
+  biConnectorEnabled bool
+  // Nodes the BI Connector reads from (PRIMARY, SECONDARY, or ANALYTICS), null when the BI Connector is disabled
+  biConnectorReadPreference string
+  // Config server management for a sharded cluster (ATLAS_MANAGED or FIXED_TO_DEDICATED), null for a replica set
+  configServerManagementMode string
+  // Config server type in use for a sharded cluster (DEDICATED or EMBEDDED), null for a replica set
+  configServerType string
+  // Order replica set nodes are scaled in (SEQUENTIAL, WORKLOAD_TYPE, or NODE_TYPE), null when Atlas has not set one
+  replicaSetScalingStrategy string
+  // When a restored node starts serving reads (FULLY_WARMED or VISIBLE_EARLIER), null when Atlas has not set one
+  diskWarmingMode string
+  // Whether sharding for a global cluster is self-managed rather than managed by Atlas
+  globalClusterSelfManagedSharding bool
+  // Cloud backup schedule and retention policy, null when cloud backup is disabled
+  backupSchedule() mongodbatlas.backupScheduleConfig
   // Atlas Search and Atlas Vector Search indexes on the cluster
   searchIndexes() []mongodbatlas.searchIndex
+}
+
+// Cloud backup schedule for a cluster
+//
+// The snapshot schedule and retention policy in effect for one cluster, which
+// governs how often snapshots are taken, how long each is kept, how far back
+// point-in-time restores reach, and whether snapshots are copied to other
+// regions or exported to cloud storage. The cluster backupEnabled field only
+// reports that backups run at all, so the retention policy items here are what
+// a recovery-objective audit actually needs. Null when the cluster has cloud
+// backup disabled, which is the case for Flex and shared tier deployments.
+private mongodbatlas.backupScheduleConfig @defaults("referenceHourOfDay restoreWindowDays") {
+  // Hour of the day in UTC that scheduled snapshots are taken at
+  referenceHourOfDay int
+  // Minute of the hour that scheduled snapshots are taken at
+  referenceMinuteOfHour int
+  // Days of continuous point-in-time restore coverage retained
+  restoreWindowDays int
+  // Time the next scheduled snapshot is taken
+  nextSnapshot time
+  // Retention policy items
+  //
+  // Each entry carries frequencyType (hourly, daily, weekly, monthly, or
+  // yearly), frequencyInterval, retentionUnit (days, weeks, months, or years),
+  // and retentionValue. An empty list means no snapshots are retained on a
+  // schedule.
+  policyItems []dict
+  // Cross-region snapshot copy settings
+  //
+  // Each entry carries cloudProvider, regionName, zoneId, shouldCopyOplogs, and
+  // frequencies (the snapshot frequencies copied to that region). An empty list
+  // means snapshots exist in a single region only.
+  copySettings []dict
+  // Extra retention settings that override the base retention
+  //
+  // Each entry carries frequencyType and retentionDays.
+  extraRetentionSettings []dict
+  // Whether snapshots are automatically exported to cloud storage
+  autoExportEnabled bool
+  // Frequency snapshots are automatically exported at, null when automatic export is off
+  exportFrequencyType string
+  // Bucket snapshots are automatically exported to, null when automatic export is off
+  exportBucket() mongodbatlas.snapshotExportBucket
+  // Whether the export path is prefixed with the organization and project names
+  useOrgAndGroupNamesInExportPrefix bool
+}
+
+// MongoDB Atlas Flex cluster
+//
+// A Flex tier database deployment in the project, keyed by name. Flex clusters
+// come from a separate endpoint than dedicated and shared tier deployments, so
+// they do not appear under clusters and a project holding only Flex deployments
+// looks empty there. Covers the running MongoDB version and release track, the
+// cloud provider and region backing the deployment, storage capacity, backup
+// state, termination protection, and the resource tags applied. Select a Flex
+// cluster by name, for example
+// `mongodbatlas.flexClusters.where(name == "flex-0")`.
+mongodbatlas.flexCluster @defaults("name backingProviderName regionName stateName") {
+  // Cluster id
+  id string
+  // Cluster name
+  name string
+  // Cluster topology, always REPLICASET for a Flex deployment
+  clusterType string
+  // Current state (such as IDLE, CREATING, UPDATING, or DELETING)
+  stateName string
+  // Running MongoDB version
+  mongoDBVersion string
+  // Version release track (LTS or CONTINUOUS)
+  versionReleaseSystem string
+  // Provider name, always FLEX for a Flex deployment
+  providerName string
+  // Cloud provider the deployment runs on (AWS, AZURE, or GCP)
+  backingProviderName string
+  // Region the deployment runs in
+  regionName string
+  // Storage capacity in GB
+  diskSizeGB float
+  // Whether cloud backup is enabled
+  backupEnabled bool
+  // Whether termination protection is enabled
+  terminationProtectionEnabled bool
+  // Standard SRV connection string clients use to reach the deployment, null while it is still being created
+  standardSrvConnectionString string
+  // Resource tags applied to the deployment
+  tags map[string]string
+  // Time the deployment was created
+  createDate time
+}
+
+// MongoDB Atlas snapshot export bucket
+//
+// A cloud storage bucket that cloud backup snapshots for the project can be
+// exported to, keyed by id. Covers the bucket name, the cloud provider and
+// region holding it, and the cloud provider access role Atlas assumes to write
+// to it. An export bucket is a path for backup data to leave Atlas, so both the
+// destination account and the role authorizing the write are worth auditing.
+mongodbatlas.snapshotExportBucket @defaults("bucketName cloudProvider") {
+  // Export bucket id
+  id string
+  // Name of the storage bucket (an AWS S3 bucket or an Azure Blob Storage container)
+  bucketName string
+  // Cloud provider hosting the bucket (AWS or AZURE)
+  cloudProvider string
+  // Azure region the storage account is in, null for an AWS bucket
+  region string
+  // Azure Blob Storage service URL, null for an AWS bucket
+  serviceUrl string
+  // Azure tenant id that owns the storage account, null for an AWS bucket
+  tenantId string
+  // Cloud provider access role Atlas assumes to write snapshots to the bucket
+  cloudProviderAccessRole() mongodbatlas.cloudProviderAccessRole
 }
 
 // MongoDB Atlas search or vector search index
