@@ -3009,6 +3009,172 @@ private oci.loadBalancer.backendSet @defaults("name") {
   backendCount int
 }
 
+// Oracle Cloud Infrastructure (OCI) Network Load Balancer
+//
+// Layer 4 load balancers in the tenancy, a service distinct from the
+// Load Balancer exposed by `oci.loadBalancer`. Network load balancers
+// operate on TCP, UDP, and ICMP rather than HTTP, are frequently
+// internet-facing, and are governed by their own listeners and backend
+// sets. `loadBalancers` enumerates every deployment with its public or
+// private placement, assigned addresses, attached network security
+// groups, and a derived internet-exposure breakdown matching the one on
+// compute instances and load balancers.
+oci.networkLoadBalancer {
+  // Network load balancers
+  loadBalancers() []oci.networkLoadBalancer.loadBalancer
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer
+//
+// Single layer 4 load balancer, keyed by its OCID. `isPrivate` and
+// `ipAddresses` decide whether it fronts the public internet, and
+// `exposure` combines that with the subnet's routing and the ingress
+// rules of the attached network security groups and security lists into
+// a single reachability verdict. `isPreserveSourceDestination` reports
+// whether the original client address survives to the backend, which
+// decides whether backend-side address filtering sees the real source.
+// `securityAttributes` carries the Zero Trust Packet Routing attributes
+// applied to the load balancer.
+private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
+  // Network load balancer OCID
+  id string
+  // Display name
+  name string
+  // Compartment containing the network load balancer
+  compartment() oci.compartment
+  // Whether the network load balancer is private (no public IP)
+  isPrivate bool
+  // Assigned IP addresses
+  //
+  // Each entry is a dict with an `ipAddress`, an `isPublic` flag indicating
+  // internet reachability, an `ipVersion` of IPV4 or IPV6, and a
+  // `reservedIp` block carrying the OCID when the address is backed by a
+  // reserved public IP.
+  ipAddresses []dict
+  // IP version the network load balancer serves (IPV4, IPV4_AND_IPV6, IPV6)
+  ipVersion string
+  // Subnet the network load balancer is attached to
+  subnet() oci.network.subnet
+  // Network security groups attached to the network load balancer
+  securityGroups() []oci.network.networkSecurityGroup
+  // Internet-exposure breakdown (a public IP and a listener, gated on subnet routing and ingress rules)
+  exposure() oci.network.exposure
+  // Listeners accepting traffic
+  listeners []oci.networkLoadBalancer.listener
+  // Backend sets traffic is distributed to
+  backendSets []oci.networkLoadBalancer.backendSet
+  // Whether the source and destination addresses are preserved to the backend
+  //
+  // When enabled the backend observes the original client address rather
+  // than the load balancer's, so any address-based filtering on the
+  // backend evaluates the real source.
+  isPreserveSourceDestination bool
+  // Whether symmetric hashing is enabled for flow distribution
+  isSymmetricHashEnabled bool
+  // Zero Trust Packet Routing security attributes applied to the load balancer
+  securityAttributes map[string]dict
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, FAILED, DELETING, DELETED)
+  state string
+  // Detail explaining the current lifecycle state, for FAILED deployments
+  stateDetails string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer listener
+//
+// Port and protocol a network load balancer accepts traffic on, and the
+// backend set it forwards to. Unlike a Load Balancer listener there is
+// no TLS termination here: the network load balancer operates at layer
+// 4, so `protocol` is TCP, UDP, TCP_AND_UDP, ICMP, or ANY, and a `port`
+// of 0 means the listener accepts every port.
+private oci.networkLoadBalancer.listener @defaults("name port protocol") {
+  // Listener name
+  name string
+  // Listener port, or 0 when the listener accepts all ports
+  port int
+  // Protocol (TCP, UDP, TCP_AND_UDP, ICMP, ANY)
+  protocol string
+  // Name of the backend set the listener forwards to
+  defaultBackendSetName string
+  // IP version the listener serves (IPV4, IPV6)
+  ipVersion string
+  // Idle timeout for TCP connections, in seconds
+  tcpIdleTimeout int
+  // Idle timeout for UDP flows, in seconds
+  udpIdleTimeout int
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer backend set
+private oci.networkLoadBalancer.backendSet @defaults("name policy") {
+  // Backend set name
+  name string
+  // Load balancing policy (FIVE_TUPLE, THREE_TUPLE, TWO_TUPLE)
+  policy string
+  // IP version the backend set serves (IPV4, IPV6)
+  ipVersion string
+  // Whether the original source address is preserved to the backend
+  isPreserveSource bool
+  // Whether traffic is still forwarded when every backend fails its health check
+  //
+  // When enabled the load balancer keeps sending traffic to backends that
+  // are failing health checks rather than dropping it, so an
+  // all-unhealthy backend set continues to receive requests.
+  isFailOpen bool
+  // Whether instant failover is enabled
+  isInstantFailoverEnabled bool
+  // Health checker configuration
+  //
+  // A dict describing the backend health probe. Keys: `protocol` (HTTP,
+  // HTTPS, TCP, UDP, or DNS), `port`, `urlPath`, `returnCode` (expected
+  // status code), `responseBodyRegex`, `retries`, `timeoutInMillis`,
+  // `intervalInMillis`, and a `dns` block for DNS probes.
+  healthChecker dict
+  // Backends traffic is distributed to
+  backends []oci.networkLoadBalancer.backend
+  // Number of backends
+  backendCount int
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer backend
+//
+// Single target behind a backend set. A backend is addressed either by
+// `ipAddress` or by the OCID of the compute instance in `instance`,
+// which is what makes a network load balancer traceable to the workload
+// it fronts when assessing an internet-facing path. `isOffline`,
+// `isDrain`, and `isBackup` report whether the backend is actually
+// taking traffic.
+private oci.networkLoadBalancer.backend @defaults("name port") {
+  // Backend name, usually `<address>:<port>`
+  name string
+  // IP address of the backend, when addressed by address rather than OCID
+  ipAddress string
+  // Compute instance the backend targets, when addressed by OCID
+  instance() oci.compute.instance
+  // Port the backend receives traffic on
+  port int
+  // Relative weight for traffic distribution
+  weight int
+  // Whether the backend is draining existing connections and taking no new ones
+  isDrain bool
+  // Whether the backend only receives traffic when the primary backends fail
+  isBackup bool
+  // Whether the backend is marked offline and receives no traffic
+  isOffline bool
+}
+
 // Oracle Cloud Infrastructure (OCI) Network Firewall
 //
 // Next-generation firewall deployments in the tenancy. The

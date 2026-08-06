@@ -36,6 +36,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/logging"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
+	"github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/redis"
@@ -311,6 +312,15 @@ func (c *OciConnection) LoadBalancerClient(region string) (*loadbalancer.LoadBal
 
 func (c *OciConnection) NetworkFirewallClient(region string) (*networkfirewall.NetworkFirewallClient, error) {
 	client, err := networkfirewall.NewNetworkFirewallClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) NetworkLoadBalancerClient(region string) (*networkloadbalancer.NetworkLoadBalancerClient, error) {
+	client, err := networkloadbalancer.NewNetworkLoadBalancerClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
