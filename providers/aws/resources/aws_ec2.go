@@ -3423,17 +3423,7 @@ func (a *mqlAwsEc2Transitgateway) attachments() ([]any, error) {
 			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(att.Tags)) {
 				continue
 			}
-			mqlAtt, err := CreateResource(a.MqlRuntime, ResourceAwsEc2TransitgatewayAttachment,
-				map[string]*llx.RawData{
-					"id":               llx.StringData(convert.ToValue(att.TransitGatewayAttachmentId)),
-					"transitGatewayId": llx.StringData(convert.ToValue(att.TransitGatewayId)),
-					"resourceId":       llx.StringData(convert.ToValue(att.ResourceId)),
-					"resourceType":     llx.StringData(string(att.ResourceType)),
-					"state":            llx.StringData(string(att.State)),
-					"createdAt":        llx.TimeDataPtr(att.CreationTime),
-					"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(att.Tags)), types.String),
-					"region":           llx.StringData(a.region),
-				})
+			mqlAtt, err := newMqlAwsEc2TransitgatewayAttachment(a.MqlRuntime, a.region, att)
 			if err != nil {
 				return nil, err
 			}

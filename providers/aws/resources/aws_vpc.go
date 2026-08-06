@@ -359,11 +359,12 @@ func newMqlAwsVpcNatgateway(runtime *plugin.Runtime, region string, gw vpctypes.
 
 	mqlNat, err := CreateResource(runtime, ResourceAwsVpcNatgateway,
 		map[string]*llx.RawData{
-			"createdAt":    llx.TimeDataPtr(gw.CreateTime),
-			"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
-			"state":        llx.StringData(string(gw.State)),
-			"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
-			"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
+			"createdAt":        llx.TimeDataPtr(gw.CreateTime),
+			"natGatewayId":     llx.StringDataPtr(gw.NatGatewayId),
+			"state":            llx.StringData(string(gw.State)),
+			"connectivityType": llx.StringData(string(gw.ConnectivityType)),
+			"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
+			"addresses":        llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
 		})
 	if err != nil {
 		return nil, err

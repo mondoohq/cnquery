@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-05T19:49:05+02:00",
+  "generated_at": "2026-08-06T08:18:04+02:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -331,6 +331,9 @@
     "ec2:GetManagedPrefixListEntries",
     "ec2:GetSerialConsoleAccessStatus",
     "ec2:GetSnapshotBlockPublicAccessState",
+    "ec2:GetTransitGatewayRouteTableAssociations",
+    "ec2:GetTransitGatewayRouteTablePropagations",
+    "ec2:SearchTransitGatewayRoutes",
     "ecr-public:DescribeImages",
     "ecr-public:DescribeRepositories",
     "ecr-public:GetRepositoryCatalogData",
@@ -2868,6 +2871,12 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ec2:DescribeTransitGatewayAttachments",
+      "service": "ec2",
+      "action": "DescribeTransitGatewayAttachments",
+      "source_file": "aws_ec2_transitgateway_routes.go"
+    },
+    {
       "permission": "ec2:DescribeTransitGatewayPeeringAttachments",
       "service": "ec2",
       "action": "DescribeTransitGatewayPeeringAttachments",
@@ -3046,6 +3055,24 @@
       "service": "ec2",
       "action": "GetSnapshotBlockPublicAccessState",
       "source_file": "aws_ec2_account_settings.go"
+    },
+    {
+      "permission": "ec2:GetTransitGatewayRouteTableAssociations",
+      "service": "ec2",
+      "action": "GetTransitGatewayRouteTableAssociations",
+      "source_file": "aws_ec2_transitgateway_routes.go"
+    },
+    {
+      "permission": "ec2:GetTransitGatewayRouteTablePropagations",
+      "service": "ec2",
+      "action": "GetTransitGatewayRouteTablePropagations",
+      "source_file": "aws_ec2_transitgateway_routes.go"
+    },
+    {
+      "permission": "ec2:SearchTransitGatewayRoutes",
+      "service": "ec2",
+      "action": "SearchTransitGatewayRoutes",
+      "source_file": "aws_ec2_transitgateway_routes.go"
     },
     {
       "permission": "ecr-public:DescribeImages",

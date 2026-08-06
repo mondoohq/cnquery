@@ -591,6 +591,7 @@ const (
 	ResourceAwsEc2Transitgateway                                                string = "aws.ec2.transitgateway"
 	ResourceAwsEc2TransitgatewayAttachment                                      string = "aws.ec2.transitgateway.attachment"
 	ResourceAwsEc2TransitgatewayRouteTable                                      string = "aws.ec2.transitgateway.routeTable"
+	ResourceAwsEc2TransitgatewayRouteTableRoute                                 string = "aws.ec2.transitgateway.routeTable.route"
 	ResourceAwsEc2DhcpOptions                                                   string = "aws.ec2.dhcpOptions"
 	ResourceAwsEc2TransitgatewayPeeringAttachment                               string = "aws.ec2.transitgateway.peeringAttachment"
 	ResourceAwsEc2ManagedPrefixList                                             string = "aws.ec2.managedPrefixList"
@@ -3266,12 +3267,16 @@ func init() {
 			Create: createAwsEc2Transitgateway,
 		},
 		"aws.ec2.transitgateway.attachment": {
-			// to override args, implement: initAwsEc2TransitgatewayAttachment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEc2TransitgatewayAttachment,
 			Create: createAwsEc2TransitgatewayAttachment,
 		},
 		"aws.ec2.transitgateway.routeTable": {
 			// to override args, implement: initAwsEc2TransitgatewayRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2TransitgatewayRouteTable,
+		},
+		"aws.ec2.transitgateway.routeTable.route": {
+			// to override args, implement: initAwsEc2TransitgatewayRouteTableRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2TransitgatewayRouteTableRoute,
 		},
 		"aws.ec2.dhcpOptions": {
 			// to override args, implement: initAwsEc2DhcpOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5408,6 +5413,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.subnet.internetGatewayBlockMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetInternetGatewayBlockMode()).ToDataRes(types.String)
+	},
+	"aws.vpc.subnet.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.vpc.subnet.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -22767,6 +22775,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.natgateway.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgateway).GetState()).ToDataRes(types.String)
 	},
+	"aws.vpc.natgateway.connectivityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetConnectivityType()).ToDataRes(types.String)
+	},
 	"aws.vpc.natgateway.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -23180,6 +23191,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.transitgateway.routeTable.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.transitgateway.routeTable.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetRoutes()).ToDataRes(types.Array(types.Resource("aws.ec2.transitgateway.routeTable.route")))
+	},
+	"aws.ec2.transitgateway.routeTable.associatedAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetAssociatedAttachments()).ToDataRes(types.Array(types.Resource("aws.ec2.transitgateway.attachment")))
+	},
+	"aws.ec2.transitgateway.routeTable.propagatingAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetPropagatingAttachments()).ToDataRes(types.Array(types.Resource("aws.ec2.transitgateway.attachment")))
+	},
+	"aws.ec2.transitgateway.routeTable.route.destinationCidrBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetDestinationCidrBlock()).ToDataRes(types.String)
+	},
+	"aws.ec2.transitgateway.routeTable.route.managedPrefixList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetManagedPrefixList()).ToDataRes(types.Resource("aws.ec2.managedPrefixList"))
+	},
+	"aws.ec2.transitgateway.routeTable.route.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetState()).ToDataRes(types.String)
+	},
+	"aws.ec2.transitgateway.routeTable.route.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetType()).ToDataRes(types.String)
+	},
+	"aws.ec2.transitgateway.routeTable.route.attachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetAttachments()).ToDataRes(types.Array(types.Resource("aws.ec2.transitgateway.attachment")))
+	},
+	"aws.ec2.transitgateway.routeTable.route.routeTableAnnouncementId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTableRoute).GetRouteTableAnnouncementId()).ToDataRes(types.String)
 	},
 	"aws.ec2.dhcpOptions.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2DhcpOptions).GetId()).ToDataRes(types.String)
@@ -36686,6 +36724,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.subnet.internetGatewayBlockMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcSubnet).InternetGatewayBlockMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.subnet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62000,6 +62042,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcNatgateway).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.natgateway.connectivityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).ConnectivityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.natgateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcNatgateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -62610,6 +62656,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.transitgateway.routeTable.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2TransitgatewayRouteTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTable).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.associatedAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTable).AssociatedAttachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.propagatingAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTable).PropagatingAttachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.destinationCidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).DestinationCidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.managedPrefixList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).ManagedPrefixList, ok = plugin.RawToTValue[*mqlAwsEc2ManagedPrefixList](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.attachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).Attachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.route.routeTableAnnouncementId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTableRoute).RouteTableAnnouncementId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.dhcpOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83271,6 +83357,7 @@ type mqlAwsVpcSubnet struct {
 	Region                      plugin.TValue[string]
 	AvailableIpAddressCount     plugin.TValue[int64]
 	InternetGatewayBlockMode    plugin.TValue[string]
+	IsPublic                    plugin.TValue[bool]
 	Tags                        plugin.TValue[map[string]any]
 	RouteTable                  plugin.TValue[*mqlAwsVpcRoutetable]
 	NetworkAcl                  plugin.TValue[*mqlAwsEc2Networkacl]
@@ -83368,6 +83455,12 @@ func (c *mqlAwsVpcSubnet) GetAvailableIpAddressCount() *plugin.TValue[int64] {
 
 func (c *mqlAwsVpcSubnet) GetInternetGatewayBlockMode() *plugin.TValue[string] {
 	return &c.InternetGatewayBlockMode
+}
+
+func (c *mqlAwsVpcSubnet) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
 }
 
 func (c *mqlAwsVpcSubnet) GetTags() *plugin.TValue[map[string]any] {
@@ -149359,14 +149452,15 @@ type mqlAwsVpcNatgateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsVpcNatgatewayInternal
-	CreatedAt    plugin.TValue[*time.Time]
-	NatGatewayId plugin.TValue[string]
-	Arn          plugin.TValue[string]
-	State        plugin.TValue[string]
-	Tags         plugin.TValue[map[string]any]
-	Vpc          plugin.TValue[*mqlAwsVpc]
-	Addresses    plugin.TValue[[]any]
-	Subnet       plugin.TValue[*mqlAwsVpcSubnet]
+	CreatedAt        plugin.TValue[*time.Time]
+	NatGatewayId     plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	State            plugin.TValue[string]
+	ConnectivityType plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
+	Vpc              plugin.TValue[*mqlAwsVpc]
+	Addresses        plugin.TValue[[]any]
+	Subnet           plugin.TValue[*mqlAwsVpcSubnet]
 }
 
 // createAwsVpcNatgateway creates a new instance of this resource
@@ -149422,6 +149516,10 @@ func (c *mqlAwsVpcNatgateway) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcNatgateway) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlAwsVpcNatgateway) GetConnectivityType() *plugin.TValue[string] {
+	return &c.ConnectivityType
 }
 
 func (c *mqlAwsVpcNatgateway) GetTags() *plugin.TValue[map[string]any] {
@@ -150895,6 +150993,9 @@ type mqlAwsEc2TransitgatewayRouteTable struct {
 	CreatedAt                    plugin.TValue[*time.Time]
 	Tags                         plugin.TValue[map[string]any]
 	Region                       plugin.TValue[string]
+	Routes                       plugin.TValue[[]any]
+	AssociatedAttachments        plugin.TValue[[]any]
+	PropagatingAttachments       plugin.TValue[[]any]
 }
 
 // createAwsEc2TransitgatewayRouteTable creates a new instance of this resource
@@ -150970,6 +151071,147 @@ func (c *mqlAwsEc2TransitgatewayRouteTable) GetTags() *plugin.TValue[map[string]
 
 func (c *mqlAwsEc2TransitgatewayRouteTable) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTable) GetRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Routes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.transitgateway.routeTable", c.__id, "routes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routes()
+	})
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTable) GetAssociatedAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedAttachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.transitgateway.routeTable", c.__id, "associatedAttachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associatedAttachments()
+	})
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTable) GetPropagatingAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PropagatingAttachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.transitgateway.routeTable", c.__id, "propagatingAttachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.propagatingAttachments()
+	})
+}
+
+// mqlAwsEc2TransitgatewayRouteTableRoute for the aws.ec2.transitgateway.routeTable.route resource
+type mqlAwsEc2TransitgatewayRouteTableRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2TransitgatewayRouteTableRouteInternal
+	DestinationCidrBlock     plugin.TValue[string]
+	ManagedPrefixList        plugin.TValue[*mqlAwsEc2ManagedPrefixList]
+	State                    plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	Attachments              plugin.TValue[[]any]
+	RouteTableAnnouncementId plugin.TValue[string]
+}
+
+// createAwsEc2TransitgatewayRouteTableRoute creates a new instance of this resource
+func createAwsEc2TransitgatewayRouteTableRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2TransitgatewayRouteTableRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.transitgateway.routeTable.route", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) MqlName() string {
+	return "aws.ec2.transitgateway.routeTable.route"
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetDestinationCidrBlock() *plugin.TValue[string] {
+	return &c.DestinationCidrBlock
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetManagedPrefixList() *plugin.TValue[*mqlAwsEc2ManagedPrefixList] {
+	return plugin.GetOrCompute[*mqlAwsEc2ManagedPrefixList](&c.ManagedPrefixList, func() (*mqlAwsEc2ManagedPrefixList, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.transitgateway.routeTable.route", c.__id, "managedPrefixList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2ManagedPrefixList), nil
+			}
+		}
+
+		return c.managedPrefixList()
+	})
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Attachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.transitgateway.routeTable.route", c.__id, "attachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.attachments()
+	})
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTableRoute) GetRouteTableAnnouncementId() *plugin.TValue[string] {
+	return &c.RouteTableAnnouncementId
 }
 
 // mqlAwsEc2DhcpOptions for the aws.ec2.dhcpOptions resource
