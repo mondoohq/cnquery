@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.33.3",
-  "generated_at": "2026-07-28T09:52:34-07:00",
+  "version": "13.34.1",
+  "generated_at": "2026-08-05T17:39:09+02:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",

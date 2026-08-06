@@ -59,8 +59,8 @@ cloud.google.com/go/bigquery v1.7.0/go.mod h1://okPTzCYNXSlb24MZs83e2Do+h+VXtc4g
 cloud.google.com/go/bigquery v1.8.0/go.mod h1:J5hqkt3O0uAFnINi6JXValWIb1v0goeZM77hZzJN/fQ=
 cloud.google.com/go/bigquery v1.79.0 h1:+tW6oRuP/4dOgdl/p32on0+3OktVQtU+veOMxhjoOhE=
 cloud.google.com/go/bigquery v1.79.0/go.mod h1:QTt5tgZxqqvZs3dOZKpvriGqy+CdvY9LyetirFZRPOE=
-cloud.google.com/go/bigtable v1.51.0 h1:AZh/vDoRdn8cz+CbdUjx/ajQGqit831Wo8dtIWsfNTY=
-cloud.google.com/go/bigtable v1.51.0/go.mod h1:PL9WVm/o2ET/MDj6i1Zt7eNW7YNY0iFOmSHTVvLdPmo=
+cloud.google.com/go/bigtable v1.52.0 h1:8DS8rq5Mn3XmPqXD/vk+1lyqcWJ4hs+0Hh8Ruqroj+U=
+cloud.google.com/go/bigtable v1.52.0/go.mod h1:51/CYIIpOoGrZ6koxZ9F5MFMwhtluPPeh0BvCJjl5RQ=
 cloud.google.com/go/binaryauthorization v1.16.0 h1:f1iNUaHWP9XPdh6grftTlIRuJSBytud4j51l1Jce94E=
 cloud.google.com/go/binaryauthorization v1.16.0/go.mod h1:E+iC5Avu4pdItdzGiSGHnh6TfQrl+KmPxDDg/T/VuHs=
 cloud.google.com/go/certificatemanager v1.15.0 h1:PwljEZlI3lZgoFUG0pnIBNOwrQUaAP+gS0ZahTwUZBA=
