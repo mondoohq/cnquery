@@ -3011,6 +3011,296 @@ private oci.loadBalancer.backendSet @defaults("name") {
   backendCount int
 }
 
+// Oracle Cloud Infrastructure (OCI) Network Load Balancer
+//
+// Layer 4 load balancers in the tenancy, a service distinct from the
+// Load Balancer exposed by `oci.loadBalancer`. Network load balancers
+// operate on TCP, UDP, and ICMP rather than HTTP, are frequently
+// internet-facing, and are governed by their own listeners and backend
+// sets. `loadBalancers` enumerates every deployment with its public or
+// private placement, assigned addresses, attached network security
+// groups, and a derived internet-exposure breakdown matching the one on
+// compute instances and load balancers.
+oci.networkLoadBalancer {
+  // Network load balancers
+  loadBalancers() []oci.networkLoadBalancer.loadBalancer
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer
+//
+// Single layer 4 load balancer, keyed by its OCID. `isPrivate` and
+// `ipAddresses` decide whether it fronts the public internet, and
+// `exposure` combines that with the subnet's routing and the ingress
+// rules of the attached network security groups and security lists into
+// a single reachability verdict. `isPreserveSourceDestination` reports
+// whether the original client address survives to the backend, which
+// decides whether backend-side address filtering sees the real source.
+// `securityAttributes` carries the Zero Trust Packet Routing attributes
+// applied to the load balancer.
+private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
+  // Network load balancer OCID
+  id string
+  // Display name
+  name string
+  // Compartment containing the network load balancer
+  compartment() oci.compartment
+  // Whether the network load balancer is private (no public IP)
+  isPrivate bool
+  // Assigned IP addresses
+  //
+  // Each entry is a dict with an `ipAddress`, an `isPublic` flag indicating
+  // internet reachability, an `ipVersion` of IPV4 or IPV6, and a
+  // `reservedIp` block carrying the OCID when the address is backed by a
+  // reserved public IP.
+  ipAddresses []dict
+  // IP version the network load balancer serves (IPV4, IPV4_AND_IPV6, IPV6)
+  ipVersion string
+  // Subnet the network load balancer is attached to
+  subnet() oci.network.subnet
+  // Network security groups attached to the network load balancer
+  securityGroups() []oci.network.networkSecurityGroup
+  // Internet-exposure breakdown (a public IP and a listener, gated on subnet routing and ingress rules)
+  exposure() oci.network.exposure
+  // Listeners accepting traffic
+  listeners []oci.networkLoadBalancer.listener
+  // Backend sets traffic is distributed to
+  backendSets []oci.networkLoadBalancer.backendSet
+  // Whether the source and destination addresses are preserved to the backend
+  //
+  // When enabled the backend observes the original client address rather
+  // than the load balancer's, so any address-based filtering on the
+  // backend evaluates the real source.
+  isPreserveSourceDestination bool
+  // Whether symmetric hashing is enabled for flow distribution
+  isSymmetricHashEnabled bool
+  // Zero Trust Packet Routing security attributes applied to the load balancer
+  securityAttributes map[string]dict
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, FAILED, DELETING, DELETED)
+  state string
+  // Detail explaining the current lifecycle state, for FAILED deployments
+  stateDetails string
+  // Creation time
+  created time
+  // Last-update time
+  updated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer listener
+//
+// Port and protocol a network load balancer accepts traffic on, and the
+// backend set it forwards to. Unlike a Load Balancer listener there is
+// no TLS termination here: the network load balancer operates at layer
+// 4, so `protocol` is TCP, UDP, TCP_AND_UDP, ICMP, or ANY, and a `port`
+// of 0 means the listener accepts every port.
+private oci.networkLoadBalancer.listener @defaults("name port protocol") {
+  // Listener name
+  name string
+  // Listener port, or 0 when the listener accepts all ports
+  port int
+  // Protocol (TCP, UDP, TCP_AND_UDP, ICMP, ANY)
+  protocol string
+  // Name of the backend set the listener forwards to
+  defaultBackendSetName string
+  // IP version the listener serves (IPV4, IPV6)
+  ipVersion string
+  // Idle timeout for TCP connections, in seconds
+  tcpIdleTimeout int
+  // Idle timeout for UDP flows, in seconds
+  udpIdleTimeout int
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer backend set
+private oci.networkLoadBalancer.backendSet @defaults("name policy") {
+  // Backend set name
+  name string
+  // Load balancing policy (FIVE_TUPLE, THREE_TUPLE, TWO_TUPLE)
+  policy string
+  // IP version the backend set serves (IPV4, IPV6)
+  ipVersion string
+  // Whether the original source address is preserved to the backend
+  isPreserveSource bool
+  // Whether traffic is still forwarded when every backend fails its health check
+  //
+  // When enabled the load balancer keeps sending traffic to backends that
+  // are failing health checks rather than dropping it, so an
+  // all-unhealthy backend set continues to receive requests.
+  isFailOpen bool
+  // Whether instant failover is enabled
+  isInstantFailoverEnabled bool
+  // Health checker configuration
+  //
+  // A dict describing the backend health probe. Keys: `protocol` (HTTP,
+  // HTTPS, TCP, UDP, or DNS), `port`, `urlPath`, `returnCode` (expected
+  // status code), `responseBodyRegex`, `retries`, `timeoutInMillis`,
+  // `intervalInMillis`, and a `dns` block for DNS probes.
+  healthChecker dict
+  // Backends traffic is distributed to
+  backends []oci.networkLoadBalancer.backend
+  // Number of backends
+  backendCount int
+}
+
+// Oracle Cloud Infrastructure (OCI) network load balancer backend
+//
+// Single target behind a backend set. A backend is addressed either by
+// `ipAddress` or by the OCID of the compute instance in `instance`,
+// which is what makes a network load balancer traceable to the workload
+// it fronts when assessing an internet-facing path. `isOffline`,
+// `isDrain`, and `isBackup` report whether the backend is actually
+// taking traffic.
+private oci.networkLoadBalancer.backend @defaults("name port") {
+  // Backend name, usually `<address>:<port>`
+  name string
+  // IP address of the backend, when addressed by address rather than OCID
+  ipAddress string
+  // Compute instance the backend targets, when addressed by OCID
+  instance() oci.compute.instance
+  // Port the backend receives traffic on
+  port int
+  // Relative weight for traffic distribution
+  weight int
+  // Whether the backend is draining existing connections and taking no new ones
+  isDrain bool
+  // Whether the backend only receives traffic when the primary backends fail
+  isBackup bool
+  // Whether the backend is marked offline and receives no traffic
+  isOffline bool
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS
+//
+// DNS zones hosted in the tenancy and the traffic-management policies
+// applied to them. `zones` covers both the internet-facing GLOBAL scope
+// and the VCN-internal PRIVATE scope, each zone reporting its DNSSEC
+// state and, through `records`, the resource records it publishes.
+// `steeringPolicies` lists the geo, failover, and load-balancing rules
+// that decide which answer a resolver receives.
+oci.dns {
+  // DNS zones hosted in the tenancy
+  zones() []oci.dns.zone
+  // Steering policies applied to DNS answers
+  steeringPolicies() []oci.dns.steeringPolicy
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS zone
+//
+// Single DNS zone, keyed by its OCID. `scope` separates a GLOBAL zone,
+// which answers queries from the public internet, from a PRIVATE zone,
+// which answers only inside the VCNs attached to its view.
+// `dnssecState` reports whether DNSSEC signing is ENABLED or DISABLED,
+// and `dnssecKeyVersions` carries the key-signing and zone-signing key
+// material behind it, including each key's algorithm and its scheduled
+// rollover times. `records` returns the resource records the zone
+// publishes, which is what makes it possible to find answers still
+// pointing at addresses or hostnames the tenancy no longer owns.
+// `isProtected` marks zones OCI manages and blocks from modification.
+private oci.dns.zone @defaults("name zoneType scope dnssecState") {
+  // Zone OCID
+  id string
+  // Zone name (the DNS domain, e.g., example.com)
+  name string
+  // Compartment containing the zone
+  compartment() oci.compartment
+  // Zone type (PRIMARY, SECONDARY)
+  zoneType string
+  // Whether the zone answers publicly (GLOBAL) or only inside attached VCNs (PRIVATE)
+  scope string
+  // How the zone resolves queries (IMPORTED, IMPORTED_LIMITED_SUPPORT)
+  resolutionMode string
+  // Whether DNSSEC signing is enabled for the zone (ENABLED, DISABLED)
+  dnssecState string
+  // DNSSEC key-signing and zone-signing key versions
+  //
+  // Has `kskDnssecKeyVersions` and `zskDnssecKeyVersions` lists. Each
+  // entry carries the key's `algorithm`, `lengthInBytes`, `uuid`, the
+  // `timeCreated`, `timeActivated`, `timeExpired` and `timeInactivated`
+  // marking its lifecycle, and the scheduled `timePromoted` and
+  // `predecessorId` or `successorId` linking a rollover. Empty when
+  // `dnssecState` is DISABLED.
+  dnssecKeyVersions dict
+  // Resource records published by the zone
+  records() []oci.dns.record
+  // Whether the zone is managed by OCI and cannot be modified
+  isProtected bool
+  // Zone serial number
+  serial int
+  // Zone version
+  version string
+  // View the zone belongs to, for PRIVATE zones
+  viewId string
+  // Zone lifecycle state (ACTIVE, CREATING, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Zone creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS record
+//
+// Single resource record in a zone. `domain` is the fully-qualified name
+// the record answers for, `rtype` its type (A, AAAA, CNAME, MX, TXT, NS,
+// and so on), and `rdata` the answer itself. A CNAME or A record whose
+// `rdata` points at a hostname or address the tenancy has released is
+// the shape of a subdomain-takeover exposure, which is why the record
+// data is queryable rather than summarized.
+private oci.dns.record @defaults("domain rtype rdata") {
+  // Fully-qualified domain name the record answers for
+  domain string
+  // Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, and others)
+  rtype string
+  // Record data, in the presentation format for its type
+  rdata string
+  // Time-to-live in seconds
+  ttl int
+  // Whether the record is managed by OCI and cannot be modified
+  isProtected bool
+  // Version of the record set this record belongs to
+  rrsetVersion string
+}
+
+// Oracle Cloud Infrastructure (OCI) DNS steering policy
+//
+// Rule set that decides which answer a resolver receives for a name,
+// keyed by its OCID. `template` names the behavior: FAILOVER,
+// LOAD_BALANCE, ROUTE_BY_GEO, ROUTE_BY_ASN, ROUTE_BY_IP, or CUSTOM.
+// Geo and IP routing decide answers from client location, so the policy
+// is part of understanding what a given client actually resolves.
+private oci.dns.steeringPolicy @defaults("name template state") {
+  // Steering policy OCID
+  id string
+  // Steering policy display name
+  name string
+  // Compartment containing the steering policy
+  compartment() oci.compartment
+  // Policy behavior (FAILOVER, LOAD_BALANCE, ROUTE_BY_GEO, ROUTE_BY_ASN, ROUTE_BY_IP, CUSTOM)
+  template string
+  // Time-to-live applied to answers this policy produces, in seconds
+  ttl int
+  // Health check monitor driving failover decisions
+  healthCheckMonitorId string
+  // Policy lifecycle state (ACTIVE, CREATING, UPDATING, DELETING, DELETED)
+  state string
+  // Policy creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
 // Oracle Cloud Infrastructure (OCI) Network Firewall
 //
 // Next-generation firewall deployments in the tenancy. The

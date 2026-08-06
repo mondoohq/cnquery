@@ -25,6 +25,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/oracle/oci-go-sdk/v65/datasafe"
 	"github.com/oracle/oci-go-sdk/v65/datascience"
+	"github.com/oracle/oci-go-sdk/v65/dns"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/functions"
@@ -36,6 +37,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/logging"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
+	"github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/redis"
@@ -168,6 +170,15 @@ func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient
 
 func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) DnsClient(region string) (*dns.DnsClient, error) {
+	client, err := dns.NewDnsClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -311,6 +322,15 @@ func (c *OciConnection) LoadBalancerClient(region string) (*loadbalancer.LoadBal
 
 func (c *OciConnection) NetworkFirewallClient(region string) (*networkfirewall.NetworkFirewallClient, error) {
 	client, err := networkfirewall.NewNetworkFirewallClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) NetworkLoadBalancerClient(region string) (*networkloadbalancer.NetworkLoadBalancerClient, error) {
+	client, err := networkloadbalancer.NewNetworkLoadBalancerClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

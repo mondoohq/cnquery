@@ -104,6 +104,15 @@ const (
 	ResourceOciLoadBalancerLoadBalancer                              string = "oci.loadBalancer.loadBalancer"
 	ResourceOciLoadBalancerListener                                  string = "oci.loadBalancer.listener"
 	ResourceOciLoadBalancerBackendSet                                string = "oci.loadBalancer.backendSet"
+	ResourceOciNetworkLoadBalancer                                   string = "oci.networkLoadBalancer"
+	ResourceOciNetworkLoadBalancerLoadBalancer                       string = "oci.networkLoadBalancer.loadBalancer"
+	ResourceOciNetworkLoadBalancerListener                           string = "oci.networkLoadBalancer.listener"
+	ResourceOciNetworkLoadBalancerBackendSet                         string = "oci.networkLoadBalancer.backendSet"
+	ResourceOciNetworkLoadBalancerBackend                            string = "oci.networkLoadBalancer.backend"
+	ResourceOciDns                                                   string = "oci.dns"
+	ResourceOciDnsZone                                               string = "oci.dns.zone"
+	ResourceOciDnsRecord                                             string = "oci.dns.record"
+	ResourceOciDnsSteeringPolicy                                     string = "oci.dns.steeringPolicy"
 	ResourceOciNetworkFirewall                                       string = "oci.networkFirewall"
 	ResourceOciNetworkFirewallFirewall                               string = "oci.networkFirewall.firewall"
 	ResourceOciNetworkFirewallPolicy                                 string = "oci.networkFirewall.policy"
@@ -547,6 +556,42 @@ func init() {
 		"oci.loadBalancer.backendSet": {
 			// to override args, implement: initOciLoadBalancerBackendSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciLoadBalancerBackendSet,
+		},
+		"oci.networkLoadBalancer": {
+			// to override args, implement: initOciNetworkLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancer,
+		},
+		"oci.networkLoadBalancer.loadBalancer": {
+			// to override args, implement: initOciNetworkLoadBalancerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancerLoadBalancer,
+		},
+		"oci.networkLoadBalancer.listener": {
+			// to override args, implement: initOciNetworkLoadBalancerListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancerListener,
+		},
+		"oci.networkLoadBalancer.backendSet": {
+			// to override args, implement: initOciNetworkLoadBalancerBackendSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancerBackendSet,
+		},
+		"oci.networkLoadBalancer.backend": {
+			// to override args, implement: initOciNetworkLoadBalancerBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancerBackend,
+		},
+		"oci.dns": {
+			// to override args, implement: initOciDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDns,
+		},
+		"oci.dns.zone": {
+			// to override args, implement: initOciDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDnsZone,
+		},
+		"oci.dns.record": {
+			// to override args, implement: initOciDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDnsRecord,
+		},
+		"oci.dns.steeringPolicy": {
+			// to override args, implement: initOciDnsSteeringPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDnsSteeringPolicy,
 		},
 		"oci.networkFirewall": {
 			// to override args, implement: initOciNetworkFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3734,6 +3779,249 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.backendSet.backendCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetBackendCount()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancer).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("oci.networkLoadBalancer.loadBalancer")))
+	},
+	"oci.networkLoadBalancer.loadBalancer.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetId()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.loadBalancer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetName()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.loadBalancer.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.networkLoadBalancer.loadBalancer.isPrivate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetIsPrivate()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.loadBalancer.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetIpAddresses()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.networkLoadBalancer.loadBalancer.ipVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetIpVersion()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.loadBalancer.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
+	},
+	"oci.networkLoadBalancer.loadBalancer.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
+	"oci.networkLoadBalancer.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetExposure()).ToDataRes(types.Resource("oci.network.exposure"))
+	},
+	"oci.networkLoadBalancer.loadBalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetListeners()).ToDataRes(types.Array(types.Resource("oci.networkLoadBalancer.listener")))
+	},
+	"oci.networkLoadBalancer.loadBalancer.backendSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetBackendSets()).ToDataRes(types.Array(types.Resource("oci.networkLoadBalancer.backendSet")))
+	},
+	"oci.networkLoadBalancer.loadBalancer.isPreserveSourceDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetIsPreserveSourceDestination()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.loadBalancer.isSymmetricHashEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetIsSymmetricHashEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.loadBalancer.securityAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetSecurityAttributes()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.networkLoadBalancer.loadBalancer.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetState()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.loadBalancer.stateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetStateDetails()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.loadBalancer.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.networkLoadBalancer.loadBalancer.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetUpdated()).ToDataRes(types.Time)
+	},
+	"oci.networkLoadBalancer.loadBalancer.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.networkLoadBalancer.loadBalancer.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.networkLoadBalancer.loadBalancer.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerLoadBalancer).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.networkLoadBalancer.listener.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetName()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.listener.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetPort()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.listener.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetProtocol()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.listener.defaultBackendSetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetDefaultBackendSetName()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.listener.ipVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetIpVersion()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.listener.tcpIdleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetTcpIdleTimeout()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.listener.udpIdleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerListener).GetUdpIdleTimeout()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.backendSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetName()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.backendSet.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetPolicy()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.backendSet.ipVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetIpVersion()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.backendSet.isPreserveSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetIsPreserveSource()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.backendSet.isFailOpen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetIsFailOpen()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.backendSet.isInstantFailoverEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetIsInstantFailoverEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.backendSet.healthChecker": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthChecker()).ToDataRes(types.Dict)
+	},
+	"oci.networkLoadBalancer.backendSet.backends": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetBackends()).ToDataRes(types.Array(types.Resource("oci.networkLoadBalancer.backend")))
+	},
+	"oci.networkLoadBalancer.backendSet.backendCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetBackendCount()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.backend.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetName()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.backend.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetIpAddress()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.backend.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetInstance()).ToDataRes(types.Resource("oci.compute.instance"))
+	},
+	"oci.networkLoadBalancer.backend.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetPort()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.backend.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetWeight()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.backend.isDrain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetIsDrain()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.backend.isBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetIsBackup()).ToDataRes(types.Bool)
+	},
+	"oci.networkLoadBalancer.backend.isOffline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackend).GetIsOffline()).ToDataRes(types.Bool)
+	},
+	"oci.dns.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDns).GetZones()).ToDataRes(types.Array(types.Resource("oci.dns.zone")))
+	},
+	"oci.dns.steeringPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDns).GetSteeringPolicies()).ToDataRes(types.Array(types.Resource("oci.dns.steeringPolicy")))
+	},
+	"oci.dns.zone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetId()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetName()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.dns.zone.zoneType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetZoneType()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetScope()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.resolutionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetResolutionMode()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.dnssecState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetDnssecState()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.dnssecKeyVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetDnssecKeyVersions()).ToDataRes(types.Dict)
+	},
+	"oci.dns.zone.records": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetRecords()).ToDataRes(types.Array(types.Resource("oci.dns.record")))
+	},
+	"oci.dns.zone.isProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetIsProtected()).ToDataRes(types.Bool)
+	},
+	"oci.dns.zone.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetSerial()).ToDataRes(types.Int)
+	},
+	"oci.dns.zone.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetVersion()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.viewId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetViewId()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetState()).ToDataRes(types.String)
+	},
+	"oci.dns.zone.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dns.zone.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dns.zone.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsZone).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dns.record.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsRecord).GetDomain()).ToDataRes(types.String)
+	},
+	"oci.dns.record.rtype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsRecord).GetRtype()).ToDataRes(types.String)
+	},
+	"oci.dns.record.rdata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsRecord).GetRdata()).ToDataRes(types.String)
+	},
+	"oci.dns.record.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsRecord).GetTtl()).ToDataRes(types.Int)
+	},
+	"oci.dns.record.isProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsRecord).GetIsProtected()).ToDataRes(types.Bool)
+	},
+	"oci.dns.record.rrsetVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsRecord).GetRrsetVersion()).ToDataRes(types.String)
+	},
+	"oci.dns.steeringPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetId()).ToDataRes(types.String)
+	},
+	"oci.dns.steeringPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetName()).ToDataRes(types.String)
+	},
+	"oci.dns.steeringPolicy.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.dns.steeringPolicy.template": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetTemplate()).ToDataRes(types.String)
+	},
+	"oci.dns.steeringPolicy.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetTtl()).ToDataRes(types.Int)
+	},
+	"oci.dns.steeringPolicy.healthCheckMonitorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetHealthCheckMonitorId()).ToDataRes(types.String)
+	},
+	"oci.dns.steeringPolicy.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetState()).ToDataRes(types.String)
+	},
+	"oci.dns.steeringPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dns.steeringPolicy.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dns.steeringPolicy.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDnsSteeringPolicy).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 	"oci.networkFirewall.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewall).GetFirewalls()).ToDataRes(types.Array(types.Resource("oci.networkFirewall.firewall")))
@@ -10994,6 +11282,366 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.backendSet.backendCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerBackendSet).BackendCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancer).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancer).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.isPrivate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).IsPrivate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.ipVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).IpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlOciNetworkExposure](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.backendSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).BackendSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.isPreserveSourceDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).IsPreserveSourceDestination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.isSymmetricHashEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).IsSymmetricHashEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.securityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).SecurityAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.stateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).StateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.loadBalancer.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerLoadBalancer).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.listener.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.defaultBackendSetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).DefaultBackendSetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.ipVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).IpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.tcpIdleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).TcpIdleTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.listener.udpIdleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerListener).UdpIdleTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.ipVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).IpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.isPreserveSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).IsPreserveSource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.isFailOpen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).IsFailOpen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.isInstantFailoverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).IsInstantFailoverEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.healthChecker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthChecker, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.backends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).Backends, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backendSet.backendCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).BackendCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.backend.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).Instance, ok = plugin.RawToTValue[*mqlOciComputeInstance](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.isDrain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).IsDrain, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.isBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).IsBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.backend.isOffline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackend).IsOffline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDns).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dns.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDns).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDns).SteeringPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dns.zone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.zoneType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).ZoneType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.resolutionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).ResolutionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.dnssecState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).DnssecState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.dnssecKeyVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).DnssecKeyVersions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Records, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.isProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).IsProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Serial, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.viewId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).ViewId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.zone.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsZone).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dns.record.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.record.rtype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).Rtype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.record.rdata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).Rdata, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.record.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.dns.record.isProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).IsProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dns.record.rrsetVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsRecord).RrsetVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dns.steeringPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.template": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).Template, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.healthCheckMonitorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).HealthCheckMonitorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dns.steeringPolicy.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDnsSteeringPolicy).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.networkFirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26446,6 +27094,919 @@ func (c *mqlOciLoadBalancerBackendSet) GetHealthChecker() *plugin.TValue[any] {
 
 func (c *mqlOciLoadBalancerBackendSet) GetBackendCount() *plugin.TValue[int64] {
 	return &c.BackendCount
+}
+
+// mqlOciNetworkLoadBalancer for the oci.networkLoadBalancer resource
+type mqlOciNetworkLoadBalancer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkLoadBalancerInternal it will be used here
+	LoadBalancers plugin.TValue[[]any]
+}
+
+// createOciNetworkLoadBalancer creates a new instance of this resource
+func createOciNetworkLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancer) MqlName() string {
+	return "oci.networkLoadBalancer"
+}
+
+func (c *mqlOciNetworkLoadBalancer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancer) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
+// mqlOciNetworkLoadBalancerLoadBalancer for the oci.networkLoadBalancer.loadBalancer resource
+type mqlOciNetworkLoadBalancerLoadBalancer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciNetworkLoadBalancerLoadBalancerInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Compartment                 plugin.TValue[*mqlOciCompartment]
+	IsPrivate                   plugin.TValue[bool]
+	IpAddresses                 plugin.TValue[[]any]
+	IpVersion                   plugin.TValue[string]
+	Subnet                      plugin.TValue[*mqlOciNetworkSubnet]
+	SecurityGroups              plugin.TValue[[]any]
+	Exposure                    plugin.TValue[*mqlOciNetworkExposure]
+	Listeners                   plugin.TValue[[]any]
+	BackendSets                 plugin.TValue[[]any]
+	IsPreserveSourceDestination plugin.TValue[bool]
+	IsSymmetricHashEnabled      plugin.TValue[bool]
+	SecurityAttributes          plugin.TValue[map[string]any]
+	State                       plugin.TValue[string]
+	StateDetails                plugin.TValue[string]
+	Created                     plugin.TValue[*time.Time]
+	Updated                     plugin.TValue[*time.Time]
+	FreeformTags                plugin.TValue[map[string]any]
+	DefinedTags                 plugin.TValue[map[string]any]
+	SystemTags                  plugin.TValue[map[string]any]
+}
+
+// createOciNetworkLoadBalancerLoadBalancer creates a new instance of this resource
+func createOciNetworkLoadBalancerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancerLoadBalancer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer.loadBalancer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) MqlName() string {
+	return "oci.networkLoadBalancer.loadBalancer"
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.loadBalancer", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetIsPrivate() *plugin.TValue[bool] {
+	return &c.IsPrivate
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetIpVersion() *plugin.TValue[string] {
+	return &c.IpVersion
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlOciNetworkSubnet](&c.Subnet, func() (*mqlOciNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.loadBalancer", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.loadBalancer", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetExposure() *plugin.TValue[*mqlOciNetworkExposure] {
+	return plugin.GetOrCompute[*mqlOciNetworkExposure](&c.Exposure, func() (*mqlOciNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetListeners() *plugin.TValue[[]any] {
+	return &c.Listeners
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetBackendSets() *plugin.TValue[[]any] {
+	return &c.BackendSets
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetIsPreserveSourceDestination() *plugin.TValue[bool] {
+	return &c.IsPreserveSourceDestination
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetIsSymmetricHashEnabled() *plugin.TValue[bool] {
+	return &c.IsSymmetricHashEnabled
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetSecurityAttributes() *plugin.TValue[map[string]any] {
+	return &c.SecurityAttributes
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetStateDetails() *plugin.TValue[string] {
+	return &c.StateDetails
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciNetworkLoadBalancerLoadBalancer) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciNetworkLoadBalancerListener for the oci.networkLoadBalancer.listener resource
+type mqlOciNetworkLoadBalancerListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkLoadBalancerListenerInternal it will be used here
+	Name                  plugin.TValue[string]
+	Port                  plugin.TValue[int64]
+	Protocol              plugin.TValue[string]
+	DefaultBackendSetName plugin.TValue[string]
+	IpVersion             plugin.TValue[string]
+	TcpIdleTimeout        plugin.TValue[int64]
+	UdpIdleTimeout        plugin.TValue[int64]
+}
+
+// createOciNetworkLoadBalancerListener creates a new instance of this resource
+func createOciNetworkLoadBalancerListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancerListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) MqlName() string {
+	return "oci.networkLoadBalancer.listener"
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetDefaultBackendSetName() *plugin.TValue[string] {
+	return &c.DefaultBackendSetName
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetIpVersion() *plugin.TValue[string] {
+	return &c.IpVersion
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetTcpIdleTimeout() *plugin.TValue[int64] {
+	return &c.TcpIdleTimeout
+}
+
+func (c *mqlOciNetworkLoadBalancerListener) GetUdpIdleTimeout() *plugin.TValue[int64] {
+	return &c.UdpIdleTimeout
+}
+
+// mqlOciNetworkLoadBalancerBackendSet for the oci.networkLoadBalancer.backendSet resource
+type mqlOciNetworkLoadBalancerBackendSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkLoadBalancerBackendSetInternal it will be used here
+	Name                     plugin.TValue[string]
+	Policy                   plugin.TValue[string]
+	IpVersion                plugin.TValue[string]
+	IsPreserveSource         plugin.TValue[bool]
+	IsFailOpen               plugin.TValue[bool]
+	IsInstantFailoverEnabled plugin.TValue[bool]
+	HealthChecker            plugin.TValue[any]
+	Backends                 plugin.TValue[[]any]
+	BackendCount             plugin.TValue[int64]
+}
+
+// createOciNetworkLoadBalancerBackendSet creates a new instance of this resource
+func createOciNetworkLoadBalancerBackendSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancerBackendSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer.backendSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) MqlName() string {
+	return "oci.networkLoadBalancer.backendSet"
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetIpVersion() *plugin.TValue[string] {
+	return &c.IpVersion
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetIsPreserveSource() *plugin.TValue[bool] {
+	return &c.IsPreserveSource
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetIsFailOpen() *plugin.TValue[bool] {
+	return &c.IsFailOpen
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetIsInstantFailoverEnabled() *plugin.TValue[bool] {
+	return &c.IsInstantFailoverEnabled
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthChecker() *plugin.TValue[any] {
+	return &c.HealthChecker
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetBackends() *plugin.TValue[[]any] {
+	return &c.Backends
+}
+
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetBackendCount() *plugin.TValue[int64] {
+	return &c.BackendCount
+}
+
+// mqlOciNetworkLoadBalancerBackend for the oci.networkLoadBalancer.backend resource
+type mqlOciNetworkLoadBalancerBackend struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciNetworkLoadBalancerBackendInternal
+	Name      plugin.TValue[string]
+	IpAddress plugin.TValue[string]
+	Instance  plugin.TValue[*mqlOciComputeInstance]
+	Port      plugin.TValue[int64]
+	Weight    plugin.TValue[int64]
+	IsDrain   plugin.TValue[bool]
+	IsBackup  plugin.TValue[bool]
+	IsOffline plugin.TValue[bool]
+}
+
+// createOciNetworkLoadBalancerBackend creates a new instance of this resource
+func createOciNetworkLoadBalancerBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancerBackend{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer.backend", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) MqlName() string {
+	return "oci.networkLoadBalancer.backend"
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetInstance() *plugin.TValue[*mqlOciComputeInstance] {
+	return plugin.GetOrCompute[*mqlOciComputeInstance](&c.Instance, func() (*mqlOciComputeInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.backend", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetIsDrain() *plugin.TValue[bool] {
+	return &c.IsDrain
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetIsBackup() *plugin.TValue[bool] {
+	return &c.IsBackup
+}
+
+func (c *mqlOciNetworkLoadBalancerBackend) GetIsOffline() *plugin.TValue[bool] {
+	return &c.IsOffline
+}
+
+// mqlOciDns for the oci.dns resource
+type mqlOciDns struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDnsInternal it will be used here
+	Zones            plugin.TValue[[]any]
+	SteeringPolicies plugin.TValue[[]any]
+}
+
+// createOciDns creates a new instance of this resource
+func createOciDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDns{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dns", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDns) MqlName() string {
+	return "oci.dns"
+}
+
+func (c *mqlOciDns) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDns) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dns", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+func (c *mqlOciDns) GetSteeringPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SteeringPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dns", c.__id, "steeringPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.steeringPolicies()
+	})
+}
+
+// mqlOciDnsZone for the oci.dns.zone resource
+type mqlOciDnsZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciDnsZoneInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Compartment       plugin.TValue[*mqlOciCompartment]
+	ZoneType          plugin.TValue[string]
+	Scope             plugin.TValue[string]
+	ResolutionMode    plugin.TValue[string]
+	DnssecState       plugin.TValue[string]
+	DnssecKeyVersions plugin.TValue[any]
+	Records           plugin.TValue[[]any]
+	IsProtected       plugin.TValue[bool]
+	Serial            plugin.TValue[int64]
+	Version           plugin.TValue[string]
+	ViewId            plugin.TValue[string]
+	State             plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	FreeformTags      plugin.TValue[map[string]any]
+	DefinedTags       plugin.TValue[map[string]any]
+}
+
+// createOciDnsZone creates a new instance of this resource
+func createOciDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDnsZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dns.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDnsZone) MqlName() string {
+	return "oci.dns.zone"
+}
+
+func (c *mqlOciDnsZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDnsZone) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDnsZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciDnsZone) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dns.zone", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciDnsZone) GetZoneType() *plugin.TValue[string] {
+	return &c.ZoneType
+}
+
+func (c *mqlOciDnsZone) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlOciDnsZone) GetResolutionMode() *plugin.TValue[string] {
+	return &c.ResolutionMode
+}
+
+func (c *mqlOciDnsZone) GetDnssecState() *plugin.TValue[string] {
+	return &c.DnssecState
+}
+
+func (c *mqlOciDnsZone) GetDnssecKeyVersions() *plugin.TValue[any] {
+	return &c.DnssecKeyVersions
+}
+
+func (c *mqlOciDnsZone) GetRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Records, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dns.zone", c.__id, "records")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.records()
+	})
+}
+
+func (c *mqlOciDnsZone) GetIsProtected() *plugin.TValue[bool] {
+	return &c.IsProtected
+}
+
+func (c *mqlOciDnsZone) GetSerial() *plugin.TValue[int64] {
+	return &c.Serial
+}
+
+func (c *mqlOciDnsZone) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOciDnsZone) GetViewId() *plugin.TValue[string] {
+	return &c.ViewId
+}
+
+func (c *mqlOciDnsZone) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciDnsZone) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDnsZone) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDnsZone) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDnsRecord for the oci.dns.record resource
+type mqlOciDnsRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDnsRecordInternal it will be used here
+	Domain       plugin.TValue[string]
+	Rtype        plugin.TValue[string]
+	Rdata        plugin.TValue[string]
+	Ttl          plugin.TValue[int64]
+	IsProtected  plugin.TValue[bool]
+	RrsetVersion plugin.TValue[string]
+}
+
+// createOciDnsRecord creates a new instance of this resource
+func createOciDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDnsRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dns.record", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDnsRecord) MqlName() string {
+	return "oci.dns.record"
+}
+
+func (c *mqlOciDnsRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDnsRecord) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlOciDnsRecord) GetRtype() *plugin.TValue[string] {
+	return &c.Rtype
+}
+
+func (c *mqlOciDnsRecord) GetRdata() *plugin.TValue[string] {
+	return &c.Rdata
+}
+
+func (c *mqlOciDnsRecord) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlOciDnsRecord) GetIsProtected() *plugin.TValue[bool] {
+	return &c.IsProtected
+}
+
+func (c *mqlOciDnsRecord) GetRrsetVersion() *plugin.TValue[string] {
+	return &c.RrsetVersion
+}
+
+// mqlOciDnsSteeringPolicy for the oci.dns.steeringPolicy resource
+type mqlOciDnsSteeringPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciDnsSteeringPolicyInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
+	Template             plugin.TValue[string]
+	Ttl                  plugin.TValue[int64]
+	HealthCheckMonitorId plugin.TValue[string]
+	State                plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	FreeformTags         plugin.TValue[map[string]any]
+	DefinedTags          plugin.TValue[map[string]any]
+}
+
+// createOciDnsSteeringPolicy creates a new instance of this resource
+func createOciDnsSteeringPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDnsSteeringPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dns.steeringPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDnsSteeringPolicy) MqlName() string {
+	return "oci.dns.steeringPolicy"
+}
+
+func (c *mqlOciDnsSteeringPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dns.steeringPolicy", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetTemplate() *plugin.TValue[string] {
+	return &c.Template
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetHealthCheckMonitorId() *plugin.TValue[string] {
+	return &c.HealthCheckMonitorId
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDnsSteeringPolicy) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
 }
 
 // mqlOciNetworkFirewall for the oci.networkFirewall resource
