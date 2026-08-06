@@ -128,6 +128,8 @@ cloud.google.com/go/orgpolicy v1.20.0 h1:kpVcE/OsC5aAzHCsAiuQSg3+s6ILzgPTuPZyS7n
 cloud.google.com/go/orgpolicy v1.20.0/go.mod h1:9LHqEGx5P5dhansdKTNIEXpM+QbebAIOs66+HUID4aQ=
 cloud.google.com/go/osconfig v1.22.0 h1:r5lzneR9GNixJ96lZ6oIfJK9Cd5sKpnzZJe1LcGZf4w=
 cloud.google.com/go/osconfig v1.22.0/go.mod h1:bUL0FaSR2ahPcFRRYnd6a0LyUzsQYIdUpBq8Tmxg8fE=
+cloud.google.com/go/privilegedaccessmanager v1.1.0 h1:EH4oX3XXtj17sEl+Qo2DjbJH5H974lghO6DMz1BTFh4=
+cloud.google.com/go/privilegedaccessmanager v1.1.0/go.mod h1:Yi2AnoUGD+Ze16bXyZ0ePwwPTeq+5QUR2PmuAKTl46c=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/pubsub v1.1.0/go.mod h1:EwwdRX2sKPjnvnqCa270oGRyludottCI76h+R3AArQw=
 cloud.google.com/go/pubsub v1.2.0/go.mod h1:jhfEVHT8odbXTkndysNHCcx0awwzvfOlguIAii9o8iA=

@@ -76,6 +76,7 @@ const (
 	ResourceGcpProjectComputeServiceBackendServiceBackend                              string = "gcp.project.computeService.backendService.backend"
 	ResourceGcpProjectComputeServiceBackendServiceCdnPolicy                            string = "gcp.project.computeService.backendService.cdnPolicy"
 	ResourceGcpProjectStorageService                                                   string = "gcp.project.storageService"
+	ResourceGcpProjectStorageServiceHmacKey                                            string = "gcp.project.storageService.hmacKey"
 	ResourceGcpProjectStorageServiceBucket                                             string = "gcp.project.storageService.bucket"
 	ResourceGcpProjectStorageServiceBucketLifecycleRule                                string = "gcp.project.storageService.bucket.lifecycleRule"
 	ResourceGcpProjectStorageServiceBucketLifecycleRuleAction                          string = "gcp.project.storageService.bucket.lifecycleRuleAction"
@@ -161,6 +162,7 @@ const (
 	ResourceGcpProjectApiKey                                                           string = "gcp.project.apiKey"
 	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
 	ResourceGcpProjectLoggingservice                                                   string = "gcp.project.loggingservice"
+	ResourceGcpLoggingSettings                                                         string = "gcp.loggingSettings"
 	ResourceGcpProjectLoggingserviceBucket                                             string = "gcp.project.loggingservice.bucket"
 	ResourceGcpProjectLoggingserviceBucketView                                         string = "gcp.project.loggingservice.bucket.view"
 	ResourceGcpProjectLoggingserviceBucketIndexConfig                                  string = "gcp.project.loggingservice.bucket.indexConfig"
@@ -455,6 +457,9 @@ const (
 	ResourceGcpProjectAssetServiceResource                                             string = "gcp.project.assetService.resource"
 	ResourceGcpProjectAssetServiceIamPolicy                                            string = "gcp.project.assetService.iamPolicy"
 	ResourceGcpProjectAssetServiceWhoCan                                               string = "gcp.project.assetService.whoCan"
+	ResourceGcpProjectPrivilegedAccessManagerService                                   string = "gcp.project.privilegedAccessManagerService"
+	ResourceGcpProjectPrivilegedAccessManagerServiceEntitlement                        string = "gcp.project.privilegedAccessManagerService.entitlement"
+	ResourceGcpProjectPrivilegedAccessManagerServiceGrant                              string = "gcp.project.privilegedAccessManagerService.grant"
 	ResourceGcpProjectIapService                                                       string = "gcp.project.iapService"
 	ResourceGcpProjectIapServiceBrand                                                  string = "gcp.project.iapService.brand"
 	ResourceGcpProjectIapServiceIdentityAwareProxyClient                               string = "gcp.project.iapService.identityAwareProxyClient"
@@ -730,6 +735,10 @@ func init() {
 		"gcp.project.storageService": {
 			Init:   initGcpProjectStorageService,
 			Create: createGcpProjectStorageService,
+		},
+		"gcp.project.storageService.hmacKey": {
+			// to override args, implement: initGcpProjectStorageServiceHmacKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceHmacKey,
 		},
 		"gcp.project.storageService.bucket": {
 			Init:   initGcpProjectStorageServiceBucket,
@@ -1070,6 +1079,10 @@ func init() {
 		"gcp.project.loggingservice": {
 			Init:   initGcpProjectLoggingservice,
 			Create: createGcpProjectLoggingservice,
+		},
+		"gcp.loggingSettings": {
+			// to override args, implement: initGcpLoggingSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpLoggingSettings,
 		},
 		"gcp.project.loggingservice.bucket": {
 			Init:   initGcpProjectLoggingserviceBucket,
@@ -2247,6 +2260,18 @@ func init() {
 			Init:   initGcpProjectAssetServiceWhoCan,
 			Create: createGcpProjectAssetServiceWhoCan,
 		},
+		"gcp.project.privilegedAccessManagerService": {
+			Init:   initGcpProjectPrivilegedAccessManagerService,
+			Create: createGcpProjectPrivilegedAccessManagerService,
+		},
+		"gcp.project.privilegedAccessManagerService.entitlement": {
+			// to override args, implement: initGcpProjectPrivilegedAccessManagerServiceEntitlement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectPrivilegedAccessManagerServiceEntitlement,
+		},
+		"gcp.project.privilegedAccessManagerService.grant": {
+			// to override args, implement: initGcpProjectPrivilegedAccessManagerServiceGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectPrivilegedAccessManagerServiceGrant,
+		},
 		"gcp.project.iapService": {
 			// to override args, implement: initGcpProjectIapService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIapService,
@@ -3289,6 +3314,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.insights": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetInsights()).ToDataRes(types.Array(types.Resource("gcp.insight")))
+	},
+	"gcp.project.privilegedAccessManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetPrivilegedAccessManager()).ToDataRes(types.Resource("gcp.project.privilegedAccessManagerService"))
 	},
 	"gcp.project.gke": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetGke()).ToDataRes(types.Resource("gcp.project.gkeService"))
@@ -5242,6 +5270,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.storageService.buckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageService).GetBuckets()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket")))
+	},
+	"gcp.project.storageService.hmacKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageService).GetHmacKeys()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.hmacKey")))
+	},
+	"gcp.project.storageService.hmacKey.accessId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetAccessId()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.hmacKey.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.hmacKey.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.hmacKey.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.storageService.hmacKey.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.hmacKey.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.storageService.hmacKey.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.storageService.hmacKey.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceHmacKey).GetEtag()).ToDataRes(types.String)
 	},
 	"gcp.project.storageService.bucket.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetId()).ToDataRes(types.String)
@@ -7972,6 +8027,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.loggingservice.cmekKmsKeyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingservice).GetCmekKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingservice).GetSettings()).ToDataRes(types.Resource("gcp.loggingSettings"))
+	},
+	"gcp.loggingSettings.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetName()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.disableDefaultSink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetDisableDefaultSink()).ToDataRes(types.Bool)
+	},
+	"gcp.loggingSettings.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.kmsServiceAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetKmsServiceAccountId()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.loggingServiceAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetLoggingServiceAccountId()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.storageLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetStorageLocation()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.defaultSinkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkConfig()).ToDataRes(types.Dict)
 	},
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetProjectId()).ToDataRes(types.String)
@@ -17561,6 +17640,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.assetService.whoCan.fullyExplored": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAssetServiceWhoCan).GetFullyExplored()).ToDataRes(types.Bool)
 	},
+	"gcp.project.privilegedAccessManagerService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerService).GetEntitlements()).ToDataRes(types.Array(types.Resource("gcp.project.privilegedAccessManagerService.entitlement")))
+	},
+	"gcp.project.privilegedAccessManagerService.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerService).GetGrants()).ToDataRes(types.Array(types.Resource("gcp.project.privilegedAccessManagerService.grant")))
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.eligiblePrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetEligiblePrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.grantedRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetGrantedRoles()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.grantedResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetGrantedResource()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.requiresApproval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetRequiresApproval()).ToDataRes(types.Bool)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.eligibleUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetEligibleUsers()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.approvalWorkflow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetApprovalWorkflow()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.privilegedAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetPrivilegedAccess()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.maxRequestDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetMaxRequestDuration()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.requesterJustificationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetRequesterJustificationConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.additionalNotificationTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetAdditionalNotificationTargets()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.requester": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetRequester()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.requestedDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetRequestedDuration()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.externallyModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetExternallyModified()).ToDataRes(types.Bool)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.justification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetJustification()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.timeline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetTimeline()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.privilegedAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetPrivilegedAccess()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.auditTrail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetAuditTrail()).ToDataRes(types.Dict)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.additionalEmailRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetAdditionalEmailRecipients()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.privilegedAccessManagerService.grant.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.privilegedAccessManagerService.grant.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).GetUpdateTime()).ToDataRes(types.Time)
+	},
 	"gcp.project.iapService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIapService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -18212,6 +18381,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.loggingService.sinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationLoggingService).GetSinks()).ToDataRes(types.Array(types.Resource("gcp.organization.loggingService.sink")))
 	},
+	"gcp.organization.loggingService.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingService).GetSettings()).ToDataRes(types.Resource("gcp.loggingSettings"))
+	},
 	"gcp.organization.loggingService.sink.organizationName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetOrganizationName()).ToDataRes(types.String)
 	},
@@ -18247,6 +18419,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.folder.loggingService.sinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolderLoggingService).GetSinks()).ToDataRes(types.Array(types.Resource("gcp.folder.loggingService.sink")))
+	},
+	"gcp.folder.loggingService.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingService).GetSettings()).ToDataRes(types.Resource("gcp.loggingSettings"))
 	},
 	"gcp.folder.loggingService.sink.folderName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolderLoggingServiceSink).GetFolderName()).ToDataRes(types.String)
@@ -19524,6 +19699,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.insights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Insights, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).PrivilegedAccessManager, ok = plugin.RawToTValue[*mqlGcpProjectPrivilegedAccessManagerService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gke": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22268,6 +22447,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageService).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageService).HmacKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.storageService.hmacKey.accessId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).AccessId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.hmacKey.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceHmacKey).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26248,6 +26467,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.loggingservice.cmekKmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingservice).CmekKmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingservice).Settings, ok = plugin.RawToTValue[*mqlGcpLoggingSettings](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.loggingSettings.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.disableDefaultSink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).DisableDefaultSink, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.kmsServiceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).KmsServiceAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.loggingServiceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).LoggingServiceAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.storageLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).StorageLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.defaultSinkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).DefaultSinkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40210,6 +40465,138 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectAssetServiceWhoCan).FullyExplored, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.privilegedAccessManagerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerService).Entitlements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerService).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.eligiblePrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).EligiblePrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.grantedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GrantedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.grantedResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).GrantedResource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.requiresApproval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).RequiresApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.eligibleUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).EligibleUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.approvalWorkflow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).ApprovalWorkflow, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.privilegedAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).PrivilegedAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.maxRequestDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).MaxRequestDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.requesterJustificationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).RequesterJustificationConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.additionalNotificationTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).AdditionalNotificationTargets, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.entitlement.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceEntitlement).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.requester": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).Requester, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.requestedDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).RequestedDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.externallyModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).ExternallyModified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.justification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).Justification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.timeline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).Timeline, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.privilegedAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).PrivilegedAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.auditTrail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).AuditTrail, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.additionalEmailRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).AdditionalEmailRecipients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.privilegedAccessManagerService.grant.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPrivilegedAccessManagerServiceGrant).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iapService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIapService).__id, ok = v.Value.(string)
 		return
@@ -41186,6 +41573,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrganizationLoggingService).Sinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.organization.loggingService.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingService).Settings, ok = plugin.RawToTValue[*mqlGcpLoggingSettings](v.Value, v.Error)
+		return
+	},
 	"gcp.organization.loggingService.sink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganizationLoggingServiceSink).__id, ok = v.Value.(string)
 		return
@@ -41240,6 +41631,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.folder.loggingService.sinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpFolderLoggingService).Sinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingService).Settings, ok = plugin.RawToTValue[*mqlGcpLoggingSettings](v.Value, v.Error)
 		return
 	},
 	"gcp.folder.loggingService.sink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44321,6 +44716,7 @@ type mqlGcpProject struct {
 	Services                 plugin.TValue[[]any]
 	Recommendations          plugin.TValue[[]any]
 	Insights                 plugin.TValue[[]any]
+	PrivilegedAccessManager  plugin.TValue[*mqlGcpProjectPrivilegedAccessManagerService]
 	Gke                      plugin.TValue[*mqlGcpProjectGkeService]
 	Compute                  plugin.TValue[*mqlGcpProjectComputeService]
 	Pubsub                   plugin.TValue[*mqlGcpProjectPubsubService]
@@ -44644,6 +45040,22 @@ func (c *mqlGcpProject) GetInsights() *plugin.TValue[[]any] {
 		}
 
 		return c.insights()
+	})
+}
+
+func (c *mqlGcpProject) GetPrivilegedAccessManager() *plugin.TValue[*mqlGcpProjectPrivilegedAccessManagerService] {
+	return plugin.GetOrCompute[*mqlGcpProjectPrivilegedAccessManagerService](&c.PrivilegedAccessManager, func() (*mqlGcpProjectPrivilegedAccessManagerService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "privilegedAccessManager")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectPrivilegedAccessManagerService), nil
+			}
+		}
+
+		return c.privilegedAccessManager()
 	})
 }
 
@@ -51263,6 +51675,7 @@ type mqlGcpProjectStorageService struct {
 	mqlGcpProjectStorageServiceInternal
 	ProjectId plugin.TValue[string]
 	Buckets   plugin.TValue[[]any]
+	HmacKeys  plugin.TValue[[]any]
 }
 
 // createGcpProjectStorageService creates a new instance of this resource
@@ -51320,6 +51733,118 @@ func (c *mqlGcpProjectStorageService) GetBuckets() *plugin.TValue[[]any] {
 
 		return c.buckets()
 	})
+}
+
+func (c *mqlGcpProjectStorageService) GetHmacKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HmacKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService", c.__id, "hmacKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hmacKeys()
+	})
+}
+
+// mqlGcpProjectStorageServiceHmacKey for the gcp.project.storageService.hmacKey resource
+type mqlGcpProjectStorageServiceHmacKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectStorageServiceHmacKeyInternal
+	AccessId            plugin.TValue[string]
+	ProjectId           plugin.TValue[string]
+	ServiceAccountEmail plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	State               plugin.TValue[string]
+	TimeCreated         plugin.TValue[*time.Time]
+	Updated             plugin.TValue[*time.Time]
+	Etag                plugin.TValue[string]
+}
+
+// createGcpProjectStorageServiceHmacKey creates a new instance of this resource
+func createGcpProjectStorageServiceHmacKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceHmacKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.hmacKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) MqlName() string {
+	return "gcp.project.storageService.hmacKey"
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetAccessId() *plugin.TValue[string] {
+	return &c.AccessId
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.hmacKey", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlGcpProjectStorageServiceHmacKey) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
 }
 
 // mqlGcpProjectStorageServiceBucket for the gcp.project.storageService.bucket resource
@@ -60505,6 +61030,7 @@ type mqlGcpProjectLoggingservice struct {
 	Sinks          plugin.TValue[[]any]
 	Exclusions     plugin.TValue[[]any]
 	CmekKmsKeyName plugin.TValue[string]
+	Settings       plugin.TValue[*mqlGcpLoggingSettings]
 }
 
 // createGcpProjectLoggingservice creates a new instance of this resource
@@ -60616,6 +61142,101 @@ func (c *mqlGcpProjectLoggingservice) GetCmekKmsKeyName() *plugin.TValue[string]
 	return plugin.GetOrCompute[string](&c.CmekKmsKeyName, func() (string, error) {
 		return c.cmekKmsKeyName()
 	})
+}
+
+func (c *mqlGcpProjectLoggingservice) GetSettings() *plugin.TValue[*mqlGcpLoggingSettings] {
+	return plugin.GetOrCompute[*mqlGcpLoggingSettings](&c.Settings, func() (*mqlGcpLoggingSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.loggingservice", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpLoggingSettings), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+// mqlGcpLoggingSettings for the gcp.loggingSettings resource
+type mqlGcpLoggingSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpLoggingSettingsInternal it will be used here
+	Name                    plugin.TValue[string]
+	DisableDefaultSink      plugin.TValue[bool]
+	KmsKeyName              plugin.TValue[string]
+	KmsServiceAccountId     plugin.TValue[string]
+	LoggingServiceAccountId plugin.TValue[string]
+	StorageLocation         plugin.TValue[string]
+	DefaultSinkConfig       plugin.TValue[any]
+}
+
+// createGcpLoggingSettings creates a new instance of this resource
+func createGcpLoggingSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpLoggingSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.loggingSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpLoggingSettings) MqlName() string {
+	return "gcp.loggingSettings"
+}
+
+func (c *mqlGcpLoggingSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpLoggingSettings) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpLoggingSettings) GetDisableDefaultSink() *plugin.TValue[bool] {
+	return &c.DisableDefaultSink
+}
+
+func (c *mqlGcpLoggingSettings) GetKmsKeyName() *plugin.TValue[string] {
+	return &c.KmsKeyName
+}
+
+func (c *mqlGcpLoggingSettings) GetKmsServiceAccountId() *plugin.TValue[string] {
+	return &c.KmsServiceAccountId
+}
+
+func (c *mqlGcpLoggingSettings) GetLoggingServiceAccountId() *plugin.TValue[string] {
+	return &c.LoggingServiceAccountId
+}
+
+func (c *mqlGcpLoggingSettings) GetStorageLocation() *plugin.TValue[string] {
+	return &c.StorageLocation
+}
+
+func (c *mqlGcpLoggingSettings) GetDefaultSinkConfig() *plugin.TValue[any] {
+	return &c.DefaultSinkConfig
 }
 
 // mqlGcpProjectLoggingserviceBucket for the gcp.project.loggingservice.bucket resource
@@ -93956,6 +94577,312 @@ func (c *mqlGcpProjectAssetServiceWhoCan) GetFullyExplored() *plugin.TValue[bool
 	})
 }
 
+// mqlGcpProjectPrivilegedAccessManagerService for the gcp.project.privilegedAccessManagerService resource
+type mqlGcpProjectPrivilegedAccessManagerService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectPrivilegedAccessManagerServiceInternal
+	ProjectId    plugin.TValue[string]
+	Entitlements plugin.TValue[[]any]
+	Grants       plugin.TValue[[]any]
+}
+
+// createGcpProjectPrivilegedAccessManagerService creates a new instance of this resource
+func createGcpProjectPrivilegedAccessManagerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectPrivilegedAccessManagerService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.privilegedAccessManagerService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerService) MqlName() string {
+	return "gcp.project.privilegedAccessManagerService"
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerService) GetEntitlements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entitlements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.privilegedAccessManagerService", c.__id, "entitlements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entitlements()
+	})
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerService) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.privilegedAccessManagerService", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+// mqlGcpProjectPrivilegedAccessManagerServiceEntitlement for the gcp.project.privilegedAccessManagerService.entitlement resource
+type mqlGcpProjectPrivilegedAccessManagerServiceEntitlement struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectPrivilegedAccessManagerServiceEntitlementInternal it will be used here
+	Name                          plugin.TValue[string]
+	State                         plugin.TValue[string]
+	EligiblePrincipals            plugin.TValue[[]any]
+	GrantedRoles                  plugin.TValue[[]any]
+	GrantedResource               plugin.TValue[string]
+	RequiresApproval              plugin.TValue[bool]
+	EligibleUsers                 plugin.TValue[[]any]
+	ApprovalWorkflow              plugin.TValue[any]
+	PrivilegedAccess              plugin.TValue[any]
+	MaxRequestDuration            plugin.TValue[string]
+	RequesterJustificationConfig  plugin.TValue[any]
+	AdditionalNotificationTargets plugin.TValue[any]
+	Etag                          plugin.TValue[string]
+	CreateTime                    plugin.TValue[*time.Time]
+	UpdateTime                    plugin.TValue[*time.Time]
+}
+
+// createGcpProjectPrivilegedAccessManagerServiceEntitlement creates a new instance of this resource
+func createGcpProjectPrivilegedAccessManagerServiceEntitlement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectPrivilegedAccessManagerServiceEntitlement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.privilegedAccessManagerService.entitlement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) MqlName() string {
+	return "gcp.project.privilegedAccessManagerService.entitlement"
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetEligiblePrincipals() *plugin.TValue[[]any] {
+	return &c.EligiblePrincipals
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetGrantedRoles() *plugin.TValue[[]any] {
+	return &c.GrantedRoles
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetGrantedResource() *plugin.TValue[string] {
+	return &c.GrantedResource
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetRequiresApproval() *plugin.TValue[bool] {
+	return &c.RequiresApproval
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetEligibleUsers() *plugin.TValue[[]any] {
+	return &c.EligibleUsers
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetApprovalWorkflow() *plugin.TValue[any] {
+	return &c.ApprovalWorkflow
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetPrivilegedAccess() *plugin.TValue[any] {
+	return &c.PrivilegedAccess
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetMaxRequestDuration() *plugin.TValue[string] {
+	return &c.MaxRequestDuration
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetRequesterJustificationConfig() *plugin.TValue[any] {
+	return &c.RequesterJustificationConfig
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetAdditionalNotificationTargets() *plugin.TValue[any] {
+	return &c.AdditionalNotificationTargets
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectPrivilegedAccessManagerServiceGrant for the gcp.project.privilegedAccessManagerService.grant resource
+type mqlGcpProjectPrivilegedAccessManagerServiceGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectPrivilegedAccessManagerServiceGrantInternal it will be used here
+	Name                      plugin.TValue[string]
+	Requester                 plugin.TValue[string]
+	RequestedDuration         plugin.TValue[string]
+	State                     plugin.TValue[string]
+	ExternallyModified        plugin.TValue[bool]
+	Justification             plugin.TValue[any]
+	Timeline                  plugin.TValue[any]
+	PrivilegedAccess          plugin.TValue[any]
+	AuditTrail                plugin.TValue[any]
+	AdditionalEmailRecipients plugin.TValue[[]any]
+	CreateTime                plugin.TValue[*time.Time]
+	UpdateTime                plugin.TValue[*time.Time]
+}
+
+// createGcpProjectPrivilegedAccessManagerServiceGrant creates a new instance of this resource
+func createGcpProjectPrivilegedAccessManagerServiceGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectPrivilegedAccessManagerServiceGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.privilegedAccessManagerService.grant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) MqlName() string {
+	return "gcp.project.privilegedAccessManagerService.grant"
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetRequester() *plugin.TValue[string] {
+	return &c.Requester
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetRequestedDuration() *plugin.TValue[string] {
+	return &c.RequestedDuration
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetExternallyModified() *plugin.TValue[bool] {
+	return &c.ExternallyModified
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetJustification() *plugin.TValue[any] {
+	return &c.Justification
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetTimeline() *plugin.TValue[any] {
+	return &c.Timeline
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetPrivilegedAccess() *plugin.TValue[any] {
+	return &c.PrivilegedAccess
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetAuditTrail() *plugin.TValue[any] {
+	return &c.AuditTrail
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetAdditionalEmailRecipients() *plugin.TValue[[]any] {
+	return &c.AdditionalEmailRecipients
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectPrivilegedAccessManagerServiceGrant) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
 // mqlGcpProjectIapService for the gcp.project.iapService resource
 type mqlGcpProjectIapService struct {
 	MqlRuntime *plugin.Runtime
@@ -96514,6 +97441,7 @@ type mqlGcpOrganizationLoggingService struct {
 	// optional: if you define mqlGcpOrganizationLoggingServiceInternal it will be used here
 	OrganizationName plugin.TValue[string]
 	Sinks            plugin.TValue[[]any]
+	Settings         plugin.TValue[*mqlGcpLoggingSettings]
 }
 
 // createGcpOrganizationLoggingService creates a new instance of this resource
@@ -96570,6 +97498,22 @@ func (c *mqlGcpOrganizationLoggingService) GetSinks() *plugin.TValue[[]any] {
 		}
 
 		return c.sinks()
+	})
+}
+
+func (c *mqlGcpOrganizationLoggingService) GetSettings() *plugin.TValue[*mqlGcpLoggingSettings] {
+	return plugin.GetOrCompute[*mqlGcpLoggingSettings](&c.Settings, func() (*mqlGcpLoggingSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization.loggingService", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpLoggingSettings), nil
+			}
+		}
+
+		return c.settings()
 	})
 }
 
@@ -96674,6 +97618,7 @@ type mqlGcpFolderLoggingService struct {
 	// optional: if you define mqlGcpFolderLoggingServiceInternal it will be used here
 	FolderName plugin.TValue[string]
 	Sinks      plugin.TValue[[]any]
+	Settings   plugin.TValue[*mqlGcpLoggingSettings]
 }
 
 // createGcpFolderLoggingService creates a new instance of this resource
@@ -96730,6 +97675,22 @@ func (c *mqlGcpFolderLoggingService) GetSinks() *plugin.TValue[[]any] {
 		}
 
 		return c.sinks()
+	})
+}
+
+func (c *mqlGcpFolderLoggingService) GetSettings() *plugin.TValue[*mqlGcpLoggingSettings] {
+	return plugin.GetOrCompute[*mqlGcpLoggingSettings](&c.Settings, func() (*mqlGcpLoggingSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder.loggingService", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpLoggingSettings), nil
+			}
+		}
+
+		return c.settings()
 	})
 }
 
