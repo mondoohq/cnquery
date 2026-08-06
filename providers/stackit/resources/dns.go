@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/dns"
+	dns "github.com/stackitcloud/stackit-sdk-go/services/dns/v1api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -21,7 +21,7 @@ func (r *mqlStackitDns) zones() ([]any, error) {
 	out := []any{}
 	const pageSize int32 = 500
 	for page := int32(1); ; page++ {
-		resp, err := client.ListZones(bgctx(), c.ProjectID()).Page(page).PageSize(pageSize).Execute()
+		resp, err := client.DefaultAPI.ListZones(bgctx(), c.ProjectID()).Page(page).PageSize(pageSize).Execute()
 		if err != nil {
 			if isAccessDenied(err) {
 				return []any{}, nil
@@ -112,7 +112,7 @@ func initStackitDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetZoneExecute(bgctx(), c.ProjectID(), id)
+	resp, err := client.DefaultAPI.GetZone(bgctx(), c.ProjectID(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -120,7 +120,7 @@ func initStackitDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if !ok {
 		return nil, nil, fmt.Errorf("stackit.dns.zone with id %q not found", id)
 	}
-	res, err := buildDnsZone(runtime, &z)
+	res, err := buildDnsZone(runtime, z)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -136,7 +136,7 @@ func (r *mqlStackitDnsZone) recordSets() ([]any, error) {
 	out := []any{}
 	const pageSize int32 = 500
 	for page := int32(1); ; page++ {
-		resp, err := client.ListRecordSets(bgctx(), c.ProjectID(), r.Id.Data).Page(page).PageSize(pageSize).Execute()
+		resp, err := client.DefaultAPI.ListRecordSets(bgctx(), c.ProjectID(), r.Id.Data).Page(page).PageSize(pageSize).Execute()
 		if err != nil {
 			if isAccessDenied(err) {
 				return []any{}, nil

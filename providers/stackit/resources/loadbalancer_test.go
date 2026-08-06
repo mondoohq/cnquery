@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/loadbalancer"
+	loadbalancer "github.com/stackitcloud/stackit-sdk-go/services/loadbalancer/v2api"
 )
 
 func TestListenerSNINames(t *testing.T) {

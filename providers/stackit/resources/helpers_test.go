@@ -301,7 +301,7 @@ func TestStringMap(t *testing.T) {
 }
 
 func TestPtrStr(t *testing.T) {
-	if got := ptrStr(nil); got != "" {
+	if got := ptrStr[*string](nil); got != "" {
 		t.Fatalf("nil pointer: expected empty string, got %q", got)
 	}
 	s := "value"

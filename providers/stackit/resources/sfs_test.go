@@ -6,7 +6,7 @@ package resources
 import "testing"
 
 func TestDerefFloat(t *testing.T) {
-	if got := derefFloat(nil); got != 0 {
+	if got := derefFloat[*float64](nil); got != 0 {
 		t.Fatalf("nil pointer: got %v, want 0", got)
 	}
 	f := 3.5

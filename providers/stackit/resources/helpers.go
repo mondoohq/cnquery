@@ -21,12 +21,28 @@ import (
 func bgctx() context.Context { return context.Background() }
 
 // timeOrNil turns a (time, ok) result from the SDK's GetXxxOk methods into the
-// *time.Time form that llx.TimeDataPtr wants. Zero time is treated as unset.
-func timeOrNil(t time.Time, ok bool) *time.Time {
-	if !ok || t.IsZero() {
+// *time.Time form that llx.TimeDataPtr wants. A nil or zero time reads as unset.
+//
+// The STACKIT service packages disagree on whether an optional timestamp comes
+// back as a value or a pointer (sfs returns time.Time, iaas and ske return
+// *time.Time), so accept both rather than making every caller adapt.
+func timeOrNil[T time.Time | *time.Time](t T, ok bool) *time.Time {
+	if !ok {
 		return nil
 	}
-	return &t
+	switch v := any(t).(type) {
+	case time.Time:
+		if v.IsZero() {
+			return nil
+		}
+		return &v
+	case *time.Time:
+		if v == nil || v.IsZero() {
+			return nil
+		}
+		return v
+	}
+	return nil
 }
 
 // rfc3339OrNil formats a (time, ok) pair from the SDK's GetXxxOk methods as an
@@ -34,11 +50,12 @@ func timeOrNil(t time.Time, ok bool) *time.Time {
 // A `dict` value must be a dict-native scalar (string/number/bool), so a
 // *time.Time cannot be stored directly; use llx.TimeDataPtr for typed `time`
 // fields and this helper only for timestamps that live inside a dict.
-func rfc3339OrNil(t time.Time, ok bool) any {
-	if !ok || t.IsZero() {
+func rfc3339OrNil[T time.Time | *time.Time](t T, ok bool) any {
+	tp := timeOrNil(t, ok)
+	if tp == nil {
 		return nil
 	}
-	return t.Format(time.RFC3339)
+	return tp.Format(time.RFC3339)
 }
 
 // parseRFC3339 turns an RFC3339 timestamp string into the *time.Time form
@@ -122,12 +139,38 @@ func labelData(in any) *llx.RawData {
 // metadataData is the same as labelData; kept distinct so callers read clearly.
 func metadataData(in any) *llx.RawData { return labelData(in) }
 
-// ptrStr derefs a nullable string returned by the SDK's getter methods.
-func ptrStr(p *string) string {
+// ptrStr derefs a nullable string returned by the SDK's getter methods. Accepts
+// the plain-string form too, since the service packages differ on which they
+// return for an optional field.
+func ptrStr[T string | *string](p T) string {
+	switch v := any(p).(type) {
+	case string:
+		return v
+	case *string:
+		if v == nil {
+			return ""
+		}
+		return *v
+	}
+	return ""
+}
+
+// derefInt64 returns the value behind a *int64, or 0 when nil.
+func derefInt64(p *int64) int64 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}
+
+// ptrEnumStr renders a pointer-to-string-enum as its string value, or "" when
+// the field is unset. The versioned service packages hand back a pointer for
+// optional enums where the root packages returned the bare enum.
+func ptrEnumStr[T ~string](p *T) string {
 	if p == nil {
 		return ""
 	}
-	return *p
+	return string(*p)
 }
 
 // toDict marshals any SDK struct (or other value) into the JSON-equivalent

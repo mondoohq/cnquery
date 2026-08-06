@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/stackitcloud/stackit-sdk-go/services/alb"
+	alb "github.com/stackitcloud/stackit-sdk-go/services/alb/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
@@ -19,7 +19,7 @@ func (r *mqlStackit) albLoadBalancers() ([]any, error) {
 	out := []any{}
 	pageId := ""
 	for {
-		req := client.ListLoadBalancers(bgctx(), c.ProjectID(), c.Region())
+		req := client.DefaultAPI.ListLoadBalancers(bgctx(), c.ProjectID(), c.Region())
 		if pageId != "" {
 			req = req.PageId(pageId)
 		}
@@ -39,10 +39,10 @@ func (r *mqlStackit) albLoadBalancers() ([]any, error) {
 			out = append(out, res)
 		}
 		next, ok := resp.GetNextPageIdOk()
-		if !ok || next == "" {
+		if !ok || next == nil || *next == "" {
 			break
 		}
-		pageId = next
+		pageId = *next
 	}
 	return out, nil
 }

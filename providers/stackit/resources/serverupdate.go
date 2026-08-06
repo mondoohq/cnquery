@@ -6,7 +6,7 @@ package resources
 import (
 	"strconv"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/serverupdate"
+	serverupdate "github.com/stackitcloud/stackit-sdk-go/services/serverupdate/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -19,7 +19,7 @@ func (r *mqlStackitServer) updates() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListUpdatesExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.ListUpdates(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
 			// A 404 means the Server Update service is not enabled for this
@@ -70,7 +70,7 @@ func (r *mqlStackitServer) updateSchedules() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListUpdateSchedulesExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.ListUpdateSchedules(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) || isNotFound(err) {
 			return []any{}, nil

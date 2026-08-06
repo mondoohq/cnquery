@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/dns"
+	dns "github.com/stackitcloud/stackit-sdk-go/services/dns/v1api"
 )
 
 func TestDnsLabels(t *testing.T) {
@@ -17,7 +17,7 @@ func TestDnsLabels(t *testing.T) {
 
 	k1, v1 := "env", "prod"
 	k2, v2 := "team", "sec"
-	in := []dns.Label{{Key: &k1, Value: &v1}, {Key: &k2, Value: &v2}}
+	in := []dns.Label{{Key: k1, Value: &v1}, {Key: k2, Value: &v2}}
 	got := dnsLabels(in)
 	want := map[string]string{"env": "prod", "team": "sec"}
 	if !reflect.DeepEqual(got, want) {

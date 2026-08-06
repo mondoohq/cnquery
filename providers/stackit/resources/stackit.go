@@ -28,7 +28,7 @@ func (r *mqlStackit) project() (*mqlStackitProject, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetProjectExecute(bgctx(), c.ProjectID())
+	resp, err := client.DefaultAPI.GetProject(bgctx(), c.ProjectID()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return markNull[mqlStackitProject](&r.Project)
@@ -52,7 +52,7 @@ func (r *mqlStackit) project() (*mqlStackitProject, error) {
 		"id":             llx.StringData(resp.GetProjectId()),
 		"name":           llx.StringData(resp.GetName()),
 		"parent":         llx.StringData(parentID),
-		"lifecycleState": llx.StringData(string(lifecycle)),
+		"lifecycleState": llx.StringData(ptrEnumStr(lifecycle)),
 		"creationTime":   llx.TimeDataPtr(timeOrNil(createdAt, ok)),
 		"labels":         labelData(labels),
 	}

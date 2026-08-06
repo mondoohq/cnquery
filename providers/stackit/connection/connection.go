@@ -13,31 +13,31 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/stackitcloud/stackit-sdk-go/core/config"
-	"github.com/stackitcloud/stackit-sdk-go/services/alb"
+	alb "github.com/stackitcloud/stackit-sdk-go/services/alb/v2api"
 	albwaf "github.com/stackitcloud/stackit-sdk-go/services/albwaf/v1betaapi"
-	"github.com/stackitcloud/stackit-sdk-go/services/authorization"
-	"github.com/stackitcloud/stackit-sdk-go/services/certificates"
-	"github.com/stackitcloud/stackit-sdk-go/services/dns"
-	"github.com/stackitcloud/stackit-sdk-go/services/iaas"
-	"github.com/stackitcloud/stackit-sdk-go/services/kms"
-	"github.com/stackitcloud/stackit-sdk-go/services/loadbalancer"
-	"github.com/stackitcloud/stackit-sdk-go/services/logme"
-	"github.com/stackitcloud/stackit-sdk-go/services/mariadb"
-	"github.com/stackitcloud/stackit-sdk-go/services/modelserving"
-	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
-	"github.com/stackitcloud/stackit-sdk-go/services/objectstorage"
-	"github.com/stackitcloud/stackit-sdk-go/services/observability"
-	"github.com/stackitcloud/stackit-sdk-go/services/opensearch"
+	authorization "github.com/stackitcloud/stackit-sdk-go/services/authorization/v2api"
+	certificates "github.com/stackitcloud/stackit-sdk-go/services/certificates/v2api"
+	dns "github.com/stackitcloud/stackit-sdk-go/services/dns/v1api"
+	iaas "github.com/stackitcloud/stackit-sdk-go/services/iaas/v2api"
+	kms "github.com/stackitcloud/stackit-sdk-go/services/kms/v1api"
+	loadbalancer "github.com/stackitcloud/stackit-sdk-go/services/loadbalancer/v2api"
+	logme "github.com/stackitcloud/stackit-sdk-go/services/logme/v2api"
+	mariadb "github.com/stackitcloud/stackit-sdk-go/services/mariadb/v2api"
+	modelserving "github.com/stackitcloud/stackit-sdk-go/services/modelserving/v1api"
+	mongodbflex "github.com/stackitcloud/stackit-sdk-go/services/mongodbflex/v2api"
+	objectstorage "github.com/stackitcloud/stackit-sdk-go/services/objectstorage/v2api"
+	observability "github.com/stackitcloud/stackit-sdk-go/services/observability/v1api"
+	opensearch "github.com/stackitcloud/stackit-sdk-go/services/opensearch/v2api"
 	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
-	"github.com/stackitcloud/stackit-sdk-go/services/rabbitmq"
-	"github.com/stackitcloud/stackit-sdk-go/services/redis"
-	"github.com/stackitcloud/stackit-sdk-go/services/resourcemanager"
-	"github.com/stackitcloud/stackit-sdk-go/services/secretsmanager"
-	"github.com/stackitcloud/stackit-sdk-go/services/serverbackup"
-	"github.com/stackitcloud/stackit-sdk-go/services/serverupdate"
-	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
-	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
-	"github.com/stackitcloud/stackit-sdk-go/services/ske"
+	rabbitmq "github.com/stackitcloud/stackit-sdk-go/services/rabbitmq/v2api"
+	redis "github.com/stackitcloud/stackit-sdk-go/services/redis/v2api"
+	resourcemanager "github.com/stackitcloud/stackit-sdk-go/services/resourcemanager/v0api"
+	secretsmanager "github.com/stackitcloud/stackit-sdk-go/services/secretsmanager/v1api"
+	serverbackup "github.com/stackitcloud/stackit-sdk-go/services/serverbackup/v2api"
+	serverupdate "github.com/stackitcloud/stackit-sdk-go/services/serverupdate/v2api"
+	serviceaccount "github.com/stackitcloud/stackit-sdk-go/services/serviceaccount/v2api"
+	sfs "github.com/stackitcloud/stackit-sdk-go/services/sfs/v1api"
+	ske "github.com/stackitcloud/stackit-sdk-go/services/ske/v2api"
 	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	telemetrylink "github.com/stackitcloud/stackit-sdk-go/services/telemetrylink/v1betaapi"
 	telemetryrouter "github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter/v1betaapi"
@@ -259,7 +259,7 @@ func (c *StackitConnection) Verify(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, err := client.GetProjectExecute(ctx, c.projectID)
+	resp, err := client.DefaultAPI.GetProject(ctx, c.projectID).Execute()
 	if err != nil {
 		log.Warn().Err(err).Msg("stackit> verify project lookup failed")
 		return fmt.Errorf("failed to verify STACKIT connection for project %s: %w", c.projectID, err)
@@ -279,7 +279,7 @@ func (c *StackitConnection) captureProjectMetadata(resp *resourcemanager.GetProj
 	if labels, ok := resp.GetLabelsOk(); ok && labels != nil {
 		// Snapshot the map so a later SDK mutation of its internal copy cannot
 		// change our captured labels, honoring the ProjectLabels() contract.
-		c.projectLabels = maps.Clone(labels)
+		c.projectLabels = maps.Clone(*labels)
 	}
 	if parent, ok := resp.GetParentOk(); ok {
 		c.projectParent = parent.GetContainerId()

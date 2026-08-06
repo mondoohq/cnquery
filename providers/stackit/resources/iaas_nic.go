@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/stackitcloud/stackit-sdk-go/services/iaas"
+	iaas "github.com/stackitcloud/stackit-sdk-go/services/iaas/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -18,7 +18,7 @@ func (r *mqlStackitNetwork) nics() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListNicsExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
+	resp, err := client.DefaultAPI.ListNics(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -36,7 +36,7 @@ func (r *mqlStackitServer) networkInterfaces() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListServerNICsExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
+	resp, err := client.DefaultAPI.ListServerNICs(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil

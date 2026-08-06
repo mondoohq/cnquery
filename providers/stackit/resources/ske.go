@@ -6,7 +6,7 @@ package resources
 import (
 	"time"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/ske"
+	ske "github.com/stackitcloud/stackit-sdk-go/services/ske/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
@@ -18,7 +18,7 @@ func (r *mqlStackitSke) clusters() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListClustersExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListClusters(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -59,15 +59,15 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 	if status, ok := cluster.GetStatusOk(); ok {
 		aggregated = string(status.GetAggregated())
 		if ct, ok := status.GetCreationTimeOk(); ok && !ct.IsZero() {
-			creationTime = &ct
+			creationTime = ct
 		}
 		if cr, ok := status.GetCredentialsRotationOk(); ok {
 			credRotPhase = string(cr.GetPhase())
 			if t, ok := cr.GetLastInitiationTimeOk(); ok && !t.IsZero() {
-				credRotInitiated = &t
+				credRotInitiated = t
 			}
 			if t, ok := cr.GetLastCompletionTimeOk(); ok && !t.IsZero() {
-				credRotCompleted = &t
+				credRotCompleted = t
 			}
 		}
 		if r, ok := status.GetEgressAddressRangesOk(); ok {
@@ -224,7 +224,7 @@ func (r *mqlStackitSkeCluster) nodePools() ([]any, error) {
 		var volSize int64
 		var volType string
 		if v, ok := np.GetVolumeOk(); ok {
-			volSize = v.GetSize()
+			volSize = int64(v.GetSize())
 			volType = v.GetType()
 		}
 
@@ -305,7 +305,7 @@ func initStackitSkeCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return nil, nil, err
 	}
-	cluster, err := client.GetClusterExecute(bgctx(), c.ProjectID(), c.Region(), name)
+	cluster, err := client.DefaultAPI.GetCluster(bgctx(), c.ProjectID(), c.Region(), name).Execute()
 	if err != nil {
 		return nil, nil, err
 	}

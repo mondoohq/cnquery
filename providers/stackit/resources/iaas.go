@@ -6,7 +6,7 @@ package resources
 import (
 	"strconv"
 
-	"github.com/stackitcloud/stackit-sdk-go/services/iaas"
+	iaas "github.com/stackitcloud/stackit-sdk-go/services/iaas/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
@@ -22,7 +22,7 @@ func (r *mqlStackit) servers() ([]any, error) {
 	}
 	// Details(true) so the response includes nics, security groups, and volumes;
 	// without it the API returns servers with those fields empty.
-	resp, err := client.ListServers(bgctx(), c.ProjectID(), c.Region()).Details(true).Execute()
+	resp, err := client.DefaultAPI.ListServers(bgctx(), c.ProjectID(), c.Region()).Details(true).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -118,7 +118,7 @@ func initStackitServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	s, err := client.GetServer(bgctx(), c.ProjectID(), c.Region(), id).Details(true).Execute()
+	s, err := client.DefaultAPI.GetServer(bgctx(), c.ProjectID(), c.Region(), id).Details(true).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -254,7 +254,7 @@ func (r *mqlStackit) volumes() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListVolumesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListVolumes(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -347,7 +347,7 @@ func initStackitVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	v, err := client.GetVolumeExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	v, err := client.DefaultAPI.GetVolume(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -418,7 +418,7 @@ func (r *mqlStackit) snapshots() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListSnapshotsInProjectExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListSnapshotsInProject(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -468,7 +468,7 @@ func initStackitSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	if err != nil {
 		return nil, nil, err
 	}
-	s, err := client.GetSnapshotExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	s, err := client.DefaultAPI.GetSnapshot(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -500,7 +500,7 @@ func (r *mqlStackit) images() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListImagesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListImages(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -531,17 +531,17 @@ func buildImage(runtime *plugin.Runtime, img *iaas.Image) (plugin.Resource, erro
 	if cfg, ok := img.GetConfigOk(); ok {
 		config = map[string]any{
 			"bootMenu":               cfg.GetBootMenu(),
-			"cdromBus":               ptrStr(cfg.GetCdromBus()),
-			"diskBus":                ptrStr(cfg.GetDiskBus()),
-			"nicModel":               ptrStr(cfg.GetNicModel()),
+			"cdromBus":               cfg.GetCdromBus(),
+			"diskBus":                cfg.GetDiskBus(),
+			"nicModel":               cfg.GetNicModel(),
 			"operatingSystem":        cfg.GetOperatingSystem(),
-			"operatingSystemDistro":  ptrStr(cfg.GetOperatingSystemDistro()),
-			"operatingSystemVersion": ptrStr(cfg.GetOperatingSystemVersion()),
-			"rescueBus":              ptrStr(cfg.GetRescueBus()),
-			"rescueDevice":           ptrStr(cfg.GetRescueDevice()),
+			"operatingSystemDistro":  cfg.GetOperatingSystemDistro(),
+			"operatingSystemVersion": cfg.GetOperatingSystemVersion(),
+			"rescueBus":              cfg.GetRescueBus(),
+			"rescueDevice":           cfg.GetRescueDevice(),
 			"secureBoot":             cfg.GetSecureBoot(),
 			"uefi":                   cfg.GetUefi(),
-			"videoModel":             ptrStr(cfg.GetVideoModel()),
+			"videoModel":             cfg.GetVideoModel(),
 			"virtioScsi":             cfg.GetVirtioScsi(),
 		}
 	}
@@ -581,7 +581,7 @@ func initStackitImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	if err != nil {
 		return nil, nil, err
 	}
-	img, err := client.GetImageExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	img, err := client.DefaultAPI.GetImage(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -600,7 +600,7 @@ func (r *mqlStackit) networks() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListNetworksExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListNetworks(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -631,7 +631,7 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 		ipv6PrefixSing string
 	)
 	if ipv4 := n.GetIpv4(); !iaasNetworkIPv4Empty(ipv4) {
-		ipv4Gateway = ptrStr(ipv4.GetGateway())
+		ipv4Gateway = ipv4.GetGateway()
 		ipv4Nameserv = ipv4.GetNameservers()
 		ipv4Prefixes = ipv4.GetPrefixes()
 		if len(ipv4Prefixes) > 0 {
@@ -639,7 +639,7 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 		}
 	}
 	if ipv6 := n.GetIpv6(); !iaasNetworkIPv6Empty(ipv6) {
-		ipv6Gateway = ptrStr(ipv6.GetGateway())
+		ipv6Gateway = ipv6.GetGateway()
 		ipv6Nameserv = ipv6.GetNameservers()
 		ipv6Prefixes = ipv6.GetPrefixes()
 		if len(ipv6Prefixes) > 0 {
@@ -682,7 +682,7 @@ func initStackitNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if err != nil {
 		return nil, nil, err
 	}
-	n, err := client.GetNetworkExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	n, err := client.DefaultAPI.GetNetwork(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -697,11 +697,11 @@ func initStackitNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 // always return a (possibly zero-value) struct, so check the inner pointers
 // for "set"-ness instead.
 func iaasNetworkIPv4Empty(v iaas.NetworkIPv4) bool {
-	return v.Gateway == nil && v.Nameservers == nil && v.Prefixes == nil && v.PublicIp == nil
+	return !v.Gateway.IsSet() && v.Nameservers == nil && v.Prefixes == nil && v.PublicIp == nil
 }
 
 func iaasNetworkIPv6Empty(v iaas.NetworkIPv6) bool {
-	return v.Gateway == nil && v.Nameservers == nil && v.Prefixes == nil
+	return !v.Gateway.IsSet() && v.Nameservers == nil && v.Prefixes == nil
 }
 
 // ------------------------- public IPs -------------------------
@@ -712,7 +712,7 @@ func (r *mqlStackit) publicIps() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListPublicIPsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListPublicIPs(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -735,7 +735,7 @@ func buildPublicIp(runtime *plugin.Runtime, ip *iaas.PublicIp) (plugin.Resource,
 	args := map[string]*llx.RawData{
 		"id":                 llx.StringData(ip.GetId()),
 		"ip":                 llx.StringData(ip.GetIp()),
-		"networkInterfaceId": llx.StringData(ptrStr(ip.GetNetworkInterface())),
+		"networkInterfaceId": llx.StringData(ip.GetNetworkInterface()),
 		"labels":             labelData(ip.GetLabels()),
 	}
 	return CreateResource(runtime, "stackit.publicIp", args)
@@ -755,7 +755,7 @@ func initStackitPublicIp(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	if err != nil {
 		return nil, nil, err
 	}
-	ip, err := client.GetPublicIPExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	ip, err := client.DefaultAPI.GetPublicIP(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -774,7 +774,7 @@ func (r *mqlStackit) securityGroups() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListSecurityGroupsExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListSecurityGroups(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -822,7 +822,7 @@ func initStackitSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
-	sg, err := client.GetSecurityGroupExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	sg, err := client.DefaultAPI.GetSecurityGroup(bgctx(), c.ProjectID(), c.Region(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -839,7 +839,7 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListSecurityGroupRulesExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
+	resp, err := client.DefaultAPI.ListSecurityGroupRules(bgctx(), c.ProjectID(), c.Region(), r.Id.Data).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -868,7 +868,7 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 		var protocol string
 		if p, ok := rule.GetProtocolOk(); ok {
 			n, okNum := p.GetNumberOk()
-			protocol = protocolLabel(p.GetName(), n, okNum)
+			protocol = protocolLabel(p.GetName(), derefInt64(n), okNum && n != nil)
 		}
 
 		createdAt, okCreated := rule.GetCreatedAtOk()
@@ -923,7 +923,7 @@ func (r *mqlStackit) keyPairs() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListKeyPairsExecute(bgctx())
+	resp, err := client.DefaultAPI.ListKeyPairs(bgctx()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -974,7 +974,7 @@ func initStackitKeyPair(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if err != nil {
 		return nil, nil, err
 	}
-	kp, err := client.GetKeyPairExecute(bgctx(), name)
+	kp, err := client.DefaultAPI.GetKeyPair(bgctx(), name).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
