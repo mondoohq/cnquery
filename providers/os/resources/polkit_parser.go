@@ -278,6 +278,13 @@ func polkitRuleFactsFrom(body string) polkitRuleFacts {
 // Separating the two keeps a commented-out rule from being reported as live
 // configuration, and keeps the "//" in a URL inside a string from being
 // mistaken for the start of a comment.
+//
+// A backtick literal is read to its closing backtick, so a `${...}`
+// interpolation is captured as part of the literal rather than as code. Two
+// consequences, both accepted because polkit rules are plain ECMAScript 5 and do
+// not use template literals: a result value referenced only inside an
+// interpolation is not reported, and a backtick nested inside an interpolation
+// ends the literal early.
 func scanPolkitRuleBody(body string) (literals []string, code string) {
 	literals = []string{}
 
@@ -302,7 +309,9 @@ func scanPolkitRuleBody(body string) (literals []string, code string) {
 				for i+1 < len(runes) && (runes[i] != '*' || runes[i+1] != '/') {
 					i++
 				}
-				// land on the closing slash; the loop steps past it
+				// land on the closing slash so the loop steps past it. On a
+				// truncated file with no closing "*/" the scan already sits at the
+				// end, and advancing once more only ends the loop.
 				i++
 				out.WriteRune(' ')
 				continue

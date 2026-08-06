@@ -213,6 +213,14 @@ func TestPolkitRuleFactsFrom_TemplateLiteral(t *testing.T) {
 	assert.Equal(t, []string{"NO"}, facts.Results)
 }
 
+func TestPolkitRuleFactsFrom_TemplateLiteralInterpolation(t *testing.T) {
+	// an interpolation is captured as part of the literal, so the call inside it
+	// is not read as code; the surrounding statements still are
+	facts := polkitRuleFactsFrom("polkit.log(`action: ${describe(polkit.Result.YES)}`); return polkit.Result.NO;")
+
+	assert.Equal(t, []string{"NO"}, facts.Results)
+}
+
 func TestPolkitRuleFactsFrom_EscapedQuoteInLiteral(t *testing.T) {
 	facts := polkitRuleFactsFrom(`var a = "he said \"hi\""; var b = "org.example.after";`)
 
