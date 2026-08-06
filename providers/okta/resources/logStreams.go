@@ -67,18 +67,30 @@ func (o *mqlOkta) logStreams() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaLogStream(runtime *plugin.Runtime, entry *okta.ListLogStreams200ResponseInner) (any, error) {
+// decodeOktaLogStream flattens one entry of the polymorphic listing into the
+// shared fields plus its type-specific settings, dropping the Splunk token.
+// Kept separate from resource construction so the redaction is testable.
+func decodeOktaLogStream(entry *okta.ListLogStreams200ResponseInner) (*oktaLogStreamRaw, error) {
 	raw, err := json.Marshal(entry.GetActualInstance())
 	if err != nil {
 		return nil, err
 	}
-	var stream oktaLogStreamRaw
-	if err := json.Unmarshal(raw, &stream); err != nil {
+	stream := &oktaLogStreamRaw{}
+	if err := json.Unmarshal(raw, stream); err != nil {
 		return nil, err
 	}
 
 	// The Splunk token is a secret; never expose it.
 	delete(stream.Settings, "token")
+	return stream, nil
+}
+
+func newMqlOktaLogStream(runtime *plugin.Runtime, entry *okta.ListLogStreams200ResponseInner) (any, error) {
+	stream, err := decodeOktaLogStream(entry)
+	if err != nil {
+		return nil, err
+	}
+
 	settings, err := convert.JsonToDict(stream.Settings)
 	if err != nil {
 		return nil, err

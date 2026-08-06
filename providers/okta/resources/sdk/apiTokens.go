@@ -37,7 +37,7 @@ func (m *ApiExtension) ListApiTokens(ctx context.Context, limit int) ([]*ApiToke
 	if limit > 0 {
 		params.Set("limit", strconv.Itoa(limit))
 	}
-	nextURL := m.url("/api/v1/api-tokens") + "?" + params.Encode()
+	nextURL := m.urlWithParams("/api/v1/api-tokens", params)
 
 	result := []*ApiToken{}
 	for i := 0; i < maxPages && nextURL != ""; i++ {

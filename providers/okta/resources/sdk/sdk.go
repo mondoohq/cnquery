@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 // ApiExtension handles cases where Okta's SDK doesn't expose a particular API.
@@ -72,4 +73,15 @@ func (m *ApiExtension) get(ctx context.Context, url string, out any) (*http.Resp
 // url builds an absolute org URL for the given API path (e.g. "/api/v1/zones").
 func (m *ApiExtension) url(path string) string {
 	return fmt.Sprintf("https://%s%s", m.Host, path)
+}
+
+// urlWithParams builds an absolute org URL with a query string, omitting the
+// "?" entirely when there are no parameters so the URL does not end in a bare
+// separator.
+func (m *ApiExtension) urlWithParams(path string, params url.Values) string {
+	u := m.url(path)
+	if len(params) == 0 {
+		return u
+	}
+	return u + "?" + params.Encode()
 }

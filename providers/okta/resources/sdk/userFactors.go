@@ -18,7 +18,7 @@ import (
 // The endpoint returns every enrolled factor in a single response, so there is
 // no `Link: rel="next"` loop here.
 func (m *ApiExtension) ListUserFactors(ctx context.Context, userId string) ([]json.RawMessage, error) {
-	factors := []json.RawMessage{}
+	var factors []json.RawMessage
 	_, err := m.get(ctx, m.url("/api/v1/users/"+url.PathEscape(userId)+"/factors"), &factors)
 	if err != nil {
 		return nil, err
