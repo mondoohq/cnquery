@@ -344,6 +344,26 @@ func newMqlHetznerServerPrivateNet(runtime *plugin.Runtime, serverID int64, p hc
 	return res.(*mqlHetznerServerPrivateNet), nil
 }
 
+// serverRef builds a lazy hetzner.server reference from its id, used by the
+// sub-resources that point back at their parent server.
+func serverRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerServer], id int64) (*mqlHetznerServer, error) {
+	if id == 0 {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(runtime, "hetzner.server", map[string]*llx.RawData{
+		"id": llx.IntData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerServer), nil
+}
+
+func (m *mqlHetznerServerPrivateNet) server() (*mqlHetznerServer, error) {
+	return serverRef(m.MqlRuntime, &m.Server, m.ServerId.Data)
+}
+
 func (m *mqlHetznerServerPrivateNet) network() (*mqlHetznerNetwork, error) {
 	if m.NetworkId.Data == 0 {
 		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
@@ -375,6 +395,10 @@ func newMqlHetznerServerFirewallBinding(runtime *plugin.Runtime, serverID int64,
 		return nil, err
 	}
 	return res.(*mqlHetznerServerFirewallBinding), nil
+}
+
+func (m *mqlHetznerServerFirewallBinding) server() (*mqlHetznerServer, error) {
+	return serverRef(m.MqlRuntime, &m.Server, m.ServerId.Data)
 }
 
 func (m *mqlHetznerServerFirewallBinding) firewall() (*mqlHetznerFirewall, error) {

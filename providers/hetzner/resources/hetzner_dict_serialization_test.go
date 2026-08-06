@@ -60,6 +60,30 @@ func TestDeprecationDict(t *testing.T) {
 	})
 }
 
+func TestZonePrimaryNameserverDicts(t *testing.T) {
+	got := zonePrimaryNameserverDicts([]hcloud.ZonePrimaryNameserver{
+		{Address: "203.0.113.53", Port: 53, TSIGAlgorithm: hcloud.ZoneTSIGAlgorithmHMACSHA256, TSIGKey: "c2VjcmV0"},
+		{Address: "198.51.100.53", Port: 5353},
+	})
+	require.Len(t, got, 2)
+
+	authenticated := got[0].(map[string]any)
+	assert.Equal(t, "203.0.113.53", authenticated["address"])
+	assert.Equal(t, int64(53), authenticated["port"])
+	assert.Equal(t, true, authenticated["tsigConfigured"])
+	// The shared secret itself must never reach queryable data, under any key.
+	for k, v := range authenticated {
+		assert.NotEqual(t, "c2VjcmV0", v, "TSIG key leaked via key %q", k)
+	}
+
+	unauthenticated := got[1].(map[string]any)
+	assert.Equal(t, false, unauthenticated["tsigConfigured"])
+	assert.Equal(t, "", unauthenticated["tsigAlgorithm"])
+
+	requireDictArraySerializes(t, got)
+	assert.Empty(t, zonePrimaryNameserverDicts(nil))
+}
+
 func TestLoadBalancerHealthCheckDict(t *testing.T) {
 	t.Run("tcp check widens int ports and serializes", func(t *testing.T) {
 		d := loadBalancerHealthCheckDict(hcloud.LoadBalancerServiceHealthCheck{

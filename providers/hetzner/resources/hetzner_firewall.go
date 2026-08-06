@@ -135,6 +135,30 @@ func initHetznerFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	return args, res, err
 }
 
+// rulesRestrictEgress reports whether a rule set constrains outbound traffic.
+// Hetzner permits all egress unless at least one rule carries direction "out",
+// at which point only traffic matching those rules is allowed.
+func rulesRestrictEgress(rules []any) bool {
+	for _, r := range rules {
+		rule, ok := r.(map[string]any)
+		if !ok {
+			continue
+		}
+		if direction, _ := rule["direction"].(string); direction == "out" {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *mqlHetznerFirewall) egressRestricted() (bool, error) {
+	rules := m.GetRules()
+	if rules.Error != nil {
+		return false, rules.Error
+	}
+	return rulesRestrictEgress(rules.Data), nil
+}
+
 func (m *mqlHetznerFirewall) servers() ([]any, error) {
 	return serverRefs(m.MqlRuntime, m.cacheServerIDs)
 }

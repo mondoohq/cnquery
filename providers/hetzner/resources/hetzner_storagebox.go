@@ -161,6 +161,30 @@ func (m *mqlHetznerStorageBox) snapshots() ([]any, error) {
 	return out, nil
 }
 
+// storageBoxRef builds a lazy hetzner.storageBox reference from its id, used by
+// the sub-resources that point back at their parent box.
+func storageBoxRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerStorageBox], id int64) (*mqlHetznerStorageBox, error) {
+	if id == 0 {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(runtime, "hetzner.storageBox", map[string]*llx.RawData{
+		"id": llx.IntData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerStorageBox), nil
+}
+
+func (m *mqlHetznerStorageBoxSubaccount) storageBox() (*mqlHetznerStorageBox, error) {
+	return storageBoxRef(m.MqlRuntime, &m.StorageBox, m.StorageBoxId.Data)
+}
+
+func (m *mqlHetznerStorageBoxSnapshot) storageBox() (*mqlHetznerStorageBox, error) {
+	return storageBoxRef(m.MqlRuntime, &m.StorageBox, m.StorageBoxId.Data)
+}
+
 func (r *mqlHetznerStorageBoxSubaccount) id() (string, error) {
 	return fmt.Sprintf("hetzner.storageBox.subaccount/%d/%d", r.StorageBoxId.Data, r.Id.Data), nil
 }

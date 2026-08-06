@@ -98,6 +98,20 @@ func newMqlHetznerServerTypeLocation(runtime *plugin.Runtime, serverTypeID int64
 	return res.(*mqlHetznerServerTypeLocation), nil
 }
 
+func (m *mqlHetznerServerTypeLocation) serverType() (*mqlHetznerServerType, error) {
+	if m.ServerTypeId.Data == 0 {
+		m.ServerType.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(m.MqlRuntime, "hetzner.serverType", map[string]*llx.RawData{
+		"id": llx.IntData(m.ServerTypeId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerServerType), nil
+}
+
 func (m *mqlHetznerServerTypeLocation) location() (*mqlHetznerLocation, error) {
 	if m.LocationId.Data == 0 {
 		m.Location.State = plugin.StateIsSet | plugin.StateIsNull
