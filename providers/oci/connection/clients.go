@@ -36,6 +36,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/oracle/oci-go-sdk/v65/logging"
+	"github.com/oracle/oci-go-sdk/v65/managedkafka"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
 	"github.com/oracle/oci-go-sdk/v65/mysql"
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
@@ -45,8 +46,10 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/opensearch"
 	"github.com/oracle/oci-go-sdk/v65/psql"
+	"github.com/oracle/oci-go-sdk/v65/queue"
 	"github.com/oracle/oci-go-sdk/v65/redis"
 	"github.com/oracle/oci-go-sdk/v65/sch"
+	"github.com/oracle/oci-go-sdk/v65/streaming"
 	"github.com/oracle/oci-go-sdk/v65/vault"
 	"github.com/oracle/oci-go-sdk/v65/vulnerabilityscanning"
 	"github.com/oracle/oci-go-sdk/v65/waf"
@@ -175,6 +178,33 @@ func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient
 
 func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) StreamAdminClient(region string) (*streaming.StreamAdminClient, error) {
+	client, err := streaming.NewStreamAdminClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) QueueAdminClient(region string) (*queue.QueueAdminClient, error) {
+	client, err := queue.NewQueueAdminClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) KafkaClusterClient(region string) (*managedkafka.KafkaClusterClient, error) {
+	client, err := managedkafka.NewKafkaClusterClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
