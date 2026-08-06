@@ -245,6 +245,8 @@ const (
 	ResourcePolkitAction                                  string = "polkit.action"
 	ResourcePolkitRule                                    string = "polkit.rule"
 	ResourcePolkitLocalAuthorityRule                      string = "polkit.localAuthorityRule"
+	ResourceAide                                          string = "aide"
+	ResourceAideRule                                      string = "aide.rule"
 	ResourceModprobe                                      string = "modprobe"
 	ResourceModprobeInstall                               string = "modprobe.install"
 	ResourceModprobeRemove                                string = "modprobe.remove"
@@ -1446,6 +1448,14 @@ func init() {
 		"polkit.localAuthorityRule": {
 			// to override args, implement: initPolkitLocalAuthorityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPolkitLocalAuthorityRule,
+		},
+		"aide": {
+			// to override args, implement: initAide(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAide,
+		},
+		"aide.rule": {
+			// to override args, implement: initAideRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAideRule,
 		},
 		"modprobe": {
 			Init:   initModprobe,
@@ -7491,6 +7501,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"polkit.localAuthorityRule.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPolkitLocalAuthorityRule).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"aide.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"aide.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetVersion()).ToDataRes(types.String)
+	},
+	"aide.configFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetConfigFile()).ToDataRes(types.Resource("file"))
+	},
+	"aide.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"aide.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aide.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetGroups()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aide.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetRules()).ToDataRes(types.Array(types.Resource("aide.rule")))
+	},
+	"aide.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetDatabase()).ToDataRes(types.Resource("file"))
+	},
+	"aide.newDatabase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAide).GetNewDatabase()).ToDataRes(types.Resource("file"))
+	},
+	"aide.rule.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAideRule).GetPath()).ToDataRes(types.String)
+	},
+	"aide.rule.selection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAideRule).GetSelection()).ToDataRes(types.String)
+	},
+	"aide.rule.expression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAideRule).GetExpression()).ToDataRes(types.String)
+	},
+	"aide.rule.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAideRule).GetAttributes()).ToDataRes(types.Array(types.String))
+	},
+	"aide.rule.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAideRule).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"aide.rule.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAideRule).GetFile()).ToDataRes(types.Resource("file"))
 	},
 	"modprobe.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlModprobe).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -20476,6 +20531,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"polkit.localAuthorityRule.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPolkitLocalAuthorityRule).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"aide.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).__id, ok = v.Value.(string)
+		return
+	},
+	"aide.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aide.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aide.configFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).ConfigFile, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"aide.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aide.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aide.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Groups, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aide.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aide.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).Database, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"aide.newDatabase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAide).NewDatabase, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"aide.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aide.rule.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aide.rule.selection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).Selection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aide.rule.expression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aide.rule.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aide.rule.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aide.rule.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAideRule).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
 	},
 	"modprobe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52290,6 +52413,232 @@ func (c *mqlPolkitLocalAuthorityRule) GetResultActive() *plugin.TValue[string] {
 }
 
 func (c *mqlPolkitLocalAuthorityRule) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+// mqlAide for the aide resource
+type mqlAide struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAideInternal
+	Installed   plugin.TValue[bool]
+	Version     plugin.TValue[string]
+	ConfigFile  plugin.TValue[*mqlFile]
+	Files       plugin.TValue[[]any]
+	Params      plugin.TValue[map[string]any]
+	Groups      plugin.TValue[map[string]any]
+	Rules       plugin.TValue[[]any]
+	Database    plugin.TValue[*mqlFile]
+	NewDatabase plugin.TValue[*mqlFile]
+}
+
+// createAide creates a new instance of this resource
+func createAide(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAide{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aide", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAide) MqlName() string {
+	return "aide"
+}
+
+func (c *mqlAide) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAide) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlAide) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAide) GetConfigFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.ConfigFile, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aide", c.__id, "configFile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.configFile()
+	})
+}
+
+func (c *mqlAide) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aide", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlAide) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		return c.params()
+	})
+}
+
+func (c *mqlAide) GetGroups() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Groups, func() (map[string]any, error) {
+		return c.groups()
+	})
+}
+
+func (c *mqlAide) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aide", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlAide) GetDatabase() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.Database, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aide", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlAide) GetNewDatabase() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.NewDatabase, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aide", c.__id, "newDatabase")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.newDatabase()
+	})
+}
+
+// mqlAideRule for the aide.rule resource
+type mqlAideRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAideRuleInternal it will be used here
+	Path       plugin.TValue[string]
+	Selection  plugin.TValue[string]
+	Expression plugin.TValue[string]
+	Attributes plugin.TValue[[]any]
+	LineNumber plugin.TValue[int64]
+	File       plugin.TValue[*mqlFile]
+}
+
+// createAideRule creates a new instance of this resource
+func createAideRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAideRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aide.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAideRule) MqlName() string {
+	return "aide.rule"
+}
+
+func (c *mqlAideRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAideRule) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAideRule) GetSelection() *plugin.TValue[string] {
+	return &c.Selection
+}
+
+func (c *mqlAideRule) GetExpression() *plugin.TValue[string] {
+	return &c.Expression
+}
+
+func (c *mqlAideRule) GetAttributes() *plugin.TValue[[]any] {
+	return &c.Attributes
+}
+
+func (c *mqlAideRule) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlAideRule) GetFile() *plugin.TValue[*mqlFile] {
 	return &c.File
 }
 
