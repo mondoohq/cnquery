@@ -102,19 +102,94 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
+// backupVaultNameFromArn extracts the vault name from a backup vault ARN of the
+// form arn:aws:backup:<region>:<account>:backup-vault:<name>.
+func backupVaultNameFromArn(vaultArn string) (name, region string, err error) {
+	parsed, err := arn.Parse(vaultArn)
+	if err != nil {
+		return "", "", err
+	}
+	return strings.TrimPrefix(parsed.Resource, "backup-vault:"), parsed.Region, nil
+}
+
+// initAwsBackupVault resolves a vault from its ARN, or from a name and region.
+// Without it, the typed vault accessors on scan jobs, copy actions, and access
+// points would hand back a resource whose fields are all unset.
+func initAwsBackupVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	var name, region string
+	if args["arn"] != nil {
+		var err error
+		name, region, err = backupVaultNameFromArn(args["arn"].Value.(string))
+		if err != nil {
+			return nil, nil, err
+		}
+	} else if args["name"] != nil && args["region"] != nil {
+		name = args["name"].Value.(string)
+		region = args["region"].Value.(string)
+	} else {
+		return nil, nil, errors.New("arn, or name and region, required to fetch aws backup vault")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Backup(region)
+	vault, err := svc.DescribeBackupVault(context.Background(), &backup.DescribeBackupVaultInput{
+		BackupVaultName: &name,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	args["arn"] = llx.StringDataPtr(vault.BackupVaultArn)
+	args["name"] = llx.StringDataPtr(vault.BackupVaultName)
+	args["region"] = llx.StringData(region)
+	args["createdAt"] = llx.TimeDataPtr(vault.CreationDate)
+	args["encryptionKeyArn"] = llx.StringDataPtr(vault.EncryptionKeyArn)
+	args["locked"] = llx.BoolDataPtr(vault.Locked)
+	args["lockedAt"] = llx.TimeDataPtr(vault.LockDate)
+	args["maxRetentionDays"] = llx.IntDataPtr(vault.MaxRetentionDays)
+	args["minRetentionDays"] = llx.IntDataPtr(vault.MinRetentionDays)
+	return args, nil, nil
+}
+
+// newMqlBackupRecoveryPoint builds a recovery point resource. Both the vault
+// listing and the per-recovery-point describe call feed through here so the two
+// paths populate an identical resource.
+func newMqlBackupRecoveryPoint(runtime *plugin.Runtime, rp backuptypes.RecoveryPointByBackupVault) (plugin.Resource, error) {
+	createdBy, err := convert.JsonToDict(rp.CreatedBy)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, "aws.backup.vaultRecoveryPoint",
+		map[string]*llx.RawData{
+			"arn":                  llx.StringDataPtr(rp.RecoveryPointArn),
+			"completionDate":       llx.TimeDataPtr(rp.CompletionDate),
+			"createdAt":            llx.TimeDataPtr(rp.CreationDate),
+			"createdBy":            llx.MapData(createdBy, types.String),
+			"encryptionKeyArn":     llx.StringDataPtr(rp.EncryptionKeyArn),
+			"iamRoleArn":           llx.StringDataPtr(rp.IamRoleArn),
+			"isEncrypted":          llx.BoolData(rp.IsEncrypted),
+			"resourceType":         llx.StringDataPtr(rp.ResourceType),
+			"status":               llx.StringData(string(rp.Status)),
+			"sourceResourceArn":    llx.StringDataPtr(rp.ResourceArn),
+			"sourceBackupVaultArn": llx.StringDataPtr(rp.SourceBackupVaultArn),
+		})
+}
+
 func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
-	vArn := a.Arn.Data
-	parsedArn, err := arn.Parse(vArn)
+	name, region, err := backupVaultNameFromArn(a.Arn.Data)
 	if err != nil {
 		return nil, err
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Backup(parsedArn.Region)
+	svc := conn.Backup(region)
 	ctx := context.Background()
 	res := []any{}
 
-	name := strings.TrimPrefix(parsedArn.Resource, "backup-vault:")
 	params := &backup.ListRecoveryPointsByBackupVaultInput{BackupVaultName: &name}
 	paginator := backup.NewListRecoveryPointsByBackupVaultPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -123,24 +198,7 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 			return nil, err
 		}
 		for _, rp := range recovPoints.RecoveryPoints {
-			createdBy, err := convert.JsonToDict(rp.CreatedBy)
-			if err != nil {
-				return nil, err
-			}
-			mqlRP, err := CreateResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
-				map[string]*llx.RawData{
-					"arn":                  llx.StringDataPtr(rp.RecoveryPointArn),
-					"completionDate":       llx.TimeDataPtr(rp.CompletionDate),
-					"createdAt":            llx.TimeDataPtr(rp.CreationDate),
-					"createdBy":            llx.MapData(createdBy, types.String),
-					"encryptionKeyArn":     llx.StringDataPtr(rp.EncryptionKeyArn),
-					"iamRoleArn":           llx.StringDataPtr(rp.IamRoleArn),
-					"isEncrypted":          llx.BoolData(rp.IsEncrypted),
-					"resourceType":         llx.StringDataPtr(rp.ResourceType),
-					"status":               llx.StringData(string(rp.Status)),
-					"sourceResourceArn":    llx.StringDataPtr(rp.ResourceArn),
-					"sourceBackupVaultArn": llx.StringDataPtr(rp.SourceBackupVaultArn),
-				})
+			mqlRP, err := newMqlBackupRecoveryPoint(a.MqlRuntime, rp)
 			if err != nil {
 				return nil, err
 			}
@@ -864,6 +922,199 @@ func (a *mqlAwsBackupScanJob) scannerRole() (*mqlAwsIamRole, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsIamRole), nil
+}
+
+// ========================
+// aws.backup.accessPoint
+// ========================
+
+type mqlAwsBackupAccessPointInternal struct {
+	cacheVaultArn         string
+	cacheVaultName        string
+	cacheRecoveryPointArn string
+	cacheRegion           string
+}
+
+func (a *mqlAwsBackupAccessPoint) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func newMqlBackupAccessPoint(runtime *plugin.Runtime, region string, ap backuptypes.ListAccessPointsMember) (*mqlAwsBackupAccessPoint, error) {
+	resource, err := CreateResource(runtime, ResourceAwsBackupAccessPoint,
+		map[string]*llx.RawData{
+			"__id":              llx.StringDataPtr(ap.AccessPointArn),
+			"arn":               llx.StringDataPtr(ap.AccessPointArn),
+			"name":              llx.StringDataPtr(ap.Name),
+			"region":            llx.StringData(region),
+			"status":            llx.StringData(string(ap.Status)),
+			"statusMessage":     llx.StringDataPtr(ap.StatusMessage),
+			"resourceType":      llx.StringDataPtr(ap.ResourceType),
+			"sourceResourceArn": llx.StringDataPtr(ap.ResourceArn),
+			"backupVaultName":   llx.StringDataPtr(ap.BackupVaultName),
+			"metadata":          llx.MapData(toInterfaceMap(ap.AccessPointMetadata), types.String),
+			"createdAt":         llx.TimeDataPtr(ap.CreationTime),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlAp := resource.(*mqlAwsBackupAccessPoint)
+	mqlAp.cacheVaultArn = convert.ToValue(ap.BackupVaultArn)
+	mqlAp.cacheVaultName = convert.ToValue(ap.BackupVaultName)
+	mqlAp.cacheRecoveryPointArn = convert.ToValue(ap.RecoveryPointArn)
+	mqlAp.cacheRegion = region
+	return mqlAp, nil
+}
+
+func (a *mqlAwsBackup) accessPoints() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getAccessPoints(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsBackup) getAccessPoints(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Backup(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := backup.NewListBackupAccessPointsPaginator(svc, &backup.ListBackupAccessPointsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("aws backup access points are not available in region")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, ap := range page.BackupAccessPoints {
+					mqlAp, err := newMqlBackupAccessPoint(a.MqlRuntime, region, ap)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlAp)
+				}
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsBackupVaultRecoveryPoint) accessPoints() ([]any, error) {
+	rpArn := a.Arn.Data
+	region, err := GetRegionFromArn(rpArn)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Backup(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := backup.NewListBackupAccessPointsByRecoveryPointPaginator(svc, &backup.ListBackupAccessPointsByRecoveryPointInput{
+		RecoveryPointArn: &rpArn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ap := range page.BackupAccessPoints {
+			mqlAp, err := newMqlBackupAccessPoint(a.MqlRuntime, region, ap)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAp)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsBackupAccessPoint) vault() (*mqlAwsBackupVault, error) {
+	args := map[string]*llx.RawData{}
+	switch {
+	case a.cacheVaultArn != "":
+		args["arn"] = llx.StringData(a.cacheVaultArn)
+	case a.cacheVaultName != "" && a.cacheRegion != "":
+		args["name"] = llx.StringData(a.cacheVaultName)
+		args["region"] = llx.StringData(a.cacheRegion)
+	default:
+		a.Vault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.backup.vault", args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupVault), nil
+}
+
+// recoveryPoint describes the recovery point the access point reads. A recovery
+// point ARN does not carry its vault name, so there is no ARN-only lookup to
+// defer to; the access point already knows both and resolves it here.
+func (a *mqlAwsBackupAccessPoint) recoveryPoint() (*mqlAwsBackupVaultRecoveryPoint, error) {
+	if a.cacheRecoveryPointArn == "" || a.cacheVaultName == "" {
+		a.RecoveryPoint.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Backup(a.cacheRegion)
+	rp, err := svc.DescribeRecoveryPoint(context.Background(), &backup.DescribeRecoveryPointInput{
+		BackupVaultName:  &a.cacheVaultName,
+		RecoveryPointArn: &a.cacheRecoveryPointArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := newMqlBackupRecoveryPoint(a.MqlRuntime, backuptypes.RecoveryPointByBackupVault{
+		RecoveryPointArn:     rp.RecoveryPointArn,
+		CompletionDate:       rp.CompletionDate,
+		CreationDate:         rp.CreationDate,
+		CreatedBy:            rp.CreatedBy,
+		EncryptionKeyArn:     rp.EncryptionKeyArn,
+		IamRoleArn:           rp.IamRoleArn,
+		IsEncrypted:          rp.IsEncrypted,
+		ResourceType:         rp.ResourceType,
+		Status:               rp.Status,
+		ResourceArn:          rp.ResourceArn,
+		SourceBackupVaultArn: rp.SourceBackupVaultArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupVaultRecoveryPoint), nil
 }
 
 func (a *mqlAwsBackupScanJob) backupPlan() (*mqlAwsBackupPlan, error) {

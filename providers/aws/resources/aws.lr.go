@@ -458,6 +458,7 @@ const (
 	ResourceAwsDrsReplicationConfiguration                                      string = "aws.drs.replicationConfiguration"
 	ResourceAwsDrsLaunchConfiguration                                           string = "aws.drs.launchConfiguration"
 	ResourceAwsBackup                                                           string = "aws.backup"
+	ResourceAwsBackupAccessPoint                                                string = "aws.backup.accessPoint"
 	ResourceAwsBackupVault                                                      string = "aws.backup.vault"
 	ResourceAwsBackupVaultRecoveryPoint                                         string = "aws.backup.vaultRecoveryPoint"
 	ResourceAwsBackupLifecycle                                                  string = "aws.backup.lifecycle"
@@ -919,6 +920,9 @@ const (
 	ResourceAwsBedrockMarketplaceModelEndpoint                                  string = "aws.bedrock.marketplaceModelEndpoint"
 	ResourceAwsBedrockAgentCore                                                 string = "aws.bedrock.agentCore"
 	ResourceAwsBedrockAgentCoreGateway                                          string = "aws.bedrock.agentCore.gateway"
+	ResourceAwsBedrockAgentCoreGatewayRateLimit                                 string = "aws.bedrock.agentCore.gatewayRateLimit"
+	ResourceAwsBedrockAgentCoreCapacityProvider                                 string = "aws.bedrock.agentCore.capacityProvider"
+	ResourceAwsBedrockAgentCoreCapacityProviderVolume                           string = "aws.bedrock.agentCore.capacityProvider.volume"
 	ResourceAwsBedrockAgentCoreGatewayTarget                                    string = "aws.bedrock.agentCore.gatewayTarget"
 	ResourceAwsBedrockAgentCoreRuntime                                          string = "aws.bedrock.agentCore.runtime"
 	ResourceAwsBedrockAgentCoreRuntimeEndpoint                                  string = "aws.bedrock.agentCore.runtimeEndpoint"
@@ -2761,8 +2765,12 @@ func init() {
 			// to override args, implement: initAwsBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBackup,
 		},
+		"aws.backup.accessPoint": {
+			// to override args, implement: initAwsBackupAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBackupAccessPoint,
+		},
 		"aws.backup.vault": {
-			// to override args, implement: initAwsBackupVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBackupVault,
 			Create: createAwsBackupVault,
 		},
 		"aws.backup.vaultRecoveryPoint": {
@@ -4604,6 +4612,18 @@ func init() {
 		"aws.bedrock.agentCore.gateway": {
 			// to override args, implement: initAwsBedrockAgentCoreGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgentCoreGateway,
+		},
+		"aws.bedrock.agentCore.gatewayRateLimit": {
+			// to override args, implement: initAwsBedrockAgentCoreGatewayRateLimit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCoreGatewayRateLimit,
+		},
+		"aws.bedrock.agentCore.capacityProvider": {
+			Init:   initAwsBedrockAgentCoreCapacityProvider,
+			Create: createAwsBedrockAgentCoreCapacityProvider,
+		},
+		"aws.bedrock.agentCore.capacityProvider.volume": {
+			// to override args, implement: initAwsBedrockAgentCoreCapacityProviderVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCoreCapacityProviderVolume,
 		},
 		"aws.bedrock.agentCore.gatewayTarget": {
 			// to override args, implement: initAwsBedrockAgentCoreGatewayTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11689,6 +11709,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.targetGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetTargetGroups()).ToDataRes(types.Array(types.Resource("aws.elb.targetgroup")))
 	},
+	"aws.autoscaling.group.operatorPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetOperatorPrincipal()).ToDataRes(types.String)
+	},
 	"aws.autoscaling.group.tag.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroupTag).GetKey()).ToDataRes(types.String)
 	},
@@ -17998,6 +18021,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.scanJobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackup).GetScanJobs()).ToDataRes(types.Array(types.Resource("aws.backup.scanJob")))
 	},
+	"aws.backup.accessPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackup).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.backup.accessPoint")))
+	},
+	"aws.backup.accessPoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.sourceResourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetSourceResourceArn()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.backupVaultName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetBackupVaultName()).ToDataRes(types.String)
+	},
+	"aws.backup.accessPoint.vault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetVault()).ToDataRes(types.Resource("aws.backup.vault"))
+	},
+	"aws.backup.accessPoint.recoveryPoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetRecoveryPoint()).ToDataRes(types.Resource("aws.backup.vaultRecoveryPoint"))
+	},
+	"aws.backup.accessPoint.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.backup.accessPoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupAccessPoint).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.backup.vault.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetArn()).ToDataRes(types.String)
 	},
@@ -18078,6 +18140,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.backup.vaultRecoveryPoint.isEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetIsEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.backup.vaultRecoveryPoint.accessPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.backup.accessPoint")))
 	},
 	"aws.backup.lifecycle.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupLifecycle).GetId()).ToDataRes(types.String)
@@ -34633,6 +34698,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.agentCore.workloadIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCore).GetWorkloadIdentities()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.workloadIdentity")))
 	},
+	"aws.bedrock.agentCore.capacityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCore).GetCapacityProviders()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.capacityProvider")))
+	},
 	"aws.bedrock.agentCore.gateway.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreGateway).GetArn()).ToDataRes(types.String)
 	},
@@ -34680,6 +34748,126 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.agentCore.gateway.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreGateway).GetTargets()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.gatewayTarget")))
+	},
+	"aws.bedrock.agentCore.gateway.rateLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGateway).GetRateLimits()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.gatewayRateLimit")))
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.gatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetGatewayId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.dimensionKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetDimensionKeys()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetEntries()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.capacityProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.statusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetStatusCode()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.capacityProvider.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.capacityProvider.operatorRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetOperatorRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.agentCore.capacityProvider.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.bedrock.agentCore.capacityProvider.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.bedrock.agentCore.capacityProvider.idleInstanceTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetIdleInstanceTimeout()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.maxInstanceLifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetMaxInstanceLifetime()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRootVolumeEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeFreeSpaceGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRootVolumeFreeSpaceGiB()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRootVolumeIops()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRootVolumeThroughput()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRootVolumeType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetRootVolumeKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.agentCore.capacityProvider.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProvider).GetVolumes()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.capacityProvider.volume")))
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.sizeGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetSizeGiB()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.iops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetIops()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.throughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetThroughput()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.volumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetVolumeType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.snapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetSnapshot()).ToDataRes(types.Resource("aws.ec2.snapshot"))
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.bedrock.agentCore.gatewayTarget.targetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreGatewayTarget).GetTargetId()).ToDataRes(types.String)
@@ -34752,6 +34940,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.agentCore.runtime.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreRuntime).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.runtimeEndpoint")))
+	},
+	"aws.bedrock.agentCore.runtime.capacityProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreRuntime).GetCapacityProvider()).ToDataRes(types.Resource("aws.bedrock.agentCore.capacityProvider"))
 	},
 	"aws.bedrock.agentCore.runtimeEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreRuntimeEndpoint).GetId()).ToDataRes(types.String)
@@ -46507,6 +46698,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAutoscalingGroup).TargetGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.autoscaling.group.operatorPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).OperatorPrincipal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.autoscaling.group.tag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroupTag).__id, ok = v.Value.(string)
 		return
@@ -55835,6 +56030,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBackup).ScanJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.backup.accessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackup).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.backup.accessPoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.sourceResourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).SourceResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.backupVaultName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).BackupVaultName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).Vault, ok = plugin.RawToTValue[*mqlAwsBackupVault](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.recoveryPoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).RecoveryPoint, ok = plugin.RawToTValue[*mqlAwsBackupVaultRecoveryPoint](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.accessPoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupAccessPoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.backup.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVault).__id, ok = v.Value.(string)
 		return
@@ -55949,6 +56200,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.backup.vaultRecoveryPoint.isEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVaultRecoveryPoint).IsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.accessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.backup.lifecycle.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79855,6 +80110,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAgentCore).WorkloadIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agentCore.capacityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCore).CapacityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agentCore.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreGateway).__id, ok = v.Value.(string)
 		return
@@ -79921,6 +80180,178 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.agentCore.gateway.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreGateway).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gateway.rateLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGateway).RateLimits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.gatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).GatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.dimensionKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).DimensionKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.gatewayRateLimit.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreGatewayRateLimit).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.statusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).StatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.operatorRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).OperatorRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.idleInstanceTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).IdleInstanceTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.maxInstanceLifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).MaxInstanceLifetime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).RootVolumeEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeFreeSpaceGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).RootVolumeFreeSpaceGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).RootVolumeIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).RootVolumeThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).RootVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.rootVolumeKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).RootVolumeKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProvider).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.sizeGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).SizeGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).Iops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.throughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).Throughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).VolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.snapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).Snapshot, ok = plugin.RawToTValue[*mqlAwsEc2Snapshot](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.capacityProvider.volume.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreCapacityProviderVolume).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.gatewayTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80025,6 +80456,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.agentCore.runtime.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreRuntime).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.runtime.capacityProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreRuntime).CapacityProvider, ok = plugin.RawToTValue[*mqlAwsBedrockAgentCoreCapacityProvider](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.runtimeEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -109009,6 +109444,7 @@ type mqlAwsAutoscalingGroup struct {
 	PlacementGroup                   plugin.TValue[string]
 	NewInstancesProtectedFromScaleIn plugin.TValue[bool]
 	TargetGroups                     plugin.TValue[[]any]
+	OperatorPrincipal                plugin.TValue[string]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -109298,6 +109734,10 @@ func (c *mqlAwsAutoscalingGroup) GetTargetGroups() *plugin.TValue[[]any] {
 
 		return c.targetGroups()
 	})
+}
+
+func (c *mqlAwsAutoscalingGroup) GetOperatorPrincipal() *plugin.TValue[string] {
+	return &c.OperatorPrincipal
 }
 
 // mqlAwsAutoscalingGroupTag for the aws.autoscaling.group.tag resource
@@ -134293,9 +134733,10 @@ type mqlAwsBackup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsBackupInternal it will be used here
-	Vaults   plugin.TValue[[]any]
-	Plans    plugin.TValue[[]any]
-	ScanJobs plugin.TValue[[]any]
+	Vaults       plugin.TValue[[]any]
+	Plans        plugin.TValue[[]any]
+	ScanJobs     plugin.TValue[[]any]
+	AccessPoints plugin.TValue[[]any]
 }
 
 // createAwsBackup creates a new instance of this resource
@@ -134381,6 +134822,150 @@ func (c *mqlAwsBackup) GetScanJobs() *plugin.TValue[[]any] {
 
 		return c.scanJobs()
 	})
+}
+
+func (c *mqlAwsBackup) GetAccessPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup", c.__id, "accessPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPoints()
+	})
+}
+
+// mqlAwsBackupAccessPoint for the aws.backup.accessPoint resource
+type mqlAwsBackupAccessPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBackupAccessPointInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusMessage     plugin.TValue[string]
+	ResourceType      plugin.TValue[string]
+	SourceResourceArn plugin.TValue[string]
+	BackupVaultName   plugin.TValue[string]
+	Vault             plugin.TValue[*mqlAwsBackupVault]
+	RecoveryPoint     plugin.TValue[*mqlAwsBackupVaultRecoveryPoint]
+	Metadata          plugin.TValue[map[string]any]
+	CreatedAt         plugin.TValue[*time.Time]
+}
+
+// createAwsBackupAccessPoint creates a new instance of this resource
+func createAwsBackupAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBackupAccessPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.backup.accessPoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBackupAccessPoint) MqlName() string {
+	return "aws.backup.accessPoint"
+}
+
+func (c *mqlAwsBackupAccessPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBackupAccessPoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBackupAccessPoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBackupAccessPoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBackupAccessPoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBackupAccessPoint) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsBackupAccessPoint) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsBackupAccessPoint) GetSourceResourceArn() *plugin.TValue[string] {
+	return &c.SourceResourceArn
+}
+
+func (c *mqlAwsBackupAccessPoint) GetBackupVaultName() *plugin.TValue[string] {
+	return &c.BackupVaultName
+}
+
+func (c *mqlAwsBackupAccessPoint) GetVault() *plugin.TValue[*mqlAwsBackupVault] {
+	return plugin.GetOrCompute[*mqlAwsBackupVault](&c.Vault, func() (*mqlAwsBackupVault, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.accessPoint", c.__id, "vault")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBackupVault), nil
+			}
+		}
+
+		return c.vault()
+	})
+}
+
+func (c *mqlAwsBackupAccessPoint) GetRecoveryPoint() *plugin.TValue[*mqlAwsBackupVaultRecoveryPoint] {
+	return plugin.GetOrCompute[*mqlAwsBackupVaultRecoveryPoint](&c.RecoveryPoint, func() (*mqlAwsBackupVaultRecoveryPoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.accessPoint", c.__id, "recoveryPoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBackupVaultRecoveryPoint), nil
+			}
+		}
+
+		return c.recoveryPoint()
+	})
+}
+
+func (c *mqlAwsBackupAccessPoint) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAwsBackupAccessPoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsBackupVault for the aws.backup.vault resource
@@ -134555,6 +135140,7 @@ type mqlAwsBackupVaultRecoveryPoint struct {
 	EncryptionKey        plugin.TValue[*mqlAwsKmsKey]
 	EncryptionKeyArn     plugin.TValue[string]
 	IsEncrypted          plugin.TValue[bool]
+	AccessPoints         plugin.TValue[[]any]
 }
 
 // createAwsBackupVaultRecoveryPoint creates a new instance of this resource
@@ -134668,6 +135254,22 @@ func (c *mqlAwsBackupVaultRecoveryPoint) GetEncryptionKeyArn() *plugin.TValue[st
 
 func (c *mqlAwsBackupVaultRecoveryPoint) GetIsEncrypted() *plugin.TValue[bool] {
 	return &c.IsEncrypted
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetAccessPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.vaultRecoveryPoint", c.__id, "accessPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPoints()
+	})
 }
 
 // mqlAwsBackupLifecycle for the aws.backup.lifecycle resource
@@ -193785,6 +194387,7 @@ type mqlAwsBedrockAgentCore struct {
 	Oauth2CredentialProviders plugin.TValue[[]any]
 	ApiKeyCredentialProviders plugin.TValue[[]any]
 	WorkloadIdentities        plugin.TValue[[]any]
+	CapacityProviders         plugin.TValue[[]any]
 }
 
 // createAwsBedrockAgentCore creates a new instance of this resource
@@ -193952,6 +194555,22 @@ func (c *mqlAwsBedrockAgentCore) GetWorkloadIdentities() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsBedrockAgentCore) GetCapacityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapacityProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore", c.__id, "capacityProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capacityProviders()
+	})
+}
+
 // mqlAwsBedrockAgentCoreGateway for the aws.bedrock.agentCore.gateway resource
 type mqlAwsBedrockAgentCoreGateway struct {
 	MqlRuntime *plugin.Runtime
@@ -193973,6 +194592,7 @@ type mqlAwsBedrockAgentCoreGateway struct {
 	WorkloadIdentity    plugin.TValue[*mqlAwsBedrockAgentCoreWorkloadIdentity]
 	WorkloadIdentityArn plugin.TValue[string]
 	Targets             plugin.TValue[[]any]
+	RateLimits          plugin.TValue[[]any]
 }
 
 // createAwsBedrockAgentCoreGateway creates a new instance of this resource
@@ -194132,6 +194752,450 @@ func (c *mqlAwsBedrockAgentCoreGateway) GetTargets() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsBedrockAgentCoreGateway) GetRateLimits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RateLimits, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.gateway", c.__id, "rateLimits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rateLimits()
+	})
+}
+
+// mqlAwsBedrockAgentCoreGatewayRateLimit for the aws.bedrock.agentCore.gatewayRateLimit resource
+type mqlAwsBedrockAgentCoreGatewayRateLimit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockAgentCoreGatewayRateLimitInternal it will be used here
+	Id            plugin.TValue[string]
+	GatewayId     plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Description   plugin.TValue[string]
+	DimensionKeys plugin.TValue[[]any]
+	Entries       plugin.TValue[[]any]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockAgentCoreGatewayRateLimit creates a new instance of this resource
+func createAwsBedrockAgentCoreGatewayRateLimit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreGatewayRateLimit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.gatewayRateLimit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) MqlName() string {
+	return "aws.bedrock.agentCore.gatewayRateLimit"
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetGatewayId() *plugin.TValue[string] {
+	return &c.GatewayId
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetDimensionKeys() *plugin.TValue[[]any] {
+	return &c.DimensionKeys
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetEntries() *plugin.TValue[[]any] {
+	return &c.Entries
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockAgentCoreGatewayRateLimit) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockAgentCoreCapacityProvider for the aws.bedrock.agentCore.capacityProvider resource
+type mqlAwsBedrockAgentCoreCapacityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentCoreCapacityProviderInternal
+	Id                     plugin.TValue[string]
+	Arn                    plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	StatusCode             plugin.TValue[string]
+	StatusReason           plugin.TValue[string]
+	Description            plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+	OperatorRole           plugin.TValue[*mqlAwsIamRole]
+	Subnets                plugin.TValue[[]any]
+	SecurityGroups         plugin.TValue[[]any]
+	IdleInstanceTimeout    plugin.TValue[int64]
+	MaxInstanceLifetime    plugin.TValue[int64]
+	RootVolumeEncrypted    plugin.TValue[bool]
+	RootVolumeFreeSpaceGiB plugin.TValue[int64]
+	RootVolumeIops         plugin.TValue[int64]
+	RootVolumeThroughput   plugin.TValue[int64]
+	RootVolumeType         plugin.TValue[string]
+	RootVolumeKmsKey       plugin.TValue[*mqlAwsKmsKey]
+	Volumes                plugin.TValue[[]any]
+}
+
+// createAwsBedrockAgentCoreCapacityProvider creates a new instance of this resource
+func createAwsBedrockAgentCoreCapacityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreCapacityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.capacityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) MqlName() string {
+	return "aws.bedrock.agentCore.capacityProvider"
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetStatusCode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StatusCode, func() (string, error) {
+		return c.statusCode()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetStatusReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StatusReason, func() (string, error) {
+		return c.statusReason()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetOperatorRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.OperatorRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider", c.__id, "operatorRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.operatorRole()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetIdleInstanceTimeout() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.IdleInstanceTimeout, func() (int64, error) {
+		return c.idleInstanceTimeout()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetMaxInstanceLifetime() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxInstanceLifetime, func() (int64, error) {
+		return c.maxInstanceLifetime()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRootVolumeEncrypted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RootVolumeEncrypted, func() (bool, error) {
+		return c.rootVolumeEncrypted()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRootVolumeFreeSpaceGiB() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RootVolumeFreeSpaceGiB, func() (int64, error) {
+		return c.rootVolumeFreeSpaceGiB()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRootVolumeIops() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RootVolumeIops, func() (int64, error) {
+		return c.rootVolumeIops()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRootVolumeThroughput() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RootVolumeThroughput, func() (int64, error) {
+		return c.rootVolumeThroughput()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRootVolumeType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RootVolumeType, func() (string, error) {
+		return c.rootVolumeType()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetRootVolumeKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.RootVolumeKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider", c.__id, "rootVolumeKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.rootVolumeKmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProvider) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+// mqlAwsBedrockAgentCoreCapacityProviderVolume for the aws.bedrock.agentCore.capacityProvider.volume resource
+type mqlAwsBedrockAgentCoreCapacityProviderVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentCoreCapacityProviderVolumeInternal
+	Name       plugin.TValue[string]
+	SizeGiB    plugin.TValue[int64]
+	Encrypted  plugin.TValue[bool]
+	Iops       plugin.TValue[int64]
+	Throughput plugin.TValue[int64]
+	VolumeType plugin.TValue[string]
+	Snapshot   plugin.TValue[*mqlAwsEc2Snapshot]
+	KmsKey     plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsBedrockAgentCoreCapacityProviderVolume creates a new instance of this resource
+func createAwsBedrockAgentCoreCapacityProviderVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreCapacityProviderVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.capacityProvider.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) MqlName() string {
+	return "aws.bedrock.agentCore.capacityProvider.volume"
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetSizeGiB() *plugin.TValue[int64] {
+	return &c.SizeGiB
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetIops() *plugin.TValue[int64] {
+	return &c.Iops
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetThroughput() *plugin.TValue[int64] {
+	return &c.Throughput
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetVolumeType() *plugin.TValue[string] {
+	return &c.VolumeType
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetSnapshot() *plugin.TValue[*mqlAwsEc2Snapshot] {
+	return plugin.GetOrCompute[*mqlAwsEc2Snapshot](&c.Snapshot, func() (*mqlAwsEc2Snapshot, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider.volume", c.__id, "snapshot")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Snapshot), nil
+			}
+		}
+
+		return c.snapshot()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreCapacityProviderVolume) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.capacityProvider.volume", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 // mqlAwsBedrockAgentCoreGatewayTarget for the aws.bedrock.agentCore.gatewayTarget resource
 type mqlAwsBedrockAgentCoreGatewayTarget struct {
 	MqlRuntime *plugin.Runtime
@@ -194249,6 +195313,7 @@ type mqlAwsBedrockAgentCoreRuntime struct {
 	AuthorizerType       plugin.TValue[string]
 	EnvironmentVariables plugin.TValue[map[string]any]
 	Endpoints            plugin.TValue[[]any]
+	CapacityProvider     plugin.TValue[*mqlAwsBedrockAgentCoreCapacityProvider]
 }
 
 // createAwsBedrockAgentCoreRuntime creates a new instance of this resource
@@ -194373,6 +195438,22 @@ func (c *mqlAwsBedrockAgentCoreRuntime) GetEndpoints() *plugin.TValue[[]any] {
 		}
 
 		return c.endpoints()
+	})
+}
+
+func (c *mqlAwsBedrockAgentCoreRuntime) GetCapacityProvider() *plugin.TValue[*mqlAwsBedrockAgentCoreCapacityProvider] {
+	return plugin.GetOrCompute[*mqlAwsBedrockAgentCoreCapacityProvider](&c.CapacityProvider, func() (*mqlAwsBedrockAgentCoreCapacityProvider, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.runtime", c.__id, "capacityProvider")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBedrockAgentCoreCapacityProvider), nil
+			}
+		}
+
+		return c.capacityProvider()
 	})
 }
 

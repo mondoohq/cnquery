@@ -200,6 +200,11 @@ func autoscalingGroupArgs(runtime *plugin.Runtime, group ec2types.AutoScalingGro
 		launchTemplateVersion = convert.ToValue(group.LaunchTemplate.Version)
 	}
 
+	operatorPrincipal := ""
+	if group.Operator != nil {
+		operatorPrincipal = convert.ToValue(group.Operator.Principal)
+	}
+
 	return map[string]*llx.RawData{
 		"arn":                              llx.StringData(groupArn),
 		"availabilityZones":                llx.ArrayData(availabilityZones, types.String),
@@ -229,6 +234,7 @@ func autoscalingGroupArgs(runtime *plugin.Runtime, group ec2types.AutoScalingGro
 		"mixedInstancesPolicy":             llx.DictData(mixedInstancesPolicy),
 		"name":                             llx.StringDataPtr(group.AutoScalingGroupName),
 		"newInstancesProtectedFromScaleIn": llx.BoolDataPtr(group.NewInstancesProtectedFromScaleIn),
+		"operatorPrincipal":                llx.StringData(operatorPrincipal),
 		"placementGroup":                   llx.StringDataPtr(group.PlacementGroup),
 		"predictedCapacity":                llx.IntDataDefault(group.PredictedCapacity, 0),
 		"region":                           llx.StringData(region),

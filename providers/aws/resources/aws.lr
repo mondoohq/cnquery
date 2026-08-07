@@ -6467,6 +6467,14 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   newInstancesProtectedFromScaleIn bool
   // Target groups associated with the group
   targetGroups() []aws.elb.targetgroup
+  // Service principal that owns the group
+  //
+  // The service principal of the AWS service that manages this group, for
+  // example eks.amazonaws.com. When set, only that service can make mutating
+  // changes to the group configuration, so a drift or misconfiguration finding
+  // against the group is not actionable by the account owner. Empty for groups
+  // the account manages itself.
+  operatorPrincipal string
 }
 
 // AWS Auto Scaling group tag
@@ -13018,6 +13026,54 @@ aws.backup @defaults("vaults") {
   plans() []aws.backup.plan
   // Malware scan jobs run against recovery points
   scanJobs() []aws.backup.scanJob
+  // Backup access points that expose recovery point contents through S3 APIs
+  accessPoints() []aws.backup.accessPoint
+}
+
+// AWS Backup access point
+//
+// A read-only door onto the contents of a recovery point, reachable
+// through ordinary Amazon S3 read APIs without running a restore job.
+// That makes it a data path out of a backup that leaves no restore-job
+// trail, so the access points on a vault are worth inventorying
+// alongside the vault access policy itself. The recoveryPoint and vault
+// fields lead back to the backup the access point reads, sourceResourceArn
+// names the resource that was backed up, and metadata carries the S3
+// identifiers callers use. The `name` field selects an access point.
+private aws.backup.accessPoint @defaults("name status resourceType region") {
+  // ARN of the backup access point
+  arn string
+  // Name of the backup access point
+  name string
+  // Region where the access point exists
+  region string
+  // Current status of the access point
+  //
+  // One of AVAILABLE, CREATING, DELETING, DISASSOCIATED, DISASSOCIATING,
+  // EXPIRED, or FAILED. Only AVAILABLE access points serve reads.
+  status string
+  // Detail accompanying the status, such as why a create or delete attempt failed
+  statusMessage string
+  // Type of AWS resource the recovery point backs up, for example S3
+  resourceType string
+  // ARN of the resource that was backed up
+  sourceResourceArn string
+  // Name of the vault holding the recovery point
+  backupVaultName string
+  // Vault holding the recovery point the access point reads
+  vault() aws.backup.vault
+  // Recovery point the access point exposes
+  recoveryPoint() aws.backup.vaultRecoveryPoint
+  // S3 identifiers callers use to read the backup data
+  //
+  // Once the access point is AVAILABLE this holds `S3AccessPointArn` and
+  // `S3AccessPointAlias`, which are used with standard Amazon S3 read
+  // APIs. For a continuous recovery point it also holds
+  // `AccessPointInTime`, the instant in the backup the access point
+  // serves.
+  metadata map[string]string
+  // Time the access point was created
+  createdAt time
 }
 
 // AWS Backup vault
@@ -13093,6 +13149,8 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   encryptionKeyArn @maturity("deprecated") string
   // Whether the recovery point is encrypted
   isEncrypted bool
+  // Backup access points exposing this recovery point through S3 APIs
+  accessPoints() []aws.backup.accessPoint
 }
 
 // AWS Backup lifecycle settings
@@ -29117,6 +29175,8 @@ private aws.bedrock.agentCore {
   apiKeyCredentialProviders() []aws.bedrock.agentCore.apiKeyCredentialProvider
   // Workload identities configured in AgentCore Identity
   workloadIdentities() []aws.bedrock.agentCore.workloadIdentity
+  // Capacity providers that run agent runtimes on account-owned EC2 instances
+  capacityProviders() []aws.bedrock.agentCore.capacityProvider
 }
 
 // Amazon Bedrock AgentCore gateway
@@ -29163,6 +29223,151 @@ private aws.bedrock.agentCore.gateway @defaults("name status protocolType") {
   workloadIdentityArn() string
   // Tool targets federated through the gateway
   targets() []aws.bedrock.agentCore.gatewayTarget
+  // Rate limits that cap how fast callers may drive the gateway
+  rateLimits() []aws.bedrock.agentCore.gatewayRateLimit
+}
+
+// Amazon Bedrock AgentCore gateway rate limit
+//
+// A rate limit caps how fast callers may drive an MCP gateway, bounding
+// request rate, token consumption, and concurrent connections. A gateway
+// with no rate limits accepts unbounded traffic, so an agent loop or a
+// compromised caller can exhaust downstream tool capacity and model
+// spend unchecked. The `dimensionKeys` field names the attributes a
+// limit is scoped by, in the order they are matched, and entries holds
+// one rule per combination of dimension values. The `id` field selects a
+// rate limit within its gateway.
+private aws.bedrock.agentCore.gatewayRateLimit @defaults("id status dimensionKeys") {
+  // Identifier of the rate limit
+  id string
+  // Identifier of the gateway the rate limit applies to
+  gatewayId string
+  // Region where the gateway exists
+  region string
+  // Current status of the rate limit
+  //
+  // One of CREATING, ACTIVE, UPDATING, or DELETING. Only ACTIVE limits
+  // are enforced.
+  status string
+  // Description of the rate limit
+  description string
+  // Attribute names the limit is scoped by, in match order
+  dimensionKeys []string
+  // Rules within the limit, one per combination of dimension values
+  //
+  // Each entry has keys `dimensions` (a map of dimension name to matched
+  // value, where an empty value is a trailing wildcard), `requests`,
+  // `tokens`, and `connections`. The latter three are each a list of
+  // `{rate, period}` pairs, where period is second or minute. A missing
+  // or empty list means that dimension of traffic is uncapped.
+  entries []dict
+  // Time the rate limit was created
+  createdAt time
+  // Time the rate limit was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore capacity provider
+//
+// A capacity provider runs agent runtimes on EC2 instances in the
+// account rather than on AWS-managed compute, which puts the network
+// placement, the persistent storage, and the instance operator role
+// under the account's own control and audit. The VPC placement is
+// exposed through subnets and securityGroups, the operator role through
+// operatorRole, the instance root disk through the rootVolume fields,
+// and the named persistent disks through volumes. The `name` field
+// selects a capacity provider.
+private aws.bedrock.agentCore.capacityProvider @defaults("name status region") {
+  // Identifier of the capacity provider
+  id string
+  // ARN of the capacity provider
+  arn string
+  // Name of the capacity provider
+  name string
+  // Region where the capacity provider exists
+  region string
+  // Current status of the capacity provider
+  //
+  // One of CREATING, CREATE_FAILED, UPDATING, UPDATE_FAILED, READY,
+  // DELETING, or DELETE_FAILED.
+  status string
+  // Reason code when the capacity provider is not READY
+  //
+  // One of VALIDATION_ERROR, QUOTA_EXCEEDED, THROTTLED, or
+  // INTERNAL_SERVER_EXCEPTION. Empty while the provider is READY.
+  statusCode() string
+  // Human-readable explanation of why the capacity provider is not READY
+  statusReason() string
+  // Description of the capacity provider
+  description() string
+  // Time the capacity provider was created
+  createdAt() time
+  // Time the capacity provider was last updated
+  updatedAt time
+  // IAM role AgentCore assumes to launch, tag, and terminate the instances
+  operatorRole() aws.iam.role
+  // Subnets the instances are launched into
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the instances
+  securityGroups() []aws.ec2.securitygroup
+  // Seconds an instance may sit idle before it is stopped
+  //
+  // An instance counts as idle when all of its agents are idle. Zero when
+  // the provider leaves the service default of 900 seconds in place.
+  idleInstanceTimeout() int
+  // Maximum lifetime of an instance in seconds, after which it is terminated
+  //
+  // Zero when the provider leaves the service default of 28800 seconds in
+  // place.
+  maxInstanceLifetime() int
+  // Whether the instance root volume is encrypted
+  rootVolumeEncrypted() bool
+  // Free space guaranteed on the instance root volume, in GiB
+  rootVolumeFreeSpaceGiB() int
+  // Provisioned IOPS for the instance root volume
+  rootVolumeIops() int
+  // Provisioned throughput for the instance root volume, in MiB/s
+  rootVolumeThroughput() int
+  // EBS volume type of the instance root volume
+  //
+  // One of standard, io1, io2, gp2, sc1, st1, or gp3.
+  rootVolumeType() string
+  // Customer-managed KMS key encrypting the instance root volume
+  rootVolumeKmsKey() aws.kms.key
+  // Named persistent EBS volumes agent runtimes can mount
+  volumes() []aws.bedrock.agentCore.capacityProvider.volume
+}
+
+// Persistent EBS volume of an AgentCore capacity provider
+//
+// A named EBS volume that is created when a session first launches and
+// outlives the instance it was attached to, persisting agent state until
+// the session is deleted. Because it survives instance termination, its
+// encryption state and key are what protect that state at rest. The
+// `name` field selects a volume and is also how an agent runtime
+// references it when mounting.
+private aws.bedrock.agentCore.capacityProvider.volume @defaults("name sizeGiB encrypted") {
+  // Logical name of the volume, used to mount it into an agent runtime
+  name string
+  // Size of the volume in GiB
+  sizeGiB int
+  // Whether the volume is encrypted
+  encrypted bool
+  // Provisioned IOPS, for gp3, io1, and io2 volumes
+  iops int
+  // Provisioned throughput in MiB/s, for gp3 volumes
+  throughput int
+  // EBS volume type
+  //
+  // One of standard, io1, io2, gp2, sc1, st1, or gp3.
+  volumeType string
+  // EBS snapshot the volume is first initialized from, if any
+  snapshot() aws.ec2.snapshot
+  // KMS key encrypting the volume
+  //
+  // Null when the volume is encrypted with the account's default EBS key
+  // rather than a customer-managed key.
+  kmsKey() aws.kms.key
 }
 
 // Amazon Bedrock AgentCore gateway target
@@ -29239,6 +29444,10 @@ private aws.bedrock.agentCore.runtime @defaults("name version status") {
   environmentVariables() map[string]string
   // Endpoints exposed by the agent runtime
   endpoints() []aws.bedrock.agentCore.runtimeEndpoint
+  // Capacity provider supplying the account-owned EC2 instances the runtime runs on
+  //
+  // Null when the runtime runs on AWS-managed compute instead.
+  capacityProvider() aws.bedrock.agentCore.capacityProvider
 }
 
 // Amazon Bedrock AgentCore runtime endpoint
