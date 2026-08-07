@@ -6,6 +6,8 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -15,6 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -118,13 +121,34 @@ func (g *mqlGcpProjectComputeService) fetchSharedVpc() (*sharedVpcTopology, erro
 		}
 		return nil
 	}); err != nil {
-		if !isHTTPSkippable(err) {
+		if !isHTTPSkippable(err) && !isNotSharedVpcHost(err) {
 			return nil, err
 		}
 		log.Debug().Err(err).Str("project", projectId).Msg("could not read Shared VPC service projects")
 	}
 
 	return out, nil
+}
+
+// isNotSharedVpcHost reports whether the error is Compute's way of saying the
+// project simply is not a Shared VPC host. GetXpnResources answers that case
+// with HTTP 400 invalidResourceUsage rather than an empty list, so without this
+// the common case (a project that hosts nothing) fails every Shared VPC
+// accessor instead of reporting false.
+func isNotSharedVpcHost(err error) bool {
+	gerr, ok := err.(*googleapi.Error)
+	if !ok || gerr.Code != http.StatusBadRequest {
+		return false
+	}
+	if strings.Contains(gerr.Message, "is not a shared VPC host project") {
+		return true
+	}
+	for _, e := range gerr.Errors {
+		if e.Reason == "invalidResourceUsage" {
+			return true
+		}
+	}
+	return false
 }
 
 // isSharedVpcHost reports whether other projects run workloads on this project's

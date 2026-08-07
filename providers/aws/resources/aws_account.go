@@ -79,15 +79,25 @@ func (a *mqlAwsAccount) aliases() ([]any, error) {
 	return result, nil
 }
 
-func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+// fetchOrganization describes the caller's AWS organization and maps it onto a
+// new aws.organization resource. Both aws.account.organization and the
+// aws.organization init go through here so the two paths cannot drift apart.
+func fetchOrganization(runtime *plugin.Runtime) (*mqlAwsOrganization, error) {
+	conn, ok := runtime.Connection.(*connection.AwsConnection)
+	if !ok {
+		return nil, errors.New("aws.organization requires an AWS connection")
+	}
 	client := conn.Organizations("") // no region for orgs, use configured region
 
 	org, err := client.DescribeOrganization(context.TODO(), &organizations.DescribeOrganizationInput{})
 	if err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(a.MqlRuntime, ResourceAwsOrganization,
+	if org.Organization == nil {
+		return nil, errors.New("aws.organization: no organization returned for this account")
+	}
+
+	res, err := CreateResource(runtime, ResourceAwsOrganization,
 		map[string]*llx.RawData{
 			"arn":                llx.StringDataPtr(org.Organization.Arn),
 			"id":                 llx.StringDataPtr(org.Organization.Id),
@@ -100,6 +110,26 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsOrganization), nil
+}
+
+func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
+	return fetchOrganization(a.MqlRuntime)
+}
+
+// initAwsOrganization populates the organization from the API when it is
+// reached directly rather than through aws.account.organization. Without this,
+// a bare `aws.organization` query creates the resource with every field unset,
+// which surfaces client-side as null values with no attribution.
+func initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) >= 2 {
+		return args, nil, nil
+	}
+
+	res, err := fetchOrganization(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (a *mqlAwsOrganization) accounts() ([]any, error) {
