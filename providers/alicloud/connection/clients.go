@@ -9,6 +9,7 @@ import (
 
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
 	albclient "github.com/alibabacloud-go/alb-20200616/v2/client"
+	cbnclient "github.com/alibabacloud-go/cbn-20170912/v2/client"
 	cloudfwclient "github.com/alibabacloud-go/cloudfw-20171207/v8/client"
 	cloudssoclient "github.com/alibabacloud-go/cloudsso-20210515/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
@@ -38,12 +39,12 @@ import (
 
 // endpoint builds the public Alibaba Cloud service endpoint for a region. A few
 // services do not follow the usual <service>.<region>.aliyuncs.com layout: RAM,
-// ActionTrail, and Resource Management are global (region-less), Cloud Config is
-// a center service reached through cn-shanghai, and Log Service (SLS) puts the
-// region ahead of a fixed log host.
+// ActionTrail, Resource Management, and Cloud Enterprise Network (cbn) are
+// global (region-less), Cloud Config is a center service reached through
+// cn-shanghai, and Log Service (SLS) puts the region ahead of a fixed log host.
 func endpoint(service, region string) string {
 	switch service {
-	case "ram", "actiontrail", "resourcemanager":
+	case "ram", "actiontrail", "resourcemanager", "cbn":
 		return service + ".aliyuncs.com"
 	case "config":
 		// Cloud Config is a center service; cn-shanghai serves the China and
@@ -81,6 +82,18 @@ func (c *AlicloudConnection) cachedClient(key string, build func() (any, error))
 	}
 	c.clients[key] = client
 	return client, nil
+}
+
+// CenClient returns the Cloud Enterprise Network client. CEN is a global
+// service, so one client is cached for the whole account.
+func (c *AlicloudConnection) CenClient() (*cbnclient.Client, error) {
+	client, err := c.cachedClient("cbn", func() (any, error) {
+		return cbnclient.NewClient(c.config("cbn", c.region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*cbnclient.Client), nil
 }
 
 // SasClient returns a Security Center client for one of the two center regions.

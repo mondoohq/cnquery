@@ -12,7 +12,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // are reached, along with the Container Service for Kubernetes, Function
 // Compute, NAS file storage, Web Application Firewall, Cloud Firewall,
 // Anti-DDoS, Security Center, Key Management Service, ActionTrail, Log Service,
-// Cloud Config, CloudSSO, and Resource Directory resources.
+// Cloud Config, CloudSSO, Cloud Enterprise Network, and Resource Directory
+// resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -683,6 +684,10 @@ alicloud.vpc {
   networkAcls() []alicloud.vpc.networkAcl
   // Flow logs across all enabled regions
   flowLogs() []alicloud.vpc.flowLog
+  // VPN gateways across all enabled regions
+  vpnGateways() []alicloud.vpc.vpnGateway
+  // VPN connections across all enabled regions
+  vpnConnections() []alicloud.vpc.vpnConnection
 }
 
 // Virtual Private Cloud network
@@ -739,6 +744,12 @@ alicloud.vpc.network {
   // captures traffic while its status is Active. Flow logs scoped to a vSwitch
   // or an elastic network interface inside the VPC are not included.
   flowLogs() []alicloud.vpc.flowLog
+  // VPN gateways attached to the VPC
+  //
+  // Each gateway terminates connections that reach the VPC from outside
+  // Alibaba Cloud, so this is reachability that security-group rules alone do
+  // not explain.
+  vpnGateways() []alicloud.vpc.vpnGateway
   // DNS hostname feature status
   //
   // Indicates whether the DNS hostname feature is enabled, for example ENABLED
@@ -4290,4 +4301,223 @@ alicloud.sas.alarmEvent @defaults("alarmEventName level eventStatus instanceName
   // Null when the alert carries no asset UUID, which is the case for alerts
   // raised against the account rather than a specific machine.
   machine() alicloud.sas.machine
+}
+
+// Cloud Enterprise Network
+//
+// Transit networking for the account. Exposes the CEN instances, each of which
+// joins the networks attached to it into one routing domain, so a workload in
+// one attached VPC can reach a workload in another regardless of region.
+alicloud.cen {
+  // Cloud Enterprise Network instances in the account
+  instances() []alicloud.cen.instance
+}
+
+// Cloud Enterprise Network instance
+//
+// A single CEN, keyed by cenId. Every network attached to it can route to every
+// other attached network, so the attachments list is the reachability boundary:
+// a VPC attached here is reachable from every other attached VPC, across
+// regions and across accounts, before security-group and ACL rules are
+// considered.
+alicloud.cen.instance @defaults("cenId name status protectionLevel") {
+  // CEN instance ID, used as the lookup key
+  cenId string
+  // Name of the CEN instance
+  name string
+  // Description of the CEN instance
+  description string
+  // Instance status, for example Creating or Active
+  status string
+  // Level of DDoS protection applied to the CEN
+  //
+  // FULL when protection covers every attached network, or REDUCE for the
+  // basic level.
+  protectionLevel string
+  // Whether the CEN carries IPv6 traffic
+  //
+  // ENABLE when IPv6 routing is on, DISABLE when the CEN carries IPv4 only.
+  ipv6Level string
+  // Resource group ID the CEN belongs to
+  resourceGroupId string
+  // Time the CEN was created
+  creationTime time
+  // Tags on the CEN, as key-value pairs
+  tags map[string]string
+  // Networks attached to the CEN
+  attachments() []alicloud.cen.attachment
+}
+
+// Network attached to a Cloud Enterprise Network
+//
+// A single network joined to a CEN, keyed by the cenId and the attached
+// network's ID. The childInstanceType names what kind of network it is, and
+// childInstanceOwnerId reveals attachments owned by another account, which
+// extend reachability outside the account boundary.
+alicloud.cen.attachment @defaults("childInstanceId childInstanceType childInstanceRegionId status") {
+  // ID of the CEN the network is attached to
+  cenId string
+  // ID of the attached network
+  childInstanceId string
+  // Kind of attached network
+  //
+  // One of VPC, VBR for a virtual border router carrying an Express Connect
+  // circuit, or CCN for a Cloud Connect Network.
+  childInstanceType string
+  // Region the attached network lives in
+  childInstanceRegionId string
+  // Account (UID) that owns the attached network
+  //
+  // A value other than the scanned account means the CEN reaches into another
+  // account, extending the routing domain past the account boundary.
+  childInstanceOwnerId int
+  // Attachment status, for example Attached or Attaching
+  status string
+  // Time the network was attached
+  attachTime time
+  // VPC behind a VPC attachment
+  //
+  // Null for a VBR or CCN attachment, and for a VPC owned by another account,
+  // which the scanned credential cannot read.
+  vpc() alicloud.vpc.network
+}
+
+// VPN gateway
+//
+// A VPN gateway attached to a VPC, keyed by vpnGatewayId. Exposes the IPsec and
+// SSL capabilities, the public address traffic arrives on, and the connections
+// terminating on it. A gateway is how traffic reaches the VPC from outside
+// Alibaba Cloud, so its connections describe reachability that security groups
+// alone do not explain.
+alicloud.vpc.vpnGateway @defaults("vpnGatewayId name status internetIp") {
+  // VPN gateway ID, used as the lookup key
+  vpnGatewayId string
+  // Name of the gateway
+  name string
+  // Description of the gateway
+  description string
+  // Region ID the gateway runs in
+  regionId string
+  // Gateway status, for example active or provisioning
+  status string
+  // Billing status of the gateway, for example Normal or FinancialLocked
+  businessStatus string
+  // Public IP address the gateway terminates tunnels on
+  internetIp string
+  // Whether the gateway accepts IPsec connections
+  //
+  // enable when IPsec-VPN is switched on, disable otherwise.
+  ipsecVpn string
+  // Whether the gateway accepts SSL client connections
+  //
+  // enable when SSL-VPN is switched on, disable otherwise. An SSL gateway lets
+  // individual clients dial into the VPC rather than joining a fixed network.
+  sslVpn string
+  // Maximum number of concurrent SSL clients the gateway accepts
+  sslMaxConnections int
+  // Public IP address SSL clients connect to
+  sslVpnInternetIp string
+  // Gateway type, for example Normal or National-Standard
+  vpnType string
+  // Whether the gateway is reachable over the internet or only privately
+  //
+  // public for an internet-facing gateway, private for one reachable only from
+  // within Alibaba Cloud.
+  networkType string
+  // Whether the gateway exchanges routes over BGP
+  enableBgp bool
+  // Whether the gateway automatically propagates learned routes to the VPC
+  autoPropagate bool
+  // Gateway bandwidth specification
+  spec string
+  // Billing method of the gateway
+  chargeType string
+  // Time the gateway was created
+  createTime time
+  // Time the gateway subscription ends
+  endTime time
+  // Resource group ID the gateway belongs to
+  resourceGroupId string
+  // Tags on the gateway, as key-value pairs
+  tags map[string]string
+  // VPC the gateway is attached to
+  vpc() alicloud.vpc.network
+  // vSwitch the gateway is placed in
+  vswitch() alicloud.vpc.vswitch
+  // Connections terminating on the gateway
+  connections() []alicloud.vpc.vpnConnection
+}
+
+// VPN connection
+//
+// A single IPsec tunnel terminating on a VPN gateway, keyed by
+// vpnConnectionId. The local and remote subnets are the reachability this
+// connection creates: traffic from the remote subnet reaches the local one
+// without crossing an internet gateway. The negotiated algorithms and lifetimes
+// are exposed so weak cipher suites can be found, but the pre-shared key is
+// deliberately not.
+alicloud.vpc.vpnConnection @defaults("vpnConnectionId name status") {
+  // VPN connection ID, used as the lookup key
+  vpnConnectionId string
+  // Name of the connection
+  name string
+  // Region ID the connection lives in
+  regionId string
+  // ID of the VPN gateway the connection terminates on
+  vpnGatewayId string
+  // ID of the customer gateway representing the remote end
+  customerGatewayId string
+  // Connection status, for example ike_sa_established or active
+  status string
+  // Negotiation state of the tunnel
+  state string
+  // CIDR blocks on the Alibaba Cloud side reachable through the tunnel
+  localSubnet string
+  // CIDR blocks on the remote side reachable through the tunnel
+  remoteSubnet string
+  // Public IP address of the remote peer
+  internetIp string
+  // Whether configuration changes take effect immediately
+  effectImmediately bool
+  // Whether dead peer detection is enabled
+  enableDpd bool
+  // Whether NAT traversal is enabled
+  enableNatTraversal bool
+  // Whether the tunnel exchanges routes over BGP
+  enableTunnelsBgp bool
+  // Whether the connection is authorized across accounts
+  //
+  // True when the tunnel joins networks owned by different accounts.
+  crossAccountAuthorized bool
+  // Whether the connection attaches to a VPN gateway or a transit router
+  attachType string
+  // ID of the gateway or transit router the connection attaches to
+  attachInstanceId string
+  // IKE protocol version, either ikev1 or ikev2
+  ikeVersion string
+  // IKE negotiation mode, either main or aggressive
+  //
+  // Aggressive mode completes in fewer exchanges but sends identity
+  // information before the channel is encrypted.
+  ikeMode string
+  // Encryption algorithm negotiated for the key exchange
+  ikeEncryptionAlgorithm string
+  // Authentication algorithm negotiated for the key exchange
+  ikeAuthenticationAlgorithm string
+  // Diffie-Hellman group used for the key exchange
+  ikePfs string
+  // Lifetime of the key-exchange security association in seconds
+  ikeLifetime int
+  // Encryption algorithm protecting the tunnel payload
+  ipsecEncryptionAlgorithm string
+  // Authentication algorithm protecting the tunnel payload
+  ipsecAuthenticationAlgorithm string
+  // Diffie-Hellman group used to rekey the tunnel
+  ipsecPfs string
+  // Lifetime of the tunnel security association in seconds
+  ipsecLifetime int
+  // Time the connection was created
+  createTime time
+  // VPN gateway the connection terminates on
+  vpnGateway() alicloud.vpc.vpnGateway
 }

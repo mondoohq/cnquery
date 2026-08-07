@@ -7,6 +7,7 @@ go 1.26.5
 require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.5.0
 	github.com/alibabacloud-go/alb-20200616/v2 v2.3.2
+	github.com/alibabacloud-go/cbn-20170912/v2 v2.4.3
 	github.com/alibabacloud-go/cloudfw-20171207/v8 v8.2.2
 	github.com/alibabacloud-go/cloudsso-20210515 v1.6.2
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
