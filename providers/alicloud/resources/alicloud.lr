@@ -75,12 +75,20 @@ alicloud.ram.user {
   accessKeys() []alicloud.ram.accessKey
   // Groups the user belongs to
   groups() []alicloud.ram.group
-  // Policies attached directly to the user
+  // Policy attachment records for policies attached directly to the user
   //
   // Each entry lists the policyName, policyType (System or Custom),
   // defaultVersion, description, and attachDate of a policy attached to the
-  // user.
+  // user. Use attachedPolicies to reach the policy itself, including its
+  // permission statements.
   policies() []dict
+  // Policies attached directly to the user
+  //
+  // The permission policies granted to the user by direct attachment, not
+  // counting policies the user inherits through group membership. Traverse to
+  // policyDocument to inspect the permission statements a user holds, for
+  // example to find users granted the AdministratorAccess system policy.
+  attachedPolicies() []alicloud.ram.policy
   // Multi-factor authentication device bound to the user
   //
   // The serialNumber and type of the bound MFA device, or null when the user
@@ -130,12 +138,19 @@ alicloud.ram.group {
   updateDate time
   // Users that belong to the group
   users() []alicloud.ram.user
-  // Policies attached to the group
+  // Policy attachment records for policies attached to the group
   //
   // Each entry lists the policyName, policyType (System or Custom),
   // defaultVersion, description, and attachDate of a policy attached to the
-  // group.
+  // group. Use attachedPolicies to reach the policy itself, including its
+  // permission statements.
   policies() []dict
+  // Policies attached to the group
+  //
+  // The permission policies every member of the group inherits. Traverse to
+  // policyDocument to inspect the permission statements granted through group
+  // membership.
+  attachedPolicies() []alicloud.ram.policy
 }
 
 // Resource Access Management role
@@ -166,20 +181,29 @@ alicloud.ram.role {
   // The assume-role policy as a JSON string, naming the principals permitted to
   // assume this role and the conditions on that trust.
   assumeRolePolicyDocument() string
-  // Policies attached to the role
+  // Policy attachment records for policies attached to the role
   //
   // Each entry lists the policyName, policyType (System or Custom),
   // defaultVersion, description, and attachDate of a policy attached to the
-  // role.
+  // role. Use attachedPolicies to reach the policy itself, including its
+  // permission statements.
   policies() []dict
+  // Policies attached to the role
+  //
+  // The permission policies a session that assumes this role receives.
+  // Traverse to policyDocument alongside assumeRolePolicyDocument to see both
+  // who may assume the role and what the assumed session is allowed to do.
+  attachedPolicies() []alicloud.ram.policy
 }
 
 // Resource Access Management permission policy
 //
-// A permission policy, keyed by policyName. Exposes the policy metadata,
-// attachment count, and default version, along with the policy document of the
-// default version. System policies are managed by Alibaba Cloud; custom
-// policies are defined in the account.
+// A permission policy. Exposes the policy metadata, attachment count, and
+// default version, along with the policy document of the default version.
+// System policies are managed by Alibaba Cloud; custom policies are defined in
+// the account. The policyName and policyType fields together select a single
+// policy, for example
+// `alicloud.ram.policy(policyName: "AdministratorAccess", policyType: "System")`.
 alicloud.ram.policy {
   // Policy name, used as the lookup key
   policyName string

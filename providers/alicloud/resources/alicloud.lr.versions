@@ -776,6 +776,7 @@ alicloud.ram.accessKey.createDate 13.0.0
 alicloud.ram.accessKey.status 13.0.0
 alicloud.ram.accessKey.userName 13.0.0
 alicloud.ram.group 13.0.0
+alicloud.ram.group.attachedPolicies 13.2.5
 alicloud.ram.group.comments 13.0.0
 alicloud.ram.group.createDate 13.0.0
 alicloud.ram.group.groupId 13.0.0
@@ -808,6 +809,7 @@ alicloud.ram.policy.updateDate 13.0.0
 alicloud.ram.role 13.0.0
 alicloud.ram.role.arn 13.0.0
 alicloud.ram.role.assumeRolePolicyDocument 13.0.0
+alicloud.ram.role.attachedPolicies 13.2.5
 alicloud.ram.role.createDate 13.0.0
 alicloud.ram.role.description 13.0.0
 alicloud.ram.role.maxSessionDuration 13.0.0
@@ -820,6 +822,7 @@ alicloud.ram.roles 13.0.0
 alicloud.ram.securityPreference 13.0.0
 alicloud.ram.user 13.0.0
 alicloud.ram.user.accessKeys 13.0.0
+alicloud.ram.user.attachedPolicies 13.2.5
 alicloud.ram.user.comments 13.0.0
 alicloud.ram.user.createDate 13.0.0
 alicloud.ram.user.displayName 13.0.0
