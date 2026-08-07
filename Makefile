@@ -214,6 +214,7 @@ PROVIDERS := \
 	datadog \
 	depsdev \
 	digitalocean \
+	elasticsearch \
 	equinix \
 	gcp \
 	github \
