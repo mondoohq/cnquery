@@ -78,6 +78,53 @@ func degradedList(err error) ([]any, error) {
 	return nil, err
 }
 
+// cloudflareTimeLayouts are the timestamp formats seen on Cloudflare endpoints
+// that report a date as a JSON string rather than an RFC 3339 timestamp. The
+// client-certificate and content-scanning endpoints are the two cases we hit:
+// both type the field as a string in cloudflare-go v6, and the wire format
+// varies between RFC 3339 and Go's default time.Time rendering.
+var cloudflareTimeLayouts = []string{
+	time.RFC3339Nano,
+	time.RFC3339,
+	"2006-01-02 15:04:05.999999999 -0700 MST",
+	"2006-01-02 15:04:05 -0700 MST",
+	"2006-01-02T15:04:05.999999999",
+	"2006-01-02 15:04:05",
+	"2006-01-02",
+}
+
+// parseCloudflareTime parses a string-typed Cloudflare timestamp, trying each
+// known layout in turn. It reports false for an empty or unrecognized value so
+// callers can surface the field as null rather than as a zero time, which would
+// read as January 1 year 1 in a query result.
+//
+// This is a superset of parseRFC3339 in devices.go, which stays strict because
+// the device endpoints are documented to emit RFC 3339. Use this one for the
+// endpoints that type a date as a plain string in cloudflare-go v6, where the
+// layout is not guaranteed.
+func parseCloudflareTime(s string) (time.Time, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return time.Time{}, false
+	}
+	for _, layout := range cloudflareTimeLayouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t, true
+		}
+	}
+	return time.Time{}, false
+}
+
+// cfTimeString converts a string-typed Cloudflare timestamp into MQL time data,
+// yielding null when the value is absent or unparseable.
+func cfTimeString(s string) *llx.RawData {
+	t, ok := parseCloudflareTime(s)
+	if !ok {
+		return llx.NilData
+	}
+	return llx.TimeDataPtr(&t)
+}
+
 // isUnavailable reports whether err is a 401, 403, or 404 from the Cloudflare
 // API. These statuses mean the resource isn't available to the calling token —
 // an unsupported plan, a missing permission, or an absent resource — which

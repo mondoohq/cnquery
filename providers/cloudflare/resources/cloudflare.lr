@@ -154,6 +154,17 @@ private cloudflare.zone @defaults("name account.name") {
 	wafRules() []cloudflare.zone.wafRule
 	// Email routing configuration (SPF/DKIM/DMARC awareness)
 	emailRouting() cloudflare.zone.emailRouting
+
+	// Client certificates issued for mTLS authentication of API clients
+	clientCertificates() []cloudflare.zone.clientCertificate
+	// Authenticated origin pull configuration, covering the mTLS handshake between Cloudflare and the origin
+	authenticatedOriginPulls() cloudflare.zone.authenticatedOriginPulls
+	// Leaked credential checking configuration
+	leakedCredentialChecks() cloudflare.zone.leakedCredentialChecks
+	// Content scanning configuration for uploads passing through the zone
+	contentScanning() cloudflare.zone.contentScanning
+	// Vulnerability disclosure policy published at /.well-known/security.txt
+	securityTxt() cloudflare.zone.securityTxt
 }
 
 // Cloudflare account
@@ -458,6 +469,15 @@ private cloudflare.account @defaults("name") {
 	// the account's tunnel routes, each with its name and whether it is the
 	// default network.
 	tunnelVirtualNetworks() []cloudflare.tunnel.virtualNetwork
+
+	// Turnstile widgets
+	//
+	// Challenge widgets defined for the account, each with the `mode` that
+	// decides how much friction a visitor sees, the `domains` it may be
+	// embedded on, and the `clearanceLevel` it grants. Use it to find
+	// widgets left in a permissive mode or scoped to domains the account no
+	// longer owns.
+	turnstileWidgets() []cloudflare.turnstile.widget
 }
 
 // Cloudflare API Token
@@ -1715,4 +1735,279 @@ private cloudflare.pages.envVar @defaults("projectName environment name type") {
 	name string
 	// Variable type (plain_text, secret_text)
 	type string
+}
+
+// Zone client certificate
+//
+// Certificate issued by Cloudflare's managed certificate authority for mTLS
+// authentication of clients connecting to the zone. The `status` field
+// reports whether the certificate is active or revoked, with
+// pending_reactivation and pending_revocation marking in-progress
+// transitions, and `expiresOn` bounds its validity. The certificate signing
+// request subject fields record who the certificate was issued to, and
+// `fingerprintSha256` identifies it uniquely. The private key and signing
+// request are never exposed.
+private cloudflare.zone.clientCertificate @defaults("commonName status expiresOn") {
+	// Certificate identifier
+	id string
+	// Common name of the client certificate
+	commonName string
+	// Certificate status
+	//
+	// One of active, pending_reactivation, pending_revocation, or revoked.
+	status string
+	// Date the certificate was issued by the certificate authority
+	issuedOn time
+	// Date the certificate expires
+	expiresOn time
+	// Number of days the certificate stays valid after its issue date
+	validityDays int
+	// SHA-256 fingerprint of the certificate
+	fingerprintSha256 string
+	// Serial number on the certificate
+	serialNumber string
+	// Type of hash used for the certificate
+	signature string
+	// Subject key identifier
+	ski string
+	// Identifier of the certificate authority that issued the certificate
+	certificateAuthorityId string
+	// Name of the certificate authority that issued the certificate
+	certificateAuthorityName string
+	// Country from the certificate signing request
+	country string
+	// State from the certificate signing request
+	state string
+	// Location from the certificate signing request
+	location string
+	// Organization from the certificate signing request
+	organization string
+	// Organizational unit from the certificate signing request
+	organizationalUnit string
+}
+
+// Authenticated origin pulls
+//
+// Configuration for the mTLS handshake Cloudflare performs when connecting to
+// the zone's origin, which proves to the origin that a request arrived
+// through Cloudflare rather than directly from the internet. The `enabled`
+// field reports whether zone-wide enforcement is on, `certificates` lists the
+// zone-level certificates Cloudflare presents, `hostnames` covers per-hostname
+// enforcement that overrides the zone-wide setting, and `hostnameCertificates`
+// lists the certificates available for those per-hostname bindings.
+private cloudflare.zone.authenticatedOriginPulls @defaults("enabled") {
+	// Whether zone-level authenticated origin pulls is enabled
+	enabled bool
+	// Zone-level certificates Cloudflare presents to the origin
+	certificates() []cloudflare.zone.authenticatedOriginPulls.certificate
+	// Per-hostname authenticated origin pull bindings
+	hostnames() []cloudflare.zone.authenticatedOriginPulls.hostname
+	// Certificates available for per-hostname authenticated origin pulls
+	hostnameCertificates() []cloudflare.zone.authenticatedOriginPulls.hostnameCertificate
+}
+
+// Zone-level authenticated origin pull certificate
+//
+// Certificate Cloudflare presents to the origin for every host in the zone.
+// The `status` field reports where the certificate sits in its activation
+// lifecycle and `expiresOn` bounds its validity, so a review can catch a
+// certificate about to lapse and break origin connectivity.
+private cloudflare.zone.authenticatedOriginPulls.certificate @defaults("id status expiresOn") {
+	// Certificate identifier
+	id string
+	// Whether this certificate is enabled for the zone
+	enabled bool
+	// Certificate authority that issued the certificate
+	issuer string
+	// Type of hash used for the certificate
+	signature string
+	// Status of the certificate activation
+	status string
+	// Date the certificate expires
+	expiresOn time
+	// Time the certificate was uploaded
+	uploadedOn time
+}
+
+// Per-hostname authenticated origin pull binding
+//
+// Binding between one origin hostname and the certificate Cloudflare presents
+// when connecting to it, which overrides the zone-wide setting. The `enabled`
+// field reports whether enforcement is active for that hostname, so a zone
+// with zone-level enforcement on can still have individual hostnames opted
+// out. The `hostname` field names the origin host, and `certificate` resolves
+// the bound certificate.
+private cloudflare.zone.authenticatedOriginPulls.hostname @defaults("hostname enabled status") {
+	// Origin hostname the certificate is used for
+	hostname string
+	// Whether hostname-level authenticated origin pulls is enabled
+	enabled bool
+	// Certificate bound to this hostname
+	certificate() cloudflare.zone.authenticatedOriginPulls.hostnameCertificate
+	// Status of the binding
+	status string
+	// Status of the bound certificate
+	certStatus string
+	// Certificate authority that issued the certificate
+	issuer string
+	// Serial number on the uploaded certificate
+	serialNumber string
+	// Type of hash used for the certificate
+	signature string
+	// Date the certificate expires
+	expiresOn time
+	// Time the certificate was uploaded
+	certUploadedOn time
+	// Time the certificate was last updated
+	certUpdatedAt time
+	// Time the binding was created
+	createdAt time
+	// Time the binding was last updated
+	updatedAt time
+}
+
+// Certificate for per-hostname authenticated origin pulls
+//
+// Certificate available for binding to individual origin hostnames. Listing
+// these alongside the hostname bindings surfaces certificates that were
+// uploaded but never bound, and reports `expiresOn` and `status` for the ones
+// in use.
+private cloudflare.zone.authenticatedOriginPulls.hostnameCertificate @defaults("id status expiresOn") {
+	// Certificate identifier
+	id string
+	// Certificate authority that issued the certificate
+	issuer string
+	// Serial number on the uploaded certificate
+	serialNumber string
+	// Type of hash used for the certificate
+	signature string
+	// Status of the certificate
+	status string
+	// Date the certificate expires
+	expiresOn time
+	// Time the certificate was uploaded
+	uploadedOn time
+}
+
+// Leaked credential checks
+//
+// Detection of credentials that appear in known breach corpora as they pass
+// through the zone, which lets a ruleset act on the request before it reaches
+// the origin. The `enabled` field reports whether the feature is switched on,
+// and `detections` lists the custom expressions that tell Cloudflare where
+// usernames and passwords live in request bodies it cannot parse on its own.
+private cloudflare.zone.leakedCredentialChecks @defaults("enabled") {
+	// Whether leaked credential checks are enabled for the zone
+	enabled bool
+	// Custom detection expressions
+	detections() []cloudflare.zone.leakedCredentialChecks.detection
+}
+
+// Leaked credential check custom detection
+//
+// Pair of ruleset expressions that locate the username and password in a
+// request whose shape Cloudflare cannot infer. The `username` and `password`
+// fields hold the expressions themselves, never credential values.
+private cloudflare.zone.leakedCredentialChecks.detection @defaults("id") {
+	// Detection identifier
+	id string
+	// Ruleset expression matching the username in a request
+	username string
+	// Ruleset expression matching the password in a request
+	password string
+}
+
+// Content scanning
+//
+// Scanning of files uploaded through the zone for malicious content, which
+// lets a ruleset block a request carrying a detected object before it reaches
+// the origin. The `enabled` field reports whether scanning is switched on,
+// `modified` records when that status last changed, and `payloads` lists the
+// custom expressions that point the scanner at content objects in request
+// bodies it cannot parse on its own.
+private cloudflare.zone.contentScanning @defaults("enabled") {
+	// Whether content scanning is enabled for the zone
+	enabled bool
+	// Time the content scanning status last changed
+	modified time
+	// Custom scan expressions
+	payloads() []cloudflare.zone.contentScanning.payload
+}
+
+// Content scanning custom expression
+//
+// Ruleset expression that tells the scanner where to find content objects in
+// a request body Cloudflare cannot parse on its own.
+private cloudflare.zone.contentScanning.payload @defaults("id payload") {
+	// Expression identifier
+	id string
+	// Ruleset expression matching content objects in a request
+	payload string
+}
+
+// Vulnerability disclosure policy (security.txt)
+//
+// Contents of the security.txt file Cloudflare serves at
+// /.well-known/security.txt for the zone, which tells researchers how to
+// report a vulnerability. The `enabled` field reports whether the file is
+// published at all, `contact` carries the reporting channels, and `expires`
+// marks the date after which the published policy should no longer be
+// trusted.
+private cloudflare.zone.securityTxt @defaults("enabled expires") {
+	// Whether a security.txt file is published for the zone
+	enabled bool
+	// Channels for reporting a vulnerability
+	contact []string
+	// Date after which the published policy is no longer valid
+	expires time
+	// Links to keys for encrypting vulnerability reports
+	encryption []string
+	// Links acknowledging researchers who reported vulnerabilities
+	acknowledgments []string
+	// Canonical URIs the security.txt file is served from
+	canonical []string
+	// Links to the zone's vulnerability disclosure policy
+	policy []string
+	// Links to security-related job openings
+	hiring []string
+	// Preferred languages for vulnerability reports
+	preferredLanguages string
+}
+
+// Turnstile widget
+//
+// Challenge widget that stands in for a CAPTCHA on a site's forms and login
+// pages. The `mode` field decides how much friction a visitor sees, `domains`
+// bounds where the widget may be embedded, and `clearanceLevel` sets the
+// challenge a visitor must pass to earn clearance when the widget sits on a
+// Cloudflare-proxied site. The widget's secret key is not exposed.
+private cloudflare.turnstile.widget @defaults("name mode sitekey") {
+	// Widget identifier tag, embedded in the page as the site key
+	sitekey string
+	// Widget name
+	name string
+	// Widget mode
+	//
+	// One of managed, non-interactive, or invisible.
+	mode string
+	// Region where the widget can be used
+	//
+	// Either world or china. This cannot be changed after creation.
+	region string
+	// Clearance level granted when the widget sits on a Cloudflare-proxied site
+	//
+	// One of no_clearance, jschallenge, managed, or interactive.
+	clearanceLevel string
+	// Domains the widget may be embedded on
+	domains []string
+	// Whether Cloudflare issues computationally expensive challenges to malicious bots
+	botFightMode bool
+	// Whether the ephemeral ID is returned in siteverify responses
+	ephemeralIdEnabled bool
+	// Whether Cloudflare branding is hidden on the widget
+	offlabel bool
+	// Time the widget was created
+	createdOn time
+	// Time the widget was last modified
+	modifiedOn time
 }
