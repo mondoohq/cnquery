@@ -109,3 +109,53 @@ func TestCfGetPagedTerminatesOnZeroEchoedPage(t *testing.T) {
 	assert.Equal(t, int32(totalPages), atomic.LoadInt32(&calls), "exactly one request per page — no infinite loop")
 	assert.Equal(t, []string{"w1", "w2", "w3"}, []string{got[0].ID, got[1].ID, got[2].ID})
 }
+
+func TestParseCloudflareTime(t *testing.T) {
+	want := time.Date(2033, 2, 20, 20, 54, 0, 0, time.UTC)
+
+	for _, tc := range []struct {
+		name  string
+		input string
+	}{
+		{"rfc3339", "2033-02-20T20:54:00Z"},
+		{"rfc3339 nano", "2033-02-20T20:54:00.000000000Z"},
+		{"go time.String rendering", "2033-02-20 20:54:00 +0000 UTC"},
+		{"space separated, no zone", "2033-02-20 20:54:00"},
+		{"surrounding whitespace", "  2033-02-20T20:54:00Z  "},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, ok := parseCloudflareTime(tc.input)
+			require.True(t, ok, "layout must be recognized")
+			assert.True(t, got.Equal(want), "got %s, want %s", got, want)
+		})
+	}
+
+	t.Run("date only", func(t *testing.T) {
+		got, ok := parseCloudflareTime("2033-02-20")
+		require.True(t, ok)
+		assert.Equal(t, 2033, got.Year())
+		assert.Equal(t, time.February, got.Month())
+		assert.Equal(t, 20, got.Day())
+	})
+
+	// An unparseable value must be reported as such rather than silently
+	// yielding the zero time, which would render as January 1 year 1 and read
+	// as a certificate that expired two millennia ago.
+	for _, bad := range []string{"", "   ", "not-a-timestamp", "20/02/2033"} {
+		t.Run("rejects "+strconv.Quote(bad), func(t *testing.T) {
+			_, ok := parseCloudflareTime(bad)
+			assert.False(t, ok)
+		})
+	}
+}
+
+func TestCfTimeString(t *testing.T) {
+	assert.Equal(t, llx.NilData, cfTimeString(""), "empty value is null")
+	assert.Equal(t, llx.NilData, cfTimeString("garbage"), "unparseable value is null, not the zero time")
+
+	got := cfTimeString("2033-02-20T20:54:00Z")
+	require.NotEqual(t, llx.NilData, got)
+	gotTime, ok := got.Value.(*time.Time)
+	require.True(t, ok, "parsed value must carry a *time.Time")
+	assert.Equal(t, 2033, gotTime.Year())
+}
