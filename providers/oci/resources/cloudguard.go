@@ -392,8 +392,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 	for {
 		response, err := client.ListDetectorRecipeDetectorRules(ctx, cloudguard.ListDetectorRecipeDetectorRulesRequest{
 			DetectorRecipeId: common.String(o.Id.Data),
-			CompartmentId:    common.String(o.CompartmentID.Data),
-			Page:             page,
+			// Read from the cached value rather than the public compartmentID
+			// field, which is marked deprecated in favour of compartment().
+			// Removing that field in a later major version would otherwise
+			// quietly scope this listing to the empty string.
+			CompartmentId: common.String(o.cacheCompartmentId),
+			Page:          page,
 		})
 		if err != nil {
 			return nil, err
@@ -531,10 +535,16 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlInstance)
+		mqlRecipe := mqlInstance.(*mqlOciCloudGuardDetectorRecipe)
+		mqlRecipe.cacheCompartmentId = stringValue(recipe.CompartmentId)
+		res = append(res, mqlRecipe)
 	}
 
 	return res, nil
+}
+
+type mqlOciCloudGuardDetectorRecipeInternal struct {
+	cacheCompartmentId string
 }
 
 func (o *mqlOciCloudGuard) securityZones() ([]any, error) {

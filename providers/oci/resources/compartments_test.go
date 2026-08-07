@@ -84,6 +84,43 @@ func TestOciRegionsByID(t *testing.T) {
 	})
 }
 
+func TestOciDedupeByID(t *testing.T) {
+	zone := func(id string) *mqlOciDnsZone {
+		z := &mqlOciDnsZone{}
+		z.__id = id
+		return z
+	}
+
+	t.Run("no items", func(t *testing.T) {
+		assert.Empty(t, ociDedupeByID(nil))
+	})
+
+	t.Run("distinct resources are all kept", func(t *testing.T) {
+		a, b := zone("oci.dns.zone/a"), zone("oci.dns.zone/b")
+		assert.Equal(t, []any{a, b}, ociDedupeByID([]any{a, b}))
+	})
+
+	t.Run("a global zone seen once per region collapses to one", func(t *testing.T) {
+		// CreateResource returns the cached instance for an id it has already
+		// built, so the region fan-out yields the same pointer N times rather
+		// than N distinct rows. Without this, zones.length multiplies by the
+		// number of subscribed regions.
+		a := zone("oci.dns.zone/a")
+		assert.Equal(t, []any{a}, ociDedupeByID([]any{a, a, a}))
+	})
+
+	t.Run("order of first appearance is preserved", func(t *testing.T) {
+		a, b, c := zone("oci.dns.zone/a"), zone("oci.dns.zone/b"), zone("oci.dns.zone/c")
+		assert.Equal(t, []any{a, b, c}, ociDedupeByID([]any{a, b, a, c, b}))
+	})
+
+	t.Run("a non-resource element passes through untouched", func(t *testing.T) {
+		// Nothing in the provider does this today, but dropping an element the
+		// helper does not recognise would be a silent data loss of its own.
+		assert.Equal(t, []any{"raw", "raw"}, ociDedupeByID([]any{"raw", "raw"}))
+	})
+}
+
 func TestOciCollectCompartmentJobs(t *testing.T) {
 	ok := func(items ...any) *jobpool.Job {
 		return jobpool.NewJob(func() (jobpool.JobResult, error) {

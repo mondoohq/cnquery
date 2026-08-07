@@ -27902,7 +27902,7 @@ func (c *mqlOciCloudGuardTarget) GetSystemTags() *plugin.TValue[map[string]any] 
 type mqlOciCloudGuardDetectorRecipe struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciCloudGuardDetectorRecipeInternal it will be used here
+	mqlOciCloudGuardDetectorRecipeInternal
 	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
 	Description   plugin.TValue[string]

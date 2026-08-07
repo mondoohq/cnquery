@@ -185,6 +185,7 @@ type mqlOciStreamingStreamPoolInternal struct {
 	detailLock    sync.Mutex
 	detailFetched atomic.Bool
 	detail        *streaming.StreamPool
+	detailErr     error
 }
 
 // initOciStreamingStreamPool resolves a stream pool by OCID.
@@ -235,18 +236,22 @@ func (o *mqlOciStreamingStreamPool) compartment() (*mqlOciCompartment, error) {
 
 func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	client, err := conn.StreamAdminClient(o.cacheRegion)
 	if err != nil {
+		// Cache the failure next to the value. Otherwise every detail-backed
+		// field on this resource re-issues the same denied or missing lookup.
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
@@ -254,6 +259,8 @@ func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
 		StreamPoolId: common.String(o.Id.Data),
 	})
 	if err != nil {
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
@@ -428,6 +435,7 @@ type mqlOciQueueQueueInternal struct {
 	detailLock    sync.Mutex
 	detailFetched atomic.Bool
 	detail        *queue.Queue
+	detailErr     error
 }
 
 func (o *mqlOciQueueQueue) id() (string, error) {
@@ -440,18 +448,20 @@ func (o *mqlOciQueueQueue) compartment() (*mqlOciCompartment, error) {
 
 func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	client, err := conn.QueueAdminClient(o.cacheRegion)
 	if err != nil {
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
@@ -459,6 +469,8 @@ func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
 		QueueId: common.String(o.Id.Data),
 	})
 	if err != nil {
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
@@ -610,6 +622,7 @@ type mqlOciKafkaClusterInternal struct {
 	detailLock    sync.Mutex
 	detailFetched atomic.Bool
 	detail        *managedkafka.KafkaCluster
+	detailErr     error
 }
 
 func (o *mqlOciKafkaCluster) id() (string, error) {
@@ -641,18 +654,20 @@ func (o *mqlOciKafkaCluster) subnets() ([]any, error) {
 
 func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	client, err := conn.KafkaClusterClient(o.cacheRegion)
 	if err != nil {
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
@@ -660,6 +675,8 @@ func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
 		KafkaClusterId: common.String(o.Id.Data),
 	})
 	if err != nil {
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 

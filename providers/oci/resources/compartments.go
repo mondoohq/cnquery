@@ -9,6 +9,7 @@ import (
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
@@ -33,6 +34,34 @@ func ociRegionsByID(regions []any) (map[string]*mqlOciRegion, error) {
 		res[regionResource.Id.Data] = regionResource
 	}
 	return res, nil
+}
+
+// ociDedupeByID drops repeated resources from a fan-out result.
+//
+// The compartment pool queries every (region, compartment) pair, which is
+// right for a regional service but over-counts a global one: OCI's public DNS
+// is served from every regional endpoint, so each global zone comes back once
+// per subscribed region. Because CreateResource returns the cached instance
+// for an id it has already seen, those repeats are the same resource appearing
+// several times rather than distinct rows, and a length or a where() over the
+// collection silently multiplies by the region count.
+func ociDedupeByID(items []any) []any {
+	res := make([]any, 0, len(items))
+	seen := make(map[string]struct{}, len(items))
+	for _, item := range items {
+		resource, ok := item.(plugin.Resource)
+		if !ok {
+			res = append(res, item)
+			continue
+		}
+		id := resource.MqlID()
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		res = append(res, item)
+	}
+	return res
 }
 
 // ociCompartmentLister lists resources of a single type inside one compartment

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -47,6 +49,34 @@ var ociScimAttributeSets = []identitydomains.AttributeSetsEnum{
 	identitydomains.AttributeSetsRequest,
 }
 
+// ociScimError annotates a failed SCIM call with the domain it was made
+// against and, for an authorization failure, what is actually missing.
+//
+// Reading a domain's users or groups needs a role granted inside that domain,
+// which is separate from the tenancy-level policy that lets ListDomains
+// enumerate it. A principal set up to read the tenancy therefore lists every
+// domain and then fails on all of them, and the bare SCIM error says only that
+// something was not authorized, naming neither the domain nor the role.
+//
+// The error is deliberately not degraded to an empty collection. An empty user
+// list is indistinguishable from a domain with no users, and a scan that
+// reports no users where it simply could not look is the failure mode this
+// provider is most concerned with.
+func ociScimError(err error, domainName string, collection string) error {
+	if err == nil {
+		return nil
+	}
+	if svcErr, ok := common.IsServiceError(err); ok {
+		switch svcErr.GetHTTPStatusCode() {
+		case 401, 403, 404:
+			return fmt.Errorf(
+				"cannot read %s of identity domain %q: the scanning principal needs a role within the domain, such as Identity Domain Administrator or User Administrator, which tenancy-level policy does not grant: %w",
+				collection, domainName, err)
+		}
+	}
+	return fmt.Errorf("cannot read %s of identity domain %q: %w", collection, domainName, err)
+}
+
 func (o *mqlOciIdentity) domains() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()
@@ -60,72 +90,91 @@ func (o *mqlOciIdentity) domains() ([]any, error) {
 	// this is a single listing rather than a region fan-out. They can be
 	// created in any compartment, though, so the compartment tree still has to
 	// be walked.
+	//
+	// Concurrently, because GetCompartments returns the entire subtree and a
+	// tenancy with a few hundred compartments turned one field access into a
+	// few hundred sequential round-trips.
 	compartments, err := conn.GetCompartments(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []any{}
+	jobs := make([]*jobpool.Job, 0, len(compartments))
 	for i := range compartments {
 		compartmentID := stringValue(compartments[i].Id)
 		if compartmentID == "" {
 			continue
 		}
 
-		domains := []identity.DomainSummary{}
-		var page *string
-		for {
-			response, err := client.ListDomains(ctx, identity.ListDomainsRequest{
-				CompartmentId: common.String(compartmentID),
-				Page:          page,
-			})
-			if err != nil {
-				// A compartment the caller cannot read is expected; anything
-				// else is a real fault, matching the compartment fan-out.
-				if ociCompartmentInaccessible(err) {
+		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
+			// []any rather than []identity.DomainSummary: the collector joins
+			// results by asserting []any and silently drops anything else.
+			domains := []any{}
+			var page *string
+			for {
+				response, err := client.ListDomains(ctx, identity.ListDomainsRequest{
+					CompartmentId: common.String(compartmentID),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				for i := range response.Items {
+					domains = append(domains, response.Items[i])
+				}
+
+				if response.OpcNextPage == nil {
 					break
 				}
-				return nil, err
+				page = response.OpcNextPage
 			}
 
-			domains = append(domains, response.Items...)
+			return jobpool.JobResult(domains), nil
+		}))
+	}
 
-			if response.OpcNextPage == nil {
-				break
-			}
-			page = response.OpcNextPage
+	// The same accounting the resource listers use: a compartment the caller
+	// cannot read is skipped, but every compartment refusing access is an
+	// under-scoped token rather than a tenancy without identity domains.
+	collected, err := ociCollectCompartmentJobs(jobs)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for j := range collected {
+		d, ok := collected[j].(identity.DomainSummary)
+		if !ok {
+			continue
 		}
 
-		for j := range domains {
-			d := domains[j]
-
-			replicaRegions := make([]string, 0, len(d.ReplicaRegions))
-			for _, r := range d.ReplicaRegions {
-				replicaRegions = append(replicaRegions, stringValue(r.Region))
-			}
-
-			mqlDomain, err := CreateResource(o.MqlRuntime, "oci.identity.domain", map[string]*llx.RawData{
-				"id":              llx.StringDataPtr(d.Id),
-				"name":            llx.StringDataPtr(d.DisplayName),
-				"description":     llx.StringDataPtr(d.Description),
-				"type":            llx.StringData(string(d.Type)),
-				"licenseType":     llx.StringDataPtr(d.LicenseType),
-				"homeRegion":      llx.StringDataPtr(d.HomeRegion),
-				"replicaRegions":  llx.ArrayData(stringsToAny(replicaRegions), types.String),
-				"isHiddenOnLogin": llx.BoolData(boolValue(d.IsHiddenOnLogin)),
-				"state":           llx.StringData(string(d.LifecycleState)),
-				"created":         sdkTimeData(d.TimeCreated),
-				"freeformTags":    llx.MapData(strMapToAny(d.FreeformTags), types.String),
-				"definedTags":     llx.MapData(definedTagsToAny(d.DefinedTags), types.Any),
-			})
-			if err != nil {
-				return nil, err
-			}
-			mqlDomainTyped := mqlDomain.(*mqlOciIdentityDomain)
-			mqlDomainTyped.cacheCompartmentId = stringValue(d.CompartmentId)
-			mqlDomainTyped.cacheUrl = stringValue(d.Url)
-			res = append(res, mqlDomainTyped)
+		replicaRegions := make([]string, 0, len(d.ReplicaRegions))
+		for _, r := range d.ReplicaRegions {
+			replicaRegions = append(replicaRegions, stringValue(r.Region))
 		}
+
+		mqlDomain, err := CreateResource(o.MqlRuntime, "oci.identity.domain", map[string]*llx.RawData{
+			"id":              llx.StringDataPtr(d.Id),
+			"name":            llx.StringDataPtr(d.DisplayName),
+			"description":     llx.StringDataPtr(d.Description),
+			"type":            llx.StringData(string(d.Type)),
+			"licenseType":     llx.StringDataPtr(d.LicenseType),
+			"homeRegion":      llx.StringDataPtr(d.HomeRegion),
+			"replicaRegions":  llx.ArrayData(stringsToAny(replicaRegions), types.String),
+			"isHiddenOnLogin": llx.BoolData(boolValue(d.IsHiddenOnLogin)),
+			"state":           llx.StringData(string(d.LifecycleState)),
+			"created":         sdkTimeData(d.TimeCreated),
+			"freeformTags":    llx.MapData(strMapToAny(d.FreeformTags), types.String),
+			"definedTags":     llx.MapData(definedTagsToAny(d.DefinedTags), types.Any),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlDomainTyped := mqlDomain.(*mqlOciIdentityDomain)
+		mqlDomainTyped.cacheCompartmentId = stringValue(d.CompartmentId)
+		mqlDomainTyped.cacheUrl = stringValue(d.Url)
+		res = append(res, mqlDomainTyped)
 	}
 
 	return res, nil
@@ -198,7 +247,7 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, err
+			return nil, ociScimError(err, o.Name.Data, "users")
 		}
 
 		users = append(users, response.Users.Resources...)
@@ -314,7 +363,7 @@ func (o *mqlOciIdentityDomain) groups() ([]any, error) {
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, err
+			return nil, ociScimError(err, o.Name.Data, "groups")
 		}
 
 		groups = append(groups, response.Groups.Resources...)
@@ -370,7 +419,7 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, err
+			return nil, ociScimError(err, o.Name.Data, "password policies")
 		}
 
 		policies = append(policies, response.PasswordPolicies.Resources...)
@@ -434,7 +483,7 @@ func (o *mqlOciIdentityDomain) authenticationFactorSettings() (*mqlOciIdentityDo
 	response, err := client.ListAuthenticationFactorSettings(context.Background(),
 		identitydomains.ListAuthenticationFactorSettingsRequest{})
 	if err != nil {
-		return nil, err
+		return nil, ociScimError(err, o.Name.Data, "authentication factor settings")
 	}
 
 	// The service models this as a collection, but a domain has exactly one
@@ -485,7 +534,7 @@ func (o *mqlOciIdentityDomain) apps() ([]any, error) {
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, err
+			return nil, ociScimError(err, o.Name.Data, "apps")
 		}
 
 		apps = append(apps, response.Apps.Resources...)
