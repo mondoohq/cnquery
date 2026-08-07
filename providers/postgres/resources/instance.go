@@ -116,14 +116,17 @@ func (r *mqlPostgresInstance) hbaRules() ([]any, error) {
 		return nil, err
 	}
 	// pg_hba_file_rules is restricted to superusers / pg_read_all_settings;
-	// treat a permission error as no visible rules rather than failing.
+	// treat only a permission error as no visible rules, and propagate the rest.
 	rows, err := pool.Query(pgContext(),
 		`SELECT line_number, type, COALESCE(database, '{}'),
 			COALESCE(user_name, '{}'), COALESCE(address, ''), COALESCE(netmask, ''),
 			COALESCE(auth_method, ''), COALESCE(options, '{}'), COALESCE(error, '')
 		 FROM pg_hba_file_rules ORDER BY line_number`)
 	if err != nil {
-		return []any{}, nil
+		if isPermissionDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	defer rows.Close()
 

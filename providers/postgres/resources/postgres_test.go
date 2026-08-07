@@ -39,6 +39,8 @@ func TestSanitizeConnInfo(t *testing.T) {
 		"host=remote dbname=x password=secret user=u": "host=remote dbname=x password=REDACTED user=u",
 		"host=remote user=u":                          "host=remote user=u",
 		"password=secret":                             "password=REDACTED",
+		// single-quoted value with a space must be fully redacted
+		"host=remote password='s3cret value' user=u": "host=remote password=REDACTED user=u",
 	}
 	for in, want := range cases {
 		if got := sanitizeConnInfo(in); got != want {

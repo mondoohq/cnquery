@@ -243,7 +243,9 @@ func (r *mqlPostgresDatabase) publications() ([]any, error) {
 	return list, rows.Err()
 }
 
-var connInfoPasswordRe = regexp.MustCompile(`(?i)password=[^ ]*`)
+// connInfoPasswordRe matches a libpq password keyword, including single-quoted
+// values that may contain spaces (password='s3cret value').
+var connInfoPasswordRe = regexp.MustCompile(`(?i)password=('[^']*'|[^ ]*)`)
 
 // sanitizeConnInfo removes a password from a subscription connection string.
 func sanitizeConnInfo(conninfo string) string {
@@ -255,12 +257,16 @@ func (r *mqlPostgresInstance) subscriptions() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	// pg_subscription is superuser-only; treat a permission error as none.
+	// pg_subscription is superuser-only; treat only a permission error as none,
+	// and propagate real failures (network, timeout, syntax).
 	rows, err := pool.Query(pgContext(),
 		`SELECT s.subname, COALESCE(o.rolname, ''), s.subenabled, COALESCE(s.subconninfo, '')
 		 FROM pg_subscription s LEFT JOIN pg_roles o ON s.subowner = o.oid ORDER BY s.subname`)
 	if err != nil {
-		return []any{}, nil
+		if isPermissionDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	defer rows.Close()
 

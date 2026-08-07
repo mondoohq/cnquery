@@ -5,14 +5,24 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/postgres/connection"
 )
+
+// isPermissionDenied reports whether an error is a PostgreSQL
+// insufficient_privilege error (SQLSTATE 42501). Only these should be treated
+// as "no visible rows"; every other error must propagate.
+func isPermissionDenied(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "42501"
+}
 
 func (r *mqlPostgres) id() (string, error) {
 	return "postgres", nil
