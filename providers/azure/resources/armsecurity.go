@@ -6,10 +6,6 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -27,8 +23,8 @@ type armSecurityConn struct {
 	token          azcore.TokenCredential
 }
 
-func (a armSecurityConn) GetToken() (azcore.AccessToken, error) {
-	return a.token.GetToken(context.Background(), policy.TokenRequestOptions{
+func (a armSecurityConn) GetToken(ctx context.Context) (azcore.AccessToken, error) {
+	return a.token.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{"https://management.core.windows.net//.default"},
 	})
 }
@@ -56,90 +52,53 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 	q.Set("api-version", "2022-06-01")
 	firstURL.RawQuery = q.Encode()
 
-	client := http.Client{}
 	result := PolicyAssignments{}
-	nextURL := firstURL.String()
-	for nextURL != "" {
-		// Fetch the token per page so a long pagination run over many policy
-		// assignments doesn't fail on an expired bearer token; the credential
-		// caches and only refreshes when the token is near expiry.
-		token, err := conn.GetToken()
-		if err != nil {
-			return PolicyAssignments{}, err
-		}
-		req, err := http.NewRequestWithContext(ctx, "GET", nextURL, nil)
-		if err != nil {
-			return PolicyAssignments{}, err
-		}
-		req.Header.Set("Accept", "application/json")
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return PolicyAssignments{}, err
-		}
-
-		if resp.StatusCode != 200 {
-			resp.Body.Close()
-			return PolicyAssignments{}, errors.New("failed to fetch policy assignments from " + nextURL + ": " + resp.Status)
-		}
-
-		raw, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return PolicyAssignments{}, err
-		}
-
+	err = fetchArmPages(ctx, conn.GetToken, firstURL.String(), "policy assignments", func(raw []byte) (string, error) {
 		page := PolicyAssignments{}
 		if err := json.Unmarshal(raw, &page); err != nil {
-			return PolicyAssignments{}, err
+			return "", err
 		}
 		result.PolicyAssignments = append(result.PolicyAssignments, page.PolicyAssignments...)
-
-		if page.NextLink == nil || *page.NextLink == "" {
-			break
+		if page.NextLink == nil {
+			return "", nil
 		}
-		nextURL = *page.NextLink
+		return *page.NextLink, nil
+	})
+	if err != nil {
+		return PolicyAssignments{}, err
 	}
 	return result, nil
 }
 
 func getServerVulnAssessmentSettings(ctx context.Context, conn armSecurityConn) (ServerVulnerabilityAssessmentsSettingsList, error) {
-	token, err := conn.GetToken()
-	if err != nil {
-		return ServerVulnerabilityAssessmentsSettingsList{}, err
-	}
 	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Security/serverVulnerabilityAssessmentsSettings"
 	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(conn.subscriptionId))
 	urlPath = runtime.JoinPaths(conn.host, urlPath)
-	client := http.Client{}
-	req, err := http.NewRequest("GET", urlPath, nil)
+
+	firstURL, err := url.Parse(urlPath)
 	if err != nil {
 		return ServerVulnerabilityAssessmentsSettingsList{}, err
 	}
-	q := req.URL.Query()
+	q := firstURL.Query()
 	q.Set("api-version", "2022-01-01-preview")
-	req.URL.RawQuery = q.Encode()
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
+	firstURL.RawQuery = q.Encode()
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return ServerVulnerabilityAssessmentsSettingsList{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return ServerVulnerabilityAssessmentsSettingsList{}, errors.New("failed to fetch server vulnerability assessment settings from " + urlPath + ": " + resp.Status)
-	}
-
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return ServerVulnerabilityAssessmentsSettingsList{}, err
-	}
 	result := ServerVulnerabilityAssessmentsSettingsList{}
-	err = json.Unmarshal(raw, &result)
-	return result, err
+	err = fetchArmPages(ctx, conn.GetToken, firstURL.String(), "server vulnerability assessment settings", func(raw []byte) (string, error) {
+		page := ServerVulnerabilityAssessmentsSettingsList{}
+		if err := json.Unmarshal(raw, &page); err != nil {
+			return "", err
+		}
+		result.Settings = append(result.Settings, page.Settings...)
+		if page.NextLink == nil {
+			return "", nil
+		}
+		return *page.NextLink, nil
+	})
+	if err != nil {
+		return ServerVulnerabilityAssessmentsSettingsList{}, err
+	}
+	return result, nil
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.authorization/policyassignments?pivots=deployment-language-bicep#property-values
@@ -199,4 +158,8 @@ type ServerVulnerabilityAssessmentsSettings struct {
 
 type ServerVulnerabilityAssessmentsSettingsList struct {
 	Settings []ServerVulnerabilityAssessmentsSettings `json:"value"`
+	// The endpoint is paginated. Without this field the cursor was discarded at
+	// unmarshal, so the settings past the first page were not merely unfetched
+	// but invisible -- there was nothing to notice.
+	NextLink *string `json:"nextLink"`
 }
