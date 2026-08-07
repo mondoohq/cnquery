@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 )
 
@@ -22,7 +23,13 @@ func TestOciCompartmentInaccessible(t *testing.T) {
 		// response so callers cannot probe for resources they cannot see, so
 		// both mean the same thing at compartment granularity.
 		{"403 not authorized", fakeServiceError{status: 403, code: "NotAuthorizedOrNotFound"}, true},
-		{"404 not found", fakeServiceError{status: 404, code: "NotAuthorizedOrNotFound"}, true},
+		{"404 not authorized or not found", fakeServiceError{status: 404, code: "NotAuthorizedOrNotFound"}, true},
+
+		// A 404 that is not the authorization denial is an absent endpoint,
+		// not a compartment the caller cannot read. Matching on the code
+		// rather than the status is what lets this run before
+		// ociRegionServiceUnavailable without swallowing undeployed regions.
+		{"404 plain not found", fakeServiceError{status: 404, code: "NotFound"}, false},
 
 		// A bad credential is tenancy-wide, not per-compartment, and must not
 		// be mistaken for a compartment the caller merely lacks read on.
@@ -46,6 +53,37 @@ func TestOciCompartmentInaccessible(t *testing.T) {
 	}
 }
 
+func TestOciRegionsByID(t *testing.T) {
+	iad := &mqlOciRegion{}
+	iad.Id.Data = "us-ashburn-1"
+	iad.Id.State = plugin.StateIsSet
+	phx := &mqlOciRegion{}
+	phx.Id.Data = "us-phoenix-1"
+	phx.Id.State = plugin.StateIsSet
+
+	t.Run("indexes every region by its id", func(t *testing.T) {
+		got, err := ociRegionsByID([]any{iad, phx})
+		require.NoError(t, err)
+		assert.Len(t, got, 2)
+		assert.Same(t, iad, got["us-ashburn-1"])
+		assert.Same(t, phx, got["us-phoenix-1"])
+	})
+
+	t.Run("no regions", func(t *testing.T) {
+		got, err := ociRegionsByID(nil)
+		require.NoError(t, err)
+		assert.Empty(t, got)
+	})
+
+	t.Run("a non-region element is an error, not a silent gap", func(t *testing.T) {
+		// A compartment lister only receives the region as a string and looks
+		// the resource up in this map, so a dropped entry would surface much
+		// later as a missing region field rather than here.
+		_, err := ociRegionsByID([]any{iad, "us-phoenix-1"})
+		require.Error(t, err)
+	})
+}
+
 func TestOciCollectCompartmentJobs(t *testing.T) {
 	ok := func(items ...any) *jobpool.Job {
 		return jobpool.NewJob(func() (jobpool.JobResult, error) {
@@ -59,8 +97,18 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 			return nil, fakeServiceError{status: 403, code: "NotAuthorizedOrNotFound"}
 		})
 	}
-	// A region where the service is not deployed at all.
+	// A region where the service is not deployed at all. Deliberately NOT
+	// NotAuthorizedOrNotFound: that code is OCI's authorization denial, and
+	// using it here is what previously let an entirely-denied tenancy be
+	// mistaken for a set of undeployed regions.
 	unavailable := func() *jobpool.Job {
+		return jobpool.NewJob(func() (jobpool.JobResult, error) {
+			return nil, fakeServiceError{status: 404, code: "NotFound"}
+		})
+	}
+	// The shape OCI actually returns when a policy does not grant read on a
+	// compartment. Same status as an absent endpoint, different code.
+	denied404 := func() *jobpool.Job {
 		return jobpool.NewJob(func() (jobpool.JobResult, error) {
 			return nil, fakeServiceError{status: 404, code: "NotAuthorizedOrNotFound"}
 		})
@@ -92,6 +140,33 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 		require.Error(t, err)
 		assert.Nil(t, res)
 		assert.Contains(t, err.Error(), "NotAuthorizedOrNotFound")
+	})
+
+	t.Run("every compartment denied with a 404 is an error, not an empty tenancy", func(t *testing.T) {
+		// OCI answers an authorization failure with 404
+		// NotAuthorizedOrNotFound, not 403. Classifying that as an absent
+		// regional endpoint made an under-scoped token return a clean, empty
+		// scan of the whole tenancy - the exact outcome the denied counter
+		// exists to prevent.
+		res, err := ociCollectCompartmentJobs([]*jobpool.Job{denied404(), denied404()})
+		require.Error(t, err)
+		assert.Nil(t, res)
+		assert.Contains(t, err.Error(), "NotAuthorizedOrNotFound")
+	})
+
+	t.Run("a 404-denied compartment does not discard the readable ones", func(t *testing.T) {
+		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok("a"), denied404(), ok("b")})
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []any{"a", "b"}, res)
+	})
+
+	t.Run("an undeployed region does not rescue an all-denied run", func(t *testing.T) {
+		// The two 404s differ only by code. The denial still has to win, or a
+		// single undeployed region would push a broken token back onto the
+		// success path.
+		res, err := ociCollectCompartmentJobs([]*jobpool.Job{unavailable(), denied404()})
+		require.Error(t, err)
+		assert.Nil(t, res)
 	})
 
 	t.Run("a readable but empty compartment counts as success", func(t *testing.T) {

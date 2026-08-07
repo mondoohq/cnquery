@@ -80,7 +80,23 @@ func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 	return &resp.Tenancy, nil
 }
 
+// GetCompartments returns the tenancy root plus every active compartment
+// beneath it.
+//
+// The result is memoized for the lifetime of the connection. A dozen listers
+// fan out over the compartment tree, and each one asking for it separately
+// meant walking the same paginated ListCompartments a dozen times per scan.
+//
+// A failure is not cached: an Identity call that fails on a throttle should be
+// retried by the next lister rather than turning one bad moment into a scan
+// with no compartments at all.
 func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compartment, error) {
+	c.compartmentLock.Lock()
+	defer c.compartmentLock.Unlock()
+	if c.compartmentsDone {
+		return c.compartmentList, nil
+	}
+
 	oClient, err := c.IdentityClient()
 	if err != nil {
 		return nil, err
@@ -122,6 +138,8 @@ func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compart
 		}
 	}
 
+	c.compartmentList = compartments
+	c.compartmentsDone = true
 	return compartments, nil
 }
 

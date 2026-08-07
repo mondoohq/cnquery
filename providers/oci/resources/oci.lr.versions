@@ -2308,6 +2308,7 @@ oci.serviceConnectorHub.connector.compartment 13.17.2
 oci.serviceConnectorHub.connector.created 13.17.2
 oci.serviceConnectorHub.connector.definedTags 13.17.2
 oci.serviceConnectorHub.connector.description 13.17.2
+oci.serviceConnectorHub.connector.exportsAuditLog 13.17.2
 oci.serviceConnectorHub.connector.freeformTags 13.17.2
 oci.serviceConnectorHub.connector.id 13.17.2
 oci.serviceConnectorHub.connector.name 13.17.2

@@ -14,7 +14,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -36,21 +35,16 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getLoadBalancers(conn, list.Data))
-}
+	// Load balancers belong to the compartment of the application they front, and
+	// ListLoadBalancers has no subtree flag. Scanning only the tenancy root meant
+	// the exposure surface an internet-facing balancer represents, along with its
+	// listener TLS settings and backend sets, never appeared in the inventory at
+	// all.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci load balancer with region %s", region)
 
-func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci load balancer with region %s", regionResource.Id.Data)
-
-			svc, err := conn.LoadBalancerClient(regionResource.Id.Data)
+			svc, err := conn.LoadBalancerClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -59,7 +53,7 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 			var page *string
 			for {
 				response, err := svc.ListLoadBalancers(ctx, loadbalancer.ListLoadBalancersRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -99,13 +93,9 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					// missing flag on a non-private load balancer means public,
 					// so falling back to false would clear a genuinely
 					// internet-facing balancer.
-					isPublic := boolValue(ip.IsPublic)
-					if ip.IsPublic == nil {
-						isPublic = !boolValue(lb.IsPrivate)
-					}
 					entry := map[string]any{
 						"ipAddress": stringValue(ip.IpAddress),
-						"isPublic":  isPublic,
+						"isPublic":  ociIpIsPublic(ip.IsPublic, boolValue(lb.IsPrivate)),
 					}
 					if ip.ReservedIp != nil {
 						entry["reservedIpId"] = stringValue(ip.ReservedIp.Id)
@@ -134,16 +124,13 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 				mqlLb := mqlInstance.(*mqlOciLoadBalancerLoadBalancer)
 				mqlLb.cacheListeners = lb.Listeners
 				mqlLb.cacheBackendSets = lb.BackendSets
-				mqlLb.cacheRegion = regionResource.Id.Data
+				mqlLb.cacheRegion = region
 				mqlLb.cacheSubnetIDs = lb.SubnetIds
 				res = append(res, mqlLb)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciLoadBalancerLoadBalancerInternal struct {

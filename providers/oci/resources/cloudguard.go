@@ -34,6 +34,24 @@ type mqlOciCloudGuardInternal struct {
 	homeRegion     string
 }
 
+// ociCloudGuardProblemWindow is how far back the problem listing reaches.
+//
+// The service defaults this to 30 days when the caller leaves it unset, which
+// is short enough to hide the remediation history the resource exists to
+// expose: a finding resolved six weeks ago simply vanishes, and "was this ever
+// raised?" answers no. 90 days matches the shortest Audit retention period, so
+// the two detection-side resources cover a comparable span.
+const ociCloudGuardProblemWindow = 90 * 24 * time.Hour
+
+// ociCloudGuardProblemStates are the lifecycle states a problem listing has to
+// ask for. The filter takes one value at a time and defaults to ACTIVE, so
+// every state has to be requested explicitly or the resolved ones never
+// appear.
+var ociCloudGuardProblemStates = []cloudguard.ListProblemsLifecycleStateEnum{
+	cloudguard.ListProblemsLifecycleStateActive,
+	cloudguard.ListProblemsLifecycleStateInactive,
+}
+
 func (o *mqlOciCloudGuard) id() (string, error) {
 	return "oci.cloudGuard", nil
 }
@@ -72,6 +90,10 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 
 	// Resolve the home region before taking configLock: getHomeRegion takes its
 	// own lock, and nesting it inside this critical section would deadlock.
+	//
+	// This is the one caller that must not use getServiceRegion. The reporting
+	// region is read *from* this configuration, so asking for it here would
+	// recurse back into getConfig and never terminate.
 	homeRegion, err := o.getHomeRegion()
 	if err != nil {
 		return nil, err
@@ -102,6 +124,23 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 	return o.config, nil
 }
 
+// getServiceRegion returns the region Cloud Guard actually serves data from.
+//
+// Cloud Guard aggregates findings from every monitored region into a single
+// reporting region, chosen when the service is enabled. That is usually the
+// tenancy's home region but is not required to be, and querying the wrong one
+// returns nothing - a Cloud Guard posture check that reports no problems at
+// all while the console shows hundreds. The home region is the fallback,
+// because it is also what getConfig has to use to discover the reporting
+// region in the first place.
+func (o *mqlOciCloudGuard) getServiceRegion() (string, error) {
+	cfg, err := o.getConfig()
+	if err == nil && cfg != nil && stringValue(cfg.ReportingRegion) != "" {
+		return *cfg.ReportingRegion, nil
+	}
+	return o.getHomeRegion()
+}
+
 func (o *mqlOciCloudGuard) status() (bool, error) {
 	cfg, err := o.getConfig()
 	if err != nil {
@@ -129,12 +168,12 @@ func (o *mqlOciCloudGuard) selfManageResources() (bool, error) {
 func (o *mqlOciCloudGuard) targets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	homeRegion, err := o.getHomeRegion()
+	serviceRegion, err := o.getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -191,48 +230,63 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 	return res, nil
 }
 
-// problems lists every finding Cloud Guard has raised. The listing is
-// deliberately unfiltered: `lifecycleDetail` is exposed as a field so callers
-// decide whether they care about OPEN findings only or also want the
-// RESOLVED and DISMISSED history. Filtering to OPEN here would make a
-// dismissed-but-unfixed finding indistinguishable from one that never existed.
+// problems lists the findings Cloud Guard has raised.
+//
+// Leaving the request's filters unset does not mean "everything": the service
+// applies its own defaults, narrowing the result to problems whose lifecycle
+// state is ACTIVE and that were last detected within the past 30 days. Both
+// bounds are set explicitly here instead, so the scope is what this code says
+// it is rather than whatever the service currently defaults to.
+//
+// The window is deliberately wider than the default. `lifecycleDetail` is
+// exposed as a field so callers decide whether they care about OPEN findings
+// only or also want the RESOLVED and DISMISSED history, and that history is
+// the point - a dismissed-but-unfixed finding should be distinguishable from
+// one that never existed, which a 30-day cutoff quietly prevents.
 func (o *mqlOciCloudGuard) problems() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	homeRegion, err := o.getHomeRegion()
+	serviceRegion, err := o.getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
+	since := common.SDKTime{Time: time.Now().UTC().Add(-ociCloudGuardProblemWindow)}
 	problems := []cloudguard.ProblemSummary{}
-	var page *string
-	for {
-		response, err := client.ListProblems(ctx, cloudguard.ListProblemsRequest{
-			CompartmentId: common.String(conn.TenantID()),
-			// Problems are raised against resources in sub-compartments, so
-			// without the subtree flag the tenancy root reports almost none.
-			CompartmentIdInSubtree: common.Bool(true),
-			// ACCESSIBLE degrades to the compartments the caller can read
-			// instead of failing the whole listing on the first one it cannot.
-			AccessLevel: cloudguard.ListProblemsAccessLevelAccessible,
-			Page:        page,
-		})
-		if err != nil {
-			return nil, err
-		}
+	// One pass per lifecycle state: the filter accepts a single value, and
+	// leaving it unset is not the union - the service falls back to ACTIVE.
+	for _, state := range ociCloudGuardProblemStates {
+		var page *string
+		for {
+			response, err := client.ListProblems(ctx, cloudguard.ListProblemsRequest{
+				CompartmentId: common.String(conn.TenantID()),
+				// Problems are raised against resources in sub-compartments, so
+				// without the subtree flag the tenancy root reports almost none.
+				CompartmentIdInSubtree: common.Bool(true),
+				// ACCESSIBLE degrades to the compartments the caller can read
+				// instead of failing the whole listing on the first one it cannot.
+				AccessLevel:                          cloudguard.ListProblemsAccessLevelAccessible,
+				LifecycleState:                       state,
+				TimeLastDetectedGreaterThanOrEqualTo: &since,
+				Page:                                 page,
+			})
+			if err != nil {
+				return nil, err
+			}
 
-		problems = append(problems, response.Items...)
+			problems = append(problems, response.Items...)
 
-		if response.OpcNextPage == nil {
-			break
+			if response.OpcNextPage == nil {
+				break
+			}
+			page = response.OpcNextPage
 		}
-		page = response.OpcNextPage
 	}
 
 	res := make([]any, 0, len(problems))
@@ -322,12 +376,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	homeRegion, err := obj.(*mqlOciCloudGuard).getHomeRegion()
+	serviceRegion, err := obj.(*mqlOciCloudGuard).getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -423,12 +477,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	homeRegion, err := o.getHomeRegion()
+	serviceRegion, err := o.getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -486,12 +540,12 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	homeRegion, err := o.getHomeRegion()
+	serviceRegion, err := o.getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -553,12 +607,12 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	homeRegion, err := o.getHomeRegion()
+	serviceRegion, err := o.getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -616,12 +670,12 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	homeRegion, err := o.getHomeRegion()
+	serviceRegion, err := o.getServiceRegion()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := conn.CloudGuardClient(homeRegion)
+	client, err := conn.CloudGuardClient(serviceRegion)
 	if err != nil {
 		return nil, err
 	}

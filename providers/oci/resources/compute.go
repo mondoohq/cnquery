@@ -37,55 +37,38 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 		return nil, list.Error
 	}
 
-	// fetch instances
-	return ociRunRegionPool(o.getComputeInstances(conn, list.Data))
-}
-
-func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Instance, error) {
-	instances := []core.Instance{}
-	var page *string
-	for {
-		request := core.ListInstancesRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := computeClient.ListInstances(ctx, request)
-		if err != nil {
-			return nil, err
-		}
-
-		instances = append(instances, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+	regionsByID, err := ociRegionsByID(list.Data)
+	if err != nil {
+		return nil, err
 	}
 
-	return instances, nil
-}
+	// Compute instances are the resource most often placed in a per-team or
+	// per-environment compartment, and ListInstances only ever answers for the
+	// one compartment it is handed. Restricting the scan to the tenancy root
+	// meant a fleet of hundreds of hosts reported as zero instances, taking
+	// every patch, agent, and IMDS check down with it.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
 
-func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
+			// Guarded rather than indexed blindly: a miss would put a typed nil
+			// into the region field, and a nil *mqlOciRegion inside an interface
+			// is not the untyped nil the runtime treats as absent, so it panics
+			// on read instead of reporting null. The pool iterates the same
+			// regions this index was built from, so a miss means the two have
+			// drifted and is worth saying out loud.
+			regionResource, ok := regionsByID[region]
+			if !ok {
+				return nil, errors.New("no oci.region resource for region " + region)
+			}
 
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
-
-			svc, err := conn.ComputeClient(regionResource.Id.Data)
+			svc, err := conn.ComputeClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []any
-			instances, err := o.getComputeInstancesForRegion(ctx, svc, conn.TenantID())
+			instances, err := o.getComputeInstancesForRegion(ctx, svc, compartmentID)
 			if err != nil {
 				return nil, err
 			}
@@ -212,23 +195,48 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					return nil, err
 				}
 				mqlInst := mqlInstance.(*mqlOciComputeInstance)
-				mqlInst.cacheRegion = regionResource.Id.Data
+				mqlInst.cacheRegion = region
+				mqlInst.cacheCompartmentID = stringValue(instance.CompartmentId)
 				if src, ok := instance.SourceDetails.(core.InstanceSourceViaBootVolumeDetails); ok {
 					mqlInst.cacheBootVolumeID = stringValue(src.BootVolumeId)
 				}
 				res = append(res, mqlInst)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Instance, error) {
+	instances := []core.Instance{}
+	var page *string
+	for {
+		request := core.ListInstancesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := computeClient.ListInstances(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		instances = append(instances, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+
+		page = response.OpcNextPage
 	}
-	return tasks
+
+	return instances, nil
 }
 
 type mqlOciComputeInstanceInternal struct {
-	cacheRegion       string
-	cacheBootVolumeID string
+	cacheRegion        string
+	cacheBootVolumeID  string
+	cacheCompartmentID string
 }
 
 func (o *mqlOciComputeInstance) id() (string, error) {
@@ -258,12 +266,24 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 		return nil, err
 	}
 
-	// List VNIC attachments for this instance
+	// List VNIC attachments for this instance.
+	//
+	// Scoped to the instance's own compartment, not the tenancy root:
+	// ListVnicAttachments filters on the compartment as well as the instance,
+	// so asking the root about an instance that lives in a child compartment
+	// returned no attachments at all. That left the instance with no IPs, no
+	// subnet and no security groups, which the exposure checks then read as
+	// "not reachable" for exactly the instances nobody had looked at.
+	compartmentID := o.cacheCompartmentID
+	if compartmentID == "" {
+		compartmentID = conn.TenantID()
+	}
+
 	var attachments []core.VnicAttachment
 	var page *string
 	for {
 		response, err := computeSvc.ListVnicAttachments(ctx, core.ListVnicAttachmentsRequest{
-			CompartmentId: common.String(conn.TenantID()),
+			CompartmentId: common.String(compartmentID),
 			InstanceId:    common.String(o.Id.Data),
 			Page:          page,
 		})

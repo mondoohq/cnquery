@@ -29,6 +29,13 @@ var ociDnsZoneScopes = []dns.ListZonesScopeEnum{
 	dns.ListZonesScopePrivate,
 }
 
+// ociDnsSteeringPolicyScopes are the scopes a steering policy can live in.
+// The listing scopes the same way zones do, so both have to be asked for.
+var ociDnsSteeringPolicyScopes = []dns.ListSteeringPoliciesScopeEnum{
+	dns.ListSteeringPoliciesScopeGlobal,
+	dns.ListSteeringPoliciesScopePrivate,
+}
+
 func (o *mqlOciDns) zones() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
@@ -138,22 +145,29 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 			}
 
 			policies := []dns.SteeringPolicySummary{}
-			var page *string
-			for {
-				response, err := client.ListSteeringPolicies(ctx, dns.ListSteeringPoliciesRequest{
-					CompartmentId: common.String(compartmentID),
-					Page:          page,
-				})
-				if err != nil {
-					return nil, err
-				}
+			// Scoped the same way zones are, and for the same reason: the
+			// listing returns one scope at a time rather than the union, so
+			// asking only for the default reports a tenancy's private traffic
+			// management as absent.
+			for _, scope := range ociDnsSteeringPolicyScopes {
+				var page *string
+				for {
+					response, err := client.ListSteeringPolicies(ctx, dns.ListSteeringPoliciesRequest{
+						CompartmentId: common.String(compartmentID),
+						Scope:         scope,
+						Page:          page,
+					})
+					if err != nil {
+						return nil, err
+					}
 
-				policies = append(policies, response.Items...)
+					policies = append(policies, response.Items...)
 
-				if response.OpcNextPage == nil {
-					break
+					if response.OpcNextPage == nil {
+						break
+					}
+					page = response.OpcNextPage
 				}
-				page = response.OpcNextPage
 			}
 
 			res := make([]any, 0, len(policies))

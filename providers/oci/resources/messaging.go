@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 
@@ -184,6 +185,44 @@ type mqlOciStreamingStreamPoolInternal struct {
 	detailLock    sync.Mutex
 	detailFetched atomic.Bool
 	detail        *streaming.StreamPool
+}
+
+// initOciStreamingStreamPool resolves a stream pool by OCID.
+//
+// Without an init, NewResource falls straight through to Create with whatever
+// args it was handed - here just an id - so `oci.streaming.streams.streamPool`
+// produced a resource with every other field unset and an empty cacheRegion,
+// which then built a client against an empty region. Resolving through the
+// pool listing returns the fully populated instance instead.
+func initOciStreamingStreamPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
+		return nil, nil, errors.New("id required to fetch oci.streaming.streamPool")
+	}
+
+	obj, err := CreateResource(runtime, "oci.streaming", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	s := obj.(*mqlOciStreaming)
+
+	rawPools := s.GetStreamPools()
+	if rawPools.Error != nil {
+		return nil, nil, rawPools.Error
+	}
+
+	for _, raw := range rawPools.Data {
+		pool := raw.(*mqlOciStreamingStreamPool)
+		if pool.Id.Data == idVal {
+			return args, pool, nil
+		}
+	}
+
+	return nil, nil, errors.New("oci.streaming.streamPool not found: " + idVal)
 }
 
 func (o *mqlOciStreamingStreamPool) id() (string, error) {

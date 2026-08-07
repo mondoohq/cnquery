@@ -203,9 +203,23 @@ func (o *mqlOciServiceConnectorHubConnector) targetBucket() (*mqlOciObjectStorag
 		return nil, nil
 	}
 
+	// The bucket's own init needs a region: it fetches the bucket detail to
+	// populate everything ListBuckets omits, and GetBucket is a regional call.
+	// Passing only namespace and name left that region unset, so every
+	// objectStorage-target connector failed with "region is required to fetch
+	// bucket details". A Connector Hub target bucket is in the connector's own
+	// region, which is already cached here.
+	regionRes, err := NewResource(o.MqlRuntime, "oci.region", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheRegion),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := NewResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
 		"namespace": llx.StringData(stringValue(target.Namespace)),
 		"name":      llx.StringData(stringValue(target.BucketName)),
+		"region":    llx.ResourceData(regionRes, "oci.region"),
 	})
 	if err != nil {
 		return nil, err
@@ -234,25 +248,74 @@ func (o *mqlOciServiceConnectorHubConnector) targetTopic() (*mqlOciOnsTopic, err
 	return res.(*mqlOciOnsTopic), nil
 }
 
-func (o *mqlOciServiceConnectorHubConnector) sourceLogGroups() ([]any, error) {
+// ociAuditLogGroup is the reserved name Connector Hub uses for the tenancy
+// audit log. A logging source names its log group either by OCID or with this
+// sentinel, which is not an OCID and cannot be resolved to an
+// oci.logging.logGroup - it is the audit stream itself, not a customer log
+// group.
+const ociAuditLogGroup = "_Audit"
+
+// ociSplitLogGroupRefs separates the log-group references on a Connector Hub
+// logging source into the OCIDs that name a real log group and a flag for the
+// tenancy audit log.
+//
+// Passing every reference through to a log-group lookup meant the audit
+// sentinel failed to resolve and was dropped, so a connector exporting the
+// audit log - the reason most tenancies run Connector Hub at all - reported no
+// sources. A reference that is neither an OCID nor the sentinel is dropped:
+// only a compartment-scoped source, which names no log group.
+func ociSplitLogGroupRefs(refs []string) (ocids []string, exportsAuditLog bool) {
+	ocids = make([]string, 0, len(refs))
+	for _, ref := range refs {
+		switch {
+		case ref == ociAuditLogGroup:
+			exportsAuditLog = true
+		case isOcid(ref):
+			ocids = append(ocids, ref)
+		}
+	}
+	return ocids, exportsAuditLog
+}
+
+// loggingSource reads the connector's logging source once for the two fields
+// derived from it, so they cannot disagree about what the source names. A
+// connector whose source is any other kind reports no log groups and no audit
+// export, which is the accurate answer rather than a missing one.
+func (o *mqlOciServiceConnectorHubConnector) loggingSource() (logGroupIds []string, exportsAuditLog bool, err error) {
 	detail, err := o.getDetail()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	source, ok := detail.Source.(sch.LoggingSourceDetailsResponse)
 	if !ok {
-		return []any{}, nil
+		return nil, false, nil
 	}
 
-	res := make([]any, 0, len(source.LogSources))
+	refs := make([]string, 0, len(source.LogSources))
 	for i := range source.LogSources {
-		logGroupId := stringValue(source.LogSources[i].LogGroupId)
-		// A log source scoped to a whole compartment names no log group.
-		if logGroupId == "" {
-			continue
-		}
+		refs = append(refs, stringValue(source.LogSources[i].LogGroupId))
+	}
+	logGroupIds, exportsAuditLog = ociSplitLogGroupRefs(refs)
+	return logGroupIds, exportsAuditLog, nil
+}
 
+func (o *mqlOciServiceConnectorHubConnector) exportsAuditLog() (bool, error) {
+	_, exportsAuditLog, err := o.loggingSource()
+	if err != nil {
+		return false, err
+	}
+	return exportsAuditLog, nil
+}
+
+func (o *mqlOciServiceConnectorHubConnector) sourceLogGroups() ([]any, error) {
+	logGroupIds, _, err := o.loggingSource()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(logGroupIds))
+	for _, logGroupId := range logGroupIds {
 		group, err := NewResource(o.MqlRuntime, "oci.logging.logGroup", map[string]*llx.RawData{
 			"id": llx.StringData(logGroupId),
 		})

@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
@@ -35,7 +34,52 @@ func (o *mqlOciKms) vaults() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getVaults(conn, list.Data))
+	// Vaults are almost always created in the compartment of the service they
+	// encrypt, and ListVaults answers for one compartment with no way to recurse.
+	// A root-only listing therefore came back empty, and every typed vault
+	// reference from a database, bucket, or stream pool then had nothing to
+	// resolve against.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci kms with region %s", region)
+
+			svc, err := conn.KmsVaultClient(region)
+			if err != nil {
+				return nil, err
+			}
+
+			var res []any
+			vaults, err := o.getVaultsForRegion(ctx, svc, compartmentID)
+			if err != nil {
+				return nil, err
+			}
+
+			for i := range vaults {
+				vault := vaults[i]
+
+				var created *time.Time
+				if vault.TimeCreated != nil {
+					created = &vault.TimeCreated.Time
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
+					"id":                 llx.StringDataPtr(vault.Id),
+					"name":               llx.StringDataPtr(vault.DisplayName),
+					"compartmentID":      llx.StringDataPtr(vault.CompartmentId),
+					"vaultType":          llx.StringData(string(vault.VaultType)),
+					"state":              llx.StringData(string(vault.LifecycleState)),
+					"managementEndpoint": llx.StringDataPtr(vault.ManagementEndpoint),
+					"created":            llx.TimeDataPtr(created),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlInstance.(*mqlOciKmsVault).region = region
+				res = append(res, mqlInstance)
+			}
+
+			return res, nil
+		})
 }
 
 func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagement.KmsVaultClient, compartmentID string) ([]keymanagement.VaultSummary, error) {
@@ -61,59 +105,6 @@ func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagemen
 	}
 
 	return entries, nil
-}
-
-func (o *mqlOciKms) getVaults(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci kms with region %s", regionResource.Id.Data)
-
-			svc, err := conn.KmsVaultClient(regionResource.Id.Data)
-			if err != nil {
-				return nil, err
-			}
-
-			var res []any
-			vaults, err := o.getVaultsForRegion(ctx, svc, conn.TenantID())
-			if err != nil {
-				return nil, err
-			}
-
-			for i := range vaults {
-				vault := vaults[i]
-
-				var created *time.Time
-				if vault.TimeCreated != nil {
-					created = &vault.TimeCreated.Time
-				}
-
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(vault.Id),
-					"name":               llx.StringDataPtr(vault.DisplayName),
-					"compartmentID":      llx.StringDataPtr(vault.CompartmentId),
-					"vaultType":          llx.StringData(string(vault.VaultType)),
-					"state":              llx.StringData(string(vault.LifecycleState)),
-					"managementEndpoint": llx.StringDataPtr(vault.ManagementEndpoint),
-					"created":            llx.TimeDataPtr(created),
-				})
-				if err != nil {
-					return nil, err
-				}
-				mqlInstance.(*mqlOciKmsVault).region = regionResource.Id.Data
-				res = append(res, mqlInstance)
-			}
-
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 type mqlOciKmsVaultInternal struct {

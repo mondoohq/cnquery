@@ -287,12 +287,58 @@ func ociAnySubnetReachable(gates []ociSubnetGate) bool {
 // matters for a multi-subnet load balancer: a hardened public subnet paired
 // with a private subnet carrying the wide-open default VCN security list must
 // not combine into a reachable verdict.
+
 func ociAnySubnetAdmitsInternet(gates []ociSubnetGate, nsgOpenRuleCount int) bool {
 	for _, g := range gates {
 		if g.prohibitsIngress || !g.routesToInternet {
 			continue
 		}
 		if ociIngressOpen(nsgOpenRuleCount, g.securityListAllows) {
+			return true
+		}
+	}
+	return false
+}
+
+// ociIpIsPublic decides whether one of a load balancer's IP addresses faces
+// the internet.
+//
+// isPublic is optional on both load balancer SDK models. Absent does not mean
+// private: a balancer that is not marked private is public, so defaulting the
+// missing flag to false would clear a genuinely internet-facing balancer and
+// report it as unreachable.
+func ociIpIsPublic(isPublic *bool, lbIsPrivate bool) bool {
+	if isPublic != nil {
+		return *isPublic
+	}
+	return !lbIsPrivate
+}
+
+// ociLoadBalancerHasPublicIp reports whether any of a load balancer's IP
+// address entries is internet-facing.
+//
+// The entries are the dicts built at creation time, so this reads the
+// `isPublic` key back out. A private balancer short-circuits: its addresses
+// are internal whatever the individual flags say. An entry missing the key
+// falls back to the balancer's own private flag for the same reason
+// ociIpIsPublic does, so a dict built before that fallback existed still
+// resolves correctly.
+func ociLoadBalancerHasPublicIp(ips []any, isPrivate bool) bool {
+	if isPrivate {
+		return false
+	}
+	for _, e := range ips {
+		d, ok := e.(map[string]any)
+		if !ok {
+			continue
+		}
+		pub, ok := d["isPublic"].(bool)
+		if !ok {
+			// The key is absent or null rather than a bool. Not private, so
+			// treat it as public rather than silently clearing the balancer.
+			return true
+		}
+		if pub {
 			return true
 		}
 	}
@@ -477,17 +523,7 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	if ips.Error != nil {
 		return nil, ips.Error
 	}
-	hasPublicIp := false
-	if !isPrivate.Data {
-		for _, e := range ips.Data {
-			if d, ok := e.(map[string]any); ok {
-				if pub, _ := d["isPublic"].(bool); pub {
-					hasPublicIp = true
-					break
-				}
-			}
-		}
-	}
+	hasPublicIp := ociLoadBalancerHasPublicIp(ips.Data, isPrivate.Data)
 
 	listeners := l.GetListeners()
 	if listeners.Error != nil {
@@ -598,17 +634,7 @@ func (n *mqlOciNetworkLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposu
 	if ips.Error != nil {
 		return nil, ips.Error
 	}
-	hasPublicIp := false
-	if !isPrivate.Data {
-		for _, e := range ips.Data {
-			if d, ok := e.(map[string]any); ok {
-				if pub, _ := d["isPublic"].(bool); pub {
-					hasPublicIp = true
-					break
-				}
-			}
-		}
-	}
+	hasPublicIp := ociLoadBalancerHasPublicIp(ips.Data, isPrivate.Data)
 
 	listeners := n.GetListeners()
 	if listeners.Error != nil {

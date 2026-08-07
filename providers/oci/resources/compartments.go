@@ -20,6 +20,21 @@ import (
 // limits.
 const ociCompartmentPoolConcurrency = 10
 
+// ociRegionsByID indexes an oci.regions collection by region key so a
+// compartment lister, which only receives the region as a string, can still set
+// a typed oci.region field on the resources it builds.
+func ociRegionsByID(regions []any) (map[string]*mqlOciRegion, error) {
+	res := make(map[string]*mqlOciRegion, len(regions))
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return nil, errors.New("invalid region type")
+		}
+		res[regionResource.Id.Data] = regionResource
+	}
+	return res, nil
+}
+
 // ociCompartmentLister lists resources of a single type inside one compartment
 // in one region. Implementations return the already-constructed MQL resources.
 type ociCompartmentLister func(ctx context.Context, region string, compartmentID string) ([]any, error)
@@ -104,15 +119,22 @@ func ociCollectCompartmentJobs(jobs []*jobpool.Job) ([]any, error) {
 	for i := range poolOfJobs.Jobs {
 		job := poolOfJobs.Jobs[i]
 		if job.Err != nil {
-			if ociRegionServiceUnavailable(job.Err) {
-				log.Debug().Err(job.Err).Msg("skipping oci region where the service is unavailable")
-				continue
-			}
+			// Order matters. OCI answers an authorization failure with 404
+			// NotAuthorizedOrNotFound, and ociRegionServiceUnavailable treats
+			// any 404 as an absent regional endpoint - so asking it first
+			// consumed every denial before it could be counted, and the
+			// all-denied guard below could never fire. The denial test is
+			// narrower (it matches on the error code, not just the status), so
+			// it goes first and the region test keeps the rest.
 			if ociCompartmentInaccessible(job.Err) {
 				denied++
 				if deniedErr == nil {
 					deniedErr = job.Err
 				}
+				continue
+			}
+			if ociRegionServiceUnavailable(job.Err) {
+				log.Debug().Err(job.Err).Msg("skipping oci region where the service is unavailable")
 				continue
 			}
 			hardErr = errors.Join(hardErr, job.Err)
@@ -147,22 +169,33 @@ func ociCollectCompartmentJobs(jobs []*jobpool.Job) ([]any, error) {
 	return res, nil
 }
 
+// ociNotAuthorizedOrNotFound is the error code OCI returns when the caller is
+// not permitted to see a resource. The service deliberately reports it for a
+// resource that does not exist as well, so that a caller cannot probe for the
+// existence of things it has no access to.
+const ociNotAuthorizedOrNotFound = "NotAuthorizedOrNotFound"
+
 // ociCompartmentInaccessible reports whether an error means "you cannot see
 // into this particular compartment" rather than a tenancy-wide fault.
 //
-// OCI collapses "does not exist" and "you are not authorized" into the same
-// NotAuthorizedOrNotFound response precisely so that a caller cannot probe for
-// the existence of resources it has no access to, so 403 and 404 are both
-// treated as an inaccessible compartment here. This is safe only because the
-// caller checks that at least one compartment did succeed.
+// A 403 is unambiguous. A 404 is not: it is both OCI's authorization denial
+// (carrying NotAuthorizedOrNotFound) and what a region with no endpoint for
+// the service returns. Matching the code rather than the bare status keeps the
+// two apart, which is what lets the caller test this before
+// ociRegionServiceUnavailable and still skip genuinely undeployed regions.
+//
+// Treating a denial as skippable is safe only because the caller checks that
+// at least one compartment did succeed.
 func ociCompartmentInaccessible(err error) bool {
 	svcErr, ok := common.IsServiceError(err)
 	if !ok {
 		return false
 	}
 	switch svcErr.GetHTTPStatusCode() {
-	case 403, 404:
+	case 403:
 		return true
+	case 404:
+		return svcErr.GetCode() == ociNotAuthorizedOrNotFound
 	default:
 		return false
 	}

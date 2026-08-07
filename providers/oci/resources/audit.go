@@ -76,7 +76,11 @@ func (o *mqlOciAudit) events() ([]any, error) {
 
 	// Audit events are recorded per region and per compartment, and the API
 	// offers no subtree flag, so both dimensions have to be walked.
-	endTime := time.Now().UTC()
+	// Truncated to the minute because the Audit API requires it: both bounds
+	// are documented as accepting minute granularity only, with seconds and
+	// milliseconds set to zero. The SDK serializes an SDKTime with RFC3339Nano,
+	// so an untruncated time.Now() puts seconds and nanoseconds on the wire.
+	endTime := time.Now().UTC().Truncate(time.Minute)
 	startTime := endTime.Add(-ociAuditEventWindow)
 
 	return ociRunCompartmentRegionPool(conn, regions.Data,
