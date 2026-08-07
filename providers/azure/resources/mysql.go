@@ -715,22 +715,15 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) azureAdAdministrators()
 			if entry == nil {
 				continue
 			}
-			var administratorType, login, sid, tenantId *string
-			if entry.Properties != nil {
-				administratorType = (*string)(orZero(entry.Properties).AdministratorType)
-				login = orZero(entry.Properties).Login
-				sid = orZero(entry.Properties).Sid
-				tenantId = orZero(entry.Properties).TenantID
-			}
 			mqlAdmin, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer.administrator",
 				map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(entry.ID),
 					"name":              llx.StringDataPtr(entry.Name),
 					"type":              llx.StringDataPtr(entry.Type),
-					"administratorType": llx.StringDataPtr(administratorType),
-					"login":             llx.StringDataPtr(login),
-					"sid":               llx.StringDataPtr(sid),
-					"tenantId":          llx.StringDataPtr(tenantId),
+					"administratorType": llx.StringDataPtr((*string)(orZero(entry.Properties).AdministratorType)),
+					"login":             llx.StringDataPtr(orZero(entry.Properties).Login),
+					"sid":               llx.StringDataPtr(orZero(entry.Properties).Sid),
+					"tenantId":          llx.StringDataPtr(orZero(entry.Properties).TenantID),
 				})
 			if err != nil {
 				return nil, err
