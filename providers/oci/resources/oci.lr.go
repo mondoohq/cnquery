@@ -55,6 +55,7 @@ const (
 	ResourceOciNetworkSubnet                                         string = "oci.network.subnet"
 	ResourceOciNetworkSecurityList                                   string = "oci.network.securityList"
 	ResourceOciNetworkNetworkSecurityGroup                           string = "oci.network.networkSecurityGroup"
+	ResourceOciNetworkSecurityRule                                   string = "oci.network.securityRule"
 	ResourceOciNetworkInternetGateway                                string = "oci.network.internetGateway"
 	ResourceOciNetworkNatGateway                                     string = "oci.network.natGateway"
 	ResourceOciNetworkRouteTable                                     string = "oci.network.routeTable"
@@ -387,6 +388,10 @@ func init() {
 		"oci.network.networkSecurityGroup": {
 			Init:   initOciNetworkNetworkSecurityGroup,
 			Create: createOciNetworkNetworkSecurityGroup,
+		},
+		"oci.network.securityRule": {
+			// to override args, implement: initOciNetworkSecurityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkSecurityRule,
 		},
 		"oci.network.internetGateway": {
 			Init:   initOciNetworkInternetGateway,
@@ -2358,8 +2363,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.vcn.defaultRouteTableId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetDefaultRouteTableId()).ToDataRes(types.String)
 	},
+	"oci.network.vcn.defaultRouteTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetDefaultRouteTable()).ToDataRes(types.Resource("oci.network.routeTable"))
+	},
 	"oci.network.vcn.defaultSecurityListId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetDefaultSecurityListId()).ToDataRes(types.String)
+	},
+	"oci.network.vcn.defaultSecurityList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetDefaultSecurityList()).ToDataRes(types.Resource("oci.network.securityList"))
 	},
 	"oci.network.vcn.dnsLabel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetDnsLabel()).ToDataRes(types.String)
@@ -2369,6 +2380,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.vcn.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.network.vcn.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetSubnets()).ToDataRes(types.Array(types.Resource("oci.network.subnet")))
+	},
+	"oci.network.vcn.routeTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetRouteTables()).ToDataRes(types.Array(types.Resource("oci.network.routeTable")))
+	},
+	"oci.network.vcn.securityLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetSecurityLists()).ToDataRes(types.Array(types.Resource("oci.network.securityList")))
+	},
+	"oci.network.vcn.networkSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetNetworkSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
+	"oci.network.vcn.internetGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetInternetGateways()).ToDataRes(types.Array(types.Resource("oci.network.internetGateway")))
+	},
+	"oci.network.vcn.natGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVcn).GetNatGateways()).ToDataRes(types.Array(types.Resource("oci.network.natGateway")))
 	},
 	"oci.network.vcn.flowLogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetFlowLogs()).ToDataRes(types.Array(types.Resource("oci.logging.log")))
@@ -2451,6 +2480,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.securityList.ingressSecurityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetIngressSecurityRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"oci.network.securityList.ingressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityList).GetIngressRules()).ToDataRes(types.Array(types.Resource("oci.network.securityRule")))
+	},
+	"oci.network.securityList.egressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityList).GetEgressRules()).ToDataRes(types.Array(types.Resource("oci.network.securityRule")))
+	},
 	"oci.network.securityList.hasStatelessRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetHasStatelessRules()).ToDataRes(types.Bool)
 	},
@@ -2499,11 +2534,59 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.networkSecurityGroup.egressSecurityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetEgressSecurityRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"oci.network.networkSecurityGroup.ingressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetIngressRules()).ToDataRes(types.Array(types.Resource("oci.network.securityRule")))
+	},
+	"oci.network.networkSecurityGroup.egressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetEgressRules()).ToDataRes(types.Array(types.Resource("oci.network.securityRule")))
+	},
 	"oci.network.networkSecurityGroup.hasStatelessRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetHasStatelessRules()).ToDataRes(types.Bool)
 	},
 	"oci.network.networkSecurityGroup.attachedVnics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetAttachedVnics()).ToDataRes(types.Array(types.Resource("oci.compute.vnic")))
+	},
+	"oci.network.securityRule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetDirection()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetSource()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetSourceType()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetDestination()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetDestinationType()).ToDataRes(types.String)
+	},
+	"oci.network.securityRule.stateless": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetStateless()).ToDataRes(types.Bool)
+	},
+	"oci.network.securityRule.sourcePortMin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetSourcePortMin()).ToDataRes(types.Int)
+	},
+	"oci.network.securityRule.sourcePortMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetSourcePortMax()).ToDataRes(types.Int)
+	},
+	"oci.network.securityRule.destinationPortMin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetDestinationPortMin()).ToDataRes(types.Int)
+	},
+	"oci.network.securityRule.destinationPortMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetDestinationPortMax()).ToDataRes(types.Int)
+	},
+	"oci.network.securityRule.icmpType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetIcmpType()).ToDataRes(types.Int)
+	},
+	"oci.network.securityRule.icmpCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityRule).GetIcmpCode()).ToDataRes(types.Int)
 	},
 	"oci.network.internetGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkInternetGateway).GetId()).ToDataRes(types.String)
@@ -10137,8 +10220,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkVcn).DefaultRouteTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.network.vcn.defaultRouteTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).DefaultRouteTable, ok = plugin.RawToTValue[*mqlOciNetworkRouteTable](v.Value, v.Error)
+		return
+	},
 	"oci.network.vcn.defaultSecurityListId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVcn).DefaultSecurityListId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.defaultSecurityList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).DefaultSecurityList, ok = plugin.RawToTValue[*mqlOciNetworkSecurityList](v.Value, v.Error)
 		return
 	},
 	"oci.network.vcn.dnsLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10151,6 +10242,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.vcn.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVcn).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.securityLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).SecurityLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.networkSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).NetworkSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.internetGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).InternetGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.vcn.natGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVcn).NatGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.vcn.flowLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10269,6 +10384,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSecurityList).IngressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.network.securityList.ingressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityList).IngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityList.egressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityList).EgressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.network.securityList.hasStatelessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSecurityList).HasStatelessRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -10337,12 +10460,80 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkNetworkSecurityGroup).EgressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.network.networkSecurityGroup.ingressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).IngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.egressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).EgressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.network.networkSecurityGroup.hasStatelessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkNetworkSecurityGroup).HasStatelessRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.network.networkSecurityGroup.attachedVnics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkNetworkSecurityGroup).AttachedVnics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.securityRule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.stateless": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).Stateless, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.sourcePortMin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).SourcePortMin, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.sourcePortMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).SourcePortMax, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.destinationPortMin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).DestinationPortMin, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.destinationPortMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).DestinationPortMax, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.icmpType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).IcmpType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityRule.icmpCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityRule).IcmpCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"oci.network.internetGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23268,10 +23459,18 @@ type mqlOciNetworkVcn struct {
 	VcnDomainName         plugin.TValue[string]
 	DefaultDhcpOptionsId  plugin.TValue[string]
 	DefaultRouteTableId   plugin.TValue[string]
+	DefaultRouteTable     plugin.TValue[*mqlOciNetworkRouteTable]
 	DefaultSecurityListId plugin.TValue[string]
+	DefaultSecurityList   plugin.TValue[*mqlOciNetworkSecurityList]
 	DnsLabel              plugin.TValue[string]
 	FreeformTags          plugin.TValue[map[string]any]
 	DefinedTags           plugin.TValue[map[string]any]
+	Subnets               plugin.TValue[[]any]
+	RouteTables           plugin.TValue[[]any]
+	SecurityLists         plugin.TValue[[]any]
+	NetworkSecurityGroups plugin.TValue[[]any]
+	InternetGateways      plugin.TValue[[]any]
+	NatGateways           plugin.TValue[[]any]
 	FlowLogs              plugin.TValue[[]any]
 }
 
@@ -23368,8 +23567,40 @@ func (c *mqlOciNetworkVcn) GetDefaultRouteTableId() *plugin.TValue[string] {
 	return &c.DefaultRouteTableId
 }
 
+func (c *mqlOciNetworkVcn) GetDefaultRouteTable() *plugin.TValue[*mqlOciNetworkRouteTable] {
+	return plugin.GetOrCompute[*mqlOciNetworkRouteTable](&c.DefaultRouteTable, func() (*mqlOciNetworkRouteTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "defaultRouteTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkRouteTable), nil
+			}
+		}
+
+		return c.defaultRouteTable()
+	})
+}
+
 func (c *mqlOciNetworkVcn) GetDefaultSecurityListId() *plugin.TValue[string] {
 	return &c.DefaultSecurityListId
+}
+
+func (c *mqlOciNetworkVcn) GetDefaultSecurityList() *plugin.TValue[*mqlOciNetworkSecurityList] {
+	return plugin.GetOrCompute[*mqlOciNetworkSecurityList](&c.DefaultSecurityList, func() (*mqlOciNetworkSecurityList, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "defaultSecurityList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkSecurityList), nil
+			}
+		}
+
+		return c.defaultSecurityList()
+	})
 }
 
 func (c *mqlOciNetworkVcn) GetDnsLabel() *plugin.TValue[string] {
@@ -23382,6 +23613,102 @@ func (c *mqlOciNetworkVcn) GetFreeformTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlOciNetworkVcn) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+func (c *mqlOciNetworkVcn) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlOciNetworkVcn) GetRouteTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RouteTables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "routeTables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routeTables()
+	})
+}
+
+func (c *mqlOciNetworkVcn) GetSecurityLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "securityLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityLists()
+	})
+}
+
+func (c *mqlOciNetworkVcn) GetNetworkSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "networkSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityGroups()
+	})
+}
+
+func (c *mqlOciNetworkVcn) GetInternetGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InternetGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "internetGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.internetGateways()
+	})
+}
+
+func (c *mqlOciNetworkVcn) GetNatGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NatGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.vcn", c.__id, "natGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.natGateways()
+	})
 }
 
 func (c *mqlOciNetworkVcn) GetFlowLogs() *plugin.TValue[[]any] {
@@ -23607,6 +23934,8 @@ type mqlOciNetworkSecurityList struct {
 	State                plugin.TValue[string]
 	EgressSecurityRules  plugin.TValue[[]any]
 	IngressSecurityRules plugin.TValue[[]any]
+	IngressRules         plugin.TValue[[]any]
+	EgressRules          plugin.TValue[[]any]
 	HasStatelessRules    plugin.TValue[bool]
 	VcnId                plugin.TValue[string]
 	Vcn                  plugin.TValue[*mqlOciNetworkVcn]
@@ -23695,6 +24024,14 @@ func (c *mqlOciNetworkSecurityList) GetIngressSecurityRules() *plugin.TValue[[]a
 	return &c.IngressSecurityRules
 }
 
+func (c *mqlOciNetworkSecurityList) GetIngressRules() *plugin.TValue[[]any] {
+	return &c.IngressRules
+}
+
+func (c *mqlOciNetworkSecurityList) GetEgressRules() *plugin.TValue[[]any] {
+	return &c.EgressRules
+}
+
 func (c *mqlOciNetworkSecurityList) GetHasStatelessRules() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasStatelessRules, func() (bool, error) {
 		return c.hasStatelessRules()
@@ -23745,6 +24082,8 @@ type mqlOciNetworkNetworkSecurityGroup struct {
 	DefinedTags          plugin.TValue[map[string]any]
 	IngressSecurityRules plugin.TValue[[]any]
 	EgressSecurityRules  plugin.TValue[[]any]
+	IngressRules         plugin.TValue[[]any]
+	EgressRules          plugin.TValue[[]any]
 	HasStatelessRules    plugin.TValue[bool]
 	AttachedVnics        plugin.TValue[[]any]
 }
@@ -23858,6 +24197,38 @@ func (c *mqlOciNetworkNetworkSecurityGroup) GetEgressSecurityRules() *plugin.TVa
 	})
 }
 
+func (c *mqlOciNetworkNetworkSecurityGroup) GetIngressRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IngressRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.networkSecurityGroup", c.__id, "ingressRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ingressRules()
+	})
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetEgressRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EgressRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.networkSecurityGroup", c.__id, "egressRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.egressRules()
+	})
+}
+
 func (c *mqlOciNetworkNetworkSecurityGroup) GetHasStatelessRules() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasStatelessRules, func() (bool, error) {
 		return c.hasStatelessRules()
@@ -23878,6 +24249,115 @@ func (c *mqlOciNetworkNetworkSecurityGroup) GetAttachedVnics() *plugin.TValue[[]
 
 		return c.attachedVnics()
 	})
+}
+
+// mqlOciNetworkSecurityRule for the oci.network.securityRule resource
+type mqlOciNetworkSecurityRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkSecurityRuleInternal it will be used here
+	Direction          plugin.TValue[string]
+	Protocol           plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Source             plugin.TValue[string]
+	SourceType         plugin.TValue[string]
+	Destination        plugin.TValue[string]
+	DestinationType    plugin.TValue[string]
+	Stateless          plugin.TValue[bool]
+	SourcePortMin      plugin.TValue[int64]
+	SourcePortMax      plugin.TValue[int64]
+	DestinationPortMin plugin.TValue[int64]
+	DestinationPortMax plugin.TValue[int64]
+	IcmpType           plugin.TValue[int64]
+	IcmpCode           plugin.TValue[int64]
+}
+
+// createOciNetworkSecurityRule creates a new instance of this resource
+func createOciNetworkSecurityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkSecurityRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.securityRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkSecurityRule) MqlName() string {
+	return "oci.network.securityRule"
+}
+
+func (c *mqlOciNetworkSecurityRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkSecurityRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlOciNetworkSecurityRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOciNetworkSecurityRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciNetworkSecurityRule) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOciNetworkSecurityRule) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlOciNetworkSecurityRule) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlOciNetworkSecurityRule) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlOciNetworkSecurityRule) GetStateless() *plugin.TValue[bool] {
+	return &c.Stateless
+}
+
+func (c *mqlOciNetworkSecurityRule) GetSourcePortMin() *plugin.TValue[int64] {
+	return &c.SourcePortMin
+}
+
+func (c *mqlOciNetworkSecurityRule) GetSourcePortMax() *plugin.TValue[int64] {
+	return &c.SourcePortMax
+}
+
+func (c *mqlOciNetworkSecurityRule) GetDestinationPortMin() *plugin.TValue[int64] {
+	return &c.DestinationPortMin
+}
+
+func (c *mqlOciNetworkSecurityRule) GetDestinationPortMax() *plugin.TValue[int64] {
+	return &c.DestinationPortMax
+}
+
+func (c *mqlOciNetworkSecurityRule) GetIcmpType() *plugin.TValue[int64] {
+	return &c.IcmpType
+}
+
+func (c *mqlOciNetworkSecurityRule) GetIcmpCode() *plugin.TValue[int64] {
+	return &c.IcmpCode
 }
 
 // mqlOciNetworkInternetGateway for the oci.network.internetGateway resource
