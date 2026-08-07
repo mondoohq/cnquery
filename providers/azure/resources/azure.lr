@@ -596,8 +596,8 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   bootDiagnosticsStorageUri string
   // Base64-encoded user data passed to the VM at provisioning time (cloud-init equivalent)
   //
-  // Empty when user data is not set. Treat as sensitive: secrets and bootstrap credentials are sometimes embedded here.
-  userData string
+  // Empty when no user data is set. Treat as sensitive: secrets and bootstrap credentials are sometimes embedded here.
+  userData() string
   // VM extension
   extensions() []dict
   // Whether the Microsoft Defender for Endpoint (MDE) extension is installed on the VM

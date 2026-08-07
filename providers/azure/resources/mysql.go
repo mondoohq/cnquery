@@ -790,45 +790,15 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnecti
 			return nil, err
 		}
 	}
-	for _, pec := range connections {
-		if pec == nil {
-			continue
-		}
-		args := map[string]*llx.RawData{
-			"__id": llx.StringDataPtr(pec.ID),
-			"id":   llx.StringDataPtr(pec.ID),
-			"name": llx.StringDataPtr(pec.Name),
-			"type": llx.StringDataPtr(pec.Type),
-		}
-		if pec.Properties != nil {
-			propsMap, err := convert.JsonToDict(pec.Properties)
-			if err != nil {
-				return nil, err
-			}
-			args["properties"] = llx.DictData(propsMap)
-			if pec.Properties.PrivateEndpoint != nil {
-				args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
-			}
-			if pec.Properties.ProvisioningState != nil {
-				args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
-			}
-			if pec.Properties.PrivateLinkServiceConnectionState != nil {
-				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
-					stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired),
-					pec.Properties.PrivateLinkServiceConnectionState.Description,
-					stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.Status))
-				if err != nil {
-					return nil, err
-				}
-				args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
-			}
-		}
-		mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlConn)
+	// The shared helper seeds every declared field, including ipAddresses.
+	// Hand-rolling the args map here left ipAddresses out entirely, so it was
+	// unset rather than empty on every connection. It is handed the accumulated
+	// slice rather than resp.Value, so it sees every page and not just the first.
+	conns, err := azurePrivateEndpointConnectionsToMql(a.MqlRuntime, connections)
+	if err != nil {
+		return nil, err
 	}
+	res = append(res, conns...)
 	return res, nil
 }
 

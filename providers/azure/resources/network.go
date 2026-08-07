@@ -876,6 +876,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) outboundRules() ([]any,
 		}
 		mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outboundRule",
 			map[string]*llx.RawData{
+				"__id":       llx.StringData(subResourceCacheID(outboundRule.ID, a.Id.Data, "outboundRules", convert.ToValue(outboundRule.Name))),
 				"id":         llx.StringDataPtr(outboundRule.ID),
 				"type":       llx.StringDataPtr(outboundRule.Type),
 				"name":       llx.StringDataPtr(outboundRule.Name),
@@ -905,6 +906,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) loadBalancerRules() ([]
 		}
 		mqlLbRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancerRule",
 			map[string]*llx.RawData{
+				"__id":       llx.StringData(subResourceCacheID(lbRule.ID, a.Id.Data, "loadBalancingRules", convert.ToValue(lbRule.Name))),
 				"id":         llx.StringDataPtr(lbRule.ID),
 				"type":       llx.StringDataPtr(lbRule.Type),
 				"name":       llx.StringDataPtr(lbRule.Name),
@@ -1631,7 +1633,11 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 	}
 
 	// the virtual network gateways API works on resource-group level. therefore, we need to fetch all RGs first
+	// __id has to be explicit: azure.subscription.id() reads the `id` field,
+	// which these args do not carry, so without it every such reference shares
+	// the empty cache key and resolves to whichever subscription got there first.
 	sub, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + subId),
 		"subscriptionId": llx.StringData(subId),
 	})
 	if err != nil {
@@ -2058,15 +2064,18 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 			}
 		}
 
+		peID := convert.ToValue(pe.ID)
+		// the two collections can hold connections of the same name, so the
+		// collection segment has to be part of the fallback cache key
 		for _, c := range pe.Properties.PrivateLinkServiceConnections {
-			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c)
+			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c, peID, "privateLinkServiceConnections")
 			if err != nil {
 				return nil, err
 			}
 			plsConns = append(plsConns, mqlConn)
 		}
 		for _, c := range pe.Properties.ManualPrivateLinkServiceConnections {
-			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c)
+			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c, peID, "manualPrivateLinkServiceConnections")
 			if err != nil {
 				return nil, err
 			}
@@ -2287,7 +2296,7 @@ func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) privateDnsZoneGroups
 	return res, nil
 }
 
-func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.PrivateLinkServiceConnection) (*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection, error) {
+func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.PrivateLinkServiceConnection, parentID, collection string) (*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection, error) {
 	if c == nil {
 		return nil, errors.New("private link service connection is nil")
 	}
@@ -2310,6 +2319,7 @@ func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.Priva
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.privateEndpoint.serviceconnection",
 		map[string]*llx.RawData{
+			"__id":                 llx.StringData(subResourceCacheID(c.ID, parentID, collection, convert.ToValue(c.Name))),
 			"id":                   llx.StringDataPtr(c.ID),
 			"name":                 llx.StringDataPtr(c.Name),
 			"privateLinkServiceId": llx.StringData(plsId),
@@ -2691,7 +2701,7 @@ func (a *mqlAzureSubscriptionNetworkService) routeTables() ([]any, error) {
 					if route == nil {
 						continue
 					}
-					mqlRoute, err := azureRouteToMql(a.MqlRuntime, route)
+					mqlRoute, err := azureRouteToMql(a.MqlRuntime, route, convert.ToValue(rt.ID))
 					if err != nil {
 						return nil, err
 					}
@@ -2701,6 +2711,7 @@ func (a *mqlAzureSubscriptionNetworkService) routeTables() ([]any, error) {
 
 			mqlRt, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.routeTable",
 				map[string]*llx.RawData{
+					"__id":                       llx.StringData(subResourceCacheID(rt.ID, "/subscriptions/"+subId, "routeTables", convert.ToValue(rt.Name))),
 					"id":                         llx.StringDataPtr(rt.ID),
 					"name":                       llx.StringDataPtr(rt.Name),
 					"location":                   llx.StringDataPtr(rt.Location),
@@ -2720,7 +2731,7 @@ func (a *mqlAzureSubscriptionNetworkService) routeTables() ([]any, error) {
 	return res, nil
 }
 
-func azureRouteToMql(runtime *plugin.Runtime, route *network.Route) (*mqlAzureSubscriptionNetworkServiceRoute, error) {
+func azureRouteToMql(runtime *plugin.Runtime, route *network.Route, routeTableID string) (*mqlAzureSubscriptionNetworkServiceRoute, error) {
 	var addressPrefix, nextHopType, nextHopIpAddress, provisioningState string
 	var hasBgpOverride bool
 	ecmpNextHopIpAddresses := []any{}
@@ -2742,6 +2753,7 @@ func azureRouteToMql(runtime *plugin.Runtime, route *network.Route) (*mqlAzureSu
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.route",
 		map[string]*llx.RawData{
+			"__id":                   llx.StringData(subResourceCacheID(route.ID, routeTableID, "routes", convert.ToValue(route.Name))),
 			"id":                     llx.StringDataPtr(route.ID),
 			"name":                   llx.StringDataPtr(route.Name),
 			"addressPrefix":          llx.StringData(addressPrefix),
@@ -6261,7 +6273,11 @@ func (a *mqlAzureSubscriptionNetworkService) localNetworkGateways() ([]any, erro
 	}
 
 	// the local network gateways API works on resource-group level, so we fetch all RGs first
+	// __id has to be explicit: azure.subscription.id() reads the `id` field,
+	// which these args do not carry, so without it every such reference shares
+	// the empty cache key and resolves to whichever subscription got there first.
 	sub, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + subId),
 		"subscriptionId": llx.StringData(subId),
 	})
 	if err != nil {

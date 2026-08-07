@@ -816,18 +816,34 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 	}
 	args["notificationsByRole"] = llx.DictData(notificationsByRole)
 
-	// emails
-	mails := ""
-	if props.Emails != nil {
-		mails = *props.Emails
-	}
-	mailsArr := strings.Split(mails, ";")
-	args["emails"] = llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String)
+	args["emails"] = llx.ArrayData(splitSecurityContactEmails(props.Emails), types.String)
 
 	args["isEnabled"] = llx.BoolDataPtr(props.IsEnabled)
 	args["phone"] = llx.StringDataPtr(props.Phone)
 
 	return args
+}
+
+// splitSecurityContactEmails turns Defender's semicolon-separated contact list
+// into the addresses it actually holds.
+//
+// strings.Split("", ";") returns []string{""}, so a contact configured with a
+// phone number and no email used to report emails: [""] -- one element, not
+// zero. A check phrased `securityContacts.any(emails.length > 0)` passed on a
+// subscription with no email contact at all, which is the opposite of the
+// finding it was written to raise. Empty entries are dropped and each address
+// is trimmed, since the portal permits spaces around the separator.
+func splitSecurityContactEmails(emails *string) []any {
+	out := []any{}
+	if emails == nil {
+		return out
+	}
+	for _, e := range strings.Split(*emails, ";") {
+		if e = strings.TrimSpace(e); e != "" {
+			out = append(out, e)
+		}
+	}
+	return out
 }
 
 // buildExtensionResources creates typed extension sub-resources from a list of Azure SDK extensions.

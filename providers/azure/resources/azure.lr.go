@@ -1515,7 +1515,7 @@ func init() {
 			Create: createAzureSubscriptionKeyVaultServiceKeyAutorotation,
 		},
 		"azure.subscription.keyVaultService.key": {
-			// to override args, implement: initAzureSubscriptionKeyVaultServiceKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionKeyVaultServiceKey,
 			Create: createAzureSubscriptionKeyVaultServiceKey,
 		},
 		"azure.subscription.keyVaultService.key.rotationPolicyObject": {
@@ -1543,7 +1543,7 @@ func init() {
 			Create: createAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties,
 		},
 		"azure.subscription.keyVaultService.secret": {
-			// to override args, implement: initAzureSubscriptionKeyVaultServiceSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionKeyVaultServiceSecret,
 			Create: createAzureSubscriptionKeyVaultServiceSecret,
 		},
 		"azure.subscription.monitorService": {
@@ -48319,7 +48319,9 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetBootDiagnosticsStorageUri() *p
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetUserData() *plugin.TValue[string] {
-	return &c.UserData
+	return plugin.GetOrCompute[string](&c.UserData, func() (string, error) {
+		return c.userData()
+	})
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetExtensions() *plugin.TValue[[]any] {

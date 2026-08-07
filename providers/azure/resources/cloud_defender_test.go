@@ -174,6 +174,33 @@ func TestArgsFromContactProperties(t *testing.T) {
 	})
 }
 
+// TestSplitSecurityContactEmails pins the empty case.
+//
+// strings.Split("", ";") returns []string{""}, so a contact with a phone number
+// and no email used to report emails: [""] -- one element, not zero. A check
+// phrased `securityContacts.any(emails.length > 0)` passed on a subscription
+// with no email contact configured at all, which is the inverse of the finding
+// it exists to raise.
+func TestSplitSecurityContactEmails(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input *string
+		want  []any
+	}{
+		{"nil is no addresses", nil, []any{}},
+		{"empty string is no addresses, not one empty address", ptr(""), []any{}},
+		{"a separator with nothing around it yields nothing", ptr(";"), []any{}},
+		{"single address", ptr("soc@example.com"), []any{"soc@example.com"}},
+		{"multiple addresses", ptr("a@example.com;b@example.com"), []any{"a@example.com", "b@example.com"}},
+		{"surrounding spaces are trimmed", ptr(" a@example.com ; b@example.com "), []any{"a@example.com", "b@example.com"}},
+		{"empty entries are dropped", ptr("a@example.com;;b@example.com"), []any{"a@example.com", "b@example.com"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, splitSecurityContactEmails(tc.input))
+		})
+	}
+}
+
 func TestSimpleDefenderDict(t *testing.T) {
 	t.Run("Enabled", func(t *testing.T) {
 		tv := &plugin.TValue[bool]{Data: true}

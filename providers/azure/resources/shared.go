@@ -93,6 +93,27 @@ func orZero[T any](p *T) *T {
 	return new(T)
 }
 
+// subResourceCacheID builds the cache key for a sub-resource that ARM normally
+// identifies by its own resource id.
+//
+// A resource created with neither an explicit "__id" argument nor an id()
+// method gets the empty cache key. CreateResource returns the cached occupant
+// of a key it has already seen, so every such instance in the scan aliases to
+// the first one created and the collection reports one row's data N times. The
+// failure is silent: the list has the right length, every entry has the wrong
+// contents.
+//
+// armID is preferred because it is already parent-qualified. When the service
+// omits it, parentID+collection+name reproduces the same shape from values the
+// caller always has, so an absent id degrades to a longer key rather than to a
+// shared one.
+func subResourceCacheID(armID *string, parentID, collection, name string) string {
+	if armID != nil && *armID != "" {
+		return *armID
+	}
+	return parentID + "/" + collection + "/" + name
+}
+
 type assetIdentifier struct {
 	name string
 	id   string
