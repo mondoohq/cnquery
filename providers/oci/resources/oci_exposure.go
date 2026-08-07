@@ -287,7 +287,6 @@ func ociAnySubnetReachable(gates []ociSubnetGate) bool {
 // matters for a multi-subnet load balancer: a hardened public subnet paired
 // with a private subnet carrying the wide-open default VCN security list must
 // not combine into a reachable verdict.
-
 func ociAnySubnetAdmitsInternet(gates []ociSubnetGate, nsgOpenRuleCount int) bool {
 	for _, g := range gates {
 		if g.prohibitsIngress || !g.routesToInternet {
