@@ -51,7 +51,16 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci with region %s", region)
 
-			regionResource := regionsByID[region]
+			// Guarded rather than indexed blindly: a miss would put a typed nil
+			// into the region field, and a nil *mqlOciRegion inside an interface
+			// is not the untyped nil the runtime treats as absent, so it panics
+			// on read instead of reporting null. The pool iterates the same
+			// regions this index was built from, so a miss means the two have
+			// drifted and is worth saying out loud.
+			regionResource, ok := regionsByID[region]
+			if !ok {
+				return nil, errors.New("no oci.region resource for region " + region)
+			}
 
 			svc, err := conn.ComputeClient(region)
 			if err != nil {

@@ -277,41 +277,42 @@ func ociSplitLogGroupRefs(refs []string) (ocids []string, exportsAuditLog bool) 
 	return ocids, exportsAuditLog
 }
 
-func (o *mqlOciServiceConnectorHubConnector) exportsAuditLog() (bool, error) {
+// loggingSource reads the connector's logging source once for the two fields
+// derived from it, so they cannot disagree about what the source names. A
+// connector whose source is any other kind reports no log groups and no audit
+// export, which is the accurate answer rather than a missing one.
+func (o *mqlOciServiceConnectorHubConnector) loggingSource() (logGroupIds []string, exportsAuditLog bool, err error) {
 	detail, err := o.getDetail()
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 
 	source, ok := detail.Source.(sch.LoggingSourceDetailsResponse)
 	if !ok {
-		return false, nil
+		return nil, false, nil
 	}
 
 	refs := make([]string, 0, len(source.LogSources))
 	for i := range source.LogSources {
 		refs = append(refs, stringValue(source.LogSources[i].LogGroupId))
 	}
-	_, exportsAuditLog := ociSplitLogGroupRefs(refs)
+	logGroupIds, exportsAuditLog = ociSplitLogGroupRefs(refs)
+	return logGroupIds, exportsAuditLog, nil
+}
+
+func (o *mqlOciServiceConnectorHubConnector) exportsAuditLog() (bool, error) {
+	_, exportsAuditLog, err := o.loggingSource()
+	if err != nil {
+		return false, err
+	}
 	return exportsAuditLog, nil
 }
 
 func (o *mqlOciServiceConnectorHubConnector) sourceLogGroups() ([]any, error) {
-	detail, err := o.getDetail()
+	logGroupIds, _, err := o.loggingSource()
 	if err != nil {
 		return nil, err
 	}
-
-	source, ok := detail.Source.(sch.LoggingSourceDetailsResponse)
-	if !ok {
-		return []any{}, nil
-	}
-
-	refs := make([]string, 0, len(source.LogSources))
-	for i := range source.LogSources {
-		refs = append(refs, stringValue(source.LogSources[i].LogGroupId))
-	}
-	logGroupIds, _ := ociSplitLogGroupRefs(refs)
 
 	res := make([]any, 0, len(logGroupIds))
 	for _, logGroupId := range logGroupIds {

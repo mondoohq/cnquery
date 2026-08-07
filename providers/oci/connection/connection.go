@@ -5,8 +5,10 @@ package connection
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/oracle/oci-go-sdk/v65/identity"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -18,6 +20,16 @@ type OciConnection struct {
 	asset       *inventory.Asset
 	config      common.ConfigurationProvider
 	tenancyOcid string
+
+	// The compartment tree, resolved once per connection. Every
+	// compartment-scoped lister needs the full list to fan out over, and there
+	// are a dozen of them, so without this a scan re-walked the paginated
+	// ListCompartments for each one. The tree does not change mid-scan, and on
+	// a large tenancy those repeats are both slow and a good way to run into
+	// Identity rate limits.
+	compartmentLock  sync.Mutex
+	compartmentList  []identity.Compartment
+	compartmentsDone bool
 }
 
 func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OciConnection, error) {
