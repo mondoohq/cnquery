@@ -58,6 +58,7 @@ func storageInfoToResources(runtime *plugin.Runtime, storages []connection.Stora
 			"type":          llx.StringData(s.Type),
 			"content":       llx.StringData(s.Content),
 			"path":          llx.StringData(s.Path),
+			"nodes":         llx.StringData(s.Nodes),
 			"enabled":       llx.BoolData(s.Enabled != 0),
 			"shared":        llx.BoolData(s.Shared != 0),
 			"total":         llx.IntData(s.Total),

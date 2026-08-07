@@ -109,8 +109,8 @@ func cephDaemonArgs(resource string, d connection.CephDaemon) map[string]*llx.Ra
 		"host":             llx.StringData(d.Host),
 		"addr":             llx.StringData(d.Addr),
 		"state":            llx.StringData(d.State),
-		"service":          llx.BoolData(d.Service),
-		"directoryExists":  llx.BoolData(d.DirExists),
+		"service":          llx.BoolData(d.Service.Bool()),
+		"directoryExists":  llx.BoolData(d.DirExists.Bool()),
 		"cephVersion":      llx.StringData(d.CephVersion),
 		"cephVersionShort": llx.StringData(d.CephVersionShort),
 	}
@@ -124,7 +124,7 @@ func (r *mqlProxmoxCeph) monitors() ([]any, error) {
 	list := make([]any, len(mons))
 	for i, m := range mons {
 		args := cephDaemonArgs("proxmox.ceph.monitor", m)
-		args["quorum"] = llx.BoolData(m.Quorum)
+		args["quorum"] = llx.BoolData(m.Quorum.Bool())
 		args["rank"] = llx.IntDataPtr(m.Rank)
 		res, err := CreateResource(r.MqlRuntime, "proxmox.ceph.monitor", args)
 		if err != nil {
@@ -161,7 +161,7 @@ func (r *mqlProxmoxCeph) metadataServers() ([]any, error) {
 		args := cephDaemonArgs("proxmox.ceph.metadataServer", m)
 		args["rank"] = llx.IntDataPtr(m.Rank)
 		args["fsName"] = llx.StringData(m.FSName)
-		args["standbyReplay"] = llx.BoolData(m.StandbyReplay)
+		args["standbyReplay"] = llx.BoolData(m.StandbyReplay.Bool())
 		res, err := CreateResource(r.MqlRuntime, "proxmox.ceph.metadataServer", args)
 		if err != nil {
 			return nil, err
@@ -350,7 +350,7 @@ func (r *mqlProxmoxCeph) config() ([]any, error) {
 			"value":              llx.StringData(e.Value),
 			"mask":               llx.StringData(e.Mask),
 			"level":              llx.StringData(e.Level),
-			"canUpdateAtRuntime": llx.BoolData(e.CanUpdateAtRuntime),
+			"canUpdateAtRuntime": llx.BoolData(e.CanUpdateAtRuntime.Bool()),
 		})
 		if err != nil {
 			return nil, err

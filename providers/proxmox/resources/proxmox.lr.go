@@ -16,64 +16,81 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceProxmox                           string = "proxmox"
-	ResourceProxmoxCluster                    string = "proxmox.cluster"
-	ResourceProxmoxClusterHaResource          string = "proxmox.cluster.haResource"
-	ResourceProxmoxNode                       string = "proxmox.node"
-	ResourceProxmoxNodeUpdate                 string = "proxmox.node.update"
-	ResourceProxmoxVm                         string = "proxmox.vm"
-	ResourceProxmoxVmNetwork                  string = "proxmox.vm.network"
-	ResourceProxmoxVmDisk                     string = "proxmox.vm.disk"
-	ResourceProxmoxVmSnapshot                 string = "proxmox.vm.snapshot"
-	ResourceProxmoxVmUpdate                   string = "proxmox.vm.update"
-	ResourceProxmoxStorage                    string = "proxmox.storage"
-	ResourceProxmoxPool                       string = "proxmox.pool"
-	ResourceProxmoxNetwork                    string = "proxmox.network"
-	ResourceProxmoxDns                        string = "proxmox.dns"
-	ResourceProxmoxService                    string = "proxmox.service"
-	ResourceProxmoxCertificate                string = "proxmox.certificate"
-	ResourceProxmoxSubscription               string = "proxmox.subscription"
-	ResourceProxmoxRepository                 string = "proxmox.repository"
-	ResourceProxmoxFirewallRule               string = "proxmox.firewall.rule"
-	ResourceProxmoxUser                       string = "proxmox.user"
-	ResourceProxmoxToken                      string = "proxmox.token"
-	ResourceProxmoxRole                       string = "proxmox.role"
-	ResourceProxmoxGroup                      string = "proxmox.group"
-	ResourceProxmoxAcl                        string = "proxmox.acl"
-	ResourceProxmoxRealm                      string = "proxmox.realm"
-	ResourceProxmoxFirewallOptions            string = "proxmox.firewall.options"
-	ResourceProxmoxFirewallIpset              string = "proxmox.firewall.ipset"
-	ResourceProxmoxFirewallIpsetEntry         string = "proxmox.firewall.ipset.entry"
-	ResourceProxmoxFirewallAlias              string = "proxmox.firewall.alias"
-	ResourceProxmoxContainer                  string = "proxmox.container"
-	ResourceProxmoxContainerNetwork           string = "proxmox.container.network"
-	ResourceProxmoxContainerMountPoint        string = "proxmox.container.mountPoint"
-	ResourceProxmoxBackupJob                  string = "proxmox.backup.job"
-	ResourceProxmoxClusterHaGroup             string = "proxmox.cluster.haGroup"
-	ResourceProxmoxNodeDisk                   string = "proxmox.node.disk"
-	ResourceProxmoxNodeDiskSmart              string = "proxmox.node.disk.smart"
-	ResourceProxmoxZfsPool                    string = "proxmox.zfs.pool"
-	ResourceProxmoxLvmVolumeGroup             string = "proxmox.lvm.volumeGroup"
-	ResourceProxmoxLvmThinPool                string = "proxmox.lvm.thinPool"
-	ResourceProxmoxReplicationJob             string = "proxmox.replication.job"
-	ResourceProxmoxSdnZone                    string = "proxmox.sdn.zone"
-	ResourceProxmoxSdnVnet                    string = "proxmox.sdn.vnet"
-	ResourceProxmoxSdnSubnet                  string = "proxmox.sdn.subnet"
-	ResourceProxmoxVmSerialPort               string = "proxmox.vm.serialPort"
-	ResourceProxmoxFirewallGroup              string = "proxmox.firewall.group"
-	ResourceProxmoxNodePciDevice              string = "proxmox.node.pciDevice"
-	ResourceProxmoxNodeUsbDevice              string = "proxmox.node.usbDevice"
-	ResourceProxmoxVmPciDevice                string = "proxmox.vm.pciDevice"
-	ResourceProxmoxVmUsbDevice                string = "proxmox.vm.usbDevice"
-	ResourceProxmoxContainerPassthroughDevice string = "proxmox.container.passthroughDevice"
-	ResourceProxmoxCeph                       string = "proxmox.ceph"
-	ResourceProxmoxCephMonitor                string = "proxmox.ceph.monitor"
-	ResourceProxmoxCephManager                string = "proxmox.ceph.manager"
-	ResourceProxmoxCephMetadataServer         string = "proxmox.ceph.metadataServer"
-	ResourceProxmoxCephOsd                    string = "proxmox.ceph.osd"
-	ResourceProxmoxCephPool                   string = "proxmox.ceph.pool"
-	ResourceProxmoxCephFilesystem             string = "proxmox.ceph.filesystem"
-	ResourceProxmoxCephConfigEntry            string = "proxmox.ceph.configEntry"
+	ResourceProxmox                             string = "proxmox"
+	ResourceProxmoxSdnController                string = "proxmox.sdn.controller"
+	ResourceProxmoxSdnIpam                      string = "proxmox.sdn.ipam"
+	ResourceProxmoxSdnDns                       string = "proxmox.sdn.dns"
+	ResourceProxmoxNotificationTarget           string = "proxmox.notification.target"
+	ResourceProxmoxNotificationMatcher          string = "proxmox.notification.matcher"
+	ResourceProxmoxNotificationSmtpEndpoint     string = "proxmox.notification.smtpEndpoint"
+	ResourceProxmoxNotificationSendmailEndpoint string = "proxmox.notification.sendmailEndpoint"
+	ResourceProxmoxNotificationGotifyEndpoint   string = "proxmox.notification.gotifyEndpoint"
+	ResourceProxmoxNotificationWebhookEndpoint  string = "proxmox.notification.webhookEndpoint"
+	ResourceProxmoxMetricServer                 string = "proxmox.metricServer"
+	ResourceProxmoxAcmeAccount                  string = "proxmox.acme.account"
+	ResourceProxmoxAcmePlugin                   string = "proxmox.acme.plugin"
+	ResourceProxmoxCorosync                     string = "proxmox.corosync"
+	ResourceProxmoxCorosyncNode                 string = "proxmox.corosync.node"
+	ResourceProxmoxMappingPci                   string = "proxmox.mapping.pci"
+	ResourceProxmoxMappingUsb                   string = "proxmox.mapping.usb"
+	ResourceProxmoxCluster                      string = "proxmox.cluster"
+	ResourceProxmoxClusterHaResource            string = "proxmox.cluster.haResource"
+	ResourceProxmoxNode                         string = "proxmox.node"
+	ResourceProxmoxNodeUpdate                   string = "proxmox.node.update"
+	ResourceProxmoxVm                           string = "proxmox.vm"
+	ResourceProxmoxVmNetwork                    string = "proxmox.vm.network"
+	ResourceProxmoxVmDisk                       string = "proxmox.vm.disk"
+	ResourceProxmoxVmSnapshot                   string = "proxmox.vm.snapshot"
+	ResourceProxmoxVmUpdate                     string = "proxmox.vm.update"
+	ResourceProxmoxStorage                      string = "proxmox.storage"
+	ResourceProxmoxStorageVolume                string = "proxmox.storage.volume"
+	ResourceProxmoxPool                         string = "proxmox.pool"
+	ResourceProxmoxNetwork                      string = "proxmox.network"
+	ResourceProxmoxDns                          string = "proxmox.dns"
+	ResourceProxmoxService                      string = "proxmox.service"
+	ResourceProxmoxCertificate                  string = "proxmox.certificate"
+	ResourceProxmoxSubscription                 string = "proxmox.subscription"
+	ResourceProxmoxRepository                   string = "proxmox.repository"
+	ResourceProxmoxFirewallRule                 string = "proxmox.firewall.rule"
+	ResourceProxmoxUser                         string = "proxmox.user"
+	ResourceProxmoxToken                        string = "proxmox.token"
+	ResourceProxmoxRole                         string = "proxmox.role"
+	ResourceProxmoxGroup                        string = "proxmox.group"
+	ResourceProxmoxAcl                          string = "proxmox.acl"
+	ResourceProxmoxRealm                        string = "proxmox.realm"
+	ResourceProxmoxFirewallOptions              string = "proxmox.firewall.options"
+	ResourceProxmoxFirewallIpset                string = "proxmox.firewall.ipset"
+	ResourceProxmoxFirewallIpsetEntry           string = "proxmox.firewall.ipset.entry"
+	ResourceProxmoxFirewallAlias                string = "proxmox.firewall.alias"
+	ResourceProxmoxContainer                    string = "proxmox.container"
+	ResourceProxmoxContainerNetwork             string = "proxmox.container.network"
+	ResourceProxmoxContainerMountPoint          string = "proxmox.container.mountPoint"
+	ResourceProxmoxBackupJob                    string = "proxmox.backup.job"
+	ResourceProxmoxClusterHaGroup               string = "proxmox.cluster.haGroup"
+	ResourceProxmoxNodeDisk                     string = "proxmox.node.disk"
+	ResourceProxmoxNodeDiskSmart                string = "proxmox.node.disk.smart"
+	ResourceProxmoxZfsPool                      string = "proxmox.zfs.pool"
+	ResourceProxmoxLvmVolumeGroup               string = "proxmox.lvm.volumeGroup"
+	ResourceProxmoxLvmThinPool                  string = "proxmox.lvm.thinPool"
+	ResourceProxmoxReplicationJob               string = "proxmox.replication.job"
+	ResourceProxmoxSdnZone                      string = "proxmox.sdn.zone"
+	ResourceProxmoxSdnVnet                      string = "proxmox.sdn.vnet"
+	ResourceProxmoxSdnSubnet                    string = "proxmox.sdn.subnet"
+	ResourceProxmoxVmSerialPort                 string = "proxmox.vm.serialPort"
+	ResourceProxmoxFirewallGroup                string = "proxmox.firewall.group"
+	ResourceProxmoxNodePciDevice                string = "proxmox.node.pciDevice"
+	ResourceProxmoxNodeUsbDevice                string = "proxmox.node.usbDevice"
+	ResourceProxmoxVmPciDevice                  string = "proxmox.vm.pciDevice"
+	ResourceProxmoxVmUsbDevice                  string = "proxmox.vm.usbDevice"
+	ResourceProxmoxContainerPassthroughDevice   string = "proxmox.container.passthroughDevice"
+	ResourceProxmoxCeph                         string = "proxmox.ceph"
+	ResourceProxmoxCephMonitor                  string = "proxmox.ceph.monitor"
+	ResourceProxmoxCephManager                  string = "proxmox.ceph.manager"
+	ResourceProxmoxCephMetadataServer           string = "proxmox.ceph.metadataServer"
+	ResourceProxmoxCephOsd                      string = "proxmox.ceph.osd"
+	ResourceProxmoxCephPool                     string = "proxmox.ceph.pool"
+	ResourceProxmoxCephFilesystem               string = "proxmox.ceph.filesystem"
+	ResourceProxmoxCephConfigEntry              string = "proxmox.ceph.configEntry"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -83,6 +100,70 @@ func init() {
 		"proxmox": {
 			// to override args, implement: initProxmox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProxmox,
+		},
+		"proxmox.sdn.controller": {
+			// to override args, implement: initProxmoxSdnController(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxSdnController,
+		},
+		"proxmox.sdn.ipam": {
+			// to override args, implement: initProxmoxSdnIpam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxSdnIpam,
+		},
+		"proxmox.sdn.dns": {
+			// to override args, implement: initProxmoxSdnDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxSdnDns,
+		},
+		"proxmox.notification.target": {
+			// to override args, implement: initProxmoxNotificationTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNotificationTarget,
+		},
+		"proxmox.notification.matcher": {
+			// to override args, implement: initProxmoxNotificationMatcher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNotificationMatcher,
+		},
+		"proxmox.notification.smtpEndpoint": {
+			// to override args, implement: initProxmoxNotificationSmtpEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNotificationSmtpEndpoint,
+		},
+		"proxmox.notification.sendmailEndpoint": {
+			// to override args, implement: initProxmoxNotificationSendmailEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNotificationSendmailEndpoint,
+		},
+		"proxmox.notification.gotifyEndpoint": {
+			// to override args, implement: initProxmoxNotificationGotifyEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNotificationGotifyEndpoint,
+		},
+		"proxmox.notification.webhookEndpoint": {
+			// to override args, implement: initProxmoxNotificationWebhookEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNotificationWebhookEndpoint,
+		},
+		"proxmox.metricServer": {
+			// to override args, implement: initProxmoxMetricServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxMetricServer,
+		},
+		"proxmox.acme.account": {
+			// to override args, implement: initProxmoxAcmeAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxAcmeAccount,
+		},
+		"proxmox.acme.plugin": {
+			// to override args, implement: initProxmoxAcmePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxAcmePlugin,
+		},
+		"proxmox.corosync": {
+			// to override args, implement: initProxmoxCorosync(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCorosync,
+		},
+		"proxmox.corosync.node": {
+			// to override args, implement: initProxmoxCorosyncNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCorosyncNode,
+		},
+		"proxmox.mapping.pci": {
+			// to override args, implement: initProxmoxMappingPci(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxMappingPci,
+		},
+		"proxmox.mapping.usb": {
+			// to override args, implement: initProxmoxMappingUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxMappingUsb,
 		},
 		"proxmox.cluster": {
 			// to override args, implement: initProxmoxCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -123,6 +204,10 @@ func init() {
 		"proxmox.storage": {
 			Init:   initProxmoxStorage,
 			Create: createProxmoxStorage,
+		},
+		"proxmox.storage.volume": {
+			// to override args, implement: initProxmoxStorageVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxStorageVolume,
 		},
 		"proxmox.pool": {
 			// to override args, implement: initProxmoxPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -433,6 +518,339 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.ceph": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmox).GetCeph()).ToDataRes(types.Resource("proxmox.ceph"))
+	},
+	"proxmox.sdnControllers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetSdnControllers()).ToDataRes(types.Array(types.Resource("proxmox.sdn.controller")))
+	},
+	"proxmox.sdnIpams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetSdnIpams()).ToDataRes(types.Array(types.Resource("proxmox.sdn.ipam")))
+	},
+	"proxmox.sdnDnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetSdnDnsServers()).ToDataRes(types.Array(types.Resource("proxmox.sdn.dns")))
+	},
+	"proxmox.notificationTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetNotificationTargets()).ToDataRes(types.Array(types.Resource("proxmox.notification.target")))
+	},
+	"proxmox.notificationMatchers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetNotificationMatchers()).ToDataRes(types.Array(types.Resource("proxmox.notification.matcher")))
+	},
+	"proxmox.smtpEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetSmtpEndpoints()).ToDataRes(types.Array(types.Resource("proxmox.notification.smtpEndpoint")))
+	},
+	"proxmox.sendmailEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetSendmailEndpoints()).ToDataRes(types.Array(types.Resource("proxmox.notification.sendmailEndpoint")))
+	},
+	"proxmox.gotifyEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetGotifyEndpoints()).ToDataRes(types.Array(types.Resource("proxmox.notification.gotifyEndpoint")))
+	},
+	"proxmox.webhookEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetWebhookEndpoints()).ToDataRes(types.Array(types.Resource("proxmox.notification.webhookEndpoint")))
+	},
+	"proxmox.metricServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetMetricServers()).ToDataRes(types.Array(types.Resource("proxmox.metricServer")))
+	},
+	"proxmox.acmeAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetAcmeAccounts()).ToDataRes(types.Array(types.Resource("proxmox.acme.account")))
+	},
+	"proxmox.acmePlugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetAcmePlugins()).ToDataRes(types.Array(types.Resource("proxmox.acme.plugin")))
+	},
+	"proxmox.corosync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetCorosync()).ToDataRes(types.Resource("proxmox.corosync"))
+	},
+	"proxmox.pciMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetPciMappings()).ToDataRes(types.Array(types.Resource("proxmox.mapping.pci")))
+	},
+	"proxmox.usbMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetUsbMappings()).ToDataRes(types.Array(types.Resource("proxmox.mapping.usb")))
+	},
+	"proxmox.sdn.controller.controller": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetController()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetNode()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetNodes()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetState()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.asn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetAsn()).ToDataRes(types.Int)
+	},
+	"proxmox.sdn.controller.peers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetPeers()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.ebgp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetEbgp()).ToDataRes(types.Bool)
+	},
+	"proxmox.sdn.controller.ebgpMultihop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetEbgpMultihop()).ToDataRes(types.Int)
+	},
+	"proxmox.sdn.controller.bgpMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetBgpMode()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.loopback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetLoopback()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.isisDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetIsisDomain()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.isisNet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetIsisNet()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.controller.isisIfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnController).GetIsisIfaces()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.ipam.ipam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnIpam).GetIpam()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.ipam.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnIpam).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.dns.dns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnDns).GetDns()).ToDataRes(types.String)
+	},
+	"proxmox.sdn.dns.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxSdnDns).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.notification.target.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationTarget).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.notification.target.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationTarget).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.notification.target.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationTarget).GetOrigin()).ToDataRes(types.String)
+	},
+	"proxmox.notification.target.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationTarget).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.target.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationTarget).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.notification.matcher.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.notification.matcher.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetMode()).ToDataRes(types.String)
+	},
+	"proxmox.notification.matcher.matchSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetMatchSeverity()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.matcher.matchField": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetMatchField()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.matcher.matchCalendar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetMatchCalendar()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.matcher.invertMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetInvertMatch()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.matcher.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetTargets()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.matcher.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetOrigin()).ToDataRes(types.String)
+	},
+	"proxmox.notification.matcher.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.matcher.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationMatcher).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetServer()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetPort()).ToDataRes(types.Int)
+	},
+	"proxmox.notification.smtpEndpoint.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetMode()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.fromAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetFromAddress()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetAuthor()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetUsername()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.mailto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetMailto()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.smtpEndpoint.mailtoUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetMailtoUser()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.smtpEndpoint.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetOrigin()).ToDataRes(types.String)
+	},
+	"proxmox.notification.smtpEndpoint.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.smtpEndpoint.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSmtpEndpoint).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.notification.sendmailEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.notification.sendmailEndpoint.fromAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetFromAddress()).ToDataRes(types.String)
+	},
+	"proxmox.notification.sendmailEndpoint.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetAuthor()).ToDataRes(types.String)
+	},
+	"proxmox.notification.sendmailEndpoint.mailto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetMailto()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.sendmailEndpoint.mailtoUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetMailtoUser()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.sendmailEndpoint.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetOrigin()).ToDataRes(types.String)
+	},
+	"proxmox.notification.sendmailEndpoint.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.sendmailEndpoint.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationSendmailEndpoint).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.notification.gotifyEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationGotifyEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.notification.gotifyEndpoint.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationGotifyEndpoint).GetServer()).ToDataRes(types.String)
+	},
+	"proxmox.notification.gotifyEndpoint.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationGotifyEndpoint).GetOrigin()).ToDataRes(types.String)
+	},
+	"proxmox.notification.gotifyEndpoint.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationGotifyEndpoint).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.gotifyEndpoint.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationGotifyEndpoint).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.notification.webhookEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.notification.webhookEndpoint.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetUrl()).ToDataRes(types.String)
+	},
+	"proxmox.notification.webhookEndpoint.method": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetMethod()).ToDataRes(types.String)
+	},
+	"proxmox.notification.webhookEndpoint.headerNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetHeaderNames()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.webhookEndpoint.secretNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetSecretNames()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.notification.webhookEndpoint.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetOrigin()).ToDataRes(types.String)
+	},
+	"proxmox.notification.webhookEndpoint.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.notification.webhookEndpoint.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNotificationWebhookEndpoint).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.metricServer.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMetricServer).GetId()).ToDataRes(types.String)
+	},
+	"proxmox.metricServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMetricServer).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.metricServer.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMetricServer).GetServer()).ToDataRes(types.String)
+	},
+	"proxmox.metricServer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMetricServer).GetPort()).ToDataRes(types.Int)
+	},
+	"proxmox.metricServer.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMetricServer).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.acme.account.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmeAccount).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.acme.plugin.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmePlugin).GetPlugin()).ToDataRes(types.String)
+	},
+	"proxmox.acme.plugin.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmePlugin).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.acme.plugin.api": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmePlugin).GetApi()).ToDataRes(types.String)
+	},
+	"proxmox.acme.plugin.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmePlugin).GetNodes()).ToDataRes(types.String)
+	},
+	"proxmox.acme.plugin.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmePlugin).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.acme.plugin.validationDelay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxAcmePlugin).GetValidationDelay()).ToDataRes(types.Int)
+	},
+	"proxmox.corosync.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosync).GetNodes()).ToDataRes(types.Array(types.Resource("proxmox.corosync.node")))
+	},
+	"proxmox.corosync.preferredNode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosync).GetPreferredNode()).ToDataRes(types.String)
+	},
+	"proxmox.corosync.totem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosync).GetTotem()).ToDataRes(types.Dict)
+	},
+	"proxmox.corosync.configDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosync).GetConfigDigest()).ToDataRes(types.String)
+	},
+	"proxmox.corosync.qdevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosync).GetQdevice()).ToDataRes(types.Dict)
+	},
+	"proxmox.corosync.node.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.corosync.node.nodeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetNodeId()).ToDataRes(types.Int)
+	},
+	"proxmox.corosync.node.quorumVotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetQuorumVotes()).ToDataRes(types.Int)
+	},
+	"proxmox.corosync.node.ring0Address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetRing0Address()).ToDataRes(types.String)
+	},
+	"proxmox.corosync.node.ring1Address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetRing1Address()).ToDataRes(types.String)
+	},
+	"proxmox.corosync.node.apiAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetApiAddress()).ToDataRes(types.String)
+	},
+	"proxmox.corosync.node.certificateFingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCorosyncNode).GetCertificateFingerprint()).ToDataRes(types.String)
+	},
+	"proxmox.mapping.pci.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMappingPci).GetId()).ToDataRes(types.String)
+	},
+	"proxmox.mapping.pci.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMappingPci).GetDescription()).ToDataRes(types.String)
+	},
+	"proxmox.mapping.pci.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMappingPci).GetEntries()).ToDataRes(types.Array(types.Dict))
+	},
+	"proxmox.mapping.usb.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMappingUsb).GetId()).ToDataRes(types.String)
+	},
+	"proxmox.mapping.usb.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMappingUsb).GetDescription()).ToDataRes(types.String)
+	},
+	"proxmox.mapping.usb.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxMappingUsb).GetEntries()).ToDataRes(types.Array(types.Dict))
 	},
 	"proxmox.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCluster).GetName()).ToDataRes(types.String)
@@ -779,6 +1197,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.vm.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetAliases()).ToDataRes(types.Array(types.Resource("proxmox.firewall.alias")))
 	},
+	"proxmox.vm.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetBackups()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.vm.lastBackupAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetLastBackupAt()).ToDataRes(types.Time)
+	},
 	"proxmox.vm.updates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetUpdates()).ToDataRes(types.Array(types.Resource("proxmox.vm.update")))
 	},
@@ -889,6 +1313,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.storage.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxStorage).GetEncryptionKey()).ToDataRes(types.String)
+	},
+	"proxmox.storage.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetNodes()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetVolumes()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.storage.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetBackups()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.storage.volume.volid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVolid()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.storage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetStorage()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetNode()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetContentType()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetFormat()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetSize()).ToDataRes(types.Int)
+	},
+	"proxmox.storage.volume.used": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetUsed()).ToDataRes(types.Int)
+	},
+	"proxmox.storage.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"proxmox.storage.volume.vm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVm()).ToDataRes(types.Resource("proxmox.vm"))
+	},
+	"proxmox.storage.volume.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetContainer()).ToDataRes(types.Resource("proxmox.container"))
+	},
+	"proxmox.storage.volume.vmid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVmid()).ToDataRes(types.Int)
+	},
+	"proxmox.storage.volume.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"proxmox.storage.volume.encryptionFingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetEncryptionFingerprint()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.protected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetProtected()).ToDataRes(types.Bool)
+	},
+	"proxmox.storage.volume.verification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVerification()).ToDataRes(types.Dict)
+	},
+	"proxmox.storage.volume.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetNotes()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetParent()).ToDataRes(types.String)
 	},
 	"proxmox.pool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxPool).GetId()).ToDataRes(types.String)
@@ -1390,6 +1874,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.container.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetAliases()).ToDataRes(types.Array(types.Resource("proxmox.firewall.alias")))
+	},
+	"proxmox.container.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetBackups()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.container.lastBackupAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetLastBackupAt()).ToDataRes(types.Time)
 	},
 	"proxmox.container.network.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainerNetwork).GetId()).ToDataRes(types.String)
@@ -2252,6 +2742,514 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmox).Ceph, ok = plugin.RawToTValue[*mqlProxmoxCeph](v.Value, v.Error)
 		return
 	},
+	"proxmox.sdnControllers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).SdnControllers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdnIpams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).SdnIpams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdnDnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).SdnDnsServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notificationTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).NotificationTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notificationMatchers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).NotificationMatchers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.smtpEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).SmtpEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.sendmailEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).SendmailEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.gotifyEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).GotifyEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.webhookEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).WebhookEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.metricServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).MetricServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.acmeAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).AcmeAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.acmePlugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).AcmePlugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).Corosync, ok = plugin.RawToTValue[*mqlProxmoxCorosync](v.Value, v.Error)
+		return
+	},
+	"proxmox.pciMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).PciMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.usbMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).UsbMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.sdn.controller.controller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Controller, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Node, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Nodes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.asn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Asn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.peers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Peers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.ebgp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Ebgp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.ebgpMultihop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).EbgpMultihop, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.bgpMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).BgpMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.loopback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).Loopback, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.isisDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).IsisDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.isisNet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).IsisNet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.controller.isisIfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnController).IsisIfaces, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.ipam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnIpam).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.sdn.ipam.ipam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnIpam).Ipam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.ipam.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnIpam).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.dns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnDns).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.sdn.dns.dns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnDns).Dns, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.sdn.dns.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxSdnDns).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.notification.target.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.target.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationTarget).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.target.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationTarget).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.target.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationTarget).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.target.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationTarget).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.notification.matcher.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.matchSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).MatchSeverity, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.matchField": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).MatchField, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.matchCalendar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).MatchCalendar, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.invertMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).InvertMatch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.matcher.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationMatcher).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.fromAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).FromAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.mailto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Mailto, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.mailtoUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).MailtoUser, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.smtpEndpoint.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSmtpEndpoint).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.fromAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).FromAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.mailto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).Mailto, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.mailtoUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).MailtoUser, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.sendmailEndpoint.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationSendmailEndpoint).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.gotifyEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationGotifyEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.notification.gotifyEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationGotifyEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.gotifyEndpoint.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationGotifyEndpoint).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.gotifyEndpoint.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationGotifyEndpoint).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.gotifyEndpoint.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationGotifyEndpoint).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.gotifyEndpoint.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationGotifyEndpoint).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.method": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).Method, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.headerNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).HeaderNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.secretNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).SecretNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.notification.webhookEndpoint.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNotificationWebhookEndpoint).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.metricServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMetricServer).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.metricServer.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMetricServer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.metricServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMetricServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.metricServer.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMetricServer).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.metricServer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMetricServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.metricServer.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMetricServer).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmeAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.acme.account.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmeAccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.acme.plugin.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.plugin.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.plugin.api": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).Api, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.plugin.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).Nodes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.plugin.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.acme.plugin.validationDelay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxAcmePlugin).ValidationDelay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosync).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.corosync.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosync).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.preferredNode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosync).PreferredNode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.totem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosync).Totem, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.configDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosync).ConfigDigest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.qdevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosync).Qdevice, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.corosync.node.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.nodeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).NodeId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.quorumVotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).QuorumVotes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.ring0Address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).Ring0Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.ring1Address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).Ring1Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.apiAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).ApiAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.corosync.node.certificateFingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCorosyncNode).CertificateFingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.mapping.pci.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingPci).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.mapping.pci.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingPci).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.mapping.pci.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingPci).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.mapping.pci.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingPci).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.mapping.usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingUsb).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.mapping.usb.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingUsb).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.mapping.usb.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingUsb).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.mapping.usb.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxMappingUsb).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"proxmox.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxCluster).__id, ok = v.Value.(string)
 		return
@@ -2732,6 +3730,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxVm).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"proxmox.vm.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.lastBackupAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).LastBackupAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"proxmox.vm.updates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVm).Updates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2898,6 +3904,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.storage.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxStorage).EncryptionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Nodes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.storage.volume.volid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Volid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.storage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Storage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Node, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.used": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Used, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.vm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Vm, ok = plugin.RawToTValue[*mqlProxmoxVm](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Container, ok = plugin.RawToTValue[*mqlProxmoxContainer](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.vmid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Vmid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.encryptionFingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).EncryptionFingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.protected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.verification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Verification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"proxmox.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3642,6 +4732,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.container.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxContainer).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.lastBackupAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).LastBackupAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"proxmox.container.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4821,23 +5919,38 @@ type mqlProxmox struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlProxmoxInternal it will be used here
-	About           plugin.TValue[any]
-	Cluster         plugin.TValue[*mqlProxmoxCluster]
-	Vms             plugin.TValue[[]any]
-	Containers      plugin.TValue[[]any]
-	Nodes           plugin.TValue[[]any]
-	Storages        plugin.TValue[[]any]
-	Pools           plugin.TValue[[]any]
-	Users           plugin.TValue[[]any]
-	Groups          plugin.TValue[[]any]
-	Roles           plugin.TValue[[]any]
-	Acl             plugin.TValue[[]any]
-	Realms          plugin.TValue[[]any]
-	BackupJobs      plugin.TValue[[]any]
-	ReplicationJobs plugin.TValue[[]any]
-	SdnZones        plugin.TValue[[]any]
-	SdnVnets        plugin.TValue[[]any]
-	Ceph            plugin.TValue[*mqlProxmoxCeph]
+	About                plugin.TValue[any]
+	Cluster              plugin.TValue[*mqlProxmoxCluster]
+	Vms                  plugin.TValue[[]any]
+	Containers           plugin.TValue[[]any]
+	Nodes                plugin.TValue[[]any]
+	Storages             plugin.TValue[[]any]
+	Pools                plugin.TValue[[]any]
+	Users                plugin.TValue[[]any]
+	Groups               plugin.TValue[[]any]
+	Roles                plugin.TValue[[]any]
+	Acl                  plugin.TValue[[]any]
+	Realms               plugin.TValue[[]any]
+	BackupJobs           plugin.TValue[[]any]
+	ReplicationJobs      plugin.TValue[[]any]
+	SdnZones             plugin.TValue[[]any]
+	SdnVnets             plugin.TValue[[]any]
+	Ceph                 plugin.TValue[*mqlProxmoxCeph]
+	SdnControllers       plugin.TValue[[]any]
+	SdnIpams             plugin.TValue[[]any]
+	SdnDnsServers        plugin.TValue[[]any]
+	NotificationTargets  plugin.TValue[[]any]
+	NotificationMatchers plugin.TValue[[]any]
+	SmtpEndpoints        plugin.TValue[[]any]
+	SendmailEndpoints    plugin.TValue[[]any]
+	GotifyEndpoints      plugin.TValue[[]any]
+	WebhookEndpoints     plugin.TValue[[]any]
+	MetricServers        plugin.TValue[[]any]
+	AcmeAccounts         plugin.TValue[[]any]
+	AcmePlugins          plugin.TValue[[]any]
+	Corosync             plugin.TValue[*mqlProxmoxCorosync]
+	PciMappings          plugin.TValue[[]any]
+	UsbMappings          plugin.TValue[[]any]
 }
 
 // createProxmox creates a new instance of this resource
@@ -5137,6 +6250,1375 @@ func (c *mqlProxmox) GetCeph() *plugin.TValue[*mqlProxmoxCeph] {
 
 		return c.ceph()
 	})
+}
+
+func (c *mqlProxmox) GetSdnControllers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SdnControllers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "sdnControllers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sdnControllers()
+	})
+}
+
+func (c *mqlProxmox) GetSdnIpams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SdnIpams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "sdnIpams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sdnIpams()
+	})
+}
+
+func (c *mqlProxmox) GetSdnDnsServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SdnDnsServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "sdnDnsServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sdnDnsServers()
+	})
+}
+
+func (c *mqlProxmox) GetNotificationTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotificationTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "notificationTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notificationTargets()
+	})
+}
+
+func (c *mqlProxmox) GetNotificationMatchers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotificationMatchers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "notificationMatchers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notificationMatchers()
+	})
+}
+
+func (c *mqlProxmox) GetSmtpEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SmtpEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "smtpEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.smtpEndpoints()
+	})
+}
+
+func (c *mqlProxmox) GetSendmailEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SendmailEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "sendmailEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sendmailEndpoints()
+	})
+}
+
+func (c *mqlProxmox) GetGotifyEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GotifyEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "gotifyEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gotifyEndpoints()
+	})
+}
+
+func (c *mqlProxmox) GetWebhookEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WebhookEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "webhookEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webhookEndpoints()
+	})
+}
+
+func (c *mqlProxmox) GetMetricServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MetricServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "metricServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.metricServers()
+	})
+}
+
+func (c *mqlProxmox) GetAcmeAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AcmeAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "acmeAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.acmeAccounts()
+	})
+}
+
+func (c *mqlProxmox) GetAcmePlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AcmePlugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "acmePlugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.acmePlugins()
+	})
+}
+
+func (c *mqlProxmox) GetCorosync() *plugin.TValue[*mqlProxmoxCorosync] {
+	return plugin.GetOrCompute[*mqlProxmoxCorosync](&c.Corosync, func() (*mqlProxmoxCorosync, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "corosync")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxCorosync), nil
+			}
+		}
+
+		return c.corosync()
+	})
+}
+
+func (c *mqlProxmox) GetPciMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PciMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "pciMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pciMappings()
+	})
+}
+
+func (c *mqlProxmox) GetUsbMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UsbMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "usbMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.usbMappings()
+	})
+}
+
+// mqlProxmoxSdnController for the proxmox.sdn.controller resource
+type mqlProxmoxSdnController struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxSdnControllerInternal it will be used here
+	Controller   plugin.TValue[string]
+	Type         plugin.TValue[string]
+	Node         plugin.TValue[string]
+	Nodes        plugin.TValue[string]
+	State        plugin.TValue[string]
+	Asn          plugin.TValue[int64]
+	Peers        plugin.TValue[string]
+	Ebgp         plugin.TValue[bool]
+	EbgpMultihop plugin.TValue[int64]
+	BgpMode      plugin.TValue[string]
+	Loopback     plugin.TValue[string]
+	IsisDomain   plugin.TValue[string]
+	IsisNet      plugin.TValue[string]
+	IsisIfaces   plugin.TValue[string]
+}
+
+// createProxmoxSdnController creates a new instance of this resource
+func createProxmoxSdnController(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxSdnController{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.sdn.controller", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxSdnController) MqlName() string {
+	return "proxmox.sdn.controller"
+}
+
+func (c *mqlProxmoxSdnController) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxSdnController) GetController() *plugin.TValue[string] {
+	return &c.Controller
+}
+
+func (c *mqlProxmoxSdnController) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlProxmoxSdnController) GetNode() *plugin.TValue[string] {
+	return &c.Node
+}
+
+func (c *mqlProxmoxSdnController) GetNodes() *plugin.TValue[string] {
+	return &c.Nodes
+}
+
+func (c *mqlProxmoxSdnController) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlProxmoxSdnController) GetAsn() *plugin.TValue[int64] {
+	return &c.Asn
+}
+
+func (c *mqlProxmoxSdnController) GetPeers() *plugin.TValue[string] {
+	return &c.Peers
+}
+
+func (c *mqlProxmoxSdnController) GetEbgp() *plugin.TValue[bool] {
+	return &c.Ebgp
+}
+
+func (c *mqlProxmoxSdnController) GetEbgpMultihop() *plugin.TValue[int64] {
+	return &c.EbgpMultihop
+}
+
+func (c *mqlProxmoxSdnController) GetBgpMode() *plugin.TValue[string] {
+	return &c.BgpMode
+}
+
+func (c *mqlProxmoxSdnController) GetLoopback() *plugin.TValue[string] {
+	return &c.Loopback
+}
+
+func (c *mqlProxmoxSdnController) GetIsisDomain() *plugin.TValue[string] {
+	return &c.IsisDomain
+}
+
+func (c *mqlProxmoxSdnController) GetIsisNet() *plugin.TValue[string] {
+	return &c.IsisNet
+}
+
+func (c *mqlProxmoxSdnController) GetIsisIfaces() *plugin.TValue[string] {
+	return &c.IsisIfaces
+}
+
+// mqlProxmoxSdnIpam for the proxmox.sdn.ipam resource
+type mqlProxmoxSdnIpam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxSdnIpamInternal it will be used here
+	Ipam plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createProxmoxSdnIpam creates a new instance of this resource
+func createProxmoxSdnIpam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxSdnIpam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.sdn.ipam", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxSdnIpam) MqlName() string {
+	return "proxmox.sdn.ipam"
+}
+
+func (c *mqlProxmoxSdnIpam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxSdnIpam) GetIpam() *plugin.TValue[string] {
+	return &c.Ipam
+}
+
+func (c *mqlProxmoxSdnIpam) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlProxmoxSdnDns for the proxmox.sdn.dns resource
+type mqlProxmoxSdnDns struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxSdnDnsInternal it will be used here
+	Dns  plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createProxmoxSdnDns creates a new instance of this resource
+func createProxmoxSdnDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxSdnDns{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.sdn.dns", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxSdnDns) MqlName() string {
+	return "proxmox.sdn.dns"
+}
+
+func (c *mqlProxmoxSdnDns) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxSdnDns) GetDns() *plugin.TValue[string] {
+	return &c.Dns
+}
+
+func (c *mqlProxmoxSdnDns) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlProxmoxNotificationTarget for the proxmox.notification.target resource
+type mqlProxmoxNotificationTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNotificationTargetInternal it will be used here
+	Name     plugin.TValue[string]
+	Type     plugin.TValue[string]
+	Origin   plugin.TValue[string]
+	Disabled plugin.TValue[bool]
+	Comment  plugin.TValue[string]
+}
+
+// createProxmoxNotificationTarget creates a new instance of this resource
+func createProxmoxNotificationTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNotificationTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.notification.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNotificationTarget) MqlName() string {
+	return "proxmox.notification.target"
+}
+
+func (c *mqlProxmoxNotificationTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNotificationTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxNotificationTarget) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlProxmoxNotificationTarget) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlProxmoxNotificationTarget) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxNotificationTarget) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlProxmoxNotificationMatcher for the proxmox.notification.matcher resource
+type mqlProxmoxNotificationMatcher struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNotificationMatcherInternal it will be used here
+	Name          plugin.TValue[string]
+	Mode          plugin.TValue[string]
+	MatchSeverity plugin.TValue[[]any]
+	MatchField    plugin.TValue[[]any]
+	MatchCalendar plugin.TValue[[]any]
+	InvertMatch   plugin.TValue[bool]
+	Targets       plugin.TValue[[]any]
+	Origin        plugin.TValue[string]
+	Disabled      plugin.TValue[bool]
+	Comment       plugin.TValue[string]
+}
+
+// createProxmoxNotificationMatcher creates a new instance of this resource
+func createProxmoxNotificationMatcher(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNotificationMatcher{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.notification.matcher", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNotificationMatcher) MqlName() string {
+	return "proxmox.notification.matcher"
+}
+
+func (c *mqlProxmoxNotificationMatcher) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetMatchSeverity() *plugin.TValue[[]any] {
+	return &c.MatchSeverity
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetMatchField() *plugin.TValue[[]any] {
+	return &c.MatchField
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetMatchCalendar() *plugin.TValue[[]any] {
+	return &c.MatchCalendar
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetInvertMatch() *plugin.TValue[bool] {
+	return &c.InvertMatch
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetTargets() *plugin.TValue[[]any] {
+	return &c.Targets
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxNotificationMatcher) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlProxmoxNotificationSmtpEndpoint for the proxmox.notification.smtpEndpoint resource
+type mqlProxmoxNotificationSmtpEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNotificationSmtpEndpointInternal it will be used here
+	Name        plugin.TValue[string]
+	Server      plugin.TValue[string]
+	Port        plugin.TValue[int64]
+	Mode        plugin.TValue[string]
+	FromAddress plugin.TValue[string]
+	Author      plugin.TValue[string]
+	Username    plugin.TValue[string]
+	Mailto      plugin.TValue[[]any]
+	MailtoUser  plugin.TValue[[]any]
+	Origin      plugin.TValue[string]
+	Disabled    plugin.TValue[bool]
+	Comment     plugin.TValue[string]
+}
+
+// createProxmoxNotificationSmtpEndpoint creates a new instance of this resource
+func createProxmoxNotificationSmtpEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNotificationSmtpEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.notification.smtpEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) MqlName() string {
+	return "proxmox.notification.smtpEndpoint"
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetFromAddress() *plugin.TValue[string] {
+	return &c.FromAddress
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetMailto() *plugin.TValue[[]any] {
+	return &c.Mailto
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetMailtoUser() *plugin.TValue[[]any] {
+	return &c.MailtoUser
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxNotificationSmtpEndpoint) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlProxmoxNotificationSendmailEndpoint for the proxmox.notification.sendmailEndpoint resource
+type mqlProxmoxNotificationSendmailEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNotificationSendmailEndpointInternal it will be used here
+	Name        plugin.TValue[string]
+	FromAddress plugin.TValue[string]
+	Author      plugin.TValue[string]
+	Mailto      plugin.TValue[[]any]
+	MailtoUser  plugin.TValue[[]any]
+	Origin      plugin.TValue[string]
+	Disabled    plugin.TValue[bool]
+	Comment     plugin.TValue[string]
+}
+
+// createProxmoxNotificationSendmailEndpoint creates a new instance of this resource
+func createProxmoxNotificationSendmailEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNotificationSendmailEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.notification.sendmailEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) MqlName() string {
+	return "proxmox.notification.sendmailEndpoint"
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetFromAddress() *plugin.TValue[string] {
+	return &c.FromAddress
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetMailto() *plugin.TValue[[]any] {
+	return &c.Mailto
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetMailtoUser() *plugin.TValue[[]any] {
+	return &c.MailtoUser
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxNotificationSendmailEndpoint) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlProxmoxNotificationGotifyEndpoint for the proxmox.notification.gotifyEndpoint resource
+type mqlProxmoxNotificationGotifyEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNotificationGotifyEndpointInternal it will be used here
+	Name     plugin.TValue[string]
+	Server   plugin.TValue[string]
+	Origin   plugin.TValue[string]
+	Disabled plugin.TValue[bool]
+	Comment  plugin.TValue[string]
+}
+
+// createProxmoxNotificationGotifyEndpoint creates a new instance of this resource
+func createProxmoxNotificationGotifyEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNotificationGotifyEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.notification.gotifyEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) MqlName() string {
+	return "proxmox.notification.gotifyEndpoint"
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxNotificationGotifyEndpoint) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlProxmoxNotificationWebhookEndpoint for the proxmox.notification.webhookEndpoint resource
+type mqlProxmoxNotificationWebhookEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNotificationWebhookEndpointInternal it will be used here
+	Name        plugin.TValue[string]
+	Url         plugin.TValue[string]
+	Method      plugin.TValue[string]
+	HeaderNames plugin.TValue[[]any]
+	SecretNames plugin.TValue[[]any]
+	Origin      plugin.TValue[string]
+	Disabled    plugin.TValue[bool]
+	Comment     plugin.TValue[string]
+}
+
+// createProxmoxNotificationWebhookEndpoint creates a new instance of this resource
+func createProxmoxNotificationWebhookEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNotificationWebhookEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.notification.webhookEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) MqlName() string {
+	return "proxmox.notification.webhookEndpoint"
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetMethod() *plugin.TValue[string] {
+	return &c.Method
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetHeaderNames() *plugin.TValue[[]any] {
+	return &c.HeaderNames
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetSecretNames() *plugin.TValue[[]any] {
+	return &c.SecretNames
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxNotificationWebhookEndpoint) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlProxmoxMetricServer for the proxmox.metricServer resource
+type mqlProxmoxMetricServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxMetricServerInternal it will be used here
+	Id       plugin.TValue[string]
+	Type     plugin.TValue[string]
+	Server   plugin.TValue[string]
+	Port     plugin.TValue[int64]
+	Disabled plugin.TValue[bool]
+}
+
+// createProxmoxMetricServer creates a new instance of this resource
+func createProxmoxMetricServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxMetricServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.metricServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxMetricServer) MqlName() string {
+	return "proxmox.metricServer"
+}
+
+func (c *mqlProxmoxMetricServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxMetricServer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlProxmoxMetricServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlProxmoxMetricServer) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlProxmoxMetricServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlProxmoxMetricServer) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+// mqlProxmoxAcmeAccount for the proxmox.acme.account resource
+type mqlProxmoxAcmeAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxAcmeAccountInternal it will be used here
+	Name plugin.TValue[string]
+}
+
+// createProxmoxAcmeAccount creates a new instance of this resource
+func createProxmoxAcmeAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxAcmeAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.acme.account", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxAcmeAccount) MqlName() string {
+	return "proxmox.acme.account"
+}
+
+func (c *mqlProxmoxAcmeAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxAcmeAccount) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+// mqlProxmoxAcmePlugin for the proxmox.acme.plugin resource
+type mqlProxmoxAcmePlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxAcmePluginInternal it will be used here
+	Plugin          plugin.TValue[string]
+	Type            plugin.TValue[string]
+	Api             plugin.TValue[string]
+	Nodes           plugin.TValue[string]
+	Disabled        plugin.TValue[bool]
+	ValidationDelay plugin.TValue[int64]
+}
+
+// createProxmoxAcmePlugin creates a new instance of this resource
+func createProxmoxAcmePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxAcmePlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.acme.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxAcmePlugin) MqlName() string {
+	return "proxmox.acme.plugin"
+}
+
+func (c *mqlProxmoxAcmePlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxAcmePlugin) GetPlugin() *plugin.TValue[string] {
+	return &c.Plugin
+}
+
+func (c *mqlProxmoxAcmePlugin) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlProxmoxAcmePlugin) GetApi() *plugin.TValue[string] {
+	return &c.Api
+}
+
+func (c *mqlProxmoxAcmePlugin) GetNodes() *plugin.TValue[string] {
+	return &c.Nodes
+}
+
+func (c *mqlProxmoxAcmePlugin) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlProxmoxAcmePlugin) GetValidationDelay() *plugin.TValue[int64] {
+	return &c.ValidationDelay
+}
+
+// mqlProxmoxCorosync for the proxmox.corosync resource
+type mqlProxmoxCorosync struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCorosyncInternal it will be used here
+	Nodes         plugin.TValue[[]any]
+	PreferredNode plugin.TValue[string]
+	Totem         plugin.TValue[any]
+	ConfigDigest  plugin.TValue[string]
+	Qdevice       plugin.TValue[any]
+}
+
+// createProxmoxCorosync creates a new instance of this resource
+func createProxmoxCorosync(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCorosync{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.corosync", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCorosync) MqlName() string {
+	return "proxmox.corosync"
+}
+
+func (c *mqlProxmoxCorosync) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCorosync) GetNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nodes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.corosync", c.__id, "nodes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nodes()
+	})
+}
+
+func (c *mqlProxmoxCorosync) GetPreferredNode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PreferredNode, func() (string, error) {
+		return c.preferredNode()
+	})
+}
+
+func (c *mqlProxmoxCorosync) GetTotem() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Totem, func() (any, error) {
+		return c.totem()
+	})
+}
+
+func (c *mqlProxmoxCorosync) GetConfigDigest() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigDigest, func() (string, error) {
+		return c.configDigest()
+	})
+}
+
+func (c *mqlProxmoxCorosync) GetQdevice() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Qdevice, func() (any, error) {
+		return c.qdevice()
+	})
+}
+
+// mqlProxmoxCorosyncNode for the proxmox.corosync.node resource
+type mqlProxmoxCorosyncNode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCorosyncNodeInternal it will be used here
+	Name                   plugin.TValue[string]
+	NodeId                 plugin.TValue[int64]
+	QuorumVotes            plugin.TValue[int64]
+	Ring0Address           plugin.TValue[string]
+	Ring1Address           plugin.TValue[string]
+	ApiAddress             plugin.TValue[string]
+	CertificateFingerprint plugin.TValue[string]
+}
+
+// createProxmoxCorosyncNode creates a new instance of this resource
+func createProxmoxCorosyncNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCorosyncNode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.corosync.node", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCorosyncNode) MqlName() string {
+	return "proxmox.corosync.node"
+}
+
+func (c *mqlProxmoxCorosyncNode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCorosyncNode) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCorosyncNode) GetNodeId() *plugin.TValue[int64] {
+	return &c.NodeId
+}
+
+func (c *mqlProxmoxCorosyncNode) GetQuorumVotes() *plugin.TValue[int64] {
+	return &c.QuorumVotes
+}
+
+func (c *mqlProxmoxCorosyncNode) GetRing0Address() *plugin.TValue[string] {
+	return &c.Ring0Address
+}
+
+func (c *mqlProxmoxCorosyncNode) GetRing1Address() *plugin.TValue[string] {
+	return &c.Ring1Address
+}
+
+func (c *mqlProxmoxCorosyncNode) GetApiAddress() *plugin.TValue[string] {
+	return &c.ApiAddress
+}
+
+func (c *mqlProxmoxCorosyncNode) GetCertificateFingerprint() *plugin.TValue[string] {
+	return &c.CertificateFingerprint
+}
+
+// mqlProxmoxMappingPci for the proxmox.mapping.pci resource
+type mqlProxmoxMappingPci struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxMappingPciInternal it will be used here
+	Id          plugin.TValue[string]
+	Description plugin.TValue[string]
+	Entries     plugin.TValue[[]any]
+}
+
+// createProxmoxMappingPci creates a new instance of this resource
+func createProxmoxMappingPci(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxMappingPci{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.mapping.pci", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxMappingPci) MqlName() string {
+	return "proxmox.mapping.pci"
+}
+
+func (c *mqlProxmoxMappingPci) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxMappingPci) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlProxmoxMappingPci) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlProxmoxMappingPci) GetEntries() *plugin.TValue[[]any] {
+	return &c.Entries
+}
+
+// mqlProxmoxMappingUsb for the proxmox.mapping.usb resource
+type mqlProxmoxMappingUsb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxMappingUsbInternal it will be used here
+	Id          plugin.TValue[string]
+	Description plugin.TValue[string]
+	Entries     plugin.TValue[[]any]
+}
+
+// createProxmoxMappingUsb creates a new instance of this resource
+func createProxmoxMappingUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxMappingUsb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.mapping.usb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxMappingUsb) MqlName() string {
+	return "proxmox.mapping.usb"
+}
+
+func (c *mqlProxmoxMappingUsb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxMappingUsb) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlProxmoxMappingUsb) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlProxmoxMappingUsb) GetEntries() *plugin.TValue[[]any] {
+	return &c.Entries
 }
 
 // mqlProxmoxCluster for the proxmox.cluster resource
@@ -6060,6 +8542,8 @@ type mqlProxmoxVm struct {
 	FirewallOptions plugin.TValue[*mqlProxmoxFirewallOptions]
 	Ipsets          plugin.TValue[[]any]
 	Aliases         plugin.TValue[[]any]
+	Backups         plugin.TValue[[]any]
+	LastBackupAt    plugin.TValue[*time.Time]
 	Updates         plugin.TValue[[]any]
 }
 
@@ -6454,6 +8938,28 @@ func (c *mqlProxmoxVm) GetAliases() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlProxmoxVm) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlProxmoxVm) GetLastBackupAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastBackupAt, func() (*time.Time, error) {
+		return c.lastBackupAt()
+	})
+}
+
 func (c *mqlProxmoxVm) GetUpdates() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Updates, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -6775,6 +9281,9 @@ type mqlProxmoxStorage struct {
 	UsagePercent  plugin.TValue[float64]
 	Encrypted     plugin.TValue[bool]
 	EncryptionKey plugin.TValue[string]
+	Nodes         plugin.TValue[string]
+	Volumes       plugin.TValue[[]any]
+	Backups       plugin.TValue[[]any]
 }
 
 // createProxmoxStorage creates a new instance of this resource
@@ -6860,6 +9369,190 @@ func (c *mqlProxmoxStorage) GetEncrypted() *plugin.TValue[bool] {
 
 func (c *mqlProxmoxStorage) GetEncryptionKey() *plugin.TValue[string] {
 	return &c.EncryptionKey
+}
+
+func (c *mqlProxmoxStorage) GetNodes() *plugin.TValue[string] {
+	return &c.Nodes
+}
+
+func (c *mqlProxmoxStorage) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+func (c *mqlProxmoxStorage) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlProxmoxStorageVolume for the proxmox.storage.volume resource
+type mqlProxmoxStorageVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlProxmoxStorageVolumeInternal
+	Volid                 plugin.TValue[string]
+	Storage               plugin.TValue[string]
+	Node                  plugin.TValue[string]
+	ContentType           plugin.TValue[string]
+	Format                plugin.TValue[string]
+	Size                  plugin.TValue[int64]
+	Used                  plugin.TValue[int64]
+	CreatedAt             plugin.TValue[*time.Time]
+	Vm                    plugin.TValue[*mqlProxmoxVm]
+	Container             plugin.TValue[*mqlProxmoxContainer]
+	Vmid                  plugin.TValue[int64]
+	Encrypted             plugin.TValue[bool]
+	EncryptionFingerprint plugin.TValue[string]
+	Protected             plugin.TValue[bool]
+	Verification          plugin.TValue[any]
+	Notes                 plugin.TValue[string]
+	Parent                plugin.TValue[string]
+}
+
+// createProxmoxStorageVolume creates a new instance of this resource
+func createProxmoxStorageVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxStorageVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.storage.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxStorageVolume) MqlName() string {
+	return "proxmox.storage.volume"
+}
+
+func (c *mqlProxmoxStorageVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxStorageVolume) GetVolid() *plugin.TValue[string] {
+	return &c.Volid
+}
+
+func (c *mqlProxmoxStorageVolume) GetStorage() *plugin.TValue[string] {
+	return &c.Storage
+}
+
+func (c *mqlProxmoxStorageVolume) GetNode() *plugin.TValue[string] {
+	return &c.Node
+}
+
+func (c *mqlProxmoxStorageVolume) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlProxmoxStorageVolume) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlProxmoxStorageVolume) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlProxmoxStorageVolume) GetUsed() *plugin.TValue[int64] {
+	return &c.Used
+}
+
+func (c *mqlProxmoxStorageVolume) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlProxmoxStorageVolume) GetVm() *plugin.TValue[*mqlProxmoxVm] {
+	return plugin.GetOrCompute[*mqlProxmoxVm](&c.Vm, func() (*mqlProxmoxVm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage.volume", c.__id, "vm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxVm), nil
+			}
+		}
+
+		return c.vm()
+	})
+}
+
+func (c *mqlProxmoxStorageVolume) GetContainer() *plugin.TValue[*mqlProxmoxContainer] {
+	return plugin.GetOrCompute[*mqlProxmoxContainer](&c.Container, func() (*mqlProxmoxContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage.volume", c.__id, "container")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxContainer), nil
+			}
+		}
+
+		return c.container()
+	})
+}
+
+func (c *mqlProxmoxStorageVolume) GetVmid() *plugin.TValue[int64] {
+	return &c.Vmid
+}
+
+func (c *mqlProxmoxStorageVolume) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlProxmoxStorageVolume) GetEncryptionFingerprint() *plugin.TValue[string] {
+	return &c.EncryptionFingerprint
+}
+
+func (c *mqlProxmoxStorageVolume) GetProtected() *plugin.TValue[bool] {
+	return &c.Protected
+}
+
+func (c *mqlProxmoxStorageVolume) GetVerification() *plugin.TValue[any] {
+	return &c.Verification
+}
+
+func (c *mqlProxmoxStorageVolume) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlProxmoxStorageVolume) GetParent() *plugin.TValue[string] {
+	return &c.Parent
 }
 
 // mqlProxmoxPool for the proxmox.pool resource
@@ -8408,6 +11101,8 @@ type mqlProxmoxContainer struct {
 	FirewallOptions    plugin.TValue[*mqlProxmoxFirewallOptions]
 	Ipsets             plugin.TValue[[]any]
 	Aliases            plugin.TValue[[]any]
+	Backups            plugin.TValue[[]any]
+	LastBackupAt       plugin.TValue[*time.Time]
 }
 
 // createProxmoxContainer creates a new instance of this resource
@@ -8748,6 +11443,28 @@ func (c *mqlProxmoxContainer) GetAliases() *plugin.TValue[[]any] {
 		}
 
 		return c.aliases()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.container", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetLastBackupAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastBackupAt, func() (*time.Time, error) {
+		return c.lastBackupAt()
 	})
 }
 

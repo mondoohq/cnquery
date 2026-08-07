@@ -56,6 +56,433 @@ proxmox {
   sdnVnets() []proxmox.sdn.vnet
   // Ceph storage cluster managed by this Proxmox deployment
   ceph() proxmox.ceph
+  // SDN controllers driving the routing protocols behind EVPN and BGP zones
+  sdnControllers() []proxmox.sdn.controller
+  // IP address management backends the SDN allocates guest addresses from
+  sdnIpams() []proxmox.sdn.ipam
+  // DNS backends the SDN registers guest records in
+  sdnDnsServers() []proxmox.sdn.dns
+  // Every configured notification target, of every type
+  notificationTargets() []proxmox.notification.target
+  // Rules deciding which notifications reach which targets
+  notificationMatchers() []proxmox.notification.matcher
+  // Notification targets that mail through an SMTP server
+  smtpEndpoints() []proxmox.notification.smtpEndpoint
+  // Notification targets that mail through the local sendmail binary
+  sendmailEndpoints() []proxmox.notification.sendmailEndpoint
+  // Notification targets that post to a Gotify server
+  gotifyEndpoints() []proxmox.notification.gotifyEndpoint
+  // Notification targets that post to an arbitrary URL
+  webhookEndpoints() []proxmox.notification.webhookEndpoint
+  // External servers the cluster ships metrics to
+  metricServers() []proxmox.metricServer
+  // ACME accounts registered for automatic certificate issuance
+  acmeAccounts() []proxmox.acme.account
+  // ACME DNS challenge plugins configured on the cluster
+  acmePlugins() []proxmox.acme.plugin
+  // Corosync cluster membership and transport configuration
+  corosync() proxmox.corosync
+  // Cluster-wide PCI device mappings guests can be granted by name
+  pciMappings() []proxmox.mapping.pci
+  // Cluster-wide USB device mappings guests can be granted by name
+  usbMappings() []proxmox.mapping.usb
+}
+
+// SDN controller
+//
+// Controller driving the routing protocol behind an SDN zone, selected
+// by `controller` (for example `proxmox.sdn.controller(controller:
+// "evpnctl")`). EVPN and BGP zones need one to exchange routes with the
+// physical network, so `type`, `asn`, and `peers` describe which
+// external routers the cluster peers with and under whose autonomous
+// system number. The `state` field reports whether the configuration
+// has been applied.
+proxmox.sdn.controller @defaults("controller type asn") {
+  // Controller name
+  controller string
+  // Controller type (`evpn`, `bgp`, `isis`, `faucet`)
+  type string
+  // Node the controller is active on; empty when it applies to all
+  node string
+  // Node restriction from the controller config, comma-separated
+  nodes string
+  // State of the configuration object (`new`, `changed`, `deleted`, or empty when applied)
+  state string
+  // Local autonomous system number, for BGP and EVPN
+  asn int
+  // Peer router addresses, comma-separated
+  peers string
+  // Whether external BGP is enabled, making peers remote-as external
+  ebgp bool
+  // Maximum hop count permitted to external BGP peers; 0 when unset
+  ebgpMultihop int
+  // Whether to use external or internal BGP, or choose automatically
+  bgpMode string
+  // Loopback interface providing the router IP, for BGP
+  loopback string
+  // IS-IS domain name
+  isisDomain string
+  // Network entity title for this node in the IS-IS network
+  isisNet string
+  // Interfaces IS-IS is active on, comma-separated
+  isisIfaces string
+}
+
+// SDN IP address management backend
+//
+// Address management backend the SDN allocates guest addresses from,
+// selected by `ipam`. The `type` field names the implementation:
+// `pve` for the built-in allocator, or `netbox` and `phpipam` for
+// external systems the cluster reaches over an API.
+proxmox.sdn.ipam @defaults("ipam type") {
+  // IPAM name
+  ipam string
+  // Backend type (`pve`, `netbox`, `phpipam`)
+  type string
+}
+
+// SDN DNS backend
+//
+// DNS backend the SDN registers guest records in, selected by `dns`.
+// The `type` field names the implementation, currently `powerdns`.
+proxmox.sdn.dns @defaults("dns type") {
+  // DNS backend name
+  dns string
+  // Backend type
+  type string
+}
+
+// Proxmox VE notification target
+//
+// Configured destination for cluster notifications, selected by `name`.
+// This is the type-independent view of every target: backup failures,
+// replication errors, fencing events, and package updates all reach an
+// operator only through one of these, so a cluster with none is running
+// unobserved. The `type` field says which transport carries it
+// (`smtp`, `sendmail`, `gotify`, `webhook`), and the matching endpoint
+// list holds the transport-specific settings. The `origin` field
+// distinguishes operator-created targets from the built-in default.
+//
+// Reading notification configuration requires Mapping.Audit on
+// `/mapping/notifications`, which the PVEAuditor role does not include.
+// A token without it sees an empty list.
+proxmox.notification.target @defaults("name type disabled") {
+  // Target name
+  name string
+  // Transport type (`smtp`, `sendmail`, `gotify`, `webhook`)
+  type string
+  // Whether the target is created by an operator or built in
+  //
+  // One of `user-created`, `builtin`, or `modified-builtin`.
+  origin string
+  // Whether the target is disabled and will not be notified
+  disabled bool
+  // Operator comment on the target
+  comment string
+}
+
+// Proxmox VE notification matcher
+//
+// Rule deciding which notifications reach which targets, selected by
+// `name`. A matcher that reaches no target, or one disabled matcher
+// where an operator expected coverage, silently drops the events it
+// governs. The `matchSeverity`, `matchField`, and `matchCalendar`
+// fields hold the conditions, `mode` says whether all or any of them
+// must hold, `invertMatch` flips the result, and `targets` names the
+// destinations notified on a match.
+proxmox.notification.matcher @defaults("name mode disabled") {
+  // Matcher name
+  name string
+  // Whether all or any of the configured conditions must hold (`all` or `any`)
+  mode string
+  // Notification severities matched
+  matchSeverity []string
+  // Metadata field conditions matched, as `(regex|exact):field=value`
+  matchField []string
+  // Timestamp conditions matched, as systemd calendar events
+  matchCalendar []string
+  // Whether the overall match result is inverted
+  invertMatch bool
+  // Names of the targets notified when the matcher fires
+  targets []string
+  // Whether the matcher is created by an operator or built in
+  origin string
+  // Whether the matcher is disabled
+  disabled bool
+  // Operator comment on the matcher
+  comment string
+}
+
+// SMTP notification endpoint
+//
+// Notification target that mails through an SMTP server, selected by
+// `name`. The `mode` field is the security-relevant one: it decides
+// whether the connection is encrypted (`tls`, `starttls`) or sent in
+// the clear (`insecure`), which matters because `username` authenticates
+// with a password on the same connection. That password is never
+// returned by the API and is not exposed here.
+proxmox.notification.smtpEndpoint @defaults("name server port mode") {
+  // Endpoint name
+  name string
+  // Address of the SMTP server
+  server string
+  // Port used for the connection; 0 when the default applies
+  //
+  // Proxmox defaults to 465 for TLS and 587 for STARTTLS.
+  port int
+  // Encryption method used for the connection
+  //
+  // One of `tls`, `starttls`, or `insecure`. An empty value takes the
+  // Proxmox default of `tls`.
+  mode string
+  // From address on the mail
+  fromAddress string
+  // Author name on the mail
+  author string
+  // Username authenticating to the SMTP server; empty when unauthenticated
+  username string
+  // Recipient email addresses
+  mailto []string
+  // Recipient Proxmox users, notified at their configured address
+  mailtoUser []string
+  // Whether the endpoint is created by an operator or built in
+  origin string
+  // Whether the endpoint is disabled
+  disabled bool
+  // Operator comment on the endpoint
+  comment string
+}
+
+// Sendmail notification endpoint
+//
+// Notification target that hands mail to the local sendmail binary,
+// selected by `name`. Delivery depends entirely on the host mail
+// transfer agent, so `mailto` and `mailtoUser` say who is meant to be
+// reached but not whether anything actually leaves the node.
+proxmox.notification.sendmailEndpoint @defaults("name disabled") {
+  // Endpoint name
+  name string
+  // From address on the mail
+  fromAddress string
+  // Author name on the mail
+  author string
+  // Recipient email addresses
+  mailto []string
+  // Recipient Proxmox users, notified at their configured address
+  mailtoUser []string
+  // Whether the endpoint is created by an operator or built in
+  origin string
+  // Whether the endpoint is disabled
+  disabled bool
+  // Operator comment on the endpoint
+  comment string
+}
+
+// Gotify notification endpoint
+//
+// Notification target that posts to a Gotify server, selected by
+// `name`. The `server` URL carries the scheme, so it shows whether
+// notifications, which are authenticated with a bearer token, travel
+// over HTTPS or plain HTTP. The token itself is never returned by the
+// API and is not exposed here.
+proxmox.notification.gotifyEndpoint @defaults("name server disabled") {
+  // Endpoint name
+  name string
+  // Gotify server URL
+  server string
+  // Whether the endpoint is created by an operator or built in
+  origin string
+  // Whether the endpoint is disabled
+  disabled bool
+  // Operator comment on the endpoint
+  comment string
+}
+
+// Webhook notification endpoint
+//
+// Notification target that posts to an arbitrary URL, selected by
+// `name`. The `url` scheme shows whether the payload, which can carry
+// cluster names and failure detail, travels encrypted. The
+// `headerNames` and `secretNames` fields list which headers and secrets
+// are configured without their values, since a header value can itself
+// carry an API token.
+proxmox.notification.webhookEndpoint @defaults("name url method") {
+  // Endpoint name
+  name string
+  // Destination URL
+  url string
+  // HTTP method used for the request
+  method string
+  // Names of the HTTP headers set on the request, without their values
+  headerNames []string
+  // Names of the configured secrets, without their values
+  secretNames []string
+  // Whether the endpoint is created by an operator or built in
+  origin string
+  // Whether the endpoint is disabled
+  disabled bool
+  // Operator comment on the endpoint
+  comment string
+}
+
+// External metric server
+//
+// External InfluxDB or Graphite server the cluster ships metrics to,
+// selected by `id`. Guest names, node names, and resource figures leave
+// the cluster continuously through these, so `server`, `port`, and
+// `type` describe where that stream goes. The Graphite and
+// InfluxDB-UDP transports carry no authentication or encryption at all.
+// The API token for the HTTP transports is not returned by the API.
+proxmox.metricServer @defaults("id type server port") {
+  // Metric server entry id
+  id string
+  // Plugin type (`influxdb` or `graphite`)
+  type string
+  // Server DNS name or IP address
+  server string
+  // Server network port
+  port int
+  // Whether the metric server is disabled and receives nothing
+  disabled bool
+}
+
+// ACME account
+//
+// ACME account registered for automatic certificate issuance, selected
+// by `name`. Nodes issue their API certificates through one of these,
+// so the presence of an account is what separates automatically renewed
+// certificates from manually managed ones.
+proxmox.acme.account @defaults("name") {
+  // Account name
+  name string
+}
+
+// ACME challenge plugin
+//
+// DNS-01 challenge plugin used to prove domain control during
+// certificate issuance, selected by `plugin`. Each plugin holds
+// credentials for a DNS provider that can create records on the
+// cluster's domain, so `api` names which provider that is and `nodes`
+// which nodes may use it. The credential data itself is not exposed
+// here.
+//
+// Reading plugin configuration requires Sys.Modify, which no audit role
+// carries. A read-only token sees an empty list.
+proxmox.acme.plugin @defaults("plugin type api") {
+  // Plugin instance identifier
+  plugin string
+  // ACME challenge type (`dns` or `standalone`)
+  type string
+  // DNS provider plugin name
+  api string
+  // Node restriction, comma-separated; empty when unrestricted
+  nodes string
+  // Whether the plugin is disabled
+  disabled bool
+  // Extra seconds to wait before requesting validation
+  validationDelay int
+}
+
+// Corosync cluster configuration
+//
+// Corosync membership and transport configuration underpinning the
+// cluster. Quorum is decided here: `nodes` lists every member with its
+// vote count and ring addresses, so a cluster whose members all reach
+// each other over a single link has no redundancy against that link
+// failing. The `qdevice` field reports an external tie-breaker when one
+// is configured, and `totem` holds the raw transport settings.
+//
+// A standalone node has no corosync configuration; `nodes` is empty
+// there.
+proxmox.corosync @defaults("preferredNode") {
+  // Cluster members and their corosync links
+  nodes() []proxmox.corosync.node
+  // Node the API suggests joining through
+  preferredNode() string
+  // Raw corosync totem transport settings
+  //
+  // Keys mirror the corosync totem section, including `cluster_name`,
+  // `config_version`, `transport`, `secauth`, `crypto_cipher`, and
+  // `crypto_hash`.
+  totem() dict
+  // Digest of the corosync configuration
+  configDigest() string
+  // External quorum device configuration
+  //
+  // A QDevice provides a tie-breaking vote so a two-node cluster can
+  // keep quorum when one node fails. Empty when none is configured.
+  qdevice() dict
+}
+
+// Corosync cluster member
+//
+// Single member of the corosync cluster, selected by `name`. The
+// `quorumVotes` field is what the member contributes toward quorum, and
+// `ring0Address` and `ring1Address` are the links it communicates over.
+// A member with only ring 0 configured loses cluster membership if that
+// network fails.
+proxmox.corosync.node @defaults("name nodeId ring0Address quorumVotes") {
+  // Cluster node name
+  name string
+  // Corosync node id
+  nodeId int
+  // Votes this member contributes toward quorum
+  quorumVotes int
+  // Address of the primary corosync link
+  ring0Address string
+  // Address of the redundant corosync link; empty when only one link is configured
+  ring1Address string
+  // Address the Proxmox API is reached on
+  apiAddress string
+  // SHA-256 fingerprint of the node's API certificate
+  certificateFingerprint string
+}
+
+// Cluster-wide PCI device mapping
+//
+// Named alias for a physical PCI device, selected by `id`. A mapping
+// grants a guest direct hardware access by name instead of by host
+// address, which lets the guest migrate between nodes and keep the
+// passthrough. Each mapping bypasses the virtualization boundary for
+// the mapped device on every node it covers, so `entries` lists the
+// per-node device addresses and IOMMU groups it resolves to.
+//
+// Reading mappings requires Mapping.Audit on `/mapping/pci`. A token
+// without it sees an empty list.
+proxmox.mapping.pci @defaults("id description") {
+  // Logical mapping id, used in guest configuration
+  id string
+  // Operator description of the mapping
+  description string
+  // Per-node device entries the mapping resolves to
+  //
+  // Each entry holds the `node` it applies to, the `path` of the PCI
+  // address, the `id` of the vendor and device, and optionally
+  // `iommugroup` and `subsystem-id`.
+  entries []dict
+}
+
+// Cluster-wide USB device mapping
+//
+// Named alias for a physical USB device, selected by `id`. A mapping
+// grants a guest direct access to host USB hardware by name rather than
+// by bus path, so the passthrough survives migration. Each mapping
+// exposes the device to whatever the guest runs, so `entries` lists the
+// per-node paths and vendor identifiers it resolves to.
+//
+// Reading mappings requires Mapping.Audit on `/mapping/usb`. A token
+// without it sees an empty list.
+proxmox.mapping.usb @defaults("id description") {
+  // Logical mapping id, used in guest configuration
+  id string
+  // Operator description of the mapping
+  description string
+  // Per-node device entries the mapping resolves to
+  //
+  // Each entry holds the `node` it applies to, the `id` of the vendor
+  // and product, and either a `path` naming a specific port or no path
+  // at all, which matches the device on any port.
+  entries []dict
 }
 
 // Proxmox VE cluster
@@ -485,6 +912,21 @@ proxmox.vm @defaults("id name status") {
   // VM-level firewall aliases
   aliases() []proxmox.firewall.alias
 
+  // --- Backups ---
+
+  // Backup archives held for this virtual machine
+  //
+  // Every backup volume across all storages that owns this VMID, newest
+  // first. Reports what was actually captured, which scheduled backup
+  // jobs alone cannot confirm. Empty when the guest has never been
+  // backed up to a storage this token can read.
+  backups() []proxmox.storage.volume
+  // When this virtual machine was last backed up
+  //
+  // Creation time of the newest backup archive owned by this guest.
+  // Null when no backup exists.
+  lastBackupAt() time
+
   // --- Updates (via QEMU Guest Agent) ---
 
   // Installed packages and available updates
@@ -614,6 +1056,92 @@ proxmox.storage @defaults("id type enabled") {
   encrypted bool
   // The raw `encryption-key` value from the storage config; empty when not configured
   encryptionKey string
+  // Nodes the storage is restricted to, comma-separated
+  //
+  // Empty when the storage is available on every node.
+  nodes string
+  // Volumes stored on this storage
+  //
+  // Covers every content class the storage holds: backup archives, ISO
+  // images, container templates, guest disks, and snippets. A shared
+  // storage is listed once; a local storage is listed from each node
+  // that has it, since each node holds an independent copy.
+  volumes() []proxmox.storage.volume
+  // Backup archives stored on this storage
+  //
+  // The subset of `volumes` with a content class of `backup`. Each
+  // entry carries the guest it belongs to, when it was written, and
+  // whether it is encrypted, protected, and verified.
+  backups() []proxmox.storage.volume
+}
+
+// Volume stored on a Proxmox VE storage
+//
+// Single volume on a storage, selected by `volid` (for example
+// `proxmox.storage.volume(volid: "local:backup/vzdump-qemu-100-2024_01_01-00_00_00.vma.zst")`).
+// Backups are the reason this matters most: `createdAt` says when a
+// guest was last actually captured, which scheduled backup jobs alone
+// cannot answer, and `encrypted`, `protected`, and `verification`
+// report whether that capture is protected and known-good. The
+// `contentType` field separates backups from ISO images, container
+// templates, guest disks, and snippets, and `vm` and `container`
+// resolve the guest a volume belongs to.
+proxmox.storage.volume @defaults("volid contentType createdAt size") {
+  // Volume identifier, in `<storage>:<path>` form
+  volid string
+  // Storage holding the volume
+  storage string
+  // Node the volume was listed from
+  //
+  // A shared storage reports one copy from a single node. A local
+  // storage holds an independent copy on each node, so the same guest
+  // can have separate volumes here per node.
+  node string
+  // Content class of the volume
+  //
+  // One of `backup`, `iso`, `vztmpl`, `images`, `rootdir`, or
+  // `snippets`. Derived from the volume identifier when the storage
+  // plugin does not report it.
+  contentType string
+  // Format identifier (`raw`, `qcow2`, `subvol`, `iso`, `tgz`, `pbs-vm`, and so on)
+  format string
+  // Volume size in bytes
+  size int
+  // Used space in bytes
+  //
+  // Most storage plugins do not report anything meaningful here; `size`
+  // is the reliable figure.
+  used int
+  // When the volume was created
+  createdAt time
+  // Guest that owns the volume; null for ISO images, templates, and snippets
+  vm() proxmox.vm
+  // Container that owns the volume; null when the volume belongs to a virtual machine
+  container() proxmox.container
+  // VMID the volume belongs to; 0 when the volume has no owning guest
+  vmid int
+  // Whether the volume is encrypted at rest
+  //
+  // Only Proxmox Backup Server storages report this. True when the
+  // backup was written with an encryption key.
+  encrypted bool
+  // Encryption key fingerprint, or `1` when the key is not identified; empty when unencrypted
+  encryptionFingerprint string
+  // Whether the volume is protected from automatic pruning
+  //
+  // A protected backup survives retention policies. Currently reported
+  // for backups only.
+  protected bool
+  // Result of the last Proxmox Backup Server verification
+  //
+  // Holds `state` (`ok` or `failed`) and the `upid` of the verification
+  // task. Empty on storages that do not verify, so an empty value means
+  // the backup was never verified rather than that it passed.
+  verification dict
+  // First line of the notes attached to the volume; empty when none
+  notes string
+  // Volume identifier of the parent, for linked clones; empty when standalone
+  parent string
 }
 
 // Proxmox VE resource pool
@@ -1229,6 +1757,21 @@ proxmox.container @defaults("id name status unprivileged") {
   ipsets() []proxmox.firewall.ipset
   // Container-level firewall aliases
   aliases() []proxmox.firewall.alias
+
+  // --- Backups ---
+
+  // Backup archives held for this container
+  //
+  // Every backup volume across all storages that owns this VMID, newest
+  // first. Reports what was actually captured, which scheduled backup
+  // jobs alone cannot confirm. Empty when the container has never been
+  // backed up to a storage this token can read.
+  backups() []proxmox.storage.volume
+  // When this container was last backed up
+  //
+  // Creation time of the newest backup archive owned by this container.
+  // Null when no backup exists.
+  lastBackupAt() time
 }
 
 // Proxmox VE container network interface

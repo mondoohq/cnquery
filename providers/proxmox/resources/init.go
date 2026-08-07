@@ -147,6 +147,7 @@ func initProxmoxStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		args["type"] = llx.StringData(s.Type)
 		args["content"] = llx.StringData(s.Content)
 		args["path"] = llx.StringData(s.Path)
+		args["nodes"] = llx.StringData(s.Nodes)
 		args["enabled"] = llx.BoolData(s.Enabled != 0)
 		args["shared"] = llx.BoolData(s.Shared != 0)
 		args["total"] = llx.IntData(s.Total)
