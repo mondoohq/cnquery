@@ -10,6 +10,31 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
+func TestSQLTagName(t *testing.T) {
+	cases := []struct {
+		name string
+		tag  string
+		want string
+	}{
+		{"bare name", "SKIP_HEADER", "SKIP_HEADER"},
+		{"surrounding space trimmed", "  SKIP_HEADER  ", "SKIP_HEADER"},
+		// The SDK's sql tags are bare today, but its ddl tags in the same
+		// structs are comma-separated. If that convention ever spreads, the
+		// option name must survive rather than becoming a wrong dict key.
+		{"comma options dropped", "SKIP_HEADER,keyword", "SKIP_HEADER"},
+		{"comma options with space", "SKIP_HEADER, keyword", "SKIP_HEADER"},
+		{"empty tag", "", ""},
+		{"leading comma", ",keyword", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := sqlTagName(tc.tag); got != tc.want {
+				t.Errorf("sqlTagName(%q) = %q, want %q", tc.tag, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestFileFormatOptionsToDict(t *testing.T) {
 	t.Run("csv keeps only csv options", func(t *testing.T) {
 		opts := sdk.FileFormatTypeOptions{
