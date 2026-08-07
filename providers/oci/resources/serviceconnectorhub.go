@@ -106,6 +106,7 @@ type mqlOciServiceConnectorHubConnectorInternal struct {
 	detailLock    sync.Mutex
 	detailFetched atomic.Bool
 	detail        *sch.ServiceConnector
+	detailErr     error
 }
 
 func (o *mqlOciServiceConnectorHubConnector) id() (string, error) {
@@ -120,18 +121,22 @@ func (o *mqlOciServiceConnectorHubConnector) getDetail() (*sch.ServiceConnector,
 	// Fast path: five computed fields share this fetch, so after the first one
 	// the rest should not queue on the mutex just to read a cached pointer.
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	o.detailLock.Lock()
 	defer o.detailLock.Unlock()
 	if o.detailFetched.Load() {
-		return o.detail, nil
+		return o.detail, o.detailErr
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	client, err := conn.ServiceConnectorClient(o.cacheRegion)
 	if err != nil {
+		// The error is kept too. The fields sharing this fetch would each
+		// repeat the same failing request if only successes were remembered.
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
@@ -139,6 +144,8 @@ func (o *mqlOciServiceConnectorHubConnector) getDetail() (*sch.ServiceConnector,
 		ServiceConnectorId: common.String(o.Id.Data),
 	})
 	if err != nil {
+		o.detailErr = err
+		o.detailFetched.Store(true)
 		return nil, err
 	}
 
