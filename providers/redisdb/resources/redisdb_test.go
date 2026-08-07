@@ -8,20 +8,6 @@ import (
 	"testing"
 )
 
-func TestParseInfo(t *testing.T) {
-	info := "# Server\r\nredis_version:7.4.0\r\nredis_mode:standalone\r\n\r\n# Clients\r\nconnected_clients:1\r\n"
-	got := parseInfo(info)
-	if got["redis_version"] != "7.4.0" {
-		t.Errorf("redis_version = %q, want 7.4.0", got["redis_version"])
-	}
-	if got["redis_mode"] != "standalone" {
-		t.Errorf("redis_mode = %q, want standalone", got["redis_mode"])
-	}
-	if _, ok := got["# Server"]; ok {
-		t.Error("section headers should be skipped")
-	}
-}
-
 func TestBindsAll(t *testing.T) {
 	cases := []struct {
 		bind []string

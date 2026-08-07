@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -161,7 +160,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.RedisdbConnect
 	if err != nil {
 		return err
 	}
-	fields := parseInfo(info)
+	fields := connection.ParseInfo(info)
 
 	title := "Redis"
 	version := fields["redis_version"]
@@ -179,22 +178,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.RedisdbConnect
 	asset.Platform.Version = version
 	asset.PlatformIds = []string{id}
 	return nil
-}
-
-// parseInfo parses a Redis INFO reply into a flat key/value map, skipping
-// section headers and blank lines.
-func parseInfo(info string) map[string]string {
-	out := map[string]string{}
-	for _, line := range strings.Split(info, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		if k, v, ok := strings.Cut(line, ":"); ok {
-			out[k] = v
-		}
-	}
-	return out
 }
 
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {

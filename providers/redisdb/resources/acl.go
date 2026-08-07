@@ -68,7 +68,7 @@ func (r *mqlRedisdbInstance) users() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	lines, err := client.ACLList(redisdbContext()).Result()
+	lines, err := client.ACLList(conn.Context()).Result()
 	if err != nil {
 		// Reading the ACL roster needs the +acl privilege; treat a denial as no
 		// visible users rather than failing the whole asset.

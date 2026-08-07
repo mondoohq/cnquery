@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"strconv"
 	"strings"
 
@@ -20,10 +19,6 @@ func redisdbConnection(runtime *plugin.Runtime) *connection.RedisdbConnection {
 	return runtime.Connection.(*connection.RedisdbConnection)
 }
 
-func redisdbContext() context.Context {
-	return context.Background()
-}
-
 // isNoPerm reports whether an error is a Redis access-control denial. These are
 // treated as "not visible" for privilege-gated fetches; other errors propagate.
 func isNoPerm(err error) bool {
@@ -32,22 +27,6 @@ func isNoPerm(err error) bool {
 	}
 	msg := err.Error()
 	return strings.Contains(msg, "NOPERM") || strings.Contains(msg, "WRONGPASS")
-}
-
-// parseInfo parses a Redis INFO reply into a flat key/value map, skipping
-// section headers and blank lines.
-func parseInfo(info string) map[string]string {
-	out := map[string]string{}
-	for _, line := range strings.Split(info, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		if k, v, ok := strings.Cut(line, ":"); ok {
-			out[k] = v
-		}
-	}
-	return out
 }
 
 func atoiOr(s string, fallback int64) int64 {

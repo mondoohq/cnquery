@@ -8,7 +8,7 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/providers/redisdb/connection"
 )
 
 // initRedisdbInstance fetches server identity from INFO and the security-
@@ -24,19 +24,25 @@ func initRedisdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	if err != nil {
 		return nil, nil, err
 	}
-	ctx := redisdbContext()
+	ctx := conn.Context()
 
 	infoText, err := client.Info(ctx, "server").Result()
 	if err != nil {
 		return nil, nil, err
 	}
-	info := parseInfo(infoText)
+	info := connection.ParseInfo(infoText)
 
-	// CONFIG GET is required to assess posture; a permission error here means
-	// the connecting credential cannot audit the server.
+	// CONFIG GET drives the posture fields. Reading it needs the config ACL
+	// category; when the credential is denied, degrade gracefully by leaving
+	// those fields null rather than failing the whole asset.
+	configReadable := true
 	cfg, err := client.ConfigGet(ctx, "*").Result()
 	if err != nil {
-		return nil, nil, err
+		if !isNoPerm(err) {
+			return nil, nil, err
+		}
+		configReadable = false
+		cfg = map[string]string{}
 	}
 
 	isValkey := info["valkey_version"] != "" || info["server_name"] == "valkey"
@@ -45,12 +51,8 @@ func initRedisdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	if mode == "" {
 		mode = info["server_mode"]
 	}
-	bind := strings.Fields(cfg["bind"])
-	bindList := make([]any, 0, len(bind))
-	for _, b := range bind {
-		bindList = append(bindList, b)
-	}
 
+	// INFO-derived identity is always available.
 	args["__id"] = llx.StringData(conn.ServerID())
 	args["version"] = llx.StringData(info["redis_version"])
 	args["isValkey"] = llx.BoolData(isValkey)
@@ -59,22 +61,51 @@ func initRedisdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	args["os"] = llx.StringData(info["os"])
 	args["runId"] = llx.StringData(info["run_id"])
 	args["port"] = llx.IntData(atoiOr(info["tcp_port"], atoiOr(cfg["port"], 0)))
-	args["protectedMode"] = llx.BoolData(cfg["protected-mode"] == "yes")
-	args["bind"] = llx.ArrayData(bindList, types.String)
-	args["bindsAllInterfaces"] = llx.BoolData(bindsAll(bind))
-	args["requirepassSet"] = llx.BoolData(cfg["requirepass"] != "")
-	tlsPort := atoiOr(cfg["tls-port"], 0)
-	args["tlsPort"] = llx.IntData(tlsPort)
-	args["tlsEnabled"] = llx.BoolData(tlsPort != 0)
-	args["tlsAuthClients"] = llx.StringData(cfg["tls-auth-clients"])
-	args["aclFile"] = llx.StringData(cfg["aclfile"])
 
 	res, err := CreateResource(runtime, "redisdb.instance", args)
 	if err != nil {
 		return nil, nil, err
 	}
-	res.(*mqlRedisdbInstance).configCache = cfg
+	inst := res.(*mqlRedisdbInstance)
+	inst.configCache = cfg
+	inst.configReadable = configReadable
+	inst.setConfigFields(cfg, configReadable)
 	return nil, res, nil
+}
+
+// setConfigFields populates the CONFIG GET-derived posture fields. When the
+// config was not readable they are set to null so a denied read is never
+// reported as an insecure value.
+func (r *mqlRedisdbInstance) setConfigFields(cfg map[string]string, readable bool) {
+	if !readable {
+		null := plugin.StateIsSet | plugin.StateIsNull
+		r.ProtectedMode = plugin.TValue[bool]{State: null}
+		r.Bind = plugin.TValue[[]any]{State: null}
+		r.BindsAllInterfaces = plugin.TValue[bool]{State: null}
+		r.RequirepassSet = plugin.TValue[bool]{State: null}
+		r.TlsPort = plugin.TValue[int64]{State: null}
+		r.TlsEnabled = plugin.TValue[bool]{State: null}
+		r.TlsAuthClients = plugin.TValue[string]{State: null}
+		r.AclFile = plugin.TValue[string]{State: null}
+		return
+	}
+
+	bind := strings.Fields(cfg["bind"])
+	bindList := make([]any, 0, len(bind))
+	for _, b := range bind {
+		bindList = append(bindList, b)
+	}
+	tlsPort := atoiOr(cfg["tls-port"], 0)
+	set := plugin.StateIsSet
+
+	r.ProtectedMode = plugin.TValue[bool]{Data: cfg["protected-mode"] == "yes", State: set}
+	r.Bind = plugin.TValue[[]any]{Data: bindList, State: set}
+	r.BindsAllInterfaces = plugin.TValue[bool]{Data: bindsAll(bind), State: set}
+	r.RequirepassSet = plugin.TValue[bool]{Data: cfg["requirepass"] != "", State: set}
+	r.TlsPort = plugin.TValue[int64]{Data: tlsPort, State: set}
+	r.TlsEnabled = plugin.TValue[bool]{Data: tlsPort != 0, State: set}
+	r.TlsAuthClients = plugin.TValue[string]{Data: cfg["tls-auth-clients"], State: set}
+	r.AclFile = plugin.TValue[string]{Data: cfg["aclfile"], State: set}
 }
 
 // bindsAll reports whether a bind list exposes the server on all interfaces:
@@ -92,6 +123,12 @@ func bindsAll(bind []string) bool {
 }
 
 func (r *mqlRedisdbInstance) config() (*mqlRedisdbConfig, error) {
+	// When CONFIG GET was denied there is nothing to report; mark the field null
+	// rather than panicking on the nil cache or fabricating zero values.
+	if !r.configReadable || r.configCache == nil {
+		r.Config.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	cfg := r.configCache
 	res, err := CreateResource(r.MqlRuntime, "redisdb.config", map[string]*llx.RawData{
 		"__id":            llx.StringData(r.__id + "/config"),

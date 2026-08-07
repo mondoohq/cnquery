@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/redis/go-redis/v9"
@@ -36,9 +37,10 @@ type RedisdbConnection struct {
 	tlsCA       string
 	tlsInsecure bool
 
-	clientOnce sync.Once
-	client     *redis.Client
-	clientErr  error
+	mu        sync.Mutex
+	dialed    bool
+	client    *redis.Client
+	clientErr error
 }
 
 func NewRedisdbConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*RedisdbConnection, error) {
@@ -132,33 +134,57 @@ func (c *RedisdbConnection) tlsConfig() (*tls.Config, error) {
 	return cfg, nil
 }
 
-// Client returns the shared Redis/Valkey client, dialing on first use.
+// Client returns the shared Redis/Valkey client, dialing on first use. It is
+// safe to call concurrently and alongside Close.
 func (c *RedisdbConnection) Client() (*redis.Client, error) {
-	c.clientOnce.Do(func() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.dialed {
+		c.dialed = true
 		tlsCfg, err := c.tlsConfig()
 		if err != nil {
 			c.clientErr = err
-			return
+		} else {
+			c.client = redis.NewClient(&redis.Options{
+				Addr:      c.ServerID(),
+				Username:  c.user,
+				Password:  c.password,
+				DB:        c.database,
+				TLSConfig: tlsCfg,
+			})
 		}
-		c.client = redis.NewClient(&redis.Options{
-			Addr:      c.ServerID(),
-			Username:  c.user,
-			Password:  c.password,
-			DB:        c.database,
-			TLSConfig: tlsCfg,
-		})
-	})
+	}
 	return c.client, c.clientErr
 }
 
-// Close releases the shared client.
+// Close releases the shared client. It shares the mutex with Client so the two
+// never race on the client handle.
 func (c *RedisdbConnection) Close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.client != nil {
 		_ = c.client.Close()
+		c.client = nil
 	}
 }
 
 // Context returns a background context for commands.
 func (c *RedisdbConnection) Context() context.Context {
 	return context.Background()
+}
+
+// ParseInfo parses a Redis INFO reply into a flat key/value map, skipping
+// section headers and blank lines.
+func ParseInfo(info string) map[string]string {
+	out := map[string]string{}
+	for _, line := range strings.Split(info, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if k, v, ok := strings.Cut(line, ":"); ok {
+			out[k] = v
+		}
+	}
+	return out
 }
