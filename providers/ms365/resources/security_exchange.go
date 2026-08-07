@@ -177,6 +177,12 @@ func (r *mqlMicrosoftSecurityExchange) getHostedConnectionFilterPolicyReport() (
 	client := newExchangeRestClient(exchangeAdminApiHost, conn.TenantId(), organization, outlookToken.Token)
 	report, err := fetchHostedConnectionFilterPolicyViaRest(ctx, client)
 	if err != nil {
+		// PowerShell is a client for this same endpoint, so a throttle or an
+		// outage would only repeat itself over a slower transport and be
+		// reported as a PowerShell failure. Surface the real cause instead.
+		if exchangeErrorIsTransient(err) {
+			return errHandler(err)
+		}
 		log.Warn().Err(err).Msg("exchange online admin endpoint unavailable, falling back to powershell")
 		report, err = fetchHostedConnectionFilterPolicyViaPowershell(conn, organization, outlookToken.Token)
 		if err != nil {

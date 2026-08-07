@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -420,4 +421,55 @@ func TestRestAndPowershellReportsAgree(t *testing.T) {
 	assert.Equal(t, fromPowershell.TransportRule, fromRest.TransportRule)
 	assert.Equal(t, fromPowershell.JournalRules, fromRest.JournalRules)
 	assert.Equal(t, fromPowershell.TransportConfig, fromRest.TransportConfig)
+}
+
+// TestExchangeErrorIsTransient pins which failures take the PowerShell
+// fallback. PowerShell reaches the same endpoint, so falling back on a
+// throttle repeats the throttle over a slower transport and reports it as a
+// PowerShell failure; the fallback is only worth taking when the endpoint or
+// the credential cannot serve the request at all.
+func TestExchangeErrorIsTransient(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"throttled", &exchangeHTTPError{StatusCode: http.StatusTooManyRequests}, true},
+		{"request timeout", &exchangeHTTPError{StatusCode: http.StatusRequestTimeout}, true},
+		{"internal server error", &exchangeHTTPError{StatusCode: http.StatusInternalServerError}, true},
+		{"bad gateway", &exchangeHTTPError{StatusCode: http.StatusBadGateway}, true},
+		{"service unavailable", &exchangeHTTPError{StatusCode: http.StatusServiceUnavailable}, true},
+		{"context deadline", context.DeadlineExceeded, true},
+		{"wrapped deadline", fmt.Errorf("get org config: %w", context.DeadlineExceeded), true},
+
+		{"unauthorized", &exchangeHTTPError{StatusCode: http.StatusUnauthorized}, false},
+		{"forbidden", &exchangeHTTPError{StatusCode: http.StatusForbidden}, false},
+		{"not found", &exchangeHTTPError{StatusCode: http.StatusNotFound}, false},
+		{"bad request", &exchangeHTTPError{StatusCode: http.StatusBadRequest}, false},
+		{"wrapped forbidden", fmt.Errorf("run cmdlet: %w", &exchangeHTTPError{StatusCode: http.StatusForbidden}), false},
+		{"a plain error is not assumed transient", errors.New("boom"), false},
+		{"no error", nil, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, exchangeErrorIsTransient(tc.err))
+		})
+	}
+}
+
+// A non-2xx response has to carry its status out of post, or the caller cannot
+// tell a throttle from a permission problem and falls back on both.
+func TestPostReturnsATypedStatusError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		fmt.Fprint(w, `{"error":"throttled"}`)
+	}))
+	defer srv.Close()
+
+	_, err := testClient(srv.URL).invoke(context.Background(), "Get-OrganizationConfig", nil)
+	require.Error(t, err)
+
+	var httpErr *exchangeHTTPError
+	require.ErrorAs(t, err, &httpErr)
+	assert.Equal(t, http.StatusTooManyRequests, httpErr.StatusCode)
+	assert.True(t, exchangeErrorIsTransient(err), "a 429 must not take the powershell fallback")
 }

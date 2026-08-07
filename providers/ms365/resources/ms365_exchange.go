@@ -412,6 +412,13 @@ func (r *mqlMs365Exchangeonline) fetchExchangeReport(ctx context.Context, conn *
 		return report, nil
 	}
 
+	// PowerShell is a client for this same endpoint, so a throttle or an outage
+	// would only repeat itself over a slower transport and be reported as a
+	// PowerShell failure. Surface the real cause instead.
+	if exchangeErrorIsTransient(err) {
+		return nil, err
+	}
+
 	log.Warn().Err(err).Msg("exchange online admin endpoint unavailable, falling back to powershell")
 	return r.fetchExchangeReportViaPowershell(conn, organization, token)
 }

@@ -7,12 +7,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -29,6 +32,15 @@ const (
 	// the same in every organization and is the routing key app-only callers use
 	// for operations that do not target a specific mailbox.
 	exchangeSystemMailboxGuid = "bb558c35-97f1-4cb9-8ff7-d53741dc928c"
+
+	// exchangeHTTPTimeout bounds a single cmdlet request. exchangeMaxPages caps
+	// how many requests a walk makes but says nothing about how long one may
+	// hang, and these requests do not go through an SDK pipeline that would
+	// impose a deadline of its own. Sections run concurrently, so a stalled
+	// connection to the admin host would otherwise hold the whole collection
+	// rather than just its own section. Generous because some cmdlets are slow
+	// on large tenants.
+	exchangeHTTPTimeout = 2 * time.Minute
 
 	// exchangeMaxPages bounds nextLink following so a service that keeps
 	// handing back a continuation cannot spin forever.
@@ -54,8 +66,42 @@ func newExchangeRestClient(host string, tenantId string, organization string, to
 		tenantId:     tenantId,
 		organization: organization,
 		token:        token,
-		httpClient:   http.DefaultClient,
+		httpClient:   &http.Client{Timeout: exchangeHTTPTimeout},
 	}
+}
+
+// exchangeHTTPError is a non-2xx response from the admin endpoint, carrying the
+// status so a caller can tell why the request failed rather than only that it
+// did.
+type exchangeHTTPError struct {
+	StatusCode int
+	msg        string
+}
+
+func (e *exchangeHTTPError) Error() string { return e.msg }
+
+// exchangeErrorIsTransient reports whether err is the service asking to be
+// tried again later rather than saying it cannot serve this caller at all.
+//
+// It decides whether the PowerShell fallback is worth taking. The
+// ExchangeOnlineManagement module is a client for this same endpoint, so
+// falling back on a throttle or an outage does not route around anything: it
+// reissues the same request over a slower transport, gets throttled again, and
+// reports it as a PowerShell failure with the original status lost. Falling
+// back is only meaningful when the endpoint or the credential cannot serve the
+// request at all, which is what the remaining statuses mean.
+func exchangeErrorIsTransient(err error) bool {
+	var httpErr *exchangeHTTPError
+	if errors.As(err, &httpErr) {
+		return httpErr.StatusCode == http.StatusRequestTimeout ||
+			httpErr.StatusCode == http.StatusTooManyRequests ||
+			httpErr.StatusCode >= 500
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	var netErr net.Error
+	return errors.As(err, &netErr) && netErr.Timeout()
 }
 
 type exchangeCmdletInput struct {
@@ -149,9 +195,15 @@ func (c *exchangeRestClient) post(ctx context.Context, url string, body []byte, 
 
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-			return nil, fmt.Errorf("access denied running %s, please ensure the credentials have the right permissions and Exchange RBAC roles (status %d)", cmdlet, resp.StatusCode)
+			return nil, &exchangeHTTPError{
+				StatusCode: resp.StatusCode,
+				msg:        fmt.Sprintf("access denied running %s, please ensure the credentials have the right permissions and Exchange RBAC roles (status %d)", cmdlet, resp.StatusCode),
+			}
 		}
-		return nil, fmt.Errorf("%s failed with status %d: %s", cmdlet, resp.StatusCode, string(raw))
+		return nil, &exchangeHTTPError{
+			StatusCode: resp.StatusCode,
+			msg:        fmt.Sprintf("%s failed with status %d: %s", cmdlet, resp.StatusCode, string(raw)),
+		}
 	}
 
 	out := &exchangeCmdletResponse{}
