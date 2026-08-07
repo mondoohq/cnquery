@@ -155,30 +155,6 @@ mql shell claude
 Admin keys work alongside both API key and WIF authentication for the standard
 API.
 
-## Resource Scoping
-
-| Key type | Resources |
-|----------|-----------|
-| Standard API key / WIF | `claude.models`, `claude.agents`, `claude.environments`, `claude.sessions`, `claude.files`, `claude.skills`, `claude.vaults`, `claude.memoryStores`, `claude.messageBatches`, `claude.userProfiles` |
-| Admin API key | `claude.organization` (workspaces, members, invites, apiKeys, rateLimits, usageReport, costReport, activities) |
-
-Standard API keys are workspace-scoped — each key accesses resources in one
-workspace. To scan multiple workspaces, either run separate scans per workspace
-or use the admin key for organization-level visibility (the admin key cannot
-access workspace-level standard API resources like models or agents).
-
-## Discovery
-
-When an admin token is provided, the provider discovers the organization and its
-workspaces as separate assets with distinct platform IDs:
-
-```bash
-# Discover org + workspaces
-mql shell claude --admin-token sk-ant-admin01-... --discover all
-```
-
-Discovery targets: `all`, `auto`, `organization`, `workspaces`.
-
 ## Usage
 
 ```bash
@@ -210,6 +186,30 @@ mql shell claude --admin-token sk-ant-admin01-...
 # Combined: both standard and admin resources
 mql shell claude --token sk-ant-api03-... --admin-token sk-ant-admin01-...
 ```
+
+## Discovery
+
+When an admin token is provided, the provider discovers the organization and its
+workspaces as separate assets with distinct platform IDs:
+
+```bash
+# Discover org + workspaces
+mql shell claude --admin-token sk-ant-admin01-... --discover all
+```
+
+Discovery targets: `all`, `auto`, `organization`, `workspaces`.
+
+## Resource Scoping
+
+| Key type | Resources |
+|----------|-----------|
+| Standard API key / WIF | `claude.models`, `claude.agents`, `claude.environments`, `claude.sessions`, `claude.files`, `claude.skills`, `claude.vaults`, `claude.memoryStores`, `claude.messageBatches`, `claude.userProfiles` |
+| Admin API key | `claude.organization` (workspaces, members, invites, apiKeys, rateLimits, usageReport, costReport, activities) |
+
+Standard API keys are workspace-scoped — each key accesses resources in one
+workspace. To scan multiple workspaces, either run separate scans per workspace
+or use the admin key for organization-level visibility (the admin key cannot
+access workspace-level standard API resources like models or agents).
 
 ## Credential Chain
 

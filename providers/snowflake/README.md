@@ -4,6 +4,8 @@
 mql shell snowflake
 ```
 
+## Authentication
+
 Required arguments:
 
 - `--account` - The Snowflake account name.
@@ -22,7 +24,7 @@ Arguments:
 - `--token` - The programmatic access token.
 
 ```shell
-cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --token <your PAT>
+mql shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --token <your PAT>
 ```
 
 > To generate a PAT, use [Snowsight](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens) and assign it to your user. Prefer a token scoped to the least-privileged role that still allows the scan.
@@ -34,7 +36,7 @@ Arguments:
 - `--identity-file` (`-i`) - The path to the private key file.
 
 ```shell
-cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa
+mql shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --identity-file ~/.ssh/id_rsa
 ```
 
 > You need to generate a RSA key pair and assign the public key to your user via [Snowsight](https://docs.snowflake.com/en/user-guide/key-pair-auth).
@@ -49,12 +51,12 @@ Arguments:
 - `--ask-pass` - Prompt for the Snowflake password.
 
 ```shell
-cnspec shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --ask-pass
+mql shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --ask-pass
 ```
 
 > To create a username and password, use [Snowsight](https://docs.snowflake.com/en/user-guide/admin-user-management#using-snowsight) or using [SQL](https://docs.snowflake.com/en/user-guide/admin-user-management#using-sql).
 
-## Asset Discovery
+## Discovery
 
 A scan surfaces the Snowflake account as its own asset and, in addition, one asset per database in the account:
 

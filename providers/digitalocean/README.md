@@ -29,13 +29,13 @@ export DIGITALOCEAN_SPACES_REGION="nyc3"
 ### CLI flag
 
 ```bash
-cnspec shell digitalocean --token <api-token>
+mql shell digitalocean --token <api-token>
 ```
 
 If `DIGITALOCEAN_TOKEN` is set, you can omit the flag:
 
 ```bash
-cnspec shell digitalocean
+mql shell digitalocean
 ```
 
 ## Discovery
@@ -53,21 +53,15 @@ The provider connects to the account as a single asset and can expand it into ch
 | `spaces-buckets` | Spaces buckets (requires Spaces credentials) |
 
 ```bash
-cnspec shell digitalocean --discover all
+mql shell digitalocean --discover all
 ```
-
-## Notes
-
-- **Spaces** resources return an empty list unless `DIGITALOCEAN_SPACES_KEY` and `DIGITALOCEAN_SPACES_SECRET` are set.
-- **Functions** are backed by Apache OpenWhisk. Listing the functions (actions) deployed in a namespace reaches the namespace's Functions API host using credentials retrieved from the DigitalOcean API.
-- Resources the token cannot read (for example, a scoped token) are handled gracefully where possible.
 
 ## Examples
 
 Launch an interactive shell and run queries:
 
 ```bash
-cnspec shell digitalocean
+mql shell digitalocean
 ```
 
 List Droplets and flag any without a firewall:
@@ -111,3 +105,9 @@ You can also run a policy scan:
 ```bash
 cnspec scan digitalocean
 ```
+
+## Notes
+
+- **Spaces** resources return an empty list unless `DIGITALOCEAN_SPACES_KEY` and `DIGITALOCEAN_SPACES_SECRET` are set.
+- **Functions** are backed by Apache OpenWhisk. Listing the functions (actions) deployed in a namespace reaches the namespace's Functions API host using credentials retrieved from the DigitalOcean API.
+- Resources the token cannot read (for example, a scoped token) are handled gracefully where possible.

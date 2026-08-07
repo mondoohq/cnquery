@@ -12,11 +12,11 @@ Provide the token in one of two ways:
 
 ```bash
 # flag
-cnspec shell vercel --token <access_token>
+mql shell vercel --token <access_token>
 
 # environment variable (VERCEL_TOKEN or VERCEL_API_TOKEN)
 export VERCEL_TOKEN=<access_token>
-cnspec shell vercel
+mql shell vercel
 ```
 
 ## Discovery
@@ -39,7 +39,7 @@ Restrict to a single team with `--team` (slug or ID):
 cnspec scan vercel --token <access_token> --team acme
 ```
 
-## Example queries
+## Examples
 
 ```coffee
 # Teams that do not enforce SAML single sign-on
