@@ -278,6 +278,8 @@ After scaffolding, register the provider in these files:
 - **`DEVELOPMENT.md`** — add the provider path to the `go.work` provider list (alphabetically)
 - **`Makefile`** — add the provider name to the `PROVIDERS` list (alphabetically)
 
+The scaffold also emits a `providers/<provider-id>/README.md` from a shared template with the canonical structure (Prerequisites, Authentication, Usage, Discovery, Examples, Resources, Verification, Troubleshooting). Fill in its `TODO` sections — at minimum **Authentication** and **Examples** — with real flags and runnable `mql shell <provider-id>` queries and their output. Keep it developer-focused; do not hand-list every resource and field (the resource reference is generated from the `.lr` schema comments). Use the `snowflake` and `shodan` provider READMEs as models.
+
 ### Asset URL tree
 
 Set `AssetUrlTrees` in `providers/<your-provider>/config/config.go` so assets discovered by the provider land under a stable technology bucket. This is what Mondoo Platform uses to group and filter assets across providers.
