@@ -45,6 +45,9 @@ func (a *mqlAzureSubscription) deployments() ([]any, error) {
 			return nil, err
 		}
 		for _, deployment := range page.Value {
+			if deployment == nil {
+				continue
+			}
 			mqlDeployment, err := newMqlAzureDeployment(a.MqlRuntime, deployment)
 			if err != nil {
 				return nil, err
@@ -77,6 +80,9 @@ func (a *mqlAzureSubscriptionResourcegroup) deployments() ([]any, error) {
 			return nil, err
 		}
 		for _, deployment := range page.Value {
+			if deployment == nil {
+				continue
+			}
 			mqlDeployment, err := newMqlAzureDeployment(a.MqlRuntime, deployment)
 			if err != nil {
 				return nil, err

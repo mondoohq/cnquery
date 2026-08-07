@@ -140,6 +140,9 @@ func (a *mqlAzureSubscriptionIotService) hubs() ([]any, error) {
 			return nil, err
 		}
 		for _, hub := range page.Value {
+			if hub == nil {
+				continue
+			}
 			hubData, err := convert.JsonToDict(hub)
 			if err != nil {
 				return nil, err

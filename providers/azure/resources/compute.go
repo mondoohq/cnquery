@@ -917,12 +917,11 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 	// Get is the only API option here (no batch endpoint), so a bounded
 	// errgroup is the cheapest fix that preserves semantics.
 	type nicFetch struct {
-		rg    string
-		name  string
-		index int
+		rg   string
+		name string
 	}
 	nicFetches := make([]nicFetch, 0, len(networkInterfaces.NetworkInterfaces))
-	for i, iface := range networkInterfaces.NetworkInterfaces {
+	for _, iface := range networkInterfaces.NetworkInterfaces {
 		if iface.ID == nil {
 			continue
 		}
@@ -934,19 +933,19 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 		if err != nil {
 			return nil, err
 		}
-		nicFetches = append(nicFetches, nicFetch{rg: resource.ResourceGroup, name: name, index: i})
+		nicFetches = append(nicFetches, nicFetch{rg: resource.ResourceGroup, name: name})
 	}
 
-	nics := make([]network.Interface, len(networkInterfaces.NetworkInterfaces))
+	nics := make([]network.Interface, len(nicFetches))
 	g1, gctx1 := errgroup.WithContext(ctx)
 	g1.SetLimit(10)
-	for _, f := range nicFetches {
+	for i, f := range nicFetches {
 		g1.Go(func() error {
 			resp, err := nicClient.Get(gctx1, f.rg, f.name, &network.InterfacesClientGetOptions{})
 			if err != nil {
 				return err
 			}
-			nics[f.index] = resp.Interface
+			nics[i] = resp.Interface
 			return nil
 		})
 	}

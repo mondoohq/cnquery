@@ -192,6 +192,9 @@ func (a *mqlAzureSubscriptionPolicy) definitions() ([]any, error) {
 			return nil, err
 		}
 		for _, def := range page.Value {
+			if def == nil {
+				continue
+			}
 			mqlDef, err := newMqlPolicyDefinition(a.MqlRuntime, def)
 			if err != nil {
 				return nil, err

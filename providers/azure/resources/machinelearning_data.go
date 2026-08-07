@@ -114,6 +114,11 @@ func mlDatastoreToMql(runtime *plugin.Runtime, ds *ml.Datastore) (*mqlAzureSubsc
 	case *ml.AzureDataLakeGen1Datastore:
 		datastoreType, description, isDefault, credentialsType, authIdentity = mlDatastoreCommon(p.DatastoreType, p.Description, p.IsDefault, p.Credentials, p.ServiceDataAccessAuthIdentity)
 		tags = p.Tags
+	case nil:
+		// ds.Properties is an interface, and the SDK's polymorphic unmarshaller
+		// returns a nil one for a null or absent `properties` body. Without this
+		// case the nil interface falls to `default` and calling a method on it
+		// panics -- which kills the whole scan, not just this query.
 	default:
 		// OneLake and any backend added later still report the common fields
 		// through the base interface.

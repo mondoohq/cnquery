@@ -159,6 +159,9 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]any, error) {
 			return nil, err
 		}
 		for _, account := range page.Value {
+			if account == nil {
+				continue
+			}
 			acc, err := storageAccountToMql(a.MqlRuntime, account)
 			if err != nil {
 				return nil, err
@@ -218,6 +221,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 		g, gctx := errgroup.WithContext(ctx)
 		g.SetLimit(10)
 		for i, container := range page.Value {
+			if container == nil {
+				continue
+			}
 			containerProps := container.Properties
 			needsDetail := containerProps != nil &&
 				((containerProps.HasImmutabilityPolicy != nil && *containerProps.HasImmutabilityPolicy) ||
@@ -239,6 +245,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 		}
 
 		for i, container := range page.Value {
+			if container == nil {
+				continue
+			}
 			containerProps := container.Properties
 			if detailedProps[i] != nil {
 				containerProps = detailedProps[i]

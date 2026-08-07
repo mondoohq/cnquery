@@ -380,8 +380,8 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]any, error) {
 					"id":             llx.StringDataPtr(entry.ID),
 					"name":           llx.StringDataPtr(entry.Name),
 					"type":           llx.StringDataPtr(entry.Type),
-					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
-					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
+					"startIpAddress": llx.StringDataPtr(orZero(entry.Properties).StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(orZero(entry.Properties).EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -436,7 +436,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 					"name":                   llx.StringDataPtr(entry.Name),
 					"type":                   llx.StringDataPtr(entry.Type),
 					"properties":             llx.DictData(properties),
-					"virtualNetworkSubnetId": llx.StringDataPtr(entry.Properties.VirtualNetworkSubnetID),
+					"virtualNetworkSubnetId": llx.StringDataPtr(orZero(entry.Properties).VirtualNetworkSubnetID),
 				})
 			if err != nil {
 				return nil, err
@@ -483,10 +483,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, e
 					"id":                llx.StringDataPtr(entry.ID),
 					"name":              llx.StringDataPtr(entry.Name),
 					"type":              llx.StringDataPtr(entry.Type),
-					"administratorType": llx.StringDataPtr((*string)(entry.Properties.AdministratorType)),
-					"login":             llx.StringDataPtr(entry.Properties.Login),
-					"sid":               llx.StringDataPtr(entry.Properties.Sid),
-					"tenantId":          llx.StringDataPtr(entry.Properties.TenantID),
+					"administratorType": llx.StringDataPtr((*string)(orZero(entry.Properties).AdministratorType)),
+					"login":             llx.StringDataPtr(orZero(entry.Properties).Login),
+					"sid":               llx.StringDataPtr(orZero(entry.Properties).Sid),
+					"tenantId":          llx.StringDataPtr(orZero(entry.Properties).TenantID),
 				})
 			if err != nil {
 				return nil, err
@@ -1146,10 +1146,10 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]any, error) {
 					"id":           llx.StringDataPtr(entry.ID),
 					"name":         llx.StringDataPtr(entry.Name),
 					"resourceName": llx.StringDataPtr(entry.Name),
-					"displayName":  llx.StringDataPtr(entry.Properties.DisplayName),
-					"currentValue": llx.FloatData(convert.ToValue(entry.Properties.CurrentValue)),
-					"limit":        llx.FloatData(convert.ToValue(entry.Properties.Limit)),
-					"unit":         llx.StringDataPtr(entry.Properties.Unit),
+					"displayName":  llx.StringDataPtr(orZero(entry.Properties).DisplayName),
+					"currentValue": llx.FloatData(convert.ToValue(orZero(entry.Properties).CurrentValue)),
+					"limit":        llx.FloatData(convert.ToValue(orZero(entry.Properties).Limit)),
+					"unit":         llx.StringDataPtr(orZero(entry.Properties).Unit),
 				})
 			if err != nil {
 				return nil, err
@@ -2415,6 +2415,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabaseVulnerabilityAssessment) scans() 
 			return nil, err
 		}
 		for _, scan := range page.Value {
+			if scan == nil {
+				continue
+			}
 			args, err := vulnerabilityAssessmentScanArgs(scan)
 			if err != nil {
 				return nil, err

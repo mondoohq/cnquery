@@ -1009,6 +1009,39 @@ func nestedResourceID(props any, key string) string {
 	return id
 }
 
+// nestedResourceIDs is the list counterpart of nestedResourceID: it pulls the
+// ids out of a JSON-decoded array of resource references, skipping anything
+// that is not shaped like one.
+//
+// Same reasoning as its sibling, and the same hazard. Several accessors used to
+// walk these arrays with bare assertions -- props.Data.(map[string]any),
+// value.([]any), entry.(map[string]any)["id"].(string) -- and an entry whose
+// "id" the service omitted (populate() drops nil pointers, so a SubResource
+// with no ID marshals without the key) made the last one panic on a nil. A
+// panic in an accessor is unrecoverable: the executor runs blocks in
+// goroutines, so it takes down the entire scan rather than one query.
+func nestedResourceIDs(props any, key string) []string {
+	propsDict, ok := props.(map[string]any)
+	if !ok {
+		return nil
+	}
+	entries, ok := propsDict[key].([]any)
+	if !ok {
+		return nil
+	}
+	ids := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		ref, ok := entry.(map[string]any)
+		if !ok {
+			continue
+		}
+		if id, ok := ref["id"].(string); ok && id != "" {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -2765,9 +2798,8 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 	if props.Error != nil {
 		return nil, props.Error
 	}
-	propsDict := props.Data.(map[string]any)
-	gateways := propsDict["applicationGateways"]
-	if gateways == nil {
+	gatewayIDs := nestedResourceIDs(props.Data, "applicationGateways")
+	if len(gatewayIDs) == 0 {
 		return nil, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
@@ -2780,25 +2812,14 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 		return nil, err
 	}
 
-	gatewaysList := gateways.([]any)
-
 	// Pre-validate all gateway IDs before launching any goroutines so that an
 	// early parse error can't leak in-flight workers.
 	type gwFetch struct {
-		rg    string
-		name  string
-		index int
+		rg   string
+		name string
 	}
-	fetches := make([]gwFetch, 0, len(gatewaysList))
-	for i, gw := range gatewaysList {
-		idVal, ok := gw.(map[string]any)["id"]
-		if !ok {
-			continue
-		}
-		strId, ok := idVal.(string)
-		if !ok {
-			continue
-		}
+	fetches := make([]gwFetch, 0, len(gatewayIDs))
+	for _, strId := range gatewayIDs {
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
 			return nil, err
@@ -2807,21 +2828,21 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 		if err != nil {
 			return nil, err
 		}
-		fetches = append(fetches, gwFetch{rg: azureId.ResourceGroup, name: gatewayName, index: i})
+		fetches = append(fetches, gwFetch{rg: azureId.ResourceGroup, name: gatewayName})
 	}
 
 	// Fetch the referenced application gateways in parallel; there is no
 	// batch endpoint, so a bounded errgroup is the cheapest fix.
-	results := make([]network.ApplicationGateway, len(gatewaysList))
+	results := make([]network.ApplicationGateway, len(fetches))
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(10)
-	for _, f := range fetches {
+	for i, f := range fetches {
 		g.Go(func() error {
 			resp, err := client.Get(gctx, f.rg, f.name, &network.ApplicationGatewaysClientGetOptions{})
 			if err != nil {
 				return err
 			}
-			results[f.index] = resp.ApplicationGateway
+			results[i] = resp.ApplicationGateway
 			return nil
 		})
 	}
@@ -2852,14 +2873,9 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]an
 	if err != nil {
 		return nil, err
 	}
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
-	}
-	publicIpAddresses := propsDict["publicIpAddresses"]
 	// if we have no present public ip addresses ids, we can just return nil
-	if publicIpAddresses == nil {
+	publicIpIDs := nestedResourceIDs(a.Properties.Data, "publicIpAddresses")
+	if len(publicIpIDs) == 0 {
 		return nil, nil
 	}
 
@@ -2870,9 +2886,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]an
 	if err != nil {
 		return nil, err
 	}
-	for _, p := range publicIpAddresses.([]any) {
-		pDict := p.(map[string]any)
-		pId := pDict["id"].(string)
+	for _, pId := range publicIpIDs {
 		resourceID, err := ParseResourceID(pId)
 		if err != nil {
 			return nil, err
@@ -3014,14 +3028,9 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]any, error) 
 	if err != nil {
 		return nil, err
 	}
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
-	}
-	subnets := propsDict["subnets"]
 	// if we have no present subnets in the dict, we can just return nil
-	if subnets == nil {
+	subnetIDs := nestedResourceIDs(a.Properties.Data, "subnets")
+	if len(subnetIDs) == 0 {
 		return nil, nil
 	}
 	res := []any{}
@@ -3031,9 +3040,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]any, error) 
 	if err != nil {
 		return nil, err
 	}
-	for _, s := range subnets.([]any) {
-		sDict := s.(map[string]any)
-		sId := sDict["id"].(string)
+	for _, sId := range subnetIDs {
 		resourceID, err := ParseResourceID(sId)
 		if err != nil {
 			return nil, err
@@ -3103,21 +3110,13 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	subId := conn.SubId()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
-	}
-	ipConfigsDict := propsDict["ipConfigurations"]
-	if ipConfigsDict == nil {
+	rawIpConfigIds := nestedResourceIDs(a.Properties.Data, "ipConfigurations")
+	if len(rawIpConfigIds) == 0 {
 		return nil, nil
 	}
 	res := []any{}
-	ipConfigIds := []string{}
-	ipConfigsList := ipConfigsDict.([]any)
-	for _, ipc := range ipConfigsList {
-		ipcDict := ipc.(map[string]any)
-		ipcId := ipcDict["id"].(string)
+	ipConfigIds := make([]string, 0, len(rawIpConfigIds))
+	for _, ipcId := range rawIpConfigIds {
 		ipConfigIds = append(ipConfigIds, strings.ToLower(ipcId))
 	}
 
@@ -3186,13 +3185,8 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]an
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
-	}
-	childPolicies := propsDict["childPolicies"]
-	if childPolicies == nil {
+	childPolicyIDs := nestedResourceIDs(a.Properties.Data, "childPolicies")
+	if len(childPolicyIDs) == 0 {
 		return nil, nil
 	}
 	baseResourceId, err := ParseResourceID(a.Id.Data)
@@ -3207,10 +3201,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]an
 		return nil, err
 	}
 	res := []any{}
-	childPoliciesList := childPolicies.([]any)
-	for _, cp := range childPoliciesList {
-		cpDict := cp.(map[string]any)
-		cpId := cpDict["id"].(string)
+	for _, cpId := range childPolicyIDs {
 		resourceID, err := ParseResourceID(cpId)
 		if err != nil {
 			return nil, err
@@ -3236,13 +3227,8 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]any, e
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	props := a.Properties.Data
-	propsDict, ok := props.(map[string]any)
-	if !ok {
-		return nil, errors.New("unexpected type for properties")
-	}
-	firewalls := propsDict["firewalls"]
-	if firewalls == nil {
+	firewallIDs := nestedResourceIDs(a.Properties.Data, "firewalls")
+	if len(firewallIDs) == 0 {
 		return nil, nil
 	}
 	baseResourceId, err := ParseResourceID(a.Id.Data)
@@ -3257,10 +3243,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]any, e
 		return nil, err
 	}
 	res := []any{}
-	firewallsList := firewalls.([]any)
-	for _, fw := range firewallsList {
-		fwDict := fw.(map[string]any)
-		fwId := fwDict["id"].(string)
+	for _, fwId := range firewallIDs {
 		resourceID, err := ParseResourceID(fwId)
 		if err != nil {
 			return nil, err
@@ -6278,6 +6261,9 @@ func (a *mqlAzureSubscriptionNetworkService) localNetworkGateways() ([]any, erro
 				return nil, err
 			}
 			for _, lng := range page.Value {
+				if lng == nil {
+					continue
+				}
 				mqlLng, err := newMqlLocalNetworkGateway(a.MqlRuntime, lng)
 				if err != nil {
 					return nil, err

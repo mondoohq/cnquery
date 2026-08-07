@@ -131,6 +131,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) fileShares() ([]any, error) 
 			return nil, err
 		}
 		for _, share := range page.Value {
+			if share == nil {
+				continue
+			}
 			mqlShare, err := fileShareToMQL(a.MqlRuntime, share)
 			if err != nil {
 				return nil, err

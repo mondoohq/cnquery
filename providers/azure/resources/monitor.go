@@ -162,6 +162,9 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]any, error
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlAI, err := createApplicationInsightResource(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err
@@ -828,6 +831,9 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) entries() ([]any, error)
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlEntry, err := newMqlActivityLogEntry(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err

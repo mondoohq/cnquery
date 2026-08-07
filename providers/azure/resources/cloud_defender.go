@@ -655,6 +655,13 @@ func (a *mqlAzureSubscriptionCloudDefenderService) getSecuritySettingsFor(name s
 		return nil, err
 	}
 
+	// SettingClassification is an interface, and the SDK's polymorphic
+	// unmarshaller returns a nil one for a null body. The result of GetSetting
+	// was checked but the receiver was not, so a 200 with a null payload panicked
+	// instead of erroring.
+	if settingResp.SettingClassification == nil {
+		return nil, fmt.Errorf("no setting returned for '%s'", name)
+	}
 	baseSetting := settingResp.SettingClassification.GetSetting()
 	if baseSetting == nil || baseSetting.Kind == nil {
 		return nil, fmt.Errorf("retrieved setting or its kind is nil for '%s'", name)
@@ -771,6 +778,12 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 
 	sources := map[string]any{}
 	for _, source := range props.NotificationsSources {
+		// the slice holds interface values, and a null array element unmarshals
+		// to a nil one -- the result of GetNotificationsSource was checked but
+		// the receiver was not
+		if source == nil {
+			continue
+		}
 		notificationSource := source.GetNotificationsSource()
 		if notificationSource == nil || notificationSource.SourceType == nil {
 			continue

@@ -63,6 +63,9 @@ func (a *mqlAzureSubscriptionLogicService) workflows() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlWf, err := logicWorkflowToMQL(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err

@@ -520,6 +520,9 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 			return nil, err
 		}
 		for _, rule := range page.Value {
+			if rule == nil {
+				continue
+			}
 			mqlRule, err := azureAdminRuleToMql(a.MqlRuntime, rule)
 			if err != nil {
 				return nil, err
