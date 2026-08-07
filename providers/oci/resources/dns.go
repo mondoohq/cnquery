@@ -48,7 +48,9 @@ func (o *mqlOciDns) zones() ([]any, error) {
 		return nil, regions.Error
 	}
 
-	return ociRunCompartmentRegionPool(conn, regions.Data,
+	// Deduplicated: a global zone is returned by every regional DNS
+	// endpoint, so the region fan-out sees it once per subscribed region.
+	items, err := ociRunCompartmentRegionPool(conn, regions.Data,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.DnsClient(region)
 			if err != nil {
@@ -79,6 +81,10 @@ func (o *mqlOciDns) zones() ([]any, error) {
 
 			return o.newZones(region, zones)
 		})
+	if err != nil {
+		return nil, err
+	}
+	return ociDedupeByID(items), nil
 }
 
 func (o *mqlOciDns) newZones(region string, zones []dns.ZoneSummary) ([]any, error) {
@@ -137,7 +143,9 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 		return nil, regions.Error
 	}
 
-	return ociRunCompartmentRegionPool(conn, regions.Data,
+	// Deduplicated: a global steering policy is returned by every regional DNS
+	// endpoint, so the region fan-out sees it once per subscribed region.
+	items, err := ociRunCompartmentRegionPool(conn, regions.Data,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.DnsClient(region)
 			if err != nil {
@@ -195,6 +203,10 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 
 			return res, nil
 		})
+	if err != nil {
+		return nil, err
+	}
+	return ociDedupeByID(items), nil
 }
 
 type mqlOciDnsZoneInternal struct {

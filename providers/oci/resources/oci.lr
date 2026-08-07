@@ -2964,9 +2964,8 @@ private oci.audit.event @defaults("eventName principalName eventTime responseSta
   responseTime time
   // State transition the operation caused
   //
-  // Has `previousState` and `currentState` maps for operations that
-  // changed a resource's lifecycle state, and is empty for read-only
-  // calls.
+  // Has `previous` and `current` maps for operations that changed a
+  // resource's lifecycle state, and is empty for read-only calls.
   stateChange dict
   // Service-specific details recorded alongside the event
   additionalDetails dict
@@ -3010,7 +3009,7 @@ private oci.serviceConnectorHub.connector @defaults("name sourceKind targetKind 
   description string
   // Compartment containing the connector
   compartment() oci.compartment
-  // Connector lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
+  // Connector lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, NEEDS_ATTENTION, DELETING, DELETED, FAILED)
   state string
   // Detail explaining the current lifecycle state, for FAILED connectors
   stateDetails string
@@ -3613,7 +3612,7 @@ oci.resourceManager {
 // far in the past means the same thing. `jobs` lists the plan, apply,
 // destroy and drift-detection runs against the stack, which is the
 // change history for everything the stack manages.
-private oci.resourceManager.stack @defaults("name driftStatus state") {
+private oci.resourceManager.stack @defaults("name state terraformVersion") {
   // Stack OCID
   id string
   // Stack display name
@@ -3684,6 +3683,12 @@ private oci.resourceManager.job @defaults("name operation state") {
   name string
   // Compartment containing the job
   compartment() oci.compartment
+  // Stack the job ran against
+  //
+  // Every job belongs to a stack, so this is the route from a failed or
+  // rolled-back run to the configuration that produced it and to the
+  // Terraform state it manages.
+  stack() oci.resourceManager.stack
   // Operation the job performed (PLAN, APPLY, DESTROY, IMPORT_TF_STATE, PLAN_ROLLBACK, APPLY_ROLLBACK)
   operation string
   // Job lifecycle state (ACCEPTED, IN_PROGRESS, FAILED, SUCCEEDED, CANCELING, CANCELED)
@@ -3833,7 +3838,7 @@ private oci.queue.queue @defaults("name state") {
   timeoutInSeconds() int
   // Delivery attempts before a message moves to the dead-letter queue
   deadLetterQueueDeliveryCount() int
-  // Capabilities enabled on the queue (PRODUCER, CONSUMER)
+  // Capabilities enabled on the queue (CONSUMER_GROUPS, LARGE_MESSAGES)
   capabilities []string
   // Lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
   state string

@@ -392,8 +392,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 	for {
 		response, err := client.ListDetectorRecipeDetectorRules(ctx, cloudguard.ListDetectorRecipeDetectorRulesRequest{
 			DetectorRecipeId: common.String(o.Id.Data),
-			CompartmentId:    common.String(o.CompartmentID.Data),
-			Page:             page,
+			// Read from the cached value rather than the public compartmentID
+			// field, which is marked deprecated in favour of compartment().
+			// Removing that field in a later major version would otherwise
+			// quietly scope this listing to the empty string.
+			CompartmentId: common.String(o.cacheCompartmentId),
+			Page:          page,
 		})
 		if err != nil {
 			return nil, err
@@ -412,10 +416,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 		rule := rules[i]
 
 		// Every field that decides whether the rule actually fires lives in
-		// DetectorDetails. A nil block means the API returned the rule without
-		// its configuration, so report it as disabled-unknown rather than
-		// defaulting isEnabled to false, which would read as an authoritative
-		// "this detection is off".
+		// DetectorDetails, which is optional on the summary. When it is absent
+		// these fall back to their zero values and isEnabled is emitted as an
+		// explicit false rather than left null, so an assertion over the rule
+		// fails instead of passing on a rule nobody could read. MQL evaluates
+		// null && null as true, so a null here would be the more dangerous
+		// answer.
 		var (
 			isEnabled              bool
 			riskLevel              string
@@ -531,10 +537,16 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlInstance)
+		mqlRecipe := mqlInstance.(*mqlOciCloudGuardDetectorRecipe)
+		mqlRecipe.cacheCompartmentId = stringValue(recipe.CompartmentId)
+		res = append(res, mqlRecipe)
 	}
 
 	return res, nil
+}
+
+type mqlOciCloudGuardDetectorRecipeInternal struct {
+	cacheCompartmentId string
 }
 
 func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
