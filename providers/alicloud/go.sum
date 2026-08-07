@@ -109,6 +109,8 @@ github.com/alibabacloud-go/rds-20140815/v11 v11.1.1 h1:Gcr6scKc+ZvDzN8PzsUsnjn+U
 github.com/alibabacloud-go/rds-20140815/v11 v11.1.1/go.mod h1:ZSu8w+2JrwizzgHwxtPpKlqzFDc1SlaPANAOw/tPRDs=
 github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1 h1:tjfy+CXfXIFPGoDcd9kOBe0rctAUOvB+dAEl36cJ7Fw=
 github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1/go.mod h1:uv+Z/VSARk6LBw9IqYsrQL9XNZC39iqdnB1h0qicrIY=
+github.com/alibabacloud-go/sas-20181203/v3 v3.4.0 h1:b39drVOYjlyUcVcPX4XZgVbG1tywd6Rw+0lPFdP7XP8=
+github.com/alibabacloud-go/sas-20181203/v3 v3.4.0/go.mod h1:POhYWQaa5lC00tiLtFjQFceTfc0dQkZNBIRG66bltmg=
 github.com/alibabacloud-go/slb-20140515/v4 v4.0.14 h1:7WBtZ6Nf9//aOVSr0rWxhrm+5MqRh1QlVSfIU8aiJic=
 github.com/alibabacloud-go/slb-20140515/v4 v4.0.14/go.mod h1:EMPbYYL5x2M7JBP4YTqhU0PQttctkHJyhL4aAFHQ5iU=
 github.com/alibabacloud-go/sls-20201230/v6 v6.13.0 h1:MFkELykW4wxoe8xCI10nK8liTaxC8RZ9sxSHI8zo8Eo=

@@ -24,6 +24,7 @@ require (
 	github.com/alibabacloud-go/ram-20150501/v2 v2.2.1
 	github.com/alibabacloud-go/rds-20140815/v11 v11.1.1
 	github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1
+	github.com/alibabacloud-go/sas-20181203/v3 v3.4.0
 	github.com/alibabacloud-go/slb-20140515/v4 v4.0.14
 	github.com/alibabacloud-go/sls-20201230/v6 v6.13.0
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0

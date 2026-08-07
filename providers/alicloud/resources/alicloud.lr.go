@@ -104,6 +104,11 @@ const (
 	ResourceAlicloudCloudssoAccessConfiguration  string = "alicloud.cloudsso.accessConfiguration"
 	ResourceAlicloudCloudssoPermissionPolicy     string = "alicloud.cloudsso.permissionPolicy"
 	ResourceAlicloudCloudssoAccessAssignment     string = "alicloud.cloudsso.accessAssignment"
+	ResourceAlicloudSas                          string = "alicloud.sas"
+	ResourceAlicloudSasMachine                   string = "alicloud.sas.machine"
+	ResourceAlicloudSasVulnerability             string = "alicloud.sas.vulnerability"
+	ResourceAlicloudSasBaselineCheck             string = "alicloud.sas.baselineCheck"
+	ResourceAlicloudSasAlarmEvent                string = "alicloud.sas.alarmEvent"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -461,6 +466,26 @@ func init() {
 		"alicloud.cloudsso.accessAssignment": {
 			// to override args, implement: initAlicloudCloudssoAccessAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudCloudssoAccessAssignment,
+		},
+		"alicloud.sas": {
+			// to override args, implement: initAlicloudSas(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSas,
+		},
+		"alicloud.sas.machine": {
+			// to override args, implement: initAlicloudSasMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasMachine,
+		},
+		"alicloud.sas.vulnerability": {
+			// to override args, implement: initAlicloudSasVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasVulnerability,
+		},
+		"alicloud.sas.baselineCheck": {
+			// to override args, implement: initAlicloudSasBaselineCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasBaselineCheck,
+		},
+		"alicloud.sas.alarmEvent": {
+			// to override args, implement: initAlicloudSasAlarmEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasAlarmEvent,
 		},
 	}
 }
@@ -4192,6 +4217,267 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.cloudsso.accessAssignment.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCloudssoAccessAssignment).GetGroup()).ToDataRes(types.Resource("alicloud.cloudsso.group"))
+	},
+	"alicloud.sas.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetVersion()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.assetLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetAssetLevel()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.trialVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetTrialVersion()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.postPay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetPostPay()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.openTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetOpenTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.machines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetMachines()).ToDataRes(types.Array(types.Resource("alicloud.sas.machine")))
+	},
+	"alicloud.sas.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetVulnerabilities()).ToDataRes(types.Array(types.Resource("alicloud.sas.vulnerability")))
+	},
+	"alicloud.sas.baselineChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetBaselineChecks()).ToDataRes(types.Array(types.Resource("alicloud.sas.baselineCheck")))
+	},
+	"alicloud.sas.alarmEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetAlarmEvents()).ToDataRes(types.Array(types.Resource("alicloud.sas.alarmEvent")))
+	},
+	"alicloud.sas.machine.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetUuid()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetInstanceName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.os": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetOs()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.osName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetOsName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.internetIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetInternetIp()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.intranetIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetIntranetIp()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.clientStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetClientStatus()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.bind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetBind()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.machine.vulCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetVulCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.machine.vulStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetVulStatus()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.riskCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetRiskCount()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.riskStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetRiskStatus()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.alarmStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetAlarmStatus()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.safeEventCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetSafeEventCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.machine.healthCheckCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetHealthCheckCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.machine.exposedStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetExposedStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.machine.importance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetImportance()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.machine.authVersionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetAuthVersionName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.assetTypeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetAssetTypeName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.vendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetVendorName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetClusterId()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.groupTrace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetGroupTrace()).ToDataRes(types.String)
+	},
+	"alicloud.sas.machine.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.machine.lastLoginTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetLastLoginTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.machine.ecsInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasMachine).GetEcsInstance()).ToDataRes(types.Resource("alicloud.ecs.instance"))
+	},
+	"alicloud.sas.vulnerability.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.vulnerability.aliasName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetAliasName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.vulnerability.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetType()).ToDataRes(types.String)
+	},
+	"alicloud.sas.vulnerability.asapCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetAsapCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.vulnerability.laterCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetLaterCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.vulnerability.nntfCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetNntfCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.vulnerability.handledCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetHandledCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.vulnerability.totalFixCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetTotalFixCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.vulnerability.lastFoundTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetLastFoundTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.vulnerability.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetTags()).ToDataRes(types.String)
+	},
+	"alicloud.sas.vulnerability.related": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetRelated()).ToDataRes(types.String)
+	},
+	"alicloud.sas.vulnerability.raspDefend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerability).GetRaspDefend()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.riskId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetRiskId()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.riskName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetRiskName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.baselineCheck.typeAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetTypeAlias()).ToDataRes(types.String)
+	},
+	"alicloud.sas.baselineCheck.subTypeAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetSubTypeAlias()).ToDataRes(types.String)
+	},
+	"alicloud.sas.baselineCheck.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetLevel()).ToDataRes(types.String)
+	},
+	"alicloud.sas.baselineCheck.checkCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetCheckCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.highWarningCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetHighWarningCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.mediumWarningCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetMediumWarningCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.lowWarningCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetLowWarningCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.warningMachineCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetWarningMachineCount()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.baselineCheck.lastFoundTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetLastFoundTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.baselineCheck.checkExploit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetCheckExploit()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.baselineCheck.containerRisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetContainerRisk()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.baselineCheck.databaseRisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasBaselineCheck).GetDatabaseRisk()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.alarmEvent.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetId()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.alarmEvent.alarmEventName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetAlarmEventName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.alarmEventType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetAlarmEventType()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetLevel()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.eventStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetEventStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.alarmEvent.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.stages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetStages()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.dataSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetDataSource()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetUuid()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetInstanceName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.internetIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetInternetIp()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.intranetIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetIntranetIp()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.containerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetContainerId()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.containerImageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetContainerImageName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.k8sClusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetK8sClusterId()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.k8sNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetK8sNamespace()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.k8sPodName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetK8sPodName()).ToDataRes(types.String)
+	},
+	"alicloud.sas.alarmEvent.occurrenceTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetOccurrenceTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.alarmEvent.lastTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetLastTime()).ToDataRes(types.Time)
+	},
+	"alicloud.sas.alarmEvent.canBeDealOnLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetCanBeDealOnLine()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.alarmEvent.autoBreaking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetAutoBreaking()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.alarmEvent.machine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasAlarmEvent).GetMachine()).ToDataRes(types.Resource("alicloud.sas.machine"))
 	},
 }
 
@@ -9435,6 +9721,374 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.cloudsso.accessAssignment.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudCloudssoAccessAssignment).Group, ok = plugin.RawToTValue[*mqlAlicloudCloudssoGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.assetLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).AssetLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.trialVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).TrialVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.postPay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).PostPay, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.openTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).OpenTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).Machines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).BaselineChecks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).AlarmEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.machine.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).Os, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.osName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).OsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.internetIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).InternetIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.intranetIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).IntranetIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.clientStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).ClientStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.bind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).Bind, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.vulCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).VulCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.vulStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).VulStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.riskCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).RiskCount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.riskStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).RiskStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.alarmStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).AlarmStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.safeEventCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).SafeEventCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.healthCheckCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).HealthCheckCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.exposedStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).ExposedStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.importance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).Importance, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.authVersionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).AuthVersionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.assetTypeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).AssetTypeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.vendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.groupTrace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).GroupTrace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.lastLoginTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).LastLoginTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.machine.ecsInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasMachine).EcsInstance, ok = plugin.RawToTValue[*mqlAlicloudEcsInstance](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.vulnerability.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.aliasName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).AliasName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.asapCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).AsapCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.laterCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).LaterCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.nntfCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).NntfCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.handledCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).HandledCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.totalFixCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).TotalFixCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.lastFoundTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).LastFoundTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).Tags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.related": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).Related, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerability.raspDefend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerability).RaspDefend, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.baselineCheck.riskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).RiskId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.riskName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).RiskName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.typeAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).TypeAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.subTypeAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).SubTypeAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.checkCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).CheckCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.highWarningCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).HighWarningCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.mediumWarningCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).MediumWarningCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.lowWarningCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).LowWarningCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.warningMachineCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).WarningMachineCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.lastFoundTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).LastFoundTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.checkExploit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).CheckExploit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.containerRisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).ContainerRisk, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.baselineCheck.databaseRisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasBaselineCheck).DatabaseRisk, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.alarmEvent.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.alarmEventName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).AlarmEventName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.alarmEventType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).AlarmEventType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.eventStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).EventStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).Stages, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.dataSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).DataSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.internetIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).InternetIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.intranetIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).IntranetIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.containerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).ContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.containerImageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).ContainerImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.k8sClusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).K8sClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.k8sNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).K8sNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.k8sPodName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).K8sPodName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.occurrenceTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).OccurrenceTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.lastTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).LastTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.canBeDealOnLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).CanBeDealOnLine, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.autoBreaking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).AutoBreaking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.alarmEvent.machine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasAlarmEvent).Machine, ok = plugin.RawToTValue[*mqlAlicloudSasMachine](v.Value, v.Error)
 		return
 	},
 }
@@ -21480,5 +22134,746 @@ func (c *mqlAlicloudCloudssoAccessAssignment) GetGroup() *plugin.TValue[*mqlAlic
 		}
 
 		return c.group()
+	})
+}
+
+// mqlAlicloudSas for the alicloud.sas resource
+type mqlAlicloudSas struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudSasInternal
+	Enabled         plugin.TValue[bool]
+	Version         plugin.TValue[int64]
+	AssetLevel      plugin.TValue[int64]
+	TrialVersion    plugin.TValue[bool]
+	PostPay         plugin.TValue[bool]
+	OpenTime        plugin.TValue[*time.Time]
+	ExpireTime      plugin.TValue[*time.Time]
+	Machines        plugin.TValue[[]any]
+	Vulnerabilities plugin.TValue[[]any]
+	BaselineChecks  plugin.TValue[[]any]
+	AlarmEvents     plugin.TValue[[]any]
+}
+
+// createAlicloudSas creates a new instance of this resource
+func createAlicloudSas(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSas{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSas) MqlName() string {
+	return "alicloud.sas"
+}
+
+func (c *mqlAlicloudSas) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSas) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlAlicloudSas) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAlicloudSas) GetAssetLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AssetLevel, func() (int64, error) {
+		return c.assetLevel()
+	})
+}
+
+func (c *mqlAlicloudSas) GetTrialVersion() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TrialVersion, func() (bool, error) {
+		return c.trialVersion()
+	})
+}
+
+func (c *mqlAlicloudSas) GetPostPay() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PostPay, func() (bool, error) {
+		return c.postPay()
+	})
+}
+
+func (c *mqlAlicloudSas) GetOpenTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.OpenTime, func() (*time.Time, error) {
+		return c.openTime()
+	})
+}
+
+func (c *mqlAlicloudSas) GetExpireTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ExpireTime, func() (*time.Time, error) {
+		return c.expireTime()
+	})
+}
+
+func (c *mqlAlicloudSas) GetMachines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Machines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas", c.__id, "machines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.machines()
+	})
+}
+
+func (c *mqlAlicloudSas) GetVulnerabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulnerabilities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas", c.__id, "vulnerabilities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulnerabilities()
+	})
+}
+
+func (c *mqlAlicloudSas) GetBaselineChecks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BaselineChecks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas", c.__id, "baselineChecks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.baselineChecks()
+	})
+}
+
+func (c *mqlAlicloudSas) GetAlarmEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlarmEvents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas", c.__id, "alarmEvents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alarmEvents()
+	})
+}
+
+// mqlAlicloudSasMachine for the alicloud.sas.machine resource
+type mqlAlicloudSasMachine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudSasMachineInternal
+	Uuid             plugin.TValue[string]
+	InstanceId       plugin.TValue[string]
+	InstanceName     plugin.TValue[string]
+	RegionId         plugin.TValue[string]
+	Os               plugin.TValue[string]
+	OsName           plugin.TValue[string]
+	InternetIp       plugin.TValue[string]
+	IntranetIp       plugin.TValue[string]
+	ClientStatus     plugin.TValue[string]
+	Bind             plugin.TValue[bool]
+	VulCount         plugin.TValue[int64]
+	VulStatus        plugin.TValue[string]
+	RiskCount        plugin.TValue[string]
+	RiskStatus       plugin.TValue[string]
+	AlarmStatus      plugin.TValue[string]
+	SafeEventCount   plugin.TValue[int64]
+	HealthCheckCount plugin.TValue[int64]
+	ExposedStatus    plugin.TValue[int64]
+	Importance       plugin.TValue[int64]
+	AuthVersionName  plugin.TValue[string]
+	AssetTypeName    plugin.TValue[string]
+	VendorName       plugin.TValue[string]
+	ClusterId        plugin.TValue[string]
+	GroupTrace       plugin.TValue[string]
+	CreatedTime      plugin.TValue[*time.Time]
+	LastLoginTime    plugin.TValue[*time.Time]
+	EcsInstance      plugin.TValue[*mqlAlicloudEcsInstance]
+}
+
+// createAlicloudSasMachine creates a new instance of this resource
+func createAlicloudSasMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasMachine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.machine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasMachine) MqlName() string {
+	return "alicloud.sas.machine"
+}
+
+func (c *mqlAlicloudSasMachine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasMachine) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlAlicloudSasMachine) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudSasMachine) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlAlicloudSasMachine) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudSasMachine) GetOs() *plugin.TValue[string] {
+	return &c.Os
+}
+
+func (c *mqlAlicloudSasMachine) GetOsName() *plugin.TValue[string] {
+	return &c.OsName
+}
+
+func (c *mqlAlicloudSasMachine) GetInternetIp() *plugin.TValue[string] {
+	return &c.InternetIp
+}
+
+func (c *mqlAlicloudSasMachine) GetIntranetIp() *plugin.TValue[string] {
+	return &c.IntranetIp
+}
+
+func (c *mqlAlicloudSasMachine) GetClientStatus() *plugin.TValue[string] {
+	return &c.ClientStatus
+}
+
+func (c *mqlAlicloudSasMachine) GetBind() *plugin.TValue[bool] {
+	return &c.Bind
+}
+
+func (c *mqlAlicloudSasMachine) GetVulCount() *plugin.TValue[int64] {
+	return &c.VulCount
+}
+
+func (c *mqlAlicloudSasMachine) GetVulStatus() *plugin.TValue[string] {
+	return &c.VulStatus
+}
+
+func (c *mqlAlicloudSasMachine) GetRiskCount() *plugin.TValue[string] {
+	return &c.RiskCount
+}
+
+func (c *mqlAlicloudSasMachine) GetRiskStatus() *plugin.TValue[string] {
+	return &c.RiskStatus
+}
+
+func (c *mqlAlicloudSasMachine) GetAlarmStatus() *plugin.TValue[string] {
+	return &c.AlarmStatus
+}
+
+func (c *mqlAlicloudSasMachine) GetSafeEventCount() *plugin.TValue[int64] {
+	return &c.SafeEventCount
+}
+
+func (c *mqlAlicloudSasMachine) GetHealthCheckCount() *plugin.TValue[int64] {
+	return &c.HealthCheckCount
+}
+
+func (c *mqlAlicloudSasMachine) GetExposedStatus() *plugin.TValue[int64] {
+	return &c.ExposedStatus
+}
+
+func (c *mqlAlicloudSasMachine) GetImportance() *plugin.TValue[int64] {
+	return &c.Importance
+}
+
+func (c *mqlAlicloudSasMachine) GetAuthVersionName() *plugin.TValue[string] {
+	return &c.AuthVersionName
+}
+
+func (c *mqlAlicloudSasMachine) GetAssetTypeName() *plugin.TValue[string] {
+	return &c.AssetTypeName
+}
+
+func (c *mqlAlicloudSasMachine) GetVendorName() *plugin.TValue[string] {
+	return &c.VendorName
+}
+
+func (c *mqlAlicloudSasMachine) GetClusterId() *plugin.TValue[string] {
+	return &c.ClusterId
+}
+
+func (c *mqlAlicloudSasMachine) GetGroupTrace() *plugin.TValue[string] {
+	return &c.GroupTrace
+}
+
+func (c *mqlAlicloudSasMachine) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAlicloudSasMachine) GetLastLoginTime() *plugin.TValue[*time.Time] {
+	return &c.LastLoginTime
+}
+
+func (c *mqlAlicloudSasMachine) GetEcsInstance() *plugin.TValue[*mqlAlicloudEcsInstance] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsInstance](&c.EcsInstance, func() (*mqlAlicloudEcsInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas.machine", c.__id, "ecsInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsInstance), nil
+			}
+		}
+
+		return c.ecsInstance()
+	})
+}
+
+// mqlAlicloudSasVulnerability for the alicloud.sas.vulnerability resource
+type mqlAlicloudSasVulnerability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasVulnerabilityInternal it will be used here
+	Name          plugin.TValue[string]
+	AliasName     plugin.TValue[string]
+	Type          plugin.TValue[string]
+	AsapCount     plugin.TValue[int64]
+	LaterCount    plugin.TValue[int64]
+	NntfCount     plugin.TValue[int64]
+	HandledCount  plugin.TValue[int64]
+	TotalFixCount plugin.TValue[int64]
+	LastFoundTime plugin.TValue[*time.Time]
+	Tags          plugin.TValue[string]
+	Related       plugin.TValue[string]
+	RaspDefend    plugin.TValue[int64]
+}
+
+// createAlicloudSasVulnerability creates a new instance of this resource
+func createAlicloudSasVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasVulnerability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.vulnerability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasVulnerability) MqlName() string {
+	return "alicloud.sas.vulnerability"
+}
+
+func (c *mqlAlicloudSasVulnerability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasVulnerability) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudSasVulnerability) GetAliasName() *plugin.TValue[string] {
+	return &c.AliasName
+}
+
+func (c *mqlAlicloudSasVulnerability) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAlicloudSasVulnerability) GetAsapCount() *plugin.TValue[int64] {
+	return &c.AsapCount
+}
+
+func (c *mqlAlicloudSasVulnerability) GetLaterCount() *plugin.TValue[int64] {
+	return &c.LaterCount
+}
+
+func (c *mqlAlicloudSasVulnerability) GetNntfCount() *plugin.TValue[int64] {
+	return &c.NntfCount
+}
+
+func (c *mqlAlicloudSasVulnerability) GetHandledCount() *plugin.TValue[int64] {
+	return &c.HandledCount
+}
+
+func (c *mqlAlicloudSasVulnerability) GetTotalFixCount() *plugin.TValue[int64] {
+	return &c.TotalFixCount
+}
+
+func (c *mqlAlicloudSasVulnerability) GetLastFoundTime() *plugin.TValue[*time.Time] {
+	return &c.LastFoundTime
+}
+
+func (c *mqlAlicloudSasVulnerability) GetTags() *plugin.TValue[string] {
+	return &c.Tags
+}
+
+func (c *mqlAlicloudSasVulnerability) GetRelated() *plugin.TValue[string] {
+	return &c.Related
+}
+
+func (c *mqlAlicloudSasVulnerability) GetRaspDefend() *plugin.TValue[int64] {
+	return &c.RaspDefend
+}
+
+// mqlAlicloudSasBaselineCheck for the alicloud.sas.baselineCheck resource
+type mqlAlicloudSasBaselineCheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasBaselineCheckInternal it will be used here
+	RiskId              plugin.TValue[int64]
+	RiskName            plugin.TValue[string]
+	TypeAlias           plugin.TValue[string]
+	SubTypeAlias        plugin.TValue[string]
+	Level               plugin.TValue[string]
+	CheckCount          plugin.TValue[int64]
+	HighWarningCount    plugin.TValue[int64]
+	MediumWarningCount  plugin.TValue[int64]
+	LowWarningCount     plugin.TValue[int64]
+	WarningMachineCount plugin.TValue[int64]
+	LastFoundTime       plugin.TValue[*time.Time]
+	CheckExploit        plugin.TValue[bool]
+	ContainerRisk       plugin.TValue[bool]
+	DatabaseRisk        plugin.TValue[bool]
+}
+
+// createAlicloudSasBaselineCheck creates a new instance of this resource
+func createAlicloudSasBaselineCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasBaselineCheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.baselineCheck", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasBaselineCheck) MqlName() string {
+	return "alicloud.sas.baselineCheck"
+}
+
+func (c *mqlAlicloudSasBaselineCheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetRiskId() *plugin.TValue[int64] {
+	return &c.RiskId
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetRiskName() *plugin.TValue[string] {
+	return &c.RiskName
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetTypeAlias() *plugin.TValue[string] {
+	return &c.TypeAlias
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetSubTypeAlias() *plugin.TValue[string] {
+	return &c.SubTypeAlias
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetCheckCount() *plugin.TValue[int64] {
+	return &c.CheckCount
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetHighWarningCount() *plugin.TValue[int64] {
+	return &c.HighWarningCount
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetMediumWarningCount() *plugin.TValue[int64] {
+	return &c.MediumWarningCount
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetLowWarningCount() *plugin.TValue[int64] {
+	return &c.LowWarningCount
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetWarningMachineCount() *plugin.TValue[int64] {
+	return &c.WarningMachineCount
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetLastFoundTime() *plugin.TValue[*time.Time] {
+	return &c.LastFoundTime
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetCheckExploit() *plugin.TValue[bool] {
+	return &c.CheckExploit
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetContainerRisk() *plugin.TValue[bool] {
+	return &c.ContainerRisk
+}
+
+func (c *mqlAlicloudSasBaselineCheck) GetDatabaseRisk() *plugin.TValue[bool] {
+	return &c.DatabaseRisk
+}
+
+// mqlAlicloudSasAlarmEvent for the alicloud.sas.alarmEvent resource
+type mqlAlicloudSasAlarmEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasAlarmEventInternal it will be used here
+	Id                 plugin.TValue[int64]
+	AlarmEventName     plugin.TValue[string]
+	AlarmEventType     plugin.TValue[string]
+	Level              plugin.TValue[string]
+	EventStatus        plugin.TValue[int64]
+	Description        plugin.TValue[string]
+	Stages             plugin.TValue[string]
+	DataSource         plugin.TValue[string]
+	Uuid               plugin.TValue[string]
+	InstanceId         plugin.TValue[string]
+	InstanceName       plugin.TValue[string]
+	InternetIp         plugin.TValue[string]
+	IntranetIp         plugin.TValue[string]
+	ContainerId        plugin.TValue[string]
+	ContainerImageName plugin.TValue[string]
+	K8sClusterId       plugin.TValue[string]
+	K8sNamespace       plugin.TValue[string]
+	K8sPodName         plugin.TValue[string]
+	OccurrenceTime     plugin.TValue[*time.Time]
+	LastTime           plugin.TValue[*time.Time]
+	CanBeDealOnLine    plugin.TValue[bool]
+	AutoBreaking       plugin.TValue[bool]
+	Machine            plugin.TValue[*mqlAlicloudSasMachine]
+}
+
+// createAlicloudSasAlarmEvent creates a new instance of this resource
+func createAlicloudSasAlarmEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasAlarmEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.alarmEvent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasAlarmEvent) MqlName() string {
+	return "alicloud.sas.alarmEvent"
+}
+
+func (c *mqlAlicloudSasAlarmEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetAlarmEventName() *plugin.TValue[string] {
+	return &c.AlarmEventName
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetAlarmEventType() *plugin.TValue[string] {
+	return &c.AlarmEventType
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetEventStatus() *plugin.TValue[int64] {
+	return &c.EventStatus
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetStages() *plugin.TValue[string] {
+	return &c.Stages
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetDataSource() *plugin.TValue[string] {
+	return &c.DataSource
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetInternetIp() *plugin.TValue[string] {
+	return &c.InternetIp
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetIntranetIp() *plugin.TValue[string] {
+	return &c.IntranetIp
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetContainerId() *plugin.TValue[string] {
+	return &c.ContainerId
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetContainerImageName() *plugin.TValue[string] {
+	return &c.ContainerImageName
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetK8sClusterId() *plugin.TValue[string] {
+	return &c.K8sClusterId
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetK8sNamespace() *plugin.TValue[string] {
+	return &c.K8sNamespace
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetK8sPodName() *plugin.TValue[string] {
+	return &c.K8sPodName
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetOccurrenceTime() *plugin.TValue[*time.Time] {
+	return &c.OccurrenceTime
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetLastTime() *plugin.TValue[*time.Time] {
+	return &c.LastTime
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetCanBeDealOnLine() *plugin.TValue[bool] {
+	return &c.CanBeDealOnLine
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetAutoBreaking() *plugin.TValue[bool] {
+	return &c.AutoBreaking
+}
+
+func (c *mqlAlicloudSasAlarmEvent) GetMachine() *plugin.TValue[*mqlAlicloudSasMachine] {
+	return plugin.GetOrCompute[*mqlAlicloudSasMachine](&c.Machine, func() (*mqlAlicloudSasMachine, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas.alarmEvent", c.__id, "machine")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudSasMachine), nil
+			}
+		}
+
+		return c.machine()
 	})
 }

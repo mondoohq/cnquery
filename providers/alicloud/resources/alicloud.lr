@@ -11,8 +11,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
 // are reached, along with the Container Service for Kubernetes, Function
 // Compute, NAS file storage, Web Application Firewall, Cloud Firewall,
-// Anti-DDoS, Key Management Service, ActionTrail, Log Service, Cloud Config,
-// CloudSSO, and Resource Directory resources.
+// Anti-DDoS, Security Center, Key Management Service, ActionTrail, Log Service,
+// Cloud Config, CloudSSO, and Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -4032,4 +4032,262 @@ alicloud.cloudsso.accessAssignment @defaults("principalName accessConfigurationN
   //
   // Null when the assignment was made to a single user.
   group() alicloud.cloudsso.group
+}
+
+// Security Center
+//
+// Threat detection and posture management for the account. Exposes the
+// subscription edition and quota, the protected machines and whether their
+// agents are reporting, the vulnerabilities and baseline check failures found
+// across them, and the alerts raised by threat detection.
+alicloud.sas {
+  // Whether Security Center is active for the account
+  //
+  // False when the service has never been subscribed. The free tier still
+  // reports true, so pair this with version to tell the tiers apart.
+  enabled() bool
+  // Subscription edition code
+  //
+  // Higher codes carry more detection capability, with 1 for the free basic
+  // edition. Zero when the service has never been subscribed.
+  version() int
+  // Number of assets the subscription covers
+  //
+  // Protection stops applying to assets beyond this quota, so a machine count
+  // above it means part of the fleet is unprotected.
+  assetLevel() int
+  // Whether the current subscription is a trial
+  trialVersion() bool
+  // Whether the subscription is billed pay-as-you-go
+  postPay() bool
+  // Time the subscription was activated
+  openTime() time
+  // Time the subscription expires
+  expireTime() time
+  // Machines Security Center is protecting
+  machines() []alicloud.sas.machine
+  // Vulnerabilities found across the protected machines, grouped by vulnerability
+  vulnerabilities() []alicloud.sas.vulnerability
+  // Baseline check failures found across the protected machines, grouped by check
+  baselineChecks() []alicloud.sas.baselineCheck
+  // Alerts raised by threat detection
+  alarmEvents() []alicloud.sas.alarmEvent
+}
+
+// Machine protected by Security Center
+//
+// A single asset in the Security Center inventory, keyed by uuid. Exposes the
+// agent state, the vulnerability and risk counts attributed to the machine, and
+// its network addresses. The clientStatus field is the coverage audit: an
+// offline or unbound agent means the machine is in the inventory but not
+// actually being protected.
+alicloud.sas.machine @defaults("instanceName clientStatus vulCount riskCount") {
+  // Security Center asset UUID, used as the lookup key
+  uuid string
+  // ID of the underlying instance
+  instanceId string
+  // Name of the instance
+  instanceName string
+  // Region ID the machine runs in
+  regionId string
+  // Operating system family, for example linux or windows
+  os string
+  // Operating system name and version
+  osName string
+  // Public IP address of the machine
+  internetIp string
+  // Private IP address of the machine
+  intranetIp string
+  // Security Center agent state
+  //
+  // Online when the agent is reporting, Offline when it has stopped, and
+  // Uninstalled when no agent is present. Anything other than Online means the
+  // machine is in the inventory without being protected.
+  clientStatus string
+  // Whether the machine is bound to the Security Center subscription
+  //
+  // False when the machine falls outside the purchased asset quota, so its
+  // findings are reported but protection is not applied.
+  bind bool
+  // Number of unfixed vulnerabilities attributed to the machine
+  vulCount int
+  // Whether the machine has outstanding vulnerabilities
+  vulStatus string
+  // Number of outstanding risks attributed to the machine
+  riskCount string
+  // Whether the machine has outstanding risks
+  riskStatus string
+  // Whether the machine has outstanding alerts
+  alarmStatus string
+  // Number of security events recorded against the machine
+  safeEventCount int
+  // Number of baseline check failures on the machine
+  healthCheckCount int
+  // Whether the machine is exposed to the internet
+  //
+  // Non-zero when Security Center's exposure analysis found an internet-facing
+  // path to the machine.
+  exposedStatus int
+  // Asset importance, where higher values mark more critical assets
+  importance int
+  // Protection edition applied to the machine
+  authVersionName string
+  // Asset type, for example ECS or a non-Alibaba Cloud server
+  assetTypeName string
+  // Cloud vendor hosting the machine
+  vendorName string
+  // ID of the Kubernetes cluster the machine belongs to
+  clusterId string
+  // Group the machine is filed under in the Security Center console
+  groupTrace string
+  // Time the machine was added to the inventory
+  createdTime time
+  // Time of the last recorded sign-in to the machine
+  lastLoginTime time
+  // ECS instance behind the machine
+  //
+  // Null when the machine is not an Alibaba Cloud ECS instance, which is the
+  // case for servers onboarded from another cloud or from on-premises.
+  ecsInstance() alicloud.ecs.instance
+}
+
+// Vulnerability found by Security Center
+//
+// A vulnerability seen across the protected machines, keyed by its type and
+// name. The counts break the affected machines down by remediation urgency, so
+// asapCount is the number that Security Center judges must be fixed
+// immediately.
+alicloud.sas.vulnerability @defaults("name aliasName type asapCount") {
+  // Vulnerability identifier, for example a CVE or advisory ID
+  name string
+  // Human-readable vulnerability title
+  aliasName string
+  // Vulnerability category
+  //
+  // One of cve for Linux software vulnerabilities, sys for Windows system
+  // vulnerabilities, cms for web content management vulnerabilities, app for
+  // application vulnerabilities, emg for urgent vulnerabilities, or sca for
+  // software component analysis findings.
+  type string
+  // Number of affected machines Security Center rates fix-immediately
+  asapCount int
+  // Number of affected machines Security Center rates fix-later
+  laterCount int
+  // Number of affected machines Security Center rates no-fix-required
+  nntfCount int
+  // Number of affected machines where the vulnerability has been handled
+  handledCount int
+  // Total number of successful fixes recorded for the vulnerability
+  totalFixCount int
+  // Time the vulnerability was last seen
+  lastFoundTime time
+  // Tags describing the vulnerability, for example whether an exploit exists
+  tags string
+  // Related vulnerability identifiers
+  related string
+  // Whether application self-protection can defend the vulnerability at runtime
+  //
+  // Non-zero when runtime defense covers the vulnerability, which mitigates it
+  // without a patch.
+  raspDefend int
+}
+
+// Baseline check failure found by Security Center
+//
+// A configuration baseline check that machines are failing, keyed by riskId.
+// Exposes how many machines fail the check and the severity split of those
+// failures, so a check with a high warningMachineCount is a systemic
+// misconfiguration rather than a one-off.
+alicloud.sas.baselineCheck @defaults("riskName level warningMachineCount") {
+  // Baseline check ID, used as the lookup key
+  riskId int
+  // Name of the baseline check
+  riskName string
+  // Category of the baseline check
+  typeAlias string
+  // Subcategory of the baseline check
+  subTypeAlias string
+  // Severity of the check
+  //
+  // One of high, medium, or low.
+  level string
+  // Number of times the check has been run
+  checkCount int
+  // Number of high-severity failures of the check
+  highWarningCount int
+  // Number of medium-severity failures of the check
+  mediumWarningCount int
+  // Number of low-severity failures of the check
+  lowWarningCount int
+  // Number of machines currently failing the check
+  warningMachineCount int
+  // Time the failure was last observed
+  lastFoundTime time
+  // Whether a known exploit exists for the condition the check detects
+  checkExploit bool
+  // Whether the check applies to container workloads
+  containerRisk bool
+  // Whether the check applies to databases
+  databaseRisk bool
+}
+
+// Alert raised by Security Center threat detection
+//
+// A single alert, keyed by its event ID. Exposes what was detected, where, and
+// whether it has been handled, along with the container and Kubernetes context
+// when the alert came from a containerized workload.
+alicloud.sas.alarmEvent @defaults("alarmEventName level eventStatus instanceName") {
+  // Event ID, used as the lookup key
+  id int
+  // Alert name
+  alarmEventName string
+  // Alert type
+  alarmEventType string
+  // Alert severity
+  //
+  // One of serious, suspicious, or remind.
+  level string
+  // Handling state of the alert
+  //
+  // A non-zero value marks the alert as still outstanding.
+  eventStatus int
+  // Description of what was detected
+  description string
+  // Attack stages the alert maps to
+  stages string
+  // Detection engine that raised the alert
+  dataSource string
+  // Security Center asset UUID of the affected machine
+  uuid string
+  // ID of the affected instance
+  instanceId string
+  // Name of the affected instance
+  instanceName string
+  // Public IP address of the affected machine
+  internetIp string
+  // Private IP address of the affected machine
+  intranetIp string
+  // ID of the affected container
+  containerId string
+  // Image the affected container was started from
+  containerImageName string
+  // ID of the Kubernetes cluster the alert came from
+  k8sClusterId string
+  // Kubernetes namespace the alert came from
+  k8sNamespace string
+  // Kubernetes pod the alert came from
+  k8sPodName string
+  // Time the activity behind the alert first occurred
+  occurrenceTime time
+  // Time the activity behind the alert was last seen
+  lastTime time
+  // Whether the alert can be handled from the console
+  canBeDealOnLine bool
+  // Whether the alert triggered automatic containment
+  autoBreaking bool
+  // Machine the alert was raised against
+  //
+  // Null when the alert carries no asset UUID, which is the case for alerts
+  // raised against the account rather than a specific machine.
+  machine() alicloud.sas.machine
 }
