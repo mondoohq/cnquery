@@ -933,6 +933,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"redisdb": {
+		Provider: &plugin.Provider{
+			Name:            "redisdb",
+			ID:              "go.mondoo.com/mql/v13/providers/redisdb",
+			ConnectionTypes: []string{"redisdb"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "redisdb",
+					Use:   "redisdb [host]",
+					Short: "a Redis or Valkey server",
+				},
+			},
+		},
+	},
+
 	"shodan": {
 		Provider: &plugin.Provider{
 			Name:            "shodan",
