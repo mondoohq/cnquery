@@ -4,11 +4,13 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/proxmox/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // init functions populate a resource when it was looked up by id only —
@@ -379,4 +381,31 @@ func initProxmoxContainer(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 	return args, nil, nil
+}
+
+func initProxmoxCephFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["name"] == nil {
+		return args, nil, nil
+	}
+	name, ok := args["name"].Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	systems, err := conn.GetCephFileSystems()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, fs := range systems {
+		if fs.Name != name {
+			continue
+		}
+		args["metadataPool"] = llx.StringData(fs.MetadataPool)
+		args["dataPools"] = llx.ArrayData(cephDataPools(fs), types.String)
+		return args, nil, nil
+	}
+	// Reporting a miss as a blank resource would leave metadataPool and
+	// dataPools unset, which reads downstream as a file system with no
+	// backing pools rather than a lookup that found nothing.
+	return nil, nil, fmt.Errorf("proxmox.ceph.filesystem %q not found", name)
 }

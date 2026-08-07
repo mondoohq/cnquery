@@ -51,6 +51,9 @@ type PveConnection struct {
 	Host   string
 	Token  string
 	client *http.Client
+
+	// ceph memoizes the one-time "does this cluster run Ceph" probe.
+	ceph cephProbe
 }
 
 // ID and ParentID implement the plugin.Connection interface.

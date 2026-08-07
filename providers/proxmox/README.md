@@ -53,7 +53,23 @@ proxmox.users { id tokens { id expire privsep } }
 
 # Check firewall rules
 proxmox.vms { name firewallRules { pos action proto dest dport } }
+
+# Ceph health and any active health checks
+proxmox.ceph { available healthStatus healthChecks }
+
+# Find Ceph pools that accept writes with only one copy of the data
+proxmox.ceph.pools.where(type == "replicated" && minSize < 2) { name size minSize }
+
+# OSDs that are down or have been marked out
+proxmox.ceph.osds.where(status != "up" || inCluster == false) { id host status deviceClass }
+
+# Confirm Ceph authentication has not been turned off
+proxmox.ceph.config.where(name == /^auth_.*_required$/) { section name value }
 ```
+
+On clusters without Ceph, `proxmox.ceph.available` is `false` and every Ceph
+list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
+`/`, both of which `PVEAuditor` grants.
 
 ## Resources
 
@@ -81,6 +97,14 @@ proxmox.vms { name firewallRules { pos action proto dest dport } }
 | `proxmox.user`              | User account                                        |
 | `proxmox.token`             | API token for a user                                |
 | `proxmox.role`              | Access control role                                 |
+| `proxmox.ceph`              | Ceph cluster health, daemons, and data layout       |
+| `proxmox.ceph.monitor`      | Ceph monitor daemon and its quorum membership       |
+| `proxmox.ceph.manager`      | Ceph manager daemon                                 |
+| `proxmox.ceph.metadataServer`| Ceph metadata server backing a CephFS              |
+| `proxmox.ceph.osd`          | Ceph object storage daemon                          |
+| `proxmox.ceph.pool`         | Ceph pool and its replication settings              |
+| `proxmox.ceph.filesystem`   | CephFS file system                                  |
+| `proxmox.ceph.configEntry`  | Entry in the Ceph configuration database            |
 
 ## Features
 
@@ -89,6 +113,12 @@ proxmox.vms { name firewallRules { pos action proto dest dport } }
 - **VMs**: Configuration, resource metrics, network interfaces, disks, snapshots, tags, firewall rules
 - **Updates**: Package update checks via QEMU Guest Agent (apt, dnf, Windows) and node APT
 - **Storage**: Storage pools with capacity monitoring
+- **Ceph**: Cluster health, monitors, managers, metadata servers, OSDs, pools, CephFS, and the Ceph config database
 - **Access Control**: Users, API tokens, roles and privileges
 - **Firewall**: Rules at cluster, node, and VM level
-- **Security Policy**: 20+ checks covering patch management, certificate hygiene, access control, and more
+
+## Security policies
+
+Policies and checks live in cnspec, not here. The shipped Proxmox policy is
+`mondoo-proxmox-security` in the cnspec content repository. This provider is
+responsible for gathering the data those checks query.

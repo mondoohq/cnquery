@@ -66,6 +66,14 @@ const (
 	ResourceProxmoxVmPciDevice                string = "proxmox.vm.pciDevice"
 	ResourceProxmoxVmUsbDevice                string = "proxmox.vm.usbDevice"
 	ResourceProxmoxContainerPassthroughDevice string = "proxmox.container.passthroughDevice"
+	ResourceProxmoxCeph                       string = "proxmox.ceph"
+	ResourceProxmoxCephMonitor                string = "proxmox.ceph.monitor"
+	ResourceProxmoxCephManager                string = "proxmox.ceph.manager"
+	ResourceProxmoxCephMetadataServer         string = "proxmox.ceph.metadataServer"
+	ResourceProxmoxCephOsd                    string = "proxmox.ceph.osd"
+	ResourceProxmoxCephPool                   string = "proxmox.ceph.pool"
+	ResourceProxmoxCephFilesystem             string = "proxmox.ceph.filesystem"
+	ResourceProxmoxCephConfigEntry            string = "proxmox.ceph.configEntry"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -272,6 +280,38 @@ func init() {
 			// to override args, implement: initProxmoxContainerPassthroughDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProxmoxContainerPassthroughDevice,
 		},
+		"proxmox.ceph": {
+			// to override args, implement: initProxmoxCeph(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCeph,
+		},
+		"proxmox.ceph.monitor": {
+			// to override args, implement: initProxmoxCephMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCephMonitor,
+		},
+		"proxmox.ceph.manager": {
+			// to override args, implement: initProxmoxCephManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCephManager,
+		},
+		"proxmox.ceph.metadataServer": {
+			// to override args, implement: initProxmoxCephMetadataServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCephMetadataServer,
+		},
+		"proxmox.ceph.osd": {
+			// to override args, implement: initProxmoxCephOsd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCephOsd,
+		},
+		"proxmox.ceph.pool": {
+			// to override args, implement: initProxmoxCephPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCephPool,
+		},
+		"proxmox.ceph.filesystem": {
+			Init:   initProxmoxCephFilesystem,
+			Create: createProxmoxCephFilesystem,
+		},
+		"proxmox.ceph.configEntry": {
+			// to override args, implement: initProxmoxCephConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxCephConfigEntry,
+		},
 	}
 }
 
@@ -390,6 +430,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.sdnVnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmox).GetSdnVnets()).ToDataRes(types.Array(types.Resource("proxmox.sdn.vnet")))
+	},
+	"proxmox.ceph": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmox).GetCeph()).ToDataRes(types.Resource("proxmox.ceph"))
 	},
 	"proxmox.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCluster).GetName()).ToDataRes(types.String)
@@ -1861,6 +1904,270 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.container.passthroughDevice.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainerPassthroughDevice).GetMode()).ToDataRes(types.String)
 	},
+	"proxmox.ceph.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetAvailable()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.healthStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetHealthStatus()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.healthChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetHealthChecks()).ToDataRes(types.Dict)
+	},
+	"proxmox.ceph.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetStatus()).ToDataRes(types.Dict)
+	},
+	"proxmox.ceph.nodeVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetNodeVersions()).ToDataRes(types.Dict)
+	},
+	"proxmox.ceph.monitors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetMonitors()).ToDataRes(types.Array(types.Resource("proxmox.ceph.monitor")))
+	},
+	"proxmox.ceph.managers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetManagers()).ToDataRes(types.Array(types.Resource("proxmox.ceph.manager")))
+	},
+	"proxmox.ceph.metadataServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetMetadataServers()).ToDataRes(types.Array(types.Resource("proxmox.ceph.metadataServer")))
+	},
+	"proxmox.ceph.osds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetOsds()).ToDataRes(types.Array(types.Resource("proxmox.ceph.osd")))
+	},
+	"proxmox.ceph.pools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetPools()).ToDataRes(types.Array(types.Resource("proxmox.ceph.pool")))
+	},
+	"proxmox.ceph.fileSystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetFileSystems()).ToDataRes(types.Array(types.Resource("proxmox.ceph.filesystem")))
+	},
+	"proxmox.ceph.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetConfig()).ToDataRes(types.Array(types.Resource("proxmox.ceph.configEntry")))
+	},
+	"proxmox.ceph.crushRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCeph).GetCrushRules()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.ceph.monitor.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.monitor.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetHost()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.monitor.addr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetAddr()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.monitor.quorum": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetQuorum()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.monitor.rank": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetRank()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.monitor.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetState()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.monitor.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetService()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.monitor.directoryExists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetDirectoryExists()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.monitor.cephVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetCephVersion()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.monitor.cephVersionShort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetCephVersionShort()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.manager.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.manager.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetHost()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.manager.addr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetAddr()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.manager.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetState()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.manager.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetService()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.manager.directoryExists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetDirectoryExists()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.manager.cephVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetCephVersion()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.manager.cephVersionShort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetCephVersionShort()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetHost()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.addr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetAddr()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetState()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.rank": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetRank()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.metadataServer.fsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetFsName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetFileSystem()).ToDataRes(types.Resource("proxmox.ceph.filesystem"))
+	},
+	"proxmox.ceph.metadataServer.standbyReplay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetStandbyReplay()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.metadataServer.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetService()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.metadataServer.directoryExists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetDirectoryExists()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.metadataServer.cephVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetCephVersion()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.cephVersionShort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetCephVersionShort()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetId()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.osd.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetHost()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.up": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetUp()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.osd.inCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetInCluster()).ToDataRes(types.Bool)
+	},
+	"proxmox.ceph.osd.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetStatus()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.deviceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetDeviceClass()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.crushWeight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetCrushWeight()).ToDataRes(types.Float)
+	},
+	"proxmox.ceph.osd.reweight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetReweight()).ToDataRes(types.Float)
+	},
+	"proxmox.ceph.osd.totalSpace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetTotalSpace()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.osd.bytesUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetBytesUsed()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.osd.percentUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetPercentUsed()).ToDataRes(types.Float)
+	},
+	"proxmox.ceph.osd.objectStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetObjectStore()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetDevices()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.deviceIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetDeviceIds()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.devicePaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetDevicePaths()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.frontAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetFrontAddress()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.backAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetBackAddress()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.dataPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetDataPath()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.cephVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetCephVersion()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.cephVersionShort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetCephVersionShort()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.cephRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetCephRelease()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.pool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.pool.poolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetPoolId()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetType()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.pool.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetSize()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.minSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetMinSize()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.pgNum": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetPgNum()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.pgNumFinal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetPgNumFinal()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.pgNumMin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetPgNumMin()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.pgAutoscaleMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetPgAutoscaleMode()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.pool.crushRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetCrushRuleId()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.crushRuleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetCrushRuleName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.pool.bytesUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetBytesUsed()).ToDataRes(types.Int)
+	},
+	"proxmox.ceph.pool.percentUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetPercentUsed()).ToDataRes(types.Float)
+	},
+	"proxmox.ceph.pool.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephPool).GetApplications()).ToDataRes(types.Dict)
+	},
+	"proxmox.ceph.filesystem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephFilesystem).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.filesystem.metadataPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephFilesystem).GetMetadataPool()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.filesystem.dataPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephFilesystem).GetDataPools()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.ceph.configEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephConfigEntry).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.configEntry.section": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephConfigEntry).GetSection()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.configEntry.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephConfigEntry).GetValue()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.configEntry.mask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephConfigEntry).GetMask()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.configEntry.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephConfigEntry).GetLevel()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.configEntry.canUpdateAtRuntime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephConfigEntry).GetCanUpdateAtRuntime()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1939,6 +2246,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.sdnVnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmox).SdnVnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmox).Ceph, ok = plugin.RawToTValue[*mqlProxmoxCeph](v.Value, v.Error)
 		return
 	},
 	"proxmox.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4097,6 +4408,390 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxContainerPassthroughDevice).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.ceph.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Available, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.healthStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).HealthStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.healthChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).HealthChecks, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.nodeVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).NodeVersions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Monitors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.managers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Managers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).MetadataServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Osds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Pools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.fileSystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).FileSystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).Config, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.crushRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCeph).CrushRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.monitor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.addr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Addr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.quorum": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Quorum, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.rank": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Rank, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Service, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.directoryExists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).DirectoryExists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.cephVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).CephVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.monitor.cephVersionShort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).CephVersionShort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.manager.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.addr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).Addr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).Service, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.directoryExists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).DirectoryExists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.cephVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).CephVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.manager.cephVersionShort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).CephVersionShort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.metadataServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.addr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).Addr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.rank": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).Rank, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.fsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).FsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).FileSystem, ok = plugin.RawToTValue[*mqlProxmoxCephFilesystem](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.standbyReplay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).StandbyReplay, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).Service, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.directoryExists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).DirectoryExists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.cephVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).CephVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.cephVersionShort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).CephVersionShort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.osd.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.up": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Up, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.inCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).InCluster, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.deviceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).DeviceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.crushWeight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).CrushWeight, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.reweight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Reweight, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.totalSpace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).TotalSpace, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.bytesUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).BytesUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.percentUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).PercentUsed, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.objectStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).ObjectStore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Devices, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.deviceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).DeviceIds, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.devicePaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).DevicePaths, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.frontAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).FrontAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.backAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).BackAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.dataPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).DataPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.cephVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).CephVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.cephVersionShort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).CephVersionShort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.cephRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).CephRelease, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.pool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.poolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).PoolId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.minSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).MinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.pgNum": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).PgNum, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.pgNumFinal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).PgNumFinal, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.pgNumMin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).PgNumMin, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.pgAutoscaleMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).PgAutoscaleMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.crushRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).CrushRuleId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.crushRuleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).CrushRuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.bytesUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).BytesUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.percentUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).PercentUsed, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.pool.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephPool).Applications, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.filesystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephFilesystem).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.filesystem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephFilesystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.filesystem.metadataPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephFilesystem).MetadataPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.filesystem.dataPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephFilesystem).DataPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.configEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.ceph.configEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.configEntry.section": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).Section, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.configEntry.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.configEntry.mask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).Mask, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.configEntry.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.configEntry.canUpdateAtRuntime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephConfigEntry).CanUpdateAtRuntime, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4142,6 +4837,7 @@ type mqlProxmox struct {
 	ReplicationJobs plugin.TValue[[]any]
 	SdnZones        plugin.TValue[[]any]
 	SdnVnets        plugin.TValue[[]any]
+	Ceph            plugin.TValue[*mqlProxmoxCeph]
 }
 
 // createProxmox creates a new instance of this resource
@@ -4424,6 +5120,22 @@ func (c *mqlProxmox) GetSdnVnets() *plugin.TValue[[]any] {
 		}
 
 		return c.sdnVnets()
+	})
+}
+
+func (c *mqlProxmox) GetCeph() *plugin.TValue[*mqlProxmoxCeph] {
+	return plugin.GetOrCompute[*mqlProxmoxCeph](&c.Ceph, func() (*mqlProxmoxCeph, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox", c.__id, "ceph")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxCeph), nil
+			}
+		}
+
+		return c.ceph()
 	})
 }
 
@@ -9873,4 +10585,869 @@ func (c *mqlProxmoxContainerPassthroughDevice) GetGid() *plugin.TValue[int64] {
 
 func (c *mqlProxmoxContainerPassthroughDevice) GetMode() *plugin.TValue[string] {
 	return &c.Mode
+}
+
+// mqlProxmoxCeph for the proxmox.ceph resource
+type mqlProxmoxCeph struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephInternal it will be used here
+	Available       plugin.TValue[bool]
+	HealthStatus    plugin.TValue[string]
+	HealthChecks    plugin.TValue[any]
+	Status          plugin.TValue[any]
+	NodeVersions    plugin.TValue[any]
+	Monitors        plugin.TValue[[]any]
+	Managers        plugin.TValue[[]any]
+	MetadataServers plugin.TValue[[]any]
+	Osds            plugin.TValue[[]any]
+	Pools           plugin.TValue[[]any]
+	FileSystems     plugin.TValue[[]any]
+	Config          plugin.TValue[[]any]
+	CrushRules      plugin.TValue[[]any]
+}
+
+// createProxmoxCeph creates a new instance of this resource
+func createProxmoxCeph(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCeph{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCeph) MqlName() string {
+	return "proxmox.ceph"
+}
+
+func (c *mqlProxmoxCeph) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCeph) GetAvailable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Available, func() (bool, error) {
+		return c.available()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetHealthStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HealthStatus, func() (string, error) {
+		return c.healthStatus()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetHealthChecks() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.HealthChecks, func() (any, error) {
+		return c.healthChecks()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetNodeVersions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.NodeVersions, func() (any, error) {
+		return c.nodeVersions()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetMonitors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Monitors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "monitors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.monitors()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetManagers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Managers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "managers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managers()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetMetadataServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MetadataServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "metadataServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.metadataServers()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetOsds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Osds, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "osds")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.osds()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "pools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pools()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetFileSystems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileSystems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "fileSystems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileSystems()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetConfig() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Config, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph", c.__id, "config")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.config()
+	})
+}
+
+func (c *mqlProxmoxCeph) GetCrushRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CrushRules, func() ([]any, error) {
+		return c.crushRules()
+	})
+}
+
+// mqlProxmoxCephMonitor for the proxmox.ceph.monitor resource
+type mqlProxmoxCephMonitor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephMonitorInternal it will be used here
+	Name             plugin.TValue[string]
+	Host             plugin.TValue[string]
+	Addr             plugin.TValue[string]
+	Quorum           plugin.TValue[bool]
+	Rank             plugin.TValue[int64]
+	State            plugin.TValue[string]
+	Service          plugin.TValue[bool]
+	DirectoryExists  plugin.TValue[bool]
+	CephVersion      plugin.TValue[string]
+	CephVersionShort plugin.TValue[string]
+}
+
+// createProxmoxCephMonitor creates a new instance of this resource
+func createProxmoxCephMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephMonitor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.monitor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephMonitor) MqlName() string {
+	return "proxmox.ceph.monitor"
+}
+
+func (c *mqlProxmoxCephMonitor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephMonitor) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephMonitor) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlProxmoxCephMonitor) GetAddr() *plugin.TValue[string] {
+	return &c.Addr
+}
+
+func (c *mqlProxmoxCephMonitor) GetQuorum() *plugin.TValue[bool] {
+	return &c.Quorum
+}
+
+func (c *mqlProxmoxCephMonitor) GetRank() *plugin.TValue[int64] {
+	return &c.Rank
+}
+
+func (c *mqlProxmoxCephMonitor) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlProxmoxCephMonitor) GetService() *plugin.TValue[bool] {
+	return &c.Service
+}
+
+func (c *mqlProxmoxCephMonitor) GetDirectoryExists() *plugin.TValue[bool] {
+	return &c.DirectoryExists
+}
+
+func (c *mqlProxmoxCephMonitor) GetCephVersion() *plugin.TValue[string] {
+	return &c.CephVersion
+}
+
+func (c *mqlProxmoxCephMonitor) GetCephVersionShort() *plugin.TValue[string] {
+	return &c.CephVersionShort
+}
+
+// mqlProxmoxCephManager for the proxmox.ceph.manager resource
+type mqlProxmoxCephManager struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephManagerInternal it will be used here
+	Name             plugin.TValue[string]
+	Host             plugin.TValue[string]
+	Addr             plugin.TValue[string]
+	State            plugin.TValue[string]
+	Service          plugin.TValue[bool]
+	DirectoryExists  plugin.TValue[bool]
+	CephVersion      plugin.TValue[string]
+	CephVersionShort plugin.TValue[string]
+}
+
+// createProxmoxCephManager creates a new instance of this resource
+func createProxmoxCephManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephManager{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.manager", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephManager) MqlName() string {
+	return "proxmox.ceph.manager"
+}
+
+func (c *mqlProxmoxCephManager) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephManager) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephManager) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlProxmoxCephManager) GetAddr() *plugin.TValue[string] {
+	return &c.Addr
+}
+
+func (c *mqlProxmoxCephManager) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlProxmoxCephManager) GetService() *plugin.TValue[bool] {
+	return &c.Service
+}
+
+func (c *mqlProxmoxCephManager) GetDirectoryExists() *plugin.TValue[bool] {
+	return &c.DirectoryExists
+}
+
+func (c *mqlProxmoxCephManager) GetCephVersion() *plugin.TValue[string] {
+	return &c.CephVersion
+}
+
+func (c *mqlProxmoxCephManager) GetCephVersionShort() *plugin.TValue[string] {
+	return &c.CephVersionShort
+}
+
+// mqlProxmoxCephMetadataServer for the proxmox.ceph.metadataServer resource
+type mqlProxmoxCephMetadataServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephMetadataServerInternal it will be used here
+	Name             plugin.TValue[string]
+	Host             plugin.TValue[string]
+	Addr             plugin.TValue[string]
+	State            plugin.TValue[string]
+	Rank             plugin.TValue[int64]
+	FsName           plugin.TValue[string]
+	FileSystem       plugin.TValue[*mqlProxmoxCephFilesystem]
+	StandbyReplay    plugin.TValue[bool]
+	Service          plugin.TValue[bool]
+	DirectoryExists  plugin.TValue[bool]
+	CephVersion      plugin.TValue[string]
+	CephVersionShort plugin.TValue[string]
+}
+
+// createProxmoxCephMetadataServer creates a new instance of this resource
+func createProxmoxCephMetadataServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephMetadataServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.metadataServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephMetadataServer) MqlName() string {
+	return "proxmox.ceph.metadataServer"
+}
+
+func (c *mqlProxmoxCephMetadataServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetAddr() *plugin.TValue[string] {
+	return &c.Addr
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetRank() *plugin.TValue[int64] {
+	return &c.Rank
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetFsName() *plugin.TValue[string] {
+	return &c.FsName
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetFileSystem() *plugin.TValue[*mqlProxmoxCephFilesystem] {
+	return plugin.GetOrCompute[*mqlProxmoxCephFilesystem](&c.FileSystem, func() (*mqlProxmoxCephFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph.metadataServer", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxCephFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetStandbyReplay() *plugin.TValue[bool] {
+	return &c.StandbyReplay
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetService() *plugin.TValue[bool] {
+	return &c.Service
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetDirectoryExists() *plugin.TValue[bool] {
+	return &c.DirectoryExists
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetCephVersion() *plugin.TValue[string] {
+	return &c.CephVersion
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetCephVersionShort() *plugin.TValue[string] {
+	return &c.CephVersionShort
+}
+
+// mqlProxmoxCephOsd for the proxmox.ceph.osd resource
+type mqlProxmoxCephOsd struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephOsdInternal it will be used here
+	Id               plugin.TValue[int64]
+	Name             plugin.TValue[string]
+	Host             plugin.TValue[string]
+	Up               plugin.TValue[bool]
+	InCluster        plugin.TValue[bool]
+	Status           plugin.TValue[string]
+	DeviceClass      plugin.TValue[string]
+	CrushWeight      plugin.TValue[float64]
+	Reweight         plugin.TValue[float64]
+	TotalSpace       plugin.TValue[int64]
+	BytesUsed        plugin.TValue[int64]
+	PercentUsed      plugin.TValue[float64]
+	ObjectStore      plugin.TValue[string]
+	Devices          plugin.TValue[string]
+	DeviceIds        plugin.TValue[string]
+	DevicePaths      plugin.TValue[string]
+	FrontAddress     plugin.TValue[string]
+	BackAddress      plugin.TValue[string]
+	DataPath         plugin.TValue[string]
+	CephVersion      plugin.TValue[string]
+	CephVersionShort plugin.TValue[string]
+	CephRelease      plugin.TValue[string]
+}
+
+// createProxmoxCephOsd creates a new instance of this resource
+func createProxmoxCephOsd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephOsd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.osd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephOsd) MqlName() string {
+	return "proxmox.ceph.osd"
+}
+
+func (c *mqlProxmoxCephOsd) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephOsd) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlProxmoxCephOsd) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephOsd) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlProxmoxCephOsd) GetUp() *plugin.TValue[bool] {
+	return &c.Up
+}
+
+func (c *mqlProxmoxCephOsd) GetInCluster() *plugin.TValue[bool] {
+	return &c.InCluster
+}
+
+func (c *mqlProxmoxCephOsd) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlProxmoxCephOsd) GetDeviceClass() *plugin.TValue[string] {
+	return &c.DeviceClass
+}
+
+func (c *mqlProxmoxCephOsd) GetCrushWeight() *plugin.TValue[float64] {
+	return &c.CrushWeight
+}
+
+func (c *mqlProxmoxCephOsd) GetReweight() *plugin.TValue[float64] {
+	return &c.Reweight
+}
+
+func (c *mqlProxmoxCephOsd) GetTotalSpace() *plugin.TValue[int64] {
+	return &c.TotalSpace
+}
+
+func (c *mqlProxmoxCephOsd) GetBytesUsed() *plugin.TValue[int64] {
+	return &c.BytesUsed
+}
+
+func (c *mqlProxmoxCephOsd) GetPercentUsed() *plugin.TValue[float64] {
+	return &c.PercentUsed
+}
+
+func (c *mqlProxmoxCephOsd) GetObjectStore() *plugin.TValue[string] {
+	return &c.ObjectStore
+}
+
+func (c *mqlProxmoxCephOsd) GetDevices() *plugin.TValue[string] {
+	return &c.Devices
+}
+
+func (c *mqlProxmoxCephOsd) GetDeviceIds() *plugin.TValue[string] {
+	return &c.DeviceIds
+}
+
+func (c *mqlProxmoxCephOsd) GetDevicePaths() *plugin.TValue[string] {
+	return &c.DevicePaths
+}
+
+func (c *mqlProxmoxCephOsd) GetFrontAddress() *plugin.TValue[string] {
+	return &c.FrontAddress
+}
+
+func (c *mqlProxmoxCephOsd) GetBackAddress() *plugin.TValue[string] {
+	return &c.BackAddress
+}
+
+func (c *mqlProxmoxCephOsd) GetDataPath() *plugin.TValue[string] {
+	return &c.DataPath
+}
+
+func (c *mqlProxmoxCephOsd) GetCephVersion() *plugin.TValue[string] {
+	return &c.CephVersion
+}
+
+func (c *mqlProxmoxCephOsd) GetCephVersionShort() *plugin.TValue[string] {
+	return &c.CephVersionShort
+}
+
+func (c *mqlProxmoxCephOsd) GetCephRelease() *plugin.TValue[string] {
+	return &c.CephRelease
+}
+
+// mqlProxmoxCephPool for the proxmox.ceph.pool resource
+type mqlProxmoxCephPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephPoolInternal it will be used here
+	Name            plugin.TValue[string]
+	PoolId          plugin.TValue[int64]
+	Type            plugin.TValue[string]
+	Size            plugin.TValue[int64]
+	MinSize         plugin.TValue[int64]
+	PgNum           plugin.TValue[int64]
+	PgNumFinal      plugin.TValue[int64]
+	PgNumMin        plugin.TValue[int64]
+	PgAutoscaleMode plugin.TValue[string]
+	CrushRuleId     plugin.TValue[int64]
+	CrushRuleName   plugin.TValue[string]
+	BytesUsed       plugin.TValue[int64]
+	PercentUsed     plugin.TValue[float64]
+	Applications    plugin.TValue[any]
+}
+
+// createProxmoxCephPool creates a new instance of this resource
+func createProxmoxCephPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.pool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephPool) MqlName() string {
+	return "proxmox.ceph.pool"
+}
+
+func (c *mqlProxmoxCephPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephPool) GetPoolId() *plugin.TValue[int64] {
+	return &c.PoolId
+}
+
+func (c *mqlProxmoxCephPool) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlProxmoxCephPool) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlProxmoxCephPool) GetMinSize() *plugin.TValue[int64] {
+	return &c.MinSize
+}
+
+func (c *mqlProxmoxCephPool) GetPgNum() *plugin.TValue[int64] {
+	return &c.PgNum
+}
+
+func (c *mqlProxmoxCephPool) GetPgNumFinal() *plugin.TValue[int64] {
+	return &c.PgNumFinal
+}
+
+func (c *mqlProxmoxCephPool) GetPgNumMin() *plugin.TValue[int64] {
+	return &c.PgNumMin
+}
+
+func (c *mqlProxmoxCephPool) GetPgAutoscaleMode() *plugin.TValue[string] {
+	return &c.PgAutoscaleMode
+}
+
+func (c *mqlProxmoxCephPool) GetCrushRuleId() *plugin.TValue[int64] {
+	return &c.CrushRuleId
+}
+
+func (c *mqlProxmoxCephPool) GetCrushRuleName() *plugin.TValue[string] {
+	return &c.CrushRuleName
+}
+
+func (c *mqlProxmoxCephPool) GetBytesUsed() *plugin.TValue[int64] {
+	return &c.BytesUsed
+}
+
+func (c *mqlProxmoxCephPool) GetPercentUsed() *plugin.TValue[float64] {
+	return &c.PercentUsed
+}
+
+func (c *mqlProxmoxCephPool) GetApplications() *plugin.TValue[any] {
+	return &c.Applications
+}
+
+// mqlProxmoxCephFilesystem for the proxmox.ceph.filesystem resource
+type mqlProxmoxCephFilesystem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephFilesystemInternal it will be used here
+	Name         plugin.TValue[string]
+	MetadataPool plugin.TValue[string]
+	DataPools    plugin.TValue[[]any]
+}
+
+// createProxmoxCephFilesystem creates a new instance of this resource
+func createProxmoxCephFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephFilesystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.filesystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephFilesystem) MqlName() string {
+	return "proxmox.ceph.filesystem"
+}
+
+func (c *mqlProxmoxCephFilesystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephFilesystem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephFilesystem) GetMetadataPool() *plugin.TValue[string] {
+	return &c.MetadataPool
+}
+
+func (c *mqlProxmoxCephFilesystem) GetDataPools() *plugin.TValue[[]any] {
+	return &c.DataPools
+}
+
+// mqlProxmoxCephConfigEntry for the proxmox.ceph.configEntry resource
+type mqlProxmoxCephConfigEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxCephConfigEntryInternal it will be used here
+	Name               plugin.TValue[string]
+	Section            plugin.TValue[string]
+	Value              plugin.TValue[string]
+	Mask               plugin.TValue[string]
+	Level              plugin.TValue[string]
+	CanUpdateAtRuntime plugin.TValue[bool]
+}
+
+// createProxmoxCephConfigEntry creates a new instance of this resource
+func createProxmoxCephConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxCephConfigEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.ceph.configEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxCephConfigEntry) MqlName() string {
+	return "proxmox.ceph.configEntry"
+}
+
+func (c *mqlProxmoxCephConfigEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxCephConfigEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxCephConfigEntry) GetSection() *plugin.TValue[string] {
+	return &c.Section
+}
+
+func (c *mqlProxmoxCephConfigEntry) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlProxmoxCephConfigEntry) GetMask() *plugin.TValue[string] {
+	return &c.Mask
+}
+
+func (c *mqlProxmoxCephConfigEntry) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlProxmoxCephConfigEntry) GetCanUpdateAtRuntime() *plugin.TValue[bool] {
+	return &c.CanUpdateAtRuntime
 }

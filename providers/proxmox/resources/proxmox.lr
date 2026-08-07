@@ -14,8 +14,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/proxmox/resources"
 // exposed through `users`, `groups`, `roles`, `acl`, and `realms`;
 // cluster-wide HA, quorum, and firewall configuration through `cluster`;
 // scheduled vzdump backups through `backupJobs`; guest replication
-// through `replicationJobs`; and software-defined networking through
-// `sdnZones` and `sdnVnets`.
+// through `replicationJobs`; software-defined networking through
+// `sdnZones` and `sdnVnets`; and the Ceph storage cluster, when one is
+// configured, through `ceph`.
 proxmox {
   // Version and system information
   //
@@ -53,6 +54,8 @@ proxmox {
   sdnZones() []proxmox.sdn.zone
   // SDN virtual networks defined on the cluster
   sdnVnets() []proxmox.sdn.vnet
+  // Ceph storage cluster managed by this Proxmox deployment
+  ceph() proxmox.ceph
 }
 
 // Proxmox VE cluster
@@ -1824,4 +1827,314 @@ proxmox.container.passthroughDevice @defaults("slot path mode") {
   gid int
   // Mode (octal) applied to the in-container device node; empty when not set
   mode string
+}
+
+// Ceph cluster backing a Proxmox VE deployment
+//
+// Ceph storage cluster managed alongside Proxmox VE, covering the
+// daemons that keep it running and the data-placement settings that
+// decide how durable it is. Monitors, managers, metadata servers, and
+// OSDs are listed through `monitors`, `managers`, `metadataServers`,
+// and `osds`; the data layout through `pools`, `fileSystems`, and
+// `crushRules`; and the cluster-wide tunables Ceph itself stores
+// through `config`. Overall health is reported by `healthStatus`, with
+// the complete unparsed report in `status`.
+//
+// Many Proxmox clusters run no Ceph at all. On those, `available` is
+// false and every list is empty, which is a real answer rather than a
+// failed one. A token that cannot read Ceph reports an error instead,
+// so missing permissions are never reported as a cluster without Ceph.
+// Reading these fields requires Sys.Audit or Datastore.Audit on `/`.
+proxmox.ceph @defaults("available healthStatus") {
+  // Whether Ceph is configured on this cluster
+  //
+  // False when `pveceph` was never initialized. All other fields are
+  // empty in that case.
+  available() bool
+  // Overall Ceph health
+  //
+  // One of HEALTH_OK, HEALTH_WARN, or HEALTH_ERR. Empty when Ceph is
+  // not configured on the cluster.
+  healthStatus() string
+  // Health check summaries currently raised by Ceph
+  //
+  // Keyed by the Ceph check name (for example `POOL_NO_REDUNDANCY`,
+  // `MON_CLOCK_SKEW`, `OSD_NEARFULL`), with the severity and message
+  // Ceph reports for each. Empty when health is HEALTH_OK.
+  healthChecks() dict
+  // Complete Ceph status report
+  //
+  // Raw `/cluster/ceph/status` response, holding the full fsid, mon
+  // map, osd map, pg map, and service map. The escape hatch for values
+  // not surfaced as their own fields.
+  status() dict
+  // Ceph version installed on each node, keyed by node name
+  nodeVersions() dict
+  // Monitors that maintain the cluster map and quorum
+  monitors() []proxmox.ceph.monitor
+  // Managers that serve cluster metrics and hosted modules
+  managers() []proxmox.ceph.manager
+  // Metadata servers backing CephFS file systems
+  metadataServers() []proxmox.ceph.metadataServer
+  // Object storage daemons holding the cluster data
+  osds() []proxmox.ceph.osd
+  // Storage pools and their replication settings
+  pools() []proxmox.ceph.pool
+  // CephFS file systems defined on the cluster
+  fileSystems() []proxmox.ceph.filesystem
+  // Cluster-wide configuration entries from the Ceph config database
+  config() []proxmox.ceph.configEntry
+  // Names of the CRUSH rules defined on the cluster
+  //
+  // Rules decide which OSDs a pool places its replicas on. Pools
+  // reference them by name through `crushRuleName`.
+  crushRules() []string
+}
+
+// Ceph monitor daemon
+//
+// Monitor daemon holding the authoritative copy of the cluster map,
+// selected by `name`. Monitors must hold quorum for the cluster to
+// accept I/O, so `quorum` and `state` are the fields that say whether
+// the cluster is actually serving. The `host` field names the node the
+// daemon runs on and `addr` its advertised bind address.
+proxmox.ceph.monitor @defaults("name host quorum state") {
+  // Monitor id, typically the hostname
+  name string
+  // Node the monitor runs on
+  host string
+  // Address the monitor advertises, in Ceph format (usually `IP:PORT/NONCE`)
+  addr string
+  // Whether the monitor is part of the current quorum
+  quorum bool
+  // Rank of the monitor within the mon map; null when not reported
+  rank int
+  // Run state of the monitor
+  //
+  // `running` when in quorum, `stopped` when the systemd unit is
+  // configured but inactive, or `unknown`.
+  state string
+  // Whether a ceph-mon systemd unit is enabled on the hosting node
+  service bool
+  // Whether the monitor data directory exists on the hosting node
+  directoryExists bool
+  // Full Ceph version string of the daemon
+  cephVersion string
+  // Short numeric Ceph version of the daemon (e.g. `19.2.0`)
+  cephVersionShort string
+}
+
+// Ceph manager daemon
+//
+// Manager daemon serving cluster metrics and hosted modules such as
+// the dashboard and the placement-group autoscaler, selected by
+// `name`. A cluster with no active manager keeps serving I/O but stops
+// reporting usable statistics, so `state` is the field to check. The
+// `host` field names the node the daemon runs on.
+proxmox.ceph.manager @defaults("name host state") {
+  // Manager id
+  name string
+  // Node the manager runs on
+  host string
+  // Address the manager advertises, in Ceph format
+  addr string
+  // Manager state
+  //
+  // `active` or `standby` for daemons visible to the manager cluster,
+  // `stopped` when the systemd unit is configured but inactive, or
+  // `unknown`.
+  state string
+  // Whether a ceph-mgr systemd unit is enabled on the hosting node
+  service bool
+  // Whether the manager data directory exists on the hosting node
+  directoryExists bool
+  // Full Ceph version string of the daemon
+  cephVersion string
+  // Short numeric Ceph version of the daemon (e.g. `19.2.0`)
+  cephVersionShort string
+}
+
+// Ceph metadata server daemon
+//
+// Metadata server backing a CephFS file system, selected by `name`.
+// Each file system needs an active MDS to serve its namespace, so
+// `state` and `rank` show whether one is bound and standbys are
+// available. The `fileSystem` field resolves the CephFS this daemon
+// serves, and `standbyReplay` reports whether a standby is tracking
+// the active daemon for faster failover.
+proxmox.ceph.metadataServer @defaults("name host state fsName") {
+  // Metadata server id
+  name string
+  // Node the metadata server runs on
+  host string
+  // Address the metadata server advertises, in Ceph format
+  addr string
+  // Ceph-reported run state (e.g. `up:active`, `up:standby`, `up:standby-replay`)
+  state string
+  // Rank within the file system; -1 for standby daemons not bound to a rank
+  rank int
+  // Name of the CephFS this daemon is bound to; empty for unbound standbys
+  fsName string
+  // CephFS this daemon serves; null for unbound standbys
+  fileSystem() proxmox.ceph.filesystem
+  // Whether the standby is polling the active daemon for faster recovery
+  standbyReplay bool
+  // Whether a ceph-mds systemd unit is enabled on the hosting node
+  service bool
+  // Whether the metadata server data directory exists on the hosting node
+  directoryExists bool
+  // Full Ceph version string of the daemon
+  cephVersion string
+  // Short numeric Ceph version of the daemon (e.g. `19.2.0`)
+  cephVersionShort string
+}
+
+// Ceph object storage daemon
+//
+// Object storage daemon holding one backing device worth of cluster
+// data, selected by its numeric `id`. An OSD contributes capacity only
+// while it is both `up` (running) and `inCluster` (accepting data), so
+// those two fields together say whether the cluster is degraded. The
+// `deviceClass` field (`hdd`, `ssd`, `nvme`) is what CRUSH rules
+// select on, `crushWeight` sets the share of data it receives, and
+// `devices` names the underlying block devices.
+proxmox.ceph.osd @defaults("id host up inCluster deviceClass") {
+  // Numeric OSD id
+  id int
+  // OSD name as it appears in the CRUSH map (e.g. `osd.3`)
+  name string
+  // Node the daemon runs on
+  host string
+  // Whether the daemon is running
+  //
+  // Null when the CRUSH tree reports no status for this OSD.
+  up bool
+  // Whether the OSD is accepting data placement
+  //
+  // An OSD that is up but marked out holds no data. Null when the
+  // CRUSH tree reports no membership state.
+  inCluster bool
+  // Ceph-reported status string (`up` or `down`)
+  status string
+  // Storage class CRUSH rules select on (`hdd`, `ssd`, `nvme`)
+  deviceClass string
+  // Share of data this OSD receives in the CRUSH map
+  crushWeight float
+  // Manual override applied on top of the CRUSH weight; 1 when untouched
+  reweight float
+  // Total capacity in bytes
+  totalSpace int
+  // Used capacity in bytes
+  bytesUsed int
+  // Percentage of capacity in use
+  percentUsed float
+  // Backing object store (`bluestore` or the legacy `filestore`)
+  objectStore string
+  // Underlying block device names, comma-joined (e.g. `sdb,sdc`)
+  devices string
+  // Underlying device serial identifiers, comma-joined
+  deviceIds string
+  // Underlying /dev/disk/by-path entries, comma-joined
+  devicePaths string
+  // Bind addresses for client-facing traffic
+  frontAddress string
+  // Bind addresses for inter-OSD replication traffic
+  backAddress string
+  // Path to the OSD data directory
+  dataPath string
+  // Full Ceph version string of the daemon
+  cephVersion string
+  // Short numeric Ceph version of the daemon (e.g. `19.2.0`)
+  cephVersionShort string
+  // Ceph release codename the daemon runs
+  cephRelease string
+}
+
+// Ceph storage pool
+//
+// Storage pool and the replication settings that decide how much
+// hardware loss its data survives, selected by `name`. The `size`
+// field is the number of replicas Ceph keeps and `minSize` the number
+// it needs before it will still accept writes; a replicated pool at
+// size 2 or minSize 1 can lose data to a single failure. The
+// `crushRuleName` field names the placement rule and
+// `pgAutoscaleMode` whether Ceph manages the placement-group count.
+proxmox.ceph.pool @defaults("name type size minSize percentUsed") {
+  // Operator-visible pool name
+  name string
+  // Numeric pool id assigned by Ceph
+  poolId int
+  // Pool type
+  //
+  // `replicated` for n-way replication or `erasure` for an
+  // erasure-coded pool.
+  type string
+  // Number of object replicas Ceph keeps
+  size int
+  // Replicas required before the pool accepts writes
+  minSize int
+  // Current placement-group count
+  pgNum int
+  // Optimal placement-group count computed by the autoscaler
+  pgNumFinal int
+  // Lowest placement-group count the autoscaler may choose
+  pgNumMin int
+  // Placement-group autoscaler mode (`on`, `warn`, or `off`)
+  pgAutoscaleMode string
+  // Numeric id of the CRUSH rule governing placement
+  crushRuleId int
+  // Name of the CRUSH rule governing placement
+  crushRuleName string
+  // Bytes currently stored in the pool
+  bytesUsed int
+  // Percentage of pool capacity in use
+  percentUsed float
+  // Applications tagged on the pool, keyed by application name
+  //
+  // Proxmox tags pools it creates with `rbd` for guest disks or
+  // `cephfs` for file-system pools.
+  applications dict
+}
+
+// CephFS file system
+//
+// CephFS file system and the pools that store it, selected by `name`.
+// The `metadataPool` holds the namespace and `dataPools` the file
+// contents, so the durability of a CephFS is the durability of those
+// pools. Proxmox mounts these through a `cephfs` storage entry.
+proxmox.ceph.filesystem @defaults("name metadataPool") {
+  // File system name
+  name string
+  // Name of the pool holding file-system metadata
+  metadataPool string
+  // Names of every data pool assigned to the file system
+  dataPools []string
+}
+
+// Ceph configuration database entry
+//
+// Setting stored in the Ceph configuration database rather than in
+// ceph.conf, selected by its `name` within a `section`. Entries here
+// are what Ceph actually runs with, so this is where authentication
+// and wire-protocol settings such as `auth_cluster_required`,
+// `auth_service_required`, and `ms_bind_msgr2` can be confirmed. The
+// `section` field scopes the entry to `global`, a daemon type, or a
+// single daemon, and `mask` narrows it further to a CRUSH location or
+// device class.
+proxmox.ceph.configEntry @defaults("section name value") {
+  // Configuration key name
+  name string
+  // Scope the entry applies to
+  //
+  // `global`, a daemon type (`mon`, `osd`, `mds`, `mgr`, `client`), or
+  // a single daemon such as `osd.3`.
+  section string
+  // Configured value, always serialized as a string by Ceph
+  value string
+  // Match expression narrowing the entry's scope; empty when unmasked
+  mask string
+  // Visibility level of the setting (`basic`, `advanced`, or `dev`)
+  level string
+  // Whether the value can change without restarting the affected daemons
+  canUpdateAtRuntime bool
 }
