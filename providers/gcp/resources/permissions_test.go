@@ -67,6 +67,7 @@ var validatedGCPPermissions = []string{
 	"aiplatform.pipelineJobs.list",
 	"aiplatform.ragCorpora.list",
 	"aiplatform.reasoningEngines.list",
+	"aiplatform.schedules.get",
 	"aiplatform.schedules.list",
 	"aiplatform.tensorboards.list",
 	"aiplatform.trainingPipelines.list",

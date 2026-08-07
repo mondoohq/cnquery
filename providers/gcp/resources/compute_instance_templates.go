@@ -20,8 +20,11 @@ import (
 )
 
 func (g *mqlGcpProjectComputeService) instanceTemplates() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 

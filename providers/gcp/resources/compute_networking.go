@@ -379,7 +379,11 @@ func (g *mqlGcpProjectComputeServiceRoute) network() (*mqlGcpProjectComputeServi
 }
 
 func (g *mqlGcpProjectComputeService) routes() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -466,7 +470,11 @@ func (g *mqlGcpProjectComputeServiceServiceAttachment) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) serviceAttachments() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -589,7 +597,11 @@ func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) subnetwork() (*mqlGcpP
 }
 
 func (g *mqlGcpProjectComputeService) networkEndpointGroups() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -680,7 +692,11 @@ func (g *mqlGcpProjectComputeServiceInterconnect) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) interconnects() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -772,7 +788,11 @@ func (g *mqlGcpProjectComputeServiceInterconnectAttachment) id() (string, error)
 }
 
 func (g *mqlGcpProjectComputeService) interconnectAttachments() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -855,7 +875,11 @@ func (g *mqlGcpProjectComputeServiceExternalVpnGateway) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) externalVpnGateways() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -926,7 +950,11 @@ func (g *mqlGcpProjectComputeServiceTargetTcpProxy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) targetTcpProxies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1005,7 +1033,11 @@ func (g *mqlGcpProjectComputeServiceTargetSslProxy) sslPolicy() (*mqlGcpProjectC
 }
 
 func (g *mqlGcpProjectComputeService) targetSslProxies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1064,7 +1096,11 @@ func (g *mqlGcpProjectComputeServicePacketMirroring) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) packetMirrorings() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1144,7 +1180,11 @@ func (g *mqlGcpProjectComputeServiceBackendBucket) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) backendBuckets() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1209,7 +1249,11 @@ func (g *mqlGcpProjectComputeServiceTargetPool) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) targetPools() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1272,7 +1316,11 @@ func (g *mqlGcpProjectComputeServicePublicAdvertisedPrefix) id() (string, error)
 }
 
 func (g *mqlGcpProjectComputeService) publicAdvertisedPrefixes() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 

@@ -58,9 +58,20 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 
 	mqlKeys := make([]any, 0, len(apiKeyItems))
 	for _, k := range apiKeyItems {
-		var mqlRestrictions plugin.Resource
+		// The API omits the entire restrictions block for a key that has no
+		// restrictions, so the resource must be built either way: that absence
+		// IS the fully-unrestricted case the `unrestricted` predicate exists to
+		// report. Building it only when k.Restrictions != nil left
+		// `restrictions` null for precisely the keys a posture check is looking
+		// for, so `unrestricted` could never evaluate to true.
+		var (
+			mqlAndroidRestr   any
+			mqlBrowserRest    any
+			mqlIosRestr       any
+			mqlServerKeyRestr any
+			mqlApiTargets     = []any{}
+		)
 		if k.Restrictions != nil {
-			var mqlAndroidRestr any
 			if k.Restrictions.AndroidKeyRestrictions != nil {
 
 				type mqlAllowedApp struct {
@@ -85,7 +96,7 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				}
 			}
 
-			mqlApiTargets := make([]any, 0, len(k.Restrictions.ApiTargets))
+			mqlApiTargets = make([]any, 0, len(k.Restrictions.ApiTargets))
 			if k.Restrictions.ApiTargets != nil {
 				type mqlApiTarget struct {
 					Service string   `json:"service"`
@@ -104,7 +115,6 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				}
 			}
 
-			var mqlBrowserRest any
 			if k.Restrictions.BrowserKeyRestrictions != nil {
 				type mqlBrowserKeyRestrictions struct {
 					AllowedReferrers []string `json:"allowedReferrers"`
@@ -118,7 +128,6 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				}
 			}
 
-			var mqlIosRestr any
 			if k.Restrictions.IosKeyRestrictions != nil {
 				type mqlIosKeyRestrictions struct {
 					AllowedBundleIds []string `json:"allowedBundleIds"`
@@ -132,7 +141,6 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				}
 			}
 
-			var mqlServerKeyRestr any
 			if k.Restrictions.ServerKeyRestrictions != nil {
 				type mqlServerKeyRestrictions struct {
 					AllowedIps []string `json:"allowedIps"`
@@ -146,17 +154,18 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				}
 			}
 
-			mqlRestrictions, err = CreateResource(g.MqlRuntime, "gcp.project.apiKey.restrictions", map[string]*llx.RawData{
-				"parentResourcePath":     llx.StringData(k.Name),
-				"androidKeyRestrictions": llx.DictData(mqlAndroidRestr),
-				"browserKeyRestrictions": llx.DictData(mqlBrowserRest),
-				"iosKeyRestrictions":     llx.DictData(mqlIosRestr),
-				"serverKeyRestrictions":  llx.DictData(mqlServerKeyRestr),
-				"apiTargets":             llx.ArrayData(mqlApiTargets, types.Dict),
-			})
-			if err != nil {
-				return nil, err
-			}
+		}
+
+		mqlRestrictions, err := CreateResource(g.MqlRuntime, "gcp.project.apiKey.restrictions", map[string]*llx.RawData{
+			"parentResourcePath":     llx.StringData(k.Name),
+			"androidKeyRestrictions": llx.DictData(mqlAndroidRestr),
+			"browserKeyRestrictions": llx.DictData(mqlBrowserRest),
+			"iosKeyRestrictions":     llx.DictData(mqlIosRestr),
+			"serverKeyRestrictions":  llx.DictData(mqlServerKeyRestr),
+			"apiTargets":             llx.ArrayData(mqlApiTargets, types.Dict),
+		})
+		if err != nil {
+			return nil, err
 		}
 
 		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.apiKey", map[string]*llx.RawData{

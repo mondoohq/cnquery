@@ -139,8 +139,13 @@ func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	projectId := conn.ResourceID()
-	args["projectId"] = llx.StringData(projectId)
+	// Only default the project from the connection when the caller did not
+	// supply one; NewResource runs this init before the resource-cache lookup,
+	// so an unconditional overwrite would redirect a caller-scoped reference at
+	// the connection's own project.
+	if pid, ok := args["projectId"]; !ok || pid == nil {
+		args["projectId"] = llx.StringData(conn.ResourceID())
+	}
 
 	return args, nil, nil
 }

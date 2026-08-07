@@ -23,7 +23,11 @@ import (
 // Instance groups
 
 func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -116,7 +120,11 @@ func (g *mqlGcpProjectComputeServiceInstanceGroup) subnetwork() (*mqlGcpProjectC
 // Instance group managers
 
 func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -238,7 +246,11 @@ func (g *mqlGcpProjectComputeServiceInstanceGroupManager) instanceTemplate() (*m
 // Network firewall policies
 
 func (g *mqlGcpProjectComputeService) firewallPolicies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {

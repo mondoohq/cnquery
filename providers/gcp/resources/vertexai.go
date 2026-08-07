@@ -2349,22 +2349,7 @@ func (g *mqlGcpProjectVertexaiService) schedules() ([]any, error) {
 				return nil, false, err
 			}
 
-			mqlSched, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.schedule", map[string]*llx.RawData{
-				"name":                  llx.StringData(sched.Name),
-				"displayName":           llx.StringData(sched.DisplayName),
-				"state":                 llx.StringData(sched.State.String()),
-				"cron":                  llx.StringData(sched.GetCron()),
-				"maxRunCount":           llx.IntData(sched.MaxRunCount),
-				"startedRunCount":       llx.IntData(sched.StartedRunCount),
-				"maxConcurrentRunCount": llx.IntData(sched.MaxConcurrentRunCount),
-				"allowQueueing":         llx.BoolData(sched.AllowQueueing),
-				"catchUp":               llx.BoolData(sched.CatchUp),
-				"startedAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.StartTime)),
-				"endedAt":               llx.TimeDataPtr(timestampAsTimePtr(sched.EndTime)),
-				"createdAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.CreateTime)),
-				"updatedAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.UpdateTime)),
-				"nextRunTime":           llx.TimeDataPtr(timestampAsTimePtr(sched.NextRunTime)),
-			})
+			mqlSched, err := newMqlVertexaiSchedule(g.MqlRuntime, sched)
 			if err != nil {
 				return nil, false, err
 			}
@@ -2376,6 +2361,86 @@ func (g *mqlGcpProjectVertexaiService) schedules() ([]any, error) {
 
 func (g *mqlGcpProjectVertexaiServiceSchedule) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+// newMqlVertexaiSchedule maps a Vertex AI Schedule onto the MQL resource. It is
+// shared by the schedules() collection and the single-schedule init so both
+// paths populate the identical field set.
+func newMqlVertexaiSchedule(runtime *plugin.Runtime, sched *aiplatformpb.Schedule) (plugin.Resource, error) {
+	return CreateResource(runtime, "gcp.project.vertexaiService.schedule", map[string]*llx.RawData{
+		"name":                  llx.StringData(sched.Name),
+		"displayName":           llx.StringData(sched.DisplayName),
+		"state":                 llx.StringData(sched.State.String()),
+		"cron":                  llx.StringData(sched.GetCron()),
+		"maxRunCount":           llx.IntData(sched.MaxRunCount),
+		"startedRunCount":       llx.IntData(sched.StartedRunCount),
+		"maxConcurrentRunCount": llx.IntData(sched.MaxConcurrentRunCount),
+		"allowQueueing":         llx.BoolData(sched.AllowQueueing),
+		"catchUp":               llx.BoolData(sched.CatchUp),
+		"startedAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.StartTime)),
+		"endedAt":               llx.TimeDataPtr(timestampAsTimePtr(sched.EndTime)),
+		"createdAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.CreateTime)),
+		"updatedAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.UpdateTime)),
+		"nextRunTime":           llx.TimeDataPtr(timestampAsTimePtr(sched.NextRunTime)),
+	})
+}
+
+// initGcpProjectVertexaiServiceSchedule resolves a single Vertex AI schedule by
+// its full resource name.
+//
+// Without an init, NewResource falls straight through to Create, so a typed
+// scheduleRef() reference produced a resource carrying only `name` -- every
+// other field unset, surfacing client-side as "primitive with no type
+// information" with no attribution. Whether that was visible depended on
+// whether schedules() had already run in the same session, so the same query
+// passed or returned nulls depending on evaluation order.
+func initGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+
+	region := vertexaiRegionFromName(name)
+	if region == "" {
+		return nil, nil, errors.New("vertexai schedule init: could not determine region from name " + name)
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := aiplatform.NewScheduleClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	sched, err := client.GetSchedule(ctx, &aiplatformpb.GetScheduleRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newMqlVertexaiSchedule(runtime, sched)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) {
