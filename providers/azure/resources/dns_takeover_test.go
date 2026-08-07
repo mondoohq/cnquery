@@ -6,7 +6,10 @@ package resources
 import (
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
 func TestNormalizeDnsTarget(t *testing.T) {
@@ -73,6 +76,63 @@ func TestAzureServiceForHostname(t *testing.T) {
 	t.Run("case and trailing dot are normalized", func(t *testing.T) {
 		assert.Equal(t, "App Service", azureServiceForHostname("Contoso.AzureWebsites.Net."))
 	})
+}
+
+// TestCnameTargetFromSdkRecordSet drives the parser with a real
+// armdns.RecordSetProperties put through the same convert.JsonToDict the
+// production path uses, rather than a hand-built map.
+//
+// This is the test that was missing. The parser read "cnameRecord" while the
+// SDK's marshaller emits "CNAMERecord", so cnameTarget and targetAzureService
+// were empty on every DNS record in every subscription and a dangling-CNAME
+// audit passed vacuously. A hand-built fixture agreed with the code and stayed
+// green; only a round-trip through the SDK type can catch this, and only a
+// round-trip will catch it again if Azure changes the casing.
+func TestCnameTargetFromSdkRecordSet(t *testing.T) {
+	t.Run("cname record", func(t *testing.T) {
+		cname := "Contoso.AzureWebsites.NET."
+		ttl := int64(300)
+		props, err := convert.JsonToDict(&armdns.RecordSetProperties{
+			TTL:         &ttl,
+			CnameRecord: &armdns.CnameRecord{Cname: &cname},
+		})
+		require.NoError(t, err)
+
+		// guard the premise: if the SDK ever lower-camel-cases this key, the
+		// assertion below would pass for the wrong reason
+		_, upper := props["CNAMERecord"]
+		require.True(t, upper, "expected the SDK to marshal the key as CNAMERecord, got %v", props)
+
+		assert.Equal(t, "contoso.azurewebsites.net", cnameTargetFromProperties(props))
+		assert.Equal(t, "App Service", azureServiceForHostname(cnameTargetFromProperties(props)))
+	})
+
+	t.Run("alias record target resource", func(t *testing.T) {
+		id := "/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/trafficManagerProfiles/tm"
+		props, err := convert.JsonToDict(&armdns.RecordSetProperties{
+			TargetResource: &armdns.SubResource{ID: &id},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, id, targetResourceIDFromProperties(props))
+	})
+
+	t.Run("an A record has no cname target", func(t *testing.T) {
+		ip := "10.0.0.1"
+		props, err := convert.JsonToDict(&armdns.RecordSetProperties{
+			ARecords: []*armdns.ARecord{{IPv4Address: &ip}},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "", cnameTargetFromProperties(props))
+	})
+}
+
+func TestDictValueFold(t *testing.T) {
+	m := map[string]any{"CNAMERecord": "upper", "other": "lower"}
+	assert.Equal(t, "upper", dictValueFold(m, "CNAMERecord"), "exact match")
+	assert.Equal(t, "upper", dictValueFold(m, "cnameRecord"), "case-insensitive match")
+	assert.Equal(t, "lower", dictValueFold(m, "OTHER"))
+	assert.Nil(t, dictValueFold(m, "absent"))
+	assert.Nil(t, dictValueFold(nil, "anything"))
 }
 
 func TestCnameTargetFromProperties(t *testing.T) {

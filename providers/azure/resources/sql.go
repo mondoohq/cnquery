@@ -432,6 +432,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.virtualNetworkRule",
 				map[string]*llx.RawData{
+					"__id":                   llx.StringData(subResourceCacheID(entry.ID, a.Id.Data, "virtualNetworkRules", convert.ToValue(entry.Name))),
 					"id":                     llx.StringDataPtr(entry.ID),
 					"name":                   llx.StringDataPtr(entry.Name),
 					"type":                   llx.StringDataPtr(entry.Type),
@@ -970,6 +971,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advancedThreatProtection() (*mq
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.advancedthreatprotection",
 		map[string]*llx.RawData{
+			"__id":         llx.StringData(subResourceCacheID(policy.ID, a.Id.Data, "advancedThreatProtectionSettings", "default")),
 			"id":           llx.StringDataPtr(policy.ID),
 			"state":        llx.StringData(state),
 			"creationTime": llx.TimeDataPtr(creationTime),
@@ -1033,6 +1035,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) backupShortTermRetentionPolicy(
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.backupshorttermretentionpolicy",
 		map[string]*llx.RawData{
+			"__id":                      llx.StringData(subResourceCacheID(policy.ID, a.Id.Data, "backupShortTermRetentionPolicies", "default")),
 			"id":                        llx.StringDataPtr(policy.ID),
 			"retentionDays":             llx.IntData(retentionDays),
 			"diffBackupIntervalInHours": llx.IntData(diffBackupInterval),
@@ -1092,6 +1095,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) longTermRetentionPolicy() (*mql
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.longtermretentionpolicy",
 		map[string]*llx.RawData{
+			"__id":             llx.StringData(subResourceCacheID(policy.ID, a.Id.Data, "backupLongTermRetentionPolicies", "default")),
 			"id":               llx.StringDataPtr(policy.ID),
 			"weeklyRetention":  llx.StringDataPtr(weeklyRetention),
 			"monthlyRetention": llx.StringDataPtr(monthlyRetention),
@@ -1874,46 +1878,14 @@ func (a *mqlAzureSubscriptionSqlServiceServer) privateEndpointConnections() ([]a
 		if err != nil {
 			return nil, err
 		}
-		for _, pec := range page.Value {
-			if pec == nil {
-				continue
-			}
-			args := map[string]*llx.RawData{
-				"__id": llx.StringDataPtr(pec.ID),
-				"id":   llx.StringDataPtr(pec.ID),
-				"name": llx.StringDataPtr(pec.Name),
-				"type": llx.StringDataPtr(pec.Type),
-			}
-			if pec.Properties != nil {
-				propsMap, err := convert.JsonToDict(pec.Properties)
-				if err != nil {
-					return nil, err
-				}
-				args["properties"] = llx.DictData(propsMap)
-				if pec.Properties.PrivateEndpoint != nil {
-					args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
-				}
-				if pec.Properties.ProvisioningState != nil {
-					args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
-				}
-				if pec.Properties.PrivateLinkServiceConnectionState != nil {
-					stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
-						stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired),
-						pec.Properties.PrivateLinkServiceConnectionState.Description,
-						stringEnumPtr(pec.Properties.PrivateLinkServiceConnectionState.Status))
-					if err != nil {
-						return nil, err
-					}
-					args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
-				}
-			}
-
-			mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlConn)
+		// The shared helper seeds every declared field, including ipAddresses.
+		// Hand-rolling the args map here left ipAddresses out entirely, so it
+		// was unset rather than empty on every connection.
+		conns, err := azurePrivateEndpointConnectionsToMql(a.MqlRuntime, page.Value)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, conns...)
 	}
 	return res, nil
 }

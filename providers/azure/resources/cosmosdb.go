@@ -228,9 +228,13 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 			if rule.IgnoreMissingVNetServiceEndpoint != nil {
 				ignoreMissing = *rule.IgnoreMissingVNetServiceEndpoint
 			}
-			ruleId := *account.ID + "/virtualNetworkRules/" + subnetId
+			// convert.ToValue rather than a bare deref: the list path guards
+			// account.ID, but the init path reaches this function straight from
+			// a Get response.
+			ruleId := convert.ToValue(account.ID) + "/virtualNetworkRules/" + subnetId
 			mqlRule, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.virtualNetworkRule",
 				map[string]*llx.RawData{
+					"__id":                             llx.StringData(ruleId),
 					"id":                               llx.StringData(ruleId),
 					"subnetId":                         llx.StringData(subnetId),
 					"ignoreMissingVNetServiceEndpoint": llx.BoolData(ignoreMissing),

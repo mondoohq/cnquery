@@ -221,7 +221,13 @@ func (a *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorizatio
 	}
 	wantGuid := lastPathSegment(a.RoleDefinitionId.Data)
 
+	// __id has to be explicit here. A Lighthouse assignment can name a managed
+	// customer subscription other than the connected one, and azure.subscription
+	// derives its cache key from the `id` field these args do not carry -- so
+	// without it the delegated role resolves against whichever subscription
+	// happened to populate the shared empty key first.
 	r, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + a.cacheSubId),
 		"subscriptionId": llx.StringData(a.cacheSubId),
 	})
 	if err != nil {
@@ -337,6 +343,7 @@ func (a *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) registrati
 	}
 
 	r, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"__id":           llx.StringData("/subscriptions/" + subId),
 		"subscriptionId": llx.StringData(subId),
 	})
 	if err != nil {

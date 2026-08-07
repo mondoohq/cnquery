@@ -122,27 +122,54 @@ func azureServiceForHostname(hostname string) string {
 
 // cnameTargetFromProperties pulls the CNAME target out of a record set's
 // properties, normalized. Returns "" for every record type other than CNAME.
+//
+// The key is matched case-insensitively because the armdns marshaller does not
+// lower-camel-case it: RecordSetProperties.MarshalJSON writes "CNAMERecord"
+// (likewise "ARecords", "MXRecords", "TXTRecords"). Reading "cnameRecord"
+// matched nothing, so cnameTarget and targetAzureService were empty on every
+// record in every subscription and a dangling-CNAME audit passed vacuously.
+// Accepting either spelling keeps this working if the SDK ever normalizes.
 func cnameTargetFromProperties(properties map[string]any) string {
-	cname, ok := properties["cnameRecord"].(map[string]any)
+	cname, ok := dictValueFold(properties, "CNAMERecord").(map[string]any)
 	if !ok {
 		return ""
 	}
-	target, ok := cname["cname"].(string)
+	target, ok := dictValueFold(cname, "cname").(string)
 	if !ok {
 		return ""
 	}
 	return normalizeDnsTarget(target)
 }
 
+// dictValueFold looks up key in m, ignoring case. Azure's generated marshallers
+// are inconsistent about the casing of JSON keys, and a lookup that assumes one
+// spelling fails silently -- it is indistinguishable from an absent value.
+//
+// An exact hit returns without scanning. Only a miss falls back to walking the
+// map, which is O(n) in its size and deliberate: these are ARM property bags
+// holding a handful of keys, so a case-folded map built per call would cost
+// more than the scan it replaced.
+func dictValueFold(m map[string]any, key string) any {
+	if v, ok := m[key]; ok {
+		return v
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v
+		}
+	}
+	return nil
+}
+
 // targetResourceIDFromProperties pulls the ARM ID an alias record set tracks.
 // Alias records are removed by Azure when their target resource is deleted, so a
 // non-empty value here means the record cannot be left dangling.
 func targetResourceIDFromProperties(properties map[string]any) string {
-	target, ok := properties["targetResource"].(map[string]any)
+	target, ok := dictValueFold(properties, "targetResource").(map[string]any)
 	if !ok {
 		return ""
 	}
-	id, ok := target["id"].(string)
+	id, ok := dictValueFold(target, "id").(string)
 	if !ok {
 		return ""
 	}

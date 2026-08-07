@@ -607,6 +607,77 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error)
 	return res, nil
 }
 
+// initAzureSubscriptionKeyVaultServiceSecret is the secret counterpart of
+// initAzureSubscriptionKeyVaultServiceKey: it resolves a secret known only by
+// its URI so contentType, managed, tags and the attributes are real values
+// rather than unset fields. See that function for the full reasoning.
+func initAzureSubscriptionKeyVaultServiceSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	idRaw := args["id"]
+	if idRaw == nil {
+		return args, nil, nil
+	}
+	id, ok := idRaw.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	client, err := azsecrets.NewClient(kvid.BaseUrl, conn.Token(), &azsecrets.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := client.GetSecret(context.Background(), kvid.Name, kvid.Version, nil)
+	if err != nil {
+		if isAzureNotConfigured(err) {
+			log.Warn().Err(err).Str("id", id).Msg("could not read key vault secret, reporting its attributes as null")
+			return keyVaultSecretArgs(id, nil), nil, nil
+		}
+		return nil, nil, err
+	}
+	return keyVaultSecretArgs(id, &resp.Secret), nil, nil
+}
+
+// keyVaultSecretArgs maps a secret onto the resource's fields. The secret's
+// Value is deliberately never read: this resource reports metadata only.
+func keyVaultSecretArgs(id string, secret *azsecrets.Secret) map[string]*llx.RawData {
+	args := map[string]*llx.RawData{
+		"id":          llx.StringData(id),
+		"tags":        llx.NilData,
+		"contentType": llx.NilData,
+		"managed":     llx.NilData,
+		"enabled":     llx.NilData,
+		"created":     llx.NilData,
+		"updated":     llx.NilData,
+		"expires":     llx.NilData,
+		"notBefore":   llx.NilData,
+	}
+	if secret == nil {
+		return args
+	}
+	args["tags"] = llx.MapData(convert.PtrMapStrToInterface(secret.Tags), types.String)
+	args["contentType"] = llx.StringDataPtr(secret.ContentType)
+	args["managed"] = llx.BoolDataPtr(secret.Managed)
+	if attrs := secret.Attributes; attrs != nil {
+		args["enabled"] = llx.BoolDataPtr(attrs.Enabled)
+		args["created"] = llx.TimeDataPtr(attrs.Created)
+		args["updated"] = llx.TimeDataPtr(attrs.Updated)
+		args["expires"] = llx.TimeDataPtr(attrs.Expires)
+		args["notBefore"] = llx.TimeDataPtr(attrs.NotBefore)
+	}
+	return args
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
@@ -750,8 +821,13 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) accessPolicies() ([]any, erro
 			}
 		}
 
+		// Azure keys an access policy on (tenantId, objectId, applicationId), so
+		// the object id alone is not unique within a vault, let alone across
+		// them. Without an explicit __id the resource has no cache key at all
+		// and every policy in the scan aliases to the first one created.
 		mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault.accessPolicy",
 			map[string]*llx.RawData{
+				"__id":                   llx.StringData(id + "/accessPolicies/" + tenantId + "/" + objectId + "/" + applicationId),
 				"id":                     llx.StringData(id + "/accessPolicies/" + objectId),
 				"objectId":               llx.StringData(objectId),
 				"tenantId":               llx.StringData(tenantId),
@@ -802,6 +878,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) networkAcls() (*mqlAzureSubsc
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault.networkAcls",
 		map[string]*llx.RawData{
+			"__id":                    llx.StringData(id + "/networkAcls"),
 			"id":                      llx.StringData(id + "/networkAcls"),
 			"bypass":                  llx.StringData(bypass),
 			"defaultAction":           llx.StringData(defaultAction),
@@ -839,6 +916,92 @@ type mqlAzureSubscriptionKeyVaultServiceKeyInternal struct {
 	fetchOnce sync.Once
 	fetchResp *azkeys.GetKeyResponse
 	fetchErr  error
+}
+
+// initAzureSubscriptionKeyVaultServiceKey resolves a key that is known only by
+// its URI -- the shape every typed encryption-key accessor in this provider
+// hands back -- into a key with its real attributes.
+//
+// Without an init, NewResource went straight to Create with whatever the caller
+// passed, which was just the kid. enabled, expires, notBefore, created, updated
+// and recoveryLevel were therefore left *unset* rather than null on ~20
+// accessors: an unset field crosses the plugin boundary as an empty DataRes and
+// surfaces client-side as "primitive with no type information", and under MQL's
+// three-valued logic `{ enabled && expires > time.now }` then passes over a key
+// that is disabled or already expired. managed and tags were worse -- they were
+// passed as invented literals, so a certificate-backed key reported managed:
+// false as fact.
+func initAzureSubscriptionKeyVaultServiceKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// the collection path supplies every field already
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	kidRaw := args["kid"]
+	if kidRaw == nil {
+		return args, nil, nil
+	}
+	kid, ok := kidRaw.Value.(string)
+	if !ok || kid == "" {
+		return args, nil, nil
+	}
+
+	kvid, err := parseKeyVaultId(kid)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := client.GetKey(context.Background(), kvid.Name, kvid.Version, nil)
+	if err != nil {
+		// Reading a vault's metadata and reading a key inside it are separate
+		// permissions, so a caller can legitimately hold a reference it cannot
+		// resolve. Report the attributes as null -- unknown -- rather than
+		// failing the surrounding query or inventing values for them.
+		if isAzureNotConfigured(err) {
+			log.Warn().Err(err).Str("kid", kid).Msg("could not read key vault key, reporting its attributes as null")
+			return keyVaultKeyArgs(kid, nil), nil, nil
+		}
+		return nil, nil, err
+	}
+	return keyVaultKeyArgs(kid, &resp.KeyBundle), nil, nil
+}
+
+// keyVaultKeyArgs maps a key bundle onto the resource's fields. A nil bundle
+// sets every attribute to null, which is what the provider knows when the key
+// could not be read -- as distinct from leaving the fields unset.
+func keyVaultKeyArgs(kid string, bundle *azkeys.KeyBundle) map[string]*llx.RawData {
+	args := map[string]*llx.RawData{
+		"kid":           llx.StringData(kid),
+		"managed":       llx.NilData,
+		"tags":          llx.NilData,
+		"enabled":       llx.NilData,
+		"created":       llx.NilData,
+		"updated":       llx.NilData,
+		"expires":       llx.NilData,
+		"notBefore":     llx.NilData,
+		"recoveryLevel": llx.NilData,
+	}
+	if bundle == nil {
+		return args
+	}
+	args["managed"] = llx.BoolDataPtr(bundle.Managed)
+	args["tags"] = llx.MapData(convert.PtrMapStrToInterface(bundle.Tags), types.String)
+	if attrs := bundle.Attributes; attrs != nil {
+		args["enabled"] = llx.BoolDataPtr(attrs.Enabled)
+		args["created"] = llx.TimeDataPtr(attrs.Created)
+		args["updated"] = llx.TimeDataPtr(attrs.Updated)
+		args["expires"] = llx.TimeDataPtr(attrs.Expires)
+		args["notBefore"] = llx.TimeDataPtr(attrs.NotBefore)
+		args["recoveryLevel"] = llx.StringDataPtr((*string)(attrs.RecoveryLevel))
+	}
+	return args
 }
 
 // fetchKeyDetails fetches the full key from Azure Key Vault. The result is

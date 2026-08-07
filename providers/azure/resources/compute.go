@@ -228,7 +228,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 	}
 
 	var bootDiagnosticsEnabled bool
-	var bootDiagnosticsStorageUri, userData string
+	var bootDiagnosticsStorageUri string
 	osType := vmOsType(vm.Properties)
 	if vm.Properties != nil {
 		if dp := vm.Properties.DiagnosticsProfile; dp != nil && dp.BootDiagnostics != nil {
@@ -238,9 +238,6 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			if dp.BootDiagnostics.StorageURI != nil {
 				bootDiagnosticsStorageUri = *dp.BootDiagnostics.StorageURI
 			}
-		}
-		if vm.Properties.UserData != nil {
-			userData = *vm.Properties.UserData
 		}
 	}
 
@@ -303,7 +300,6 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"imageReference":                llx.ResourceData(mqlImageRef, mqlImageRef.MqlName()),
 			"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
 			"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
-			"userData":                      llx.StringData(userData),
 			"identity":                      llx.DictData(identityDict),
 			"principalId":                   llx.StringDataPtr(principalId),
 		})
@@ -1056,6 +1052,50 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 		return nil, nil, err
 	}
 	return args, mqlVm, nil
+}
+
+// userData returns the VM's base64-encoded user data.
+//
+// ARM only returns userData when the read asks for it with $expand=userData,
+// and the list API cannot return it at all -- ExpandTypesForListVMs offers only
+// instanceView. Reading vm.Properties.UserData off a plain Get or List therefore
+// always produced "", so a hunt for credentials embedded in bootstrap data
+// (vms.where(userData != "")) came back empty on every subscription. Asking for
+// the expansion costs one read per VM, which is why this is a computed field
+// rather than part of the listing.
+func (a *mqlAzureSubscriptionComputeServiceVm) userData() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return "", err
+	}
+	vmName, err := resourceID.Component("virtualMachines")
+	if err != nil {
+		return "", err
+	}
+
+	client, err := compute.NewVirtualMachinesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	expand := compute.InstanceViewTypesUserData
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, vmName, &compute.VirtualMachinesClientGetOptions{
+		Expand: &expand,
+	})
+	if err != nil {
+		if isAzureNotConfigured(err) {
+			log.Warn().Err(err).Str("vm", a.Id.Data).Msg("could not read vm user data")
+			return "", nil
+		}
+		return "", err
+	}
+	if resp.Properties == nil {
+		return "", nil
+	}
+	return convert.ToValue(resp.Properties.UserData), nil
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) id() (string, error) {
