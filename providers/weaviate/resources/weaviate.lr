@@ -1,0 +1,150 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/v13/providers/weaviate"
+option go_package = "go.mondoo.com/mql/v13/providers/weaviate/resources"
+
+// Weaviate vector database
+//
+// Root of the Weaviate provider. The connected server and everything
+// queryable through it (collections, roles, users, and cluster nodes) is
+// reached from weaviate.instance.
+weaviate {
+}
+
+// Weaviate server
+//
+// Server-wide configuration and security posture: version, enabled modules,
+// whether anonymous access is allowed, and whether OpenID Connect and
+// role-based access control are enabled. Collections, roles, users, and
+// cluster nodes are reached from here.
+weaviate.instance @defaults("version rbacEnabled anonymousAccessEnabled") {
+  // Server version, for example "1.38.8"
+  version string
+  // Hostname the server reports for itself
+  hostname string
+  // Names of the enabled modules, for example "text2vec-openai"
+  modules []string
+  // Whether unauthenticated requests are accepted
+  //
+  // True when the server answers an unauthenticated request, meaning any
+  // client that can reach the network endpoint reads data without
+  // credentials.
+  anonymousAccessEnabled bool
+  // Whether OpenID Connect authentication is configured
+  oidcEnabled bool
+  // OIDC issuer discovery URL, when OIDC is configured
+  oidcIssuer string
+  // OIDC client id, when OIDC is configured
+  oidcClientId string
+  // Whether role-based access control is enabled
+  rbacEnabled bool
+  // Collections (classes) defined on the server
+  collections() []weaviate.collection
+  // Roles defined on the server
+  roles() []weaviate.role
+  // Database-managed users known to the server
+  //
+  // Only database-managed users are listed. Users authenticated through OIDC
+  // are not enumerated here and appear only in role assignments.
+  users() []weaviate.user
+  // Cluster nodes backing the server
+  nodes() []weaviate.node
+}
+
+// Weaviate collection
+//
+// A single collection (class) and its data-governance settings: vectorizer
+// module, multi-tenancy, replication, and vector index type. The name field
+// selects the collection, for example
+// weaviate.instance.collections.where(name == "Article").
+weaviate.collection @defaults("name vectorizer multiTenancyEnabled") {
+  // Collection (class) name
+  name string
+  // Human-readable description, when set
+  description string
+  // Vectorizer module, for example "none" or "text2vec-openai"
+  vectorizer string
+  // Names of the modules configured on the collection
+  modules []string
+  // Whether multi-tenancy is enabled
+  //
+  // When true, data is partitioned into isolated tenants. Auto-creation and
+  // auto-activation weaken that isolation by materializing tenants on first
+  // use.
+  multiTenancyEnabled bool
+  // Whether tenants are created automatically on first use
+  autoTenantCreation bool
+  // Whether tenants are activated automatically on first use
+  autoTenantActivation bool
+  // Number of replicas kept for each shard
+  replicationFactor int
+  // Whether asynchronous replication is enabled
+  asyncReplicationEnabled bool
+  // Vector index type, for example "hnsw", "flat", or "dynamic"
+  vectorIndexType string
+}
+
+// Weaviate role
+//
+// A role in role-based access control and the permissions it grants. The
+// built-in root and viewer roles are marked with isBuiltin. The name field
+// selects the role, for example
+// weaviate.instance.roles.where(name == "viewer").
+weaviate.role @defaults("name isBuiltin") {
+  // Role name
+  name string
+  // Whether this is a built-in, immutable role (root or viewer)
+  isBuiltin bool
+  // Permissions granted by the role
+  permissions() []weaviate.role.permission
+  // Identifiers of the users assigned this role
+  assignedUsers() []string
+}
+
+// Weaviate role permission
+//
+// A single action a role is allowed, optionally scoped to a collection. For
+// example the action "read_data" scoped to collection "Article".
+weaviate.role.permission @defaults("action collection") {
+  // Allowed action, for example "read_data", "manage_roles", or "read_nodes"
+  action string
+  // Collection the action is scoped to, "*" for all, or empty when not applicable
+  collection string
+}
+
+// Weaviate user
+//
+// A database-managed principal known to the server, its type, and the roles
+// assigned to it. Users authenticated through OIDC are not listed here and
+// appear only in role assignments. The userId field selects the user, for
+// example weaviate.instance.users.where(userId == "root-user").
+weaviate.user @defaults("userId userType") {
+  // User identifier
+  userId string
+  // User type, for example "db_user", "db_env_user", or "oidc"
+  userType string
+  // Whether the user is active
+  active bool
+  // Roles assigned to the user
+  roles() []weaviate.role
+}
+
+// Weaviate cluster node
+//
+// A single node in the Weaviate cluster and its health, including version,
+// status, and object and shard counts. The name field selects the node.
+weaviate.node @defaults("name status version") {
+  // Node name
+  name string
+  // Node health status, for example "HEALTHY", "UNHEALTHY", or "INDEXING"
+  status string
+  // Weaviate version running on the node
+  version string
+  // Git commit the node was built from
+  gitHash string
+  // Number of shards hosted on the node
+  shardCount int
+  // Number of objects stored on the node
+  objectCount int
+}

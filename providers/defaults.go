@@ -1112,6 +1112,20 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"weaviate": {
+		Provider: &plugin.Provider{
+			Name:            "weaviate",
+			ID:              "go.mondoo.com/mql/v13/providers/weaviate",
+			ConnectionTypes: []string{"weaviate"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "weaviate",
+					Use:   "weaviate [host]",
+					Short: "a Weaviate vector database",
+				},
+			},
+		},
+	},
 	"networkdiscovery": {
 		Provider: &plugin.Provider{
 			Name:            "networkdiscovery",

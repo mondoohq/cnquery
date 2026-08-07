@@ -254,6 +254,7 @@ use (
    ./mql/providers/vercel
    ./mql/providers/vllm
    ./mql/providers/vsphere
+   ./mql/providers/weaviate
    ./cnspec
 )
 ```

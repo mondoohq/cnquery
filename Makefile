@@ -263,7 +263,8 @@ PROVIDERS := \
 	vcd \
 	vercel \
 	vllm \
-	vsphere
+	vsphere \
+	weaviate
 
 .PHONY: providers/build
 providers/build: \
