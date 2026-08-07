@@ -2269,6 +2269,7 @@ oci.resourceManager.job.finished 13.17.2
 oci.resourceManager.job.id 13.17.2
 oci.resourceManager.job.name 13.17.2
 oci.resourceManager.job.operation 13.17.2
+oci.resourceManager.job.stack 13.17.2
 oci.resourceManager.job.state 13.17.2
 oci.resourceManager.stack 13.17.2
 oci.resourceManager.stack.compartment 13.17.2

@@ -632,7 +632,7 @@ func init() {
 			Create: createOciResourceManager,
 		},
 		"oci.resourceManager.stack": {
-			// to override args, implement: initOciResourceManagerStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciResourceManagerStack,
 			Create: createOciResourceManagerStack,
 		},
 		"oci.resourceManager.job": {
@@ -4419,6 +4419,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.resourceManager.job.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciResourceManagerJob).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.resourceManager.job.stack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciResourceManagerJob).GetStack()).ToDataRes(types.Resource("oci.resourceManager.stack"))
 	},
 	"oci.resourceManager.job.operation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciResourceManagerJob).GetOperation()).ToDataRes(types.String)
@@ -13108,6 +13111,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.resourceManager.job.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciResourceManagerJob).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.resourceManager.job.stack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciResourceManagerJob).Stack, ok = plugin.RawToTValue[*mqlOciResourceManagerStack](v.Value, v.Error)
 		return
 	},
 	"oci.resourceManager.job.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31209,6 +31216,7 @@ type mqlOciResourceManagerJob struct {
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Compartment plugin.TValue[*mqlOciCompartment]
+	Stack       plugin.TValue[*mqlOciResourceManagerStack]
 	Operation   plugin.TValue[string]
 	State       plugin.TValue[string]
 	Created     plugin.TValue[*time.Time]
@@ -31273,6 +31281,22 @@ func (c *mqlOciResourceManagerJob) GetCompartment() *plugin.TValue[*mqlOciCompar
 		}
 
 		return c.compartment()
+	})
+}
+
+func (c *mqlOciResourceManagerJob) GetStack() *plugin.TValue[*mqlOciResourceManagerStack] {
+	return plugin.GetOrCompute[*mqlOciResourceManagerStack](&c.Stack, func() (*mqlOciResourceManagerStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.resourceManager.job", c.__id, "stack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciResourceManagerStack), nil
+			}
+		}
+
+		return c.stack()
 	})
 }
 
