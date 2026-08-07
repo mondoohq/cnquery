@@ -331,6 +331,7 @@ stackit.mongoDbFlex.instance.version 13.0.0
 stackit.mongoDbFlex.instances 13.0.0
 stackit.network 13.0.0
 stackit.network.createdAt 13.2.2
+stackit.network.dhcp 13.5.2
 stackit.network.exposure 13.0.6
 stackit.network.exposure.hasPublicIp 13.0.6
 stackit.network.exposure.internetReachable 13.0.6
@@ -341,6 +342,7 @@ stackit.network.ipv4Gateway 13.0.0
 stackit.network.ipv4Nameservers 13.0.0
 stackit.network.ipv4Prefix 13.0.0
 stackit.network.ipv4Prefixes 13.0.0
+stackit.network.ipv4PublicIp 13.5.2
 stackit.network.ipv6Gateway 13.0.0
 stackit.network.ipv6Nameservers 13.0.0
 stackit.network.ipv6Prefix 13.0.0
@@ -349,7 +351,9 @@ stackit.network.labels 13.0.0
 stackit.network.name 13.0.0
 stackit.network.nics 13.4.2
 stackit.network.routed 13.0.0
+stackit.network.routingTable 13.5.2
 stackit.network.state 13.0.0
+stackit.network.updatedAt 13.5.2
 stackit.networks 13.0.0
 stackit.nic 13.4.2
 stackit.nic.allowedAddresses 13.4.2
@@ -493,6 +497,16 @@ stackit.redis.instance.tlsCiphersuites 13.4.2
 stackit.redis.instance.tlsProtocols 13.4.2
 stackit.redis.instances 13.0.0
 stackit.region 13.0.0
+stackit.routingTable 13.5.2
+stackit.routingTable.createdAt 13.5.2
+stackit.routingTable.description 13.5.2
+stackit.routingTable.dynamicRoutes 13.5.2
+stackit.routingTable.id 13.5.2
+stackit.routingTable.isDefault 13.5.2
+stackit.routingTable.labels 13.5.2
+stackit.routingTable.name 13.5.2
+stackit.routingTable.systemRoutes 13.5.2
+stackit.routingTable.updatedAt 13.5.2
 stackit.secretsManager 13.0.0
 stackit.secretsManager.instance 13.0.0
 stackit.secretsManager.instance.acls 13.0.0

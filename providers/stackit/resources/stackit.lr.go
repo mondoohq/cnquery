@@ -25,6 +25,7 @@ const (
 	ResourceStackitAffinityGroup                           string = "stackit.affinityGroup"
 	ResourceStackitImage                                   string = "stackit.image"
 	ResourceStackitNetwork                                 string = "stackit.network"
+	ResourceStackitRoutingTable                            string = "stackit.routingTable"
 	ResourceStackitNic                                     string = "stackit.nic"
 	ResourceStackitPublicIp                                string = "stackit.publicIp"
 	ResourceStackitSecurityGroup                           string = "stackit.securityGroup"
@@ -150,6 +151,10 @@ func init() {
 		"stackit.network": {
 			Init:   initStackitNetwork,
 			Create: createStackitNetwork,
+		},
+		"stackit.routingTable": {
+			// to override args, implement: initStackitRoutingTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitRoutingTable,
 		},
 		"stackit.nic": {
 			// to override args, implement: initStackitNic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -993,6 +998,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.network.ipv4Prefixes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetIpv4Prefixes()).ToDataRes(types.Array(types.String))
 	},
+	"stackit.network.ipv4PublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetwork).GetIpv4PublicIp()).ToDataRes(types.String)
+	},
 	"stackit.network.ipv6Prefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetIpv6Prefix()).ToDataRes(types.String)
 	},
@@ -1008,14 +1016,50 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.network.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetState()).ToDataRes(types.String)
 	},
+	"stackit.network.dhcp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetwork).GetDhcp()).ToDataRes(types.Bool)
+	},
 	"stackit.network.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"stackit.network.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetwork).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"stackit.network.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.network.routingTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetwork).GetRoutingTable()).ToDataRes(types.Resource("stackit.routingTable"))
+	},
 	"stackit.network.nics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetNics()).ToDataRes(types.Array(types.Resource("stackit.nic")))
+	},
+	"stackit.routingTable.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetId()).ToDataRes(types.String)
+	},
+	"stackit.routingTable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetName()).ToDataRes(types.String)
+	},
+	"stackit.routingTable.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.routingTable.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"stackit.routingTable.dynamicRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetDynamicRoutes()).ToDataRes(types.Bool)
+	},
+	"stackit.routingTable.systemRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetSystemRoutes()).ToDataRes(types.Bool)
+	},
+	"stackit.routingTable.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"stackit.routingTable.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"stackit.routingTable.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRoutingTable).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"stackit.nic.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNic).GetId()).ToDataRes(types.String)
@@ -3607,6 +3651,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitNetwork).Ipv4Prefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.network.ipv4PublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetwork).Ipv4PublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.network.ipv6Prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitNetwork).Ipv6Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3627,16 +3675,68 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitNetwork).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.network.dhcp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetwork).Dhcp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.network.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitNetwork).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.network.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetwork).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.network.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitNetwork).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.network.routingTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetwork).RoutingTable, ok = plugin.RawToTValue[*mqlStackitRoutingTable](v.Value, v.Error)
+		return
+	},
 	"stackit.network.nics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitNetwork).Nics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.routingTable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.dynamicRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).DynamicRoutes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.systemRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).SystemRoutes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.routingTable.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRoutingTable).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"stackit.nic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8315,7 +8415,7 @@ func (c *mqlStackitImage) GetSharedWithOrganization() *plugin.TValue[bool] {
 type mqlStackitNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitNetworkInternal it will be used here
+	mqlStackitNetworkInternal
 	Id              plugin.TValue[string]
 	Name            plugin.TValue[string]
 	Routed          plugin.TValue[bool]
@@ -8323,13 +8423,17 @@ type mqlStackitNetwork struct {
 	Ipv4Gateway     plugin.TValue[string]
 	Ipv4Nameservers plugin.TValue[[]any]
 	Ipv4Prefixes    plugin.TValue[[]any]
+	Ipv4PublicIp    plugin.TValue[string]
 	Ipv6Prefix      plugin.TValue[string]
 	Ipv6Gateway     plugin.TValue[string]
 	Ipv6Nameservers plugin.TValue[[]any]
 	Ipv6Prefixes    plugin.TValue[[]any]
 	State           plugin.TValue[string]
+	Dhcp            plugin.TValue[bool]
 	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
 	Labels          plugin.TValue[map[string]any]
+	RoutingTable    plugin.TValue[*mqlStackitRoutingTable]
 	Nics            plugin.TValue[[]any]
 }
 
@@ -8398,6 +8502,10 @@ func (c *mqlStackitNetwork) GetIpv4Prefixes() *plugin.TValue[[]any] {
 	return &c.Ipv4Prefixes
 }
 
+func (c *mqlStackitNetwork) GetIpv4PublicIp() *plugin.TValue[string] {
+	return &c.Ipv4PublicIp
+}
+
 func (c *mqlStackitNetwork) GetIpv6Prefix() *plugin.TValue[string] {
 	return &c.Ipv6Prefix
 }
@@ -8418,12 +8526,36 @@ func (c *mqlStackitNetwork) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
+func (c *mqlStackitNetwork) GetDhcp() *plugin.TValue[bool] {
+	return &c.Dhcp
+}
+
 func (c *mqlStackitNetwork) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+func (c *mqlStackitNetwork) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
 func (c *mqlStackitNetwork) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+func (c *mqlStackitNetwork) GetRoutingTable() *plugin.TValue[*mqlStackitRoutingTable] {
+	return plugin.GetOrCompute[*mqlStackitRoutingTable](&c.RoutingTable, func() (*mqlStackitRoutingTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.network", c.__id, "routingTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitRoutingTable), nil
+			}
+		}
+
+		return c.routingTable()
+	})
 }
 
 func (c *mqlStackitNetwork) GetNics() *plugin.TValue[[]any] {
@@ -8440,6 +8572,95 @@ func (c *mqlStackitNetwork) GetNics() *plugin.TValue[[]any] {
 
 		return c.nics()
 	})
+}
+
+// mqlStackitRoutingTable for the stackit.routingTable resource
+type mqlStackitRoutingTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitRoutingTableInternal it will be used here
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	IsDefault     plugin.TValue[bool]
+	DynamicRoutes plugin.TValue[bool]
+	SystemRoutes  plugin.TValue[bool]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	Labels        plugin.TValue[map[string]any]
+}
+
+// createStackitRoutingTable creates a new instance of this resource
+func createStackitRoutingTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitRoutingTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.routingTable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitRoutingTable) MqlName() string {
+	return "stackit.routingTable"
+}
+
+func (c *mqlStackitRoutingTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitRoutingTable) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitRoutingTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitRoutingTable) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitRoutingTable) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlStackitRoutingTable) GetDynamicRoutes() *plugin.TValue[bool] {
+	return &c.DynamicRoutes
+}
+
+func (c *mqlStackitRoutingTable) GetSystemRoutes() *plugin.TValue[bool] {
+	return &c.SystemRoutes
+}
+
+func (c *mqlStackitRoutingTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlStackitRoutingTable) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlStackitRoutingTable) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 // mqlStackitNic for the stackit.nic resource

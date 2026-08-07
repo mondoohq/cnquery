@@ -74,6 +74,12 @@ type StackitConnection struct {
 	// observability, service-account). Those APIs reject WithRegion.
 	configOptsGlobal []config.ConfigurationOption
 
+	// routing tables reachable from the project's network areas, resolved once
+	// per connection because every network in a scan asks for the same walk.
+	routingTablesOnce sync.Once
+	routingTables     map[string]iaas.RoutingTable
+	routingTablesErr  error
+
 	iaasOnce             sync.Once
 	iaasClient           *iaas.APIClient
 	iaasErr              error
@@ -287,6 +293,82 @@ func (c *StackitConnection) captureProjectMetadata(resp *resourcemanager.GetProj
 			c.projectParent = parent.GetId()
 		}
 	}
+}
+
+// NetworkAreaRoutingTables returns the routing tables defined on the network
+// areas that hold this project, keyed by routing table ID.
+//
+// The IaaS API scopes routing tables to an organization and a network area
+// rather than to a project, so reaching the table a network points at means
+// walking from the project's parent container to that container's areas and
+// asking each area which projects it holds. The walk runs once per connection
+// and is shared by every network.
+//
+// A project whose parent container is a folder rather than an organization,
+// and a credential without organization-level read access, both leave the walk
+// with nowhere to start. Those are ordinary configurations rather than
+// failures, so they yield an empty map and networks report no routing table.
+func (c *StackitConnection) NetworkAreaRoutingTables(ctx context.Context) (map[string]iaas.RoutingTable, error) {
+	c.routingTablesOnce.Do(func() {
+		c.routingTables, c.routingTablesErr = c.loadNetworkAreaRoutingTables(ctx)
+	})
+	return c.routingTables, c.routingTablesErr
+}
+
+func (c *StackitConnection) loadNetworkAreaRoutingTables(ctx context.Context) (map[string]iaas.RoutingTable, error) {
+	empty := map[string]iaas.RoutingTable{}
+	if c.projectParent == "" {
+		log.Debug().Msg("stackit> project has no parent container, skipping routing table lookup")
+		return empty, nil
+	}
+	client, err := c.IaaS()
+	if err != nil {
+		return nil, err
+	}
+
+	areas, err := client.DefaultAPI.ListNetworkAreas(ctx, c.projectParent).Execute()
+	if err != nil {
+		log.Debug().Err(err).Str("container", c.projectParent).
+			Msg("stackit> network areas unavailable, networks will report no routing table")
+		return empty, nil
+	}
+
+	out := map[string]iaas.RoutingTable{}
+	for _, area := range areas.GetItems() {
+		areaID := area.GetId()
+		if areaID == "" || !c.areaHoldsProject(ctx, client, areaID) {
+			continue
+		}
+		tables, err := client.DefaultAPI.
+			ListRoutingTablesOfArea(ctx, c.projectParent, areaID, c.region).Execute()
+		if err != nil {
+			log.Debug().Err(err).Str("area", areaID).Msg("stackit> routing tables unavailable for area")
+			continue
+		}
+		for _, table := range tables.GetItems() {
+			if id := table.GetId(); id != "" {
+				out[id] = table
+			}
+		}
+	}
+	return out, nil
+}
+
+// areaHoldsProject reports whether the connected project is attached to the
+// given network area. A project can belong to more than one area, so callers
+// collect from every area that matches rather than stopping at the first.
+func (c *StackitConnection) areaHoldsProject(ctx context.Context, client *iaas.APIClient, areaID string) bool {
+	projects, err := client.DefaultAPI.ListNetworkAreaProjects(ctx, c.projectParent, areaID).Execute()
+	if err != nil {
+		log.Debug().Err(err).Str("area", areaID).Msg("stackit> network area project list failed")
+		return false
+	}
+	for _, projectID := range projects.GetItems() {
+		if projectID == c.projectID {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *StackitConnection) IaaS() (*iaas.APIClient, error) {
