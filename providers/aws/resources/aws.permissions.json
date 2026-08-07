@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.52.1",
-  "generated_at": "2026-08-06T17:01:47+02:00",
+  "generated_at": "2026-08-07T08:19:11-07:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -66,9 +66,13 @@
     "athena:ListWorkGroups",
     "autoscaling:DescribeAutoScalingGroups",
     "autoscaling:DescribeLaunchConfigurations",
+    "backup:DescribeBackupVault",
+    "backup:DescribeRecoveryPoint",
     "backup:GetBackupPlan",
     "backup:GetBackupSelection",
     "backup:GetBackupVaultAccessPolicy",
+    "backup:ListBackupAccessPoints",
+    "backup:ListBackupAccessPointsByRecoveryPoint",
     "backup:ListBackupPlans",
     "backup:ListBackupSelections",
     "backup:ListBackupVaults",
@@ -83,6 +87,7 @@
     "batch:ListSchedulingPolicies",
     "bedrock-agentcore:GetAgentRuntime",
     "bedrock-agentcore:GetBrowser",
+    "bedrock-agentcore:GetCapacityProvider",
     "bedrock-agentcore:GetCodeInterpreter",
     "bedrock-agentcore:GetGateway",
     "bedrock-agentcore:GetGatewayTarget",
@@ -90,7 +95,9 @@
     "bedrock-agentcore:ListAgentRuntimes",
     "bedrock-agentcore:ListApiKeyCredentialProviders",
     "bedrock-agentcore:ListBrowsers",
+    "bedrock-agentcore:ListCapacityProviders",
     "bedrock-agentcore:ListCodeInterpreters",
+    "bedrock-agentcore:ListGatewayRateLimits",
     "bedrock-agentcore:ListGatewayTargets",
     "bedrock-agentcore:ListGateways",
     "bedrock-agentcore:ListMemories",
@@ -1410,6 +1417,18 @@
       "source_file": "aws_ec2_launchconfiguration.go"
     },
     {
+      "permission": "backup:DescribeBackupVault",
+      "service": "backup",
+      "action": "DescribeBackupVault",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:DescribeRecoveryPoint",
+      "service": "backup",
+      "action": "DescribeRecoveryPoint",
+      "source_file": "aws_backups.go"
+    },
+    {
       "permission": "backup:GetBackupPlan",
       "service": "backup",
       "action": "GetBackupPlan",
@@ -1425,6 +1444,18 @@
       "permission": "backup:GetBackupVaultAccessPolicy",
       "service": "backup",
       "action": "GetBackupVaultAccessPolicy",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListBackupAccessPoints",
+      "service": "backup",
+      "action": "ListBackupAccessPoints",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListBackupAccessPointsByRecoveryPoint",
+      "service": "backup",
+      "action": "ListBackupAccessPointsByRecoveryPoint",
       "source_file": "aws_backups.go"
     },
     {
@@ -1512,6 +1543,12 @@
       "source_file": "aws_bedrock_agentcore.go"
     },
     {
+      "permission": "bedrock-agentcore:GetCapacityProvider",
+      "service": "bedrock-agentcore",
+      "action": "GetCapacityProvider",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
       "permission": "bedrock-agentcore:GetCodeInterpreter",
       "service": "bedrock-agentcore",
       "action": "GetCodeInterpreter",
@@ -1554,9 +1591,21 @@
       "source_file": "aws_bedrock_agentcore.go"
     },
     {
+      "permission": "bedrock-agentcore:ListCapacityProviders",
+      "service": "bedrock-agentcore",
+      "action": "ListCapacityProviders",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
       "permission": "bedrock-agentcore:ListCodeInterpreters",
       "service": "bedrock-agentcore",
       "action": "ListCodeInterpreters",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListGatewayRateLimits",
+      "service": "bedrock-agentcore",
+      "action": "ListGatewayRateLimits",
       "source_file": "aws_bedrock_agentcore.go"
     },
     {
