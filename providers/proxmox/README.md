@@ -79,9 +79,36 @@ proxmox.storages { backups.where(protected == false) { volid createdAt } }
 proxmox.storages { backups.where(verification['state'] != "ok") { volid createdAt } }
 ```
 
+```mql
+# Notification targets posting over plain HTTP
+proxmox.webhookEndpoints.where(url != /^https:/) { name url }
+
+# Where cluster metrics are being shipped
+proxmox.metricServers.where(disabled == false) { id type server port }
+
+# Cluster members with no redundant corosync link
+proxmox.corosync.nodes.where(ring1Address == "") { name ring0Address }
+```
+
 On clusters without Ceph, `proxmox.ceph.available` is `false` and every Ceph
 list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
 `/`, both of which `PVEAuditor` grants.
+
+## Token privileges
+
+Most of the provider works with `PVEAuditor`. Three groups of resources need
+more, and return an **empty list** rather than failing when the token lacks it:
+
+| Resources | Required privilege |
+|---|---|
+| `proxmox.notification.*` | `Mapping.Audit` on `/mapping/notifications` |
+| `proxmox.mapping.pci`, `proxmox.mapping.usb` | `Mapping.Audit` on `/mapping/pci`, `/mapping/usb` |
+| `proxmox.acme.plugin` | `Sys.Modify` — no audit role carries this, so plugins are normally not visible to a read-only token |
+
+Grant the `Mapping.Audit` privileges to the scanning token if you want the
+notification and device-mapping checks to evaluate. Permission failures are
+logged at debug level, so run with `--log-level debug` to confirm whether an
+empty list means "nothing configured" or "not visible to this token".
 
 ## Resources
 
@@ -118,6 +145,22 @@ list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
 | `proxmox.ceph.filesystem`   | CephFS file system                                  |
 | `proxmox.ceph.configEntry`  | Entry in the Ceph configuration database            |
 | `proxmox.storage.volume`    | Volume on a storage: backup, ISO, template, or disk |
+| `proxmox.notification.target`| Notification destination of any transport          |
+| `proxmox.notification.matcher`| Rule routing notifications to targets             |
+| `proxmox.notification.smtpEndpoint` | SMTP notification target                    |
+| `proxmox.notification.sendmailEndpoint` | Sendmail notification target            |
+| `proxmox.notification.gotifyEndpoint` | Gotify notification target                |
+| `proxmox.notification.webhookEndpoint` | Webhook notification target              |
+| `proxmox.metricServer`      | External InfluxDB or Graphite metrics target        |
+| `proxmox.acme.account`      | ACME account for certificate issuance               |
+| `proxmox.acme.plugin`       | ACME DNS challenge plugin                           |
+| `proxmox.corosync`          | Corosync membership and transport configuration     |
+| `proxmox.corosync.node`     | Cluster member with its corosync links              |
+| `proxmox.mapping.pci`       | Cluster-wide PCI device mapping                     |
+| `proxmox.mapping.usb`       | Cluster-wide USB device mapping                     |
+| `proxmox.sdn.controller`    | SDN controller (EVPN, BGP, IS-IS)                   |
+| `proxmox.sdn.ipam`          | SDN IP address management backend                   |
+| `proxmox.sdn.dns`           | SDN DNS backend                                     |
 
 ## Features
 
@@ -128,6 +171,12 @@ list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
 - **Storage**: Storage pools with capacity monitoring
 - **Ceph**: Cluster health, monitors, managers, metadata servers, OSDs, pools, CephFS, and the Ceph config database
 - **Backups**: Backup archives actually present on each storage, with creation time, encryption, protection, and PBS verification state
+- **Notifications**: Targets and matchers, with SMTP, sendmail, Gotify, and webhook endpoint settings
+- **Telemetry**: External metric servers the cluster ships to
+- **Certificates**: ACME accounts and DNS challenge plugins
+- **Cluster membership**: Corosync nodes, ring addresses, quorum votes, and QDevice
+- **Device mappings**: Cluster-wide PCI and USB passthrough aliases
+- **SDN**: Zones, VNets, subnets, controllers, IPAM, and DNS backends
 - **Access Control**: Users, API tokens, roles and privileges
 - **Firewall**: Rules at cluster, node, and VM level
 

@@ -57,6 +57,8 @@ type PveConnection struct {
 	// backups memoizes the cluster-wide backup sweep so that per-guest
 	// lookups don't each re-list every storage.
 	backups backupIndex
+	// corosync memoizes the join configuration, which several fields read.
+	corosync corosyncCache
 }
 
 // ID and ParentID implement the plugin.Connection interface.
