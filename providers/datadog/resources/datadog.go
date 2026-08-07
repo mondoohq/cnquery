@@ -33,6 +33,10 @@ type mqlDatadogInternal struct {
 	teamsList []datadogV2.Team
 	teamsErr  error
 
+	dashboardsOnce sync.Once
+	dashboardsList []datadogV1.DashboardSummaryDefinition
+	dashboardsErr  error
+
 	apiKeysOnce sync.Once
 	apiKeysList []datadogV2.PartialAPIKey
 	apiKeysErr  error
@@ -262,31 +266,14 @@ func (r *mqlDatadogMonitor) id() (string, error) {
 // --- Dashboards ---
 
 func (r *mqlDatadog) dashboards() ([]interface{}, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV1.NewDashboardsApi(conn.ApiClient())
-
-	resp, httpResp, err := api.ListDashboards(conn.AuthCtx())
+	dashboards, err := r.fetchDashboards()
 	if err != nil {
-		if isForbidden(httpResp) {
-			log.Warn().Msg("datadog> dashboards not available (403 Forbidden)")
-			return nil, nil
-		}
 		return nil, err
 	}
 
 	var all []interface{}
-	for _, d := range resp.GetDashboards() {
-		res, err := CreateResource(r.MqlRuntime, "datadog.dashboard", map[string]*llx.RawData{
-			"id":           llx.StringData(d.GetId()),
-			"title":        llx.StringData(d.GetTitle()),
-			"description":  llx.StringData(d.GetDescription()),
-			"layoutType":   llx.StringData(string(d.GetLayoutType())),
-			"url":          llx.StringData(d.GetUrl()),
-			"createdAt":    llx.TimeDataPtr(timePtr(d.GetCreatedAt())),
-			"modifiedAt":   llx.TimeDataPtr(timePtr(d.GetModifiedAt())),
-			"authorHandle": llx.StringData(d.GetAuthorHandle()),
-			"isReadOnly":   llx.BoolData(d.GetIsReadOnly()),
-		})
+	for _, d := range dashboards {
+		res, err := CreateResource(r.MqlRuntime, "datadog.dashboard", dashboardArgs(d))
 		if err != nil {
 			return nil, err
 		}

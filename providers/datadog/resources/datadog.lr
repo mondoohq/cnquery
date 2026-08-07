@@ -123,7 +123,7 @@ datadog.sharedDashboard @defaults("token shareType status") {
   // Share token
   token string
   // Dashboard being shared
-  dashboardId string
+  dashboard() datadog.dashboard
   // Dashboard title
   title string
   // Public URL serving the shared dashboard

@@ -132,7 +132,6 @@ func (r *mqlDatadogDashboard) sharedDashboards() ([]interface{}, error) {
 
 		res, err := CreateResource(r.MqlRuntime, "datadog.sharedDashboard", map[string]*llx.RawData{
 			"token":             llx.StringData(attrs.GetToken()),
-			"dashboardId":       llx.StringData(rels.Dashboard.Data.Id),
 			"title":             llx.StringData(attrs.GetTitle()),
 			"publicUrl":         llx.StringData(attrs.GetUrl()),
 			"shareType":         llx.StringData(string(attrs.GetShareType())),
@@ -150,13 +149,15 @@ func (r *mqlDatadogDashboard) sharedDashboards() ([]interface{}, error) {
 
 		mqlShare := res.(*mqlDatadogSharedDashboard)
 		mqlShare.cacheSharerId = rels.Sharer.Data.Id
+		mqlShare.cacheDashboardId = rels.Dashboard.Data.Id
 		all = append(all, mqlShare)
 	}
 	return all, nil
 }
 
 type mqlDatadogSharedDashboardInternal struct {
-	cacheSharerId string
+	cacheSharerId    string
+	cacheDashboardId string
 }
 
 func (r *mqlDatadogSharedDashboard) id() (string, error) {
@@ -165,6 +166,21 @@ func (r *mqlDatadogSharedDashboard) id() (string, error) {
 
 func (r *mqlDatadogSharedDashboard) sharer() (*mqlDatadogUser, error) {
 	return resolveUserRef(r.MqlRuntime, r.cacheSharerId, &r.Sharer)
+}
+
+func (r *mqlDatadogSharedDashboard) dashboard() (*mqlDatadogDashboard, error) {
+	if r.cacheDashboardId == "" {
+		r.Dashboard.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(r.MqlRuntime, "datadog.dashboard", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheDashboardId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDatadogDashboard), nil
 }
 
 // --- Identity provider attribute mappings ---

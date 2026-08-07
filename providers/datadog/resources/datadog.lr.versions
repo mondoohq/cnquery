@@ -252,7 +252,7 @@ datadog.serviceAccount.status 13.0.1
 datadog.serviceAccounts 13.0.1
 datadog.sharedDashboard 13.0.21
 datadog.sharedDashboard.createdAt 13.0.21
-datadog.sharedDashboard.dashboardId 13.0.21
+datadog.sharedDashboard.dashboard 13.0.21
 datadog.sharedDashboard.embeddableDomains 13.0.21
 datadog.sharedDashboard.expiration 13.0.21
 datadog.sharedDashboard.invitees 13.0.21

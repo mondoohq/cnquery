@@ -101,7 +101,7 @@ func init() {
 			Create: createDatadogMonitor,
 		},
 		"datadog.dashboard": {
-			// to override args, implement: initDatadogDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDatadogDashboard,
 			Create: createDatadogDashboard,
 		},
 		"datadog.syntheticsTest": {
@@ -339,8 +339,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.sharedDashboard.token": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSharedDashboard).GetToken()).ToDataRes(types.String)
 	},
-	"datadog.sharedDashboard.dashboardId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSharedDashboard).GetDashboardId()).ToDataRes(types.String)
+	"datadog.sharedDashboard.dashboard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogSharedDashboard).GetDashboard()).ToDataRes(types.Resource("datadog.dashboard"))
 	},
 	"datadog.sharedDashboard.title": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSharedDashboard).GetTitle()).ToDataRes(types.String)
@@ -1310,8 +1310,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatadogSharedDashboard).Token, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"datadog.sharedDashboard.dashboardId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSharedDashboard).DashboardId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"datadog.sharedDashboard.dashboard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogSharedDashboard).Dashboard, ok = plugin.RawToTValue[*mqlDatadogDashboard](v.Value, v.Error)
 		return
 	},
 	"datadog.sharedDashboard.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3111,7 +3111,7 @@ type mqlDatadogSharedDashboard struct {
 	__id       string
 	mqlDatadogSharedDashboardInternal
 	Token             plugin.TValue[string]
-	DashboardId       plugin.TValue[string]
+	Dashboard         plugin.TValue[*mqlDatadogDashboard]
 	Title             plugin.TValue[string]
 	PublicUrl         plugin.TValue[string]
 	ShareType         plugin.TValue[string]
@@ -3166,8 +3166,20 @@ func (c *mqlDatadogSharedDashboard) GetToken() *plugin.TValue[string] {
 	return &c.Token
 }
 
-func (c *mqlDatadogSharedDashboard) GetDashboardId() *plugin.TValue[string] {
-	return &c.DashboardId
+func (c *mqlDatadogSharedDashboard) GetDashboard() *plugin.TValue[*mqlDatadogDashboard] {
+	return plugin.GetOrCompute[*mqlDatadogDashboard](&c.Dashboard, func() (*mqlDatadogDashboard, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog.sharedDashboard", c.__id, "dashboard")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatadogDashboard), nil
+			}
+		}
+
+		return c.dashboard()
+	})
 }
 
 func (c *mqlDatadogSharedDashboard) GetTitle() *plugin.TValue[string] {

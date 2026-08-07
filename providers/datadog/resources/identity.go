@@ -87,6 +87,25 @@ func (r *mqlDatadog) fetchTeams() ([]datadogV2.Team, error) {
 	return r.teamsList, r.teamsErr
 }
 
+func (r *mqlDatadog) fetchDashboards() ([]datadogV1.DashboardSummaryDefinition, error) {
+	r.dashboardsOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+		api := datadogV1.NewDashboardsApi(conn.ApiClient())
+
+		resp, httpResp, err := api.ListDashboards(conn.AuthCtx())
+		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> dashboards not available (403 Forbidden)")
+				return
+			}
+			r.dashboardsErr = err
+			return
+		}
+		r.dashboardsList = resp.GetDashboards()
+	})
+	return r.dashboardsList, r.dashboardsErr
+}
+
 func (r *mqlDatadog) fetchApiKeys() ([]datadogV2.PartialAPIKey, error) {
 	r.apiKeysOnce.Do(func() {
 		conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
@@ -286,6 +305,20 @@ func teamArgs(t datadogV2.Team) map[string]*llx.RawData {
 	}
 }
 
+func dashboardArgs(d datadogV1.DashboardSummaryDefinition) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"id":           llx.StringData(d.GetId()),
+		"title":        llx.StringData(d.GetTitle()),
+		"description":  llx.StringData(d.GetDescription()),
+		"layoutType":   llx.StringData(string(d.GetLayoutType())),
+		"url":          llx.StringData(d.GetUrl()),
+		"createdAt":    llx.TimeDataPtr(timePtr(d.GetCreatedAt())),
+		"modifiedAt":   llx.TimeDataPtr(timePtr(d.GetModifiedAt())),
+		"authorHandle": llx.StringData(d.GetAuthorHandle()),
+		"isReadOnly":   llx.BoolData(d.GetIsReadOnly()),
+	}
+}
+
 func permissionArgs(p datadogV2.Permission) map[string]*llx.RawData {
 	attrs := p.GetAttributes()
 	return map[string]*llx.RawData{
@@ -351,6 +384,32 @@ func initDatadogRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		}
 	}
 	return nil, nil, fmt.Errorf("datadog.role %q not found", id)
+}
+
+func initDatadogDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	id, ok := stringArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+
+	root, err := datadogRoot(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	dashboards, err := root.fetchDashboards()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, d := range dashboards {
+		if d.GetId() == id {
+			return dashboardArgs(d), nil, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("datadog.dashboard %q not found", id)
 }
 
 func initDatadogTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
