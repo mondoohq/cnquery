@@ -62,6 +62,7 @@ func flattenPermissions(role *rbac.Role) []permEntry {
 		add(p.Actions, p.Collection)
 	}
 	for _, p := range role.Tenants {
+		// TenantsPermission carries no collection scope in this client version.
 		add(p.Actions, "")
 	}
 	for _, p := range role.Roles {
@@ -95,10 +96,20 @@ func (r *mqlWeaviateRole) permissions() ([]any, error) {
 	if r.cacheRole == nil {
 		return []any{}, nil
 	}
+	// Derive each permission's id from its (action, collection) so it is stable
+	// regardless of the order the API returns permissions in. A repeated pair
+	// gets a counter suffix so distinct entries never collide.
+	seen := map[string]int{}
 	list := []any{}
-	for i, p := range flattenPermissions(r.cacheRole) {
+	for _, p := range flattenPermissions(r.cacheRole) {
+		key := p.action + "/" + p.collection
+		suffix := key
+		if n := seen[key]; n > 0 {
+			suffix = key + "#" + intToStr(int64(n))
+		}
+		seen[key]++
 		res, err := CreateResource(r.MqlRuntime, "weaviate.role.permission", map[string]*llx.RawData{
-			"__id":       llx.StringData(r.__id + "/perm/" + intToStr(int64(i))),
+			"__id":       llx.StringData(r.__id + "/perm/" + suffix),
 			"action":     llx.StringData(p.action),
 			"collection": llx.StringData(p.collection),
 		})

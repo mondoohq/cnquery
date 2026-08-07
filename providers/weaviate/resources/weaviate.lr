@@ -43,7 +43,10 @@ weaviate.instance @defaults("version rbacEnabled anonymousAccessEnabled") {
   collections() []weaviate.collection
   // Roles defined on the server
   roles() []weaviate.role
-  // Users known to the server
+  // Database-managed users known to the server
+  //
+  // Only database-managed users are listed. Users authenticated through OIDC
+  // are not enumerated here and appear only in role assignments.
   users() []weaviate.user
   // Cluster nodes backing the server
   nodes() []weaviate.node
@@ -112,9 +115,10 @@ weaviate.role.permission @defaults("action collection") {
 
 // Weaviate user
 //
-// A principal known to the server, its type, and the roles assigned to it.
-// The userId field selects the user, for example
-// weaviate.instance.users.where(userId == "root-user").
+// A database-managed principal known to the server, its type, and the roles
+// assigned to it. Users authenticated through OIDC are not listed here and
+// appear only in role assignments. The userId field selects the user, for
+// example weaviate.instance.users.where(userId == "root-user").
 weaviate.user @defaults("userId userType") {
   // User identifier
   userId string
