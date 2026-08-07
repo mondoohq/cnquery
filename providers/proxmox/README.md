@@ -116,4 +116,9 @@ list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
 - **Ceph**: Cluster health, monitors, managers, metadata servers, OSDs, pools, CephFS, and the Ceph config database
 - **Access Control**: Users, API tokens, roles and privileges
 - **Firewall**: Rules at cluster, node, and VM level
-- **Security Policy**: 20+ checks covering patch management, certificate hygiene, access control, and more
+
+## Security policies
+
+Policies and checks live in cnspec, not here. The shipped Proxmox policy is
+`mondoo-proxmox-security` in the cnspec content repository. This provider is
+responsible for gathering the data those checks query.
