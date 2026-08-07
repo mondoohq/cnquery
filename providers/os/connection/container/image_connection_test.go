@@ -60,6 +60,10 @@ func cacheImageToTar(source string, filename string) error {
 	// every subsequent run. The failure that produces is "unexpected EOF" from
 	// whatever later tries to read the tar, which points nowhere near the
 	// download that actually failed.
+	//
+	// The temporary file deliberately sits next to its destination rather than
+	// in os.TempDir(): a same-directory rename is atomic and cannot land
+	// cross-volume, which is what would make os.Rename fail on Windows.
 	tmp := filename + ".partial"
 	if err := tarball.WriteToFile(tmp, tag, img); err != nil {
 		os.Remove(tmp)
