@@ -1943,7 +1943,7 @@ func init() {
 			Create: createGcpProjectVertexaiServicePersistentResource,
 		},
 		"gcp.project.vertexaiService.schedule": {
-			// to override args, implement: initGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectVertexaiServiceSchedule,
 			Create: createGcpProjectVertexaiServiceSchedule,
 		},
 		"gcp.project.vertexaiService.deploymentResourcePool": {

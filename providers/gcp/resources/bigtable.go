@@ -760,7 +760,11 @@ func getBigtableBackupByName(runtime *plugin.Runtime, backupResourceName string)
 	}
 	projectId := parts[1]
 	instanceName := parts[3]
-	clusterFullName := fmt.Sprintf("projects/%s/instances/%s/clusters/%s", parts[1], parts[3], parts[5])
+	// backups() stores ClusterInfo.Name, which the Bigtable SDK sets to the
+	// short cluster id (the last path segment), not the full resource path.
+	// Comparing against a full path here never matched, so sourceBackup was
+	// always null and backup lineage was invisible.
+	clusterShort := parts[5]
 	backupShort := parts[7]
 
 	obj, err := CreateResource(runtime, "gcp.project.bigtableService.instance", map[string]*llx.RawData{
@@ -783,7 +787,7 @@ func getBigtableBackupByName(runtime *plugin.Runtime, backupResourceName string)
 		if backup.ClusterName.Error != nil {
 			return nil, backup.ClusterName.Error
 		}
-		if backup.Name.Data == backupShort && backup.ClusterName.Data == clusterFullName {
+		if backup.Name.Data == backupShort && backup.ClusterName.Data == clusterShort {
 			return backup, nil
 		}
 	}

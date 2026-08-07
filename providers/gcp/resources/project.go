@@ -75,8 +75,24 @@ func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return nil, nil, err
 	}
 
-	projectId := fmt.Sprintf("projects/%s", conn.ResourceID())
-	project, err := svc.Projects.Get(projectId).Do()
+	// Resolve the project the caller asked for, not the one the connection
+	// happens to point at. NewResource runs this init before consulting the
+	// resource cache, so ignoring args["id"] would silently redirect every
+	// typed project reference (projectRefById, sharedVpcHost, folder
+	// managementProjectRef, ...) to the connection's own project -- and on an
+	// organization- or folder-scoped connection ResourceID() is not a project
+	// id at all. initGcpFolder resolves its id the same way.
+	projectRef := conn.ResourceID()
+	if raw := args["id"]; raw != nil {
+		if v, ok := raw.Value.(string); ok && v != "" {
+			projectRef = v
+		}
+	}
+	if projectRef == "" {
+		return nil, nil, errors.New("gcp.project requires a project id")
+	}
+
+	project, err := svc.Projects.Get(fmt.Sprintf("projects/%s", projectRef)).Do()
 	if err != nil {
 		return nil, nil, err
 	}

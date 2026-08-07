@@ -258,6 +258,124 @@ func TestInitGuardsEveryDereferencedArg(t *testing.T) {
 	}
 }
 
+// TestInitDoesNotRedirectACallerSuppliedProject pins the invariant that makes
+// the unconditional `args["projectId"] = llx.StringData(conn.ResourceID())`
+// assignments safe.
+//
+// NewResource runs an init before the resource-cache lookup, so an init that
+// overwrites projectId redirects every caller-scoped reference
+// (gcp.projects.list { compute.instances }) at the connection's own project.
+// On an organization- or folder-scoped connection ResourceID() is not a
+// project id at all, so the reference resolves to nothing.
+//
+// Two shapes prevent that, and an init must use one of them:
+//
+//   - wrap the assignment in a check on args["projectId"], or
+//   - return early on `len(args) > 0`, which a caller-supplied projectId
+//     always trips.
+//
+// The second is what most service inits rely on, and it is invisible at the
+// assignment. Raising that threshold to `> 1` or `> 2` while adding a second
+// argument is an easy and silent way to reintroduce the redirection, so the
+// pairing is asserted here rather than left to review.
+func TestInitDoesNotRedirectACallerSuppliedProject(t *testing.T) {
+	fset := token.NewFileSet()
+	paths, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("glob package sources: %v", err)
+	}
+
+	for _, path := range paths {
+		if strings.HasSuffix(path, "_test.go") {
+			continue
+		}
+		file, err := parser.ParseFile(fset, path, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", path, err)
+		}
+
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Body == nil || !strings.HasPrefix(fn.Name.Name, "init") {
+				continue
+			}
+			// Only the top-level statements matter: an assignment nested in an
+			// if is guarded by that if, which the walk below treats separately.
+			for _, stmt := range fn.Body.List {
+				assign, ok := stmt.(*ast.AssignStmt)
+				if !ok || !assignsProjectIdFromResourceID(assign) {
+					continue
+				}
+				if !returnsEarlyOnAnyArg(fn.Body, assign.Pos()) {
+					t.Errorf("%s: %s overwrites args[\"projectId\"] with the connection's own "+
+						"resource id without an earlier `if len(args) > 0` return, so a "+
+						"caller-supplied project is silently redirected. Guard the assignment "+
+						"with `if pid, ok := args[\"projectId\"]; !ok || pid == nil`.",
+						fset.Position(assign.Pos()), fn.Name.Name)
+				}
+			}
+		}
+	}
+}
+
+// assignsProjectIdFromResourceID reports whether stmt is
+// args["projectId"] = <...conn.ResourceID()...>.
+func assignsProjectIdFromResourceID(stmt *ast.AssignStmt) bool {
+	if len(stmt.Lhs) != 1 || !isArgsIndex(stmt.Lhs[0], "projectId") {
+		return false
+	}
+	found := false
+	for _, rhs := range stmt.Rhs {
+		ast.Inspect(rhs, func(n ast.Node) bool {
+			if call, ok := n.(*ast.CallExpr); ok && calleeName(call.Fun) == "ResourceID" {
+				found = true
+				return false
+			}
+			return true
+		})
+	}
+	return found
+}
+
+// returnsEarlyOnAnyArg reports whether body contains, before pos, an
+// `if len(args) > 0 { ... return ... }`. A threshold above zero does not
+// count: it lets a caller pass projectId and still fall through.
+func returnsEarlyOnAnyArg(body *ast.BlockStmt, pos token.Pos) bool {
+	guarded := false
+	ast.Inspect(body, func(n ast.Node) bool {
+		ifStmt, ok := n.(*ast.IfStmt)
+		if !ok || ifStmt.Pos() >= pos {
+			return true
+		}
+		cond, ok := ifStmt.Cond.(*ast.BinaryExpr)
+		if !ok || cond.Op != token.GTR || !isLenOfArgs(cond.X) {
+			return true
+		}
+		lit, ok := cond.Y.(*ast.BasicLit)
+		if !ok || lit.Kind != token.INT || lit.Value != "0" {
+			return true
+		}
+		for _, stmt := range ifStmt.Body.List {
+			if _, isReturn := stmt.(*ast.ReturnStmt); isReturn {
+				guarded = true
+				return false
+			}
+		}
+		return true
+	})
+	return guarded
+}
+
+// isLenOfArgs reports whether e is the expression len(args).
+func isLenOfArgs(e ast.Expr) bool {
+	call, ok := e.(*ast.CallExpr)
+	if !ok || calleeName(call.Fun) != "len" || len(call.Args) != 1 {
+		return false
+	}
+	ident, ok := call.Args[0].(*ast.Ident)
+	return ok && ident.Name == "args"
+}
+
 // argsKeys returns the args key referenced by e, if e is args["<key>"].
 func argsKeys(e ast.Expr) []string {
 	idx, ok := e.(*ast.IndexExpr)

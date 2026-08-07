@@ -21,7 +21,11 @@ import (
 // Health checks
 
 func (g *mqlGcpProjectComputeService) healthChecks() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -95,7 +99,11 @@ func (g *mqlGcpProjectComputeServiceHealthCheck) id() (string, error) {
 // URL maps
 
 func (g *mqlGcpProjectComputeService) urlMaps() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -157,7 +165,11 @@ func (g *mqlGcpProjectComputeServiceUrlMap) id() (string, error) {
 // Target HTTP proxies
 
 func (g *mqlGcpProjectComputeService) targetHttpProxies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {
@@ -232,7 +244,11 @@ func (g *mqlGcpProjectComputeServiceTargetHttpProxy) urlMap() (*mqlGcpProjectCom
 // Target HTTPS proxies
 
 func (g *mqlGcpProjectComputeService) targetHttpsProxies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 	if g.ProjectId.Error != nil {

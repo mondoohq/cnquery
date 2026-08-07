@@ -41,8 +41,15 @@ func initGcpProjectComputeService(runtime *plugin.Runtime, args map[string]*llx.
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	projectId := conn.ResourceID()
-	args["projectId"] = llx.StringData(projectId)
+	// Only default the project from the connection when the caller did not
+	// supply one. NewResource runs this init before the resource-cache lookup,
+	// so an unconditional overwrite redirects every caller-scoped reference
+	// (gcp.projects.list { compute.instances }, instance.exposure) at the
+	// connection's own project, and on an organization- or folder-scoped
+	// connection ResourceID() is not a project id at all.
+	if pid, ok := args["projectId"]; !ok || pid == nil {
+		args["projectId"] = llx.StringData(conn.ResourceID())
+	}
 
 	return args, nil, nil
 }
@@ -75,6 +82,25 @@ func (g *mqlGcpProjectComputeService) enabled() (bool, error) {
 		return false, err
 	}
 	return serviceEnabled, nil
+}
+
+// serviceEnabled resolves the compute service-enabled gate and propagates the
+// error from that resolution.
+//
+// Reading `GetEnabled().Data` on its own is not safe: enabled() resolves
+// gcp.project and calls isServiceEnabled, and on any failure of that chain (a
+// serviceusage permission gap, the Service Usage API itself disabled, a
+// transient error) GetOrCompute returns Data=false alongside a non-nil Error.
+// A caller that only reads Data then reports "this project has no instances /
+// firewalls / disks" for a project it was never able to check -- an empty list
+// is the most dangerous wrong answer for a posture check, because it passes
+// vacuously instead of failing or erroring.
+func (g *mqlGcpProjectComputeService) serviceEnabled() (bool, error) {
+	enabled := g.GetEnabled()
+	if enabled.Error != nil {
+		return false, enabled.Error
+	}
+	return enabled.Data, nil
 }
 
 func (g *mqlGcpProjectComputeService) id() (string, error) {
@@ -194,8 +220,11 @@ func newMqlZone(runtime *plugin.Runtime, z *compute.Zone) (any, error) {
 }
 
 func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -245,8 +274,11 @@ func (g *mqlGcpProjectComputeServiceZone) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) zones() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -328,8 +360,11 @@ func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, proj
 }
 
 func (g *mqlGcpProjectComputeService) machineTypes() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -987,8 +1022,11 @@ func (g *mqlGcpProjectComputeServiceInstance) serviceAccountRefs() ([]any, error
 }
 
 func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1202,9 +1240,27 @@ func customerEncryptionKeyToDict(key *compute.CustomerEncryptionKey) map[string]
 	}
 }
 
+// computeAggregatedScope splits a Compute AggregatedList scope key into its
+// kind and name. Compute keys aggregated results by "zones/<zone>" for zonal
+// resources and "regions/<region>" for regional ones; the "global" bucket and
+// any future scope kind report ok=false so callers skip them explicitly rather
+// than silently mapping them into the wrong location.
+func computeAggregatedScope(scope string) (kind, name string, ok bool) {
+	if n, found := strings.CutPrefix(scope, "zones/"); found && n != "" {
+		return "zone", n, true
+	}
+	if n, found := strings.CutPrefix(scope, "regions/"); found && n != "" {
+		return "region", n, true
+	}
+	return "", "", false
+}
+
 func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1246,14 +1302,25 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 	req := computeSvc.Disks.AggregatedList(projectId)
 	if err := req.Pages(ctx, func(page *compute.DiskAggregatedList) error {
 		for scope, scopedList := range page.Items {
-			zoneName, ok := strings.CutPrefix(scope, "zones/")
+			// Disks are aggregated under both "zones/<zone>" (zonal) and
+			// "regions/<region>" (regional, synchronously replicated). Skipping
+			// the regional scope hid every regional PD -- the HA disk type --
+			// from encryption and source-image audits with no error.
+			kind, locationName, ok := computeAggregatedScope(scope)
 			if !ok {
-				// regional disks are not modeled today; preserve prior behavior
 				continue
 			}
-			zone, ok := zonesByName[zoneName]
-			if !ok {
-				continue
+			// A regional disk has no zone, so the field resolves to null. It
+			// must be llx.NilData and not a typed-nil resource pointer: a typed
+			// nil is a non-nil interface, which RawToTValue records as set and
+			// NOT null, and the runtime then dereferences it.
+			zoneData := llx.NilData
+			if kind == "zone" {
+				zone, found := zonesByName[locationName]
+				if !found {
+					continue
+				}
+				zoneData = llx.ResourceData(zone, "gcp.project.computeService.zone")
 			}
 			for _, disk := range scopedList.Disks {
 				guestOsFeatures := []string{}
@@ -1313,7 +1380,7 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					"satisfiesPzs":                llx.BoolData(disk.SatisfiesPzs),
 					"sizeGb":                      llx.IntData(disk.SizeGb),
 					"status":                      llx.StringData(disk.Status),
-					"zone":                        llx.ResourceData(zone, "gcp.project.computeService.zone"),
+					"zone":                        zoneData,
 					"created":                     llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
 					"diskEncryptionKey":           llx.DictData(mqlDiskEnc),
 					"sourceImageEncryptionKey":    llx.DictData(mqlSourceImageEnc),
@@ -1458,8 +1525,11 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 }
 
 func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1566,8 +1636,11 @@ func (g *mqlGcpProjectComputeServiceSnapshot) managedBy() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -1833,8 +1906,11 @@ func (g *mqlGcpProjectComputeServiceImage) sourceSnapshot() (*mqlGcpProjectCompu
 }
 
 func (g *mqlGcpProjectComputeService) images() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -2152,8 +2228,11 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 }
 
 func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -2490,8 +2569,11 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 }
 
 func (g *mqlGcpProjectComputeService) subnetworks() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -2634,8 +2716,11 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 }
 
 func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -2701,8 +2786,11 @@ func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 }
 
 func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3003,8 +3091,11 @@ func networkMode(n *compute.Network) string {
 }
 
 func (g *mqlGcpProjectComputeService) addresses() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3100,8 +3191,11 @@ func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
 func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 	// when the service is not enabled, we return nil (mirrors the other 19
 	// compute list accessors so an API-disabled project degrades to empty
-	// rather than hard-failing this one query).
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3280,7 +3374,11 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicyRule) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3485,7 +3583,11 @@ func (g *mqlGcpProjectComputeServiceSslPolicy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) sslPolicies() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3568,7 +3670,11 @@ func (g *mqlGcpProjectComputeServiceSslCertificate) expired() (bool, error) {
 }
 
 func (g *mqlGcpProjectComputeService) sslCertificates() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3648,7 +3754,11 @@ func (g *mqlGcpProjectComputeServiceVpnGateway) network() (*mqlGcpProjectCompute
 }
 
 func (g *mqlGcpProjectComputeService) vpnGateways() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3720,7 +3830,11 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeService) vpnTunnels() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -3810,7 +3924,11 @@ func storagePoolSharedProjectIds(shareSettings *compute.StoragePoolShareSettings
 }
 
 func (g *mqlGcpProjectComputeService) storagePools() ([]any, error) {
-	if !g.GetEnabled().Data {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
