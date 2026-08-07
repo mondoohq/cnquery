@@ -858,6 +858,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"postgresdb": {
+		Provider: &plugin.Provider{
+			Name:            "postgresdb",
+			ID:              "go.mondoo.com/mql/v13/providers/postgresdb",
+			ConnectionTypes: []string{"postgresdb"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "postgresdb",
+					Use:   "postgresdb [host]",
+					Short: "a PostgreSQL server",
+				},
+			},
+		},
+	},
+
 	"proxmox": {
 		Provider: &plugin.Provider{
 			Name:            "proxmox",
