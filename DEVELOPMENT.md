@@ -240,6 +240,7 @@ use (
    ./mql/providers/ollama
    ./mql/providers/opcua
    ./mql/providers/openai
+   ./mql/providers/opensearch
    ./mql/providers/openstack
    ./mql/providers/portainer
    ./mql/providers/postgresdb

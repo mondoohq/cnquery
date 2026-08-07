@@ -248,6 +248,7 @@ PROVIDERS := \
 	ollama \
 	opcua \
 	openai \
+	opensearch \
 	openstack \
 	os \
 	portainer \

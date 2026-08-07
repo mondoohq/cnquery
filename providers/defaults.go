@@ -816,6 +816,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"opensearch": {
+		Provider: &plugin.Provider{
+			Name:            "opensearch",
+			ID:              "go.mondoo.com/mql/v13/providers/opensearch",
+			ConnectionTypes: []string{"opensearch"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "opensearch",
+					Use:   "opensearch [host]",
+					Short: "an OpenSearch cluster",
+				},
+			},
+		},
+	},
+
 	"openstack": {
 		Provider: &plugin.Provider{
 			Name:            "openstack",
