@@ -1,6 +1,6 @@
 # Datadog Provider
 
-Query and assess your Datadog account configuration, including users, monitors, dashboards, security rules, and more.
+Query and assess your Datadog account configuration, including organization single sign-on settings, users, roles and permissions, monitors, dashboards, security rules, and more.
 
 ## Prerequisites
 
@@ -32,6 +32,24 @@ mql shell datadog --api-key <key> --app-key <key> --site datadoghq.eu
 ```
 
 ## Examples
+
+**Check that single sign-on is enforced**
+
+```shell
+mql> datadog.org { samlEnabled samlStrictModeEnabled privateWidgetShare }
+```
+
+**Find who holds a privileged permission**
+
+```shell
+mql> datadog.roles.where(permissions.any(name == "org_management")) { name users { email } }
+```
+
+**Find application keys that are unscoped or unused**
+
+```shell
+mql> datadog.applicationKeys { name lastUsedAt scopes owner { email } }
+```
 
 **List all users**
 
@@ -105,8 +123,14 @@ The table below lists the Datadog RBAC permission each resource requires. These 
 
 | Resource | Required RBAC Permission |
 |---|---|
+| `datadog.org` | `org_management` |
+| `datadog.org.domainAllowlistEnabled` / `domainAllowlistDomains` | `org_management` |
 | `datadog.users` | `user_access_invite` |
+| `datadog.user.roles` | `user_access_read` |
+| `datadog.user.teams` | `teams_read` |
 | `datadog.roles` | `user_access_invite` |
+| `datadog.role.permissions` / `datadog.role.users` | `user_access_read` |
+| `datadog.permissions` | `user_access_read` |
 | `datadog.serviceAccounts` | `user_access_invite` |
 | `datadog.monitors` | `monitors_read` |
 | `datadog.dashboards` | `dashboards_read` |
@@ -125,7 +149,7 @@ The table below lists the Datadog RBAC permission each resource requires. These 
 | `datadog.applicationKeys` | `user_app_keys` |
 | `datadog.ipAllowlistEntries` / `ipAllowlistEnabled` | `org_management` |
 | `datadog.integrationAwsAccounts` | `aws_configuration_read` |
-| `datadog.teams` | `teams_read` |
+| `datadog.teams` / `datadog.team.members` | `teams_read` |
 | `datadog.rumApplications` | `rum_apps_read` |
 
 > **Tip**: For full access to all resources, use an unscoped Application Key (it inherits all permissions from its creator). Scoped keys are recommended for production use to follow least-privilege principles.
