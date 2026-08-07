@@ -43,15 +43,15 @@ func init() {
 			Create: createPostgres,
 		},
 		"postgres.instance": {
-			// to override args, implement: initPostgresInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostgresInstance,
 			Create: createPostgresInstance,
 		},
 		"postgres.role": {
-			// to override args, implement: initPostgresRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostgresRole,
 			Create: createPostgresRole,
 		},
 		"postgres.database": {
-			// to override args, implement: initPostgresDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initPostgresDatabase,
 			Create: createPostgresDatabase,
 		},
 		"postgres.schema": {
@@ -209,17 +209,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"postgres.instance.hbaRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresInstance).GetHbaRules()).ToDataRes(types.Array(types.Resource("postgres.hbaRule")))
 	},
-	"postgres.instance.extensions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPostgresInstance).GetExtensions()).ToDataRes(types.Array(types.Resource("postgres.extension")))
-	},
-	"postgres.instance.foreignServers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPostgresInstance).GetForeignServers()).ToDataRes(types.Array(types.Resource("postgres.foreignServer")))
-	},
 	"postgres.instance.replicationSlots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresInstance).GetReplicationSlots()).ToDataRes(types.Array(types.Resource("postgres.replicationSlot")))
-	},
-	"postgres.instance.publications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPostgresInstance).GetPublications()).ToDataRes(types.Array(types.Resource("postgres.publication")))
 	},
 	"postgres.instance.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresInstance).GetSubscriptions()).ToDataRes(types.Array(types.Resource("postgres.subscription")))
@@ -307,6 +298,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"postgres.database.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresDatabase).GetExtensions()).ToDataRes(types.Array(types.Resource("postgres.extension")))
+	},
+	"postgres.database.foreignServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresDatabase).GetForeignServers()).ToDataRes(types.Array(types.Resource("postgres.foreignServer")))
+	},
+	"postgres.database.publications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresDatabase).GetPublications()).ToDataRes(types.Array(types.Resource("postgres.publication")))
 	},
 	"postgres.schema.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresSchema).GetName()).ToDataRes(types.String)
@@ -577,20 +574,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPostgresInstance).HbaRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"postgres.instance.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPostgresInstance).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"postgres.instance.foreignServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPostgresInstance).ForeignServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"postgres.instance.replicationSlots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostgresInstance).ReplicationSlots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"postgres.instance.publications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPostgresInstance).Publications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"postgres.instance.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -715,6 +700,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"postgres.database.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostgresDatabase).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.database.foreignServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresDatabase).ForeignServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.database.publications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresDatabase).Publications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"postgres.schema.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1118,10 +1111,7 @@ type mqlPostgresInstance struct {
 	Databases          plugin.TValue[[]any]
 	Tablespaces        plugin.TValue[[]any]
 	HbaRules           plugin.TValue[[]any]
-	Extensions         plugin.TValue[[]any]
-	ForeignServers     plugin.TValue[[]any]
 	ReplicationSlots   plugin.TValue[[]any]
-	Publications       plugin.TValue[[]any]
 	Subscriptions      plugin.TValue[[]any]
 }
 
@@ -1265,38 +1255,6 @@ func (c *mqlPostgresInstance) GetHbaRules() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlPostgresInstance) GetExtensions() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.instance", c.__id, "extensions")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.extensions()
-	})
-}
-
-func (c *mqlPostgresInstance) GetForeignServers() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.ForeignServers, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.instance", c.__id, "foreignServers")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.foreignServers()
-	})
-}
-
 func (c *mqlPostgresInstance) GetReplicationSlots() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ReplicationSlots, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -1310,22 +1268,6 @@ func (c *mqlPostgresInstance) GetReplicationSlots() *plugin.TValue[[]any] {
 		}
 
 		return c.replicationSlots()
-	})
-}
-
-func (c *mqlPostgresInstance) GetPublications() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Publications, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.instance", c.__id, "publications")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.publications()
 	})
 }
 
@@ -1487,7 +1429,7 @@ func (c *mqlPostgresRole) GetConfig() *plugin.TValue[[]any] {
 type mqlPostgresDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresDatabaseInternal it will be used here
+	mqlPostgresDatabaseInternal
 	Name             plugin.TValue[string]
 	Oid              plugin.TValue[int64]
 	Owner            plugin.TValue[*mqlPostgresRole]
@@ -1501,6 +1443,8 @@ type mqlPostgresDatabase struct {
 	Schemas          plugin.TValue[[]any]
 	Functions        plugin.TValue[[]any]
 	Extensions       plugin.TValue[[]any]
+	ForeignServers   plugin.TValue[[]any]
+	Publications     plugin.TValue[[]any]
 }
 
 // createPostgresDatabase creates a new instance of this resource
@@ -1647,11 +1591,43 @@ func (c *mqlPostgresDatabase) GetExtensions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlPostgresDatabase) GetForeignServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ForeignServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.database", c.__id, "foreignServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.foreignServers()
+	})
+}
+
+func (c *mqlPostgresDatabase) GetPublications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Publications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.database", c.__id, "publications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publications()
+	})
+}
+
 // mqlPostgresSchema for the postgres.schema resource
 type mqlPostgresSchema struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresSchemaInternal it will be used here
+	mqlPostgresSchemaInternal
 	Name       plugin.TValue[string]
 	Oid        plugin.TValue[int64]
 	Owner      plugin.TValue[*mqlPostgresRole]
@@ -1734,7 +1710,7 @@ func (c *mqlPostgresSchema) GetPrivileges() *plugin.TValue[[]any] {
 type mqlPostgresFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresFunctionInternal it will be used here
+	mqlPostgresFunctionInternal
 	Name              plugin.TValue[string]
 	Oid               plugin.TValue[int64]
 	Schema            plugin.TValue[string]
@@ -2054,7 +2030,7 @@ func (c *mqlPostgresHbaRule) GetError() *plugin.TValue[string] {
 type mqlPostgresExtension struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresExtensionInternal it will be used here
+	mqlPostgresExtensionInternal
 	Name    plugin.TValue[string]
 	Version plugin.TValue[string]
 	Schema  plugin.TValue[string]
@@ -2125,7 +2101,7 @@ func (c *mqlPostgresExtension) GetOwner() *plugin.TValue[*mqlPostgresRole] {
 type mqlPostgresTablespace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresTablespaceInternal it will be used here
+	mqlPostgresTablespaceInternal
 	Name       plugin.TValue[string]
 	Oid        plugin.TValue[int64]
 	Owner      plugin.TValue[*mqlPostgresRole]
@@ -2213,7 +2189,7 @@ func (c *mqlPostgresTablespace) GetPrivileges() *plugin.TValue[[]any] {
 type mqlPostgresForeignServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresForeignServerInternal it will be used here
+	mqlPostgresForeignServerInternal
 	Name         plugin.TValue[string]
 	Type         plugin.TValue[string]
 	Version      plugin.TValue[string]
@@ -2429,7 +2405,7 @@ func (c *mqlPostgresReplicationSlot) GetTemporary() *plugin.TValue[bool] {
 type mqlPostgresPublication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresPublicationInternal it will be used here
+	mqlPostgresPublicationInternal
 	Name      plugin.TValue[string]
 	Owner     plugin.TValue[*mqlPostgresRole]
 	AllTables plugin.TValue[bool]
@@ -2515,7 +2491,7 @@ func (c *mqlPostgresPublication) GetTruncate() *plugin.TValue[bool] {
 type mqlPostgresSubscription struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPostgresSubscriptionInternal it will be used here
+	mqlPostgresSubscriptionInternal
 	Name                plugin.TValue[string]
 	Owner               plugin.TValue[*mqlPostgresRole]
 	Enabled             plugin.TValue[bool]

@@ -46,15 +46,9 @@ postgres.instance @defaults("version") {
   tablespaces() []postgres.tablespace
   // Host-based authentication rules (pg_hba_file_rules)
   hbaRules() []postgres.hbaRule
-  // Extensions installed in the connected database
-  extensions() []postgres.extension
-  // Foreign servers defined for foreign-data wrappers
-  foreignServers() []postgres.foreignServer
   // Replication slots on the server
   replicationSlots() []postgres.replicationSlot
-  // Logical-replication publications in the connected database
-  publications() []postgres.publication
-  // Logical-replication subscriptions in the connected database
+  // Logical-replication subscriptions on the server
   subscriptions() []postgres.subscription
 }
 
@@ -138,6 +132,10 @@ postgres.database @defaults("name") {
   functions() []postgres.function
   // Extensions installed in the database
   extensions() []postgres.extension
+  // Foreign servers defined in the database (for foreign-data wrappers)
+  foreignServers() []postgres.foreignServer
+  // Logical-replication publications defined in the database
+  publications() []postgres.publication
 }
 
 // PostgreSQL schema

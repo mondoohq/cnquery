@@ -1,0 +1,166 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"time"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/types"
+)
+
+// initPostgresInstance fetches the server's core properties once and populates
+// the instance resource. Collections resolve lazily through their accessors.
+func initPostgresInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	conn := pgConnection(runtime)
+	systemID, err := conn.SystemID()
+	if err != nil {
+		return nil, nil, err
+	}
+	pool, err := conn.Client("")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var version string
+	var startTime time.Time
+	var inRecovery bool
+	if err := pool.QueryRow(pgContext(),
+		"SELECT version(), pg_postmaster_start_time(), pg_is_in_recovery()").
+		Scan(&version, &startTime, &inRecovery); err != nil {
+		return nil, nil, err
+	}
+
+	// A handful of settings are surfaced directly on the instance.
+	settings := map[string]string{}
+	rows, err := pool.Query(pgContext(),
+		"SELECT name, setting FROM pg_settings WHERE name IN ('ssl', 'password_encryption', 'listen_addresses')")
+	if err != nil {
+		return nil, nil, err
+	}
+	for rows.Next() {
+		var name, setting string
+		if err := rows.Scan(&name, &setting); err != nil {
+			rows.Close()
+			return nil, nil, err
+		}
+		settings[name] = setting
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	args["__id"] = llx.StringData(systemID)
+	args["systemIdentifier"] = llx.StringData(systemID)
+	args["version"] = llx.StringData(version)
+	args["startTime"] = llx.TimeDataPtr(&startTime)
+	args["inRecovery"] = llx.BoolData(inRecovery)
+	args["ssl"] = llx.BoolData(settings["ssl"] == "on")
+	args["passwordEncryption"] = llx.StringData(settings["password_encryption"])
+	args["listenAddresses"] = llx.StringData(settings["listen_addresses"])
+	return args, nil, nil
+}
+
+func (r *mqlPostgresInstance) settings() ([]any, error) {
+	pool, err := pgPool(r.MqlRuntime, "")
+	if err != nil {
+		return nil, err
+	}
+	rows, err := pool.Query(pgContext(),
+		`SELECT name, setting, COALESCE(unit, ''), COALESCE(category, ''),
+			context, source, COALESCE(boot_val, ''), COALESCE(reset_val, ''), pending_restart
+		 FROM pg_settings ORDER BY name`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []any{}
+	for rows.Next() {
+		var name, setting, unit, category, context, source, bootVal, resetVal string
+		var pendingRestart bool
+		if err := rows.Scan(&name, &setting, &unit, &category, &context, &source,
+			&bootVal, &resetVal, &pendingRestart); err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "postgres.setting", map[string]*llx.RawData{
+			"__id":           llx.StringData(r.SystemIdentifier.Data + "/setting/" + name),
+			"name":           llx.StringData(name),
+			"setting":        llx.StringData(setting),
+			"unit":           llx.StringData(unit),
+			"category":       llx.StringData(category),
+			"context":        llx.StringData(context),
+			"source":         llx.StringData(source),
+			"bootValue":      llx.StringData(bootVal),
+			"resetValue":     llx.StringData(resetVal),
+			"pendingRestart": llx.BoolData(pendingRestart),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, res)
+	}
+	return list, rows.Err()
+}
+
+func (r *mqlPostgresInstance) hbaRules() ([]any, error) {
+	pool, err := pgPool(r.MqlRuntime, "")
+	if err != nil {
+		return nil, err
+	}
+	// pg_hba_file_rules is restricted to superusers / pg_read_all_settings;
+	// treat a permission error as no visible rules rather than failing.
+	rows, err := pool.Query(pgContext(),
+		`SELECT line_number, type, COALESCE(database, '{}'),
+			COALESCE(user_name, '{}'), COALESCE(address, ''), COALESCE(netmask, ''),
+			COALESCE(auth_method, ''), COALESCE(options, '{}'), COALESCE(error, '')
+		 FROM pg_hba_file_rules ORDER BY line_number`)
+	if err != nil {
+		return []any{}, nil
+	}
+	defer rows.Close()
+
+	list := []any{}
+	for rows.Next() {
+		var lineNumber int64
+		var typ, address, netmask, authMethod, ruleError string
+		var databases, userNames, options []string
+		if err := rows.Scan(&lineNumber, &typ, &databases, &userNames, &address,
+			&netmask, &authMethod, &options, &ruleError); err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "postgres.hbaRule", map[string]*llx.RawData{
+			"__id":       llx.StringData(r.SystemIdentifier.Data + "/hba/" + intToStr(lineNumber)),
+			"lineNumber": llx.IntData(lineNumber),
+			"type":       llx.StringData(typ),
+			"databases":  llx.ArrayData(strSliceToAny(databases), types.String),
+			"userNames":  llx.ArrayData(strSliceToAny(userNames), types.String),
+			"address":    llx.StringData(address),
+			"netmask":    llx.StringData(netmask),
+			"authMethod": llx.StringData(authMethod),
+			"options":    llx.ArrayData(strSliceToAny(options), types.String),
+			"error":      llx.StringData(ruleError),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, res)
+	}
+	return list, rows.Err()
+}
+
+// strSliceToAny converts a []string to []any for llx.ArrayData.
+func strSliceToAny(in []string) []any {
+	out := make([]any, len(in))
+	for i, v := range in {
+		out[i] = v
+	}
+	return out
+}
