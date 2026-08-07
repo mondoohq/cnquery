@@ -291,6 +291,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"elasticsearch": {
+		Provider: &plugin.Provider{
+			Name:            "elasticsearch",
+			ID:              "go.mondoo.com/mql/v13/providers/elasticsearch",
+			ConnectionTypes: []string{"elasticsearch"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "elasticsearch",
+					Use:   "elasticsearch [host]",
+					Short: "an Elasticsearch cluster",
+				},
+			},
+		},
+	},
+
 	"equinix": {
 		Provider: &plugin.Provider{
 			Name:            "equinix",
