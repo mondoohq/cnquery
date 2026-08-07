@@ -842,6 +842,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.instance.internetExposed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsInstance).GetInternetExposed()).ToDataRes(types.Bool)
 	},
+	"alicloud.ecs.instance.ramRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetRamRole()).ToDataRes(types.Resource("alicloud.ram.role"))
+	},
+	"alicloud.ecs.instance.metadataEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetMetadataEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.instance.metadataHttpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetMetadataHttpTokens()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.instance.metadataHopLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetMetadataHopLimit()).ToDataRes(types.Int)
+	},
 	"alicloud.ecs.disk.diskId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsDisk).GetDiskId()).ToDataRes(types.String)
 	},
@@ -1817,6 +1829,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.rds.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
+	"alicloud.rds.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
+	},
 	"alicloud.redis.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedis).GetInstances()).ToDataRes(types.Array(types.Resource("alicloud.redis.instance")))
 	},
@@ -1915,6 +1930,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.redis.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.redis.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRedisInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
 	},
 	"alicloud.redis.instance.authEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetAuthEnabled()).ToDataRes(types.Bool)
@@ -2056,6 +2074,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.mongodb.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.mongodb.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudMongodbInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
 	},
 	"alicloud.mongodb.instance.auditPolicyEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetAuditPolicyEnabled()).ToDataRes(types.Bool)
@@ -4393,6 +4414,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcsInstance).InternetExposed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"alicloud.ecs.instance.ramRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).RamRole, ok = plugin.RawToTValue[*mqlAlicloudRamRole](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.instance.metadataEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).MetadataEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.instance.metadataHttpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).MetadataHttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.instance.metadataHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).MetadataHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"alicloud.ecs.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsDisk).__id, ok = v.Value.(string)
 		return
@@ -5769,6 +5806,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRdsInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.rds.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRedis).__id, ok = v.Value.(string)
 		return
@@ -5907,6 +5948,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.redis.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRedisInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.redis.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRedisInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.redis.instance.authEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6103,6 +6148,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.mongodb.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudMongodbInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.mongodb.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudMongodbInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.mongodb.instance.auditPolicyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9738,6 +9787,10 @@ type mqlAlicloudEcsInstance struct {
 	Tags                    plugin.TValue[map[string]any]
 	SecurityGroups          plugin.TValue[[]any]
 	InternetExposed         plugin.TValue[bool]
+	RamRole                 plugin.TValue[*mqlAlicloudRamRole]
+	MetadataEndpointEnabled plugin.TValue[bool]
+	MetadataHttpTokens      plugin.TValue[string]
+	MetadataHopLimit        plugin.TValue[int64]
 }
 
 // createAlicloudEcsInstance creates a new instance of this resource
@@ -10021,6 +10074,34 @@ func (c *mqlAlicloudEcsInstance) GetInternetExposed() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetExposed, func() (bool, error) {
 		return c.internetExposed()
 	})
+}
+
+func (c *mqlAlicloudEcsInstance) GetRamRole() *plugin.TValue[*mqlAlicloudRamRole] {
+	return plugin.GetOrCompute[*mqlAlicloudRamRole](&c.RamRole, func() (*mqlAlicloudRamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.instance", c.__id, "ramRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudRamRole), nil
+			}
+		}
+
+		return c.ramRole()
+	})
+}
+
+func (c *mqlAlicloudEcsInstance) GetMetadataEndpointEnabled() *plugin.TValue[bool] {
+	return &c.MetadataEndpointEnabled
+}
+
+func (c *mqlAlicloudEcsInstance) GetMetadataHttpTokens() *plugin.TValue[string] {
+	return &c.MetadataHttpTokens
+}
+
+func (c *mqlAlicloudEcsInstance) GetMetadataHopLimit() *plugin.TValue[int64] {
+	return &c.MetadataHopLimit
 }
 
 // mqlAlicloudEcsDisk for the alicloud.ecs.disk resource
@@ -12729,6 +12810,7 @@ type mqlAlicloudRdsInstance struct {
 	TdeEnabled            plugin.TValue[bool]
 	SecurityIPList        plugin.TValue[[]any]
 	SecurityGroupIds      plugin.TValue[[]any]
+	SecurityGroups        plugin.TValue[[]any]
 }
 
 // createAlicloudRdsInstance creates a new instance of this resource
@@ -12952,6 +13034,22 @@ func (c *mqlAlicloudRdsInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAlicloudRdsInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.rds.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
 // mqlAlicloudRedis for the alicloud.redis resource
 type mqlAlicloudRedis struct {
 	MqlRuntime *plugin.Runtime
@@ -13050,6 +13148,7 @@ type mqlAlicloudRedisInstance struct {
 	TdeEnabled       plugin.TValue[bool]
 	SecurityIPList   plugin.TValue[[]any]
 	SecurityGroupIds plugin.TValue[[]any]
+	SecurityGroups   plugin.TValue[[]any]
 	AuthEnabled      plugin.TValue[bool]
 }
 
@@ -13250,6 +13349,22 @@ func (c *mqlAlicloudRedisInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAlicloudRedisInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.redis.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
 func (c *mqlAlicloudRedisInstance) GetAuthEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AuthEnabled, func() (bool, error) {
 		return c.authEnabled()
@@ -13367,6 +13482,7 @@ type mqlAlicloudMongodbInstance struct {
 	TdeEnabled            plugin.TValue[bool]
 	SecurityIPList        plugin.TValue[[]any]
 	SecurityGroupIds      plugin.TValue[[]any]
+	SecurityGroups        plugin.TValue[[]any]
 	AuditPolicyEnabled    plugin.TValue[bool]
 }
 
@@ -13648,6 +13764,22 @@ func (c *mqlAlicloudMongodbInstance) GetSecurityIPList() *plugin.TValue[[]any] {
 func (c *mqlAlicloudMongodbInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityGroupIds, func() ([]any, error) {
 		return c.securityGroupIds()
+	})
+}
+
+func (c *mqlAlicloudMongodbInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.mongodb.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
 	})
 }
 

@@ -4,11 +4,14 @@
 package resources
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
+	"github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
@@ -76,6 +79,13 @@ type mqlAlicloudEcsInstanceInternal struct {
 	cacheVpcID     string
 	cacheVswitchID string
 	cacheImageID   string
+
+	// cacheRamRoleName holds the instance RAM role name that the batched
+	// DescribeInstanceRamRole lookup found for this instance. ramRoleFetched
+	// distinguishes "the lookup ran and found no role" from "the lookup never
+	// ran", which is the case for an instance built by its init function.
+	cacheRamRoleName string
+	ramRoleFetched   bool
 }
 
 // mqlAlicloudEcsDiskInternal caches the identifiers needed to resolve the
@@ -99,6 +109,25 @@ func strDeref(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// ecsMetadataEndpointEnabled maps the enabled/disabled HttpEndpoint string to a
+// bool, returning nil for an absent or unrecognized value so the field reads as
+// null rather than claiming the endpoint is off.
+func ecsMetadataEndpointEnabled(httpEndpoint *string) *bool {
+	if httpEndpoint == nil {
+		return nil
+	}
+	switch *httpEndpoint {
+	case "enabled":
+		enabled := true
+		return &enabled
+	case "disabled":
+		disabled := false
+		return &disabled
+	default:
+		return nil
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -162,7 +191,125 @@ func ecsInstancesInRegion(runtime *plugin.Runtime, conn *connection.AlicloudConn
 		}
 		req.NextToken = resp.Body.NextToken
 	}
+
+	seedEcsRamRoleNames(client, region, res)
 	return res, nil
+}
+
+// seedEcsRamRoleNames fills in each instance's RAM role name.
+//
+// DescribeInstances does not return it, but DescribeInstanceRamRole accepts up
+// to 50 instance IDs per request, so resolving it here costs one call per 50
+// instances instead of the one call per instance a purely lazy accessor would
+// need. A failed lookup leaves ramRoleFetched false on the affected instances,
+// so ramRole falls back to a single-instance call rather than reporting "no
+// role" for an instance whose role was never read.
+func seedEcsRamRoleNames(client *ecsclient.Client, region string, instances []any) {
+	const batchSize = 50
+
+	for start := 0; start < len(instances); start += batchSize {
+		end := min(start+batchSize, len(instances))
+		batch := instances[start:end]
+
+		ids := make([]string, 0, len(batch))
+		for _, i := range batch {
+			inst, ok := i.(*mqlAlicloudEcsInstance)
+			if !ok || inst.InstanceId.Data == "" {
+				continue
+			}
+			ids = append(ids, inst.InstanceId.Data)
+		}
+		if len(ids) == 0 {
+			continue
+		}
+
+		encoded, err := json.Marshal(ids)
+		if err != nil {
+			continue
+		}
+		resp, err := client.DescribeInstanceRamRole(&ecsclient.DescribeInstanceRamRoleRequest{
+			RegionId:    &region,
+			InstanceIds: tea.String(string(encoded)),
+			PageSize:    int32Ptr(batchSize),
+		})
+		if err != nil || resp == nil || resp.Body == nil || resp.Body.InstanceRamRoleSets == nil {
+			// leave ramRoleFetched false so ramRole retries for a single instance
+			log.Debug().Err(err).Str("region", region).Msg("alicloud: could not batch-read ECS instance RAM roles")
+			continue
+		}
+
+		roleByInstance := map[string]string{}
+		for _, set := range resp.Body.InstanceRamRoleSets.InstanceRamRoleSet {
+			if set == nil || set.InstanceId == nil {
+				continue
+			}
+			roleByInstance[*set.InstanceId] = strDeref(set.RamRoleName)
+		}
+
+		for _, i := range batch {
+			inst, ok := i.(*mqlAlicloudEcsInstance)
+			if !ok {
+				continue
+			}
+			inst.cacheRamRoleName = roleByInstance[inst.InstanceId.Data]
+			inst.ramRoleFetched = true
+		}
+	}
+}
+
+// ramRole resolves the instance RAM role whose credentials the instance
+// metadata service issues to workloads on the instance.
+func (r *mqlAlicloudEcsInstance) ramRole() (*mqlAlicloudRamRole, error) {
+	if !r.ramRoleFetched {
+		name, err := ecsInstanceRamRoleName(r.MqlRuntime, r.cacheRegion, r.InstanceId.Data)
+		if err != nil {
+			return nil, err
+		}
+		r.cacheRamRoleName = name
+		r.ramRoleFetched = true
+	}
+
+	if r.cacheRamRoleName == "" {
+		r.RamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveRamRole(r.MqlRuntime, r.cacheRamRoleName)
+}
+
+// ecsInstanceRamRoleName reads the RAM role of a single instance, for instances
+// that did not come from a listing and so were never batch-seeded.
+func ecsInstanceRamRoleName(runtime *plugin.Runtime, region, instanceID string) (string, error) {
+	if region == "" || instanceID == "" {
+		return "", nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.EcsClient(region)
+	if err != nil {
+		return "", err
+	}
+
+	encoded, err := json.Marshal([]string{instanceID})
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.DescribeInstanceRamRole(&ecsclient.DescribeInstanceRamRoleRequest{
+		RegionId:    &region,
+		InstanceIds: tea.String(string(encoded)),
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp == nil || resp.Body == nil || resp.Body.InstanceRamRoleSets == nil {
+		return "", nil
+	}
+	for _, set := range resp.Body.InstanceRamRoleSets.InstanceRamRoleSet {
+		if set == nil || strDeref(set.InstanceId) != instanceID {
+			continue
+		}
+		return strDeref(set.RamRoleName), nil
+	}
+	return "", nil
 }
 
 // newMqlEcsInstance maps one DescribeInstances item to a resource.
@@ -207,6 +354,15 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 	spotPriceLimit := llx.NilData
 	if inst.SpotPriceLimit != nil {
 		spotPriceLimit = llx.FloatData(float64(*inst.SpotPriceLimit))
+	}
+
+	var metadataEndpointEnabled *bool
+	var metadataHttpTokens *string
+	var metadataHopLimit *int32
+	if inst.MetadataOptions != nil {
+		metadataEndpointEnabled = ecsMetadataEndpointEnabled(inst.MetadataOptions.HttpEndpoint)
+		metadataHttpTokens = inst.MetadataOptions.HttpTokens
+		metadataHopLimit = inst.MetadataOptions.HttpPutResponseHopLimit
 	}
 
 	args := map[string]*llx.RawData{
@@ -255,6 +411,9 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 		"publicIpAddresses":       llx.ArrayData(llx.TArr2Raw(publicIps), types.String),
 		"eipAddress":              llx.StringDataPtr(eip),
 		"tags":                    llx.MapData(ecsTagsToMap(tags), types.String),
+		"metadataEndpointEnabled": llx.BoolDataPtr(metadataEndpointEnabled),
+		"metadataHttpTokens":      llx.StringDataPtr(metadataHttpTokens),
+		"metadataHopLimit":        llx.IntDataPtr(metadataHopLimit),
 	}
 
 	resource, err := CreateResource(runtime, "alicloud.ecs.instance", args)
@@ -934,6 +1093,30 @@ func resolveEcsInstance(runtime *plugin.Runtime, region, instanceID string) (*mq
 }
 
 // resolveEcsSecuritygroup is the security group equivalent of resolveEcsImage.
+// resolveEcsSecuritygroups turns a list of security group IDs into typed group
+// resources. Blank and unresolvable entries are skipped rather than failing the
+// list, since a group may have been deleted while still referenced.
+func resolveEcsSecuritygroups(runtime *plugin.Runtime, region string, ids []any) ([]any, error) {
+	res := []any{}
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || id == "" {
+			continue
+		}
+		sg, err := resolveEcsSecuritygroup(runtime, region, id)
+		if err != nil {
+			log.Debug().Err(err).Str("securityGroup", id).Str("region", region).
+				Msg("alicloud: could not resolve security group")
+			continue
+		}
+		if sg == nil {
+			continue
+		}
+		res = append(res, sg)
+	}
+	return res, nil
+}
+
 func resolveEcsSecuritygroup(runtime *plugin.Runtime, region, sgID string) (*mqlAlicloudEcsSecuritygroup, error) {
 	if sgID == "" {
 		return nil, nil

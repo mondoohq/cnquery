@@ -388,7 +388,10 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   // vSwitch the instance is connected to
   vswitch() alicloud.vpc.vswitch
   // Security group IDs applied to the instance
-  securityGroupIds []string
+  //
+  // Deprecated in favor of securityGroups, which returns the same groups as
+  // resources whose rules can be inspected.
+  securityGroupIds @maturity("deprecated") []string
   // Private IP addresses assigned to the instance
   privateIpAddresses []string
   // Public IP addresses assigned directly to the instance
@@ -405,6 +408,31 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   // associated elastic IP address, indicating inbound reachability from the
   // public internet before security-group rules are considered.
   internetExposed() bool
+  // Instance RAM role assumed by workloads on the instance
+  //
+  // The role whose temporary credentials the instance metadata service hands
+  // to any process that can reach it. Traverse to attachedPolicies to see what
+  // a workload on this instance is authorized to do, and therefore what an
+  // attacker reaching the metadata service would inherit. Null when no
+  // instance RAM role is attached.
+  ramRole() alicloud.ram.role
+  // Whether the instance metadata service endpoint is reachable
+  //
+  // False when the metadata endpoint is switched off entirely, which removes
+  // the instance RAM role credential path from the instance.
+  metadataEndpointEnabled bool
+  // Whether a session token is required to read instance metadata
+  //
+  // Either optional, where a plain request to the metadata service returns
+  // credentials, or required, where the caller must obtain a token first.
+  // Requiring a token is what stops a server-side request forgery from reading
+  // the instance RAM role credentials.
+  metadataHttpTokens string
+  // Maximum number of network hops a metadata response may travel
+  //
+  // A limit of 1 keeps metadata responses on the instance itself, so a
+  // containerized workload on a bridged network cannot reach them.
+  metadataHopLimit int
 }
 
 // Elastic Compute Service disk
@@ -1468,7 +1496,16 @@ alicloud.rds.instance {
   // whitelist entry of 0.0.0.0/0 exposes the instance to the entire internet.
   securityIPList() []string
   // IDs of the ECS security groups attached to the instance
-  securityGroupIds() []string
+  //
+  // Deprecated in favor of securityGroups, which returns the same groups as
+  // resources whose rules can be inspected.
+  securityGroupIds() @maturity("deprecated") []string
+  // ECS security groups attached to the instance
+  //
+  // The groups whose rules govern which sources may reach the instance.
+  // Traverse to permissions to see the allowed source ranges and ports
+  // alongside securityIPList, which controls the database whitelist separately.
+  securityGroups() []alicloud.ecs.securitygroup
 }
 
 // ApsaraDB for Redis
@@ -1576,7 +1613,16 @@ alicloud.redis.instance {
   // IP addresses and CIDR blocks allowed by the instance whitelists
   securityIPList() []string
   // IDs of the ECS security groups associated with the instance
-  securityGroupIds() []string
+  //
+  // Deprecated in favor of securityGroups, which returns the same groups as
+  // resources whose rules can be inspected.
+  securityGroupIds() @maturity("deprecated") []string
+  // ECS security groups associated with the instance
+  //
+  // The groups whose rules govern which sources may reach the instance.
+  // Traverse to permissions to see the allowed source ranges and ports
+  // alongside securityIPList, which controls the instance whitelist separately.
+  securityGroups() []alicloud.ecs.securitygroup
   // Whether password authentication is enforced
   //
   // True when password authentication is required. False when
@@ -1718,7 +1764,16 @@ alicloud.mongodb.instance {
   // IP addresses and CIDR blocks in the instance whitelist
   securityIPList() []string
   // IDs of the ECS security groups bound to the instance
-  securityGroupIds() []string
+  //
+  // Deprecated in favor of securityGroups, which returns the same groups as
+  // resources whose rules can be inspected.
+  securityGroupIds() @maturity("deprecated") []string
+  // ECS security groups bound to the instance
+  //
+  // The groups whose rules govern which sources may reach the instance.
+  // Traverse to permissions to see the allowed source ranges and ports
+  // alongside securityIPList, which controls the instance whitelist separately.
+  securityGroups() []alicloud.ecs.securitygroup
   // Whether the audit log feature is enabled
   auditPolicyEnabled() bool
 }
