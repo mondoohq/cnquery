@@ -16,6 +16,8 @@ const (
 	OptionVpcID         = "vpc-id"
 	OptionWafInstanceID = "waf-instance-id"
 	OptionCloudFirewall = "cloud-firewall"
+	OptionOssBucket     = "oss-bucket"
+	OptionRdsInstanceID = "rds-instance-id"
 )
 
 const (
@@ -26,6 +28,8 @@ const (
 	platformIDVpc           = "//platformid.api.mondoo.app/runtime/alicloud/vpc/network/"
 	platformIDWafInstance   = "//platformid.api.mondoo.app/runtime/alicloud/waf/instance/"
 	platformIDCloudFirewall = "//platformid.api.mondoo.app/runtime/alicloud/cloudfirewall/"
+	platformIDOssBucket     = "//platformid.api.mondoo.app/runtime/alicloud/oss/bucket/"
+	platformIDRdsInstance   = "//platformid.api.mondoo.app/runtime/alicloud/rds/instance/"
 )
 
 // Platforms is the static catalog of platforms the alicloud provider emits: the
@@ -39,6 +43,8 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "alicloud-vpc", Title: "Alibaba Cloud VPC", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-waf-instance", Title: "Alibaba Cloud Web Application Firewall", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-cloud-firewall", Title: "Alibaba Cloud Cloud Firewall", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-oss-bucket", Title: "Alibaba Cloud OSS Bucket", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-rds-instance", Title: "Alibaba Cloud RDS Instance", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)
@@ -100,6 +106,18 @@ func NewCloudFirewallPlatform(accountID string) *inventory.Platform {
 		[]string{"technology=alicloud", "kind=cloud-firewall", "account=" + accountID})
 }
 
+// NewOssBucketPlatform returns the platform for a discovered OSS bucket asset.
+func NewOssBucketPlatform(bucketName string) *inventory.Platform {
+	return newPlatform("alicloud-oss-bucket", "",
+		[]string{"technology=alicloud", "kind=oss-bucket", "bucket=" + bucketName})
+}
+
+// NewRdsInstancePlatform returns the platform for a discovered RDS instance asset.
+func NewRdsInstancePlatform(instanceID string) *inventory.Platform {
+	return newPlatform("alicloud-rds-instance", "",
+		[]string{"technology=alicloud", "kind=rds-instance", "instance=" + instanceID})
+}
+
 func NewAccountIdentifier(accountID string) string       { return platformIDAccount + accountID }
 func NewAckClusterIdentifier(clusterID string) string    { return platformIDAckCluster + clusterID }
 func NewAlbIdentifier(lbID string) string                { return platformIDAlb + lbID }
@@ -107,3 +125,5 @@ func NewNlbIdentifier(lbID string) string                { return platformIDNlb 
 func NewVpcIdentifier(vpcID string) string               { return platformIDVpc + vpcID }
 func NewWafInstanceIdentifier(instanceID string) string  { return platformIDWafInstance + instanceID }
 func NewCloudFirewallIdentifier(accountID string) string { return platformIDCloudFirewall + accountID }
+func NewOssBucketIdentifier(bucketName string) string    { return platformIDOssBucket + bucketName }
+func NewRdsInstanceIdentifier(instanceID string) string  { return platformIDRdsInstance + instanceID }

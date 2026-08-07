@@ -183,6 +183,9 @@ func ecsInstancesInRegion(runtime *plugin.Runtime, conn *connection.AlicloudConn
 			if err != nil {
 				return nil, err
 			}
+			if filteredOutByTags(conn, mqlInst.Tags.Data) {
+				continue
+			}
 			res = append(res, mqlInst)
 		}
 

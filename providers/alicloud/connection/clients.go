@@ -377,7 +377,7 @@ func (c *AlicloudConnection) ResourceManagerClient() (*rmclient.Client, error) {
 // account is enumerated via the ECS DescribeRegions API.
 func (c *AlicloudConnection) GetRegions() ([]string, error) {
 	if len(c.regionFilter) > 0 {
-		return c.regionFilter, nil
+		return c.Filters.General.applyRegionFilters(c.regionFilter), nil
 	}
 
 	client, err := c.EcsClient(c.region)
@@ -399,7 +399,7 @@ func (c *AlicloudConnection) GetRegions() ([]string, error) {
 			regions = append(regions, *r.RegionId)
 		}
 	}
-	return regions, nil
+	return c.Filters.General.applyRegionFilters(regions), nil
 }
 
 // Identify looks up the account (UID) the credential belongs to via the STS

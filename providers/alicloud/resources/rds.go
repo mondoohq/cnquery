@@ -94,6 +94,17 @@ func (r *mqlAlicloudRds) instances() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				// instance tags cost a DescribeTags call each, so only read them
+				// when a tag filter is actually set
+				if conn.Filters.General.HasTags() {
+					tags := mqlInst.GetTags()
+					if tags.Error != nil {
+						return nil, tags.Error
+					}
+					if filteredOutByTags(conn, tags.Data) {
+						continue
+					}
+				}
 				res = append(res, mqlInst)
 			}
 
@@ -175,6 +186,9 @@ func initAlicloudRdsInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	// on a discovered RDS instance asset, resolve the instance the asset is
+	// scoped to
+	args = scopedInitArgs(runtime, args, connection.OptionRdsInstanceID, "dbInstanceId")
 
 	dbInstanceID, err := requiredStringArg(args, "dbInstanceId", "alicloud.rds.instance")
 	if err != nil {

@@ -51,6 +51,17 @@ func (r *mqlAlicloudOss) buckets() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			// bucket tags cost a GetBucketTags call each, so only read them when
+			// a tag filter is actually set
+			if conn.Filters.General.HasTags() {
+				tags := bucket.GetTags()
+				if tags.Error != nil {
+					return nil, tags.Error
+				}
+				if filteredOutByTags(conn, tags.Data) {
+					continue
+				}
+			}
 			res = append(res, bucket)
 		}
 
@@ -119,6 +130,8 @@ func initAlicloudOssBucket(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if len(args) > 1 {
 		return args, nil, nil
 	}
+	// on a discovered bucket asset, resolve the bucket the asset is scoped to
+	args = scopedInitIDArgs(runtime, args, connection.OptionOssBucket, "name")
 
 	name, err := requiredStringArg(args, "name", "alicloud.oss.bucket")
 	if err != nil {
