@@ -99,13 +99,9 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					// missing flag on a non-private load balancer means public,
 					// so falling back to false would clear a genuinely
 					// internet-facing balancer.
-					isPublic := boolValue(ip.IsPublic)
-					if ip.IsPublic == nil {
-						isPublic = !boolValue(lb.IsPrivate)
-					}
 					entry := map[string]any{
 						"ipAddress": stringValue(ip.IpAddress),
-						"isPublic":  isPublic,
+						"isPublic":  ociIpIsPublic(ip.IsPublic, boolValue(lb.IsPrivate)),
 					}
 					if ip.ReservedIp != nil {
 						entry["reservedIpId"] = stringValue(ip.ReservedIp.Id)

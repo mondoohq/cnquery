@@ -2946,8 +2946,8 @@ private oci.serviceConnectorHub.connector @defaults("name sourceKind targetKind 
   // Configuration of the source the connector reads from
   //
   // Shape varies by `sourceKind`. A `logging` source has `logSources`,
-  // each with `compartmentId` and optionally `logGroupId` and `logId`; the
-  // tenancy audit log appears as a log group named `_Audit`. A
+  // each with `compartmentId` and optionally `logGroupId` and `logId`,
+  // where the tenancy audit log is named by the reserved value `_Audit`. A
   // `monitoring` source has `namespaceDetails`, a `streaming` source has
   // `streamId` and `cursor`, and a `plugin` source has `pluginName` and
   // `configMap`.
@@ -2967,9 +2967,16 @@ private oci.serviceConnectorHub.connector @defaults("name sourceKind targetKind 
   // Log groups the connector reads from
   //
   // The log groups named by a `logging` source. Empty for every other
-  // source kind. The tenancy audit log appears here as the `_Audit` log
-  // group, so a connector exporting audit events resolves to it.
+  // source kind. The tenancy audit log is not a customer log group and so
+  // does not appear here; `exportsAuditLog` reports it instead.
   sourceLogGroups() []oci.logging.logGroup
+  // Whether the connector exports the tenancy audit log
+  //
+  // True when a `logging` source names the reserved `_Audit` log group,
+  // which is the audit stream itself rather than a log group in a
+  // compartment. This is the check for whether control-plane audit events
+  // leave OCI for archival or a SIEM.
+  exportsAuditLog() bool
   // Configuration of the target the connector writes to
   //
   // Shape varies by `targetKind`. An `objectStorage` target has
@@ -5461,9 +5468,9 @@ private oci.apigateway.gateway @defaults("name") {
   // Hostname assigned to the gateway
   hostname string
   // Whether a response cache is configured (true for EXTERNAL_RESP_CACHE; false for NONE or unset)
-  hasResponseCache bool
+  hasResponseCache() bool
   // IP addresses assigned to the gateway
-  ipAddresses []string
+  ipAddresses() []string
   // Subnet the gateway is deployed in
   subnet() oci.network.subnet
   // Network Security Groups attached to the gateway
@@ -5471,7 +5478,7 @@ private oci.apigateway.gateway @defaults("name") {
   // TLS certificate used by the gateway (from the apigateway certificates service)
   certificate() oci.apigateway.certificate
   // OCIDs of CA bundles (from the certificatesmanagement service or the apigateway certificates service) used by the gateway for TLS validation
-  caBundleIds []string
+  caBundleIds() []string
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // Creation time
@@ -6450,7 +6457,7 @@ private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name ins
   // Each entry has `benchmarkIdentifier` (e.g., "1.1.1"),
   // `description` (the control statement), and `score` (PASS or
   // FAIL).
-  scores []dict
+  scores() []dict
   // Time the scan started
   //
   // Distinguishes a scan that never ran from one that ran and found
@@ -6489,7 +6496,7 @@ private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("na
   // Each entry has `service` (the endpoint protection product name),
   // `configurationFinding` (the misconfiguration, if any), and
   // `severity`.
-  endpointProtections []dict
+  endpointProtections() []dict
   // Time the scan started
   //
   // Distinguishes a scan that never ran from one that ran and found

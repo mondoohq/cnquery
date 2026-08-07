@@ -69,9 +69,22 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 	for i := range nlbs {
 		nlb := nlbs[i]
 
-		ipAddresses, err := convert.JsonToDictSlice(nlb.IpAddresses)
-		if err != nil {
-			return nil, err
+		// Built by hand rather than marshalled from the SDK slice: isPublic is
+		// optional on the model, and exposure() reads the key back to decide
+		// internet reachability. A marshalled nil arrives as JSON null, which
+		// reads as "not public" and clears a genuinely internet-facing
+		// balancer. This mirrors the classic load balancer.
+		ipAddresses := make([]any, 0, len(nlb.IpAddresses))
+		for j := range nlb.IpAddresses {
+			ip := nlb.IpAddresses[j]
+			entry := map[string]any{
+				"ipAddress": stringValue(ip.IpAddress),
+				"isPublic":  ociIpIsPublic(ip.IsPublic, boolValue(nlb.IsPrivate)),
+			}
+			if ip.ReservedIp != nil {
+				entry["reservedIpId"] = stringValue(ip.ReservedIp.Id)
+			}
+			ipAddresses = append(ipAddresses, entry)
 		}
 
 		listeners, err := o.newListeners(stringValue(nlb.Id), nlb.Listeners)

@@ -27,6 +27,26 @@ import (
 // maximum and keeps the request count low on domains with many users.
 const ociScimPageSize = 200
 
+// ociScimAttributeSets selects which groups of attributes a SCIM listing
+// returns.
+//
+// A plain SCIM list returns only the attributes a schema marks
+// returned=always or returned=default. Anything marked returned=request is
+// omitted unless the caller asks for it, and the fields that carry the
+// security signal are exactly the ones marked that way: a user's login
+// history and MFA enrollment date, a user's group memberships, and a group's
+// member list. Without this the provider reported every account as never
+// having signed in and every group as empty, which reads as fact rather than
+// as a missing request parameter.
+//
+// The default set has to be listed alongside request, because naming
+// attributes narrows the response to what was named; asking for both keeps
+// everything a plain listing already returned.
+var ociScimAttributeSets = []identitydomains.AttributeSetsEnum{
+	identitydomains.AttributeSetsDefault,
+	identitydomains.AttributeSetsRequest,
+}
+
 func (o *mqlOciIdentity) domains() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()
@@ -173,8 +193,9 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 	startIndex := 1
 	for {
 		response, err := client.ListUsers(ctx, identitydomains.ListUsersRequest{
-			StartIndex: common.Int(startIndex),
-			Count:      common.Int(ociScimPageSize),
+			StartIndex:    common.Int(startIndex),
+			Count:         common.Int(ociScimPageSize),
+			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
 			return nil, err
@@ -288,8 +309,9 @@ func (o *mqlOciIdentityDomain) groups() ([]any, error) {
 	startIndex := 1
 	for {
 		response, err := client.ListGroups(ctx, identitydomains.ListGroupsRequest{
-			StartIndex: common.Int(startIndex),
-			Count:      common.Int(ociScimPageSize),
+			StartIndex:    common.Int(startIndex),
+			Count:         common.Int(ociScimPageSize),
+			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
 			return nil, err
@@ -343,8 +365,9 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 	startIndex := 1
 	for {
 		response, err := client.ListPasswordPolicies(ctx, identitydomains.ListPasswordPoliciesRequest{
-			StartIndex: common.Int(startIndex),
-			Count:      common.Int(ociScimPageSize),
+			StartIndex:    common.Int(startIndex),
+			Count:         common.Int(ociScimPageSize),
+			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
 			return nil, err
@@ -457,8 +480,9 @@ func (o *mqlOciIdentityDomain) apps() ([]any, error) {
 	startIndex := 1
 	for {
 		response, err := client.ListApps(ctx, identitydomains.ListAppsRequest{
-			StartIndex: common.Int(startIndex),
-			Count:      common.Int(ociScimPageSize),
+			StartIndex:    common.Int(startIndex),
+			Count:         common.Int(ociScimPageSize),
+			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
 			return nil, err

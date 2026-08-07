@@ -234,6 +234,54 @@ func (o *mqlOciServiceConnectorHubConnector) targetTopic() (*mqlOciOnsTopic, err
 	return res.(*mqlOciOnsTopic), nil
 }
 
+// ociAuditLogGroup is the reserved name Connector Hub uses for the tenancy
+// audit log. A logging source names its log group either by OCID or with this
+// sentinel, which is not an OCID and cannot be resolved to an
+// oci.logging.logGroup - it is the audit stream itself, not a customer log
+// group.
+const ociAuditLogGroup = "_Audit"
+
+// ociSplitLogGroupRefs separates the log-group references on a Connector Hub
+// logging source into the OCIDs that name a real log group and a flag for the
+// tenancy audit log.
+//
+// Passing every reference through to a log-group lookup meant the audit
+// sentinel failed to resolve and was dropped, so a connector exporting the
+// audit log - the reason most tenancies run Connector Hub at all - reported no
+// sources. A reference that is neither an OCID nor the sentinel is dropped:
+// only a compartment-scoped source, which names no log group.
+func ociSplitLogGroupRefs(refs []string) (ocids []string, exportsAuditLog bool) {
+	ocids = make([]string, 0, len(refs))
+	for _, ref := range refs {
+		switch {
+		case ref == ociAuditLogGroup:
+			exportsAuditLog = true
+		case isOcid(ref):
+			ocids = append(ocids, ref)
+		}
+	}
+	return ocids, exportsAuditLog
+}
+
+func (o *mqlOciServiceConnectorHubConnector) exportsAuditLog() (bool, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return false, err
+	}
+
+	source, ok := detail.Source.(sch.LoggingSourceDetailsResponse)
+	if !ok {
+		return false, nil
+	}
+
+	refs := make([]string, 0, len(source.LogSources))
+	for i := range source.LogSources {
+		refs = append(refs, stringValue(source.LogSources[i].LogGroupId))
+	}
+	_, exportsAuditLog := ociSplitLogGroupRefs(refs)
+	return exportsAuditLog, nil
+}
+
 func (o *mqlOciServiceConnectorHubConnector) sourceLogGroups() ([]any, error) {
 	detail, err := o.getDetail()
 	if err != nil {
@@ -245,14 +293,14 @@ func (o *mqlOciServiceConnectorHubConnector) sourceLogGroups() ([]any, error) {
 		return []any{}, nil
 	}
 
-	res := make([]any, 0, len(source.LogSources))
+	refs := make([]string, 0, len(source.LogSources))
 	for i := range source.LogSources {
-		logGroupId := stringValue(source.LogSources[i].LogGroupId)
-		// A log source scoped to a whole compartment names no log group.
-		if logGroupId == "" {
-			continue
-		}
+		refs = append(refs, stringValue(source.LogSources[i].LogGroupId))
+	}
+	logGroupIds, _ := ociSplitLogGroupRefs(refs)
 
+	res := make([]any, 0, len(logGroupIds))
+	for _, logGroupId := range logGroupIds {
 		group, err := NewResource(o.MqlRuntime, "oci.logging.logGroup", map[string]*llx.RawData{
 			"id": llx.StringData(logGroupId),
 		})

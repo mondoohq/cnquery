@@ -3907,6 +3907,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.serviceConnectorHub.connector.sourceLogGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciServiceConnectorHubConnector).GetSourceLogGroups()).ToDataRes(types.Array(types.Resource("oci.logging.logGroup")))
 	},
+	"oci.serviceConnectorHub.connector.exportsAuditLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciServiceConnectorHubConnector).GetExportsAuditLog()).ToDataRes(types.Bool)
+	},
 	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciServiceConnectorHubConnector).GetTarget()).ToDataRes(types.Dict)
 	},
@@ -12345,6 +12348,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.serviceConnectorHub.connector.sourceLogGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciServiceConnectorHubConnector).SourceLogGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.serviceConnectorHub.connector.exportsAuditLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciServiceConnectorHubConnector).ExportsAuditLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.serviceConnectorHub.connector.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29028,6 +29035,7 @@ type mqlOciServiceConnectorHubConnector struct {
 	TargetBucket    plugin.TValue[*mqlOciObjectStorageBucket]
 	TargetTopic     plugin.TValue[*mqlOciOnsTopic]
 	SourceLogGroups plugin.TValue[[]any]
+	ExportsAuditLog plugin.TValue[bool]
 	Target          plugin.TValue[any]
 	Tasks           plugin.TValue[[]any]
 	Created         plugin.TValue[*time.Time]
@@ -29177,6 +29185,12 @@ func (c *mqlOciServiceConnectorHubConnector) GetSourceLogGroups() *plugin.TValue
 		}
 
 		return c.sourceLogGroups()
+	})
+}
+
+func (c *mqlOciServiceConnectorHubConnector) GetExportsAuditLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ExportsAuditLog, func() (bool, error) {
+		return c.exportsAuditLog()
 	})
 }
 
@@ -37323,11 +37337,15 @@ func (c *mqlOciApigatewayGateway) GetHostname() *plugin.TValue[string] {
 }
 
 func (c *mqlOciApigatewayGateway) GetHasResponseCache() *plugin.TValue[bool] {
-	return &c.HasResponseCache
+	return plugin.GetOrCompute[bool](&c.HasResponseCache, func() (bool, error) {
+		return c.hasResponseCache()
+	})
 }
 
 func (c *mqlOciApigatewayGateway) GetIpAddresses() *plugin.TValue[[]any] {
-	return &c.IpAddresses
+	return plugin.GetOrCompute[[]any](&c.IpAddresses, func() ([]any, error) {
+		return c.ipAddresses()
+	})
 }
 
 func (c *mqlOciApigatewayGateway) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
@@ -37379,7 +37397,9 @@ func (c *mqlOciApigatewayGateway) GetCertificate() *plugin.TValue[*mqlOciApigate
 }
 
 func (c *mqlOciApigatewayGateway) GetCaBundleIds() *plugin.TValue[[]any] {
-	return &c.CaBundleIds
+	return plugin.GetOrCompute[[]any](&c.CaBundleIds, func() ([]any, error) {
+		return c.caBundleIds()
+	})
 }
 
 func (c *mqlOciApigatewayGateway) GetState() *plugin.TValue[string] {
@@ -40881,7 +40901,9 @@ func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetState() *plug
 }
 
 func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetScores() *plugin.TValue[[]any] {
-	return &c.Scores
+	return plugin.GetOrCompute[[]any](&c.Scores, func() ([]any, error) {
+		return c.scores()
+	})
 }
 
 func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetScanStarted() *plugin.TValue[*time.Time] {
@@ -41009,7 +41031,9 @@ func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetState()
 }
 
 func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetEndpointProtections() *plugin.TValue[[]any] {
-	return &c.EndpointProtections
+	return plugin.GetOrCompute[[]any](&c.EndpointProtections, func() ([]any, error) {
+		return c.endpointProtections()
+	})
 }
 
 func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetScanStarted() *plugin.TValue[*time.Time] {
