@@ -389,6 +389,7 @@ func (g *mqlGcpProjectCloudRunService) operations() ([]any, error) {
 				})
 				if err != nil {
 					log.Error().Err(err).Send()
+					continue
 				}
 				mux.Lock()
 				operations = append(operations, mqlOp)
@@ -570,10 +571,10 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					"generation":                    llx.IntData(s.Generation),
 					"labels":                        llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
 					"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
-					"created":                       llx.TimeData(s.CreateTime.AsTime()),
-					"updated":                       llx.TimeData(s.UpdateTime.AsTime()),
-					"deleted":                       llx.TimeData(s.DeleteTime.AsTime()),
-					"expired":                       llx.TimeData(s.ExpireTime.AsTime()),
+					"created":                       llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
+					"updated":                       llx.TimeDataPtr(timestampAsTimePtr(s.UpdateTime)),
+					"deleted":                       llx.TimeDataPtr(timestampAsTimePtr(s.DeleteTime)),
+					"expired":                       llx.TimeDataPtr(timestampAsTimePtr(s.ExpireTime)),
 					"creator":                       llx.StringData(s.Creator),
 					"lastModifier":                  llx.StringData(s.LastModifier),
 					"ingress":                       llx.StringData(s.Ingress.String()),
@@ -911,10 +912,10 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 					"generation":         llx.IntData(j.Generation),
 					"labels":             llx.MapData(convert.MapToInterfaceMap(j.Labels), types.String),
 					"annotations":        llx.MapData(convert.MapToInterfaceMap(j.Annotations), types.String),
-					"created":            llx.TimeData(j.CreateTime.AsTime()),
-					"updated":            llx.TimeData(j.UpdateTime.AsTime()),
-					"deleted":            llx.TimeData(j.DeleteTime.AsTime()),
-					"expired":            llx.TimeData(j.ExpireTime.AsTime()),
+					"created":            llx.TimeDataPtr(timestampAsTimePtr(j.CreateTime)),
+					"updated":            llx.TimeDataPtr(timestampAsTimePtr(j.UpdateTime)),
+					"deleted":            llx.TimeDataPtr(timestampAsTimePtr(j.DeleteTime)),
+					"expired":            llx.TimeDataPtr(timestampAsTimePtr(j.ExpireTime)),
 					"creator":            llx.StringData(j.Creator),
 					"lastModifier":       llx.StringData(j.LastModifier),
 					"client":             llx.StringData(j.Client),
@@ -988,11 +989,14 @@ func mqlCondition(runtime *plugin.Runtime, c *runpb.Condition, parentId, suffix 
 		return nil, nil
 	}
 	return CreateResource(runtime, "gcp.project.cloudRunService.condition", map[string]*llx.RawData{
-		"id":                 llx.StringData(fmt.Sprintf("%s/condition/%s", parentId, suffix)),
-		"type":               llx.StringData(c.Type),
-		"state":              llx.StringData(c.String()),
+		"id":   llx.StringData(fmt.Sprintf("%s/condition/%s", parentId, suffix)),
+		"type": llx.StringData(c.Type),
+		// c.String() is the generated proto-message stringer, which renders the
+		// whole message as protobuf TEXT (`type:"Ready" state:CONDITION_...`).
+		// The state enum is c.State.
+		"state":              llx.StringData(c.State.String()),
 		"message":            llx.StringData(c.Message),
-		"lastTransitionTime": llx.TimeData(c.LastTransitionTime.AsTime()),
+		"lastTransitionTime": llx.TimeDataPtr(timestampAsTimePtr(c.LastTransitionTime)),
 		"severity":           llx.StringData(c.Severity.String()),
 	})
 }

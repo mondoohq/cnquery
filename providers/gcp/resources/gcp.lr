@@ -6008,7 +6008,14 @@ private gcp.project.apiKey @defaults("name") {
   // Deletion timestamp
   deleted time
   // Encrypted and signed value held by this key
-  keyString string
+  //
+  // Always empty, and there is no replacement field. The API returns this
+  // value only from a dedicated key-string request, never on the key listing
+  // this resource is built from, so nothing can populate it here. It is also
+  // a live API credential, which an inventory resource deliberately does not
+  // carry: read it from the Cloud Console or gcloud when a caller genuinely
+  // needs the secret. Will be removed in the next major release.
+  keyString @maturity("deprecated") string
   // API key restrictions
   restrictions gcp.project.apiKey.restrictions
   // Update timestamp

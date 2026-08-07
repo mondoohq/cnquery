@@ -730,7 +730,11 @@ func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) serviceAccount() (
 		return nil, nil
 	}
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+	// NewResource, not CreateResource: the service account has an init that
+	// resolves the real account. CreateResource skips it, leaving a husk whose
+	// id() keys on the email while a listed account keys on uniqueId, so the
+	// two never share a cache entry.
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 		"email":     llx.StringData(email),
 	})

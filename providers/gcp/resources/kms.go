@@ -249,7 +249,7 @@ func initGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args map[
 	args["primary"] = llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version")
 	args["primaryState"] = llx.StringData(primaryState)
 	args["purpose"] = llx.StringData(k.Purpose.String())
-	args["created"] = llx.TimeData(k.CreateTime.AsTime())
+	args["created"] = llx.TimeDataPtr(timestampAsTimePtr(k.CreateTime))
 	args["nextRotation"] = llx.TimeDataPtr(timestampAsTimePtr(k.NextRotationTime))
 	args["rotationPeriod"] = llx.TimeDataPtr(mqlRotationPeriod)
 	args["versionTemplate"] = llx.DictData(versionTemplate)
@@ -500,7 +500,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			"primary":                       llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version"),
 			"primaryState":                  llx.StringData(primaryState),
 			"purpose":                       llx.StringData(k.Purpose.String()),
-			"created":                       llx.TimeData(k.CreateTime.AsTime()),
+			"created":                       llx.TimeDataPtr(timestampAsTimePtr(k.CreateTime)),
 			"nextRotation":                  llx.TimeDataPtr(timestampAsTimePtr(k.NextRotationTime)),
 			"rotationPeriod":                llx.TimeDataPtr(mqlRotationPeriod),
 			"versionTemplate":               llx.DictData(versionTemplate),

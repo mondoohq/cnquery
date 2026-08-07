@@ -1385,12 +1385,33 @@ func (g *mqlGcpProjectSqlServiceInstance) iamAuthenticationEnabled() (bool, erro
 	if flags.Error != nil {
 		return false, flags.Error
 	}
-	v, ok := flags.Data["cloudsql.iam_authentication"]
-	if !ok {
-		return false, nil
+	return sqlFlagOn(flags.Data, "cloudsql.iam_authentication"), nil
+}
+
+// normalizeSqlFlagName folds the separators Cloud SQL uses to spell the same
+// database flag differently per engine. IAM database authentication, for
+// example, is "cloudsql.iam_authentication" on PostgreSQL,
+// "cloudsql_iam_authentication" on MySQL and "cloudsql iam authentication" on
+// SQL Server. Matching one spelling literally reported IAM auth as disabled on
+// every instance of the other two engines.
+func normalizeSqlFlagName(name string) string {
+	return strings.ToLower(strings.NewReplacer(".", "_", " ", "_", "-", "_").Replace(name))
+}
+
+// sqlFlagOn reports whether the named database flag is set to "on", comparing
+// flag names by their normalized form so any engine's spelling matches. A flag
+// that is absent reports false, which matches the Cloud SQL default.
+func sqlFlagOn(flags map[string]any, name string) bool {
+	want := normalizeSqlFlagName(name)
+	for k, v := range flags {
+		if normalizeSqlFlagName(k) != want {
+			continue
+		}
+		if s, ok := v.(string); ok && strings.EqualFold(s, "on") {
+			return true
+		}
 	}
-	s, _ := v.(string)
-	return s == "on", nil
+	return false
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) backupConfigurationEnabled() (bool, error) {

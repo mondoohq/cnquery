@@ -93,6 +93,18 @@ func managedZoneDnssecNonExistence(cfg *dns.ManagedZoneDnsSecConfig) string {
 	return cfg.NonExistence
 }
 
+// dnssecStateEnabled reports whether DNSSEC is enabled for a managed zone.
+//
+// The API documents three states: "off" (not signed), "on" (signed and fully
+// managed) and "transfer" (enabled, in transfer mode -- the zone IS signed,
+// which is what a zone mid-KSK-transfer reports). Matching only "on" reported a
+// signed zone as unsigned, and because dnsSecAlgorithmWeak() short-circuits on
+// this predicate it also reported a transfer-state zone signed with RSASHA1 as
+// not weak -- a missed finding, not just a false alarm.
+func dnssecStateEnabled(cfg *dns.ManagedZoneDnsSecConfig) bool {
+	return cfg != nil && cfg.State != "" && cfg.State != "off"
+}
+
 func (g *mqlGcpProjectDnsService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -306,7 +318,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				"created":                    llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
 				"labels":                     llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
 				"cloudLoggingEnabled":        llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
-				"dnssecEnabled":              llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
+				"dnssecEnabled":              llx.BoolData(dnssecStateEnabled(managedZone.DnssecConfig)),
 				"dnssecNonExistence":         llx.StringData(dnssecNonExistence),
 				"dnssecDefaultKeyAlgorithms": llx.ArrayData(dnssecAlgorithms, types.String),
 				"privateVisibilityConfig":    llx.DictData(mqlPrivateVisibilityCfg),

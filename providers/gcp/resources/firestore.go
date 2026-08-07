@@ -167,10 +167,10 @@ func (g *mqlGcpProjectFirestoreService) databases() ([]any, error) {
 			updatedAt = llx.NilData
 		}
 
-		var versionRetentionPeriod string
-		if db.VersionRetentionPeriod != nil {
-			versionRetentionPeriod = db.VersionRetentionPeriod.String()
-		}
+		// durationToString, not (*durationpb.Duration).String(): the latter is
+		// the generated proto stringer and renders protobuf TEXT
+		// ("seconds:604800"), not a duration.
+		versionRetentionPeriod := durationToString(db.VersionRetentionPeriod)
 
 		mqlDb, err := CreateResource(g.MqlRuntime, "gcp.project.firestoreService.database", map[string]*llx.RawData{
 			"projectId":                     llx.StringData(projectId),
@@ -336,10 +336,7 @@ func (g *mqlGcpProjectFirestoreServiceDatabase) backupSchedules() ([]any, error)
 
 	res := make([]any, 0, len(resp.BackupSchedules))
 	for _, bs := range resp.BackupSchedules {
-		var retention string
-		if bs.Retention != nil {
-			retention = bs.Retention.String()
-		}
+		retention := durationToString(bs.Retention)
 
 		dailyRecurrence, err := protoToDict(bs.GetDailyRecurrence())
 		if err != nil {

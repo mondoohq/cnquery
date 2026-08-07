@@ -161,7 +161,12 @@ func (g *mqlGcpProjectWorkflowsServiceWorkflow) serviceAccount() (*mqlGcpProject
 		return nil, nil
 	}
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+	// NewResource, not CreateResource: the service account has an init that
+	// resolves the real account. CreateResource skips it, leaving a husk with
+	// only projectId and email set -- and because that husk's id() falls back
+	// to the email form while a listed account keys on uniqueId, the two never
+	// share a cache entry, so it can't be repaired by a later lookup either.
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
 		"projectId": llx.StringData(g.ProjectId.Data),
 		"email":     llx.StringData(email),
 	})
