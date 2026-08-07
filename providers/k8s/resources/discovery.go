@@ -121,8 +121,6 @@ func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Invent
 	if _, ok := invConfig.Options[plugin.OptionStagedDiscovery]; ok {
 		// If a namespace is already set, we're in stage 2 (workload discovery
 		// for that namespace). Otherwise it's stage 1 (cluster + namespaces).
-		// Kyverno scans always need the cluster asset, even when their connection
-		// is scoped to a namespace.
 		discoverKyverno := invConfig.Discover != nil && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno)
 		if nsName, ok := namespaceStageName(invConfig); ok && !discoverKyverno {
 			in, err = discoverNamespaceStage(runtime, conn, invConfig, features, nsName)
@@ -204,7 +202,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
 	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno)
-	if (len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty()) || discoverKyverno {
+	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
 		assetId, err := conn.AssetId()
 		if err == nil {
 			root := &inventory.Asset{
@@ -226,8 +224,19 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		return nil, err
 	}
 
-	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
-		in.Spec.Assets = append(in.Spec.Assets, nss...)
+	kyvernoNamespaceDiscovery := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno) && (len(nsFilter.include) > 0 || len(nsFilter.exclude) > 0)
+	if resFilters.IsEmpty() {
+		if kyvernoNamespaceDiscovery {
+			for _, ns := range nss {
+				nsConfig := invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))
+				nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+				ns.Connections = []*inventory.Config{nsConfig}
+			}
+		}
+
+		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) || kyvernoNamespaceDiscovery {
+			in.Spec.Assets = append(in.Spec.Assets, nss...)
+		}
 	}
 
 	// Discover the assets for each namespace and use the namespace platform ID as root
@@ -285,7 +294,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
 	discoverKyverno := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno)
-	if (len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty()) || discoverKyverno {
+	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
 		assetId, err := conn.AssetId()
 		if err == nil {
 			root := &inventory.Asset{
@@ -304,7 +313,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	}
 
 	namespaceTargets := discoveryTargetsWithout(invConfig.Discover.Targets, DiscoveryKyverno)
-	if discoverKyverno && len(namespaceTargets) == 0 {
+	if discoverKyverno && len(namespaceTargets) == 0 && len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
 		return in, nil
 	}
 
@@ -321,8 +330,9 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// IDs → skip" logic in AssetExplorer/scanner prevents them from being
 	// scanned or added to the progress bar. They are still emitted so that
 	// AssetExplorer connects to them (triggering stage 2 workload discovery).
+	kyvernoNamespaceDiscovery := stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryKyverno) && (len(nsFilter.include) > 0 || len(nsFilter.exclude) > 0)
 	nsIsScannable := stringx.ContainsAnyOf(invConfig.Discover.Targets,
-		DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll)
+		DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) || kyvernoNamespaceDiscovery
 
 	for _, ns := range nss {
 		// Clone without WithParentConnectionId so each namespace gets its own
