@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -232,6 +233,28 @@ func (r *mqlPostgresdbDatabase) extensions() ([]any, error) {
 		return nil, err
 	}
 	return listExtensions(r.MqlRuntime, pool, r.__id)
+}
+
+// pgvectorVersion returns the installed pgvector (the `vector` extension)
+// version, or an empty string when it is not installed in this database.
+func (r *mqlPostgresdbDatabase) pgvectorVersion() (string, error) {
+	if !r.AllowConnections.Data {
+		return "", nil
+	}
+	pool, err := pgPool(r.MqlRuntime, r.Name.Data)
+	if err != nil {
+		return "", err
+	}
+	var version string
+	err = pool.QueryRow(pgContext(),
+		`SELECT COALESCE(extversion, '') FROM pg_extension WHERE extname = 'vector'`).Scan(&version)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", nil
+		}
+		return "", err
+	}
+	return version, nil
 }
 
 // --- schema -----------------------------------------------------------------

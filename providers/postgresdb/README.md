@@ -124,6 +124,20 @@ postgresdb.instance.databases.where.first.schemas.where.first.tables: [
 ]
 ```
 
+**Databases with pgvector (embedding stores)**
+
+Find databases that have the pgvector extension installed, and read its version to check against pgvector advisories. An empty `pgvectorVersion` means it is not installed.
+
+```shell
+mql> postgresdb.instance.databases.where(pgvectorVersion != "") { name pgvectorVersion }
+postgresdb.instance.databases.where: [
+  0: {
+    name: "postgres"
+    pgvectorVersion: "0.8.6"
+  }
+]
+```
+
 ## Verification
 
 Confirm the connection with a single query:

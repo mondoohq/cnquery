@@ -132,6 +132,14 @@ postgresdb.database @defaults("name") {
   functions() []postgresdb.function
   // Extensions installed in the database
   extensions() []postgresdb.extension
+  // Installed pgvector version, empty when pgvector is not installed
+  //
+  // pgvector adds vector similarity search through the `vector` extension; a
+  // database with it installed typically stores embeddings. An empty value
+  // means it is not installed. Use it to find such databases, for example
+  // databases.where(pgvectorVersion != ""), and to check the version against
+  // known pgvector advisories.
+  pgvectorVersion() string
   // Foreign servers defined in the database (for foreign-data wrappers)
   foreignServers() []postgresdb.foreignServer
   // Logical-replication publications defined in the database

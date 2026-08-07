@@ -122,6 +122,9 @@ func TestIntegrationResolveAll(t *testing.T) {
 		}
 		resolveList(t, name+".privileges", db.GetPrivileges())
 		resolveList(t, name+".extensions", db.GetExtensions())
+		if v := db.GetPgvectorVersion(); v.Error != nil {
+			t.Errorf("%s.pgvectorVersion errored: %v", name, v.Error)
+		}
 		resolveList(t, name+".publications", db.GetPublications())
 		for _, f := range resolveList(t, name+".foreignServers", db.GetForeignServers()) {
 			fs := f.(*mqlPostgresdbForeignServer)
