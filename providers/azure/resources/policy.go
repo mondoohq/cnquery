@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -364,48 +362,26 @@ func (a *mqlAzureSubscriptionPolicy) exemptions() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	token, err := armConn.GetToken()
-	if err != nil {
-		return nil, err
-	}
-
-	url := fmt.Sprintf("%s/subscriptions/%s/providers/Microsoft.Authorization/policyExemptions?api-version=2022-07-01-preview",
+	firstURL := fmt.Sprintf("%s/subscriptions/%s/providers/Microsoft.Authorization/policyExemptions?api-version=2022-07-01-preview",
 		armConn.host, subId)
-	client := http.Client{}
+
 	res := []any{}
-	for url != "" {
-		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-		if err != nil {
-			return nil, err
-		}
-		req.Header.Set("Accept", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token.Token)
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		raw, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-		if resp.StatusCode != http.StatusOK {
-			return nil, errors.New("failed to fetch policy exemptions: " + resp.Status)
-		}
-
+	err = fetchArmPages(ctx, armConn.GetToken, firstURL, "policy exemptions", func(raw []byte) (string, error) {
 		list := azurePolicyExemptionList{}
 		if err := json.Unmarshal(raw, &list); err != nil {
-			return nil, err
+			return "", err
 		}
 		for i := range list.Value {
 			mqlExemption, err := newMqlPolicyExemption(a.MqlRuntime, &list.Value[i])
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 			res = append(res, mqlExemption)
 		}
-		url = list.NextLink
+		return list.NextLink, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	return res, nil
 }

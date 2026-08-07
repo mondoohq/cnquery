@@ -244,8 +244,12 @@ func getAdvisorScoresByCategory(ctx context.Context, subscriptionId, host, token
 	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/advisorScore"
 	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(subscriptionId))
 	urlPath = runtime.JoinPaths(host, urlPath)
-	client := http.Client{}
-	req, err := http.NewRequest("GET", urlPath, nil)
+	// The Advisor score endpoint is genuinely single-page: AdvisorScoreResponse
+	// carries only `value`, with no nextLink, and armadvisor ships no client for
+	// it -- which is why this is hand-rolled at all. It still needs the shared
+	// client's timeout, since nothing else bounds a request made outside the
+	// azcore pipeline.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -255,13 +259,13 @@ func getAdvisorScoresByCategory(ctx context.Context, subscriptionId, host, token
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	resp, err := client.Do(req)
+	resp, err := armHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("failed to fetch advisor scores " + urlPath + ": " + resp.Status)
 	}
 

@@ -5,13 +5,13 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -769,14 +769,35 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnecti
 	if err != nil {
 		return nil, err
 	}
-	// armmysqlflexibleservers/v2 models this as a single call even though the
-	// response carries a NextLink, so there is no pager to loop. Truncation is
-	// unlikely in practice (a server rarely has enough private endpoints to
-	// fill a page) but must not be silent if it ever happens.
-	if resp.NextLink != nil && *resp.NextLink != "" {
-		log.Warn().Str("server", server).Msg("mysql private endpoint connection list is paginated; only the first page is reported")
+	connections := resp.Value
+
+	// armmysqlflexibleservers/v2 exposes ListByServer as a plain method with no
+	// pager, even though the response carries a NextLink -- its postgresql
+	// counterpart does ship NewListByServerPager, so this is an SDK asymmetry
+	// rather than a non-paginated endpoint. The cursor used to be logged and
+	// dropped, which put the truncation in provider stderr where no query result
+	// or policy verdict could see it. Follow it instead.
+	next := ""
+	if resp.NextLink != nil {
+		next = *resp.NextLink
 	}
-	for _, pec := range resp.Value {
+	if next != "" {
+		err = fetchArmPages(ctx, armTokenFunc(ctx, conn), next, "mysql private endpoint connections", func(raw []byte) (string, error) {
+			page := flexible.PrivateEndpointConnectionListResult{}
+			if err := json.Unmarshal(raw, &page); err != nil {
+				return "", err
+			}
+			connections = append(connections, page.Value...)
+			if page.NextLink == nil {
+				return "", nil
+			}
+			return *page.NextLink, nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, pec := range connections {
 		if pec == nil {
 			continue
 		}
