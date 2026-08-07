@@ -119,6 +119,16 @@ snowflake.account {
   // region), and region-group values such as AWS_US, AWS_EU, AWS_APJ, AZURE_US,
   // or AWS_US_ANY. Empty when the parameter is unset.
   cortexEnabledCrossRegion() string
+  // Tables in the account
+  tables() []snowflake.table
+  // External tables in the account (tables backed by data in external storage)
+  externalTables() []snowflake.externalTable
+  // Materialized views in the account
+  materializedViews() []snowflake.materializedView
+  // Dynamic tables in the account
+  dynamicTables() []snowflake.dynamicTable
+  // Event tables in the account (tables that collect logs and telemetry)
+  eventTables() []snowflake.eventTable
 }
 
 // Snowflake User
@@ -557,6 +567,16 @@ snowflake.database @defaults("name") {
   tags() []snowflake.tag
   // Snowflake-managed secrets in the database
   secrets() []snowflake.secret
+  // Tables in the database
+  tables() []snowflake.table
+  // External tables in the database (tables backed by data in external storage)
+  externalTables() []snowflake.externalTable
+  // Materialized views in the database
+  materializedViews() []snowflake.materializedView
+  // Dynamic tables in the database
+  dynamicTables() []snowflake.dynamicTable
+  // Event tables in the database (tables that collect logs and telemetry)
+  eventTables() []snowflake.eventTable
 }
 
 // Snowflake Warehouse
@@ -1632,4 +1652,273 @@ snowflake.cortexSearchService @defaults("name databaseName schemaName") {
   definition() string
   // URL clients call to query the service
   serviceQueryUrl() string
+}
+
+// Snowflake table
+//
+// Table in a schema, keyed by name, the primary store for account data and so
+// the main subject of data-protection review. Covers the physical footprint in
+// rows and bytes, the time-travel retention window that governs how long
+// deleted or changed data stays recoverable, whether change tracking records
+// row-level history for streams, whether search optimization has built an
+// access path over the data, and whether the table is backed by external
+// storage or collects telemetry as an event table. Select a table by name, for
+// example `snowflake.account.tables.where(name == "CUSTOMERS")`.
+snowflake.table @defaults("name schemaName rows") {
+  // Table name
+  name string
+  // Name of the database that contains the table
+  databaseName string
+  // Name of the schema that contains the table
+  schemaName string
+  // Database that contains the table
+  database() snowflake.database
+  // Schema that contains the table
+  schema() snowflake.schema
+  // Role that owns the table
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Kind of table
+  //
+  // Reported by Snowflake as TABLE for a permanent table. Transient and
+  // temporary tables report their own kind.
+  kind string
+  // Number of rows in the table
+  rows int
+  // Size of the table in bytes, null when Snowflake does not report a size
+  bytes int
+  // Clustering key expression, empty when the table has no clustering key
+  clusterBy string
+  // Time-travel retention window in days, the period for which changed or deleted data stays recoverable
+  retentionTime int
+  // Whether Snowflake reclusters the table automatically
+  automaticClustering bool
+  // Whether change tracking records row-level history for streams
+  changeTracking bool
+  // Whether search optimization has been enabled on the table
+  searchOptimization bool
+  // Percentage of the search optimization build that has finished
+  searchOptimizationProgress string
+  // Bytes consumed by the search optimization access path, null when search optimization is off
+  searchOptimizationBytes int
+  // Whether the table reads its data from external storage
+  isExternal bool
+  // Whether schema evolution may add columns to the table automatically during a load
+  enableSchemaEvolution bool
+  // Whether the table is an event table that collects logs and telemetry
+  isEvent bool
+  // Name of the budget that tracks spend for the table, empty when no budget is attached
+  budget string
+  // Comment on the table
+  comment string
+  // Time the table was created
+  createdAt time
+  // Time the table was dropped, null while the table still exists
+  droppedAt time
+}
+
+// Snowflake external table
+//
+// External table in a schema, keyed by name, a table whose data stays in cloud
+// object storage instead of Snowflake. External tables read across the account
+// boundary, so the storage location, the stage that reaches it, and the cloud
+// and region that hold it are the review targets: together they show exactly
+// which outside storage the account reads. Covers the backing stage and
+// location, the file format the data is parsed with, the notification channel
+// that drives automatic refresh, refresh state, and whether Snowflake considers
+// the table invalid. Select an external table by name, for example
+// `snowflake.account.externalTables.where(name == "RAW_EVENTS")`.
+snowflake.externalTable @defaults("name schemaName location") {
+  // External table name
+  name string
+  // Name of the database that contains the external table
+  databaseName string
+  // Name of the schema that contains the external table
+  schemaName string
+  // Database that contains the external table
+  database() snowflake.database
+  // Schema that contains the external table
+  schema() snowflake.schema
+  // Role that owns the external table
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Stage that reaches the external storage holding the table data
+  stage() snowflake.stage
+  // Storage location the table reads, as a cloud storage URL
+  location string
+  // Cloud provider that hosts the external storage
+  cloud string
+  // Cloud region that hosts the external storage
+  region string
+  // File format type the data is parsed with (such as CSV, JSON, AVRO, ORC, or PARQUET)
+  fileFormatType string
+  // Table format of the external data, empty for a plain external table and DELTA for a Delta Lake table
+  tableFormat string
+  // Notification channel that triggers automatic refresh, empty when refresh is manual
+  notificationChannel string
+  // Whether Snowflake considers the external table invalid
+  invalid bool
+  // Reason the external table is invalid, empty when it is valid
+  invalidReason string
+  // Time the external table metadata was last refreshed
+  lastRefreshedOn time
+  // Details of the last refresh, as reported by Snowflake
+  lastRefreshDetails string
+  // Comment on the external table
+  comment string
+  // Time the external table was created
+  createdAt time
+}
+
+// Snowflake materialized view
+//
+// Materialized view in a schema, keyed by name, a stored query whose results
+// Snowflake persists and keeps current against a single source table. A
+// materialized view copies data out of its source table into a separately
+// governed object, so it can widen access to data the source table restricts.
+// The `text` field holds the defining SQL, which shows exactly which columns
+// and rows the view surfaces, and `isSecure` reports whether the definition is
+// hidden from roles without access to the view. Covers the source table, the
+// stored footprint in rows and bytes, refresh currency, and whether Snowflake
+// considers the view invalid. Select a materialized view by name, for example
+// `snowflake.account.materializedViews.where(isSecure == false)`.
+snowflake.materializedView @defaults("name schemaName isSecure") {
+  // Materialized view name
+  name string
+  // Name of the database that contains the materialized view
+  databaseName string
+  // Name of the schema that contains the materialized view
+  schemaName string
+  // Database that contains the materialized view
+  database() snowflake.database
+  // Schema that contains the materialized view
+  schema() snowflake.schema
+  // Role that owns the materialized view
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Table the materialized view reads its data from
+  sourceTable() snowflake.table
+  // SQL that defines the materialized view
+  text string
+  // Whether the materialized view is secure, hiding its definition from roles without access to it
+  isSecure bool
+  // Number of rows stored for the materialized view
+  rows int
+  // Size of the stored results in bytes
+  bytes int
+  // Clustering key expression, empty when the materialized view has no clustering key
+  clusterBy string
+  // Whether Snowflake reclusters the materialized view automatically
+  automaticClustering bool
+  // Whether Snowflake considers the materialized view invalid and will not serve it
+  invalid bool
+  // Reason the materialized view is invalid, empty when it is valid
+  invalidReason string
+  // How far the materialized view trails its source table
+  behindBy string
+  // Time the materialized view was last refreshed against its source table
+  refreshedOn time
+  // Time the materialized view storage was last compacted
+  compactedOn time
+  // Name of the budget that tracks spend for the materialized view, empty when no budget is attached
+  budget string
+  // Comment on the materialized view
+  comment string
+  // Time the materialized view was created
+  createdAt time
+}
+
+// Snowflake dynamic table
+//
+// Dynamic table in a schema, keyed by name, a table whose contents Snowflake
+// refreshes from a defining query on a declared freshness target. A dynamic
+// table runs its query on a warehouse without a task or a schedule of its own,
+// which makes it an automation surface that reads whatever the defining query
+// reaches. The `text` field holds that query. Covers the warehouse the refresh
+// runs on, the target lag that sets how stale the data may become, the refresh
+// mode Snowflake chose and why, the scheduling state, and whether the table is
+// a clone or a replica. Select a dynamic table by name, for example
+// `snowflake.account.dynamicTables.where(schedulingState == "ACTIVE")`.
+snowflake.dynamicTable @defaults("name schemaName targetLag") {
+  // Dynamic table name
+  name string
+  // Name of the database that contains the dynamic table
+  databaseName string
+  // Name of the schema that contains the dynamic table
+  schemaName string
+  // Database that contains the dynamic table
+  database() snowflake.database
+  // Schema that contains the dynamic table
+  schema() snowflake.schema
+  // Role that owns the dynamic table
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Warehouse the refresh runs on
+  warehouse() snowflake.warehouse
+  // SQL query that defines the dynamic table contents
+  text string
+  // Maximum staleness the data may reach before Snowflake refreshes it, such as "1 hour" or "DOWNSTREAM"
+  targetLag string
+  // Refresh mode Snowflake uses
+  //
+  // One of AUTO, FULL, or INCREMENTAL. AUTO lets Snowflake choose, and the
+  // choice it made is reported in refreshModeReason.
+  refreshMode string
+  // Why Snowflake selected the current refresh mode
+  refreshModeReason string
+  // Scheduling state of the refresh (ACTIVE or SUSPENDED)
+  schedulingState string
+  // Number of rows in the dynamic table
+  rows int
+  // Size of the dynamic table in bytes
+  bytes int
+  // Clustering key expression, empty when the dynamic table has no clustering key
+  clusterBy string
+  // Whether Snowflake reclusters the dynamic table automatically
+  automaticClustering bool
+  // Whether the dynamic table was created as a clone of another dynamic table
+  isClone bool
+  // Whether the dynamic table is a replica of a dynamic table in another account
+  isReplica bool
+  // Time the dynamic table was last suspended, null when it has never been suspended
+  lastSuspendedOn time
+  // Timestamp of the source data the current contents reflect
+  dataTimestamp time
+  // Comment on the dynamic table
+  comment string
+  // Time the dynamic table was created
+  createdAt time
+}
+
+// Snowflake event table
+//
+// Event table in a schema, keyed by name, the destination Snowflake writes log
+// entries, trace spans, and other telemetry to from functions, procedures, and
+// stored code. An event table receives whatever the emitting code logs, which
+// can include argument values and other sensitive data, so its ownership
+// governs who can read that record. Select an event table by name, for example
+// `snowflake.account.eventTables.where(name == "TELEMETRY_EVENTS")`.
+snowflake.eventTable @defaults("name schemaName") {
+  // Event table name
+  name string
+  // Name of the database that contains the event table
+  databaseName string
+  // Name of the schema that contains the event table
+  schemaName string
+  // Database that contains the event table
+  database() snowflake.database
+  // Schema that contains the event table
+  schema() snowflake.schema
+  // Role that owns the event table
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Comment on the event table
+  comment string
+  // Time the event table was created
+  createdAt time
 }

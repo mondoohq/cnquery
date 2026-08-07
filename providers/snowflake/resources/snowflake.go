@@ -67,6 +67,16 @@ func splitCommaList(value string) []any {
 	return out
 }
 
+// snowflakeSchemaObjectID renders the fully qualified name of a schema-scoped
+// object as the cache key for its resource. It quotes each part the way
+// Snowflake does, so a name containing a dot cannot collide with a different
+// database/schema/name split. The SDK's ID().FullyQualifiedName() produces the
+// same shape but panics on identifiers it fails to parse, so the id is built
+// from the raw parts instead.
+func snowflakeSchemaObjectID(databaseName, schemaName, name string) string {
+	return `"` + databaseName + `"."` + schemaName + `"."` + name + `"`
+}
+
 func (r *mqlSnowflake) currentRole() (string, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()

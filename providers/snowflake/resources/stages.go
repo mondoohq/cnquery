@@ -60,6 +60,38 @@ func newMqlSnowflakeStage(runtime *plugin.Runtime, user sdk.Stage) (*mqlSnowflak
 	return mqlResource, nil
 }
 
+// resolveStageRef resolves a fully qualified stage name (the form Snowflake
+// reports in SHOW output, such as "DB"."SCHEMA"."STAGE") to its stage. A name
+// that cannot be parsed, or a stage the caller cannot see, resolves to null
+// rather than failing the surrounding query.
+func resolveStageRef(runtime *plugin.Runtime, fqn string, field *plugin.TValue[*mqlSnowflakeStage]) (*mqlSnowflakeStage, error) {
+	if fqn == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id, err := sdk.ParseSchemaObjectIdentifier(fqn)
+	if err != nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	stages, err := conn.Client().Stages.Show(context.Background(), &sdk.ShowStageRequest{
+		Like: &sdk.Like{Pattern: sdk.String(id.Name())},
+		In:   &sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())},
+	})
+	if err != nil {
+		return nil, err
+	}
+	for i := range stages {
+		if stages[i].Name == id.Name() && stages[i].DatabaseName == id.DatabaseName() && stages[i].SchemaName == id.SchemaName() {
+			return newMqlSnowflakeStage(runtime, stages[i])
+		}
+	}
+	field.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 func (r *mqlSnowflakeStage) storageIntegration() (*mqlSnowflakeStorageIntegration, error) {
 	name := r.StoreIntegration.Data
 	if name == "" {

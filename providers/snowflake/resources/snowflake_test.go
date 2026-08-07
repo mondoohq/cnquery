@@ -36,6 +36,35 @@ func TestSplitCommaList(t *testing.T) {
 	}
 }
 
+func TestSnowflakeSchemaObjectID(t *testing.T) {
+	cases := []struct {
+		name                     string
+		database, schema, object string
+		want                     string
+	}{
+		{"plain parts", "DB", "PUBLIC", "CUSTOMERS", `"DB"."PUBLIC"."CUSTOMERS"`},
+		{"lowercase parts", "db", "public", "customers", `"db"."public"."customers"`},
+		// Quoting each part is what keeps these two distinct: without it both
+		// would render as A.B.C and collide in the resource cache.
+		{"dot in object name", "A", "B", "C.D", `"A"."B"."C.D"`},
+		{"dot in schema name", "A", "B.C", "D", `"A"."B.C"."D"`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := snowflakeSchemaObjectID(tc.database, tc.schema, tc.object)
+			if got != tc.want {
+				t.Errorf("snowflakeSchemaObjectID(%q, %q, %q) = %q, want %q",
+					tc.database, tc.schema, tc.object, got, tc.want)
+			}
+		})
+	}
+
+	// Distinct coordinates must never produce the same cache key.
+	if a, b := snowflakeSchemaObjectID("A", "B", "C.D"), snowflakeSchemaObjectID("A", "B.C", "D"); a == b {
+		t.Errorf("distinct objects share a cache key: %q", a)
+	}
+}
+
 func TestParseSnowflakeTime(t *testing.T) {
 	// null cases: empty and unparseable strings must resolve to null, never error.
 	nullCases := []struct {
