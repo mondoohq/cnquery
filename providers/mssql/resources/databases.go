@@ -454,7 +454,11 @@ func (c *mqlMssqlDatabase) auditSpecifications() ([]any, error) {
 			}
 			details[specID][action] = result
 		}
+		err = detailRows.Err()
 		detailRows.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	q := `SELECT s.database_specification_id, s.name, s.is_state_enabled, ISNULL(a.name, '')
@@ -533,6 +537,7 @@ func (c *mqlMssqlDatabase) backups() ([]any, error) {
 	}
 	defer rows.Close()
 
+	instanceID := mssqlConnection(c.MqlRuntime).InstanceID()
 	list := []any{}
 	for rows.Next() {
 		var uuid, databaseName, typeCode, keyAlgorithm string
@@ -543,7 +548,7 @@ func (c *mqlMssqlDatabase) backups() ([]any, error) {
 			return nil, err
 		}
 		res, err := CreateResource(c.MqlRuntime, "mssql.backup", map[string]*llx.RawData{
-			"__id":             llx.StringData("backup/" + uuid),
+			"__id":             llx.StringData(instanceID + "/backup/" + uuid),
 			"backupSetUuid":    llx.StringData(uuid),
 			"databaseName":     llx.StringData(databaseName),
 			"type":             llx.StringData(backupTypeDesc(typeCode)),

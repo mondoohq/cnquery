@@ -184,7 +184,10 @@ func (c *mqlMssqlServer) serviceAccount() (string, error) {
 
 func (c *mqlMssqlServer) serviceAccountSid() (string, error) {
 	acct := c.GetServiceAccount()
-	if acct.Error != nil || acct.Data == "" {
+	if acct.Error != nil {
+		return "", acct.Error
+	}
+	if acct.Data == "" {
 		c.ServiceAccountSid.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
@@ -477,7 +480,11 @@ func (c *mqlMssqlServer) proxyAccounts() ([]any, error) {
 			}
 			publicProxies[proxyID] = true
 		}
+		err = pubRows.Err()
 		pubRows.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Subsystems for each proxy, collected first so they can be attached inline.
@@ -496,7 +503,11 @@ func (c *mqlMssqlServer) proxyAccounts() ([]any, error) {
 			}
 			subsystems[proxyID] = append(subsystems[proxyID], subsystem)
 		}
+		err = subRows.Err()
 		subRows.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	const q = `SELECT p.proxy_id, p.name, ISNULL(c.name, ''), p.enabled
@@ -600,7 +611,11 @@ func (c *mqlMssqlServer) serverAuditSpecifications() ([]any, error) {
 			}
 			details[specID][action] = result
 		}
+		err = detailRows.Err()
 		detailRows.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	const q = `SELECT s.server_specification_id, s.name, s.is_state_enabled, ISNULL(a.name, '')

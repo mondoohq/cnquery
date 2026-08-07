@@ -89,9 +89,11 @@ func NewMssqlConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 
 	conn.port = 1433
 	if p := conf.Options[OptionPort]; p != "" {
-		if v, err := strconv.Atoi(p); err == nil {
-			conn.port = v
+		v, err := strconv.Atoi(p)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid port %q: %v", p, err)
 		}
+		conn.port = v
 	} else if conf.Port > 0 {
 		conn.port = int(conf.Port)
 	}

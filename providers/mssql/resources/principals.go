@@ -275,8 +275,10 @@ func (c *mqlMssqlDatabaseRole) members() ([]any, error) {
 		return nil, err
 	}
 	db := quoteName(c.cacheDatabase)
-	q := `SELECT m.principal_id, m.name, m.type_desc, m.authentication_type_desc,
-		ISNULL(m.default_schema_name, ''), CONVERT(VARCHAR(85), m.sid, 1),
+	// Column order and types must match scanDatabaseUser (see dbUserColumns);
+	// in particular sid is selected as raw binary, not a converted hex string.
+	q := `SELECT m.principal_id, m.name, m.type_desc, ISNULL(m.authentication_type_desc, ''),
+		ISNULL(m.default_schema_name, ''), m.sid,
 		m.create_date, m.modify_date, ISNULL(SUSER_SNAME(m.sid), '')
 		FROM ` + db + `.sys.database_role_members rm
 		JOIN ` + db + `.sys.database_principals m ON rm.member_principal_id = m.principal_id
