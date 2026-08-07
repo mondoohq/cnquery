@@ -671,8 +671,11 @@ func (g *mqlGcpProjectMonitoringServiceService) slos() ([]any, error) {
 		}
 
 		var rollingPeriod, calendarPeriod string
-		if rp, ok := slo.Period.(*monitoringpb.ServiceLevelObjective_RollingPeriod); ok && rp.RollingPeriod != nil {
-			rollingPeriod = durationpb.New(rp.RollingPeriod.AsDuration()).String()
+		if rp, ok := slo.Period.(*monitoringpb.ServiceLevelObjective_RollingPeriod); ok {
+			// durationToString, not (*durationpb.Duration).String(): the latter
+			// is the generated proto stringer and renders protobuf TEXT
+			// ("seconds:2592000"). The .lr documents this field as "86400s".
+			rollingPeriod = durationToString(rp.RollingPeriod)
 		}
 		if cp, ok := slo.Period.(*monitoringpb.ServiceLevelObjective_CalendarPeriod); ok {
 			calendarPeriod = cp.CalendarPeriod.String()

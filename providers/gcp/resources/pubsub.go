@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -803,20 +802,12 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	bindings := policy.Bindings
-	res := make([]any, 0, len(bindings))
-	for i, b := range bindings {
-		mqlBinding, err := CreateResource(g.MqlRuntime, ResourceGcpResourcemanagerBinding, map[string]*llx.RawData{
-			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
-			"role":    llx.StringData(b.Role),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlBinding)
-	}
-	return res, nil
+	// Share the standard binding mapper. The inline copy this replaces omitted
+	// conditionTitle/conditionExpression/conditionDescription, which are plain
+	// (non-computed) fields, so they crossed the plugin boundary UNSET -- and a
+	// conditional allUsers grant read as an unconditional one even though the
+	// request already asks for policy schema v3.
+	return iampbBindingsToMql(g.MqlRuntime, resourcePath, policy.Bindings)
 }
 
 func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
@@ -855,20 +846,12 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	bindings := policy.Bindings
-	res := make([]any, 0, len(bindings))
-	for i, b := range bindings {
-		mqlBinding, err := CreateResource(g.MqlRuntime, ResourceGcpResourcemanagerBinding, map[string]*llx.RawData{
-			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
-			"role":    llx.StringData(b.Role),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlBinding)
-	}
-	return res, nil
+	// Share the standard binding mapper. The inline copy this replaces omitted
+	// conditionTitle/conditionExpression/conditionDescription, which are plain
+	// (non-computed) fields, so they crossed the plugin boundary UNSET -- and a
+	// conditional allUsers grant read as an unconditional one even though the
+	// request already asks for policy schema v3.
+	return iampbBindingsToMql(g.MqlRuntime, resourcePath, policy.Bindings)
 }
 
 func topicStateToString(state pubsubpb.Topic_State) string {
