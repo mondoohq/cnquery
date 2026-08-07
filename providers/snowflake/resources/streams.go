@@ -74,7 +74,7 @@ func newMqlSnowflakeStream(runtime *plugin.Runtime, stream sdk.Stream) (*mqlSnow
 		"mode":          llx.StringData(mode),
 		"invalidReason": llx.StringDataPtr(stream.InvalidReason),
 		"comment":       llx.StringDataPtr(stream.Comment),
-		"createdAt":     llx.TimeData(stream.CreatedOn),
+		"createdAt":     snowflakeTime(stream.CreatedOn),
 	})
 	if err != nil {
 		return nil, err

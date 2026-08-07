@@ -48,7 +48,7 @@ func newMqlSnowflakeApplicationRole(runtime *plugin.Runtime, applicationName str
 		"applicationName": llx.StringData(applicationName),
 		"ownerRoleType":   llx.StringData(role.OwnerRoleType),
 		"comment":         llx.StringData(role.Comment),
-		"createdAt":       llx.TimeData(role.CreatedOn),
+		"createdAt":       snowflakeTime(role.CreatedOn),
 	})
 	if err != nil {
 		return nil, err

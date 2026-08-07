@@ -81,7 +81,7 @@ func newMqlSnowflakeFileFormat(runtime *plugin.Runtime, format sdk.FileFormat) (
 		"type":          llx.StringData(string(format.Type)),
 		"options":       llx.DictData(fileFormatOptionsToDict(format.Type, format.Options)),
 		"comment":       llx.StringData(comment),
-		"createdAt":     llx.TimeData(format.CreatedOn),
+		"createdAt":     snowflakeTime(format.CreatedOn),
 	})
 	if err != nil {
 		return nil, err

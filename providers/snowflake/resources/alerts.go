@@ -57,7 +57,7 @@ func newMqlSnowflakeAlert(runtime *plugin.Runtime, alert sdk.Alert) (*mqlSnowfla
 		"condition":     llx.StringData(alert.Condition),
 		"action":        llx.StringData(alert.Action),
 		"comment":       llx.StringDataPtr(alert.Comment),
-		"createdAt":     llx.TimeData(alert.CreatedOn),
+		"createdAt":     snowflakeTime(alert.CreatedOn),
 	})
 	if err != nil {
 		return nil, err
