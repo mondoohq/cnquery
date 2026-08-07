@@ -229,6 +229,7 @@ use (
    ./mql/providers/mondoo
    ./mql/providers/ms365
    ./mql/providers/mssql
+   ./mql/providers/mysqldb
    ./mql/providers/nextdns
    ./mql/providers/nmap
    ./mql/providers/nutanix

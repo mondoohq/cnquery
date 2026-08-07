@@ -236,6 +236,7 @@ PROVIDERS := \
 	mongodbatlas \
 	ms365 \
 	mssql \
+	mysqldb \
 	network \
 	nextdns \
 	nmap \
