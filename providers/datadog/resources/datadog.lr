@@ -7,17 +7,23 @@ option go_package = "go.mondoo.com/mql/v13/providers/datadog/resources"
 // Datadog
 //
 // Organization-wide Datadog configuration and inventory. Covers users, roles,
-// monitors, dashboards, synthetics tests, SLOs, log indexes, security rules,
-// downtimes, API keys, application keys, AWS integrations, teams, sensitive
-// data scanner groups, security filters and suppressions, service accounts,
-// logs archives, RUM applications, and synthetics global variables and private
-// locations. The organization IP allowlist is exposed through
-// ipAllowlistEnabled and ipAllowlistEntries.
+// permissions, monitors, dashboards, synthetics tests, SLOs, log indexes,
+// security rules, downtimes, API keys, application keys, AWS integrations,
+// teams, sensitive data scanner groups, security filters and suppressions,
+// service accounts, logs archives, RUM applications, and synthetics global
+// variables and private locations. The org field carries the single sign-on
+// and sharing settings that govern how the organization is accessed, and the
+// organization IP allowlist is exposed through ipAllowlistEnabled and
+// ipAllowlistEntries.
 datadog {
+  // Organization the credentials authenticate against
+  org() datadog.organization
   // Datadog users in the organization
   users() []datadog.user
   // Roles defined for permissioning
   roles() []datadog.role
+  // Permissions that can be granted to a role
+  permissions() []datadog.permission
   // Alerting monitors
   monitors() []datadog.monitor
   // Dashboards in the organization
@@ -66,6 +72,107 @@ datadog {
   syntheticsPrivateLocations() []datadog.syntheticsPrivateLocation
 }
 
+// Datadog Organization
+//
+// Datadog organization the supplied credentials authenticate against, and the
+// account-wide settings that govern how people reach it. The single sign-on
+// fields describe whether SAML is configured and how strictly it is enforced:
+// samlEnabled reports whether SAML login is turned on, samlStrictModeEnabled
+// reports whether username and password login is refused once SAML is active,
+// and samlIdpInitiatedLoginEnabled reports whether the identity provider may
+// start a session on its own. The samlAutocreateUsersEnabled and
+// samlAutocreateUsersDomains fields expose which email domains are granted an
+// account automatically on first login, and samlAutocreateAccessRole is the
+// role those accounts receive. Beyond SAML, privateWidgetShare reports whether
+// individual dashboard widgets can be shared outside the organization, and
+// domainAllowlistEnabled together with domainAllowlistDomains restrict which
+// email domains may be invited at all.
+datadog.organization @defaults("publicId name samlEnabled") {
+  // Organization public ID
+  publicId string
+  // Organization name
+  name string
+  // Organization description
+  description string
+  // Whether the organization is on a trial plan
+  trial bool
+  // Created at
+  createdAt time
+  // Whether SAML single sign-on is enabled
+  samlEnabled bool
+  // Whether SAML can be enabled for this organization
+  //
+  // False until an identity provider metadata file has been uploaded, so it
+  // distinguishes an organization that has declined single sign-on from one
+  // that cannot yet turn it on.
+  samlCanBeEnabled bool
+  // Whether SAML strict mode is enabled
+  //
+  // Strict mode refuses username and password logins once SAML is active, so
+  // an organization with samlEnabled true and this false still permits a
+  // direct login that bypasses the identity provider.
+  samlStrictModeEnabled bool
+  // Whether identity provider initiated login is enabled
+  samlIdpInitiatedLoginEnabled bool
+  // Whether identity provider metadata has been uploaded
+  samlIdpMetadataUploaded bool
+  // Identity provider endpoint URL
+  samlIdpEndpoint string
+  // SAML login URL
+  samlLoginUrl string
+  // Whether users are created automatically on first SAML login
+  samlAutocreateUsersEnabled bool
+  // Email domains whose users are created automatically on first SAML login
+  samlAutocreateUsersDomains []string
+  // Role granted to automatically created users
+  //
+  // One of st (Standard), adm (Administrator), or ro (Read Only). Empty when
+  // automatic user creation is off.
+  samlAutocreateAccessRole string
+  // Whether individual dashboard widgets can be shared outside the organization
+  privateWidgetShare bool
+  // Whether the email domain allowlist is enforced
+  domainAllowlistEnabled() bool
+  // Email domains that may be invited to the organization
+  domainAllowlistDomains() []string
+}
+
+// Datadog Permission
+//
+// Individual capability that a role can grant, such as reading dashboards or
+// managing API keys. Permissions are the leaves of the role-based access
+// control model, so listing the permissions attached to a role shows exactly
+// what its members can do rather than what the role is called. The name field
+// is the stable identifier used in policy (for example org_management or
+// logs_read_data), while displayName and groupName carry the wording shown in
+// the Datadog roles interface. The restricted field marks permissions that
+// cannot be granted through the API and are reserved to built-in roles.
+datadog.permission @defaults("name groupName") {
+  // Permission ID
+  id string
+  // Permission name
+  //
+  // The stable identifier referenced by scoped application keys and role
+  // definitions, for example org_management, user_access_manage, or
+  // logs_read_data.
+  name string
+  // Display name shown in the Datadog interface
+  displayName string
+  // Description of what the permission grants
+  description string
+  // Group the permission belongs to
+  groupName string
+  // Display type
+  //
+  // How the permission is presented in the roles interface. One of read,
+  // write, or other.
+  displayType string
+  // Whether the permission is restricted to built-in roles
+  restricted bool
+  // Created at
+  createdAt time
+}
+
 // Datadog User
 //
 // User account belonging to the Datadog organization, covering both
@@ -97,6 +204,10 @@ datadog.user @defaults("id email status") {
   createdAt time
   // Icon URL
   icon string
+  // Roles assigned to the user
+  roles() []datadog.role
+  // Teams the user belongs to
+  teams() []datadog.team
 }
 
 // Datadog Role
@@ -105,7 +216,9 @@ datadog.user @defaults("id email status") {
 // within the organization. Roles bundle permissions and are assigned to users,
 // so auditing them shows how administrative and read/write access is scoped.
 // The `userCount` field reports how many members hold the role, which helps
-// flag over-provisioned or unused roles.
+// flag over-provisioned or unused roles. The permissions field expands the
+// role into the individual capabilities it grants, and users lists the members
+// who hold it, so the two together answer who can perform a given action.
 datadog.role @defaults("id name") {
   // Role ID
   id string
@@ -117,6 +230,10 @@ datadog.role @defaults("id name") {
   createdAt time
   // Modified at
   modifiedAt time
+  // Permissions granted by the role
+  permissions() []datadog.permission
+  // Users that hold the role
+  users() []datadog.user
 }
 
 // Datadog Monitor
@@ -149,7 +266,14 @@ datadog.monitor @defaults("id name type") {
   // Modified at
   modified time
   // Creator email
-  creator string
+  //
+  // Deprecated in favor of createdBy, which resolves the same person to their
+  // user account.
+  creator @maturity("deprecated") string
+  // User that created the monitor
+  //
+  // Null when the creator no longer has an account in the organization.
+  createdBy() datadog.user
   // Whether the monitor notifies when data is missing
   notifyNoData bool
   // Alert behavior options
@@ -186,7 +310,14 @@ datadog.dashboard @defaults("id title") {
   // Modified at
   modifiedAt time
   // Author handle
-  authorHandle string
+  //
+  // Deprecated in favor of author, which resolves the same person to their
+  // user account.
+  authorHandle @maturity("deprecated") string
+  // User that authored the dashboard
+  //
+  // Null when the author no longer has an account in the organization.
+  author() datadog.user
   // Is read only
   isReadOnly bool
 }
@@ -221,7 +352,14 @@ datadog.syntheticsTest @defaults("publicId name type") {
   // Monitor ID
   monitorId int
   // Creator email
-  creator string
+  //
+  // Deprecated in favor of createdBy, which resolves the same person to their
+  // user account.
+  creator @maturity("deprecated") string
+  // User that created the test
+  //
+  // Null when the creator no longer has an account in the organization.
+  createdBy() datadog.user
   // Request configuration
   //
   // Request under test. Keys: `method` (HTTP method, for example GET or POST)
@@ -263,7 +401,14 @@ datadog.slo @defaults("id name type") {
   // Timeframe (7d, 30d, 90d)
   timeframe string
   // Creator email
-  creator string
+  //
+  // Deprecated in favor of createdBy, which resolves the same person to their
+  // user account.
+  creator @maturity("deprecated") string
+  // User that created the SLO
+  //
+  // Null when the creator no longer has an account in the organization.
+  createdBy() datadog.user
   // Created at
   createdAt time
   // Modified at
@@ -423,7 +568,10 @@ datadog.downtime @defaults("id status") {
 // metrics, traces, logs, and events to the organization. The `last4` field
 // exposes only the final four characters so a key can be identified without
 // revealing the secret. The `createdAt` and `modifiedAt` timestamps let you
-// audit key age and flag stale or unrotated credentials.
+// audit key age and flag stale or unrotated credentials, and `lastUsedAt`
+// separates keys that are still submitting data from abandoned ones that
+// should be revoked. The `createdBy` and `modifiedBy` fields attribute a key
+// to the accounts that issued and last changed it.
 datadog.apiKey @defaults("id name") {
   // API key ID
   id string
@@ -435,6 +583,28 @@ datadog.apiKey @defaults("id name") {
   modifiedAt time
   // Last four characters
   last4 string
+  // Last used at
+  //
+  // Null when the key has never been used to submit data, which together with
+  // an old createdAt identifies a credential that can be revoked.
+  lastUsedAt time
+  // Key category
+  category string
+  // Whether the key may read remote configuration
+  //
+  // Remote configuration lets an agent authenticated with this key pull
+  // configuration changes from Datadog, so a key with it enabled carries more
+  // than submit-only access.
+  remoteConfigReadEnabled bool
+  // User that created the key
+  //
+  // Null when the creating account has been removed from the organization.
+  createdBy() datadog.user
+  // User that last modified the key
+  //
+  // Null when the key has not been modified since creation, or the modifying
+  // account has been removed from the organization.
+  modifiedBy() datadog.user
 }
 
 // Datadog Application Key
@@ -442,8 +612,11 @@ datadog.apiKey @defaults("id name") {
 // Application key that a user presents alongside an API key to make
 // authenticated Datadog HTTP API calls. Auditing these surfaces which keys
 // exist, who owns them, and how broad their access is: the `scopes` field
-// is null when the key has full account access, and otherwise lists the
-// specific permission scopes granted to it.
+// is empty when the key has full account access, and otherwise lists the
+// specific permission scopes granted to it. A key with no scopes inherits
+// every permission its `owner` holds, so pairing the two shows the effective
+// reach of the credential, and `lastUsedAt` separates live keys from dormant
+// ones.
 datadog.applicationKey @defaults("id name") {
   // Application key ID
   id string
@@ -453,8 +626,18 @@ datadog.applicationKey @defaults("id name") {
   createdAt time
   // Last four characters
   last4 string
-  // Scopes (null means full access)
+  // Scopes (empty means full access)
   scopes []string
+  // Last used at
+  //
+  // Null when the key has never been used, which together with an old
+  // createdAt identifies a credential that can be revoked.
+  lastUsedAt time
+  // User that owns the key
+  //
+  // An unscoped key acts with every permission this user holds. Null when the
+  // owning account has been removed from the organization.
+  owner() datadog.user
 }
 
 // Datadog AWS Integration Account
@@ -500,8 +683,9 @@ datadog.integration.aws @defaults("accountId") {
 // Group of Datadog users organized for ownership, on-call rotation, and
 // access control. Teams tie people to the resources they are responsible
 // for, so auditing them shows who owns what and how membership is scoped.
-// The `handle` is the team's URL slug and `userCount` reports how many
-// members belong to the team.
+// The `handle` is the team's URL slug, `userCount` reports how many members
+// belong to the team, and `members` resolves those members to their user
+// accounts.
 datadog.team @defaults("id name") {
   // Team ID
   id string
@@ -517,6 +701,8 @@ datadog.team @defaults("id name") {
   createdAt time
   // Modified at
   modifiedAt time
+  // Users that belong to the team
+  members() []datadog.user
 }
 
 // Datadog Sensitive Data Scanner Group
