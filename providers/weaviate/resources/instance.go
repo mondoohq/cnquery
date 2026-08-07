@@ -88,7 +88,8 @@ func (r *mqlWeaviateInstance) collections() ([]any, error) {
 		asyncRepl := false
 		if rc := class.ReplicationConfig; rc != nil {
 			replFactor = rc.Factor
-			asyncRepl = rc.AsyncEnabled
+			// Async replication is signaled by a present async config block.
+			asyncRepl = rc.AsyncConfig != nil
 		}
 
 		res, err := CreateResource(r.MqlRuntime, "weaviate.collection", map[string]*llx.RawData{

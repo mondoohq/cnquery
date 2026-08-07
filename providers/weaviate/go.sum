@@ -471,8 +471,8 @@ github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 h1:2f304B10
 github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0/go.mod h1:278M4p8WsNh3n4a1eqiFcV2FGk7wE5fwUpUom9mK9lE=
 github.com/ulikunitz/xz v0.5.16 h1:ld6NyySjx5lowVKwJvMRLnW5nxKX/xnpSiFYZ/Lxur0=
 github.com/ulikunitz/xz v0.5.16/go.mod h1:H9Rt/W6/Qj27PGauhQc6nfCDy7vHpzsOThBSaYDoEhw=
-github.com/weaviate/weaviate v1.37.2 h1:LgDVfNfYA01KAsHtlznuB2JoRWA5tSuoDttwe9PEg2Q=
-github.com/weaviate/weaviate v1.37.2/go.mod h1:dZtzUfJmL9zs/47ADqi+d/pyAQDRwFrun/dCjKj7R5A=
+github.com/weaviate/weaviate v1.38.9 h1:gvtPFIV5e6MDqpeQrRBAOX2QMejYl34CGpdMEAbh0L8=
+github.com/weaviate/weaviate v1.38.9/go.mod h1:nKdU5qRSEHmGCBkP/gVlPBTv68pSTnLmZXuo3CgIf+w=
 github.com/weaviate/weaviate-go-client/v5 v5.7.3 h1:AB7asp3Nv3QMh34EtJarpezQQ600p6TJVrdRhmisrMI=
 github.com/weaviate/weaviate-go-client/v5 v5.7.3/go.mod h1:Q6lG7oDiKZLcE0UPiPkJ2+V7bOejSOpgJV3kZari1MY=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
