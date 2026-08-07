@@ -79,7 +79,7 @@ const (
 
 	// Auto-update the execution engine
 	// start:  v13.x
-	// status: new
+	// status: default
 	AutoUpdateEngine Feature = 14
 
 	// Use BIOS UUID as the asset ID. Preferred over SerialNumber for VMs since some hypervisors (e.g., OpenStack) pass through the host's serial number to VMs, making it non-unique. On detected VMs, the BIOS UUID detector is added automatically; this flag enables it on non-VM (bare metal) machines.
@@ -152,13 +152,13 @@ var DefaultFeatures = Features{
 	byte(SerialNumberAsID),
 	byte(ForceShellCompletion),
 	byte(ResourceContext),
+	byte(AutoUpdateEngine),
 }
 
 // AvailableFeatures are a set of flags that can be activated
 var AvailableFeatures = Features{
 	byte(MQLAssetContext),
 	byte(UploadResultsV2),
-	byte(AutoUpdateEngine),
 	byte(BiosUUIDAsID),
 	byte(ExchangeTokenForToken),
 	byte(TerraformResolveVars),
