@@ -22,19 +22,19 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.64.5
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/athena v1.60.4
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.70.4
-	github.com/aws/aws-sdk-go-v2/service/backup v1.59.4
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.71.0
+	github.com/aws/aws-sdk-go-v2/service/backup v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.68.4
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.66.4
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.58.4
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.54.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.76.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.67.4
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.58.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.66.3
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.81.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.72.4
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.38.4
@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.63.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.319.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.320.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.60.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.90.0
@@ -77,8 +77,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.54.1
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.57.2
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.28.4
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.55.4
@@ -102,12 +102,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.65.6
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.48.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.106.5
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.107.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.73.4
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.263.2
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.264.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.4
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.75.4
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.66.4
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.45.4
@@ -288,7 +288,7 @@ require (
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260806123557-f15147f1b271 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260807010921-92ef02e456bd // indirect
 	go.mondoo.com/ranger-rpc v0.8.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0 // indirect
@@ -320,9 +320,9 @@ require (
 	k8s.io/kube-openapi v0.0.0-20260330154417-16be699c7b31 // indirect
 	k8s.io/kubelet v0.36.3 // indirect
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3 // indirect
-	modernc.org/libc v1.74.4 // indirect
+	modernc.org/libc v1.75.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.11.0 // indirect
+	modernc.org/memory v1.12.0 // indirect
 	modernc.org/sqlite v1.56.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
