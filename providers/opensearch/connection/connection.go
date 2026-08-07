@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -185,8 +186,9 @@ func (e *PermissionError) Error() string {
 	return fmt.Sprintf("opensearch GET %s: not authorized (status %d)", e.Path, e.StatusCode)
 }
 
-// IsPermissionError reports whether err is an authorization failure.
+// IsPermissionError reports whether err is an authorization failure, including
+// when it has been wrapped with fmt.Errorf("%w", ...).
 func IsPermissionError(err error) bool {
-	_, ok := err.(*PermissionError)
-	return ok
+	var pe *PermissionError
+	return errors.As(err, &pe)
 }

@@ -107,6 +107,16 @@ type osAuthcRealmCfg struct {
 	Enabled     *bool `json:"enabled"`
 }
 
+// realmServesREST reports whether an authc domain serves REST (HTTP) requests.
+// OpenSearch defaults http_enabled and enabled to true when the key is absent,
+// so a nil pointer means enabled; a domain serves REST only when it is both
+// generally enabled and HTTP-enabled.
+func realmServesREST(c osAuthcRealmCfg) bool {
+	httpOn := c.HTTPEnabled == nil || *c.HTTPEnabled
+	enabled := c.Enabled == nil || *c.Enabled
+	return httpOn && enabled
+}
+
 func (r *mqlOpensearchCluster) security() (*mqlOpensearchSecurity, error) {
 	conn := osConnection(r.MqlRuntime)
 
@@ -140,9 +150,7 @@ func (r *mqlOpensearchCluster) security() (*mqlOpensearchSecurity, error) {
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		c := dyn.Authc[name]
-		enabled := (c.HTTPEnabled != nil && *c.HTTPEnabled) || (c.Enabled != nil && *c.Enabled)
-		if enabled {
+		if realmServesREST(dyn.Authc[name]) {
 			realms = append(realms, name)
 		}
 	}
