@@ -117,12 +117,12 @@ func (c *CassandraConnection) Session() (*gocql.Session, error) {
 			}
 		}
 		if c.tls {
-			ssl := &gocql.SslOptions{EnableHostVerification: !c.tlsInsecure}
+			ssl := &gocql.SslOptions{
+				Config:                 &tls.Config{InsecureSkipVerify: c.tlsInsecure},
+				EnableHostVerification: !c.tlsInsecure,
+			}
 			if c.tlsCA != "" {
 				ssl.CaPath = c.tlsCA
-			}
-			if c.tlsInsecure {
-				ssl.Config = &tls.Config{InsecureSkipVerify: true}
 			}
 			cluster.SslOpts = ssl
 		}

@@ -19,14 +19,17 @@ PASS="${CASS_PASSWORD:?set CASS_PASSWORD}"
 AUDITOR_PASS="${CASS_AUDITOR_PASSWORD:?set CASS_AUDITOR_PASSWORD}"
 CQLSH="${CASS_CQLSH:-cqlsh}"
 
+# Creates, in one CQL batch:
+#  - a least-privilege auditor role (a non-superuser login) to audit against the
+#    default cassandra superuser;
+#  - a SimpleStrategy, replication-factor-1 keyspace to trip the replication check;
+#  - a scoped SELECT grant to the auditor (a narrow data permission).
+# The auditor password is interpolated into CQL, so it must not contain a single
+# quote (this is test-only fixture tooling, not a general seeder).
 # shellcheck disable=SC2086
-$CQLSH -u "$USER" -p "$PASS" "$HOST" "$PORT" -e "
-  -- A least-privilege auditor role to audit against the default cassandra superuser.
-  CREATE ROLE IF NOT EXISTS auditor WITH LOGIN = true AND PASSWORD = '${AUDITOR_PASS}';
-  -- A SimpleStrategy, replication-factor-1 keyspace to trip the replication posture check.
-  CREATE KEYSPACE IF NOT EXISTS app WITH replication = {'class':'SimpleStrategy','replication_factor':1};
-  -- A scoped grant to the auditor (a non-superuser with a narrow data permission).
-  GRANT SELECT ON KEYSPACE app TO auditor;
-"
+$CQLSH -u "$USER" -p "$PASS" "$HOST" "$PORT" -e "\
+CREATE ROLE IF NOT EXISTS auditor WITH LOGIN = true AND PASSWORD = '${AUDITOR_PASS}'; \
+CREATE KEYSPACE IF NOT EXISTS app WITH replication = {'class':'SimpleStrategy','replication_factor':1}; \
+GRANT SELECT ON KEYSPACE app TO auditor;"
 
 echo "seed complete"

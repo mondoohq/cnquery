@@ -105,9 +105,11 @@ func (r *mqlCassandraRole) permissions() ([]any, error) {
 	sort.Slice(rows, func(i, j int) bool { return rows[i].resource < rows[j].resource })
 
 	list := []any{}
-	for i, row := range rows {
+	for _, row := range rows {
+		// resource is unique per role (role_permissions PK is (role, resource)),
+		// so it makes a stable id regardless of the order rows are returned in.
 		res, err := CreateResource(r.MqlRuntime, "cassandra.role.permission", map[string]*llx.RawData{
-			"__id":        llx.StringData(r.__id + "/perm/" + intToStr(i)),
+			"__id":        llx.StringData(r.__id + "/perm/" + row.resource),
 			"resource":    llx.StringData(row.resource),
 			"permissions": llx.ArrayData(toAnySlice(row.permissions), types.String),
 		})

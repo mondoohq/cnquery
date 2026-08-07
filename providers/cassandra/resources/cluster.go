@@ -4,11 +4,13 @@
 package resources
 
 import (
+	"fmt"
 	"maps"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/gocql/gocql"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cassandra/connection"
@@ -17,7 +19,9 @@ import (
 
 // initCassandraCluster fetches the cluster identity from system.local.
 func initCassandraCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 3 {
+	// Fast path: the resource was constructed with its fields already populated
+	// (more than just the __id/host pair), so there is nothing to fetch.
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
@@ -34,7 +38,10 @@ func initCassandraCluster(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, err
 	}
 	// native_protocol_version is stored as text (e.g. "5").
-	protoVersionInt, _ := strconv.ParseInt(protoVersion, 10, 64)
+	protoVersionInt, err := strconv.ParseInt(protoVersion, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing native_protocol_version %q: %w", protoVersion, err)
+	}
 
 	clusterID := hostID
 	if clusterID == "" {
@@ -132,22 +139,38 @@ func (r *mqlCassandraCluster) nodes() ([]any, error) {
 	}
 	list = append(list, local)
 
-	// Other nodes come from system.peers_v2 (4.0+).
-	iter := session.Query(`SELECT peer, host_id, release_version, data_center, rack FROM system.peers_v2`).Iter()
-	var paddr, phost, pver, pdc, prack string
-	for iter.Scan(&paddr, &phost, &pver, &pdc, &prack) {
-		node, err := r.newNode(serverID, paddr, phost, pver, pdc, prack, false)
+	// Other nodes come from system.peers_v2 (4.0+); fall back to the legacy
+	// system.peers on clusters that do not have it (pre-4.0).
+	peers, err := r.scanPeers(session, `SELECT peer, host_id, release_version, data_center, rack FROM system.peers_v2`)
+	if err != nil {
+		peers, err = r.scanPeers(session, `SELECT peer, host_id, release_version, data_center, rack FROM system.peers`)
+		if err != nil {
+			if connection.IsUnauthorized(err) {
+				return list, nil
+			}
+			return nil, err
+		}
+	}
+	list = append(list, peers...)
+	return list, nil
+}
+
+// scanPeers runs a peers query and builds a node resource per row.
+func (r *mqlCassandraCluster) scanPeers(session *gocql.Session, query string) ([]any, error) {
+	serverID := r.__id
+	iter := session.Query(query).Iter()
+	var addr, host, ver, dc, rack string
+	list := []any{}
+	for iter.Scan(&addr, &host, &ver, &dc, &rack) {
+		node, err := r.newNode(serverID, addr, host, ver, dc, rack, false)
 		if err != nil {
 			_ = iter.Close()
 			return nil, err
 		}
 		list = append(list, node)
 	}
-	if err := iter.Close(); err != nil && !connection.IsUnauthorized(err) {
-		// peers_v2 exists on 4.0+; ignore its absence but not other errors.
-		if !strings.Contains(err.Error(), "peers_v2") {
-			return nil, err
-		}
+	if err := iter.Close(); err != nil {
+		return nil, err
 	}
 	return list, nil
 }
