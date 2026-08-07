@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/rs/zerolog/log"
@@ -44,7 +45,19 @@ const (
 	// powerBiMaxPages bounds continuation following so a service that keeps
 	// handing back a link cannot spin forever.
 	powerBiMaxPages = 512
+
+	// powerBiHTTPTimeout bounds a single request. powerBiMaxPages caps how many
+	// requests a walk makes but says nothing about how long one may hang, and
+	// these requests do not go through an SDK pipeline that would impose a
+	// deadline of its own. Without it a stalled connection blocks the section
+	// forever, and the sections are collected concurrently, so one hung endpoint
+	// holds the whole report.
+	powerBiHTTPTimeout = 60 * time.Second
 )
+
+// powerBiHTTPClient is shared by the admin API requests so they all get the
+// timeout. http.Client is safe for concurrent use.
+var powerBiHTTPClient = &http.Client{Timeout: powerBiHTTPTimeout}
 
 // powerBiSection is one report section: its payload as raw JSON plus any error
 // captured while collecting it. Each section is collected independently: the
@@ -271,7 +284,7 @@ func powerBiRequest(ctx context.Context, token string, url string) ([]byte, erro
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := powerBiHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
