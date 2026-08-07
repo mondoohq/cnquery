@@ -239,6 +239,7 @@ use (
    ./mql/providers/openai
    ./mql/providers/openstack
    ./mql/providers/portainer
+   ./mql/providers/postgres
    ./mql/providers/proxmox
    ./mql/providers/redfish
    ./mql/providers/shodan

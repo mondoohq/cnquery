@@ -248,6 +248,7 @@ PROVIDERS := \
 	openstack \
 	os \
 	portainer \
+	postgres \
 	proxmox \
 	redfish \
 	shodan \
