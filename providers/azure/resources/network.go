@@ -4857,9 +4857,11 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 		return nil, err
 	}
 	mqlSubnet := mqlAzure.(*mqlAzureSubscriptionNetworkServiceSubnet)
-	mqlSubnet.cacheNetworkSecurityGroupID = nsgID
-	mqlSubnet.cacheRouteTableID = routeTableID
+	// see azureInterfaceToMql: a reference-shaped payload must not clear values
+	// a full read already stored on the cached instance
 	if subnet.Properties != nil {
+		mqlSubnet.cacheNetworkSecurityGroupID = nsgID
+		mqlSubnet.cacheRouteTableID = routeTableID
 		for _, pe := range subnet.Properties.PrivateEndpoints {
 			if pe != nil && pe.ID != nil {
 				mqlSubnet.cachePrivateEndpointIDs = append(mqlSubnet.cachePrivateEndpointIDs, *pe.ID)
@@ -5100,8 +5102,12 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 		return nil, err
 	}
 	mqlIface := res.(*mqlAzureSubscriptionNetworkServiceInterface)
-	mqlIface.cacheNetworkSecurityGroupID = networkSecurityGroupId
+	// Only seed the cache fields from a response that actually carried
+	// properties. CreateResource returns the already-cached instance on a known
+	// __id, so writing unconditionally let a reference-shaped payload clear the
+	// values a full read had already stored.
 	if iface.Properties != nil {
+		mqlIface.cacheNetworkSecurityGroupID = networkSecurityGroupId
 		mqlIface.cacheIPConfigurations = iface.Properties.IPConfigurations
 	}
 	return mqlIface, nil
@@ -5292,10 +5298,20 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) interfaces() ([]any, e
 	}
 	res := []any{}
 	for _, iface := range a.cacheProperties.NetworkInterfaces {
-		if iface == nil {
+		// Resolve by id rather than mapping the embedded value. The SDK marks
+		// SecurityGroupPropertiesFormat.NetworkInterfaces as "a collection of
+		// references": ARM returns {"id": ...} with no properties. Mapping that
+		// through azureInterfaceToMql invented enableIPForwarding: false and an
+		// empty ipConfigurations list, and -- because CreateResource returns the
+		// already-cached instance for a known __id while the mapper then wrote
+		// its cache fields onto it -- wiped the NSG reference of a NIC that had
+		// been read properly, so nic.networkSecurityGroup() answered null for
+		// the rest of the scan. subnets() below has always done it this way.
+		if iface == nil || iface.ID == nil {
 			continue
 		}
-		mqlIface, err := azureInterfaceToMql(a.MqlRuntime, *iface)
+		mqlIface, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.interface",
+			map[string]*llx.RawData{"id": llx.StringDataPtr(iface.ID)})
 		if err != nil {
 			return nil, err
 		}
@@ -5932,7 +5948,17 @@ func (a *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) id()
 func (a *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) subnets() ([]any, error) {
 	res := []any{}
 	for _, subnet := range a.cacheSubnets {
-		mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, subnet)
+		// Same shape as securityGroup.interfaces(): the SDK marks
+		// ServiceEndpointPolicyPropertiesFormat.Subnets as "a collection of
+		// references", so these carry an id and nothing else. Mapping them
+		// invented an empty addressPrefix and cleared the cached subnet's NSG
+		// and route-table references, which made subnet.networkSecurityGroup()
+		// answer null -- "this subnet has no NSG" -- for the rest of the scan.
+		if subnet.ID == nil {
+			continue
+		}
+		mqlSubnet, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+			map[string]*llx.RawData{"id": llx.StringDataPtr(subnet.ID)})
 		if err != nil {
 			return nil, err
 		}

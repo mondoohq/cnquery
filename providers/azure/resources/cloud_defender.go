@@ -568,8 +568,15 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forContainers() (*mqlAzureSub
 	}
 
 	args := commonPricingArgs(containersPricing.Properties, ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers, subId)
-	args["defenderDaemonSet"] = llx.BoolData(arcDefender && kubernetesDefender)
-	args["azurePolicyForKubernetes"] = llx.BoolData(arcPolicyExt && kubernetesPolicyExt)
+	// Either cluster flavour counts. There are two policy definitions per
+	// component -- one for Arc-enabled Kubernetes, one for AKS -- and a
+	// subscription that runs only AKS, which is the common case, will never have
+	// the Arc policy assigned. Both constants used to hold the Arc GUID, so this
+	// was `x && x`; correcting the AKS GUID silently turned it into a real
+	// conjunction and every AKS-only subscription began reporting false for a
+	// component it demonstrably had.
+	args["defenderDaemonSet"] = llx.BoolData(arcDefender || kubernetesDefender)
+	args["azurePolicyForKubernetes"] = llx.BoolData(arcPolicyExt || kubernetesPolicyExt)
 
 	resource, err := CreateResource(a.MqlRuntime,
 		ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers,
