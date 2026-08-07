@@ -129,6 +129,14 @@ snowflake.account {
   dynamicTables() []snowflake.dynamicTable
   // Event tables in the account (tables that collect logs and telemetry)
   eventTables() []snowflake.eventTable
+  // Streams in the account (change-data-capture readers over tables)
+  streams() []snowflake.stream
+  // Pipes in the account (continuous loaders from a stage into a table)
+  pipes() []snowflake.pipe
+  // Sequences in the account
+  sequences() []snowflake.sequence
+  // File formats in the account (parsing rules for staged data files)
+  fileFormats() []snowflake.fileFormat
 }
 
 // Snowflake User
@@ -577,6 +585,14 @@ snowflake.database @defaults("name") {
   dynamicTables() []snowflake.dynamicTable
   // Event tables in the database (tables that collect logs and telemetry)
   eventTables() []snowflake.eventTable
+  // Streams in the database (change-data-capture readers over tables)
+  streams() []snowflake.stream
+  // Pipes in the database (continuous loaders from a stage into a table)
+  pipes() []snowflake.pipe
+  // Sequences in the database
+  sequences() []snowflake.sequence
+  // File formats in the database (parsing rules for staged data files)
+  fileFormats() []snowflake.fileFormat
 }
 
 // Snowflake Warehouse
@@ -1754,6 +1770,8 @@ snowflake.externalTable @defaults("name schemaName location") {
   region string
   // File format type the data is parsed with (such as CSV, JSON, AVRO, ORC, or PARQUET)
   fileFormatType string
+  // File format that supplies the parsing rules for the staged data files
+  fileFormat() snowflake.fileFormat
   // Table format of the external data, empty for a plain external table and DELTA for a Delta Lake table
   tableFormat string
   // Notification channel that triggers automatic refresh, empty when refresh is manual
@@ -1920,5 +1938,186 @@ snowflake.eventTable @defaults("name schemaName") {
   // Comment on the event table
   comment string
   // Time the event table was created
+  createdAt time
+}
+
+// Snowflake stream
+//
+// Stream in a schema, keyed by name, a change-data-capture reader that records
+// the rows inserted, updated, and deleted in a source table since the stream
+// was last consumed. A stream reads whatever its source table holds, so it
+// carries that data forward into whatever consumes the stream, which makes the
+// source table and base tables the review targets. Covers the source object and
+// the base tables behind it, the kind of change data recorded, and staleness:
+// a stream that goes stale silently stops delivering change data, so `stale`
+// and `staleAfter` show whether the pipeline reading it has quietly stopped.
+// Select a stream by name, for example
+// `snowflake.account.streams.where(stale == true)`.
+snowflake.stream @defaults("name schemaName stale") {
+  // Stream name
+  name string
+  // Name of the database that contains the stream
+  databaseName string
+  // Name of the schema that contains the stream
+  schemaName string
+  // Database that contains the stream
+  database() snowflake.database
+  // Schema that contains the stream
+  schema() snowflake.schema
+  // Role that owns the stream
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Object the stream reads changes from
+  table() snowflake.table
+  // Tables the stream ultimately reads from
+  //
+  // The source object itself for a stream over a table, and the underlying
+  // tables for a stream defined over a view.
+  baseTables() []snowflake.table
+  // Kind of object the stream is defined on (such as Table, View, or Stage)
+  sourceType string
+  // Kind of change data the stream records (such as DELTA or DEFAULT)
+  type string
+  // Whether the stream has gone stale and no longer returns change data
+  stale bool
+  // Time after which the stream becomes stale if it is not consumed
+  staleAfter time
+  // Read mode of the stream
+  //
+  // One of DEFAULT, APPEND_ONLY, or INSERT_ONLY. APPEND_ONLY and INSERT_ONLY
+  // record inserts but not updates or deletes.
+  mode string
+  // Reason the stream is invalid, empty when it is valid
+  invalidReason string
+  // Comment on the stream
+  comment string
+  // Time the stream was created
+  createdAt time
+}
+
+// Snowflake pipe
+//
+// Pipe in a schema, keyed by name, a continuous loader that copies files from a
+// stage into a table as they arrive. A pipe runs its COPY statement without a
+// caller, so the `definition` field is the authoritative record of which stage
+// it reads and which table it writes, and the notification integration and
+// channel show what triggers it from outside the account. Covers the load
+// statement, the integrations that drive automatic ingestion and receive load
+// errors, the file pattern the pipe matches, and why Snowflake considers a pipe
+// invalid. Select a pipe by name, for example
+// `snowflake.account.pipes.where(name == "INGEST_EVENTS")`.
+snowflake.pipe @defaults("name schemaName") {
+  // Pipe name
+  name string
+  // Name of the database that contains the pipe
+  databaseName string
+  // Name of the schema that contains the pipe
+  schemaName string
+  // Database that contains the pipe
+  database() snowflake.database
+  // Schema that contains the pipe
+  schema() snowflake.schema
+  // Role that owns the pipe
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // COPY statement the pipe runs, naming the stage it reads and the table it loads into
+  definition string
+  // Notification integration that triggers automatic ingestion, null when the pipe is triggered by the REST endpoint
+  integration() snowflake.notificationIntegration
+  // Notification integration that receives load error notifications, null when none is configured
+  errorIntegration() snowflake.notificationIntegration
+  // Cloud messaging channel the pipe listens on for new file notifications, empty when the pipe is triggered by the REST endpoint
+  notificationChannel string
+  // Regular expression that selects which staged files the pipe loads, empty when it loads every file
+  pattern string
+  // Reason the pipe is invalid, empty when it is valid
+  invalidReason string
+  // Comment on the pipe
+  comment string
+  // Time the pipe was created
+  createdAt time
+}
+
+// Snowflake sequence
+//
+// Sequence in a schema, keyed by name, a generator of monotonically increasing
+// numbers used for surrogate keys and similar identifiers. Covers the next
+// value the sequence will hand out, the step between values, and whether values
+// are guaranteed to be issued in order. Select a sequence by name, for example
+// `snowflake.account.sequences.where(name == "ORDER_ID_SEQ")`.
+snowflake.sequence @defaults("name schemaName nextValue") {
+  // Sequence name
+  name string
+  // Name of the database that contains the sequence
+  databaseName string
+  // Name of the schema that contains the sequence
+  schemaName string
+  // Database that contains the sequence
+  database() snowflake.database
+  // Schema that contains the sequence
+  schema() snowflake.schema
+  // Role that owns the sequence
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Next value the sequence will return
+  nextValue int
+  // Step between successive values
+  interval int
+  // Whether values are guaranteed to be issued in increasing order
+  ordered bool
+  // Comment on the sequence
+  comment string
+  // Time the sequence was created
+  createdAt time
+}
+
+// Snowflake file format
+//
+// File format in a schema, keyed by name, the named set of parsing rules
+// Snowflake applies when it reads staged data files. A file format decides how
+// staged bytes become rows, so its options govern whether malformed input is
+// rejected or silently coerced: settings such as error-on-column-count-mismatch
+// and replace-invalid-characters determine whether a load fails loudly or
+// quietly admits corrupted data. Covers the format type and the full option set
+// for that type. Select a file format by name, for example
+// `snowflake.account.fileFormats.where(type == "CSV")`.
+snowflake.fileFormat @defaults("name schemaName type") {
+  // File format name
+  name string
+  // Name of the database that contains the file format
+  databaseName string
+  // Name of the schema that contains the file format
+  schemaName string
+  // Database that contains the file format
+  database() snowflake.database
+  // Schema that contains the file format
+  schema() snowflake.schema
+  // Role that owns the file format
+  ownerRole() snowflake.role
+  // Type of the owning role (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Type of data the format parses
+  //
+  // One of CSV, JSON, AVRO, ORC, PARQUET, or XML.
+  type string
+  // Parsing options set on the format
+  //
+  // Keyed by the Snowflake option name, holding only the options that apply to
+  // this format's type and are set on it. CSV formats carry keys such as
+  // RECORD_DELIMITER, FIELD_DELIMITER, SKIP_HEADER, PARSE_HEADER,
+  // FIELD_OPTIONALLY_ENCLOSED_BY, ERROR_ON_COLUMN_COUNT_MISMATCH, and ENCODING.
+  // JSON formats carry keys such as STRIP_OUTER_ARRAY, STRIP_NULL_VALUES,
+  // ALLOW_DUPLICATE, ENABLE_OCTAL, and IGNORE_UTF8_ERRORS. AVRO, ORC, and
+  // PARQUET formats carry COMPRESSION, TRIM_SPACE, REPLACE_INVALID_CHARACTERS,
+  // and NULL_IF, with PARQUET adding BINARY_AS_TEXT. XML formats carry keys
+  // such as PRESERVE_SPACE, STRIP_OUTER_ELEMENT, DISABLE_AUTO_CONVERT, and
+  // DISABLE_SNOWFLAKE_DATA. Every type carries COMPRESSION.
+  options dict
+  // Comment on the file format
+  comment string
+  // Time the file format was created
   createdAt time
 }

@@ -137,6 +137,23 @@ func initSnowflakeTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return nil, nil, fmt.Errorf("snowflake.table %q not found in %q.%q", name, databaseName, schemaName)
 }
 
+// resolveTableRefByFQN resolves a fully qualified table name (the form
+// Snowflake reports in SHOW output, such as "DB"."SCHEMA"."TABLE") to its
+// table. A name that cannot be parsed resolves to null rather than failing the
+// surrounding query.
+func resolveTableRefByFQN(runtime *plugin.Runtime, fqn string, field *plugin.TValue[*mqlSnowflakeTable]) (*mqlSnowflakeTable, error) {
+	if fqn == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id, err := sdk.ParseSchemaObjectIdentifier(fqn)
+	if err != nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveTableRef(runtime, id.DatabaseName(), id.SchemaName(), id.Name(), field)
+}
+
 // resolveTableRef returns the table a database/schema/name triple refers to, or
 // a null resource when any coordinate is empty. A table the caller cannot see
 // resolves to null rather than failing the surrounding query, matching how the

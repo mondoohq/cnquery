@@ -59,6 +59,10 @@ const (
 	ResourceSnowflakeMaterializedView          string = "snowflake.materializedView"
 	ResourceSnowflakeDynamicTable              string = "snowflake.dynamicTable"
 	ResourceSnowflakeEventTable                string = "snowflake.eventTable"
+	ResourceSnowflakeStream                    string = "snowflake.stream"
+	ResourceSnowflakePipe                      string = "snowflake.pipe"
+	ResourceSnowflakeSequence                  string = "snowflake.sequence"
+	ResourceSnowflakeFileFormat                string = "snowflake.fileFormat"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -236,6 +240,22 @@ func init() {
 		"snowflake.eventTable": {
 			// to override args, implement: initSnowflakeEventTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSnowflakeEventTable,
+		},
+		"snowflake.stream": {
+			// to override args, implement: initSnowflakeStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeStream,
+		},
+		"snowflake.pipe": {
+			// to override args, implement: initSnowflakePipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakePipe,
+		},
+		"snowflake.sequence": {
+			// to override args, implement: initSnowflakeSequence(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeSequence,
+		},
+		"snowflake.fileFormat": {
+			// to override args, implement: initSnowflakeFileFormat(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeFileFormat,
 		},
 	}
 }
@@ -445,6 +465,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.account.eventTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetEventTables()).ToDataRes(types.Array(types.Resource("snowflake.eventTable")))
+	},
+	"snowflake.account.streams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetStreams()).ToDataRes(types.Array(types.Resource("snowflake.stream")))
+	},
+	"snowflake.account.pipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetPipes()).ToDataRes(types.Array(types.Resource("snowflake.pipe")))
+	},
+	"snowflake.account.sequences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetSequences()).ToDataRes(types.Array(types.Resource("snowflake.sequence")))
+	},
+	"snowflake.account.fileFormats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetFileFormats()).ToDataRes(types.Array(types.Resource("snowflake.fileFormat")))
 	},
 	"snowflake.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetName()).ToDataRes(types.String)
@@ -877,6 +909,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.database.eventTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetEventTables()).ToDataRes(types.Array(types.Resource("snowflake.eventTable")))
+	},
+	"snowflake.database.streams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetStreams()).ToDataRes(types.Array(types.Resource("snowflake.stream")))
+	},
+	"snowflake.database.pipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetPipes()).ToDataRes(types.Array(types.Resource("snowflake.pipe")))
+	},
+	"snowflake.database.sequences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetSequences()).ToDataRes(types.Array(types.Resource("snowflake.sequence")))
+	},
+	"snowflake.database.fileFormats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetFileFormats()).ToDataRes(types.Array(types.Resource("snowflake.fileFormat")))
 	},
 	"snowflake.warehouse.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeWarehouse).GetName()).ToDataRes(types.String)
@@ -1997,6 +2041,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.externalTable.fileFormatType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeExternalTable).GetFileFormatType()).ToDataRes(types.String)
 	},
+	"snowflake.externalTable.fileFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeExternalTable).GetFileFormat()).ToDataRes(types.Resource("snowflake.fileFormat"))
+	},
 	"snowflake.externalTable.tableFormat": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeExternalTable).GetTableFormat()).ToDataRes(types.String)
 	},
@@ -2182,6 +2229,171 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.eventTable.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeEventTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.stream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.stream.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.stream.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.stream.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.stream.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
+	"snowflake.stream.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.stream.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.stream.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetTable()).ToDataRes(types.Resource("snowflake.table"))
+	},
+	"snowflake.stream.baseTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetBaseTables()).ToDataRes(types.Array(types.Resource("snowflake.table")))
+	},
+	"snowflake.stream.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetSourceType()).ToDataRes(types.String)
+	},
+	"snowflake.stream.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetType()).ToDataRes(types.String)
+	},
+	"snowflake.stream.stale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetStale()).ToDataRes(types.Bool)
+	},
+	"snowflake.stream.staleAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetStaleAfter()).ToDataRes(types.Time)
+	},
+	"snowflake.stream.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetMode()).ToDataRes(types.String)
+	},
+	"snowflake.stream.invalidReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetInvalidReason()).ToDataRes(types.String)
+	},
+	"snowflake.stream.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.stream.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeStream).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.pipe.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.pipe.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
+	"snowflake.pipe.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.pipe.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetDefinition()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.integration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetIntegration()).ToDataRes(types.Resource("snowflake.notificationIntegration"))
+	},
+	"snowflake.pipe.errorIntegration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetErrorIntegration()).ToDataRes(types.Resource("snowflake.notificationIntegration"))
+	},
+	"snowflake.pipe.notificationChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetNotificationChannel()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetPattern()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.invalidReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetInvalidReason()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.pipe.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakePipe).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.sequence.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.sequence.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.sequence.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.sequence.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.sequence.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
+	"snowflake.sequence.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.sequence.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.sequence.nextValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetNextValue()).ToDataRes(types.Int)
+	},
+	"snowflake.sequence.interval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetInterval()).ToDataRes(types.Int)
+	},
+	"snowflake.sequence.ordered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetOrdered()).ToDataRes(types.Bool)
+	},
+	"snowflake.sequence.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.sequence.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSequence).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.fileFormat.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.fileFormat.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"snowflake.fileFormat.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetSchemaName()).ToDataRes(types.String)
+	},
+	"snowflake.fileFormat.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetDatabase()).ToDataRes(types.Resource("snowflake.database"))
+	},
+	"snowflake.fileFormat.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetSchema()).ToDataRes(types.Resource("snowflake.schema"))
+	},
+	"snowflake.fileFormat.ownerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetOwnerRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.fileFormat.ownerRoleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetOwnerRoleType()).ToDataRes(types.String)
+	},
+	"snowflake.fileFormat.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetType()).ToDataRes(types.String)
+	},
+	"snowflake.fileFormat.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetOptions()).ToDataRes(types.Dict)
+	},
+	"snowflake.fileFormat.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetComment()).ToDataRes(types.String)
+	},
+	"snowflake.fileFormat.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeFileFormat).GetCreatedAt()).ToDataRes(types.Time)
 	},
 }
 
@@ -2385,6 +2597,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.account.eventTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAccount).EventTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.streams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Streams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.pipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Pipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.sequences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).Sequences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.fileFormats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).FileFormats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2997,6 +3225,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.database.eventTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).EventTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.streams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Streams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.pipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Pipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.sequences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Sequences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.fileFormats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).FileFormats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.warehouse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4607,6 +4851,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeExternalTable).FileFormatType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.externalTable.fileFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeExternalTable).FileFormat, ok = plugin.RawToTValue[*mqlSnowflakeFileFormat](v.Value, v.Error)
+		return
+	},
 	"snowflake.externalTable.tableFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeExternalTable).TableFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4867,6 +5115,242 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeEventTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"snowflake.stream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.stream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Table, ok = plugin.RawToTValue[*mqlSnowflakeTable](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.baseTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).BaseTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.stale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Stale, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.staleAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).StaleAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.invalidReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).InvalidReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.stream.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeStream).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.pipe.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.integration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Integration, ok = plugin.RawToTValue[*mqlSnowflakeNotificationIntegration](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.errorIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).ErrorIntegration, ok = plugin.RawToTValue[*mqlSnowflakeNotificationIntegration](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.notificationChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).NotificationChannel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.invalidReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).InvalidReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.pipe.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakePipe).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.sequence.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.nextValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).NextValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.interval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).Interval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.ordered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).Ordered, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.sequence.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSequence).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.fileFormat.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).Database, ok = plugin.RawToTValue[*mqlSnowflakeDatabase](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).Schema, ok = plugin.RawToTValue[*mqlSnowflakeSchema](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.ownerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).OwnerRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.ownerRoleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).OwnerRoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).Options, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.fileFormat.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeFileFormat).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4992,6 +5476,10 @@ type mqlSnowflakeAccount struct {
 	MaterializedViews          plugin.TValue[[]any]
 	DynamicTables              plugin.TValue[[]any]
 	EventTables                plugin.TValue[[]any]
+	Streams                    plugin.TValue[[]any]
+	Pipes                      plugin.TValue[[]any]
+	Sequences                  plugin.TValue[[]any]
+	FileFormats                plugin.TValue[[]any]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -5698,6 +6186,70 @@ func (c *mqlSnowflakeAccount) GetEventTables() *plugin.TValue[[]any] {
 		}
 
 		return c.eventTables()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Streams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "streams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streams()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetPipes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pipes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "pipes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pipes()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetSequences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sequences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "sequences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sequences()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetFileFormats() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileFormats, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "fileFormats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileFormats()
 	})
 }
 
@@ -6808,6 +7360,10 @@ type mqlSnowflakeDatabase struct {
 	MaterializedViews plugin.TValue[[]any]
 	DynamicTables     plugin.TValue[[]any]
 	EventTables       plugin.TValue[[]any]
+	Streams           plugin.TValue[[]any]
+	Pipes             plugin.TValue[[]any]
+	Sequences         plugin.TValue[[]any]
+	FileFormats       plugin.TValue[[]any]
 }
 
 // createSnowflakeDatabase creates a new instance of this resource
@@ -7079,6 +7635,70 @@ func (c *mqlSnowflakeDatabase) GetEventTables() *plugin.TValue[[]any] {
 		}
 
 		return c.eventTables()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Streams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "streams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streams()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetPipes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pipes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "pipes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pipes()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetSequences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sequences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "sequences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sequences()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetFileFormats() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileFormats, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "fileFormats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileFormats()
 	})
 }
 
@@ -10396,6 +11016,7 @@ type mqlSnowflakeExternalTable struct {
 	Cloud               plugin.TValue[string]
 	Region              plugin.TValue[string]
 	FileFormatType      plugin.TValue[string]
+	FileFormat          plugin.TValue[*mqlSnowflakeFileFormat]
 	TableFormat         plugin.TValue[string]
 	NotificationChannel plugin.TValue[string]
 	Invalid             plugin.TValue[bool]
@@ -10532,6 +11153,22 @@ func (c *mqlSnowflakeExternalTable) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeExternalTable) GetFileFormatType() *plugin.TValue[string] {
 	return &c.FileFormatType
+}
+
+func (c *mqlSnowflakeExternalTable) GetFileFormat() *plugin.TValue[*mqlSnowflakeFileFormat] {
+	return plugin.GetOrCompute[*mqlSnowflakeFileFormat](&c.FileFormat, func() (*mqlSnowflakeFileFormat, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.externalTable", c.__id, "fileFormat")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeFileFormat), nil
+			}
+		}
+
+		return c.fileFormat()
+	})
 }
 
 func (c *mqlSnowflakeExternalTable) GetTableFormat() *plugin.TValue[string] {
@@ -11082,5 +11719,628 @@ func (c *mqlSnowflakeEventTable) GetComment() *plugin.TValue[string] {
 }
 
 func (c *mqlSnowflakeEventTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlSnowflakeStream for the snowflake.stream resource
+type mqlSnowflakeStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeStreamInternal
+	Name          plugin.TValue[string]
+	DatabaseName  plugin.TValue[string]
+	SchemaName    plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
+	Schema        plugin.TValue[*mqlSnowflakeSchema]
+	OwnerRole     plugin.TValue[*mqlSnowflakeRole]
+	OwnerRoleType plugin.TValue[string]
+	Table         plugin.TValue[*mqlSnowflakeTable]
+	BaseTables    plugin.TValue[[]any]
+	SourceType    plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Stale         plugin.TValue[bool]
+	StaleAfter    plugin.TValue[*time.Time]
+	Mode          plugin.TValue[string]
+	InvalidReason plugin.TValue[string]
+	Comment       plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+}
+
+// createSnowflakeStream creates a new instance of this resource
+func createSnowflakeStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.stream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeStream) MqlName() string {
+	return "snowflake.stream"
+}
+
+func (c *mqlSnowflakeStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeStream) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeStream) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeStream) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.stream", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeStream) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.stream", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlSnowflakeStream) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.stream", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
+}
+
+func (c *mqlSnowflakeStream) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeStream) GetTable() *plugin.TValue[*mqlSnowflakeTable] {
+	return plugin.GetOrCompute[*mqlSnowflakeTable](&c.Table, func() (*mqlSnowflakeTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.stream", c.__id, "table")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeTable), nil
+			}
+		}
+
+		return c.table()
+	})
+}
+
+func (c *mqlSnowflakeStream) GetBaseTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BaseTables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.stream", c.__id, "baseTables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.baseTables()
+	})
+}
+
+func (c *mqlSnowflakeStream) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlSnowflakeStream) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSnowflakeStream) GetStale() *plugin.TValue[bool] {
+	return &c.Stale
+}
+
+func (c *mqlSnowflakeStream) GetStaleAfter() *plugin.TValue[*time.Time] {
+	return &c.StaleAfter
+}
+
+func (c *mqlSnowflakeStream) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlSnowflakeStream) GetInvalidReason() *plugin.TValue[string] {
+	return &c.InvalidReason
+}
+
+func (c *mqlSnowflakeStream) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeStream) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlSnowflakePipe for the snowflake.pipe resource
+type mqlSnowflakePipe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakePipeInternal
+	Name                plugin.TValue[string]
+	DatabaseName        plugin.TValue[string]
+	SchemaName          plugin.TValue[string]
+	Database            plugin.TValue[*mqlSnowflakeDatabase]
+	Schema              plugin.TValue[*mqlSnowflakeSchema]
+	OwnerRole           plugin.TValue[*mqlSnowflakeRole]
+	OwnerRoleType       plugin.TValue[string]
+	Definition          plugin.TValue[string]
+	Integration         plugin.TValue[*mqlSnowflakeNotificationIntegration]
+	ErrorIntegration    plugin.TValue[*mqlSnowflakeNotificationIntegration]
+	NotificationChannel plugin.TValue[string]
+	Pattern             plugin.TValue[string]
+	InvalidReason       plugin.TValue[string]
+	Comment             plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+}
+
+// createSnowflakePipe creates a new instance of this resource
+func createSnowflakePipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakePipe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.pipe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakePipe) MqlName() string {
+	return "snowflake.pipe"
+}
+
+func (c *mqlSnowflakePipe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakePipe) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakePipe) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakePipe) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakePipe) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.pipe", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakePipe) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.pipe", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlSnowflakePipe) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.pipe", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
+}
+
+func (c *mqlSnowflakePipe) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakePipe) GetDefinition() *plugin.TValue[string] {
+	return &c.Definition
+}
+
+func (c *mqlSnowflakePipe) GetIntegration() *plugin.TValue[*mqlSnowflakeNotificationIntegration] {
+	return plugin.GetOrCompute[*mqlSnowflakeNotificationIntegration](&c.Integration, func() (*mqlSnowflakeNotificationIntegration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.pipe", c.__id, "integration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeNotificationIntegration), nil
+			}
+		}
+
+		return c.integration()
+	})
+}
+
+func (c *mqlSnowflakePipe) GetErrorIntegration() *plugin.TValue[*mqlSnowflakeNotificationIntegration] {
+	return plugin.GetOrCompute[*mqlSnowflakeNotificationIntegration](&c.ErrorIntegration, func() (*mqlSnowflakeNotificationIntegration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.pipe", c.__id, "errorIntegration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeNotificationIntegration), nil
+			}
+		}
+
+		return c.errorIntegration()
+	})
+}
+
+func (c *mqlSnowflakePipe) GetNotificationChannel() *plugin.TValue[string] {
+	return &c.NotificationChannel
+}
+
+func (c *mqlSnowflakePipe) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlSnowflakePipe) GetInvalidReason() *plugin.TValue[string] {
+	return &c.InvalidReason
+}
+
+func (c *mqlSnowflakePipe) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakePipe) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlSnowflakeSequence for the snowflake.sequence resource
+type mqlSnowflakeSequence struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeSequenceInternal
+	Name          plugin.TValue[string]
+	DatabaseName  plugin.TValue[string]
+	SchemaName    plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
+	Schema        plugin.TValue[*mqlSnowflakeSchema]
+	OwnerRole     plugin.TValue[*mqlSnowflakeRole]
+	OwnerRoleType plugin.TValue[string]
+	NextValue     plugin.TValue[int64]
+	Interval      plugin.TValue[int64]
+	Ordered       plugin.TValue[bool]
+	Comment       plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+}
+
+// createSnowflakeSequence creates a new instance of this resource
+func createSnowflakeSequence(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeSequence{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.sequence", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeSequence) MqlName() string {
+	return "snowflake.sequence"
+}
+
+func (c *mqlSnowflakeSequence) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeSequence) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeSequence) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeSequence) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeSequence) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.sequence", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeSequence) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.sequence", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlSnowflakeSequence) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.sequence", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
+}
+
+func (c *mqlSnowflakeSequence) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeSequence) GetNextValue() *plugin.TValue[int64] {
+	return &c.NextValue
+}
+
+func (c *mqlSnowflakeSequence) GetInterval() *plugin.TValue[int64] {
+	return &c.Interval
+}
+
+func (c *mqlSnowflakeSequence) GetOrdered() *plugin.TValue[bool] {
+	return &c.Ordered
+}
+
+func (c *mqlSnowflakeSequence) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeSequence) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlSnowflakeFileFormat for the snowflake.fileFormat resource
+type mqlSnowflakeFileFormat struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSnowflakeFileFormatInternal
+	Name          plugin.TValue[string]
+	DatabaseName  plugin.TValue[string]
+	SchemaName    plugin.TValue[string]
+	Database      plugin.TValue[*mqlSnowflakeDatabase]
+	Schema        plugin.TValue[*mqlSnowflakeSchema]
+	OwnerRole     plugin.TValue[*mqlSnowflakeRole]
+	OwnerRoleType plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Options       plugin.TValue[any]
+	Comment       plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+}
+
+// createSnowflakeFileFormat creates a new instance of this resource
+func createSnowflakeFileFormat(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeFileFormat{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.fileFormat", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeFileFormat) MqlName() string {
+	return "snowflake.fileFormat"
+}
+
+func (c *mqlSnowflakeFileFormat) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeFileFormat) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeFileFormat) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlSnowflakeFileFormat) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlSnowflakeFileFormat) GetDatabase() *plugin.TValue[*mqlSnowflakeDatabase] {
+	return plugin.GetOrCompute[*mqlSnowflakeDatabase](&c.Database, func() (*mqlSnowflakeDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.fileFormat", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlSnowflakeFileFormat) GetSchema() *plugin.TValue[*mqlSnowflakeSchema] {
+	return plugin.GetOrCompute[*mqlSnowflakeSchema](&c.Schema, func() (*mqlSnowflakeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.fileFormat", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlSnowflakeFileFormat) GetOwnerRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.OwnerRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.fileFormat", c.__id, "ownerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.ownerRole()
+	})
+}
+
+func (c *mqlSnowflakeFileFormat) GetOwnerRoleType() *plugin.TValue[string] {
+	return &c.OwnerRoleType
+}
+
+func (c *mqlSnowflakeFileFormat) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSnowflakeFileFormat) GetOptions() *plugin.TValue[any] {
+	return &c.Options
+}
+
+func (c *mqlSnowflakeFileFormat) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlSnowflakeFileFormat) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
