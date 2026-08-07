@@ -108,7 +108,10 @@ func TestGetStorageContentTagsOrigin(t *testing.T) {
 		{
 			"volid": "local:backup/vzdump-qemu-100-2024_01_01-00_00_00.vma.zst",
 			"ctime": 1704067200, "size": 1073741824, "vmid": 100,
-			"format": "vma.zst", "protected": true, "encrypted": "ab:cd",
+			// Proxmox is Perl and sends 1, not JSON true. Using the real
+			// wire format here is the point: a plain bool field decodes this
+			// as false and the test would still pass.
+			"format": "vma.zst", "protected": 1, "encrypted": "ab:cd",
 			"verification": map[string]any{"state": "ok", "upid": "UPID:..."},
 		},
 	})
@@ -120,7 +123,7 @@ func TestGetStorageContentTagsOrigin(t *testing.T) {
 	require.Equal(t, "local", content[0].Storage)
 	require.Equal(t, "backup", content[0].ContentType())
 	require.Equal(t, int64(1704067200), content[0].CTime)
-	require.True(t, content[0].Protected)
+	require.True(t, content[0].Protected.Bool())
 	require.Equal(t, "ab:cd", content[0].Encrypted)
 	require.Equal(t, "ok", content[0].Verification["state"])
 }

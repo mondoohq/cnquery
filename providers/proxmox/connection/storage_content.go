@@ -18,15 +18,15 @@ type StorageContent struct {
 	VolID string `json:"volid"`
 	// Content is the volume class. PVE returns it on most storage plugins but
 	// does not guarantee it, so ContentType() falls back to the volid.
-	Content   string `json:"content"`
-	Format    string `json:"format"`
-	Size      int64  `json:"size"`
-	Used      int64  `json:"used"`
-	CTime     int64  `json:"ctime"`
-	VMID      int    `json:"vmid"`
-	Notes     string `json:"notes"`
-	Parent    string `json:"parent"`
-	Protected bool   `json:"protected"`
+	Content   string  `json:"content"`
+	Format    string  `json:"format"`
+	Size      int64   `json:"size"`
+	Used      int64   `json:"used"`
+	CTime     int64   `json:"ctime"`
+	VMID      int     `json:"vmid"`
+	Notes     string  `json:"notes"`
+	Parent    string  `json:"parent"`
+	Protected PveBool `json:"protected"`
 	// Encrypted is the PBS encryption marker: either a key fingerprint or the
 	// literal "1". Empty when the volume is not encrypted.
 	Encrypted string `json:"encrypted"`
@@ -178,10 +178,9 @@ func (c *PveConnection) ListStorageContent(s StorageInfo) ([]StorageContent, err
 // backupIndex memoizes the cluster-wide backup listing so that asking every
 // guest for its backups costs one sweep instead of one sweep per guest.
 type backupIndex struct {
-	once    sync.Once
-	byVMID  map[int][]StorageContent
-	err     error
-	scanned bool
+	once   sync.Once
+	byVMID map[int][]StorageContent
+	err    error
 }
 
 // GetBackupsForGuest returns every backup volume owned by a guest, across all
@@ -218,7 +217,6 @@ func (c *PveConnection) buildBackupIndex() {
 		}
 	}
 	c.backups.byVMID = index
-	c.backups.scanned = true
 }
 
 // storageHoldsBackups reports whether a storage is configured to accept backup

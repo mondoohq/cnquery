@@ -113,22 +113,22 @@ func (c *PveConnection) cephGet(route string, result any) (bool, error) {
 // every field is populated for every daemon type; MDS adds Rank, FSName, and
 // StandbyReplay, and MON adds Rank and Quorum.
 type CephDaemon struct {
-	Name             string `json:"name"`
-	Host             string `json:"host"`
-	Addr             string `json:"addr"`
-	State            string `json:"state"`
-	Service          bool   `json:"service"`
-	DirExists        bool   `json:"direxists"`
-	CephVersion      string `json:"ceph_version"`
-	CephVersionShort string `json:"ceph_version_short"`
+	Name             string  `json:"name"`
+	Host             string  `json:"host"`
+	Addr             string  `json:"addr"`
+	State            string  `json:"state"`
+	Service          PveBool `json:"service"`
+	DirExists        PveBool `json:"direxists"`
+	CephVersion      string  `json:"ceph_version"`
+	CephVersionShort string  `json:"ceph_version_short"`
 
 	// mon + mds
 	Rank *int `json:"rank"`
 	// mon only
-	Quorum bool `json:"quorum"`
+	Quorum PveBool `json:"quorum"`
 	// mds only
-	FSName        string `json:"fs_name"`
-	StandbyReplay bool   `json:"standby_replay"`
+	FSName        string  `json:"fs_name"`
+	StandbyReplay PveBool `json:"standby_replay"`
 }
 
 func (c *PveConnection) GetCephMonitors() ([]CephDaemon, error) {
@@ -203,12 +203,12 @@ func (c *PveConnection) GetCephFileSystems() ([]CephFS, error) {
 // ---------------------------------------------------------------------------
 
 type CephConfigEntry struct {
-	Section            string `json:"section"`
-	Name               string `json:"name"`
-	Value              string `json:"value"`
-	Mask               string `json:"mask"`
-	Level              string `json:"level"`
-	CanUpdateAtRuntime bool   `json:"can_update_at_runtime"`
+	Section            string  `json:"section"`
+	Name               string  `json:"name"`
+	Value              string  `json:"value"`
+	Mask               string  `json:"mask"`
+	Level              string  `json:"level"`
+	CanUpdateAtRuntime PveBool `json:"can_update_at_runtime"`
 }
 
 func (c *PveConnection) GetCephConfig() ([]CephConfigEntry, error) {

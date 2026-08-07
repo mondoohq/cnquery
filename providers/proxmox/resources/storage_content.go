@@ -105,7 +105,7 @@ func storageVolumeArgs(v connection.StorageContent) map[string]*llx.RawData {
 		"vmid":                  llx.IntData(int64(v.VMID)),
 		"encrypted":             llx.BoolData(v.Encrypted != ""),
 		"encryptionFingerprint": llx.StringData(v.Encrypted),
-		"protected":             llx.BoolData(v.Protected),
+		"protected":             llx.BoolData(v.Protected.Bool()),
 		"verification":          llx.DictData(verification),
 		"notes":                 llx.StringData(v.Notes),
 		"parent":                llx.StringData(v.Parent),

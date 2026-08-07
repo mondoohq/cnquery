@@ -42,7 +42,7 @@ func (r *mqlProxmox) sdnControllers() ([]any, error) {
 			"state":        llx.StringData(c.State),
 			"asn":          llx.IntData(int64(c.ASN)),
 			"peers":        llx.StringData(c.Peers),
-			"ebgp":         llx.BoolData(c.EBGP),
+			"ebgp":         llx.BoolData(c.EBGP.Bool()),
 			"ebgpMultihop": llx.IntData(int64(c.EBGPMultihop)),
 			"bgpMode":      llx.StringData(c.BGPMode),
 			"loopback":     llx.StringData(c.Loopback),
@@ -114,7 +114,7 @@ func (r *mqlProxmox) notificationTargets() ([]any, error) {
 			"name":     llx.StringData(t.Name),
 			"type":     llx.StringData(t.Type),
 			"origin":   llx.StringData(t.Origin),
-			"disabled": llx.BoolData(t.Disable),
+			"disabled": llx.BoolData(t.Disable.Bool()),
 			"comment":  llx.StringData(t.Comment),
 		})
 		if err != nil {
@@ -139,10 +139,10 @@ func (r *mqlProxmox) notificationMatchers() ([]any, error) {
 			"matchSeverity": stringList(m.MatchSeverity),
 			"matchField":    stringList(m.MatchField),
 			"matchCalendar": stringList(m.MatchCalendar),
-			"invertMatch":   llx.BoolData(m.InvertMatch),
+			"invertMatch":   llx.BoolData(m.InvertMatch.Bool()),
 			"targets":       stringList(m.Target),
 			"origin":        llx.StringData(m.Origin),
-			"disabled":      llx.BoolData(m.Disable),
+			"disabled":      llx.BoolData(m.Disable.Bool()),
 			"comment":       llx.StringData(m.Comment),
 		})
 		if err != nil {
@@ -172,7 +172,7 @@ func (r *mqlProxmox) smtpEndpoints() ([]any, error) {
 			"mailto":      stringList(e.Mailto),
 			"mailtoUser":  stringList(e.MailtoUser),
 			"origin":      llx.StringData(e.Origin),
-			"disabled":    llx.BoolData(e.Disable),
+			"disabled":    llx.BoolData(e.Disable.Bool()),
 			"comment":     llx.StringData(e.Comment),
 		})
 		if err != nil {
@@ -198,7 +198,7 @@ func (r *mqlProxmox) sendmailEndpoints() ([]any, error) {
 			"mailto":      stringList(e.Mailto),
 			"mailtoUser":  stringList(e.MailtoUser),
 			"origin":      llx.StringData(e.Origin),
-			"disabled":    llx.BoolData(e.Disable),
+			"disabled":    llx.BoolData(e.Disable.Bool()),
 			"comment":     llx.StringData(e.Comment),
 		})
 		if err != nil {
@@ -221,7 +221,7 @@ func (r *mqlProxmox) gotifyEndpoints() ([]any, error) {
 			"name":     llx.StringData(e.Name),
 			"server":   llx.StringData(e.Server),
 			"origin":   llx.StringData(e.Origin),
-			"disabled": llx.BoolData(e.Disable),
+			"disabled": llx.BoolData(e.Disable.Bool()),
 			"comment":  llx.StringData(e.Comment),
 		})
 		if err != nil {
@@ -249,7 +249,7 @@ func (r *mqlProxmox) webhookEndpoints() ([]any, error) {
 			"headerNames": stringList(connection.PropertyStringNames(e.Header)),
 			"secretNames": stringList(connection.PropertyStringNames(e.Secret)),
 			"origin":      llx.StringData(e.Origin),
-			"disabled":    llx.BoolData(e.Disable),
+			"disabled":    llx.BoolData(e.Disable.Bool()),
 			"comment":     llx.StringData(e.Comment),
 		})
 		if err != nil {
@@ -277,7 +277,7 @@ func (r *mqlProxmox) metricServers() ([]any, error) {
 			"type":     llx.StringData(s.Type),
 			"server":   llx.StringData(s.Server),
 			"port":     llx.IntData(int64(s.Port)),
-			"disabled": llx.BoolData(s.Disable),
+			"disabled": llx.BoolData(s.Disable.Bool()),
 		})
 		if err != nil {
 			return nil, err
@@ -323,7 +323,7 @@ func (r *mqlProxmox) acmePlugins() ([]any, error) {
 			"type":            llx.StringData(p.Type),
 			"api":             llx.StringData(p.API),
 			"nodes":           llx.StringData(p.Nodes),
-			"disabled":        llx.BoolData(p.Disable),
+			"disabled":        llx.BoolData(p.Disable.Bool()),
 			"validationDelay": llx.IntData(int64(p.ValidationDelay)),
 		})
 		if err != nil {

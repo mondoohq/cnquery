@@ -34,11 +34,11 @@ func (c *PveConnection) optionalGet(path string, result any) error {
 // ---------------------------------------------------------------------------
 
 type NotificationTarget struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Origin  string `json:"origin"`
-	Disable bool   `json:"disable"`
-	Comment string `json:"comment"`
+	Name    string  `json:"name"`
+	Type    string  `json:"type"`
+	Origin  string  `json:"origin"`
+	Disable PveBool `json:"disable"`
+	Comment string  `json:"comment"`
 }
 
 func (c *PveConnection) GetNotificationTargets() ([]NotificationTarget, error) {
@@ -52,10 +52,10 @@ type NotificationMatcher struct {
 	MatchSeverity []string `json:"match-severity"`
 	MatchField    []string `json:"match-field"`
 	MatchCalendar []string `json:"match-calendar"`
-	InvertMatch   bool     `json:"invert-match"`
+	InvertMatch   PveBool  `json:"invert-match"`
 	Target        []string `json:"target"`
 	Origin        string   `json:"origin"`
-	Disable       bool     `json:"disable"`
+	Disable       PveBool  `json:"disable"`
 	Comment       string   `json:"comment"`
 }
 
@@ -77,7 +77,7 @@ type SMTPEndpoint struct {
 	Mailto      []string `json:"mailto"`
 	MailtoUser  []string `json:"mailto-user"`
 	Origin      string   `json:"origin"`
-	Disable     bool     `json:"disable"`
+	Disable     PveBool  `json:"disable"`
 	Comment     string   `json:"comment"`
 }
 
@@ -93,7 +93,7 @@ type SendmailEndpoint struct {
 	Mailto      []string `json:"mailto"`
 	MailtoUser  []string `json:"mailto-user"`
 	Origin      string   `json:"origin"`
-	Disable     bool     `json:"disable"`
+	Disable     PveBool  `json:"disable"`
 	Comment     string   `json:"comment"`
 }
 
@@ -103,11 +103,11 @@ func (c *PveConnection) GetSendmailEndpoints() ([]SendmailEndpoint, error) {
 }
 
 type GotifyEndpoint struct {
-	Name    string `json:"name"`
-	Server  string `json:"server"`
-	Origin  string `json:"origin"`
-	Disable bool   `json:"disable"`
-	Comment string `json:"comment"`
+	Name    string  `json:"name"`
+	Server  string  `json:"server"`
+	Origin  string  `json:"origin"`
+	Disable PveBool `json:"disable"`
+	Comment string  `json:"comment"`
 }
 
 func (c *PveConnection) GetGotifyEndpoints() ([]GotifyEndpoint, error) {
@@ -125,7 +125,7 @@ type WebhookEndpoint struct {
 	Header  []string `json:"header"`
 	Secret  []string `json:"secret"`
 	Origin  string   `json:"origin"`
-	Disable bool     `json:"disable"`
+	Disable PveBool  `json:"disable"`
 	Comment string   `json:"comment"`
 }
 
@@ -160,11 +160,11 @@ func PropertyStringNames(entries []string) []string {
 // MetricServer is an external InfluxDB or Graphite endpoint the cluster ships
 // metrics to. The API token or shared secret is not returned.
 type MetricServer struct {
-	ID      string `json:"id"`
-	Type    string `json:"type"`
-	Server  string `json:"server"`
-	Port    int    `json:"port"`
-	Disable bool   `json:"disable"`
+	ID      string  `json:"id"`
+	Type    string  `json:"type"`
+	Server  string  `json:"server"`
+	Port    int     `json:"port"`
+	Disable PveBool `json:"disable"`
 }
 
 func (c *PveConnection) GetMetricServers() ([]MetricServer, error) {
@@ -188,12 +188,12 @@ func (c *PveConnection) GetACMEAccounts() ([]ACMEAccount, error) {
 // ACMEPlugin is a DNS-01 challenge plugin. Reading it needs Sys.Modify, which
 // no audit role carries, so this is commonly empty on a read-only token.
 type ACMEPlugin struct {
-	Plugin          string `json:"plugin"`
-	Type            string `json:"type"`
-	API             string `json:"api"`
-	Nodes           string `json:"nodes"`
-	Disable         bool   `json:"disable"`
-	ValidationDelay int    `json:"validation-delay"`
+	Plugin          string  `json:"plugin"`
+	Type            string  `json:"type"`
+	API             string  `json:"api"`
+	Nodes           string  `json:"nodes"`
+	Disable         PveBool `json:"disable"`
+	ValidationDelay int     `json:"validation-delay"`
 }
 
 func (c *PveConnection) GetACMEPlugins() ([]ACMEPlugin, error) {
@@ -280,20 +280,20 @@ func (c *PveConnection) GetUSBMappings() ([]DeviceMapping, error) {
 // ---------------------------------------------------------------------------
 
 type SDNController struct {
-	Controller   string `json:"controller"`
-	Type         string `json:"type"`
-	Node         string `json:"node"`
-	Nodes        string `json:"nodes"`
-	State        string `json:"state"`
-	ASN          int    `json:"asn"`
-	Peers        string `json:"peers"`
-	EBGP         bool   `json:"ebgp"`
-	EBGPMultihop int    `json:"ebgp-multihop"`
-	BGPMode      string `json:"bgp-mode"`
-	Loopback     string `json:"loopback"`
-	ISISDomain   string `json:"isis-domain"`
-	ISISNet      string `json:"isis-net"`
-	ISISIfaces   string `json:"isis-ifaces"`
+	Controller   string  `json:"controller"`
+	Type         string  `json:"type"`
+	Node         string  `json:"node"`
+	Nodes        string  `json:"nodes"`
+	State        string  `json:"state"`
+	ASN          int     `json:"asn"`
+	Peers        string  `json:"peers"`
+	EBGP         PveBool `json:"ebgp"`
+	EBGPMultihop int     `json:"ebgp-multihop"`
+	BGPMode      string  `json:"bgp-mode"`
+	Loopback     string  `json:"loopback"`
+	ISISDomain   string  `json:"isis-domain"`
+	ISISNet      string  `json:"isis-net"`
+	ISISIfaces   string  `json:"isis-ifaces"`
 }
 
 func (c *PveConnection) GetSDNControllers() ([]SDNController, error) {

@@ -121,24 +121,24 @@ func TestGetCephMonitors(t *testing.T) {
 	f.route("/nodes/pve1/ceph/mon", []map[string]any{
 		{
 			"name": "pve1", "host": "pve1", "addr": "10.0.0.1:6789/0",
-			"quorum": true, "rank": 0, "state": "running",
-			"service": true, "direxists": true,
+			"quorum": 1, "rank": 0, "state": "running",
+			"service": 1, "direxists": 1,
 			"ceph_version_short": "19.2.0",
 		},
 		{
-			"name": "pve2", "host": "pve2", "quorum": false, "state": "stopped",
+			"name": "pve2", "host": "pve2", "quorum": 0, "state": "stopped",
 		},
 	})
 
 	mons, err := f.conn().GetCephMonitors()
 	require.NoError(t, err)
 	require.Len(t, mons, 2)
-	require.True(t, mons[0].Quorum)
+	require.True(t, mons[0].Quorum.Bool())
 	require.Equal(t, "10.0.0.1:6789/0", mons[0].Addr)
 	require.Equal(t, "19.2.0", mons[0].CephVersionShort)
 	require.NotNil(t, mons[0].Rank)
 	require.Equal(t, 0, *mons[0].Rank)
-	require.False(t, mons[1].Quorum)
+	require.False(t, mons[1].Quorum.Bool())
 	require.Nil(t, mons[1].Rank, "an omitted rank must stay null, not read as rank 0")
 }
 
@@ -172,7 +172,7 @@ func TestGetCephConfig(t *testing.T) {
 		{
 			"section": "global", "name": "auth_cluster_required",
 			"value": "cephx", "mask": "", "level": "advanced",
-			"can_update_at_runtime": false,
+			"can_update_at_runtime": 0,
 		},
 	})
 
@@ -181,7 +181,7 @@ func TestGetCephConfig(t *testing.T) {
 	require.Len(t, entries, 1)
 	require.Equal(t, "global", entries[0].Section)
 	require.Equal(t, "cephx", entries[0].Value)
-	require.False(t, entries[0].CanUpdateAtRuntime)
+	require.False(t, entries[0].CanUpdateAtRuntime.Bool())
 }
 
 func TestGetCephCrushRules(t *testing.T) {

@@ -180,7 +180,7 @@ func TestGetSMTPEndpoints(t *testing.T) {
 func TestGetMetricServers(t *testing.T) {
 	f := newFakePVE(t)
 	f.route("/cluster/metrics/server", []map[string]any{
-		{"id": "influx", "type": "influxdb", "server": "10.0.0.9", "port": 8086, "disable": false},
+		{"id": "influx", "type": "influxdb", "server": "10.0.0.9", "port": 8086, "disable": 0},
 	})
 
 	servers, err := f.conn().GetMetricServers()
@@ -188,7 +188,7 @@ func TestGetMetricServers(t *testing.T) {
 	require.Len(t, servers, 1)
 	require.Equal(t, "influxdb", servers[0].Type)
 	require.Equal(t, 8086, servers[0].Port)
-	require.False(t, servers[0].Disable)
+	require.False(t, servers[0].Disable.Bool())
 }
 
 func TestGetCorosyncConfig(t *testing.T) {
@@ -266,7 +266,7 @@ func TestGetSDNControllers(t *testing.T) {
 	f.route("/cluster/sdn/controllers", []map[string]any{
 		{
 			"controller": "evpnctl", "type": "evpn", "asn": 65000,
-			"peers": "10.0.0.1,10.0.0.2", "ebgp": true, "state": "new",
+			"peers": "10.0.0.1,10.0.0.2", "ebgp": 1, "state": "new",
 		},
 	})
 
@@ -274,6 +274,6 @@ func TestGetSDNControllers(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, controllers, 1)
 	require.Equal(t, 65000, controllers[0].ASN)
-	require.True(t, controllers[0].EBGP)
+	require.True(t, controllers[0].EBGP.Bool())
 	require.Equal(t, "new", controllers[0].State)
 }
