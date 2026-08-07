@@ -227,6 +227,7 @@ use (
    ./mql/providers/mikrotik
    ./mql/providers/mistral
    ./mql/providers/mondoo
+   ./mql/providers/mongo
    ./mql/providers/ms365
    ./mql/providers/mssql
    ./mql/providers/mysqldb
