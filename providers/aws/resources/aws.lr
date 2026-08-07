@@ -19866,18 +19866,67 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   prefixListIds []dict
   // Managed prefix lists this rule targets
   prefixLists() []aws.ec2.managedPrefixList
-  // Security group references the rule allows
+  // Security group reference dicts
   //
-  // Each entry carries GroupId and GroupName of the referenced security
-  // group, UserId of the account that owns it, VpcId and
-  // VpcPeeringConnectionId when the reference crosses a VPC peering
+  // Deprecated in favor of peers. Each entry carries GroupId and GroupName of
+  // the referenced security group, UserId of the account that owns it, VpcId
+  // and VpcPeeringConnectionId when the reference crosses a VPC peering
   // connection, PeeringStatus, and an optional Description.
-  userIdGroupPairs []dict
+  userIdGroupPairs @maturity("deprecated") []dict
+  // Security groups the rule allows traffic from or to
+  //
+  // A rule can name another security group instead of an address range, so
+  // that every instance in that group is permitted. These references are what
+  // carries reachability between workloads inside a VPC, and following them
+  // shows which groups can reach a group without any address appearing in the
+  // rule.
+  peers []aws.ec2.securitygroup.ippermission.peer
   // Whether the rule allows traffic from the entire internet
   //
   // True when the IPv4 ranges include `0.0.0.0/0` or the IPv6 ranges include
   // `::/0`.
   includesPublicSource() bool
+}
+
+// Security group named by a security group rule
+//
+// A reference from one security group rule to another security group, which
+// permits every instance in the referenced group rather than an address range.
+// The reference is either within one VPC or across a VPC peering connection,
+// and `peeringConnection` with `peeringStatus` says which and whether the
+// peering is still active: a reference whose peering has been deleted stays on
+// the rule but no longer carries traffic.
+private aws.ec2.securitygroup.ippermission.peer @defaults("groupId accountId peeringStatus") {
+  // ID of the referenced security group
+  groupId string
+  // Name of the referenced security group, returned only for EC2-Classic references
+  groupName string
+  // Account that owns the referenced security group
+  //
+  // Differs from the scanned account when the rule permits a group in another
+  // account across a VPC peering connection.
+  accountId string
+  // Description recorded on the reference
+  description string
+  // State of the VPC peering connection the reference crosses
+  //
+  // Empty when the reference stays inside one VPC. Otherwise one of the
+  // peering connection states, of which only `active` carries traffic.
+  peeringStatus string
+  // Referenced security group
+  //
+  // Null when the group belongs to another account or is reached across a VPC
+  // peering connection, because neither is readable with the credentials
+  // scanning this account. Read groupId and accountId in that case; a null
+  // here means the group was not resolvable, never that the rule does not
+  // reference one.
+  securityGroup() aws.ec2.securitygroup
+  // VPC of the referenced security group, when the reference crosses a peering connection
+  vpc() aws.vpc
+  // VPC peering connection the reference crosses
+  //
+  // Null when the reference stays inside one VPC.
+  peeringConnection() aws.vpc.peeringConnection
 }
 
 // AWS Config
