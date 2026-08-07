@@ -10,18 +10,18 @@ import (
 // Platforms is the static catalog of platforms this provider can emit.
 var Platforms = []*plugin.PlatformInfo{
 	{
-		Name:    "postgres",
+		Name:    "postgresdb",
 		Title:   "PostgreSQL Server",
-		Family:  []string{"postgres"},
+		Family:  []string{"postgresdb"},
 		Kind:    []string{"api"},
-		Runtime: []string{"postgres"},
+		Runtime: []string{"postgresdb"},
 	},
 	{
-		Name:    "postgres-database",
+		Name:    "postgresdb-database",
 		Title:   "PostgreSQL Database",
-		Family:  []string{"postgres"},
+		Family:  []string{"postgresdb"},
 		Kind:    []string{"api"},
-		Runtime: []string{"postgres"},
+		Runtime: []string{"postgresdb"},
 	},
 }
 

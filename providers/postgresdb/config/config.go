@@ -5,22 +5,22 @@ package config
 
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/postgres/connection"
-	"go.mondoo.com/mql/v13/providers/postgres/provider"
+	"go.mondoo.com/mql/v13/providers/postgresdb/connection"
+	"go.mondoo.com/mql/v13/providers/postgresdb/provider"
 )
 
 var Config = plugin.Provider{
-	Name:            "postgres",
-	ID:              "go.mondoo.com/mql/v13/providers/postgres",
+	Name:            "postgresdb",
+	ID:              "go.mondoo.com/mql/v13/providers/postgresdb",
 	Version:         "13.0.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
-			Name:  "postgres",
-			Use:   "postgres [host]",
+			Name:  "postgresdb",
+			Use:   "postgresdb [host]",
 			Short: "a PostgreSQL server",
-			Long: `Use the postgres provider to query a PostgreSQL server.
+			Long: `Use the postgresdb provider to query a PostgreSQL server.
 
 The provider connects to a PostgreSQL server and runs read-only catalog
 queries (pg_catalog and information_schema) to inventory roles, databases,
@@ -31,8 +31,8 @@ By default the provider discovers every connectable database on the server as
 its own asset.
 
 Examples:
-  cnspec shell postgres db.contoso.com --user postgres --ask-pass
-  cnspec scan postgres db.contoso.com --database appdb --sslmode verify-full --sslrootcert ca.pem
+  cnspec shell postgresdb db.contoso.com --user postgres --ask-pass
+  cnspec scan postgresdb db.contoso.com --database appdb --sslmode verify-full --sslrootcert ca.pem
 `,
 			Discovery: []string{
 				connection.DiscoveryAuto,

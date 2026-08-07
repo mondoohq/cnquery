@@ -44,7 +44,7 @@ func policyCommandDesc(code string) string {
 	}
 }
 
-func (r *mqlPostgresSchema) tables() ([]any, error) {
+func (r *mqlPostgresdbSchema) tables() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, r.cacheDatabase)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (r *mqlPostgresSchema) tables() ([]any, error) {
 		if err := rows.Scan(&name, &oid, &relkind, &ownerName, &rlsEnabled, &rlsForced); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.table", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.table", map[string]*llx.RawData{
 			"__id":               llx.StringData(r.__id + "/table/" + name),
 			"name":               llx.StringData(name),
 			"oid":                llx.IntData(oid),
@@ -82,7 +82,7 @@ func (r *mqlPostgresSchema) tables() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		tbl := res.(*mqlPostgresTable)
+		tbl := res.(*mqlPostgresdbTable)
 		tbl.cacheDatabase = r.cacheDatabase
 		tbl.cacheOwner = ownerName
 		list = append(list, tbl)
@@ -90,11 +90,11 @@ func (r *mqlPostgresSchema) tables() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresTable) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbTable) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresTable) privileges() ([]any, error) {
+func (r *mqlPostgresdbTable) privileges() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, r.cacheDatabase)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func (r *mqlPostgresTable) privileges() ([]any, error) {
 		 WHERE c.oid = $1::oid`, r.Oid.Data)
 }
 
-func (r *mqlPostgresTable) policies() ([]any, error) {
+func (r *mqlPostgresdbTable) policies() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, r.cacheDatabase)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func (r *mqlPostgresTable) policies() ([]any, error) {
 		if err := rows.Scan(&name, &cmd, &permissive, &roles, &usingExpr, &checkExpr); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.rlsPolicy", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.rlsPolicy", map[string]*llx.RawData{
 			"__id":            llx.StringData(r.__id + "/policy/" + name),
 			"name":            llx.StringData(name),
 			"command":         llx.StringData(policyCommandDesc(cmd)),

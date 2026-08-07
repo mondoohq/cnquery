@@ -160,7 +160,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Oracle Cloud Interface (OCI)  | `oci`                      | `mql shell oci`                                                                                                                                 |
 | OpenStack project             | `openstack`                | `mql shell openstack --cloud CLOUD_NAME` or<br></br>`mql shell openstack --auth-url AUTH_URL --username USER --password PASSWORD --project-name PROJECT` |
 | Portainer server              | `portainer`                | `mql shell portainer HOST --access-token TOKEN`                                                                                                 |
-| PostgreSQL server             | `postgres`                 | `mql shell postgres --host db.contoso.com --user postgres --ask-pass`                                                                          |
+| PostgreSQL server             | `postgresdb`               | `mql shell postgresdb --host db.contoso.com --user postgres --ask-pass`                                                                        |
 | Proxmox VE                    | `proxmox`                  | `mql shell proxmox --host HOST --token TOKEN`                                                                                                   |
 | Palo Alto Networks PAN-OS     | `panos`                    | `mql shell panos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Running containers            | `docker`                   | `mql shell docker CONTAINER_ID`                                                                                                                 |

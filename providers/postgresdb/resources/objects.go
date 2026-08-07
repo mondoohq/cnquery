@@ -13,7 +13,7 @@ import (
 
 // --- tablespaces ------------------------------------------------------------
 
-func (r *mqlPostgresInstance) tablespaces() ([]any, error) {
+func (r *mqlPostgresdbInstance) tablespaces() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (r *mqlPostgresInstance) tablespaces() ([]any, error) {
 		if err := rows.Scan(&name, &oid, &ownerName, &location); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.tablespace", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.tablespace", map[string]*llx.RawData{
 			"__id":     llx.StringData(r.SystemIdentifier.Data + "/tablespace/" + name),
 			"name":     llx.StringData(name),
 			"oid":      llx.IntData(oid),
@@ -42,18 +42,18 @@ func (r *mqlPostgresInstance) tablespaces() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		ts := res.(*mqlPostgresTablespace)
+		ts := res.(*mqlPostgresdbTablespace)
 		ts.cacheOwner = ownerName
 		list = append(list, ts)
 	}
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresTablespace) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbTablespace) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresTablespace) privileges() ([]any, error) {
+func (r *mqlPostgresdbTablespace) privileges() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func redactOptions(in []string) []any {
 	return out
 }
 
-func (r *mqlPostgresDatabase) foreignServers() ([]any, error) {
+func (r *mqlPostgresdbDatabase) foreignServers() ([]any, error) {
 	if !r.AllowConnections.Data {
 		return []any{}, nil
 	}
@@ -108,7 +108,7 @@ func (r *mqlPostgresDatabase) foreignServers() ([]any, error) {
 		if err := rows.Scan(&name, &srvType, &version, &fdwName, &ownerName, &options); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.foreignServer", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.foreignServer", map[string]*llx.RawData{
 			"__id":    llx.StringData(r.__id + "/foreignserver/" + name),
 			"name":    llx.StringData(name),
 			"type":    llx.StringData(srvType),
@@ -119,7 +119,7 @@ func (r *mqlPostgresDatabase) foreignServers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		fs := res.(*mqlPostgresForeignServer)
+		fs := res.(*mqlPostgresdbForeignServer)
 		fs.cacheOwner = ownerName
 		fs.cacheDatabase = r.Name.Data
 		list = append(list, fs)
@@ -127,11 +127,11 @@ func (r *mqlPostgresDatabase) foreignServers() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresForeignServer) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbForeignServer) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresForeignServer) userMappings() ([]any, error) {
+func (r *mqlPostgresdbForeignServer) userMappings() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, r.cacheDatabase)
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (r *mqlPostgresForeignServer) userMappings() ([]any, error) {
 		if err := rows.Scan(&role, &server, &options); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.userMapping", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.userMapping", map[string]*llx.RawData{
 			"__id":    llx.StringData(r.__id + "/mapping/" + role),
 			"role":    llx.StringData(role),
 			"server":  llx.StringData(server),
@@ -167,7 +167,7 @@ func (r *mqlPostgresForeignServer) userMappings() ([]any, error) {
 
 // --- replication ------------------------------------------------------------
 
-func (r *mqlPostgresInstance) replicationSlots() ([]any, error) {
+func (r *mqlPostgresdbInstance) replicationSlots() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -187,7 +187,7 @@ func (r *mqlPostgresInstance) replicationSlots() ([]any, error) {
 		if err := rows.Scan(&name, &slotType, &active, &database, &temporary); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.replicationSlot", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.replicationSlot", map[string]*llx.RawData{
 			"__id":      llx.StringData(r.SystemIdentifier.Data + "/slot/" + name),
 			"name":      llx.StringData(name),
 			"slotType":  llx.StringData(slotType),
@@ -203,7 +203,7 @@ func (r *mqlPostgresInstance) replicationSlots() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresDatabase) publications() ([]any, error) {
+func (r *mqlPostgresdbDatabase) publications() ([]any, error) {
 	if !r.AllowConnections.Data {
 		return []any{}, nil
 	}
@@ -227,7 +227,7 @@ func (r *mqlPostgresDatabase) publications() ([]any, error) {
 		if err := rows.Scan(&name, &ownerName, &allTables, &insert, &update, &del, &truncate); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.publication", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.publication", map[string]*llx.RawData{
 			"__id":      llx.StringData(r.__id + "/publication/" + name),
 			"name":      llx.StringData(name),
 			"allTables": llx.BoolData(allTables),
@@ -239,7 +239,7 @@ func (r *mqlPostgresDatabase) publications() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		pub := res.(*mqlPostgresPublication)
+		pub := res.(*mqlPostgresdbPublication)
 		pub.cacheOwner = ownerName
 		list = append(list, pub)
 	}
@@ -262,7 +262,7 @@ func sanitizeConnInfo(conninfo string) string {
 	return strings.TrimSpace(s)
 }
 
-func (r *mqlPostgresInstance) subscriptions() ([]any, error) {
+func (r *mqlPostgresdbInstance) subscriptions() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -287,7 +287,7 @@ func (r *mqlPostgresInstance) subscriptions() ([]any, error) {
 		if err := rows.Scan(&name, &ownerName, &enabled, &conninfo); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.subscription", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.subscription", map[string]*llx.RawData{
 			"__id":                llx.StringData(r.SystemIdentifier.Data + "/subscription/" + name),
 			"name":                llx.StringData(name),
 			"enabled":             llx.BoolData(enabled),
@@ -296,17 +296,17 @@ func (r *mqlPostgresInstance) subscriptions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		sub := res.(*mqlPostgresSubscription)
+		sub := res.(*mqlPostgresdbSubscription)
 		sub.cacheOwner = ownerName
 		list = append(list, sub)
 	}
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresPublication) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbPublication) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresSubscription) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbSubscription) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }

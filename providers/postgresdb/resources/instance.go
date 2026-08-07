@@ -11,9 +11,9 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// initPostgresInstance fetches the server's core properties once and populates
+// initPostgresdbInstance fetches the server's core properties once and populates
 // the instance resource. Collections resolve lazily through their accessors.
-func initPostgresInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initPostgresdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// The instance is a singleton with no user-facing key; init always populates
 	// all scalar fields, so only skip when a full set (8: __id + 7 scalars) is
 	// already provided (recording replay or explicit construction).
@@ -71,7 +71,7 @@ func initPostgresInstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return args, nil, nil
 }
 
-func (r *mqlPostgresInstance) settings() ([]any, error) {
+func (r *mqlPostgresdbInstance) settings() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (r *mqlPostgresInstance) settings() ([]any, error) {
 			&bootVal, &resetVal, &pendingRestart); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.setting", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.setting", map[string]*llx.RawData{
 			"__id":           llx.StringData(r.SystemIdentifier.Data + "/setting/" + name),
 			"name":           llx.StringData(name),
 			"setting":        llx.StringData(setting),
@@ -113,7 +113,7 @@ func (r *mqlPostgresInstance) settings() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresInstance) hbaRules() ([]any, error) {
+func (r *mqlPostgresdbInstance) hbaRules() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func (r *mqlPostgresInstance) hbaRules() ([]any, error) {
 			&netmask, &authMethod, &options, &ruleError); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.hbaRule", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.hbaRule", map[string]*llx.RawData{
 			"__id":       llx.StringData(r.SystemIdentifier.Data + "/hba/" + intToStr(lineNumber)),
 			"lineNumber": llx.IntData(lineNumber),
 			"type":       llx.StringData(typ),

@@ -13,12 +13,12 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
-	"go.mondoo.com/mql/v13/providers/postgres/connection"
-	"go.mondoo.com/mql/v13/providers/postgres/resources"
+	"go.mondoo.com/mql/v13/providers/postgresdb/connection"
+	"go.mondoo.com/mql/v13/providers/postgresdb/resources"
 )
 
 const (
-	DefaultConnectionType = "postgres"
+	DefaultConnectionType = "postgresdb"
 )
 
 type Service struct {
@@ -115,7 +115,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.PostgresConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.PostgresdbConnection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
@@ -123,12 +123,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	conf := asset.Connections[0]
 	runtime, err := s.AddRuntime(conf, func(connId uint32) (*plugin.Runtime, error) {
-		var conn *connection.PostgresConnection
+		var conn *connection.PostgresdbConnection
 		var err error
 
 		switch conf.Type {
 		default:
-			conn, err = connection.NewPostgresConnection(connId, asset, conf)
+			conn, err = connection.NewPostgresdbConnection(connId, asset, conf)
 		}
 		if err != nil {
 			return nil, err
@@ -157,10 +157,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
-	return runtime.Connection.(*connection.PostgresConnection), nil
+	return runtime.Connection.(*connection.PostgresdbConnection), nil
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.PostgresConnection) error {
+func (s *Service) detect(asset *inventory.Asset, conn *connection.PostgresdbConnection) error {
 	systemID, err := conn.SystemID()
 	if err != nil {
 		return err

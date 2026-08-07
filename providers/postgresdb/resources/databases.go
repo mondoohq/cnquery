@@ -15,7 +15,7 @@ const databaseColumns = `d.datname, d.oid::bigint, COALESCE(o.rolname, ''),
 	pg_encoding_to_char(d.encoding), d.datcollate, d.datctype,
 	d.datistemplate, d.datallowconn, d.datconnlimit`
 
-func newPostgresDatabase(runtime *plugin.Runtime, systemID string, pool *pgxpool.Pool, name string) (*mqlPostgresDatabase, error) {
+func newPostgresdbDatabase(runtime *plugin.Runtime, systemID string, pool *pgxpool.Pool, name string) (*mqlPostgresdbDatabase, error) {
 	rows, err := pool.Query(pgContext(),
 		"SELECT "+databaseColumns+" FROM pg_database d LEFT JOIN pg_roles o ON d.datdba = o.oid WHERE d.datname = $1", name)
 	if err != nil {
@@ -26,14 +26,14 @@ func newPostgresDatabase(runtime *plugin.Runtime, systemID string, pool *pgxpool
 		if err := rows.Err(); err != nil {
 			return nil, err
 		}
-		return nil, errors.New("postgres.database " + name + " not found")
+		return nil, errors.New("postgresdb.database " + name + " not found")
 	}
 	return scanDatabase(runtime, systemID, rows)
 }
 
 func scanDatabase(runtime *plugin.Runtime, systemID string, rows interface {
 	Scan(...any) error
-}) (*mqlPostgresDatabase, error) {
+}) (*mqlPostgresdbDatabase, error) {
 	var datname, ownerName, encoding, collate, ctype string
 	var oid, connLimit int64
 	var isTemplate, allowConn bool
@@ -41,7 +41,7 @@ func scanDatabase(runtime *plugin.Runtime, systemID string, rows interface {
 		&isTemplate, &allowConn, &connLimit); err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(runtime, "postgres.database", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "postgresdb.database", map[string]*llx.RawData{
 		"__id":             llx.StringData(databaseResourceID(systemID, datname)),
 		"name":             llx.StringData(datname),
 		"oid":              llx.IntData(oid),
@@ -55,12 +55,12 @@ func scanDatabase(runtime *plugin.Runtime, systemID string, rows interface {
 	if err != nil {
 		return nil, err
 	}
-	db := res.(*mqlPostgresDatabase)
+	db := res.(*mqlPostgresdbDatabase)
 	db.cacheOwner = ownerName
 	return db, nil
 }
 
-func initPostgresDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initPostgresdbDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
@@ -74,7 +74,7 @@ func initPostgresDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return nil, nil, errors.New("postgres.database requires a non-empty name")
+		return nil, nil, errors.New("postgresdb.database requires a non-empty name")
 	}
 
 	systemID, err := conn.SystemID()
@@ -85,14 +85,14 @@ func initPostgresDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if err != nil {
 		return nil, nil, err
 	}
-	res, err := newPostgresDatabase(runtime, systemID, pool, name)
+	res, err := newPostgresdbDatabase(runtime, systemID, pool, name)
 	if err != nil {
 		return nil, nil, err
 	}
 	return nil, res, nil
 }
 
-func (r *mqlPostgresInstance) databases() ([]any, error) {
+func (r *mqlPostgresdbInstance) databases() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -115,11 +115,11 @@ func (r *mqlPostgresInstance) databases() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresDatabase) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbDatabase) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresDatabase) privileges() ([]any, error) {
+func (r *mqlPostgresdbDatabase) privileges() ([]any, error) {
 	// datacl lives in the cluster-global pg_database, so use the server pool.
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
@@ -132,7 +132,7 @@ func (r *mqlPostgresDatabase) privileges() ([]any, error) {
 		 WHERE d.datname = $1`, r.Name.Data)
 }
 
-func (r *mqlPostgresDatabase) schemas() ([]any, error) {
+func (r *mqlPostgresdbDatabase) schemas() ([]any, error) {
 	// Schemas are per-database, so connect to this database.
 	if !r.AllowConnections.Data {
 		return []any{}, nil
@@ -158,7 +158,7 @@ func (r *mqlPostgresDatabase) schemas() ([]any, error) {
 		if err := rows.Scan(&name, &oid, &ownerName); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.schema", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.schema", map[string]*llx.RawData{
 			"__id": llx.StringData(r.__id + "/schema/" + name),
 			"name": llx.StringData(name),
 			"oid":  llx.IntData(oid),
@@ -166,7 +166,7 @@ func (r *mqlPostgresDatabase) schemas() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		schema := res.(*mqlPostgresSchema)
+		schema := res.(*mqlPostgresdbSchema)
 		schema.cacheDatabase = r.Name.Data
 		schema.cacheOwner = ownerName
 		list = append(list, schema)
@@ -174,7 +174,7 @@ func (r *mqlPostgresDatabase) schemas() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresDatabase) functions() ([]any, error) {
+func (r *mqlPostgresdbDatabase) functions() ([]any, error) {
 	if !r.AllowConnections.Data {
 		return []any{}, nil
 	}
@@ -204,7 +204,7 @@ func (r *mqlPostgresDatabase) functions() ([]any, error) {
 		if err := rows.Scan(&name, &oid, &schema, &language, &securityDefiner, &ownerName); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(r.MqlRuntime, "postgres.function", map[string]*llx.RawData{
+		res, err := CreateResource(r.MqlRuntime, "postgresdb.function", map[string]*llx.RawData{
 			"__id":              llx.StringData(r.__id + "/function/" + schema + "/" + name + "/" + intToStr(oid)),
 			"name":              llx.StringData(name),
 			"oid":               llx.IntData(oid),
@@ -215,7 +215,7 @@ func (r *mqlPostgresDatabase) functions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		fn := res.(*mqlPostgresFunction)
+		fn := res.(*mqlPostgresdbFunction)
 		fn.cacheDatabase = r.Name.Data
 		fn.cacheOwner = ownerName
 		list = append(list, fn)
@@ -223,7 +223,7 @@ func (r *mqlPostgresDatabase) functions() ([]any, error) {
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresDatabase) extensions() ([]any, error) {
+func (r *mqlPostgresdbDatabase) extensions() ([]any, error) {
 	if !r.AllowConnections.Data {
 		return []any{}, nil
 	}
@@ -236,11 +236,11 @@ func (r *mqlPostgresDatabase) extensions() ([]any, error) {
 
 // --- schema -----------------------------------------------------------------
 
-func (r *mqlPostgresSchema) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbSchema) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresSchema) privileges() ([]any, error) {
+func (r *mqlPostgresdbSchema) privileges() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, r.cacheDatabase)
 	if err != nil {
 		return nil, err
@@ -254,11 +254,11 @@ func (r *mqlPostgresSchema) privileges() ([]any, error) {
 
 // --- function ---------------------------------------------------------------
 
-func (r *mqlPostgresFunction) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbFunction) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }
 
-func (r *mqlPostgresFunction) privileges() ([]any, error) {
+func (r *mqlPostgresdbFunction) privileges() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, r.cacheDatabase)
 	if err != nil {
 		return nil, err
@@ -290,7 +290,7 @@ func listExtensions(runtime *plugin.Runtime, pool *pgxpool.Pool, scopeID string)
 		if err := rows.Scan(&name, &version, &schema, &ownerName); err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(runtime, "postgres.extension", map[string]*llx.RawData{
+		res, err := CreateResource(runtime, "postgresdb.extension", map[string]*llx.RawData{
 			"__id":    llx.StringData(scopeID + "/extension/" + name),
 			"name":    llx.StringData(name),
 			"version": llx.StringData(version),
@@ -299,13 +299,13 @@ func listExtensions(runtime *plugin.Runtime, pool *pgxpool.Pool, scopeID string)
 		if err != nil {
 			return nil, err
 		}
-		ext := res.(*mqlPostgresExtension)
+		ext := res.(*mqlPostgresdbExtension)
 		ext.cacheOwner = ownerName
 		list = append(list, ext)
 	}
 	return list, rows.Err()
 }
 
-func (r *mqlPostgresExtension) owner() (*mqlPostgresRole, error) {
+func (r *mqlPostgresdbExtension) owner() (*mqlPostgresdbRole, error) {
 	return resolveRoleRef(r.MqlRuntime, r.cacheOwner, &r.Owner)
 }

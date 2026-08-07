@@ -18,10 +18,10 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 )
 
-// PostgresConnection holds the settings needed to reach a PostgreSQL server.
+// PostgresdbConnection holds the settings needed to reach a PostgreSQL server.
 // Because PostgreSQL cannot query across databases, it keeps one connection
 // pool per database, opened lazily and shared across resources.
-type PostgresConnection struct {
+type PostgresdbConnection struct {
 	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
@@ -47,8 +47,8 @@ type PostgresConnection struct {
 	systemIDErr  error
 }
 
-func NewPostgresConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*PostgresConnection, error) {
-	conn := &PostgresConnection{
+func NewPostgresdbConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*PostgresdbConnection, error) {
+	conn := &PostgresdbConnection{
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
@@ -105,22 +105,22 @@ func NewPostgresConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 	return conn, nil
 }
 
-func (c *PostgresConnection) Name() string {
-	return "postgres"
+func (c *PostgresdbConnection) Name() string {
+	return "postgresdb"
 }
 
-func (c *PostgresConnection) Asset() *inventory.Asset {
+func (c *PostgresdbConnection) Asset() *inventory.Asset {
 	return c.asset
 }
 
 // ScopedDatabase returns the single database this asset is scoped to, or an
 // empty string when the asset is the whole server.
-func (c *PostgresConnection) ScopedDatabase() string {
+func (c *PostgresdbConnection) ScopedDatabase() string {
 	return c.scopedDatabase
 }
 
 // connString builds a postgres:// URL for a specific database.
-func (c *PostgresConnection) connString(database string) string {
+func (c *PostgresdbConnection) connString(database string) string {
 	query := url.Values{}
 	query.Set("sslmode", c.sslmode)
 	if c.sslrootcert != "" {
@@ -144,7 +144,7 @@ func (c *PostgresConnection) connString(database string) string {
 
 // Client returns a connection pool for the given database, opening it on first
 // use. An empty database name resolves to the server-level database.
-func (c *PostgresConnection) Client(database string) (*pgxpool.Pool, error) {
+func (c *PostgresdbConnection) Client(database string) (*pgxpool.Pool, error) {
 	if database == "" {
 		database = c.database
 	}
@@ -164,7 +164,7 @@ func (c *PostgresConnection) Client(database string) (*pgxpool.Pool, error) {
 }
 
 // Close releases every open pool.
-func (c *PostgresConnection) Close() {
+func (c *PostgresdbConnection) Close() {
 	c.poolsMu.Lock()
 	defer c.poolsMu.Unlock()
 	for _, pool := range c.pools {
@@ -175,7 +175,7 @@ func (c *PostgresConnection) Close() {
 
 // SystemID returns the cluster system identifier, used to build stable asset
 // platform ids. It is resolved once and shared.
-func (c *PostgresConnection) SystemID() (string, error) {
+func (c *PostgresdbConnection) SystemID() (string, error) {
 	c.systemIDOnce.Do(func() {
 		pool, err := c.Client("")
 		if err != nil {

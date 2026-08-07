@@ -5,7 +5,7 @@ package main
 
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin/gen"
-	"go.mondoo.com/mql/v13/providers/postgres/config"
+	"go.mondoo.com/mql/v13/providers/postgresdb/config"
 )
 
 func main() {

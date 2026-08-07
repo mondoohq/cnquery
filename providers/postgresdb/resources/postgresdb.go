@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/postgres/connection"
+	"go.mondoo.com/mql/v13/providers/postgresdb/connection"
 )
 
 // isPermissionDenied reports whether an error is a PostgreSQL
@@ -24,12 +24,12 @@ func isPermissionDenied(err error) bool {
 	return errors.As(err, &pgErr) && pgErr.Code == "42501"
 }
 
-func (r *mqlPostgres) id() (string, error) {
-	return "postgres", nil
+func (r *mqlPostgresdb) id() (string, error) {
+	return "postgresdb", nil
 }
 
-func pgConnection(runtime *plugin.Runtime) *connection.PostgresConnection {
-	return runtime.Connection.(*connection.PostgresConnection)
+func pgConnection(runtime *plugin.Runtime) *connection.PostgresdbConnection {
+	return runtime.Connection.(*connection.PostgresdbConnection)
 }
 
 // pgPool returns the connection pool for a database (empty = server database).
@@ -78,8 +78,8 @@ func classifyPassword(rolpassword *string) string {
 
 // --- privileges (ACL) -------------------------------------------------------
 
-func newPostgresPrivilege(runtime *plugin.Runtime, parentID, grantee, privilegeType string, grantable bool) (*mqlPostgresPrivilege, error) {
-	res, err := CreateResource(runtime, "postgres.privilege", map[string]*llx.RawData{
+func newPostgresdbPrivilege(runtime *plugin.Runtime, parentID, grantee, privilegeType string, grantable bool) (*mqlPostgresdbPrivilege, error) {
+	res, err := CreateResource(runtime, "postgresdb.privilege", map[string]*llx.RawData{
 		"__id":          llx.StringData(privilegeResourceID(parentID, grantee, privilegeType)),
 		"grantee":       llx.StringData(grantee),
 		"privilegeType": llx.StringData(privilegeType),
@@ -88,7 +88,7 @@ func newPostgresPrivilege(runtime *plugin.Runtime, parentID, grantee, privilegeT
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlPostgresPrivilege), nil
+	return res.(*mqlPostgresdbPrivilege), nil
 }
 
 // aclPrivileges runs an aclexplode-based query that must return
@@ -108,7 +108,7 @@ func aclPrivileges(runtime *plugin.Runtime, pool *pgxpool.Pool, parentID, query 
 		if err := rows.Scan(&grantee, &privilegeType, &grantable); err != nil {
 			return nil, err
 		}
-		p, err := newPostgresPrivilege(runtime, parentID, grantee, privilegeType, grantable)
+		p, err := newPostgresdbPrivilege(runtime, parentID, grantee, privilegeType, grantable)
 		if err != nil {
 			return nil, err
 		}
@@ -121,18 +121,18 @@ func aclPrivileges(runtime *plugin.Runtime, pool *pgxpool.Pool, parentID, query 
 
 // resolveRoleRef resolves a role by name for a typed owner/member reference,
 // setting the field null when the name is empty.
-func resolveRoleRef(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlPostgresRole]) (*mqlPostgresRole, error) {
+func resolveRoleRef(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlPostgresdbRole]) (*mqlPostgresdbRole, error) {
 	if name == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := NewResource(runtime, "postgres.role", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "postgresdb.role", map[string]*llx.RawData{
 		"name": llx.StringData(name),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlPostgresRole), nil
+	return res.(*mqlPostgresdbRole), nil
 }
 
 // intToStr is a tiny helper for building ids from oids.

@@ -44,8 +44,8 @@ func passwordTypesByOid(pool *pgxpool.Pool) map[int64]string {
 	return out
 }
 
-// newPostgresRole builds a role from a row selected with roleColumns.
-func newPostgresRole(runtime *plugin.Runtime, systemID string, rows pgx.Rows, passwordTypes map[int64]string) (*mqlPostgresRole, error) {
+// newPostgresdbRole builds a role from a row selected with roleColumns.
+func newPostgresdbRole(runtime *plugin.Runtime, systemID string, rows pgx.Rows, passwordTypes map[int64]string) (*mqlPostgresdbRole, error) {
 	var name string
 	var oid, connLimit int64
 	var super, canLogin, createRole, createDb, replication, bypassRLS, inherit bool
@@ -80,14 +80,14 @@ func newPostgresRole(runtime *plugin.Runtime, systemID string, rows pgx.Rows, pa
 		fields["passwordType"] = llx.NilData
 	}
 
-	res, err := CreateResource(runtime, "postgres.role", fields)
+	res, err := CreateResource(runtime, "postgresdb.role", fields)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlPostgresRole), nil
+	return res.(*mqlPostgresdbRole), nil
 }
 
-func initPostgresRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initPostgresdbRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
@@ -97,7 +97,7 @@ func initPostgresRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 	name, _ := nameRaw.Value.(string)
 	if name == "" {
-		return nil, nil, errors.New("postgres.role requires a non-empty name")
+		return nil, nil, errors.New("postgresdb.role requires a non-empty name")
 	}
 
 	systemID, err := pgSystemID(runtime)
@@ -117,16 +117,16 @@ func initPostgresRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		if err := rows.Err(); err != nil {
 			return nil, nil, err
 		}
-		return nil, nil, errors.New("postgres.role " + name + " not found")
+		return nil, nil, errors.New("postgresdb.role " + name + " not found")
 	}
-	res, err := newPostgresRole(runtime, systemID, rows, passwordTypesByOid(pool))
+	res, err := newPostgresdbRole(runtime, systemID, rows, passwordTypesByOid(pool))
 	if err != nil {
 		return nil, nil, err
 	}
 	return nil, res, nil
 }
 
-func (r *mqlPostgresInstance) roles() ([]any, error) {
+func (r *mqlPostgresdbInstance) roles() ([]any, error) {
 	pool, err := pgPool(r.MqlRuntime, "")
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (r *mqlPostgresInstance) roles() ([]any, error) {
 
 	list := []any{}
 	for rows.Next() {
-		role, err := newPostgresRole(r.MqlRuntime, r.SystemIdentifier.Data, rows, passwordTypes)
+		role, err := newPostgresdbRole(r.MqlRuntime, r.SystemIdentifier.Data, rows, passwordTypes)
 		if err != nil {
 			return nil, err
 		}
@@ -150,7 +150,7 @@ func (r *mqlPostgresInstance) roles() ([]any, error) {
 }
 
 // rolesByQuery resolves each role name returned by a membership query into a
-// full postgres.role via its init.
+// full postgresdb.role via its init.
 func rolesByQuery(runtime *plugin.Runtime, oid int64, query string) ([]any, error) {
 	pool, err := pgPool(runtime, "")
 	if err != nil {
@@ -176,7 +176,7 @@ func rolesByQuery(runtime *plugin.Runtime, oid int64, query string) ([]any, erro
 
 	list := []any{}
 	for _, name := range names {
-		res, err := NewResource(runtime, "postgres.role", map[string]*llx.RawData{"name": llx.StringData(name)})
+		res, err := NewResource(runtime, "postgresdb.role", map[string]*llx.RawData{"name": llx.StringData(name)})
 		if err != nil {
 			return nil, err
 		}
@@ -185,12 +185,12 @@ func rolesByQuery(runtime *plugin.Runtime, oid int64, query string) ([]any, erro
 	return list, nil
 }
 
-func (r *mqlPostgresRole) memberOf() ([]any, error) {
+func (r *mqlPostgresdbRole) memberOf() ([]any, error) {
 	return rolesByQuery(r.MqlRuntime, r.Oid.Data,
 		"SELECT g.rolname FROM pg_auth_members m JOIN pg_roles g ON m.roleid = g.oid WHERE m.member = $1::oid")
 }
 
-func (r *mqlPostgresRole) members() ([]any, error) {
+func (r *mqlPostgresdbRole) members() ([]any, error) {
 	return rolesByQuery(r.MqlRuntime, r.Oid.Data,
 		"SELECT mr.rolname FROM pg_auth_members m JOIN pg_roles mr ON m.member = mr.oid WHERE m.roleid = $1::oid")
 }

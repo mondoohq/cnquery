@@ -1,4 +1,4 @@
-module go.mondoo.com/mql/v13/providers/postgres
+module go.mondoo.com/mql/v13/providers/postgresdb
 
 replace go.mondoo.com/mql/v13 => ../..
 

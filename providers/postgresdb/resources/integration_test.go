@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
-	"go.mondoo.com/mql/v13/providers/postgres/connection"
+	"go.mondoo.com/mql/v13/providers/postgresdb/connection"
 )
 
 // newIntegrationRuntime connects to a live PostgreSQL server described by the
@@ -45,24 +45,24 @@ func newIntegrationRuntime(t *testing.T) *plugin.Runtime {
 	}
 
 	conf := &inventory.Config{
-		Type:        "postgres",
+		Type:        "postgresdb",
 		Options:     options,
 		Credentials: []*vault.Credential{vault.NewPasswordCredential(user, password)},
 	}
 	asset := &inventory.Asset{Connections: []*inventory.Config{conf}}
-	conn, err := connection.NewPostgresConnection(1, asset, conf)
+	conn, err := connection.NewPostgresdbConnection(1, asset, conf)
 	if err != nil {
 		t.Fatalf("failed to build connection: %v", err)
 	}
 	return plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)
 }
 
-func mustInstance(t *testing.T, runtime *plugin.Runtime) *mqlPostgresInstance {
-	res, err := NewResource(runtime, "postgres.instance", map[string]*llx.RawData{})
+func mustInstance(t *testing.T, runtime *plugin.Runtime) *mqlPostgresdbInstance {
+	res, err := NewResource(runtime, "postgresdb.instance", map[string]*llx.RawData{})
 	if err != nil {
-		t.Fatalf("failed to resolve postgres.instance: %v", err)
+		t.Fatalf("failed to resolve postgresdb.instance: %v", err)
 	}
-	return res.(*mqlPostgresInstance)
+	return res.(*mqlPostgresdbInstance)
 }
 
 func resolveList(t *testing.T, label string, tv *plugin.TValue[[]any]) []any {
@@ -103,19 +103,19 @@ func TestIntegrationResolveAll(t *testing.T) {
 	resolveList(t, "subscriptions", inst.GetSubscriptions())
 
 	for _, x := range resolveList(t, "roles", inst.GetRoles()) {
-		role := x.(*mqlPostgresRole)
+		role := x.(*mqlPostgresdbRole)
 		resolveList(t, "role.memberOf", role.GetMemberOf())
 		resolveList(t, "role.members", role.GetMembers())
 	}
 	for _, x := range resolveList(t, "tablespaces", inst.GetTablespaces()) {
-		ts := x.(*mqlPostgresTablespace)
+		ts := x.(*mqlPostgresdbTablespace)
 		if ts.GetOwner().Error != nil {
 			t.Errorf("tablespace.owner errored: %v", ts.GetOwner().Error)
 		}
 		resolveList(t, "tablespace.privileges", ts.GetPrivileges())
 	}
 	for _, x := range resolveList(t, "databases", inst.GetDatabases()) {
-		db := x.(*mqlPostgresDatabase)
+		db := x.(*mqlPostgresdbDatabase)
 		name := db.GetName().Data
 		if db.GetOwner().Error != nil {
 			t.Errorf("%s.owner errored: %v", name, db.GetOwner().Error)
@@ -124,20 +124,20 @@ func TestIntegrationResolveAll(t *testing.T) {
 		resolveList(t, name+".extensions", db.GetExtensions())
 		resolveList(t, name+".publications", db.GetPublications())
 		for _, f := range resolveList(t, name+".foreignServers", db.GetForeignServers()) {
-			fs := f.(*mqlPostgresForeignServer)
+			fs := f.(*mqlPostgresdbForeignServer)
 			if fs.GetOwner().Error != nil {
 				t.Errorf("%s foreignServer owner errored: %v", name, fs.GetOwner().Error)
 			}
 			resolveList(t, name+".foreignServer.userMappings", fs.GetUserMappings())
 		}
 		for _, s := range resolveList(t, name+".schemas", db.GetSchemas()) {
-			sc := s.(*mqlPostgresSchema)
+			sc := s.(*mqlPostgresdbSchema)
 			if sc.GetOwner().Error != nil {
 				t.Errorf("%s schema owner errored: %v", name, sc.GetOwner().Error)
 			}
 			resolveList(t, name+".schema.privileges", sc.GetPrivileges())
 			for _, tb := range resolveList(t, name+".tables", sc.GetTables()) {
-				tbl := tb.(*mqlPostgresTable)
+				tbl := tb.(*mqlPostgresdbTable)
 				if tbl.GetOwner().Error != nil {
 					t.Errorf("%s table owner errored: %v", name, tbl.GetOwner().Error)
 				}
@@ -146,7 +146,7 @@ func TestIntegrationResolveAll(t *testing.T) {
 			}
 		}
 		for _, f := range resolveList(t, name+".functions", db.GetFunctions()) {
-			fn := f.(*mqlPostgresFunction)
+			fn := f.(*mqlPostgresdbFunction)
 			if fn.GetOwner().Error != nil {
 				t.Errorf("%s function owner errored: %v", name, fn.GetOwner().Error)
 			}
@@ -164,9 +164,9 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	inst := mustInstance(t, newIntegrationRuntime(t))
 
 	// role attributes
-	var admin *mqlPostgresRole
+	var admin *mqlPostgresdbRole
 	for _, x := range inst.GetRoles().Data {
-		if r := x.(*mqlPostgresRole); r.GetName().Data == "app_admin" {
+		if r := x.(*mqlPostgresdbRole); r.GetName().Data == "app_admin" {
 			admin = r
 		}
 	}
@@ -181,16 +181,16 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	}
 	memberOf := map[string]bool{}
 	for _, x := range admin.GetMemberOf().Data {
-		memberOf[x.(*mqlPostgresRole).GetName().Data] = true
+		memberOf[x.(*mqlPostgresdbRole).GetName().Data] = true
 	}
 	if !memberOf["app_group"] {
 		t.Error("app_admin should be a member of app_group")
 	}
 
 	// appdb: owner, SECURITY DEFINER function with an EXECUTE grant
-	var appdb *mqlPostgresDatabase
+	var appdb *mqlPostgresdbDatabase
 	for _, x := range inst.GetDatabases().Data {
-		if d := x.(*mqlPostgresDatabase); d.GetName().Data == "appdb" {
+		if d := x.(*mqlPostgresdbDatabase); d.GetName().Data == "appdb" {
 			appdb = d
 		}
 	}
@@ -200,9 +200,9 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	if o := appdb.GetOwner(); o.Error != nil || o.Data == nil || o.Data.GetName().Data != "app_admin" {
 		t.Errorf("appdb owner not app_admin")
 	}
-	var secdef *mqlPostgresFunction
+	var secdef *mqlPostgresdbFunction
 	for _, x := range appdb.GetFunctions().Data {
-		if f := x.(*mqlPostgresFunction); f.GetName().Data == "secdef_fn" {
+		if f := x.(*mqlPostgresdbFunction); f.GetName().Data == "secdef_fn" {
 			secdef = f
 		}
 	}
@@ -214,21 +214,21 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	}
 	grantees := map[string]bool{}
 	for _, x := range secdef.GetPrivileges().Data {
-		grantees[x.(*mqlPostgresPrivilege).GetGrantee().Data] = true
+		grantees[x.(*mqlPostgresdbPrivilege).GetGrantee().Data] = true
 	}
 	if !grantees["app_group"] {
 		t.Error("secdef_fn should grant EXECUTE to app_group")
 	}
 
 	// table DML privileges (CIS 4.6) and row-level security (CIS 4.7)
-	var t1 *mqlPostgresTable
+	var t1 *mqlPostgresdbTable
 	for _, s := range appdb.GetSchemas().Data {
-		sc := s.(*mqlPostgresSchema)
+		sc := s.(*mqlPostgresdbSchema)
 		if sc.GetName().Data != "appschema" {
 			continue
 		}
 		for _, tb := range sc.GetTables().Data {
-			if tbl := tb.(*mqlPostgresTable); tbl.GetName().Data == "t1" {
+			if tbl := tb.(*mqlPostgresdbTable); tbl.GetName().Data == "t1" {
 				t1 = tbl
 			}
 		}
@@ -241,7 +241,7 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	}
 	dmlGrantees := map[string]bool{}
 	for _, x := range t1.GetPrivileges().Data {
-		p := x.(*mqlPostgresPrivilege)
+		p := x.(*mqlPostgresdbPrivilege)
 		if p.GetPrivilegeType().Data == "SELECT" {
 			dmlGrantees[p.GetGrantee().Data] = true
 		}
@@ -251,16 +251,16 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	}
 	policyNames := map[string]bool{}
 	for _, x := range t1.GetPolicies().Data {
-		policyNames[x.(*mqlPostgresRlsPolicy).GetName().Data] = true
+		policyNames[x.(*mqlPostgresdbRlsPolicy).GetName().Data] = true
 	}
 	if !policyNames["t1_sel"] {
 		t.Error("t1 should have policy t1_sel")
 	}
 
 	// foreign server user mapping must not expose the password option
-	var fs *mqlPostgresForeignServer
+	var fs *mqlPostgresdbForeignServer
 	for _, x := range appdb.GetForeignServers().Data {
-		if s := x.(*mqlPostgresForeignServer); s.GetName().Data == "remote_srv" {
+		if s := x.(*mqlPostgresdbForeignServer); s.GetName().Data == "remote_srv" {
 			fs = s
 		}
 	}
@@ -268,7 +268,7 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 		t.Fatal("remote_srv not found")
 	}
 	for _, x := range fs.GetUserMappings().Data {
-		for _, opt := range x.(*mqlPostgresUserMapping).GetOptions().Data {
+		for _, opt := range x.(*mqlPostgresdbUserMapping).GetOptions().Data {
 			if strings.HasPrefix(strings.ToLower(opt.(string)), "password") {
 				t.Errorf("user mapping leaked a password option: %v", opt)
 			}

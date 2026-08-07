@@ -7,42 +7,42 @@ package resources
 // structs. They carry the parent context (owning role, containing database)
 // that typed references and per-database queries need.
 
-type mqlPostgresDatabaseInternal struct {
+type mqlPostgresdbDatabaseInternal struct {
 	cacheOwner string
 }
 
-type mqlPostgresSchemaInternal struct {
+type mqlPostgresdbSchemaInternal struct {
 	cacheDatabase string
 	cacheOwner    string
 }
 
-type mqlPostgresFunctionInternal struct {
+type mqlPostgresdbFunctionInternal struct {
 	cacheDatabase string
 	cacheOwner    string
 }
 
-type mqlPostgresTableInternal struct {
+type mqlPostgresdbTableInternal struct {
 	cacheDatabase string
 	cacheOwner    string
 }
 
-type mqlPostgresTablespaceInternal struct {
+type mqlPostgresdbTablespaceInternal struct {
 	cacheOwner string
 }
 
-type mqlPostgresExtensionInternal struct {
+type mqlPostgresdbExtensionInternal struct {
 	cacheOwner string
 }
 
-type mqlPostgresForeignServerInternal struct {
+type mqlPostgresdbForeignServerInternal struct {
 	cacheOwner    string
 	cacheDatabase string
 }
 
-type mqlPostgresPublicationInternal struct {
+type mqlPostgresdbPublicationInternal struct {
 	cacheOwner string
 }
 
-type mqlPostgresSubscriptionInternal struct {
+type mqlPostgresdbSubscriptionInternal struct {
 	cacheOwner string
 }

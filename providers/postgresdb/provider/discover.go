@@ -7,14 +7,14 @@ import (
 	"context"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/postgres/connection"
+	"go.mondoo.com/mql/v13/providers/postgresdb/connection"
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
 // discover enumerates the server's connectable databases and emits each as a
 // child asset scoped to that database. Only the server connection discovers
 // children; a database-scoped connection is already a leaf.
-func (s *Service) discover(conn *connection.PostgresConnection) (*inventory.Inventory, error) {
+func (s *Service) discover(conn *connection.PostgresdbConnection) (*inventory.Inventory, error) {
 	conf := conn.Asset().Connections[0]
 	if conf.Discover == nil {
 		return nil, nil

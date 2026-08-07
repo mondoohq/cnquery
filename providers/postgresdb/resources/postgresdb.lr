@@ -1,16 +1,16 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/mql/v13/providers/postgres"
-option go_package = "go.mondoo.com/mql/v13/providers/postgres/resources"
+option provider = "go.mondoo.com/mql/v13/providers/postgresdb"
+option go_package = "go.mondoo.com/mql/v13/providers/postgresdb/resources"
 
 // PostgreSQL
 //
-// Root namespace for all PostgreSQL resources. Query `postgres.instance`
-// for the connected server: its version and configuration settings,
-// cluster roles, databases, schemas, functions, privileges, host-based
+// Root namespace for all PostgreSQL server resources. Query
+// `postgresdb.instance` for the connected server: its configuration settings,
+// cluster roles, databases, schemas, tables, functions, privileges, host-based
 // authentication rules, extensions, foreign servers, and replication state.
-postgres {}
+postgresdb {}
 
 // PostgreSQL server
 //
@@ -21,7 +21,7 @@ postgres {}
 // `listenAddresses`. Cluster-wide principals and objects are reachable through
 // `roles`, `databases`, `tablespaces`, `extensions`, `hbaRules`,
 // `foreignServers`, and the replication collections.
-postgres.instance @defaults("version") {
+postgresdb.instance @defaults("version") {
   // Full server version string
   version string
   // Cluster system identifier (stable unique id for the server)
@@ -37,19 +37,19 @@ postgres.instance @defaults("version") {
   // Value of the `listen_addresses` setting
   listenAddresses string
   // Runtime configuration parameters (pg_settings)
-  settings() []postgres.setting
+  settings() []postgresdb.setting
   // Cluster roles (login and group roles)
-  roles() []postgres.role
+  roles() []postgresdb.role
   // Databases hosted on the server
-  databases() []postgres.database
+  databases() []postgresdb.database
   // Tablespaces defined on the server
-  tablespaces() []postgres.tablespace
+  tablespaces() []postgresdb.tablespace
   // Host-based authentication rules (pg_hba_file_rules)
-  hbaRules() []postgres.hbaRule
+  hbaRules() []postgresdb.hbaRule
   // Replication slots on the server
-  replicationSlots() []postgres.replicationSlot
+  replicationSlots() []postgresdb.replicationSlot
   // Logical-replication subscriptions on the server
-  subscriptions() []postgres.subscription
+  subscriptions() []postgresdb.subscription
 }
 
 // PostgreSQL role
@@ -62,7 +62,7 @@ postgres.instance @defaults("version") {
 // and `members`. `passwordType` reports how the role's password is stored
 // (scram-sha-256, md5, or none) and is null when the session role cannot read
 // pg_authid.
-postgres.role @defaults("name") {
+postgresdb.role @defaults("name") {
   // Role name
   name string
   // Object identifier of the role
@@ -91,9 +91,9 @@ postgres.role @defaults("name") {
   // role lacks the privilege to read pg_authid.
   passwordType string
   // Roles this role is a direct member of
-  memberOf() []postgres.role
+  memberOf() []postgresdb.role
   // Roles that are direct members of this role
-  members() []postgres.role
+  members() []postgresdb.role
   // Per-role configuration parameter overrides (SET ... for the role)
   config []string
 }
@@ -105,13 +105,13 @@ postgres.role @defaults("name") {
 // access-control list through `privileges`, and the database's `schemas`,
 // `functions`, and `extensions`. Enumerating schemas and functions opens a
 // connection to this database, since PostgreSQL catalogs are per-database.
-postgres.database @defaults("name") {
+postgresdb.database @defaults("name") {
   // Database name
   name string
   // Object identifier of the database
   oid int
   // Role that owns the database
-  owner() postgres.role
+  owner() postgresdb.role
   // Character-set encoding, for example UTF8
   encoding string
   // LC_COLLATE locale of the database
@@ -125,17 +125,17 @@ postgres.database @defaults("name") {
   // Maximum number of concurrent connections, or -1 for no limit
   connectionLimit int
   // Access privileges granted on the database (from the datacl)
-  privileges() []postgres.privilege
+  privileges() []postgresdb.privilege
   // Schemas in the database
-  schemas() []postgres.schema
+  schemas() []postgresdb.schema
   // Functions across all schemas in the database
-  functions() []postgres.function
+  functions() []postgresdb.function
   // Extensions installed in the database
-  extensions() []postgres.extension
+  extensions() []postgresdb.extension
   // Foreign servers defined in the database (for foreign-data wrappers)
-  foreignServers() []postgres.foreignServer
+  foreignServers() []postgresdb.foreignServer
   // Logical-replication publications defined in the database
-  publications() []postgres.publication
+  publications() []postgresdb.publication
 }
 
 // PostgreSQL schema
@@ -144,17 +144,17 @@ postgres.database @defaults("name") {
 // the access privileges granted on the schema. The `public` schema's
 // privileges are a common hardening focus, since a permissive PUBLIC grant
 // lets any role create objects.
-postgres.schema @defaults("name") {
+postgresdb.schema @defaults("name") {
   // Schema name
   name string
   // Object identifier of the schema
   oid int
   // Role that owns the schema
-  owner() postgres.role
+  owner() postgresdb.role
   // Access privileges granted on the schema (from the nspacl)
-  privileges() []postgres.privilege
+  privileges() []postgresdb.privilege
   // Tables, views, and other relations in the schema
-  tables() []postgres.table
+  tables() []postgresdb.table
 }
 
 // PostgreSQL relation
@@ -164,7 +164,7 @@ postgres.schema @defaults("name") {
 // owning role, the access privileges granted on the relation (`privileges`,
 // the source for DML-privilege review), and its row-level security posture
 // (`rowSecurityEnabled`, `rowSecurityForced`, and `policies`).
-postgres.table @defaults("schema name kind") {
+postgresdb.table @defaults("schema name kind") {
   // Relation name
   name string
   // Object identifier of the relation
@@ -174,15 +174,15 @@ postgres.table @defaults("schema name kind") {
   // Relation kind: table, view, materializedView, foreignTable, or partitionedTable
   kind string
   // Role that owns the relation
-  owner() postgres.role
+  owner() postgresdb.role
   // Whether row-level security is enabled on the relation
   rowSecurityEnabled bool
   // Whether row-level security is forced for the relation's owner
   rowSecurityForced bool
   // Access privileges granted on the relation (from the relacl)
-  privileges() []postgres.privilege
+  privileges() []postgresdb.privilege
   // Row-level security policies attached to the relation
-  policies() []postgres.rlsPolicy
+  policies() []postgresdb.rlsPolicy
 }
 
 // PostgreSQL row-level security policy
@@ -191,7 +191,7 @@ postgres.table @defaults("schema name kind") {
 // the statement type the policy applies to (SELECT, INSERT, UPDATE, DELETE, or
 // ALL), `roles` lists the roles it targets (PUBLIC for all roles), and
 // `usingExpression` / `checkExpression` are the row filters it enforces.
-postgres.rlsPolicy @defaults("name command") {
+postgresdb.rlsPolicy @defaults("name command") {
   // Policy name
   name string
   // Statement type the policy applies to: SELECT, INSERT, UPDATE, DELETE, or ALL
@@ -213,7 +213,7 @@ postgres.rlsPolicy @defaults("name command") {
 // is a privilege-escalation path when the owner is highly privileged.
 // `privileges` lists the EXECUTE grants, so over-broad function access can be
 // audited.
-postgres.function @defaults("name schema") {
+postgresdb.function @defaults("name schema") {
   // Function name
   name string
   // Object identifier of the function
@@ -225,9 +225,9 @@ postgres.function @defaults("name schema") {
   // Whether the function runs with the privileges of its owner
   isSecurityDefiner bool
   // Role that owns the function
-  owner() postgres.role
+  owner() postgresdb.role
   // Access privileges granted on the function (from the proacl)
-  privileges() []postgres.privilege
+  privileges() []postgresdb.privilege
 }
 
 // PostgreSQL access privilege
@@ -236,7 +236,7 @@ postgres.function @defaults("name schema") {
 // `grantee` is a role name, or PUBLIC for a grant to every role.
 // `isGrantable` reports whether the grantee may in turn grant the privilege to
 // others (WITH GRANT OPTION).
-postgres.privilege @defaults("privilegeType grantee") {
+postgresdb.privilege @defaults("privilegeType grantee") {
   // Role the privilege is granted to, or PUBLIC
   grantee string
   // Privilege type, for example CONNECT, USAGE, CREATE, SELECT, or EXECUTE
@@ -248,10 +248,10 @@ postgres.privilege @defaults("privilegeType grantee") {
 // PostgreSQL configuration setting
 //
 // A runtime configuration parameter (pg_settings), selected by `name`, for
-// example `postgres.instance.settings.where(name == "log_connections")`.
+// example `postgresdb.instance.settings.where(name == "log_connections")`.
 // `context` reports when a change takes effect (postmaster, sighup, superuser,
 // or user), and `source` reports where the current value came from.
-postgres.setting @defaults("name setting") {
+postgresdb.setting @defaults("name setting") {
   // Parameter name
   name string
   // Current value
@@ -278,7 +278,7 @@ postgres.setting @defaults("name setting") {
 // (pg_hba_file_rules), which controls who may connect and how they
 // authenticate. `authMethod` is the security-relevant field: a value of
 // `trust` allows connections with no authentication.
-postgres.hbaRule @defaults("type authMethod") {
+postgresdb.hbaRule @defaults("type authMethod") {
   // Line number of the rule in the configuration file
   lineNumber int
   // Connection type: local, host, hostssl, or hostnossl
@@ -304,7 +304,7 @@ postgres.hbaRule @defaults("type authMethod") {
 // An installed extension (pg_extension), for example pgaudit, pgcrypto, or
 // set_user. Auditing installed extensions confirms required security tooling
 // is present and flags unexpected additions.
-postgres.extension @defaults("name version") {
+postgresdb.extension @defaults("name version") {
   // Extension name
   name string
   // Installed version
@@ -312,24 +312,24 @@ postgres.extension @defaults("name version") {
   // Schema the extension's objects are installed in
   schema string
   // Role that owns the extension
-  owner() postgres.role
+  owner() postgresdb.role
 }
 
 // PostgreSQL tablespace
 //
 // A tablespace (pg_tablespace) that maps a storage location on disk. Exposes
 // the owning role and the access privileges granted on it.
-postgres.tablespace @defaults("name") {
+postgresdb.tablespace @defaults("name") {
   // Tablespace name
   name string
   // Object identifier of the tablespace
   oid int
   // Role that owns the tablespace
-  owner() postgres.role
+  owner() postgresdb.role
   // Filesystem location of the tablespace
   location string
   // Access privileges granted on the tablespace (from the spcacl)
-  privileges() []postgres.privilege
+  privileges() []postgresdb.privilege
 }
 
 // PostgreSQL foreign server
@@ -337,7 +337,7 @@ postgres.tablespace @defaults("name") {
 // A foreign server (pg_foreign_server) reachable through a foreign-data
 // wrapper. `userMappings` lists the role-to-remote-credential mappings used
 // when the server is accessed, so credential exposure can be reviewed.
-postgres.foreignServer @defaults("name") {
+postgresdb.foreignServer @defaults("name") {
   // Foreign server name
   name string
   // Server type, when set by the wrapper
@@ -347,11 +347,11 @@ postgres.foreignServer @defaults("name") {
   // Name of the foreign-data wrapper the server uses
   fdwName string
   // Role that owns the foreign server
-  owner() postgres.role
+  owner() postgresdb.role
   // Options configured on the foreign server
   options []string
   // Role-to-remote-credential mappings for this server
-  userMappings() []postgres.userMapping
+  userMappings() []postgresdb.userMapping
 }
 
 // PostgreSQL user mapping
@@ -359,7 +359,7 @@ postgres.foreignServer @defaults("name") {
 // A mapping (pg_user_mappings) from a local role to the credentials used
 // against a foreign server. `options` may contain a remote user name; secret
 // values are not exposed.
-postgres.userMapping @defaults("role") {
+postgresdb.userMapping @defaults("role") {
   // Local role the mapping applies to, or PUBLIC
   role string
   // Foreign server the mapping targets
@@ -373,7 +373,7 @@ postgres.userMapping @defaults("role") {
 // A replication slot (pg_replication_slots) that a standby or logical consumer
 // uses to receive changes. `active` reports whether a consumer is currently
 // attached.
-postgres.replicationSlot @defaults("name active") {
+postgresdb.replicationSlot @defaults("name active") {
   // Slot name
   name string
   // Slot type: physical or logical
@@ -390,11 +390,11 @@ postgres.replicationSlot @defaults("name active") {
 //
 // A logical-replication publication (pg_publication) that defines the set of
 // changes offered to subscribers.
-postgres.publication @defaults("name") {
+postgresdb.publication @defaults("name") {
   // Publication name
   name string
   // Role that owns the publication
-  owner() postgres.role
+  owner() postgresdb.role
   // Whether the publication includes all tables
   allTables bool
   // Whether inserts are published
@@ -412,11 +412,11 @@ postgres.publication @defaults("name") {
 // A logical-replication subscription (pg_subscription) that consumes changes
 // from a publisher. The connection string is exposed only in a sanitized form
 // with any password removed.
-postgres.subscription @defaults("name enabled") {
+postgresdb.subscription @defaults("name enabled") {
   // Subscription name
   name string
   // Role that owns the subscription
-  owner() postgres.role
+  owner() postgresdb.role
   // Whether the subscription is enabled
   enabled bool
   // Publisher connection string with any password removed

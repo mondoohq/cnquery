@@ -37,22 +37,22 @@ const (
 	// OptionSSLKey is the path to the client private key.
 	OptionSSLKey = "sslkey"
 	// OptionScopedDatabase marks a connection as scoped to a single discovered
-	// database, making the asset a postgres-database rather than the server.
+	// database, making the asset a postgresdb-database rather than the server.
 	OptionScopedDatabase = "scoped-database"
 )
 
 var (
-	platformIdPostgresServer   = "//platformid.api.mondoo.app/runtime/postgres/server/"
-	platformIdPostgresDatabase = "/database/"
+	platformIdPostgresdbServer   = "//platformid.api.mondoo.app/runtime/postgresdb/server/"
+	platformIdPostgresdbDatabase = "/database/"
 )
 
 // NewPostgresServerPlatform returns the platform for a PostgreSQL server asset,
 // keyed by the cluster system identifier.
 func NewPostgresServerPlatform(systemID string) *inventory.Platform {
 	pf := &inventory.Platform{
-		TechnologyUrlSegments: []string{"db", "postgres", "server", systemID},
+		TechnologyUrlSegments: []string{"db", "postgresdb", "server", systemID},
 	}
-	PlatformByName("postgres").Apply(pf)
+	PlatformByName("postgresdb").Apply(pf)
 	return pf
 }
 
@@ -60,19 +60,19 @@ func NewPostgresServerPlatform(systemID string) *inventory.Platform {
 // discovered under a server.
 func NewPostgresDatabasePlatform(systemID, database string) *inventory.Platform {
 	pf := &inventory.Platform{
-		TechnologyUrlSegments: []string{"db", "postgres", "server", systemID, "database", database},
+		TechnologyUrlSegments: []string{"db", "postgresdb", "server", systemID, "database", database},
 	}
-	PlatformByName("postgres-database").Apply(pf)
+	PlatformByName("postgresdb-database").Apply(pf)
 	return pf
 }
 
 // NewPostgresServerIdentifier returns the stable platform id for a server.
 func NewPostgresServerIdentifier(systemID string) string {
-	return platformIdPostgresServer + systemID
+	return platformIdPostgresdbServer + systemID
 }
 
 // NewPostgresDatabaseIdentifier returns the stable platform id for a database,
 // qualified by its server so it is unique across servers.
 func NewPostgresDatabaseIdentifier(systemID, database string) string {
-	return platformIdPostgresServer + systemID + platformIdPostgresDatabase + database
+	return platformIdPostgresdbServer + systemID + platformIdPostgresdbDatabase + database
 }
