@@ -136,6 +136,14 @@ func TestIntegrationResolveAll(t *testing.T) {
 				t.Errorf("%s schema owner errored: %v", name, sc.GetOwner().Error)
 			}
 			resolveList(t, name+".schema.privileges", sc.GetPrivileges())
+			for _, tb := range resolveList(t, name+".tables", sc.GetTables()) {
+				tbl := tb.(*mqlPostgresTable)
+				if tbl.GetOwner().Error != nil {
+					t.Errorf("%s table owner errored: %v", name, tbl.GetOwner().Error)
+				}
+				resolveList(t, name+".table.privileges", tbl.GetPrivileges())
+				resolveList(t, name+".table.policies", tbl.GetPolicies())
+			}
 		}
 		for _, f := range resolveList(t, name+".functions", db.GetFunctions()) {
 			fn := f.(*mqlPostgresFunction)
@@ -210,6 +218,43 @@ func TestIntegrationSeededFixtures(t *testing.T) {
 	}
 	if !grantees["app_group"] {
 		t.Error("secdef_fn should grant EXECUTE to app_group")
+	}
+
+	// table DML privileges (CIS 4.6) and row-level security (CIS 4.7)
+	var t1 *mqlPostgresTable
+	for _, s := range appdb.GetSchemas().Data {
+		sc := s.(*mqlPostgresSchema)
+		if sc.GetName().Data != "appschema" {
+			continue
+		}
+		for _, tb := range sc.GetTables().Data {
+			if tbl := tb.(*mqlPostgresTable); tbl.GetName().Data == "t1" {
+				t1 = tbl
+			}
+		}
+	}
+	if t1 == nil {
+		t.Fatal("appschema.t1 not found")
+	}
+	if !t1.GetRowSecurityEnabled().Data {
+		t.Error("t1 should have row-level security enabled")
+	}
+	dmlGrantees := map[string]bool{}
+	for _, x := range t1.GetPrivileges().Data {
+		p := x.(*mqlPostgresPrivilege)
+		if p.GetPrivilegeType().Data == "SELECT" {
+			dmlGrantees[p.GetGrantee().Data] = true
+		}
+	}
+	if !dmlGrantees["app_group"] {
+		t.Error("t1 should grant SELECT to app_group")
+	}
+	policyNames := map[string]bool{}
+	for _, x := range t1.GetPolicies().Data {
+		policyNames[x.(*mqlPostgresRlsPolicy).GetName().Data] = true
+	}
+	if !policyNames["t1_sel"] {
+		t.Error("t1 should have policy t1_sel")
 	}
 
 	// foreign server user mapping must not expose the password option

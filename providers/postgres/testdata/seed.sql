@@ -21,6 +21,12 @@ CREATE EXTENSION IF NOT EXISTS postgres_fdw;
 CREATE FUNCTION appschema.secdef_fn() RETURNS integer LANGUAGE sql SECURITY DEFINER AS 'SELECT 1';
 GRANT EXECUTE ON FUNCTION appschema.secdef_fn() TO app_group;
 
+-- a table with a DML grant (CIS 4.6) and a row-level security policy (CIS 4.7)
+CREATE TABLE appschema.t1 (id integer, secret text);
+GRANT SELECT ON appschema.t1 TO app_group;
+ALTER TABLE appschema.t1 ENABLE ROW LEVEL SECURITY;
+CREATE POLICY t1_sel ON appschema.t1 FOR SELECT TO app_group USING (true);
+
 -- foreign server + user mapping carrying a (redacted) password option
 CREATE SERVER remote_srv FOREIGN DATA WRAPPER postgres_fdw
   OPTIONS (host 'remote.example', dbname 'remote', port '5432');

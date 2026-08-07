@@ -21,6 +21,11 @@ type mqlPostgresFunctionInternal struct {
 	cacheOwner    string
 }
 
+type mqlPostgresTableInternal struct {
+	cacheDatabase string
+	cacheOwner    string
+}
+
 type mqlPostgresTablespaceInternal struct {
 	cacheOwner string
 }

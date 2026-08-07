@@ -153,6 +153,57 @@ postgres.schema @defaults("name") {
   owner() postgres.role
   // Access privileges granted on the schema (from the nspacl)
   privileges() []postgres.privilege
+  // Tables, views, and other relations in the schema
+  tables() []postgres.table
+}
+
+// PostgreSQL relation
+//
+// A relation in a schema (pg_class): an ordinary table, view, materialized
+// view, foreign table, or partitioned table, reported by `kind`. Exposes the
+// owning role, the access privileges granted on the relation (`privileges`,
+// the source for DML-privilege review), and its row-level security posture
+// (`rowSecurityEnabled`, `rowSecurityForced`, and `policies`).
+postgres.table @defaults("schema name kind") {
+  // Relation name
+  name string
+  // Object identifier of the relation
+  oid int
+  // Schema the relation belongs to
+  schema string
+  // Relation kind: table, view, materializedView, foreignTable, or partitionedTable
+  kind string
+  // Role that owns the relation
+  owner() postgres.role
+  // Whether row-level security is enabled on the relation
+  rowSecurityEnabled bool
+  // Whether row-level security is forced for the relation's owner
+  rowSecurityForced bool
+  // Access privileges granted on the relation (from the relacl)
+  privileges() []postgres.privilege
+  // Row-level security policies attached to the relation
+  policies() []postgres.rlsPolicy
+}
+
+// PostgreSQL row-level security policy
+//
+// A row-level security policy (pg_policy) attached to a relation. `command` is
+// the statement type the policy applies to (SELECT, INSERT, UPDATE, DELETE, or
+// ALL), `roles` lists the roles it targets (PUBLIC for all roles), and
+// `usingExpression` / `checkExpression` are the row filters it enforces.
+postgres.rlsPolicy @defaults("name command") {
+  // Policy name
+  name string
+  // Statement type the policy applies to: SELECT, INSERT, UPDATE, DELETE, or ALL
+  command string
+  // Whether the policy is permissive (OR-combined) rather than restrictive
+  permissive bool
+  // Roles the policy applies to, or PUBLIC for all roles
+  roles []string
+  // Row filter applied to existing rows (the USING expression)
+  usingExpression string
+  // Row filter applied to new or updated rows (the WITH CHECK expression)
+  checkExpression string
 }
 
 // PostgreSQL function

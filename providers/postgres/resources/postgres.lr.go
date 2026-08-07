@@ -21,6 +21,8 @@ const (
 	ResourcePostgresRole            string = "postgres.role"
 	ResourcePostgresDatabase        string = "postgres.database"
 	ResourcePostgresSchema          string = "postgres.schema"
+	ResourcePostgresTable           string = "postgres.table"
+	ResourcePostgresRlsPolicy       string = "postgres.rlsPolicy"
 	ResourcePostgresFunction        string = "postgres.function"
 	ResourcePostgresPrivilege       string = "postgres.privilege"
 	ResourcePostgresSetting         string = "postgres.setting"
@@ -57,6 +59,14 @@ func init() {
 		"postgres.schema": {
 			// to override args, implement: initPostgresSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPostgresSchema,
+		},
+		"postgres.table": {
+			// to override args, implement: initPostgresTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPostgresTable,
+		},
+		"postgres.rlsPolicy": {
+			// to override args, implement: initPostgresRlsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPostgresRlsPolicy,
 		},
 		"postgres.function": {
 			// to override args, implement: initPostgresFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -316,6 +326,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"postgres.schema.privileges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresSchema).GetPrivileges()).ToDataRes(types.Array(types.Resource("postgres.privilege")))
+	},
+	"postgres.schema.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresSchema).GetTables()).ToDataRes(types.Array(types.Resource("postgres.table")))
+	},
+	"postgres.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetName()).ToDataRes(types.String)
+	},
+	"postgres.table.oid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetOid()).ToDataRes(types.Int)
+	},
+	"postgres.table.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetSchema()).ToDataRes(types.String)
+	},
+	"postgres.table.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetKind()).ToDataRes(types.String)
+	},
+	"postgres.table.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetOwner()).ToDataRes(types.Resource("postgres.role"))
+	},
+	"postgres.table.rowSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetRowSecurityEnabled()).ToDataRes(types.Bool)
+	},
+	"postgres.table.rowSecurityForced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetRowSecurityForced()).ToDataRes(types.Bool)
+	},
+	"postgres.table.privileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetPrivileges()).ToDataRes(types.Array(types.Resource("postgres.privilege")))
+	},
+	"postgres.table.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresTable).GetPolicies()).ToDataRes(types.Array(types.Resource("postgres.rlsPolicy")))
+	},
+	"postgres.rlsPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresRlsPolicy).GetName()).ToDataRes(types.String)
+	},
+	"postgres.rlsPolicy.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresRlsPolicy).GetCommand()).ToDataRes(types.String)
+	},
+	"postgres.rlsPolicy.permissive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresRlsPolicy).GetPermissive()).ToDataRes(types.Bool)
+	},
+	"postgres.rlsPolicy.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresRlsPolicy).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"postgres.rlsPolicy.usingExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresRlsPolicy).GetUsingExpression()).ToDataRes(types.String)
+	},
+	"postgres.rlsPolicy.checkExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresRlsPolicy).GetCheckExpression()).ToDataRes(types.String)
 	},
 	"postgres.function.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresFunction).GetName()).ToDataRes(types.String)
@@ -728,6 +786,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"postgres.schema.privileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostgresSchema).Privileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.schema.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresSchema).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).__id, ok = v.Value.(string)
+		return
+	},
+	"postgres.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgres.table.oid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Oid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"postgres.table.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Schema, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgres.table.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgres.table.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Owner, ok = plugin.RawToTValue[*mqlPostgresRole](v.Value, v.Error)
+		return
+	},
+	"postgres.table.rowSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).RowSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgres.table.rowSecurityForced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).RowSecurityForced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgres.table.privileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Privileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.table.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresTable).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.rlsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"postgres.rlsPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgres.rlsPolicy.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgres.rlsPolicy.permissive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).Permissive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgres.rlsPolicy.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgres.rlsPolicy.usingExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).UsingExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgres.rlsPolicy.checkExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresRlsPolicy).CheckExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"postgres.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1632,6 +1762,7 @@ type mqlPostgresSchema struct {
 	Oid        plugin.TValue[int64]
 	Owner      plugin.TValue[*mqlPostgresRole]
 	Privileges plugin.TValue[[]any]
+	Tables     plugin.TValue[[]any]
 }
 
 // createPostgresSchema creates a new instance of this resource
@@ -1704,6 +1835,211 @@ func (c *mqlPostgresSchema) GetPrivileges() *plugin.TValue[[]any] {
 
 		return c.privileges()
 	})
+}
+
+func (c *mqlPostgresSchema) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.schema", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlPostgresTable for the postgres.table resource
+type mqlPostgresTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPostgresTableInternal
+	Name               plugin.TValue[string]
+	Oid                plugin.TValue[int64]
+	Schema             plugin.TValue[string]
+	Kind               plugin.TValue[string]
+	Owner              plugin.TValue[*mqlPostgresRole]
+	RowSecurityEnabled plugin.TValue[bool]
+	RowSecurityForced  plugin.TValue[bool]
+	Privileges         plugin.TValue[[]any]
+	Policies           plugin.TValue[[]any]
+}
+
+// createPostgresTable creates a new instance of this resource
+func createPostgresTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgres.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresTable) MqlName() string {
+	return "postgres.table"
+}
+
+func (c *mqlPostgresTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPostgresTable) GetOid() *plugin.TValue[int64] {
+	return &c.Oid
+}
+
+func (c *mqlPostgresTable) GetSchema() *plugin.TValue[string] {
+	return &c.Schema
+}
+
+func (c *mqlPostgresTable) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlPostgresTable) GetOwner() *plugin.TValue[*mqlPostgresRole] {
+	return plugin.GetOrCompute[*mqlPostgresRole](&c.Owner, func() (*mqlPostgresRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.table", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPostgresRole), nil
+			}
+		}
+
+		return c.owner()
+	})
+}
+
+func (c *mqlPostgresTable) GetRowSecurityEnabled() *plugin.TValue[bool] {
+	return &c.RowSecurityEnabled
+}
+
+func (c *mqlPostgresTable) GetRowSecurityForced() *plugin.TValue[bool] {
+	return &c.RowSecurityForced
+}
+
+func (c *mqlPostgresTable) GetPrivileges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Privileges, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.table", c.__id, "privileges")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privileges()
+	})
+}
+
+func (c *mqlPostgresTable) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgres.table", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+// mqlPostgresRlsPolicy for the postgres.rlsPolicy resource
+type mqlPostgresRlsPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostgresRlsPolicyInternal it will be used here
+	Name            plugin.TValue[string]
+	Command         plugin.TValue[string]
+	Permissive      plugin.TValue[bool]
+	Roles           plugin.TValue[[]any]
+	UsingExpression plugin.TValue[string]
+	CheckExpression plugin.TValue[string]
+}
+
+// createPostgresRlsPolicy creates a new instance of this resource
+func createPostgresRlsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresRlsPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgres.rlsPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresRlsPolicy) MqlName() string {
+	return "postgres.rlsPolicy"
+}
+
+func (c *mqlPostgresRlsPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresRlsPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPostgresRlsPolicy) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlPostgresRlsPolicy) GetPermissive() *plugin.TValue[bool] {
+	return &c.Permissive
+}
+
+func (c *mqlPostgresRlsPolicy) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+func (c *mqlPostgresRlsPolicy) GetUsingExpression() *plugin.TValue[string] {
+	return &c.UsingExpression
+}
+
+func (c *mqlPostgresRlsPolicy) GetCheckExpression() *plugin.TValue[string] {
+	return &c.CheckExpression
 }
 
 // mqlPostgresFunction for the postgres.function resource
