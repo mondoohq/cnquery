@@ -5,8 +5,11 @@ package connection
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"net"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,6 +37,7 @@ type MongoConnection struct {
 	password    string
 	authDB      string
 	tls         bool
+	tlsCAFile   string
 	tlsInsecure bool
 
 	// scopedDatabase is set when the asset is a single discovered database.
@@ -65,7 +69,12 @@ func NewMongoConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	}
 	conn.scopedDatabase = conf.Options[OptionScopedDatabase]
 	conn.tls = conf.Options[OptionTLS] == "true"
+	conn.tlsCAFile = conf.Options[OptionTLSCA]
 	conn.tlsInsecure = conf.Options[OptionTLSInsecure] == "true"
+	// A CA path or insecure flag implies TLS even without an explicit --tls.
+	if conn.tlsCAFile != "" || conn.tlsInsecure {
+		conn.tls = true
+	}
 
 	conn.port = 27017
 	if p := conf.Options[OptionPort]; p != "" {
@@ -117,20 +126,25 @@ func (c *MongoConnection) ServerID() string {
 	return net.JoinHostPort(c.host, strconv.Itoa(c.port))
 }
 
+// Host returns the configured host (a hostname or a full mongodb:// string).
+func (c *MongoConnection) Host() string {
+	return c.host
+}
+
+// Port returns the resolved TCP port.
+func (c *MongoConnection) Port() int {
+	return c.port
+}
+
 // uri builds a mongodb:// connection string from the resolved settings, unless
-// the host is already a full connection string.
+// the host is already a full connection string. TLS is configured separately
+// via tlsConfig/SetTLSConfig, not through query parameters.
 func (c *MongoConnection) uri() string {
 	if strings.HasPrefix(c.host, "mongodb://") || strings.HasPrefix(c.host, "mongodb+srv://") {
 		return c.host
 	}
 	q := url.Values{}
 	q.Set("authSource", c.authDB)
-	if c.tls {
-		q.Set("tls", "true")
-		if c.tlsInsecure {
-			q.Set("tlsInsecure", "true")
-		}
-	}
 	u := &url.URL{
 		Scheme:   "mongodb",
 		Host:     net.JoinHostPort(c.host, strconv.Itoa(c.port)),
@@ -143,10 +157,41 @@ func (c *MongoConnection) uri() string {
 	return u.String()
 }
 
+// tlsConfig builds the TLS configuration from the connection settings, or
+// returns nil when TLS is disabled. A configured CA file is loaded into the
+// root pool so servers with a private CA verify correctly.
+func (c *MongoConnection) tlsConfig() (*tls.Config, error) {
+	if !c.tls {
+		return nil, nil
+	}
+	cfg := &tls.Config{InsecureSkipVerify: c.tlsInsecure}
+	if c.tlsCAFile != "" {
+		pem, err := os.ReadFile(c.tlsCAFile)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "failed to read tls-ca %q: %v", c.tlsCAFile, err)
+		}
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(pem) {
+			return nil, status.Errorf(codes.InvalidArgument, "no certificates found in tls-ca %q", c.tlsCAFile)
+		}
+		cfg.RootCAs = pool
+	}
+	return cfg, nil
+}
+
 // Client returns the shared MongoDB client, dialing on first use.
 func (c *MongoConnection) Client() (*mongo.Client, error) {
 	c.clientOnce.Do(func() {
-		client, err := mongo.Connect(options.Client().ApplyURI(c.uri()))
+		opts := options.Client().ApplyURI(c.uri())
+		tlsCfg, err := c.tlsConfig()
+		if err != nil {
+			c.clientErr = err
+			return
+		}
+		if tlsCfg != nil {
+			opts.SetTLSConfig(tlsCfg)
+		}
+		client, err := mongo.Connect(opts)
 		if err != nil {
 			c.clientErr = err
 			return

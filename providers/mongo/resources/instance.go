@@ -53,11 +53,22 @@ func initMongoInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		jsEnabled = toBool(v)
 	}
 
+	// getCmdLineOpts only reports explicitly-set options, and may be unauthorized
+	// entirely, so fall back to the values the connection already knows.
+	port := toInt(deepGet(parsed, "net", "port"))
+	if port == 0 {
+		port = int64(conn.Port())
+	}
+	bindIp := toStr(deepGet(parsed, "net", "bindIp"))
+	if bindIp == "" {
+		bindIp = conn.Host()
+	}
+
 	args["__id"] = llx.StringData(serverID)
 	args["version"] = llx.StringData(toStr(buildInfo["version"]))
 	args["gitVersion"] = llx.StringData(toStr(buildInfo["gitVersion"]))
-	args["port"] = llx.IntData(toInt(deepGet(parsed, "net", "port")))
-	args["bindIp"] = llx.StringData(toStr(deepGet(parsed, "net", "bindIp")))
+	args["port"] = llx.IntData(port)
+	args["bindIp"] = llx.StringData(bindIp)
 	args["authenticationEnabled"] = llx.BoolData(authEnabled)
 	args["authorizationEnabled"] = llx.BoolData(authEnabled)
 	args["clusterAuthMode"] = llx.StringData(toStr(deepGet(parsed, "security", "clusterAuthMode")))
