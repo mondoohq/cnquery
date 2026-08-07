@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"math"
+	"net/netip"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,21 +16,95 @@ import (
 
 // --- Pure helpers (table-tested in azure_exposure_test.go) ---
 
-// internetOpenSourcePrefixes is the set of NSG source address prefixes that
-// represent "any internet source". An inbound Allow rule whose source matches
+// isInternetOpenSourcePrefix reports whether a single NSG source address prefix
+// represents "any internet source". An inbound Allow rule whose source matches
 // one of these exposes the destination to the public internet.
-//   - "*"            wildcard, any source
-//   - "0.0.0.0/0"    all IPv4
-//   - "::/0"         all IPv6
-//   - "internet"     the Azure "Internet" service tag (everything outside the VNet)
+//
+// The named forms are Azure's own vocabulary:
+//   - "*" / "any"  wildcard, any source
+//   - "internet"   the Azure "Internet" service tag (everything outside the VNet)
+//
+// Everything else is parsed as a prefix rather than string-compared, so any
+// zero-length prefix counts -- "0.0.0.0/0" and "::/0", but equally "0.0.0.0/0 "
+// or an IPv6 form written out in full. A string compare recognized only the two
+// canonical spellings, and a rule written any other way read as closed.
+//
+// Note this deliberately answers only for ONE prefix. A source list can cover
+// the whole internet without any single entry doing so -- see
+// prefixesCoverInternet.
 func isInternetOpenSourcePrefix(prefix string) bool {
 	p := strings.ToLower(strings.TrimSpace(prefix))
 	switch p {
-	case "*", "0.0.0.0/0", "::/0", "internet":
+	case "*", "any", "internet":
 		return true
-	default:
+	}
+	parsed, err := netip.ParsePrefix(p)
+	if err != nil {
 		return false
 	}
+	return parsed.Bits() == 0
+}
+
+// prefixesCoverInternet reports whether a set of source prefixes together cover
+// the whole public address space, even though no single entry does.
+//
+// The case that matters is the split-halves form -- ["0.0.0.0/1",
+// "128.0.0.0/1"] -- which is all of IPv4 written as two prefixes. It is a
+// common way to express "any" and it defeats a per-entry check: every entry
+// looks like an ordinary CIDR, so an NSG opened this way read as closed and the
+// resource behind it reported internetReachable: false.
+//
+// The aggregation is IPv4 only. A prefix that is open on its own is caught for
+// either family, so "::/0" still reports true, but IPv6 prefixes are not summed
+// against each other: an all-of-IPv6 set written as ["::/1", "8000::/1"] is not
+// recognized. The split-halves spelling exists to get past tooling that rejects
+// 0.0.0.0/0, which is an IPv4 habit, so that gap has not been worth 128-bit
+// range math.
+func prefixesCoverInternet(prefixes []string) bool {
+	var ranges []ipRange
+	for _, p := range prefixes {
+		if isInternetOpenSourcePrefix(p) {
+			return true
+		}
+		parsed, err := netip.ParsePrefix(strings.TrimSpace(p))
+		if err != nil || !parsed.Addr().Is4() {
+			continue
+		}
+		lo := ipv4ToUint(parsed.Masked().Addr())
+		size := uint64(1) << (32 - parsed.Bits())
+		ranges = append(ranges, ipRange{lo: uint64(lo), hi: uint64(lo) + size - 1})
+	}
+	return rangesCoverAllIPv4(ranges)
+}
+
+type ipRange struct{ lo, hi uint64 }
+
+func ipv4ToUint(addr netip.Addr) uint32 {
+	b := addr.As4()
+	return uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+}
+
+// rangesCoverAllIPv4 merges the ranges and reports whether they span the entire
+// IPv4 address space.
+func rangesCoverAllIPv4(ranges []ipRange) bool {
+	if len(ranges) == 0 {
+		return false
+	}
+	sort.Slice(ranges, func(i, j int) bool { return ranges[i].lo < ranges[j].lo })
+	if ranges[0].lo != 0 {
+		return false
+	}
+	reached := ranges[0].hi
+	for _, r := range ranges[1:] {
+		// a gap means the space is not fully covered
+		if r.lo > reached+1 {
+			return false
+		}
+		if r.hi > reached {
+			reached = r.hi
+		}
+	}
+	return reached >= math.MaxUint32
 }
 
 // securityRuleAllowsInternetIngress reports whether a single NSG security rule
@@ -46,12 +122,7 @@ func securityRuleAllowsInternetIngress(direction, access, sourcePrefix string, s
 	if isInternetOpenSourcePrefix(sourcePrefix) {
 		return true
 	}
-	for _, p := range sourcePrefixes {
-		if isInternetOpenSourcePrefix(p) {
-			return true
-		}
-	}
-	return false
+	return prefixesCoverInternet(sourcePrefixes)
 }
 
 // publicNetworkAccessEnabled interprets the Azure `publicNetworkAccess` string,
@@ -63,20 +134,37 @@ func publicNetworkAccessEnabled(value string) bool {
 }
 
 // firewallRuleAllowsAnyInternet reports whether a database firewall rule (start
-// IP / end IP range) opens the server to the public internet. A rule qualifies
-// when it starts at 0.0.0.0 and extends to any address beyond it — this catches
-// the full IPv4 span (0.0.0.0 -> 255.255.255.255) as well as wide partial
-// ranges such as 0.0.0.0 -> 128.255.255.255.
+// IP / end IP range) opens the server to the public internet.
 //
-// The special "allow all Azure services" rule (0.0.0.0 -> 0.0.0.0) is
-// deliberately NOT treated as internet-open. That rule permits traffic only
-// from Azure-internal service IPs, not from arbitrary public addresses, so
-// counting it as internet-reachable would be a false positive for servers that
-// have nothing but that rule enabled.
+// The rule is judged on how much of the address space it actually admits, not
+// on the text of its endpoints. Anchoring on the literal string "0.0.0.0" got
+// this wrong in both directions: 1.0.0.0 -> 255.255.255.255 and
+// 0.0.0.1 -> 255.255.255.255 are the whole routable internet and read as
+// closed, while 0.0.0.0 -> 0.0.0.1 is two addresses and read as open.
+//
+// A rule counts as internet-open when it spans at least half of IPv4. That
+// keeps the documented wide-partial case (0.0.0.0 -> 128.255.255.255) and the
+// off-by-one variants above, and excludes ordinary allowlists.
+//
+// The special "allow all Azure services" rule (0.0.0.0 -> 0.0.0.0) is NOT
+// internet-open: it permits traffic only from Azure-internal service IPs, not
+// from arbitrary public addresses. The span test excludes it on its own, since
+// it admits a single address.
 func firewallRuleAllowsAnyInternet(startIp, endIp string) bool {
-	start := strings.TrimSpace(startIp)
-	end := strings.TrimSpace(endIp)
-	return start == "0.0.0.0" && end != "" && end != "0.0.0.0"
+	start, err := netip.ParseAddr(strings.TrimSpace(startIp))
+	if err != nil || !start.Is4() {
+		return false
+	}
+	end, err := netip.ParseAddr(strings.TrimSpace(endIp))
+	if err != nil || !end.Is4() {
+		return false
+	}
+	lo, hi := ipv4ToUint(start), ipv4ToUint(end)
+	if hi < lo {
+		return false
+	}
+	const halfOfIPv4 = uint64(1) << 31
+	return uint64(hi)-uint64(lo)+1 >= halfOfIPv4
 }
 
 // databaseInternetReachable combines the publicNetworkAccess gate with the
@@ -96,9 +184,16 @@ func databaseInternetReachable(publicNetworkAccess string, firewallRanges [][2]s
 }
 
 // aksApiServerInternetReachable reports whether an AKS API server is reachable
-// from the public internet. It is reachable only when the cluster is not a
-// private cluster, public network access is not disabled, and no authorized-IP
-// allowlist restricts API access. Any of those gates closes the exposure.
+// from the public internet. It is reachable when the cluster is not private,
+// public network access is not disabled, and no authorized-IP allowlist
+// meaningfully restricts API access.
+//
+// An allowlist only counts as a restriction when it actually restricts
+// something. Treating any non-empty list as a restriction meant a cluster
+// allowlisted to 0.0.0.0/0 -- what several Terraform modules emit when the
+// field cannot be left empty -- reported its API server as unreachable while it
+// was open to the world. The same applies to a list written as the two IPv4
+// halves.
 func aksApiServerInternetReachable(enablePrivateCluster bool, publicNetworkAccess string, authorizedIPRanges []string) bool {
 	if enablePrivateCluster {
 		return false
@@ -106,10 +201,10 @@ func aksApiServerInternetReachable(enablePrivateCluster bool, publicNetworkAcces
 	if !publicNetworkAccessEnabled(publicNetworkAccess) {
 		return false
 	}
-	if len(authorizedIPRanges) > 0 {
-		return false
+	if len(authorizedIPRanges) == 0 {
+		return true
 	}
-	return true
+	return prefixesCoverInternet(authorizedIPRanges)
 }
 
 // --- Resolvers ---
@@ -123,12 +218,20 @@ func ruleSourceIsInternet(rule map[string]any) bool {
 		return true
 	}
 	for _, key := range []string{"sourceAddressPrefixes", "expandedSourceAddressPrefix"} {
-		if arr, ok := rule[key].([]any); ok {
-			for _, p := range arr {
-				if s, ok := p.(string); ok && isInternetOpenSourcePrefix(s) {
-					return true
-				}
+		arr, ok := rule[key].([]any)
+		if !ok {
+			continue
+		}
+		prefixes := make([]string, 0, len(arr))
+		for _, p := range arr {
+			if s, ok := p.(string); ok {
+				prefixes = append(prefixes, s)
 			}
+		}
+		// judged as a set, not entry by entry: a source list can cover the
+		// whole internet without any single entry doing so
+		if prefixesCoverInternet(prefixes) {
+			return true
 		}
 	}
 	return false
