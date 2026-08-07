@@ -207,6 +207,7 @@ PROVIDERS := \
 	aws \
 	azure \
 	bicep \
+	cassandra \
 	claude \
 	cloudflare \
 	cloudformation \

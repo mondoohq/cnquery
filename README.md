@@ -102,6 +102,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Alibaba Cloud accounts        | `alicloud`                 | `mql shell alicloud --access-key-id ID --access-key-secret SECRET`                                                                              |
 | Claude AI platform            | `claude`                   | `mql shell claude --token YOUR_API_KEY`                                                                                                         |
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
+| Apache Cassandra cluster      | `cassandra`                | `mql shell cassandra localhost --user cassandra --ask-pass`                                                                                     |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | AWS accounts                  | `aws`                      | `mql shell aws`                                                                                                                                 |
