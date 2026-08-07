@@ -643,6 +643,7 @@ const (
 	ResourceAwsEc2InstancePlacement                                             string = "aws.ec2.instance.placement"
 	ResourceAwsEc2Securitygroup                                                 string = "aws.ec2.securitygroup"
 	ResourceAwsEc2SecuritygroupIppermission                                     string = "aws.ec2.securitygroup.ippermission"
+	ResourceAwsEc2SecuritygroupIppermissionPeer                                 string = "aws.ec2.securitygroup.ippermission.peer"
 	ResourceAwsConfig                                                           string = "aws.config"
 	ResourceAwsConfigRule                                                       string = "aws.config.rule"
 	ResourceAwsConfigRuleComplianceDetail                                       string = "aws.config.rule.complianceDetail"
@@ -3504,6 +3505,10 @@ func init() {
 		"aws.ec2.securitygroup.ippermission": {
 			// to override args, implement: initAwsEc2SecuritygroupIppermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2SecuritygroupIppermission,
+		},
+		"aws.ec2.securitygroup.ippermission.peer": {
+			// to override args, implement: initAwsEc2SecuritygroupIppermissionPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2SecuritygroupIppermissionPeer,
 		},
 		"aws.config": {
 			// to override args, implement: initAwsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -25206,8 +25211,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.securitygroup.ippermission.userIdGroupPairs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetUserIdGroupPairs()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.ec2.securitygroup.ippermission.peers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetPeers()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup.ippermission.peer")))
+	},
 	"aws.ec2.securitygroup.ippermission.includesPublicSource": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetIncludesPublicSource()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.securitygroup.ippermission.peer.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetGroupId()).ToDataRes(types.String)
+	},
+	"aws.ec2.securitygroup.ippermission.peer.groupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetGroupName()).ToDataRes(types.String)
+	},
+	"aws.ec2.securitygroup.ippermission.peer.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.ec2.securitygroup.ippermission.peer.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.securitygroup.ippermission.peer.peeringStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetPeeringStatus()).ToDataRes(types.String)
+	},
+	"aws.ec2.securitygroup.ippermission.peer.securityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.ec2.securitygroup.ippermission.peer.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.ec2.securitygroup.ippermission.peer.peeringConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GetPeeringConnection()).ToDataRes(types.Resource("aws.vpc.peeringConnection"))
 	},
 	"aws.config.recorders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfig).GetRecorders()).ToDataRes(types.Array(types.Resource("aws.config.recorder")))
@@ -66350,8 +66382,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2SecuritygroupIppermission).UserIdGroupPairs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.securitygroup.ippermission.peers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).Peers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.securitygroup.ippermission.includesPublicSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2SecuritygroupIppermission).IncludesPublicSource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.groupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).GroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.peeringStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).PeeringStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.securityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).SecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.peer.peeringConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermissionPeer).PeeringConnection, ok = plugin.RawToTValue[*mqlAwsVpcPeeringConnection](v.Value, v.Error)
 		return
 	},
 	"aws.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -159580,6 +159652,7 @@ type mqlAwsEc2SecuritygroupIppermission struct {
 	PrefixListIds        plugin.TValue[[]any]
 	PrefixLists          plugin.TValue[[]any]
 	UserIdGroupPairs     plugin.TValue[[]any]
+	Peers                plugin.TValue[[]any]
 	IncludesPublicSource plugin.TValue[bool]
 }
 
@@ -159676,9 +159749,128 @@ func (c *mqlAwsEc2SecuritygroupIppermission) GetUserIdGroupPairs() *plugin.TValu
 	return &c.UserIdGroupPairs
 }
 
+func (c *mqlAwsEc2SecuritygroupIppermission) GetPeers() *plugin.TValue[[]any] {
+	return &c.Peers
+}
+
 func (c *mqlAwsEc2SecuritygroupIppermission) GetIncludesPublicSource() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IncludesPublicSource, func() (bool, error) {
 		return c.includesPublicSource()
+	})
+}
+
+// mqlAwsEc2SecuritygroupIppermissionPeer for the aws.ec2.securitygroup.ippermission.peer resource
+type mqlAwsEc2SecuritygroupIppermissionPeer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2SecuritygroupIppermissionPeerInternal
+	GroupId           plugin.TValue[string]
+	GroupName         plugin.TValue[string]
+	AccountId         plugin.TValue[string]
+	Description       plugin.TValue[string]
+	PeeringStatus     plugin.TValue[string]
+	SecurityGroup     plugin.TValue[*mqlAwsEc2Securitygroup]
+	Vpc               plugin.TValue[*mqlAwsVpc]
+	PeeringConnection plugin.TValue[*mqlAwsVpcPeeringConnection]
+}
+
+// createAwsEc2SecuritygroupIppermissionPeer creates a new instance of this resource
+func createAwsEc2SecuritygroupIppermissionPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2SecuritygroupIppermissionPeer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.securitygroup.ippermission.peer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) MqlName() string {
+	return "aws.ec2.securitygroup.ippermission.peer"
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetGroupName() *plugin.TValue[string] {
+	return &c.GroupName
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetPeeringStatus() *plugin.TValue[string] {
+	return &c.PeeringStatus
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.SecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup.ippermission.peer", c.__id, "securityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.securityGroup()
+	})
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup.ippermission.peer", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermissionPeer) GetPeeringConnection() *plugin.TValue[*mqlAwsVpcPeeringConnection] {
+	return plugin.GetOrCompute[*mqlAwsVpcPeeringConnection](&c.PeeringConnection, func() (*mqlAwsVpcPeeringConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup.ippermission.peer", c.__id, "peeringConnection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcPeeringConnection), nil
+			}
+		}
+
+		return c.peeringConnection()
 	})
 }
 
