@@ -14,7 +14,7 @@ func (r *mqlMysqldbInstance) schemas() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	serverID := r.ServerUuid.Data
+	serverID := r.__id
 	rows, err := db.QueryContext(mysqldbContext(),
 		`SELECT SCHEMA_NAME, COALESCE(DEFAULT_CHARACTER_SET_NAME, ''), COALESCE(DEFAULT_COLLATION_NAME, '')
 		 FROM information_schema.SCHEMATA ORDER BY SCHEMA_NAME`)

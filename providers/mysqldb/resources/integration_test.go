@@ -101,14 +101,24 @@ func TestIntegrationResolveAll(t *testing.T) {
 	resolveList(t, "components", inst.GetComponents())
 	resolveList(t, "replicationChannels", inst.GetReplicationChannels())
 
+	// Child __ids must carry the server prefix so resources from different
+	// servers never collide (regression guard for the MariaDB no-server_uuid
+	// case, where the prefix would otherwise be empty).
+	serverPrefix := inst.MqlID()
 	for _, x := range resolveList(t, "users", inst.GetUsers()) {
 		u := x.(*mqlMysqldbUser)
+		if !strings.HasPrefix(u.MqlID(), serverPrefix+"/") {
+			t.Errorf("user __id %q not prefixed by server id %q", u.MqlID(), serverPrefix)
+		}
 		resolveList(t, "user.grantedRoles", u.GetGrantedRoles())
 		resolveList(t, "user.privileges", u.GetPrivileges())
 	}
 	for _, x := range resolveList(t, "schemas", inst.GetSchemas()) {
 		sc := x.(*mqlMysqldbSchema)
 		name := sc.GetName().Data
+		if !strings.HasPrefix(sc.MqlID(), serverPrefix+"/") {
+			t.Errorf("schema __id %q not prefixed by server id %q", sc.MqlID(), serverPrefix)
+		}
 		resolveList(t, name+".privileges", sc.GetPrivileges())
 		resolveList(t, name+".routines", sc.GetRoutines())
 		for _, tb := range resolveList(t, name+".tables", sc.GetTables()) {

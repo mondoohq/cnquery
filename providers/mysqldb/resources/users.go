@@ -94,7 +94,7 @@ func (r *mqlMysqldbInstance) users() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	serverID := r.ServerUuid.Data
+	serverID := r.__id
 	mariadb := r.Flavor.Data == "mariadb"
 
 	rows, err := db.QueryContext(mysqldbContext(), "SELECT "+userColumns("", mariadb)+" FROM mysql.user ORDER BY User, Host")
