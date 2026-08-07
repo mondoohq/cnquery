@@ -91,17 +91,5 @@ func (r *mqlSnowflakeDynamicTable) ownerRole() (*mqlSnowflakeRole, error) {
 }
 
 func (r *mqlSnowflakeDynamicTable) warehouse() (*mqlSnowflakeWarehouse, error) {
-	if r.cacheWarehouse == "" {
-		r.Warehouse.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	wh, err := snowflakeWarehouseByName(r.MqlRuntime, r.cacheWarehouse)
-	if err != nil {
-		return nil, err
-	}
-	if wh == nil {
-		r.Warehouse.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return wh, nil
+	return resolveWarehouseRef(r.MqlRuntime, r.cacheWarehouse, &r.Warehouse)
 }
