@@ -36,6 +36,62 @@ func TestSplitCommaList(t *testing.T) {
 	}
 }
 
+func TestSnowflakeSchemaObjectID(t *testing.T) {
+	cases := []struct {
+		name                     string
+		database, schema, object string
+		want                     string
+	}{
+		{"plain parts", "DB", "PUBLIC", "CUSTOMERS", `"DB"."PUBLIC"."CUSTOMERS"`},
+		{"lowercase parts", "db", "public", "customers", `"db"."public"."customers"`},
+		// Quoting each part is what keeps these two distinct: without it both
+		// would render as A.B.C and collide in the resource cache.
+		{"dot in object name", "A", "B", "C.D", `"A"."B"."C.D"`},
+		{"dot in schema name", "A", "B.C", "D", `"A"."B.C"."D"`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := snowflakeSchemaObjectID(tc.database, tc.schema, tc.object)
+			if got != tc.want {
+				t.Errorf("snowflakeSchemaObjectID(%q, %q, %q) = %q, want %q",
+					tc.database, tc.schema, tc.object, got, tc.want)
+			}
+		})
+	}
+
+	// Distinct coordinates must never produce the same cache key.
+	if a, b := snowflakeSchemaObjectID("A", "B", "C.D"), snowflakeSchemaObjectID("A", "B.C", "D"); a == b {
+		t.Errorf("distinct objects share a cache key: %q", a)
+	}
+}
+
+func TestSnowflakeTime(t *testing.T) {
+	// A nullable timestamp column reaches us as the zero time, because the SDK
+	// reads it into a sql.NullTime and only copies through a valid value. It
+	// must resolve to null rather than to the year 1.
+	t.Run("zero time is null", func(t *testing.T) {
+		got := snowflakeTime(time.Time{})
+		if got.Type != types.Nil {
+			t.Errorf("snowflakeTime(zero) type = %v, want Nil", got.Type)
+		}
+	})
+
+	t.Run("real time is preserved", func(t *testing.T) {
+		want := time.Date(2023, 1, 2, 15, 4, 5, 0, time.UTC)
+		got := snowflakeTime(want)
+		if got.Type != types.Time {
+			t.Fatalf("snowflakeTime(%v) type = %v, want Time", want, got.Type)
+		}
+		gotTime, ok := got.Value.(*time.Time)
+		if !ok {
+			t.Fatalf("snowflakeTime(%v) value is %T, want *time.Time", want, got.Value)
+		}
+		if !gotTime.Equal(want) {
+			t.Errorf("snowflakeTime(%v) = %v, want %v", want, gotTime, want)
+		}
+	})
+}
+
 func TestParseSnowflakeTime(t *testing.T) {
 	// null cases: empty and unparseable strings must resolve to null, never error.
 	nullCases := []struct {
