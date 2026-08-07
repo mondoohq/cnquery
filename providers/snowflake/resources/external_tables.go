@@ -13,8 +13,9 @@ import (
 )
 
 type mqlSnowflakeExternalTableInternal struct {
-	cacheOwner string
-	cacheStage string
+	cacheOwner      string
+	cacheStage      string
+	cacheFileFormat string
 }
 
 func (r *mqlSnowflakeAccount) externalTables() ([]any, error) {
@@ -74,6 +75,7 @@ func newMqlSnowflakeExternalTable(runtime *plugin.Runtime, table sdk.ExternalTab
 	mqlTable := r.(*mqlSnowflakeExternalTable)
 	mqlTable.cacheOwner = table.Owner
 	mqlTable.cacheStage = table.Stage
+	mqlTable.cacheFileFormat = table.FileFormatName
 	return mqlTable, nil
 }
 
@@ -91,4 +93,8 @@ func (r *mqlSnowflakeExternalTable) ownerRole() (*mqlSnowflakeRole, error) {
 
 func (r *mqlSnowflakeExternalTable) stage() (*mqlSnowflakeStage, error) {
 	return resolveStageRef(r.MqlRuntime, r.cacheStage, &r.Stage)
+}
+
+func (r *mqlSnowflakeExternalTable) fileFormat() (*mqlSnowflakeFileFormat, error) {
+	return resolveFileFormatRef(r.MqlRuntime, r.cacheFileFormat, &r.FileFormat)
 }

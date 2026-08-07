@@ -42,6 +42,31 @@ func (r *mqlSnowflakeAccount) notificationIntegrations() ([]any, error) {
 	return list, nil
 }
 
+// resolveNotificationIntegrationRef resolves an account-level notification
+// integration by name. An empty name, or an integration the caller cannot see,
+// resolves to null rather than failing the surrounding query, matching how the
+// other object references degrade.
+func resolveNotificationIntegrationRef(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlSnowflakeNotificationIntegration]) (*mqlSnowflakeNotificationIntegration, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.SnowflakeConnection)
+	integrations, err := conn.Client().NotificationIntegrations.Show(context.Background(),
+		sdk.NewShowNotificationIntegrationRequest().WithLike(sdk.Like{Pattern: sdk.String(name)}))
+	if err != nil {
+		return nil, err
+	}
+	for i := range integrations {
+		if integrations[i].Name == name {
+			return newMqlSnowflakeNotificationIntegration(runtime, integrations[i])
+		}
+	}
+	field.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 func newMqlSnowflakeNotificationIntegration(runtime *plugin.Runtime, integration sdk.NotificationIntegration) (*mqlSnowflakeNotificationIntegration, error) {
 	r, err := CreateResource(runtime, "snowflake.notificationIntegration", map[string]*llx.RawData{
 		"__id":      llx.StringData(integration.ID().FullyQualifiedName()),
