@@ -3194,14 +3194,115 @@ azure.subscription.networkService.interface @defaults("name location properties.
   ipConfigs() []azure.subscription.networkService.interface.ipConfiguration
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
-  // Effective NSG rules merged across NSG-on-NIC, ASGs, and NSG-on-subnet (computed via BeginGetEffectiveNetworkSecurityGroup)
-  effectiveSecurityRules() []dict
-  // Effective routes applied to the NIC
+  // Effective NSG rule dicts
+  //
+  // Deprecated in favor of effectiveRules. Merged across NSG-on-NIC, ASGs, and
+  // NSG-on-subnet.
+  effectiveSecurityRules() @maturity("deprecated") []dict
+  // Effective route dicts
+  //
+  // Deprecated in favor of effectiveRoutes. Each entry carries name, source,
+  // state, addressPrefix, nextHopType, and nextHopIpAddress.
+  effectiveRouteTable() @maturity("deprecated") []dict
+  // Security rules actually applied to the interface
+  //
+  // The merged rule set across the NSG on the interface, the NSG on its subnet,
+  // and any application security group rules, which is what decides whether
+  // traffic reaches the interface. A rule on a single NSG is not the whole
+  // answer, because another NSG in the chain can deny what it allows. Empty
+  // when Azure declines to compute the set, which it does for an interface not
+  // attached to a running virtual machine, so an empty list is not proof that
+  // the interface admits nothing.
+  effectiveRules() []azure.subscription.networkService.interface.effectiveSecurityRule
+  // Routes actually applied to the interface
   //
   // Merges system, user-defined, and BGP-learned routes into the route table
-  // actually applied to the interface. Each entry carries name, source, state,
-  // addressPrefix, nextHopType, and nextHopIpAddress.
-  effectiveRouteTable() []dict
+  // the interface actually uses. Empty under the same conditions as
+  // effectiveRules.
+  effectiveRoutes() []azure.subscription.networkService.interface.effectiveRoute
+}
+
+// Security rule applied to a network interface after NSG merging
+//
+// One rule from the merged set across the NSG on an interface, the NSG on its
+// subnet, and any application security group rules. `networkSecurityGroup`
+// names which NSG in the chain contributed the rule, and `priority` with
+// `access` decides it against the others: Azure applies the lowest-priority
+// number that matches, so a Deny at a lower number closes an Allow above it.
+// Address and port fields come in both a singular and a plural form and Azure
+// populates one or the other, so read both; the expanded prefix lists resolve
+// service tags and application security groups into the concrete ranges they
+// stand for.
+private azure.subscription.networkService.interface.effectiveSecurityRule @defaults("name direction access protocol priority") {
+  // Rule name, prefixed with defaultSecurityRules/ for the rules Azure supplies
+  name string
+  // Traffic direction the rule covers: Inbound or Outbound
+  direction string
+  // Whether the rule permits or blocks matching traffic: Allow or Deny
+  access string
+  // Protocol the rule covers: Tcp, Udp, or All
+  protocol string
+  // Evaluation order
+  //
+  // Lower numbers are evaluated first, and the first matching rule decides the
+  // traffic, so a Deny at a lower priority closes an Allow at a higher one.
+  priority int
+  // Source port range the rule covers, as a single port, a range, or * for any
+  sourcePortRange string
+  // Source port ranges the rule covers, when the rule states more than one
+  sourcePortRanges []string
+  // Destination port range the rule covers, as a single port, a range, or * for any
+  destinationPortRange string
+  // Destination port ranges the rule covers, when the rule states more than one
+  destinationPortRanges []string
+  // Source the rule covers, as a CIDR block, * for any, or a service tag such as Internet or VirtualNetwork
+  sourceAddressPrefix string
+  // Sources the rule covers, when the rule states more than one
+  sourceAddressPrefixes []string
+  // Destination the rule covers, as a CIDR block, * for any, or a service tag
+  destinationAddressPrefix string
+  // Destinations the rule covers, when the rule states more than one
+  destinationAddressPrefixes []string
+  // Concrete source ranges the rule resolves to
+  //
+  // The address ranges behind a service tag or application security group in
+  // the source, expanded by Azure. Reading these rather than the tag name is
+  // what shows the actual reach of a rule written against Internet or
+  // AzureCloud.
+  expandedSourceAddressPrefix []string
+  // Concrete destination ranges the rule resolves to
+  expandedDestinationAddressPrefix []string
+  // Network security group in the effective chain that contributed the rule
+  networkSecurityGroup() azure.subscription.networkService.securityGroup
+}
+
+// Route applied to a network interface after route merging
+//
+// One route from the table the interface actually uses, merging the system
+// routes Azure creates, the user-defined routes from the subnet's route table,
+// and any routes learned over BGP. `source` says which of those it came from
+// and `state` whether it is active, since an invalid route is present but not
+// in use. `nextHopType` is what decides where traffic leaves: a default route
+// whose next hop is Internet leaves directly, while VirtualAppliance or
+// VirtualNetworkGateway sends it through an inspection or tunnel path.
+private azure.subscription.networkService.interface.effectiveRoute @defaults("name addressPrefix nextHopType state") {
+  // Route name, empty for the system routes Azure supplies
+  name string
+  // Where the route came from: Default, User, VirtualNetworkGateway, or Unknown
+  source string
+  // Whether the route is in use: Active or Invalid
+  state string
+  // Destination ranges the route covers
+  addressPrefix []string
+  // Where matching traffic is sent
+  //
+  // One of VirtualNetworkGateway, VnetLocal, Internet, VirtualAppliance, or
+  // None. A route to None discards the traffic.
+  nextHopType string
+  // Next hop addresses, set only when nextHopType is VirtualAppliance
+  nextHopIpAddress []string
+  // Whether BGP route propagation is disabled on the route's table
+  disableBgpRoutePropagation bool
 }
 
 // Azure network interface IP configuration

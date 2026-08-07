@@ -94,6 +94,8 @@ const (
 	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                                             string = "azure.subscription.networkService.loadBalancerRule"
 	ResourceAzureSubscriptionNetworkServiceOutboundRule                                                 string = "azure.subscription.networkService.outboundRule"
 	ResourceAzureSubscriptionNetworkServiceInterface                                                    string = "azure.subscription.networkService.interface"
+	ResourceAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule                               string = "azure.subscription.networkService.interface.effectiveSecurityRule"
+	ResourceAzureSubscriptionNetworkServiceInterfaceEffectiveRoute                                      string = "azure.subscription.networkService.interface.effectiveRoute"
 	ResourceAzureSubscriptionNetworkServiceInterfaceIpConfiguration                                     string = "azure.subscription.networkService.interface.ipConfiguration"
 	ResourceAzureSubscriptionNetworkServiceIpAddress                                                    string = "azure.subscription.networkService.ipAddress"
 	ResourceAzureSubscriptionNetworkServiceBastionHost                                                  string = "azure.subscription.networkService.bastionHost"
@@ -841,6 +843,14 @@ func init() {
 		"azure.subscription.networkService.interface": {
 			Init:   initAzureSubscriptionNetworkServiceInterface,
 			Create: createAzureSubscriptionNetworkServiceInterface,
+		},
+		"azure.subscription.networkService.interface.effectiveSecurityRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule,
+		},
+		"azure.subscription.networkService.interface.effectiveRoute": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceInterfaceEffectiveRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceInterfaceEffectiveRoute,
 		},
 		"azure.subscription.networkService.interface.ipConfiguration": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceInterfaceIpConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5881,6 +5891,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.interface.effectiveRouteTable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetEffectiveRouteTable()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.interface.effectiveRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetEffectiveRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.interface.effectiveSecurityRule")))
+	},
+	"azure.subscription.networkService.interface.effectiveRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetEffectiveRoutes()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.interface.effectiveRoute")))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetDirection()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.access": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourcePortRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetSourcePortRange()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourcePortRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetSourcePortRanges()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationPortRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetDestinationPortRange()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationPortRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetDestinationPortRanges()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourceAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetSourceAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourceAddressPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetSourceAddressPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetDestinationAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationAddressPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetDestinationAddressPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.expandedSourceAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetExpandedSourceAddressPrefix()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.expandedDestinationAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetExpandedDestinationAddressPrefix()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.networkSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).GetNetworkSecurityGroup()).ToDataRes(types.Resource("azure.subscription.networkService.securityGroup"))
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.addressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetAddressPrefix()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.nextHopType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetNextHopType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.nextHopIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetNextHopIpAddress()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.disableBgpRoutePropagation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).GetDisableBgpRoutePropagation()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.networkService.interface.ipConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration).GetId()).ToDataRes(types.String)
@@ -25026,6 +25111,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.interface.effectiveRouteTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceInterface).EffectiveRouteTable, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).EffectiveRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).EffectiveRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourcePortRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).SourcePortRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourcePortRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).SourcePortRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationPortRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).DestinationPortRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationPortRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).DestinationPortRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourceAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).SourceAddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.sourceAddressPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).SourceAddressPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).DestinationAddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.destinationAddressPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).DestinationAddressPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.expandedSourceAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).ExpandedSourceAddressPrefix, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.expandedDestinationAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).ExpandedDestinationAddressPrefix, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveSecurityRule.networkSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule).NetworkSecurityGroup, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.addressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).AddressPrefix, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.nextHopType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).NextHopType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.nextHopIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).NextHopIpAddress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRoute.disableBgpRoutePropagation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute).DisableBgpRoutePropagation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.interface.ipConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57484,6 +57677,8 @@ type mqlAzureSubscriptionNetworkServiceInterface struct {
 	Vm                          plugin.TValue[*mqlAzureSubscriptionComputeServiceVm]
 	EffectiveSecurityRules      plugin.TValue[[]any]
 	EffectiveRouteTable         plugin.TValue[[]any]
+	EffectiveRules              plugin.TValue[[]any]
+	EffectiveRoutes             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceInterface creates a new instance of this resource
@@ -57641,6 +57836,243 @@ func (c *mqlAzureSubscriptionNetworkServiceInterface) GetEffectiveRouteTable() *
 	return plugin.GetOrCompute[[]any](&c.EffectiveRouteTable, func() ([]any, error) {
 		return c.effectiveRouteTable()
 	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetEffectiveRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.interface", c.__id, "effectiveRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetEffectiveRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.interface", c.__id, "effectiveRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveRoutes()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule for the azure.subscription.networkService.interface.effectiveSecurityRule resource
+type mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRuleInternal
+	Name                             plugin.TValue[string]
+	Direction                        plugin.TValue[string]
+	Access                           plugin.TValue[string]
+	Protocol                         plugin.TValue[string]
+	Priority                         plugin.TValue[int64]
+	SourcePortRange                  plugin.TValue[string]
+	SourcePortRanges                 plugin.TValue[[]any]
+	DestinationPortRange             plugin.TValue[string]
+	DestinationPortRanges            plugin.TValue[[]any]
+	SourceAddressPrefix              plugin.TValue[string]
+	SourceAddressPrefixes            plugin.TValue[[]any]
+	DestinationAddressPrefix         plugin.TValue[string]
+	DestinationAddressPrefixes       plugin.TValue[[]any]
+	ExpandedSourceAddressPrefix      plugin.TValue[[]any]
+	ExpandedDestinationAddressPrefix plugin.TValue[[]any]
+	NetworkSecurityGroup             plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup]
+}
+
+// createAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.interface.effectiveSecurityRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) MqlName() string {
+	return "azure.subscription.networkService.interface.effectiveSecurityRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetAccess() *plugin.TValue[string] {
+	return &c.Access
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetSourcePortRange() *plugin.TValue[string] {
+	return &c.SourcePortRange
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetSourcePortRanges() *plugin.TValue[[]any] {
+	return &c.SourcePortRanges
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetDestinationPortRange() *plugin.TValue[string] {
+	return &c.DestinationPortRange
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetDestinationPortRanges() *plugin.TValue[[]any] {
+	return &c.DestinationPortRanges
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetSourceAddressPrefix() *plugin.TValue[string] {
+	return &c.SourceAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetSourceAddressPrefixes() *plugin.TValue[[]any] {
+	return &c.SourceAddressPrefixes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetDestinationAddressPrefix() *plugin.TValue[string] {
+	return &c.DestinationAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetDestinationAddressPrefixes() *plugin.TValue[[]any] {
+	return &c.DestinationAddressPrefixes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetExpandedSourceAddressPrefix() *plugin.TValue[[]any] {
+	return &c.ExpandedSourceAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetExpandedDestinationAddressPrefix() *plugin.TValue[[]any] {
+	return &c.ExpandedDestinationAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveSecurityRule) GetNetworkSecurityGroup() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSecurityGroup](&c.NetworkSecurityGroup, func() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.interface.effectiveSecurityRule", c.__id, "networkSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
+			}
+		}
+
+		return c.networkSecurityGroup()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute for the azure.subscription.networkService.interface.effectiveRoute resource
+type mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRouteInternal it will be used here
+	Name                       plugin.TValue[string]
+	Source                     plugin.TValue[string]
+	State                      plugin.TValue[string]
+	AddressPrefix              plugin.TValue[[]any]
+	NextHopType                plugin.TValue[string]
+	NextHopIpAddress           plugin.TValue[[]any]
+	DisableBgpRoutePropagation plugin.TValue[bool]
+}
+
+// createAzureSubscriptionNetworkServiceInterfaceEffectiveRoute creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceInterfaceEffectiveRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.interface.effectiveRoute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) MqlName() string {
+	return "azure.subscription.networkService.interface.effectiveRoute"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetAddressPrefix() *plugin.TValue[[]any] {
+	return &c.AddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetNextHopType() *plugin.TValue[string] {
+	return &c.NextHopType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetNextHopIpAddress() *plugin.TValue[[]any] {
+	return &c.NextHopIpAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterfaceEffectiveRoute) GetDisableBgpRoutePropagation() *plugin.TValue[bool] {
+	return &c.DisableBgpRoutePropagation
 }
 
 // mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration for the azure.subscription.networkService.interface.ipConfiguration resource
