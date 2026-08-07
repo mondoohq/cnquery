@@ -27,6 +27,12 @@ type StorageInfo struct {
 	// either an explicit key fingerprint or the literal "autogen" when
 	// Proxmox manages the key. An empty string means encryption is off.
 	EncryptionKey string `json:"encryption-key"`
+	// Nodes is the comma-separated node restriction from the storage config.
+	// Empty means the storage is available on every node.
+	Nodes string `json:"nodes"`
+	// Active reports whether the storage is currently reachable. Only the
+	// per-node /nodes/<n>/storage endpoint returns it.
+	Active int `json:"active"`
 }
 
 func (c *PveConnection) GetStorages() ([]StorageInfo, error) {

@@ -54,6 +54,9 @@ type PveConnection struct {
 
 	// ceph memoizes the one-time "does this cluster run Ceph" probe.
 	ceph cephProbe
+	// backups memoizes the cluster-wide backup sweep so that per-guest
+	// lookups don't each re-list every storage.
+	backups backupIndex
 }
 
 // ID and ParentID implement the plugin.Connection interface.

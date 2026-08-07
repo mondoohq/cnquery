@@ -485,6 +485,21 @@ proxmox.vm @defaults("id name status") {
   // VM-level firewall aliases
   aliases() []proxmox.firewall.alias
 
+  // --- Backups ---
+
+  // Backup archives held for this virtual machine
+  //
+  // Every backup volume across all storages that owns this VMID, newest
+  // first. Reports what was actually captured, which scheduled backup
+  // jobs alone cannot confirm. Empty when the guest has never been
+  // backed up to a storage this token can read.
+  backups() []proxmox.storage.volume
+  // When this virtual machine was last backed up
+  //
+  // Creation time of the newest backup archive owned by this guest.
+  // Null when no backup exists.
+  lastBackupAt() time
+
   // --- Updates (via QEMU Guest Agent) ---
 
   // Installed packages and available updates
@@ -614,6 +629,92 @@ proxmox.storage @defaults("id type enabled") {
   encrypted bool
   // The raw `encryption-key` value from the storage config; empty when not configured
   encryptionKey string
+  // Nodes the storage is restricted to, comma-separated
+  //
+  // Empty when the storage is available on every node.
+  nodes string
+  // Volumes stored on this storage
+  //
+  // Covers every content class the storage holds: backup archives, ISO
+  // images, container templates, guest disks, and snippets. A shared
+  // storage is listed once; a local storage is listed from each node
+  // that has it, since each node holds an independent copy.
+  volumes() []proxmox.storage.volume
+  // Backup archives stored on this storage
+  //
+  // The subset of `volumes` with a content class of `backup`. Each
+  // entry carries the guest it belongs to, when it was written, and
+  // whether it is encrypted, protected, and verified.
+  backups() []proxmox.storage.volume
+}
+
+// Volume stored on a Proxmox VE storage
+//
+// Single volume on a storage, selected by `volid` (for example
+// `proxmox.storage.volume(volid: "local:backup/vzdump-qemu-100-2024_01_01-00_00_00.vma.zst")`).
+// Backups are the reason this matters most: `createdAt` says when a
+// guest was last actually captured, which scheduled backup jobs alone
+// cannot answer, and `encrypted`, `protected`, and `verification`
+// report whether that capture is protected and known-good. The
+// `contentType` field separates backups from ISO images, container
+// templates, guest disks, and snippets, and `vm` and `container`
+// resolve the guest a volume belongs to.
+proxmox.storage.volume @defaults("volid contentType createdAt size") {
+  // Volume identifier, in `<storage>:<path>` form
+  volid string
+  // Storage holding the volume
+  storage string
+  // Node the volume was listed from
+  //
+  // A shared storage reports one copy from a single node. A local
+  // storage holds an independent copy on each node, so the same guest
+  // can have separate volumes here per node.
+  node string
+  // Content class of the volume
+  //
+  // One of `backup`, `iso`, `vztmpl`, `images`, `rootdir`, or
+  // `snippets`. Derived from the volume identifier when the storage
+  // plugin does not report it.
+  contentType string
+  // Format identifier (`raw`, `qcow2`, `subvol`, `iso`, `tgz`, `pbs-vm`, and so on)
+  format string
+  // Volume size in bytes
+  size int
+  // Used space in bytes
+  //
+  // Most storage plugins do not report anything meaningful here; `size`
+  // is the reliable figure.
+  used int
+  // When the volume was created
+  createdAt time
+  // Guest that owns the volume; null for ISO images, templates, and snippets
+  vm() proxmox.vm
+  // Container that owns the volume; null when the volume belongs to a virtual machine
+  container() proxmox.container
+  // VMID the volume belongs to; 0 when the volume has no owning guest
+  vmid int
+  // Whether the volume is encrypted at rest
+  //
+  // Only Proxmox Backup Server storages report this. True when the
+  // backup was written with an encryption key.
+  encrypted bool
+  // Encryption key fingerprint, or `1` when the key is not identified; empty when unencrypted
+  encryptionFingerprint string
+  // Whether the volume is protected from automatic pruning
+  //
+  // A protected backup survives retention policies. Currently reported
+  // for backups only.
+  protected bool
+  // Result of the last Proxmox Backup Server verification
+  //
+  // Holds `state` (`ok` or `failed`) and the `upid` of the verification
+  // task. Empty on storages that do not verify, so an empty value means
+  // the backup was never verified rather than that it passed.
+  verification dict
+  // First line of the notes attached to the volume; empty when none
+  notes string
+  // Volume identifier of the parent, for linked clones; empty when standalone
+  parent string
 }
 
 // Proxmox VE resource pool
@@ -1229,6 +1330,21 @@ proxmox.container @defaults("id name status unprivileged") {
   ipsets() []proxmox.firewall.ipset
   // Container-level firewall aliases
   aliases() []proxmox.firewall.alias
+
+  // --- Backups ---
+
+  // Backup archives held for this container
+  //
+  // Every backup volume across all storages that owns this VMID, newest
+  // first. Reports what was actually captured, which scheduled backup
+  // jobs alone cannot confirm. Empty when the container has never been
+  // backed up to a storage this token can read.
+  backups() []proxmox.storage.volume
+  // When this container was last backed up
+  //
+  // Creation time of the newest backup archive owned by this container.
+  // Null when no backup exists.
+  lastBackupAt() time
 }
 
 // Proxmox VE container network interface
