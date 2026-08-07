@@ -244,6 +244,7 @@ use (
    ./mql/providers/postgresdb
    ./mql/providers/proxmox
    ./mql/providers/redfish
+   ./mql/providers/redisdb
    ./mql/providers/shodan
    ./mql/providers/slack
    ./mql/providers/snowflake

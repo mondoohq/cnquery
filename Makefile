@@ -253,6 +253,7 @@ PROVIDERS := \
 	postgresdb \
 	proxmox \
 	redfish \
+	redisdb \
 	shodan \
 	slack \
 	snowflake \
