@@ -203,9 +203,23 @@ func (o *mqlOciServiceConnectorHubConnector) targetBucket() (*mqlOciObjectStorag
 		return nil, nil
 	}
 
+	// The bucket's own init needs a region: it fetches the bucket detail to
+	// populate everything ListBuckets omits, and GetBucket is a regional call.
+	// Passing only namespace and name left that region unset, so every
+	// objectStorage-target connector failed with "region is required to fetch
+	// bucket details". A Connector Hub target bucket is in the connector's own
+	// region, which is already cached here.
+	regionRes, err := NewResource(o.MqlRuntime, "oci.region", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheRegion),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := NewResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
 		"namespace": llx.StringData(stringValue(target.Namespace)),
 		"name":      llx.StringData(stringValue(target.BucketName)),
+		"region":    llx.ResourceData(regionRes, "oci.region"),
 	})
 	if err != nil {
 		return nil, err

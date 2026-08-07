@@ -20,6 +20,21 @@ import (
 // limits.
 const ociCompartmentPoolConcurrency = 10
 
+// ociRegionsByID indexes an oci.regions collection by region key so a
+// compartment lister, which only receives the region as a string, can still set
+// a typed oci.region field on the resources it builds.
+func ociRegionsByID(regions []any) (map[string]*mqlOciRegion, error) {
+	res := make(map[string]*mqlOciRegion, len(regions))
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return nil, errors.New("invalid region type")
+		}
+		res[regionResource.Id.Data] = regionResource
+	}
+	return res, nil
+}
+
 // ociCompartmentLister lists resources of a single type inside one compartment
 // in one region. Implementations return the already-constructed MQL resources.
 type ociCompartmentLister func(ctx context.Context, region string, compartmentID string) ([]any, error)

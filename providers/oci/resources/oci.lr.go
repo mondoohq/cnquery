@@ -648,7 +648,7 @@ func init() {
 			Create: createOciStreamingStream,
 		},
 		"oci.streaming.streamPool": {
-			// to override args, implement: initOciStreamingStreamPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciStreamingStreamPool,
 			Create: createOciStreamingStreamPool,
 		},
 		"oci.queue": {

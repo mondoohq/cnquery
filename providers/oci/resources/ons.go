@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
@@ -34,7 +33,53 @@ func (o *mqlOciOns) topics() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getTopics(conn, list.Data))
+	// Notification topics are created next to the alarms and connectors that
+	// publish to them, which puts them in child compartments. ListTopics has no
+	// subtree option, so a root-only sweep reported no topics and broke the alarm
+	// and Connector Hub destination references that point at them.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
+
+			svc, err := conn.NotificationControlPlaneClient(region)
+			if err != nil {
+				return nil, err
+			}
+
+			var res []any
+			topics, err := o.getTopicsForRegion(ctx, svc, compartmentID)
+			if err != nil {
+				return nil, err
+			}
+
+			for i := range topics {
+				topic := topics[i]
+
+				var created *time.Time
+				if topic.TimeCreated != nil {
+					created = &topic.TimeCreated.Time
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.ons.topic", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(topic.TopicId),
+					"name":          llx.StringDataPtr(topic.Name),
+					"description":   llx.StringDataPtr(topic.Description),
+					"compartmentID": llx.StringDataPtr(topic.CompartmentId),
+					"state":         llx.StringData(string(topic.LifecycleState)),
+					"created":       llx.TimeDataPtr(created),
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				mqlTopic := mqlInstance.(*mqlOciOnsTopic)
+				mqlTopic.region = region
+
+				res = append(res, mqlInstance)
+			}
+
+			return res, nil
+		})
 }
 
 func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.NotificationControlPlaneClient, compartmentID string) ([]ons.NotificationTopicSummary, error) {
@@ -61,61 +106,6 @@ func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.Notifica
 	}
 
 	return topics, nil
-}
-
-func (o *mqlOciOns) getTopics(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NotificationControlPlaneClient(regionResource.Id.Data)
-			if err != nil {
-				return nil, err
-			}
-
-			var res []any
-			topics, err := o.getTopicsForRegion(ctx, svc, conn.TenantID())
-			if err != nil {
-				return nil, err
-			}
-
-			for i := range topics {
-				topic := topics[i]
-
-				var created *time.Time
-				if topic.TimeCreated != nil {
-					created = &topic.TimeCreated.Time
-				}
-
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.ons.topic", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(topic.TopicId),
-					"name":          llx.StringDataPtr(topic.Name),
-					"description":   llx.StringDataPtr(topic.Description),
-					"compartmentID": llx.StringDataPtr(topic.CompartmentId),
-					"state":         llx.StringData(string(topic.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-				})
-				if err != nil {
-					return nil, err
-				}
-
-				mqlTopic := mqlInstance.(*mqlOciOnsTopic)
-				mqlTopic.region = regionResource.Id.Data
-
-				res = append(res, mqlInstance)
-			}
-
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 type mqlOciOnsTopicInternal struct {

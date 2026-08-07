@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 )
 
@@ -50,6 +51,37 @@ func TestOciCompartmentInaccessible(t *testing.T) {
 			assert.Equal(t, tt.want, ociCompartmentInaccessible(tt.err))
 		})
 	}
+}
+
+func TestOciRegionsByID(t *testing.T) {
+	iad := &mqlOciRegion{}
+	iad.Id.Data = "us-ashburn-1"
+	iad.Id.State = plugin.StateIsSet
+	phx := &mqlOciRegion{}
+	phx.Id.Data = "us-phoenix-1"
+	phx.Id.State = plugin.StateIsSet
+
+	t.Run("indexes every region by its id", func(t *testing.T) {
+		got, err := ociRegionsByID([]any{iad, phx})
+		require.NoError(t, err)
+		assert.Len(t, got, 2)
+		assert.Same(t, iad, got["us-ashburn-1"])
+		assert.Same(t, phx, got["us-phoenix-1"])
+	})
+
+	t.Run("no regions", func(t *testing.T) {
+		got, err := ociRegionsByID(nil)
+		require.NoError(t, err)
+		assert.Empty(t, got)
+	})
+
+	t.Run("a non-region element is an error, not a silent gap", func(t *testing.T) {
+		// A compartment lister only receives the region as a string and looks
+		// the resource up in this map, so a dropped entry would surface much
+		// later as a missing region field rather than here.
+		_, err := ociRegionsByID([]any{iad, "us-phoenix-1"})
+		require.Error(t, err)
+	})
 }
 
 func TestOciCollectCompartmentJobs(t *testing.T) {
