@@ -1769,10 +1769,12 @@ gcp.project.computeService.externalVpnGateway.selfLink 13.6.1
 gcp.project.computeService.externalVpnGateways 13.6.1
 gcp.project.computeService.firewall 9.0.0
 gcp.project.computeService.firewall.allowed 9.0.0
+gcp.project.computeService.firewall.allowedProtocols 13.34.2
 gcp.project.computeService.firewall.allowsRdpFromInternet 13.12.2
 gcp.project.computeService.firewall.allowsSshFromInternet 13.12.2
 gcp.project.computeService.firewall.created 9.0.0
 gcp.project.computeService.firewall.denied 9.0.0
+gcp.project.computeService.firewall.deniedProtocols 13.34.2
 gcp.project.computeService.firewall.description 9.0.0
 gcp.project.computeService.firewall.destinationRanges 9.0.0
 gcp.project.computeService.firewall.direction 9.0.0
@@ -1814,6 +1816,7 @@ gcp.project.computeService.firewallPolicy.rule.disabled 11.6.6
 gcp.project.computeService.firewallPolicy.rule.enableLogging 11.6.6
 gcp.project.computeService.firewallPolicy.rule.id 11.6.6
 gcp.project.computeService.firewallPolicy.rule.layer4Configs 13.14.2
+gcp.project.computeService.firewallPolicy.rule.layer4Protocols 13.34.2
 gcp.project.computeService.firewallPolicy.rule.match 11.6.6
 gcp.project.computeService.firewallPolicy.rule.priority 11.6.6
 gcp.project.computeService.firewallPolicy.rule.ruleName 11.6.6
@@ -2174,6 +2177,7 @@ gcp.project.computeService.network.description 9.0.0
 gcp.project.computeService.network.enableUlaInternalIpv6 9.0.0
 gcp.project.computeService.network.firewallPolicy 11.6.6
 gcp.project.computeService.network.firewallPolicyRef 13.27.2
+gcp.project.computeService.network.firewalls 13.34.2
 gcp.project.computeService.network.gatewayIPv4 9.0.0
 gcp.project.computeService.network.id 9.0.0
 gcp.project.computeService.network.internalIpv6Range 11.6.6
@@ -2200,6 +2204,7 @@ gcp.project.computeService.network.peering.state 11.6.6
 gcp.project.computeService.network.peering.stateDetails 11.6.6
 gcp.project.computeService.network.peerings 9.0.0
 gcp.project.computeService.network.projectId 9.0.0
+gcp.project.computeService.network.routes 13.34.2
 gcp.project.computeService.network.routingMode 9.0.0
 gcp.project.computeService.network.subnetworkUrls 9.0.0
 gcp.project.computeService.network.subnetworks 9.0.0

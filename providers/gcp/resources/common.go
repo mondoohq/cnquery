@@ -525,13 +525,10 @@ func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProject
 		return nil, nil
 	}
 
-	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
-	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
-	if len(parts) < 5 || parts[0] != "projects" || parts[3] != "networks" {
+	project, name, ok := parseNetworkURL(networkUrl)
+	if !ok {
 		return nil, fmt.Errorf("unrecognized network reference: %q", networkUrl)
 	}
-	project, name := parts[1], parts[4]
 
 	// Use NewResource so initGcpProjectComputeServiceNetwork runs and
 	// populates every field (scalars like autoCreateSubnetworks would
