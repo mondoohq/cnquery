@@ -46,6 +46,7 @@ import (
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -330,9 +331,12 @@ func exportContainerdImageWithFallback(conf *inventory.Config, imageRef string) 
 		}
 		candidateOptions := cloneStringMap(original)
 		applyRuntimeImageDelegateCandidate(candidateOptions, candidate)
-		candidateConfig := *conf
+		candidateConfig, ok := proto.Clone(conf).(*inventory.Config)
+		if !ok {
+			return "", nil, errors.New("runtime image connection requires protobuf config")
+		}
 		candidateConfig.Options = candidateOptions
-		exportPath, cleanup, err := exportContainerdImage(&candidateConfig, imageRef)
+		exportPath, cleanup, err := exportContainerdImage(candidateConfig, imageRef)
 		if err == nil {
 			conf.Options = candidateOptions
 			return exportPath, cleanup, nil
