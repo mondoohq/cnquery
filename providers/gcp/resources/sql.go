@@ -865,6 +865,13 @@ func (g *mqlGcpProjectSqlServiceInstance) databases() ([]any, error) {
 
 	dbs, err := sqladminSvc.Databases.List(projectId, instanceName).Do()
 	if err != nil {
+		// A principal often holds cloudsql.instances.list without the
+		// per-instance sub-collection permissions. Degrade to null so the
+		// instance still reports, rather than failing the whole query.
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("instance", instanceName).Msg("could not list Cloud SQL databases")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1119,6 +1126,13 @@ func (g *mqlGcpProjectSqlServiceInstance) users() ([]any, error) {
 
 	resp, err := sqladminSvc.Users.List(projectId, instanceName).Do()
 	if err != nil {
+		// hasBuiltInUsers() and localRootEnabled() both read this collection,
+		// so propagating a 403 here failed the two headline Cloud SQL
+		// hardening checks with an opaque error.
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("instance", instanceName).Msg("could not list Cloud SQL users")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1201,6 +1215,10 @@ func (g *mqlGcpProjectSqlServiceInstance) sslCerts() ([]any, error) {
 
 	resp, err := sqladminSvc.SslCerts.List(projectId, instanceName).Do()
 	if err != nil {
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("instance", instanceName).Msg("could not list Cloud SQL SSL certificates")
+			return nil, nil
+		}
 		return nil, err
 	}
 

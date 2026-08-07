@@ -203,7 +203,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 				}
 			}
 			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.dataset.accessEntry", map[string]*llx.RawData{
-				"id":         llx.StringData(fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%s/%s/%s", projectId, dataset.DatasetID, a.Role, entityTypeToString(a.EntityType), a.Entity)),
+				"id":         llx.StringData(fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%s/%s/%s", projectId, dataset.DatasetID, a.Role, entityTypeToString(a.EntityType), accessEntryKey(a))),
 				"datasetId":  llx.StringData(dataset.DatasetID),
 				"role":       llx.StringData(string(a.Role)),
 				"entityType": llx.StringData(entityTypeToString(a.EntityType)),
@@ -815,6 +815,29 @@ func (g *mqlGcpProjectBigqueryServiceRoutine) id() (string, error) {
 	// Routine IDs are unique only within a dataset, so qualify with
 	// project + dataset (matches the model/table ids).
 	return fmt.Sprintf("gcp.project.bigqueryService.routine/%s/%s/%s", g.ProjectId.Data, g.DatasetId.Data, g.Id.Data), nil
+}
+
+// accessEntryKey returns the value that identifies a dataset access entry
+// within its (role, entityType) pair.
+//
+// For most entity kinds that is AccessEntry.Entity, but the BigQuery SDK
+// decoder leaves Entity EMPTY for view, routine and dataset entries and records
+// the reference in the typed View/Routine/Dataset field instead. Keying the
+// resource on Entity alone therefore produced the identical id for every
+// authorized view on a dataset, and CreateResource returned the first one for
+// all of them -- so a dataset sharing three views reported the same view three
+// times.
+func accessEntryKey(a *bigquery.AccessEntry) string {
+	switch {
+	case a.View != nil:
+		return fmt.Sprintf("%s:%s:%s", a.View.ProjectID, a.View.DatasetID, a.View.TableID)
+	case a.Routine != nil:
+		return fmt.Sprintf("%s:%s:%s", a.Routine.ProjectID, a.Routine.DatasetID, a.Routine.RoutineID)
+	case a.Dataset != nil:
+		return fmt.Sprintf("%s:%s", a.Dataset.Dataset.ProjectID, a.Dataset.Dataset.DatasetID)
+	default:
+		return a.Entity
+	}
 }
 
 func entityTypeToString(entityType bigquery.EntityType) string {

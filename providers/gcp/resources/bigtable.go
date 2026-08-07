@@ -20,6 +20,26 @@ import (
 	"google.golang.org/api/option"
 )
 
+// bigtablePartialResult reports whether err is the Bigtable SDK's
+// ErrPartiallyUnavailable, which the admin client returns ALONGSIDE a populated
+// result slice when some locations are unreachable ("Return partial results and
+// an error in case of some locations are unavailable").
+//
+// It is a plain struct with no GRPCStatus(), so status.FromError does not
+// recognise it and isGRPCSkippable returns false -- the callers therefore took
+// the hard-error path and threw away the instances, clusters or backups the SDK
+// had just handed them. A transient blip in one region emptied the whole
+// Bigtable inventory.
+func bigtablePartialResult(err error, what string) bool {
+	var partial bigtable.ErrPartiallyUnavailable
+	if !errors.As(err, &partial) {
+		return false
+	}
+	log.Warn().Strs("locations", partial.Locations).Str("kind", what).
+		Msg("some Bigtable locations were unreachable; returning partial results")
+	return true
+}
+
 // bigtableAdminScopes are the OAuth scopes needed for Bigtable admin operations.
 var bigtableAdminScopes = []string{
 	bigtable.AdminScope,
@@ -136,11 +156,14 @@ func (g *mqlGcpProjectBigtableService) instances() ([]any, error) {
 
 	instances, err := iac.Instances(ctx)
 	if err != nil {
-		if isGRPCSkippable(err) {
-			log.Warn().Err(err).Msg("could not list Bigtable instances")
-			return nil, nil
+		if !bigtablePartialResult(err, "instances") {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Bigtable instances")
+				return nil, nil
+			}
+			return nil, err
 		}
-		return nil, err
+		// fall through: instances holds the reachable locations' results
 	}
 
 	res := make([]any, 0, len(instances))
@@ -223,7 +246,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 	defer iac.Close()
 
 	clusters, err := iac.Clusters(ctx, instanceName)
-	if err != nil {
+	if err != nil && !bigtablePartialResult(err, "clusters") {
 		if isGRPCSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Bigtable clusters")
 			return nil, nil
@@ -610,7 +633,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 	defer iac.Close()
 
 	clusters, err := iac.Clusters(ctx, instanceName)
-	if err != nil {
+	if err != nil && !bigtablePartialResult(err, "clusters") {
 		if isGRPCSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Bigtable clusters for backup lookup")
 			return nil, nil

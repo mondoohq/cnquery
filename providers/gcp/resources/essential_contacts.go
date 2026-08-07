@@ -61,6 +61,15 @@ func essentialContactsForParent(runtime *plugin.Runtime, conn *connection.GcpCon
 		err = contactSvc.Projects.Contacts.List(parent).Pages(ctx, process)
 	}
 	if err != nil {
+		// Only the project path is gated on isServiceEnabled; the organization
+		// and folder paths reach the API directly, and org-level
+		// essentialcontacts.contacts.list is a separate grant a project-scoped
+		// principal rarely holds. Degrade so one missing grant at the org node
+		// does not fail the whole query.
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("parent", parent).Msg("could not list essential contacts")
+			return nil, nil
+		}
 		return nil, err
 	}
 	return mqlContacts, nil

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -82,6 +83,15 @@ func (g *mqlGcpProjectSourceRepositoriesService) repos() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
+		// Cloud Source Repositories is off by default and is unavailable
+		// altogether to projects that had not used it before June 2024, so a
+		// 403 SERVICE_DISABLED is the COMMON case here, not an exceptional one.
+		// service_sourcerepo is declared in services.go but was never wired to
+		// a gate, so this accessor hard-failed on most projects.
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("project", projectId).Msg("could not list Cloud Source Repositories")
+			return nil, nil
+		}
 		return nil, err
 	}
 

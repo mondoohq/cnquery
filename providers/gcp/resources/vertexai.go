@@ -13,6 +13,7 @@ import (
 	aiplatform "cloud.google.com/go/aiplatform/apiv1"
 	"cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
 	iampb "cloud.google.com/go/iam/apiv1/iampb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -199,15 +200,36 @@ func (g *mqlGcpProjectVertexaiService) listAcrossRegions(
 	}
 	wg.Wait()
 
-	var res []any
+	// A single region failing must not discard the ~33 that succeeded. Vertex
+	// AI fans out over one regional endpoint per region, so any one of them can
+	// return Unavailable, DeadlineExceeded or ResourceExhausted independently --
+	// none of which isVertexAIRegionSkippable covers -- and the whole inventory
+	// used to disappear behind it. Only report an error when EVERY region
+	// failed, which is the case that actually means "this did not work".
+	var (
+		res       []any
+		firstErr  error
+		failed    int
+		attempted int
+	)
 	for _, r := range results {
+		attempted++
 		if r.err != nil {
-			return nil, r.err
+			failed++
+			if firstErr == nil {
+				firstErr = r.err
+			}
+			log.Warn().Err(r.err).Str("kind", kind).Str("region", r.region).
+				Msg("vertexai region listing failed, continuing with the remaining regions")
+			continue
 		}
 		if r.skipped {
 			g.markRegionSkipped(kind, r.region)
 		}
 		res = append(res, r.items...)
+	}
+	if attempted > 0 && failed == attempted {
+		return nil, firstErr
 	}
 	return res, nil
 }
@@ -246,7 +268,10 @@ func (g *mqlGcpProjectVertexaiService) models() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -357,7 +382,10 @@ func (g *mqlGcpProjectVertexaiService) endpoints() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -663,7 +691,10 @@ func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -826,7 +857,10 @@ func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -902,7 +936,10 @@ func (g *mqlGcpProjectVertexaiService) featureOnlineStores() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -994,7 +1031,10 @@ func (g *mqlGcpProjectVertexaiService) tensorboards() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1403,7 +1443,10 @@ func (g *mqlGcpProjectVertexaiService) customJobs() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1460,7 +1503,10 @@ func (g *mqlGcpProjectVertexaiService) indexes() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1553,7 +1599,10 @@ func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1637,7 +1686,10 @@ func (g *mqlGcpProjectVertexaiService) metadataStores() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1708,7 +1760,10 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1823,7 +1878,10 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimeTemplates() ([]any, error)
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -1945,7 +2003,10 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2025,7 +2086,10 @@ func (g *mqlGcpProjectVertexaiService) reasoningEngines() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2122,7 +2186,10 @@ func (g *mqlGcpProjectVertexaiService) ragCorpora() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2193,7 +2260,10 @@ func (g *mqlGcpProjectVertexaiService) featureGroups() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2259,7 +2329,10 @@ func (g *mqlGcpProjectVertexaiService) persistentResources() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2344,7 +2417,10 @@ func (g *mqlGcpProjectVertexaiService) schedules() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2477,7 +2553,10 @@ func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) 
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2549,7 +2628,10 @@ func (g *mqlGcpProjectVertexaiService) cachedContents() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2621,7 +2703,10 @@ func (g *mqlGcpProjectVertexaiService) batchPredictionJobs() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2707,7 +2792,10 @@ func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2793,7 +2881,10 @@ func (g *mqlGcpProjectVertexaiService) trainingPipelines() ([]any, error) {
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2873,7 +2964,10 @@ func (g *mqlGcpProjectVertexaiService) hyperparameterTuningJobs() ([]any, error)
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}
@@ -2961,7 +3055,10 @@ func (g *mqlGcpProjectVertexaiService) modelDeploymentMonitoringJobs() ([]any, e
 			}
 			if err != nil {
 				if isVertexAIRegionSkippable(err) {
-					return nil, true, nil
+					// Keep what this region already yielded: the iterator
+					// paginates lazily, so a skippable error on a later page
+					// must not discard the pages that succeeded.
+					return items, true, nil
 				}
 				return nil, false, err
 			}

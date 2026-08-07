@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -138,9 +139,15 @@ func (g *mqlGcpProjectComposerService) environments() ([]any, error) {
 			return nil
 		}); err != nil {
 			if composerServiceDisabled(err) {
-				// The Cloud Composer API is not enabled for the project; it
-				// is disabled project-wide, so no other region would succeed.
-				return []any{}, nil
+				// Cloud Composer is not offered in every Compute region, and
+				// this classifier treats any 404 as "not available here". It is
+				// therefore a PER-REGION signal, not a project-wide one:
+				// returning an empty slice here discarded every environment
+				// already collected from the regions that did answer, so a
+				// project with a dozen environments reported none.
+				log.Debug().Str("project", projectId).Str("region", region.Name).
+					Msg("cloud composer not available in region, skipping")
+				continue
 			}
 			// Surface transient or server-side errors instead of silently
 			// dropping this region's environments from the result set.
