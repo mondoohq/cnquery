@@ -103,7 +103,7 @@ func TestDiscoverStagedDiscoveryWithNamespaceGlobStartsClusterStage(t *testing.T
 	require.Empty(t, conn.namespaceGetCalls)
 }
 
-func TestDiscoverKyvernoWithNamespaceFilterIncludesClusterAsset(t *testing.T) {
+func TestDiscoverKyvernoWithNamespaceFilterUsesNamespaceAssets(t *testing.T) {
 	for _, staged := range []bool{false, true} {
 		t.Run(fmt.Sprintf("staged=%t", staged), func(t *testing.T) {
 			options := map[string]string{shared.OPTION_NAMESPACE: "team-a"}
@@ -137,8 +137,9 @@ func TestDiscoverKyvernoWithNamespaceFilterIncludesClusterAsset(t *testing.T) {
 			inv, err := Discover(pluginRuntime, mql.Features{})
 			require.NoError(t, err)
 			require.Len(t, inv.Spec.Assets, 1)
-			assert.Equal(t, asset.Name, inv.Spec.Assets[0].Name)
+			assert.Equal(t, "team-a", inv.Spec.Assets[0].Name)
 			assert.NotEmpty(t, inv.Spec.Assets[0].PlatformIds)
+			assert.Contains(t, inv.Spec.Assets[0].PlatformIds[0], "/namespace/team-a")
 			assert.Equal(t, "team-a", inv.Spec.Assets[0].Connections[0].Options[shared.OPTION_NAMESPACE])
 		})
 	}
