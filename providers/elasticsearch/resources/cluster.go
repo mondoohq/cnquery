@@ -43,11 +43,16 @@ func initElasticsearchCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, err
 	}
 
-	// Cluster health drives status and node counts; it needs only the monitor
-	// privilege, but degrade to empty values if the credential lacks it.
+	// Cluster health needs the monitor privilege. A permission denial leaves the
+	// health fields null (set below) rather than reporting misleading zeros,
+	// matching the documented degradation contract; any other error fails.
 	var health esHealth
-	if err := conn.Get("/_cluster/health", &health); err != nil && !connection.IsPermissionError(err) {
-		return nil, nil, err
+	healthDenied := false
+	if err := conn.Get("/_cluster/health", &health); err != nil {
+		if !connection.IsPermissionError(err) {
+			return nil, nil, err
+		}
+		healthDenied = true
 	}
 
 	clusterID := root.ClusterUUID
@@ -67,10 +72,26 @@ func initElasticsearchCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 	args["distribution"] = llx.StringData(distribution)
 	args["buildFlavor"] = llx.StringData(root.Version.BuildFlavor)
 	args["luceneVersion"] = llx.StringData(root.Version.LuceneVersion)
-	args["healthStatus"] = llx.StringData(health.Status)
-	args["nodeCount"] = llx.IntData(health.NumberOfNodes)
-	args["dataNodeCount"] = llx.IntData(health.NumberOfDataNodes)
-	return args, nil, nil
+
+	res, err := CreateResource(runtime, "elasticsearch.cluster", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	cluster := res.(*mqlElasticsearchCluster)
+	if healthDenied {
+		// The credential cannot read health: report null, not zero, so a policy
+		// like nodeCount == 0 does not fire on a missing privilege.
+		null := plugin.StateIsSet | plugin.StateIsNull
+		cluster.HealthStatus = plugin.TValue[string]{State: null}
+		cluster.NodeCount = plugin.TValue[int64]{State: null}
+		cluster.DataNodeCount = plugin.TValue[int64]{State: null}
+	} else {
+		set := plugin.StateIsSet
+		cluster.HealthStatus = plugin.TValue[string]{Data: health.Status, State: set}
+		cluster.NodeCount = plugin.TValue[int64]{Data: health.NumberOfNodes, State: set}
+		cluster.DataNodeCount = plugin.TValue[int64]{Data: health.NumberOfDataNodes, State: set}
+	}
+	return nil, res, nil
 }
 
 // esUsage is the subset of GET /_xpack/usage used for the security posture.
@@ -220,6 +241,14 @@ func (r *mqlElasticsearchCluster) apiKeys() ([]any, error) {
 		}
 		return nil, err
 	}
+
+	// Sort for deterministic output, matching users/roles/roleMappings.
+	sort.Slice(resp.APIKeys, func(i, j int) bool {
+		if resp.APIKeys[i].Name != resp.APIKeys[j].Name {
+			return resp.APIKeys[i].Name < resp.APIKeys[j].Name
+		}
+		return resp.APIKeys[i].ID < resp.APIKeys[j].ID
+	})
 
 	list := []any{}
 	for _, k := range resp.APIKeys {
