@@ -320,6 +320,17 @@ func (g *mqlGcpProjectComputeService) zones() ([]any, error) {
 	return res, nil
 }
 
+// machineTypeID builds the cache key for a machine type. The zone is part of
+// the key because a machine type is a per-zone catalogue entry and its numeric
+// id is shared across zones.
+func machineTypeID(projectId, zoneName, name string) string {
+	return "gcp.project.computeService.machineType/" + projectId + "/" + zoneName + "/" + name
+}
+
+// id is the fallback for a machine type built without an explicit "__id".
+// It cannot see the zone (the field holds a resource, not a name, and may not
+// be set yet at construction time), so newMqlMachineType passes "__id"
+// directly, which wins over this method.
 func (g *mqlGcpProjectComputeServiceMachineType) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -341,6 +352,15 @@ func (g *mqlGcpProjectComputeServiceMachineType) zone() (any, error) {
 
 func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, projectId string, zone *mqlGcpProjectComputeServiceZone) (*mqlGcpProjectComputeServiceMachineType, error) {
 	res, err := CreateResource(runtime, "gcp.project.computeService.machineType", map[string]*llx.RawData{
+		// Machine types are a per-zone catalogue and the numeric id is a
+		// catalogue constant: e2-medium carries the same Id in every zone. An
+		// id() keyed on (project, id) therefore collapsed every zone's copy
+		// onto one cache entry, so machineTypes() returned N duplicates all
+		// reporting the FIRST zone -- and machineTypeByZoneAndName, which
+		// indexes on zone+name, only ever saw that one zone, silently falling
+		// back to a per-instance MachineTypes.Get for every VM elsewhere.
+		// An explicit __id wins over id(); see the note on id() below.
+		"__id":                         llx.StringData(machineTypeID(projectId, zone.GetName().Data, entry.Name)),
 		"id":                           llx.StringData(strconv.FormatInt(int64(entry.Id), 10)),
 		"projectId":                    llx.StringData(projectId),
 		"name":                         llx.StringData(entry.Name),
@@ -4034,7 +4054,12 @@ func (g *mqlGcpProjectComputeServiceImage) iamPolicy() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return computeIamBindingsToResources(g.MqlRuntime, name, policy.Bindings)
+	// Qualify the binding ids by resource type and project. Keying on the bare
+	// name aliased an image and a snapshot that share a name (and the same
+	// image name across two scanned projects) onto one set of bindings, so a
+	// public image could read as private from whichever resolved first.
+	return computeIamBindingsToResources(g.MqlRuntime,
+		"gcp.project.computeService.image/"+projectId+"/"+name, policy.Bindings)
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) hasPublicIp() (bool, error) {
@@ -4116,7 +4141,8 @@ func (g *mqlGcpProjectComputeServiceSnapshot) iamPolicy() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return computeIamBindingsToResources(g.MqlRuntime, name, policy.Bindings)
+	return computeIamBindingsToResources(g.MqlRuntime,
+		"gcp.project.computeService.snapshot/"+projectId+"/"+name, policy.Bindings)
 }
 
 func (g *mqlGcpProjectComputeServiceSnapshot) public() (bool, error) {

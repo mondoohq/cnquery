@@ -1359,7 +1359,7 @@ private gcp.resourcemanager.binding {
   //
   // True when the role is one of roles/iam.serviceAccountTokenCreator,
   // roles/iam.serviceAccountUser, roles/iam.workloadIdentityUser, or
-  // roles/iam.serviceAccountKeyAdmin — the roles that surface
+  // roles/iam.serviceAccountKeyAdmin. These are the roles that surface
   // impersonation and privilege-escalation paths.
   grantsImpersonation() bool
 }
@@ -3309,15 +3309,20 @@ private gcp.project.sqlService.instance @defaults("name") {
   replicas() []gcp.project.sqlService.instance
   // Detailed Cloud SQL instance configuration (tier, flags, backups, network, IAM)
   settings gcp.project.sqlService.instance.settings
-  // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
+  // Whether the instance is reachable on a public IP (flat hoist of settings.ipConfiguration.ipv4Enabled)
   publicIpEnabled() bool
   // Whether the instance is reachable from the internet (a public IP and an authorized network open to 0.0.0.0/0)
   internetReachable() bool
-  // Whether IAM database authentication is enabled — true when the cloudsql.iam_authentication database flag is on
+  // Whether IAM database authentication is enabled
+  //
+  // True when the Cloud SQL IAM authentication database flag is on. Cloud SQL
+  // spells that flag differently per engine (cloudsql.iam_authentication on
+  // PostgreSQL, cloudsql_iam_authentication on MySQL, and
+  // "cloudsql iam authentication" on SQL Server); all three are recognized.
   iamAuthenticationEnabled() bool
-  // Whether automated backups are enabled — flat hoist of settings.backupConfiguration.enabled
+  // Whether automated backups are enabled (flat hoist of settings.backupConfiguration.enabled)
   backupConfigurationEnabled() bool
-  // Whether point-in-time recovery is enabled — flat hoist of settings.backupConfiguration.pointInTimeRecoveryEnabled
+  // Whether point-in-time recovery is enabled (flat hoist of settings.backupConfiguration.pointInTimeRecoveryEnabled)
   pointInTimeRecoveryEnabled() bool
   // Whether the instance has any built-in (non-IAM) database users
   hasBuiltInUsers() bool
@@ -4039,7 +4044,7 @@ private gcp.project.bigqueryService.table @defaults("id") {
   // and other BigQuery types), `Description`, `Required`, `Repeated`, and a
   // nested `Schema` list for RECORD fields.
   schema []dict
-  // Cloud DLP table data profile for this table — sensitivity score, risk level, and predicted infoTypes. Null when discovery has not profiled this table
+  // Cloud DLP table data profile for this table: sensitivity score, risk level, and predicted infoTypes. Null when discovery has not profiled this table
   dlpDataProfile() gcp.project.dlpService.tableDataProfile
   // IAM policy bindings that grant access to this table or view
   iamPolicy() []gcp.resourcemanager.binding
@@ -4446,7 +4451,7 @@ private gcp.project.dnsService.responsePolicy @defaults("responsePolicyName") {
 // Google Kubernetes Engine (GKE)
 //
 // Use this resource as the entry point for GKE in the project. It hosts
-// the project's `clusters` — each exposing its node pools, network and
+// the project's `clusters`, each exposing its node pools, network and
 // control-plane configuration, workload identity, binary authorization,
 // release channel, and security posture for Kubernetes audits.
 private gcp.project.gkeService {
@@ -5868,7 +5873,7 @@ private gcp.project.kmsService.ekmConnection @defaults("name keyManagementMode l
   cryptoSpacePath string
   // Service Directory resolvers identifying the reachable EKM replicas
   //
-  // Each entry exposes `serviceDirectoryService` (the Service Directory service pointing to an EKM replica), `endpointFilter` (optional endpoint filter), `hostname` (the EKM replica hostname used at the TLS and HTTP layers), and `serverCertificates` (the leaf certificates the EKM presents — each carries its issuer, subject, validity window, fingerprints, and the raw PEM).
+  // Each entry exposes `serviceDirectoryService` (the Service Directory service pointing to an EKM replica), `endpointFilter` (optional endpoint filter), `hostname` (the EKM replica hostname used at the TLS and HTTP layers), and `serverCertificates` (the leaf certificates the EKM presents, each carrying its issuer, subject, validity window, fingerprints, and the raw PEM).
   serviceResolvers []dict
 }
 
@@ -6591,7 +6596,7 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   attributeCondition string
   // Whether an attribute condition is set on the provider
   //
-  // When false, every external token that satisfies the mapping is accepted —
+  // When false, every external token that satisfies the mapping is accepted,
   // the classic over-broad workload-identity-federation misconfiguration.
   hasAttributeCondition() bool
   // Discriminator for which credential family this provider trusts: `aws`, `oidc`, `saml`, or `x509`.
@@ -9197,7 +9202,7 @@ private gcp.project.spannerService.instance.instancePartition @defaults("name") 
 // Google Cloud (GCP) Bigtable
 //
 // Use this resource as the entry point for Bigtable in the project. It
-// hosts the project's `instances` — each exposing its clusters, app
+// hosts the project's `instances`, each exposing its clusters, app
 // profiles, storage type, and encryption configuration for wide-column
 // database audits.
 private gcp.project.bigtableService {
@@ -10565,7 +10570,7 @@ private gcp.project.certificateManagerService.certificateMapEntry @defaults("nam
 // DNS authorization used to prove domain ownership when issuing
 // Google-managed certificates. Each authorization covers a single `domain`
 // and its wildcard. `dnsResourceRecord` is the CNAME the operator must
-// publish under the domain's DNS zone — once that record resolves, Google
+// publish under the domain's DNS zone. Once that record resolves, Google
 // can mint managed certs for the domain. `type` distinguishes
 // `FIXED_RECORD` (a stable per-authorization CNAME target) from
 // `PER_PROJECT_RECORD` (a shared per-project CNAME target, available only
@@ -16387,7 +16392,7 @@ private gcp.project.containerAnalysisService {
   projectId string
   // Vulnerability occurrences
   occurrences() []gcp.project.containerAnalysisService.occurrence
-  // Notes — the metadata definitions (vulnerability, attestation authority, build provenance, ...) that occurrences reference
+  // Notes: the metadata definitions (vulnerability, attestation authority, build provenance, ...) that occurrences reference
   notes() []gcp.project.containerAnalysisService.note
 }
 
@@ -17800,7 +17805,7 @@ private gcp.project.datastreamService.route @defaults("name destinationAddress")
 //
 // Use this resource as the entry point for the unified Memorystore service
 // (Valkey and Redis) in the project. It hosts the project's `instances`
-// and the `backupCollections` that retain their backups — exposing node
+// and the `backupCollections` that retain their backups, exposing node
 // configuration, persistence, and encryption settings for cache-tier
 // audits.
 private gcp.project.memorystoreService {
