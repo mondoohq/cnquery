@@ -2527,7 +2527,7 @@ func (c *mqlDatadog) GetSyntheticsPrivateLocations() *plugin.TValue[[]any] {
 type mqlDatadogOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogOrganizationInternal it will be used here
+	mqlDatadogOrganizationInternal
 	PublicId                     plugin.TValue[string]
 	Name                         plugin.TValue[string]
 	Description                  plugin.TValue[string]

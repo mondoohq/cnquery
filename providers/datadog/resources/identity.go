@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
@@ -458,23 +459,35 @@ func (r *mqlDatadogOrganization) id() (string, error) {
 	return "datadog.organization/" + r.PublicId.Data, nil
 }
 
+type mqlDatadogOrganizationInternal struct {
+	domainAllowlistOnce  sync.Once
+	domainAllowlistAttrs datadogV2.DomainAllowlistResponseDataAttributes
+	domainAllowlistErr   error
+}
+
 // fetchDomainAllowlist reads the invite domain allowlist, which lives behind a
-// separate v2 endpoint rather than in the organization settings block.
+// separate v2 endpoint rather than in the organization settings block. It is
+// cached so that reading both domainAllowlistEnabled and domainAllowlistDomains
+// costs one request.
 func (r *mqlDatadogOrganization) fetchDomainAllowlist() (datadogV2.DomainAllowlistResponseDataAttributes, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV2.NewDomainAllowlistApi(conn.ApiClient())
+	r.domainAllowlistOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+		api := datadogV2.NewDomainAllowlistApi(conn.ApiClient())
 
-	resp, httpResp, err := api.GetDomainAllowlist(conn.AuthCtx())
-	if err != nil {
-		if isForbidden(httpResp) {
-			log.Warn().Msg("datadog> domain allowlist not available (403 Forbidden)")
-			return datadogV2.DomainAllowlistResponseDataAttributes{}, nil
+		resp, httpResp, err := api.GetDomainAllowlist(conn.AuthCtx())
+		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> domain allowlist not available (403 Forbidden)")
+				return
+			}
+			r.domainAllowlistErr = err
+			return
 		}
-		return datadogV2.DomainAllowlistResponseDataAttributes{}, err
-	}
 
-	data := resp.GetData()
-	return data.GetAttributes(), nil
+		data := resp.GetData()
+		r.domainAllowlistAttrs = data.GetAttributes()
+	})
+	return r.domainAllowlistAttrs, r.domainAllowlistErr
 }
 
 func (r *mqlDatadogOrganization) domainAllowlistEnabled() (bool, error) {
@@ -845,6 +858,9 @@ func (r *mqlDatadogApiKey) keyOwners() (string, string, error) {
 		}
 		return created, modified, nil
 	}
+
+	log.Debug().Str("apiKey", r.Id.Data).
+		Msg("datadog> API key was not returned by the key management API, cannot resolve its owners")
 	return "", "", nil
 }
 
@@ -859,10 +875,12 @@ func (r *mqlDatadogApplicationKey) owner() (*mqlDatadogUser, error) {
 	}
 
 	ownerId := ""
+	found := false
 	for _, k := range keys {
 		if k.GetId() != r.Id.Data {
 			continue
 		}
+		found = true
 		if rels, ok := k.GetRelationshipsOk(); ok && rels != nil {
 			if owned, ok := rels.GetOwnedByOk(); ok && owned != nil {
 				if data, ok := owned.GetDataOk(); ok && data != nil {
@@ -871,6 +889,10 @@ func (r *mqlDatadogApplicationKey) owner() (*mqlDatadogUser, error) {
 			}
 		}
 		break
+	}
+	if !found {
+		log.Debug().Str("applicationKey", r.Id.Data).
+			Msg("datadog> application key was not returned by the key management API, cannot resolve its owner")
 	}
 	return resolveUserRef(r.MqlRuntime, ownerId, &r.Owner)
 }
