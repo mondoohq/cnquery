@@ -154,7 +154,12 @@ private stackit.server @defaults("id name status machineType") {
   // Whether a config drive is attached
   configDrive bool
   // Whether a virtual TPM (vTPM) device is attached for measured boot
-  vtpmEnabled bool
+  //
+  // Always false. STACKIT withdrew the vTPM server attribute because the
+  // feature was never functional, so the API no longer reports it and this
+  // field cannot describe real server state. Do not write audits against
+  // it. It will be removed in the next major release.
+  vtpmEnabled @maturity("deprecated") bool
   // SSH key pair name used at boot (empty if none)
   keypairName string
   // SSH key pair used at boot (nullable)
@@ -432,6 +437,13 @@ private stackit.network @defaults("id name routed") {
   ipv4Nameservers []string
   // IPv4 prefix list
   ipv4Prefixes []string
+  // Public IPv4 address fronting the network (empty if none)
+  //
+  // Set when the network has a public IPv4 address bound to it, which makes
+  // workloads on the network reachable from the internet subject to security
+  // group rules. An empty value means the network has no public IPv4 entry
+  // point of its own.
+  ipv4PublicIp string
   // IPv6 prefix CIDR
   ipv6Prefix string
   // IPv6 gateway address (empty if no gateway)
@@ -442,12 +454,57 @@ private stackit.network @defaults("id name routed") {
   ipv6Prefixes []string
   // Network state (CREATING, CREATED, UPDATING, DELETING, FAILED)
   state string
+  // Whether DHCP is enabled on the network
+  //
+  // When enabled, the network hands out addresses and DNS settings to
+  // attached interfaces automatically. When disabled, workloads carry
+  // statically configured addressing.
+  dhcp bool
   // Creation timestamp
   createdAt time
+  // Last update timestamp
+  updatedAt time
   // User-defined labels
   labels map[string]string
+  // Routing table the network forwards through (nullable)
+  routingTable() stackit.routingTable
   // Network interfaces attached to this network
   nics() []stackit.nic
+}
+
+// STACKIT network area routing table
+//
+// Routing table that decides where traffic leaving a network is forwarded,
+// keyed by its UUID `id`. Routing tables live on a network area rather than
+// on a single project, so several networks across the area can share one.
+// `isDefault` marks the table applied to networks that do not choose one,
+// `dynamicRoutes` reports whether routes learned over the area's dynamic
+// peering are propagated into the table, and `systemRoutes` reports whether
+// automatic routes connecting projects in the same area are installed. Both
+// widen reachability without an explicit route being written, so they are the
+// fields to check when auditing which networks can reach each other.
+private stackit.routingTable @defaults("id name isDefault") {
+  // Routing table UUID
+  id string
+  // Routing table name
+  name string
+  // Description (empty if none)
+  description string
+  // Whether this is the area's default routing table
+  //
+  // The default table is applied to networks that do not name one and cannot
+  // be deleted.
+  isDefault bool
+  // Whether dynamic routes are propagated into this table
+  dynamicRoutes bool
+  // Whether automatic system routes connecting projects in the same network area are installed
+  systemRoutes bool
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
 }
 
 // STACKIT network interface

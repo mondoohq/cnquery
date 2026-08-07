@@ -72,10 +72,11 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 	launchedAt, ok2 := s.GetLaunchedAtOk()
 	updatedAt, ok3 := s.GetUpdatedAtOk()
 
-	vtpmEnabled := false
-	if v, ok := s.GetVtpmOk(); ok {
-		vtpmEnabled = v.GetEnabled()
-	}
+	// STACKIT withdrew the vTPM server attribute in iaas v1.14.0: the feature
+	// was never functional and the API stopped reporting it, so there is
+	// nothing left to read. The deprecated field reports false until it is
+	// dropped in the next major release.
+	const vtpmEnabled = false
 
 	args := map[string]*llx.RawData{
 		"id":                  llx.StringData(s.GetId()),
@@ -681,6 +682,7 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 		ipv4Nameserv   []string
 		ipv4Prefixes   []string
 		ipv4PrefixSing string
+		ipv4PublicIp   string
 		ipv6Gateway    string
 		ipv6Nameserv   []string
 		ipv6Prefixes   []string
@@ -690,6 +692,7 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 		ipv4Gateway = ipv4.GetGateway()
 		ipv4Nameserv = ipv4.GetNameservers()
 		ipv4Prefixes = ipv4.GetPrefixes()
+		ipv4PublicIp = ipv4.GetPublicIp()
 		if len(ipv4Prefixes) > 0 {
 			ipv4PrefixSing = ipv4Prefixes[0]
 		}
@@ -704,16 +707,20 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 	}
 
 	createdAt, okCreated := n.GetCreatedAtOk()
+	updatedAt, okUpdated := n.GetUpdatedAtOk()
 
 	args := map[string]*llx.RawData{
 		"id":              llx.StringData(n.GetId()),
 		"name":            llx.StringData(n.GetName()),
 		"routed":          llx.BoolData(n.GetRouted()),
+		"dhcp":            llx.BoolData(n.GetDhcp()),
 		"createdAt":       llx.TimeDataPtr(timeOrNil(createdAt, okCreated)),
+		"updatedAt":       llx.TimeDataPtr(timeOrNil(updatedAt, okUpdated)),
 		"ipv4Prefix":      llx.StringData(ipv4PrefixSing),
 		"ipv4Gateway":     llx.StringData(ipv4Gateway),
 		"ipv4Nameservers": strSliceData(ipv4Nameserv),
 		"ipv4Prefixes":    strSliceData(ipv4Prefixes),
+		"ipv4PublicIp":    llx.StringData(ipv4PublicIp),
 		"ipv6Prefix":      llx.StringData(ipv6PrefixSing),
 		"ipv6Gateway":     llx.StringData(ipv6Gateway),
 		"ipv6Nameservers": strSliceData(ipv6Nameserv),
@@ -721,7 +728,61 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 		"state":           llx.StringData(n.GetStatus()),
 		"labels":          labelData(n.GetLabels()),
 	}
-	return CreateResource(runtime, "stackit.network", args)
+	res, err := CreateResource(runtime, "stackit.network", args)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlStackitNetwork).cacheRoutingTableId = n.GetRoutingTableId()
+	return res, nil
+}
+
+// mqlStackitNetworkInternal carries the routing table ID off the network
+// payload. The table itself lives on a network area, so resolving it needs a
+// separate walk that only runs when a query asks for it.
+type mqlStackitNetworkInternal struct {
+	cacheRoutingTableId string
+}
+
+func (r *mqlStackitNetwork) routingTable() (*mqlStackitRoutingTable, error) {
+	if r.cacheRoutingTableId == "" {
+		return markNull[mqlStackitRoutingTable](&r.RoutingTable)
+	}
+	tables, err := conn(r.MqlRuntime).NetworkAreaRoutingTables(bgctx())
+	if err != nil {
+		return nil, err
+	}
+	table, ok := tables[r.cacheRoutingTableId]
+	if !ok {
+		// The network names a table on an area this credential cannot read, so
+		// report no table rather than inventing an empty one.
+		return markNull[mqlStackitRoutingTable](&r.RoutingTable)
+	}
+	return buildRoutingTable(r.MqlRuntime, &table)
+}
+
+func buildRoutingTable(runtime *plugin.Runtime, t *iaas.RoutingTable) (*mqlStackitRoutingTable, error) {
+	createdAt, okCreated := t.GetCreatedAtOk()
+	updatedAt, okUpdated := t.GetUpdatedAtOk()
+
+	res, err := CreateResource(runtime, "stackit.routingTable", map[string]*llx.RawData{
+		"id":            llx.StringData(t.GetId()),
+		"name":          llx.StringData(t.GetName()),
+		"description":   llx.StringData(t.GetDescription()),
+		"isDefault":     llx.BoolData(t.GetDefault()),
+		"dynamicRoutes": llx.BoolData(t.GetDynamicRoutes()),
+		"systemRoutes":  llx.BoolData(t.GetSystemRoutes()),
+		"createdAt":     llx.TimeDataPtr(timeOrNil(createdAt, okCreated)),
+		"updatedAt":     llx.TimeDataPtr(timeOrNil(updatedAt, okUpdated)),
+		"labels":        labelData(t.GetLabels()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitRoutingTable), nil
+}
+
+func (r *mqlStackitRoutingTable) id() (string, error) {
+	return "stackit.routingTable/" + r.Id.Data, nil
 }
 
 func (r *mqlStackitNetwork) id() (string, error) {
