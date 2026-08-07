@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -13,6 +14,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/resourcemanager"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -252,6 +254,7 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 		}
 		mqlJobTyped := mqlJob.(*mqlOciResourceManagerJob)
 		mqlJobTyped.cacheCompartmentId = stringValue(job.CompartmentId)
+		mqlJobTyped.cacheStackId = stringValue(job.StackId)
 		res = append(res, mqlJobTyped)
 	}
 
@@ -260,6 +263,7 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 
 type mqlOciResourceManagerJobInternal struct {
 	cacheCompartmentId string
+	cacheStackId       string
 }
 
 func (o *mqlOciResourceManagerJob) id() (string, error) {
@@ -268,4 +272,55 @@ func (o *mqlOciResourceManagerJob) id() (string, error) {
 
 func (o *mqlOciResourceManagerJob) compartment() (*mqlOciCompartment, error) {
 	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+}
+
+func (o *mqlOciResourceManagerJob) stack() (*mqlOciResourceManagerStack, error) {
+	if o.cacheStackId == "" {
+		o.Stack.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.resourceManager.stack", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheStackId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciResourceManagerStack), nil
+}
+
+// initOciResourceManagerStack resolves a stack by OCID.
+//
+// The job accessor above reaches a stack by id, and without an init
+// NewResource would build one from that id alone: correct cache key, every
+// other field unset, and a detail fetch pointed at no region. Resolving
+// through the stack listing hands back the populated resource instead.
+func initOciResourceManagerStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
+		return nil, nil, errors.New("id required to fetch oci.resourceManager.stack")
+	}
+
+	obj, err := CreateResource(runtime, "oci.resourceManager", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	rm := obj.(*mqlOciResourceManager)
+
+	rawStacks := rm.GetStacks()
+	if rawStacks.Error != nil {
+		return nil, nil, rawStacks.Error
+	}
+
+	for _, raw := range rawStacks.Data {
+		stack := raw.(*mqlOciResourceManagerStack)
+		if stack.Id.Data == idVal {
+			return args, stack, nil
+		}
+	}
+
+	return nil, nil, errors.New("oci.resourceManager.stack not found: " + idVal)
 }

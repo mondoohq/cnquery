@@ -416,10 +416,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 		rule := rules[i]
 
 		// Every field that decides whether the rule actually fires lives in
-		// DetectorDetails. A nil block means the API returned the rule without
-		// its configuration, so report it as disabled-unknown rather than
-		// defaulting isEnabled to false, which would read as an authoritative
-		// "this detection is off".
+		// DetectorDetails, which is optional on the summary. When it is absent
+		// these fall back to their zero values and isEnabled is emitted as an
+		// explicit false rather than left null, so an assertion over the rule
+		// fails instead of passing on a rule nobody could read. MQL evaluates
+		// null && null as true, so a null here would be the more dangerous
+		// answer.
 		var (
 			isEnabled              bool
 			riskLevel              string
