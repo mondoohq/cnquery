@@ -59,6 +59,12 @@ func TestPrefixesCoverInternet(t *testing.T) {
 		{"ordinary allowlist", []string{"10.0.0.0/8", "203.0.113.0/24"}, false},
 		{"empty list", nil, false},
 		{"unparseable entries are ignored, not assumed open", []string{"garbage", "also-garbage"}, false},
+
+		// The aggregation is IPv4 only, and these two pin that boundary so a
+		// later change has to move both the behavior and the doc comment.
+		{"a zero-length IPv6 prefix counts on its own", []string{"::/0"}, true},
+		{"IPv6 halves are not summed against each other", []string{"::/1", "8000::/1"}, false},
+		{"IPv6 entries do not complete an IPv4 half", []string{"0.0.0.0/1", "8000::/1"}, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, prefixesCoverInternet(tc.prefixes))

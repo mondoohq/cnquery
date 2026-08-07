@@ -52,8 +52,14 @@ func isInternetOpenSourcePrefix(prefix string) bool {
 // "128.0.0.0/1"] -- which is all of IPv4 written as two prefixes. It is a
 // common way to express "any" and it defeats a per-entry check: every entry
 // looks like an ordinary CIDR, so an NSG opened this way read as closed and the
-// resource behind it reported internetReachable: false. Any zero-length IPv6
-// prefix is treated the same way.
+// resource behind it reported internetReachable: false.
+//
+// The aggregation is IPv4 only. A prefix that is open on its own is caught for
+// either family, so "::/0" still reports true, but IPv6 prefixes are not summed
+// against each other: an all-of-IPv6 set written as ["::/1", "8000::/1"] is not
+// recognized. The split-halves spelling exists to get past tooling that rejects
+// 0.0.0.0/0, which is an IPv4 habit, so that gap has not been worth 128-bit
+// range math.
 func prefixesCoverInternet(prefixes []string) bool {
 	var ranges []ipRange
 	for _, p := range prefixes {
