@@ -373,8 +373,10 @@ func mqlFirewallPolicyRules(runtime *plugin.Runtime, policyId string, rules []*c
 
 		var srcIpRanges, destIpRanges, srcAddressGroups, destAddressGroups []any
 		var layer4Configs []any
+		layer4Protocols := map[string]any{}
 		srcSecureTags := map[string]any{}
 		if r.Match != nil {
+			layer4Protocols = layer4ProtocolPorts(r.Match.Layer4Configs)
 			srcIpRanges = convert.SliceAnyToInterface(r.Match.SrcIpRanges)
 			destIpRanges = convert.SliceAnyToInterface(r.Match.DestIpRanges)
 			srcAddressGroups = convert.SliceAnyToInterface(r.Match.SrcAddressGroups)
@@ -419,6 +421,7 @@ func mqlFirewallPolicyRules(runtime *plugin.Runtime, policyId string, rules []*c
 			"srcIpRanges":           llx.ArrayData(srcIpRanges, types.String),
 			"destIpRanges":          llx.ArrayData(destIpRanges, types.String),
 			"layer4Configs":         llx.ArrayData(layer4Configs, types.Dict),
+			"layer4Protocols":       llx.MapData(layer4Protocols, types.Array(types.String)),
 			"srcSecureTags":         llx.MapData(srcSecureTags, types.String),
 			"srcAddressGroups":      llx.ArrayData(srcAddressGroups, types.String),
 			"destAddressGroups":     llx.ArrayData(destAddressGroups, types.String),

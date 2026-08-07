@@ -1623,6 +1623,8 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 				"created":               llx.TimeDataPtr(parseTime(firewall.CreationTimestamp)),
 				"allowed":               llx.ArrayData(allowedDict, types.Dict),
 				"denied":                llx.ArrayData(deniedDict, types.Dict),
+				"allowedProtocols":      llx.MapData(firewallAllowedProtocolPorts(firewall.Allowed), types.Array(types.String)),
+				"deniedProtocols":       llx.MapData(firewallDeniedProtocolPorts(firewall.Denied), types.Array(types.String)),
 				"targetTags":            llx.ArrayData(convert.SliceAnyToInterface(firewall.TargetTags), types.String),
 				"loggingEnabled":        llx.BoolData(firewall.LogConfig != nil && firewall.LogConfig.Enable),
 				"logConfig":             llx.DictData(firewallLogConfigDict),

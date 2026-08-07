@@ -2524,10 +2524,27 @@ private gcp.project.computeService.firewall @defaults("name") {
   targetServiceAccountRefs() []gcp.project.iamService.serviceAccount
   // Creation timestamp
   created time
-  // List of ALLOW rules specified by this firewall
-  allowed []dict
-  // List of DENY rules specified by this firewall
-  denied []dict
+  // ALLOW rule dicts
+  //
+  // Deprecated in favor of allowedProtocols. Each entry: {ipProtocol, ports}.
+  allowed @maturity("deprecated") []dict
+  // DENY rule dicts
+  //
+  // Deprecated in favor of deniedProtocols. Each entry: {ipProtocol, ports}.
+  denied @maturity("deprecated") []dict
+  // Ports this rule allows, keyed by protocol
+  //
+  // Maps each protocol the rule permits (tcp, udp, icmp, esp, ah, sctp, ipip,
+  // or an IANA protocol number) to the ports it permits for that protocol.
+  // A port entry is either a single port ("22") or an inclusive range
+  // ("8000-8080"). An empty list means every port of that protocol, which is
+  // also the only form protocols that carry no ports (such as icmp) take.
+  allowedProtocols map[string][]string
+  // Ports this rule denies, keyed by protocol
+  //
+  // Same shape as allowedProtocols. A firewall rule carries either allow
+  // entries or deny entries, never both, so one of the two is always empty.
+  deniedProtocols map[string][]string
   // Instance tags that the firewall rule applies to
   targetTags []string
   // Whether firewall logging is enabled for this rule
@@ -2585,6 +2602,18 @@ gcp.project.computeService.network @defaults("name") {
   subnetworkUrls []string
   // Subnetworks in the network
   subnetworks() []gcp.project.computeService.subnetwork
+  // VPC firewall rules attached to the network
+  //
+  // The rules whose network is this one, in the project's firewall list.
+  // Selecting them here avoids matching each rule's network self-link URL by
+  // hand. Firewall policy rules are separate and reachable through
+  // firewallPolicyRef.
+  firewalls() []gcp.project.computeService.firewall
+  // Routes defined on the network
+  //
+  // Both the routes created with the network and any custom routes added to
+  // it, including the default route whose next hop is the internet gateway.
+  routes() []gcp.project.computeService.route
   // The range of internal IPv6 addresses owned by this network
   internalIpv6Range string
   // URL of the firewall policy applied to this network
@@ -11029,8 +11058,17 @@ private gcp.project.computeService.firewallPolicy.rule @defaults("priority actio
   srcIpRanges []string
   // Destination IPv4/IPv6 CIDR ranges the rule matches
   destIpRanges []string
-  // Protocol/port combinations the rule matches (each entry: {ipProtocol, ports[]})
-  layer4Configs []dict
+  // Layer 4 configuration dicts
+  //
+  // Deprecated in favor of layer4Protocols. Each entry: {ipProtocol, ports}.
+  layer4Configs @maturity("deprecated") []dict
+  // Ports the rule matches, keyed by protocol
+  //
+  // Maps each protocol the rule matches (tcp, udp, icmp, esp, ah, sctp, or an
+  // IANA protocol number) to the ports it matches for that protocol. A port
+  // entry is either a single port ("22") or an inclusive range ("8000-8080").
+  // An empty list means every port of that protocol.
+  layer4Protocols map[string][]string
   // Source secure tag values the rule matches (tag name -> state, e.g. EFFECTIVE / INEFFECTIVE)
   srcSecureTags map[string]string
   // Source address groups the rule matches

@@ -4911,6 +4911,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewall.denied": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetDenied()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.firewall.allowedProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewall).GetAllowedProtocols()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"gcp.project.computeService.firewall.deniedProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewall).GetDeniedProtocols()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
 	"gcp.project.computeService.firewall.targetTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetTargetTags()).ToDataRes(types.Array(types.String))
 	},
@@ -4976,6 +4982,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.network.subnetworks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetSubnetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.subnetwork")))
+	},
+	"gcp.project.computeService.network.firewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetwork).GetFirewalls()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewall")))
+	},
+	"gcp.project.computeService.network.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetwork).GetRoutes()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.route")))
 	},
 	"gcp.project.computeService.network.internalIpv6Range": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetInternalIpv6Range()).ToDataRes(types.String)
@@ -12410,6 +12422,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.firewallPolicy.rule.layer4Configs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetLayer4Configs()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.layer4Protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetLayer4Protocols()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
 	"gcp.project.computeService.firewallPolicy.rule.srcSecureTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcSecureTags()).ToDataRes(types.Map(types.String, types.String))
@@ -22132,6 +22147,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceFirewall).Denied, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.firewall.allowedProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewall).AllowedProtocols, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewall.deniedProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewall).DeniedProtocols, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.firewall.targetTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewall).TargetTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -22222,6 +22245,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.network.subnetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceNetwork).Subnetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetwork).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetwork).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.network.internalIpv6Range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32998,6 +33029,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.firewallPolicy.rule.layer4Configs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Layer4Configs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.layer4Protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Layer4Protocols, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewallPolicy.rule.srcSecureTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51062,6 +51097,8 @@ type mqlGcpProjectComputeServiceFirewall struct {
 	Created                  plugin.TValue[*time.Time]
 	Allowed                  plugin.TValue[[]any]
 	Denied                   plugin.TValue[[]any]
+	AllowedProtocols         plugin.TValue[map[string]any]
+	DeniedProtocols          plugin.TValue[map[string]any]
 	TargetTags               plugin.TValue[[]any]
 	LoggingEnabled           plugin.TValue[bool]
 	LogConfig                plugin.TValue[any]
@@ -51216,6 +51253,14 @@ func (c *mqlGcpProjectComputeServiceFirewall) GetDenied() *plugin.TValue[[]any] 
 	return &c.Denied
 }
 
+func (c *mqlGcpProjectComputeServiceFirewall) GetAllowedProtocols() *plugin.TValue[map[string]any] {
+	return &c.AllowedProtocols
+}
+
+func (c *mqlGcpProjectComputeServiceFirewall) GetDeniedProtocols() *plugin.TValue[map[string]any] {
+	return &c.DeniedProtocols
+}
+
 func (c *mqlGcpProjectComputeServiceFirewall) GetTargetTags() *plugin.TValue[[]any] {
 	return &c.TargetTags
 }
@@ -51270,6 +51315,8 @@ type mqlGcpProjectComputeServiceNetwork struct {
 	Mode                                  plugin.TValue[string]
 	SubnetworkUrls                        plugin.TValue[[]any]
 	Subnetworks                           plugin.TValue[[]any]
+	Firewalls                             plugin.TValue[[]any]
+	Routes                                plugin.TValue[[]any]
 	InternalIpv6Range                     plugin.TValue[string]
 	FirewallPolicy                        plugin.TValue[string]
 	FirewallPolicyRef                     plugin.TValue[*mqlGcpProjectComputeServiceFirewallPolicy]
@@ -51405,6 +51452,38 @@ func (c *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() *plugin.TValue[[]a
 		}
 
 		return c.subnetworks()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceNetwork) GetFirewalls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Firewalls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.network", c.__id, "firewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewalls()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceNetwork) GetRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Routes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.network", c.__id, "routes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routes()
 	})
 }
 
@@ -76172,6 +76251,7 @@ type mqlGcpProjectComputeServiceFirewallPolicyRule struct {
 	SrcIpRanges           plugin.TValue[[]any]
 	DestIpRanges          plugin.TValue[[]any]
 	Layer4Configs         plugin.TValue[[]any]
+	Layer4Protocols       plugin.TValue[map[string]any]
 	SrcSecureTags         plugin.TValue[map[string]any]
 	SrcAddressGroups      plugin.TValue[[]any]
 	DestAddressGroups     plugin.TValue[[]any]
@@ -76273,6 +76353,10 @@ func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDestIpRanges() *plugi
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetLayer4Configs() *plugin.TValue[[]any] {
 	return &c.Layer4Configs
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetLayer4Protocols() *plugin.TValue[map[string]any] {
+	return &c.Layer4Protocols
 }
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcSecureTags() *plugin.TValue[map[string]any] {
