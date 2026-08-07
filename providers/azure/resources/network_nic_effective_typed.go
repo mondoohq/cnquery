@@ -125,7 +125,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveRules() ([]any, e
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveRoutes() ([]any, error) {
-	routes, err := a.fetchEffectiveRoutes()
+	routes, err := a.effectiveRoutesCached()
 	if err != nil {
 		return nil, err
 	}

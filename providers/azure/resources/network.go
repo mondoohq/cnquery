@@ -5124,6 +5124,16 @@ type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
 	// inbound flow is admitted); a degraded fetch also yields an empty list
 	// but proves nothing, and the two must not be conflated.
 	effNsgEvaluated bool
+
+	// effRouteMu guards a memoized fetch of the NIC's effective routes, shared
+	// by the deprecated effectiveRouteTable field and the typed effectiveRoutes
+	// field. BeginGetEffectiveRouteTable is a long-running operation bounded at
+	// 60 seconds, so a query naming both fields would otherwise pay for it
+	// twice. As with the NSG fetch, only a successful call is memoized
+	// (effRouteLoaded), leaving a transient failure retryable.
+	effRouteMu     sync.Mutex
+	effRouteLoaded bool
+	effRoutes      []*network.EffectiveRoute
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {

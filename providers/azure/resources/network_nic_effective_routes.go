@@ -22,7 +22,7 @@ import (
 // running VM; when it is not, Azure returns a 4xx that we surface as an empty
 // list rather than an error.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveRouteTable() ([]any, error) {
-	routes, err := a.fetchEffectiveRoutes()
+	routes, err := a.effectiveRoutesCached()
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +38,32 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveRouteTable() ([]a
 	return res, nil
 }
 
+// effectiveRoutesCached returns the NIC's effective routes, memoizing the
+// result so the deprecated effectiveRouteTable field and the typed
+// effectiveRoutes field share one call. BeginGetEffectiveRouteTable is a
+// long-running operation bounded at 60 seconds, so a query naming both fields
+// would otherwise poll Azure twice for the same answer.
+//
+// Only a successful fetch is memoized: the call can fail transiently, and
+// caching that would turn one timeout into a permanently empty route table for
+// the interface.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveRoutesCached() ([]*network.EffectiveRoute, error) {
+	a.effRouteMu.Lock()
+	defer a.effRouteMu.Unlock()
+	if a.effRouteLoaded {
+		return a.effRoutes, nil
+	}
+	routes, err := a.fetchEffectiveRoutes()
+	if err != nil {
+		return nil, err
+	}
+	a.effRoutes = routes
+	a.effRouteLoaded = true
+	return a.effRoutes, nil
+}
+
 // fetchEffectiveRoutes performs the long-running call and returns the SDK
-// values, so the deprecated dict view and the typed effectiveRoutes view derive
-// from one fetch rather than each issuing its own.
+// values. Call effectiveRoutesCached rather than this directly.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveRoutes() ([]*network.EffectiveRoute, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	// Bound the long-poll so a stuck operation doesn't hang the interfaces query.

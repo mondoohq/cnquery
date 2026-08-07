@@ -53,6 +53,34 @@ func TestEnumString(t *testing.T) {
 	assert.Equal(t, "Internet", enumString(&hop))
 }
 
+// The deprecated effectiveRouteTable field and the typed effectiveRoutes field
+// are separate MQL fields, so each is resolved independently. Both must read
+// through the memo, or a query naming both polls Azure's 60-second
+// long-running operation twice for the same answer.
+func TestEffectiveRoutesCachedReturnsMemoWithoutRefetching(t *testing.T) {
+	name := "system-route"
+	nic := &mqlAzureSubscriptionNetworkServiceInterface{}
+	nic.effRouteLoaded = true
+	nic.effRoutes = []*network.EffectiveRoute{{Name: &name}}
+
+	// A populated memo is returned as-is. Were it ignored, this would fall
+	// through to the live fetch and fail on the nil connection.
+	first, err := nic.effectiveRoutesCached()
+	assert.NoError(t, err)
+	assert.Len(t, first, 1)
+
+	second, err := nic.effectiveRoutesCached()
+	assert.NoError(t, err)
+	assert.Equal(t, first, second)
+}
+
+// Only a successful fetch is memoized, so a transient failure stays retryable
+// rather than freezing an empty route table onto the interface.
+func TestEffectiveRoutesCachedDoesNotMemoizeFailure(t *testing.T) {
+	nic := &mqlAzureSubscriptionNetworkServiceInterface{}
+	assert.False(t, nic.effRouteLoaded)
+}
+
 func TestStrPtrSliceToAny(t *testing.T) {
 	a, b := "10.0.0.0/8", "0.0.0.0/0"
 
