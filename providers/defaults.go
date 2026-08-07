@@ -621,6 +621,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mssql": {
+		Provider: &plugin.Provider{
+			Name:            "mssql",
+			ID:              "go.mondoo.com/mql/v13/providers/mssql",
+			ConnectionTypes: []string{"mssql"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mssql",
+					Use:   "mssql [host]",
+					Short: "a Microsoft SQL Server instance",
+				},
+			},
+		},
+	},
+
 	"network": {
 		Provider: &plugin.Provider{
 			Name:            "network",

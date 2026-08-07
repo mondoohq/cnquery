@@ -235,6 +235,7 @@ PROVIDERS := \
 	mondoo \
 	mongodbatlas \
 	ms365 \
+	mssql \
 	network \
 	nextdns \
 	nmap \
