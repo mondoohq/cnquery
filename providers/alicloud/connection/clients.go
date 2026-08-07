@@ -10,6 +10,7 @@ import (
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
 	albclient "github.com/alibabacloud-go/alb-20200616/v2/client"
 	cloudfwclient "github.com/alibabacloud-go/cloudfw-20171207/v8/client"
+	cloudssoclient "github.com/alibabacloud-go/cloudsso-20210515/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
 	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -79,6 +80,19 @@ func (c *AlicloudConnection) cachedClient(key string, build func() (any, error))
 	}
 	c.clients[key] = client
 	return client, nil
+}
+
+// CloudSsoClient returns a CloudSSO client for one of the two service regions.
+// CloudSSO directories are hosted per-region, so callers probe both regions
+// rather than assuming which one an account uses.
+func (c *AlicloudConnection) CloudSsoClient(region string) (*cloudssoclient.Client, error) {
+	client, err := c.cachedClient("cloudsso/"+region, func() (any, error) {
+		return cloudssoclient.NewClient(c.config("cloudsso", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*cloudssoclient.Client), nil
 }
 
 func (c *AlicloudConnection) EcsClient(region string) (*ecsclient.Client, error) {

@@ -11,8 +11,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 // which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
 // are reached, along with the Container Service for Kubernetes, Function
 // Compute, NAS file storage, Web Application Firewall, Cloud Firewall,
-// Anti-DDoS, Key Management Service, ActionTrail, Log Service, Cloud Config, and
-// Resource Directory resources.
+// Anti-DDoS, Key Management Service, ActionTrail, Log Service, Cloud Config,
+// CloudSSO, and Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -3732,4 +3732,304 @@ alicloud.antiddos.networkRule {
   backendPort int
   // Origin servers traffic is forwarded to after scrubbing
   realServers []string
+}
+
+// CloudSSO
+//
+// Workforce identity and account access for an Alibaba Cloud resource
+// directory. Exposes the CloudSSO directories in the account, and through them
+// the workforce users and groups, the access configurations that define what a
+// session may do, and the assignments that grant those configurations on
+// individual member accounts.
+alicloud.cloudsso {
+  // Whether CloudSSO is enabled for the account
+  //
+  // False when the service has never been enabled, in which case the account
+  // manages access through RAM users and roles alone.
+  enabled() bool
+  // CloudSSO directories in the account
+  directories() []alicloud.cloudsso.directory
+}
+
+// CloudSSO directory
+//
+// A CloudSSO directory, the container for a workforce identity population and
+// the access it holds on the resource directory. The directoryId selects the
+// directory, for example
+// `alicloud.cloudsso.directory(directoryId: "d-00example")`. Exposes the users
+// and groups in the directory, the access configurations and their assignments,
+// the password policy, and the multi-factor and credential-retrieval settings
+// that govern how members sign in.
+alicloud.cloudsso.directory @defaults("directoryId directoryName region") {
+  // Directory ID, used as the lookup key
+  directoryId string
+  // Name of the directory
+  directoryName string
+  // Region the directory is hosted in
+  region string
+  // Time the directory was created
+  createTime time
+  // Time the directory was last updated
+  updateTime time
+  // Users in the directory
+  users() []alicloud.cloudsso.user
+  // Groups in the directory
+  groups() []alicloud.cloudsso.group
+  // Access configurations defined in the directory
+  accessConfigurations() []alicloud.cloudsso.accessConfiguration
+  // Assignments granting access configurations on member accounts
+  accessAssignments() []alicloud.cloudsso.accessAssignment
+  // Password requirements for users in the directory
+  passwordPolicy() alicloud.cloudsso.passwordPolicy
+  // When multi-factor authentication is demanded of users signing in
+  //
+  // One of Enabled, where every sign-in requires a second factor, Byp, where it
+  // is required only for sign-ins the service judges risky, or Disabled.
+  mfaAuthenticationStatus() string
+  // Whether users may retrieve long-lived access credentials for themselves
+  //
+  // True lets a signed-in user mint credentials that outlive the sign-in
+  // session, widening the window in which a compromised session is useful.
+  allowUserToGetCredentials() bool
+  // Network ranges users may sign in from
+  //
+  // Semicolon-separated CIDR blocks restricting where sign-ins are accepted.
+  // Empty when sign-in is accepted from anywhere.
+  loginNetworkMasks() string
+  // Whether SCIM synchronization from an external identity provider is enabled
+  //
+  // When enabled, the user and group population is managed by the external
+  // provider, so accounts deactivated there stop being usable here.
+  scimSynchronizationEnabled() bool
+}
+
+// CloudSSO password policy
+//
+// Password requirements applied to users in a CloudSSO directory. Exposes the
+// length, character-class, reuse, and expiration rules, along with the
+// failed-sign-in lockout threshold.
+alicloud.cloudsso.passwordPolicy @defaults("minPasswordLength maxLoginAttempts") {
+  // Minimum number of characters a password must contain
+  minPasswordLength int
+  // Maximum number of characters a password may contain
+  maxPasswordLength int
+  // Minimum number of characters that must differ from the previous password
+  minPasswordDifferentChars int
+  // Number of days a password remains valid
+  maxPasswordAge int
+  // Number of previous passwords that may not be reused
+  passwordReusePrevention int
+  // Number of consecutive failed sign-ins before the account is locked
+  maxLoginAttempts int
+  // Whether a lowercase letter is required
+  requireLowerCaseChars bool
+  // Whether an uppercase letter is required
+  requireUpperCaseChars bool
+  // Whether a digit is required
+  requireNumbers bool
+  // Whether a symbol is required
+  requireSymbols bool
+  // Whether the password is barred from containing the user name
+  passwordNotContainUsername bool
+  // Whether an expired password blocks sign-in outright
+  //
+  // True locks the user out until an administrator resets the password, rather
+  // than prompting for a change at the next sign-in.
+  hardExpire bool
+}
+
+// CloudSSO user
+//
+// A workforce user in a CloudSSO directory, keyed by the directoryId and
+// userId. Exposes the user profile, whether the account was created directly or
+// synchronized from an external identity provider, the multi-factor devices
+// bound to it, and the groups it belongs to.
+alicloud.cloudsso.user @defaults("userName displayName status provisionType") {
+  // ID of the directory the user belongs to
+  directoryId string
+  // User ID, used with directoryId as the lookup key
+  userId string
+  // Sign-in name of the user
+  userName string
+  // Display name of the user
+  displayName string
+  // First name of the user
+  firstName string
+  // Last name of the user
+  lastName string
+  // Email address of the user
+  email string
+  // Description of the user
+  description string
+  // User status
+  //
+  // Either Enabled or Disabled. A disabled user cannot sign in but keeps its
+  // group memberships and assignments.
+  status string
+  // How the user account came to exist
+  //
+  // Either Manual for a user created directly in the directory, or
+  // Synchronized for one provisioned from an external identity provider. A
+  // manual user survives deprovisioning at the identity provider.
+  provisionType string
+  // Time the user was created
+  createTime time
+  // Time the user was last updated
+  updateTime time
+  // Multi-factor authentication devices bound to the user
+  mfaDevices() []alicloud.cloudsso.mfaDevice
+  // Groups the user belongs to
+  groups() []alicloud.cloudsso.group
+}
+
+// CloudSSO group
+//
+// A group of workforce users in a CloudSSO directory, keyed by the directoryId
+// and groupId. Access assignments made to a group apply to every member, so the
+// members list is what turns a group-level grant into the set of people who
+// actually hold it.
+alicloud.cloudsso.group @defaults("groupName provisionType") {
+  // ID of the directory the group belongs to
+  directoryId string
+  // Group ID, used with directoryId as the lookup key
+  groupId string
+  // Name of the group
+  groupName string
+  // Description of the group
+  description string
+  // How the group came to exist
+  //
+  // Either Manual for a group created directly in the directory, or
+  // Synchronized for one provisioned from an external identity provider.
+  provisionType string
+  // Time the group was created
+  createTime time
+  // Time the group was last updated
+  updateTime time
+  // Users that belong to the group
+  members() []alicloud.cloudsso.user
+}
+
+// CloudSSO multi-factor authentication device
+//
+// A second-factor device bound to a CloudSSO user, keyed by deviceId. Exposes
+// the device type and when it became effective.
+alicloud.cloudsso.mfaDevice @defaults("deviceName deviceType") {
+  // Device ID
+  deviceId string
+  // ID of the user the device is bound to
+  userId string
+  // Name of the device
+  deviceName string
+  // Device type, for example TOTP for an authenticator application
+  deviceType string
+  // Time the device became effective
+  effectiveTime time
+}
+
+// CloudSSO access configuration
+//
+// A named set of permissions that a CloudSSO user assumes on a member account,
+// keyed by the directoryId and accessConfigurationId. The permission policies
+// determine what a session created from this configuration may do, and the
+// session duration determines how long it lasts. An access configuration grants
+// nothing until an assignment binds it to a principal and an account.
+alicloud.cloudsso.accessConfiguration @defaults("accessConfigurationName sessionDuration") {
+  // ID of the directory the access configuration belongs to
+  directoryId string
+  // Access configuration ID, used with directoryId as the lookup key
+  accessConfigurationId string
+  // Name of the access configuration
+  accessConfigurationName string
+  // Description of the access configuration
+  description string
+  // Maximum length of a session created from this configuration, in seconds
+  sessionDuration int
+  // Initial console page a session lands on
+  relayState string
+  // Time the access configuration was created
+  createTime time
+  // Time the access configuration was last updated
+  updateTime time
+  // Permission policies attached to the access configuration
+  permissionPolicies() []alicloud.cloudsso.permissionPolicy
+}
+
+// CloudSSO permission policy
+//
+// A permission policy attached to a CloudSSO access configuration. A System
+// policy is one of the Alibaba Cloud managed policies, reachable through
+// ramPolicy; an Inline policy carries its statements in policyDocument on this
+// resource. Between them they define everything a session created from the
+// access configuration is allowed to do.
+alicloud.cloudsso.permissionPolicy @defaults("policyName policyType") {
+  // ID of the directory the access configuration belongs to
+  directoryId string
+  // ID of the access configuration the policy is attached to
+  accessConfigurationId string
+  // Name of the permission policy
+  policyName string
+  // Policy type
+  //
+  // Either System for an Alibaba Cloud managed policy or Inline for a policy
+  // defined on the access configuration itself.
+  policyType string
+  // Permission statements of an inline policy, as a JSON string
+  //
+  // Empty for a System policy, whose statements are exposed through ramPolicy
+  // instead.
+  policyDocument string
+  // Time the policy was attached to the access configuration
+  addTime time
+  // Managed policy behind a System permission policy
+  //
+  // The Alibaba Cloud managed policy of the same name, so its statements can be
+  // read the same way as for a RAM identity. Null for an Inline policy.
+  ramPolicy() alicloud.ram.policy
+}
+
+// CloudSSO access assignment
+//
+// A grant binding a CloudSSO user or group to an access configuration on one
+// member account. This is the edge that turns a permission set into effective
+// access: it names who (principal), what (access configuration), and where
+// (target account).
+alicloud.cloudsso.accessAssignment @defaults("principalName accessConfigurationName targetName") {
+  // ID of the directory the assignment belongs to
+  directoryId string
+  // ID of the principal the assignment grants access to
+  principalId string
+  // Name of the principal
+  principalName string
+  // Principal type
+  //
+  // Either User for an assignment made to a single user, or Group for one made
+  // to a group, in which case every member of the group holds the access.
+  principalType string
+  // ID of the access configuration the assignment grants
+  accessConfigurationId string
+  // Name of the access configuration the assignment grants
+  accessConfigurationName string
+  // ID of the account the assignment grants access on
+  targetId string
+  // Name of the account the assignment grants access on
+  targetName string
+  // Target type, for example RD-Account for a resource directory member account
+  targetType string
+  // Path of the target account in the resource directory hierarchy
+  targetPath string
+  // Time the assignment was created
+  createTime time
+  // Access configuration the assignment grants
+  accessConfiguration() alicloud.cloudsso.accessConfiguration
+  // Member account the assignment grants access on
+  account() alicloud.resourceManager.account
+  // User the assignment was made to
+  //
+  // Null when the assignment was made to a group.
+  user() alicloud.cloudsso.user
+  // Group the assignment was made to
+  //
+  // Null when the assignment was made to a single user.
+  group() alicloud.cloudsso.group
 }

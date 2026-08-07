@@ -129,6 +129,57 @@ func (r *mqlAlicloudResourceManager) createTime() (*time.Time, error) {
 	return rmParseTime(d.CreateTime), nil
 }
 
+// initAlicloudResourceManagerAccount resolves a member account from its ID.
+//
+// NewResource runs an init before it consults the resource cache, so the cache
+// probe here keeps an account that the account listing already produced from
+// costing another GetAccount call for every assignment that targets it.
+func initAlicloudResourceManagerAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	accountID, err := requiredStringArg(args, "accountId", "alicloud.resourceManager.account")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.resourceManager.account\x00" + accountID); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.ResourceManagerClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetAccount(&rmclient.GetAccountRequest{AccountId: tea.String(accountID)})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.Body == nil || resp.Body.Account == nil {
+		return nil, nil, fmt.Errorf("alicloud.resourceManager.account %q not found", accountID)
+	}
+
+	a := resp.Body.Account
+	res, err := CreateResource(runtime, "alicloud.resourceManager.account", map[string]*llx.RawData{
+		"__id":                llx.StringDataPtr(a.AccountId),
+		"accountId":           llx.StringDataPtr(a.AccountId),
+		"displayName":         llx.StringDataPtr(a.DisplayName),
+		"status":              llx.StringDataPtr(a.Status),
+		"type":                llx.StringDataPtr(a.Type),
+		"folderId":            llx.StringDataPtr(a.FolderId),
+		"resourceDirectoryId": llx.StringDataPtr(a.ResourceDirectoryId),
+		"joinMethod":          llx.StringDataPtr(a.JoinMethod),
+		"joinTime":            llx.TimeDataPtr(rmParseTime(a.JoinTime)),
+		"modifyTime":          llx.TimeDataPtr(rmParseTime(a.ModifyTime)),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
 func (r *mqlAlicloudResourceManager) accounts() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	client, err := conn.ResourceManagerClient()
