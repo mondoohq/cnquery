@@ -67,13 +67,14 @@ func (r *mqlPostgresTablespace) privileges() ([]any, error) {
 
 // --- foreign servers --------------------------------------------------------
 
-// redactOptions drops any option that carries a secret (a password). It matches
-// the "password=" key specifically so benign keys like "password_timeout" are
-// kept.
+// redactOptions drops any option whose key carries a secret. Options are
+// "key=value" pairs; the key is compared exactly so benign keys such as
+// "password_timeout" are kept.
 func redactOptions(in []string) []any {
 	out := []any{}
 	for _, opt := range in {
-		if strings.HasPrefix(strings.ToLower(opt), "password=") {
+		key, _, _ := strings.Cut(opt, "=")
+		if strings.EqualFold(strings.TrimSpace(key), "password") {
 			continue
 		}
 		out = append(out, opt)
