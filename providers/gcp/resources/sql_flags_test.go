@@ -13,13 +13,13 @@ import (
 // every engine's spelling of the same Cloud SQL database flag.
 func TestNormalizeSqlFlagKey(t *testing.T) {
 	// All three are the same flag, spelled per engine.
-	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagKey("cloudsql.iam_authentication"))
-	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagKey("cloudsql_iam_authentication"))
-	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagKey("cloudsql iam authentication"))
-	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagKey("cloudsql-iam-authentication"))
+	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagName("cloudsql.iam_authentication"))
+	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagName("cloudsql_iam_authentication"))
+	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagName("cloudsql iam authentication"))
+	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagName("cloudsql-iam-authentication"))
 	// Case is folded too, so a mixed-case flag name still matches.
-	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagKey("CloudSQL.IAM_Authentication"))
-	assert.Equal(t, "", normalizeSqlFlagKey(""))
+	assert.Equal(t, "cloudsql_iam_authentication", normalizeSqlFlagName("CloudSQL.IAM_Authentication"))
+	assert.Equal(t, "", normalizeSqlFlagName(""))
 }
 
 // TestSqlFlagOn covers the predicate behind iamAuthenticationEnabled.
