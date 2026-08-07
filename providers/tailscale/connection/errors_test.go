@@ -13,14 +13,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 // apiErrorWithStatus produces a genuine tsclient.APIError by driving the real
-// client against a stub server. tsclient keeps the HTTP status on an unexported
-// field, so the error cannot be constructed directly, and asserting against a
-// hand-rolled stand-in would not prove APIStatusCode parses what the SDK
-// actually emits.
+// client against a stub server. The status could be set on a hand-rolled
+// APIError, but only the SDK's own request path proves it populates the field
+// these helpers read, which is what would break if the SDK changed how it
+// reports failures.
 func apiErrorWithStatus(t *testing.T, status int) error {
 	t.Helper()
 

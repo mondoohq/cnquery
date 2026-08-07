@@ -36,6 +36,22 @@ tailscale {
   networkFlowLoggingEnabled() bool
   // Whether device posture identity collection is enabled for the tailnet
   postureIdentityCollectionEnabled() bool
+  // Whether traffic between regions is routed over Tailscale's network rather than taking the shortest path
+  regionalRoutingEnabled() bool
+  // Whether HTTPS certificates are enabled for the tailnet
+  //
+  // Required before a node can obtain a certificate for its MagicDNS
+  // name, and a prerequisite for exposing a service publicly with Funnel.
+  httpsEnabled() bool
+  // Whether the ACL policy is managed outside the admin console
+  //
+  // True when the tailnet's policy is maintained in an external system,
+  // typically a version-controlled repository synced through CI, in which
+  // case admin console edits are overwritten. The `aclsExternalLink`
+  // field points at that system.
+  aclsExternallyManaged() bool
+  // Link to the external system managing the ACL policy, empty when the policy is managed in the admin console
+  aclsExternalLink() string
   // Lowest user role allowed to join external tailnets: 'none' (disabled), 'admin' (admins only), or 'member' (any member)
   usersRoleAllowedToJoinExternalTailnets() string
   // Tailnet ACL (access control list) policy
@@ -44,9 +60,11 @@ tailscale {
   authKeys() []tailscale.authKey
   // Webhook endpoints subscribed to tailnet events
   webhooks() []tailscale.webhook
+  // Services published on the tailnet under their own Tailscale addresses
+  services() []tailscale.service
   // Configured log stream destinations for the tailnet (configuration audit logs, network flow logs)
   //
-  // Returns at most two entries — one with `logType == "configuration"` and one with `logType == "network"`. Entries are omitted when no destination is configured for that log type. Use this resource to assert that an organization is exporting tailnet audit and flow logs to a SIEM or object store.
+  // Returns at most two entries: one with `logType == "configuration"` and one with `logType == "network"`. Entries are omitted when no destination is configured for that log type. Use this resource to assert that an organization is exporting tailnet audit and flow logs to a SIEM or object store.
   logstreams() []tailscale.logstream
 }
 
@@ -60,11 +78,19 @@ tailscale {
 // tailnet-lock signing state. The `advertisedRoutes` and
 // `enabledRoutes` fields show which subnets the device offers to route
 // and which of those have been approved, so you can audit for
-// unapproved or overbroad subnet routing.
+// unapproved or overbroad subnet routing. `sshEnabled` reports whether
+// the node accepts Tailscale SSH sessions, and `postureSerialNumbers`
+// and `postureHardwareAddresses` carry the hardware identity the tailnet
+// collects when posture identity collection is turned on.
 tailscale.device @defaults("id hostname os") {
   init(id? string)
   // Legacy identifier for a device
   id string
+  // Preferred identifier for a device
+  //
+  // Tailscale's current device identifier, which supersedes the numeric
+  // `id`. Both address the same device through the API.
+  nodeId string
   // Machine name in the admin console
   hostname string
   // Operating system that the device is running
@@ -93,6 +119,17 @@ tailscale.device @defaults("id hostname os") {
   authorized bool
   // Whether a device is shared into the tailnet (rather than a member of the tailnet)
   isExternal bool
+  // Whether the device was registered with an ephemeral auth key and is removed automatically once it goes offline
+  isEphemeral bool
+  // Whether the device currently holds a connection to the Tailscale coordination server
+  connectedToControl bool
+  // Whether the device accepts Tailscale SSH sessions
+  //
+  // A node with Tailscale SSH turned on serves SSH to any peer the ACL
+  // `ssh` rules permit, bypassing the host's own sshd and its
+  // authorized_keys. Combine with the `ssh` rules on
+  // `tailscale.aclPolicy` to see who can reach it.
+  sshEnabled bool
   // Whether key expiration is disabled for the device
   keyExpiryDisabled bool
   // Whether a Tailscale client version upgrade is available (empty for external devices)
@@ -102,11 +139,43 @@ tailscale.device @defaults("id hostname os") {
   // Expiration date of the device's auth key
   expiresAt time
   // When device was last active on the tailnet
+  //
+  // Null while the device holds a connection to the coordination server,
+  // because "last seen" has no meaning for a device that is seen right
+  // now. Pair with `connectedToControl` when auditing for dormant
+  // devices.
   lastSeenAt time
   // Subnet routes that the device is advertising
-  advertisedRoutes() []string
+  advertisedRoutes []string
   // Subnet routes that are enabled (allowed) for the device, its effective subnet scope
-  enabledRoutes() []string
+  enabledRoutes []string
+  // Operating system distribution name reported by the client, for example 'ubuntu' or 'debian'
+  distroName string
+  // Operating system distribution version reported by the client
+  distroVersion string
+  // Operating system distribution code name reported by the client, for example 'noble'
+  distroCodeName string
+  // Hardware serial numbers collected from the device
+  //
+  // Populated only when posture identity collection is turned on for the
+  // tailnet, which `postureIdentityCollectionEnabled` on `tailscale`
+  // reports. Empty when collection is off or the client reported none.
+  postureSerialNumbers []string
+  // Hardware (MAC) addresses collected from the device
+  //
+  // Populated only when posture identity collection is turned on for the tailnet.
+  postureHardwareAddresses []string
+  // Whether posture identity collection is turned off for this specific device
+  postureIdentityDisabled bool
+  // Public endpoints the client last advertised for direct connections, as host:port
+  endpoints []string
+  // DERP relay the device falls back to when a direct connection cannot be established
+  derpRelay string
+  // Whether the device's NAT maps it to a different external port per destination
+  //
+  // True indicates hard or symmetric NAT, which prevents direct peer
+  // connections and forces traffic through a DERP relay.
+  mappingVariesByDestIp bool
 }
 
 // Tailscale user
@@ -148,7 +217,7 @@ tailscale.user @defaults("id displayName type") {
   deviceCount int
   // Time the user joined the tailnet
   createdAt time
-  // Last time the user was active on the tailnet — either via a node connection or by authenticating to a Tailscale service (including the admin panel)
+  // Last time the user was active on the tailnet, either via a node connection or by authenticating to a Tailscale service (including the admin panel)
   lastSeenAt time
   // Whether the user is currently connected to the tailnet
   currentlyConnected bool
@@ -172,12 +241,45 @@ tailscale.aclPolicy @defaults("tailnet") {
   // "accept"), `src` (source identities the rule applies to), `dst`
   // (destinations as host:port), `proto` (IP protocol), `ports`, `users`,
   // and `srcPosture` (device-posture rule names required of the source).
+  //
+  // A tailnet that has moved to `grants` expresses its access rules there
+  // instead, and this list is then empty or partial. Read both when
+  // auditing what a tailnet permits.
   acls []dict
+  // Grant rules
+  //
+  // Tailscale's current form for expressing access, which supersedes
+  // `acls` and can additionally grant application capabilities. Each entry
+  // has keys `src` (source identities), `dst` (destinations), `ip` (the
+  // network-layer ports and protocols allowed), `app` (application
+  // capabilities keyed by capability name), `srcPosture` (device-posture
+  // rule names required of the source), and `via` (routers the traffic
+  // must transit).
+  grants []dict
+  // Named sets of IP addresses and CIDR ranges referenced by rules (set name to list of addresses)
+  ipsets map[string][]string
+  // Configuration for custom device attributes
+  //
+  // Keyed by attribute name. Each value has `type` (`string`, `bool`, or
+  // `number`), `allowSetByNode` (whether a node may set the value itself),
+  // and `broadcastToPeers` (the destinations the value is shared with).
+  // An attribute a node can set for itself should not be trusted as a
+  // posture signal.
+  attrConfig map[string]dict
+  // Custom DERP relay servers defined for the tailnet
+  //
+  // Each entry describes a region with keys `regionID`, `regionCode`,
+  // `regionName`, `avoid`, and `nodes` (the relay hosts, each with
+  // `hostName`, `ipv4`, `ipv6`, `derpPort`, `stunPort`, and `stunOnly`).
+  // Empty when the tailnet uses only Tailscale's own relays.
+  derpRegions []dict
+  // Whether the tailnet's own DERP relays replace Tailscale's default relays rather than adding to them
+  omitDefaultDerpRegions bool
   // Named groups of users used in ACL rules (group name → list of members)
   groups map[string][]string
   // Named hosts (alias → IP/CIDR) referenced by ACL rules
   hosts map[string]string
-  // Tag owners — users or groups allowed to assign each ACL tag (tag → list of owners)
+  // Tag owners, the users or groups allowed to assign each ACL tag (tag to list of owners)
   tagOwners map[string][]string
   // Tailscale SSH access rules
   //
@@ -228,27 +330,52 @@ tailscale.aclPolicy @defaults("tailnet") {
   raw() string
 }
 
-// Tailscale pre-authentication key
+// Tailscale tailnet key
 //
-// Single auth key (pre-auth key) issued for the tailnet, selected by
-// `id` (for example `tailscale.authKey(id: "kXZ...")`). Auth keys
-// onboard devices into the tailnet without interactive sign-in and are
-// long-lived credentials, so the `expires` and `revoked` timestamps, the
-// `invalid` flag, and the `reusable`, `ephemeral`, and `preauthorized`
-// capability flags are the primary audit signals. `tags` lists the ACL
-// tags any device enrolled with this key will receive, where over-broad
-// tagging is a common finding. The key material itself is never exposed;
-// only the metadata is.
-private tailscale.authKey @defaults("id description expires revoked") {
+// Single long-lived credential issued for the tailnet, selected by `id`
+// (for example `tailscale.authKey(id: "kXZ...")`). The tailnet key list
+// covers three kinds of credential, which `keyType` distinguishes:
+// pre-auth keys that onboard devices without interactive sign-in,
+// OAuth clients that call the Tailscale API, and federated identities
+// that exchange an external IdP token for API access. Because all three
+// are long-lived, the `expires` and `revoked` timestamps, the `invalid`
+// flag, and the `reusable`, `ephemeral`, and `preauthorized` capability
+// flags are the primary audit signals. `scopes` carries the API access
+// an OAuth client or federated identity holds, where a client granted
+// broad write scopes is effectively a tailnet administrator. `tags`
+// lists the ACL tags any device enrolled with this credential will
+// receive, where over-broad tagging is a common finding. The key
+// material itself is never exposed; only the metadata is.
+private tailscale.authKey @defaults("id keyType description expires revoked") {
   init(id? string)
   // Identifier of the key
   id string
+  // Kind of credential this key represents
+  //
+  // `client` for an OAuth client, `federated` for a federated identity,
+  // and empty or `auth` for a pre-auth key that onboards devices.
+  keyType string
   // Human-readable description set when the key was created
   description string
   // ID of the user that owns the key
   userId string
+  // API scopes granted to an OAuth client or federated identity
+  //
+  // For example `devices:core:read` or `all:write`. Empty for pre-auth
+  // keys, which onboard devices rather than calling the API.
+  scopes []string
+  // Audience the external identity provider must name in tokens presented by a federated identity
+  audience string
+  // Issuer URL of the external identity provider trusted by a federated identity
+  issuer string
+  // Subject claim the external identity provider must assert for a federated identity to be accepted
+  subject string
+  // Additional claims an external identity provider's token must carry for a federated identity to be accepted (claim name to required value)
+  customClaimRules map[string]string
   // Time the key was created
   created time
+  // Time the key was last modified
+  updated time
   // Time the key expires; the zero value means the key never expires
   expires time
   // Whether the key has an expiration set (false means the key never expires)
@@ -300,6 +427,36 @@ private tailscale.webhook @defaults("endpointId providerType endpointUrl") {
   //
   // Individual events such as `nodeCreated`, `nodeNeedsApproval`, `nodeApproved`, `nodeKeyExpiringInOneDay`, `nodeKeyExpired`, `nodeDeleted`, `policyUpdate`, `userCreated`, `userNeedsApproval`, `userSuspended`, `userRestored`, `userDeleted`, `userApproved`, `userRoleUpdated`, `subnetIPForwardingNotEnabled`, `exitNodeIPForwardingNotEnabled`. Umbrella categories `categoryTailnetManagement` and `categoryDeviceMisconfigurations` subscribe to every event in their group, including future additions.
   subscriptions []string
+}
+
+// Tailscale service
+//
+// Service published on the tailnet under its own Tailscale address
+// rather than on a single node's address, selected by `name` (for
+// example `tailscale.service(name: "svc:web")`). A service is reachable
+// from any node the ACL permits, and the nodes backing it can change
+// without the address changing. `ports` lists the protocol and port
+// ranges the service accepts, where `tcp:*` or a wide range widens the
+// reachable surface, and `tags` carries the ACL tags that decide which
+// nodes may host it and which peers may reach it.
+private tailscale.service @defaults("name ports") {
+  init(name? string)
+  // Name of the service, including the 'svc:' prefix
+  name string
+  // Tailscale IP addresses assigned to the service, including both IPv4 and IPv6 addresses
+  addresses []string
+  // Protocol and port ranges the service accepts
+  //
+  // Each entry is a protocol and port specification such as `tcp:443`,
+  // `udp:53`, or `tcp:8000-8080`. The value `*` accepts every port on
+  // every protocol.
+  ports []string
+  // ACL tags applied to the service
+  tags []string
+  // Human-readable comment set when the service was defined
+  comment string
+  // Arbitrary key/value annotations attached to the service
+  annotations map[string]string
 }
 
 // Tailscale log stream destination

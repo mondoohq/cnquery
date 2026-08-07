@@ -7,10 +7,10 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 func createTailscaleLogstreamResource(runtime *plugin.Runtime, tailnet string, logType tsclient.LogType, cfg *tsclient.LogstreamConfiguration) (plugin.Resource, error) {
