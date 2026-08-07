@@ -233,6 +233,7 @@ PROVIDERS := \
 	mikrotik \
 	mistral \
 	mondoo \
+	mongo \
 	mongodbatlas \
 	ms365 \
 	mssql \

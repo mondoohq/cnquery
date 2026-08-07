@@ -591,6 +591,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mongo": {
+		Provider: &plugin.Provider{
+			Name:            "mongo",
+			ID:              "go.mondoo.com/mql/v13/providers/mongo",
+			ConnectionTypes: []string{"mongo"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mongo",
+					Use:   "mongo [host]",
+					Short: "a self-hosted MongoDB server",
+				},
+			},
+		},
+	},
+
 	"mongodbatlas": {
 		Provider: &plugin.Provider{
 			Name:            "mongodbatlas",
