@@ -636,6 +636,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mysqldb": {
+		Provider: &plugin.Provider{
+			Name:            "mysqldb",
+			ID:              "go.mondoo.com/mql/v13/providers/mysqldb",
+			ConnectionTypes: []string{"mysqldb"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mysqldb",
+					Use:   "mysqldb [host]",
+					Short: "a MySQL or MariaDB server",
+				},
+			},
+		},
+	},
+
 	"network": {
 		Provider: &plugin.Provider{
 			Name:            "network",

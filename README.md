@@ -150,6 +150,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Microsoft Azure instances     | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |
 | Microsoft Azure subscriptions | `azure`                    | `mql shell azure --subscription SUBSCRIPTION_ID`                                                                                                |
 | Microsoft SQL Server          | `mssql`                    | `mql shell mssql sql.contoso.com --user sa --ask-pass`                                                                                          |
+| MySQL or MariaDB server       | `mysqldb`                  | `mql shell mysqldb db.contoso.com --user root --ask-pass`                                                                                       |
 | MongoDB Atlas organization    | `mongodbatlas`             | `mql shell mongodbatlas --org-id ORG_ID --public-key PUBLIC_KEY --private-key PRIVATE_KEY`                                                       |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
 | NextDNS accounts              | `nextdns`                  | `mql shell nextdns --api-key API_KEY`                                                                                                           |
