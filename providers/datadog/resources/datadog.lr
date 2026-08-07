@@ -14,7 +14,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/datadog/resources"
 // variables and private locations. The org field carries the single sign-on
 // and sharing settings that govern how the organization is accessed, and the
 // organization IP allowlist is exposed through ipAllowlistEnabled and
-// ipAllowlistEntries.
+// ipAllowlistEntries. Identity provider attribute mappings, log processing
+// pipelines, log forwarding destinations and log restriction queries cover how
+// privilege is granted at login and where log data is read and sent.
 datadog {
   // Organization the credentials authenticate against
   org() datadog.organization
@@ -70,6 +72,233 @@ datadog {
   syntheticsGlobalVariables() []datadog.syntheticsGlobalVariable
   // Private locations that run synthetics tests inside customer networks
   syntheticsPrivateLocations() []datadog.syntheticsPrivateLocation
+  // Mappings from identity provider attributes to roles and teams
+  authnMappings() []datadog.authnMapping
+  // Log processing pipelines
+  logsPipelines() []datadog.logsPipeline
+  // Destinations logs are forwarded to outside Datadog
+  logsCustomDestinations() []datadog.logsCustomDestination
+  // Queries that restrict which logs a role can read
+  logsRestrictionQueries() []datadog.logsRestrictionQuery
+}
+
+// Datadog Restriction Policy
+//
+// Access control list attached to one Datadog resource, overriding the
+// organization-wide role permissions for that resource alone. A dashboard or
+// monitor with no restriction policy is governed purely by role permissions;
+// one with a policy is reachable only by the principals the policy names. The
+// `id` is the Datadog resource identifier the policy protects, in the form
+// type:identifier, for example dashboard:abc-def-ghi or monitor:12345. The
+// bindings hold the grants themselves, so an empty bindings list means the
+// policy exists but grants nothing beyond the resource owner.
+datadog.restrictionPolicy @defaults("id") {
+  // Resource the policy protects
+  //
+  // The Datadog resource identifier the policy applies to, in the form
+  // type:identifier, for example dashboard:abc-def-ghi, monitor:12345,
+  // slo:abc123, or security-rule:def456.
+  id string
+  // Access grants
+  //
+  // Each binding is a dict with `relation` (the access level granted, such as
+  // viewer or editor) and `principals` (the list of identities holding it).
+  // A principal is written as type:identifier, for example role:abc-123,
+  // team:def-456, user:ghi-789, or org:jkl-012 to grant the whole
+  // organization.
+  bindings []dict
+}
+
+// Datadog Shared Dashboard
+//
+// Public or invite-only share of a dashboard, exposing its telemetry outside
+// the Datadog organization through a generated URL. A share with `shareType`
+// open serves the dashboard to anyone holding the link and needs no Datadog
+// account, so it is the strongest exposure signal on a dashboard; invite
+// shares restrict access to the addresses in `invitees`. The `token` selects
+// the share and forms the tail of `publicUrl`. Use `status` to tell live
+// shares from paused ones, `expiration` to find shares that never lapse, and
+// `embeddableDomains` to see which sites may frame the dashboard.
+datadog.sharedDashboard @defaults("token shareType status") {
+  // Share token
+  token string
+  // Dashboard being shared
+  dashboardId string
+  // Dashboard title
+  title string
+  // Public URL serving the shared dashboard
+  publicUrl string
+  // Share type
+  //
+  // One of open, when anyone with the link may view the dashboard without a
+  // Datadog account; invite, when access is limited to the addresses in
+  // invitees; embed, when the dashboard is framed by the sites in
+  // embeddableDomains; or secure-embed, when an embedded dashboard also
+  // requires a signed token.
+  shareType string
+  // Share status
+  //
+  // One of active or paused. A paused share keeps its URL but stops serving
+  // the dashboard.
+  status string
+  // Domains permitted to embed the dashboard
+  embeddableDomains []string
+  // Addresses invited to an invite-only share
+  invitees []string
+  // Expiration
+  //
+  // Null when the share never expires, which leaves the URL live
+  // indefinitely.
+  expiration time
+  // Last time the shared dashboard was viewed
+  lastAccessed time
+  // Created at
+  createdAt time
+  // Whether the account that created the share has been disabled
+  //
+  // A share created by a disabled account keeps serving the dashboard, so it
+  // outlives the access of the person who published it.
+  sharerDisabled bool
+  // User that created the share
+  //
+  // Null when the sharing account has been removed from the organization.
+  sharer() datadog.user
+}
+
+// Datadog Identity Provider Attribute Mapping
+//
+// Rule granting a role or team to everyone whose identity provider assertion
+// carries a given attribute, so it is where privilege is actually decided for
+// a single sign-on organization. A mapping matches when the assertion contains
+// `attributeKey` with the value `attributeValue`, and grants the `role` or
+// `team` it points at. Auditing these shows which external directory groups
+// confer administrative access, which is invisible from the role assignments
+// alone because the grants are applied at login.
+datadog.authnMapping @defaults("id attributeKey attributeValue") {
+  // Mapping ID
+  id string
+  // Identity provider attribute the mapping matches on
+  attributeKey string
+  // Attribute value the mapping matches on
+  attributeValue string
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Role granted by the mapping
+  //
+  // Null when the mapping grants a team instead.
+  role() datadog.role
+  // Team granted by the mapping
+  //
+  // Null when the mapping grants a role instead.
+  team() datadog.team
+}
+
+// Datadog Log Processing Pipeline
+//
+// Pipeline that parses, enriches and rewrites log events as they are
+// ingested, ahead of indexing. Pipelines are where log content is reshaped, so
+// auditing them shows which log sources are processed at all and whether the
+// processing that redacts or remaps sensitive fields is switched on. The
+// `filterQuery` selects which events enter the pipeline, `isEnabled` reports
+// whether it runs, and `isReadOnly` distinguishes the integration pipelines
+// Datadog ships from those the organization authored.
+datadog.logsPipeline @defaults("id name isEnabled") {
+  // Pipeline ID
+  id string
+  // Pipeline name
+  name string
+  // Pipeline type
+  type string
+  // Whether the pipeline is enabled
+  isEnabled bool
+  // Whether the pipeline is read only
+  //
+  // True for the integration pipelines Datadog ships, which cannot be edited.
+  isReadOnly bool
+  // Query selecting which log events enter the pipeline
+  filterQuery string
+  // Tags
+  tags []string
+}
+
+// Datadog Log Forwarding Destination
+//
+// External system that Datadog copies matching log events to, so it is an
+// egress path for whatever the `query` selects. Auditing these shows where log
+// data leaves Datadog and how the connection is authenticated: the
+// `destinationType` names the receiving system, `endpoint` is the address it
+// is sent to, and `enabled` reports whether forwarding is live. The
+// `forwardTags` flag together with `forwardTagsRestrictionList` controls
+// whether host and service tags travel with the events.
+datadog.logsCustomDestination @defaults("id name destinationType enabled") {
+  // Destination ID
+  id string
+  // Destination name
+  name string
+  // Whether forwarding is enabled
+  enabled bool
+  // Query selecting which log events are forwarded
+  //
+  // Empty when every ingested log is forwarded.
+  query string
+  // Destination type
+  //
+  // One of http, splunk_hec, elasticsearch, or microsoft_sentinel. Empty when
+  // Datadog reports a destination type this provider does not yet recognize.
+  destinationType string
+  // Address log events are sent to
+  //
+  // The HTTP, Splunk or Elasticsearch endpoint URL. For a Microsoft Sentinel
+  // destination this is the data collection endpoint.
+  endpoint string
+  // Authentication method used to reach the destination
+  //
+  // One of basic or custom_header for an HTTP destination, and empty for
+  // destination types that authenticate another way.
+  authType string
+  // Elasticsearch index events are written to
+  //
+  // Empty for destination types other than elasticsearch.
+  indexName string
+  // Whether tags are forwarded alongside the log events
+  forwardTags bool
+  // Tag keys forwarded when the restriction list is in use
+  forwardTagsRestrictionList []string
+  // How the tag restriction list is applied
+  //
+  // One of ALLOW_LIST or BLOCK_LIST.
+  forwardTagsRestrictionListType string
+}
+
+// Datadog Log Restriction Query
+//
+// Query limiting which log events the roles it is attached to may read, so it
+// is the mechanism that keeps one team from reading another team's logs. A
+// role with no restriction query reads every log its permissions allow; a role
+// with one reads only events matching `restrictionQuery`. The `roleCount` and
+// `userCount` fields report how far the restriction reaches, and `roles`
+// resolves the roles it is bound to.
+datadog.logsRestrictionQuery @defaults("id restrictionQuery") {
+  // Restriction query ID
+  id string
+  // Query limiting which log events may be read
+  restrictionQuery string
+  // Number of roles the restriction is attached to
+  roleCount int
+  // Number of users covered by the restriction
+  userCount int
+  // Email address of the account that last modified the restriction
+  lastModifierEmail string
+  // Name of the account that last modified the restriction
+  lastModifierName string
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Roles the restriction is attached to
+  roles() []datadog.role
 }
 
 // Datadog Organization
@@ -274,6 +503,11 @@ datadog.monitor @defaults("id name type") {
   //
   // Null when the creator no longer has an account in the organization.
   createdBy() datadog.user
+  // Access control list attached to this monitor
+  //
+  // Null when no restriction policy is set, in which case access follows the
+  // organization-wide role permissions.
+  restrictionPolicy() datadog.restrictionPolicy
   // Whether the monitor notifies when data is missing
   notifyNoData bool
   // Alert behavior options
@@ -320,6 +554,15 @@ datadog.dashboard @defaults("id title") {
   author() datadog.user
   // Is read only
   isReadOnly bool
+  // Access control list attached to this dashboard
+  //
+  // Null when no restriction policy is set, in which case access follows the
+  // organization-wide role permissions.
+  restrictionPolicy() datadog.restrictionPolicy
+  // Shares exposing this dashboard outside the organization
+  //
+  // Empty when the dashboard has never been shared.
+  sharedDashboards() []datadog.sharedDashboard
 }
 
 // Datadog Synthetics Test
@@ -415,6 +658,11 @@ datadog.slo @defaults("id name type") {
   modifiedAt time
   // Monitor IDs (for monitor-based SLOs)
   monitorIds []int
+  // Access control list attached to this SLO
+  //
+  // Null when no restriction policy is set, in which case access follows the
+  // organization-wide role permissions.
+  restrictionPolicy() datadog.restrictionPolicy
 }
 
 // Datadog Log Index
@@ -509,6 +757,11 @@ datadog.securityRule @defaults("id name type") {
   // (seconds a signal stays open on repeated matches), and
   // `maxSignalDuration` (seconds before a signal is force-closed).
   options dict
+  // Access control list attached to this rule
+  //
+  // Null when no restriction policy is set, in which case access follows the
+  // organization-wide role permissions.
+  restrictionPolicy() datadog.restrictionPolicy
 }
 
 // Datadog Downtime

@@ -45,6 +45,24 @@ mql> datadog.org { samlEnabled samlStrictModeEnabled privateWidgetShare }
 mql> datadog.roles.where(permissions.any(name == "org_management")) { name users { email } }
 ```
 
+**Find dashboards shared publicly**
+
+```shell
+mql> datadog.dashboards { title sharedDashboards.where(shareType == "open") { publicUrl status expiration } }
+```
+
+**Review where logs are forwarded outside Datadog**
+
+```shell
+mql> datadog.logsCustomDestinations { name enabled destinationType endpoint query }
+```
+
+**Check which identity provider attributes grant a role**
+
+```shell
+mql> datadog.authnMappings { attributeKey attributeValue role { name } team { name } }
+```
+
 **Find application keys that are unscoped or unused**
 
 ```shell
@@ -150,6 +168,12 @@ The table below lists the Datadog RBAC permission each resource requires. These 
 | `datadog.ipAllowlistEntries` / `ipAllowlistEnabled` | `org_management` |
 | `datadog.integrationAwsAccounts` | `aws_configuration_read` |
 | `datadog.teams` / `datadog.team.members` | `teams_read` |
+| `datadog.authnMappings` | `user_access_read` |
+| `datadog.logsPipelines` | `logs_read_config` |
+| `datadog.logsCustomDestinations` | `logs_read_config` |
+| `datadog.logsRestrictionQueries` | `logs_read_config` |
+| `datadog.dashboard.sharedDashboards` | `dashboards_public_share` |
+| `*.restrictionPolicy` | the read permission of the resource it is attached to |
 | `datadog.rumApplications` | `rum_apps_read` |
 
 > **Tip**: For full access to all resources, use an unscoped Application Key (it inherits all permissions from its creator). Scoped keys are recommended for production use to follow least-privilege principles.
