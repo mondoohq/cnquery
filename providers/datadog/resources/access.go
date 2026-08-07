@@ -148,8 +148,8 @@ func (r *mqlDatadogDashboard) sharedDashboards() ([]interface{}, error) {
 		}
 
 		mqlShare := res.(*mqlDatadogSharedDashboard)
-		mqlShare.cacheSharerId = rels.Sharer.Data.Id
-		mqlShare.cacheDashboardId = rels.Dashboard.Data.Id
+		mqlShare.cacheSharerId = rels.Sharer.Data.GetId()
+		mqlShare.cacheDashboardId = rels.Dashboard.Data.GetId()
 		all = append(all, mqlShare)
 	}
 	return all, nil
@@ -535,7 +535,7 @@ func (r *mqlDatadogLogsRestrictionQuery) roles() ([]interface{}, error) {
 		data := resp.GetData()
 		for _, role := range data {
 			res, err := NewResource(r.MqlRuntime, "datadog.role", map[string]*llx.RawData{
-				"id": llx.StringData(role.Id),
+				"id": llx.StringData(role.GetId()),
 			})
 			if err != nil {
 				return nil, err
