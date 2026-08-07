@@ -182,6 +182,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | vLLM inference servers        | `vllm`                     | `mql shell vllm http://localhost:8000`                                                                                                          |
 | VMware Cloud Director         | `vcd`                      | `mql shell vcd user@domain@host --ask-pass`                                                                                                     |
 | VMware vSphere                | `vsphere`                  | `mql shell vsphere user@domain@host --ask-pass`                                                                                                 |
+| Weaviate vector database      | `weaviate`                 | `mql shell weaviate localhost --api-key API_KEY`                                                                                                |
 | Windows hosts                 | `local`, `ssh`, `winrm`    | `mql shell local`,<br></br>`mql shell ssh Administrator@IP_ADDRESS --ask-pass` or<br></br>`mql shell winrm Administrator@IP_ADDRESS --ask-pass` |
 | YARA rule scanning            | `yara`                     | `mql run local -c "yara.scan('/path/to/rules.yar').result"`                                                                                     |
 

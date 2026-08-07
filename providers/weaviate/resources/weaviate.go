@@ -1,0 +1,114 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"errors"
+	"sort"
+	"strconv"
+
+	"github.com/weaviate/weaviate-go-client/v5/weaviate/fault"
+	"github.com/weaviate/weaviate-go-client/v5/weaviate/rbac"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/weaviate/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+func (r *mqlWeaviate) id() (string, error) {
+	return "weaviate", nil
+}
+
+func weaviateConnection(runtime *plugin.Runtime) *connection.WeaviateConnection {
+	return runtime.Connection.(*connection.WeaviateConnection)
+}
+
+func weaviateContext() context.Context {
+	return context.Background()
+}
+
+func intToStr(i int64) string {
+	return strconv.FormatInt(i, 10)
+}
+
+// isForbidden reports whether an error is a Weaviate authentication or
+// authorization failure (HTTP 401 or 403). Only these should be treated as
+// "not visible"; every other error must propagate.
+func isForbidden(err error) bool {
+	var ce *fault.WeaviateClientError
+	if errors.As(err, &ce) {
+		return ce.StatusCode == 401 || ce.StatusCode == 403
+	}
+	return false
+}
+
+// builtinRoles is the set of Weaviate-provided, predefined role names. These
+// ship with the server and are not created by an administrator.
+var builtinRoles = map[string]struct{}{
+	"root":      {},
+	"admin":     {},
+	"viewer":    {},
+	"read-only": {},
+}
+
+// moduleNames returns the sorted keys of a Weaviate module-config object, which
+// the client decodes as a JSON object (map[string]any). Non-object values yield
+// an empty list.
+func moduleNames(v any) []any {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return []any{}
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	out := make([]any, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, k)
+	}
+	return out
+}
+
+// --- id builders ------------------------------------------------------------
+
+func collectionResourceID(serverID, name string) string {
+	return serverID + "/collection/" + name
+}
+
+func roleResourceID(serverID, name string) string {
+	return serverID + "/role/" + name
+}
+
+func userResourceID(serverID, userID string) string {
+	return serverID + "/user/" + userID
+}
+
+func nodeResourceID(serverID, name string) string {
+	return serverID + "/node/" + name
+}
+
+// --- shared role builder ----------------------------------------------------
+
+// newWeaviateRole creates a role resource, caching the source role so its
+// permissions resolve without a second fetch. Assigned users are still fetched
+// lazily by the role's own accessor.
+func newWeaviateRole(runtime *plugin.Runtime, serverID string, role *rbac.Role) (*mqlWeaviateRole, error) {
+	_, isBuiltin := builtinRoles[role.Name]
+	res, err := CreateResource(runtime, "weaviate.role", map[string]*llx.RawData{
+		"__id":      llx.StringData(roleResourceID(serverID, role.Name)),
+		"name":      llx.StringData(role.Name),
+		"isBuiltin": llx.BoolData(isBuiltin),
+	})
+	if err != nil {
+		return nil, err
+	}
+	r := res.(*mqlWeaviateRole)
+	r.cacheRole = role
+	return r, nil
+}
+
+var _ = types.String
