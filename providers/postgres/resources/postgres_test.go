@@ -41,6 +41,10 @@ func TestSanitizeConnInfo(t *testing.T) {
 		"password=secret":                             "password=REDACTED",
 		// single-quoted value with a space must be fully redacted
 		"host=remote password='s3cret value' user=u": "host=remote password=REDACTED user=u",
+		// URI-style connection strings must redact the password segment
+		"postgresql://user:secret@host:5432/db": "postgresql://user:REDACTED@host:5432/db",
+		// URI without a password is left unchanged
+		"postgresql://user@host:5432/db": "postgresql://user@host:5432/db",
 	}
 	for in, want := range cases {
 		if got := sanitizeConnInfo(in); got != want {

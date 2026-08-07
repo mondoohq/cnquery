@@ -67,11 +67,13 @@ func (r *mqlPostgresTablespace) privileges() ([]any, error) {
 
 // --- foreign servers --------------------------------------------------------
 
-// redactOptions drops any option that carries a secret (a password).
+// redactOptions drops any option that carries a secret (a password). It matches
+// the "password=" key specifically so benign keys like "password_timeout" are
+// kept.
 func redactOptions(in []string) []any {
 	out := []any{}
 	for _, opt := range in {
-		if strings.HasPrefix(strings.ToLower(opt), "password") {
+		if strings.HasPrefix(strings.ToLower(opt), "password=") {
 			continue
 		}
 		out = append(out, opt)
@@ -243,13 +245,20 @@ func (r *mqlPostgresDatabase) publications() ([]any, error) {
 	return list, rows.Err()
 }
 
-// connInfoPasswordRe matches a libpq password keyword, including single-quoted
+// connInfoPasswordRe matches a libpq keyword password, including single-quoted
 // values that may contain spaces (password='s3cret value').
 var connInfoPasswordRe = regexp.MustCompile(`(?i)password=('[^']*'|[^ ]*)`)
 
-// sanitizeConnInfo removes a password from a subscription connection string.
+// connInfoURIRe matches the password in a URI-style connection string
+// (postgresql://user:password@host/db).
+var connInfoURIRe = regexp.MustCompile(`(://[^:/@]+:)([^@]+)(@)`)
+
+// sanitizeConnInfo removes a password from a subscription connection string,
+// covering both keyword-value and URI formats.
 func sanitizeConnInfo(conninfo string) string {
-	return strings.TrimSpace(connInfoPasswordRe.ReplaceAllString(conninfo, "password=REDACTED"))
+	s := connInfoPasswordRe.ReplaceAllString(conninfo, "password=REDACTED")
+	s = connInfoURIRe.ReplaceAllString(s, "${1}REDACTED${3}")
+	return strings.TrimSpace(s)
 }
 
 func (r *mqlPostgresInstance) subscriptions() ([]any, error) {

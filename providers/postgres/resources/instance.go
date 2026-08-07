@@ -14,7 +14,10 @@ import (
 // initPostgresInstance fetches the server's core properties once and populates
 // the instance resource. Collections resolve lazily through their accessors.
 func initPostgresInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 3 {
+	// The instance is a singleton with no user-facing key; init always populates
+	// all scalar fields, so only skip when a full set (8: __id + 7 scalars) is
+	// already provided (recording replay or explicit construction).
+	if len(args) > 7 {
 		return args, nil, nil
 	}
 

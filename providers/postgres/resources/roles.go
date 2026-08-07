@@ -32,9 +32,14 @@ func passwordTypesByOid(pool *pgxpool.Pool) map[int64]string {
 		var oid int64
 		var rolpassword *string
 		if err := rows.Scan(&oid, &rolpassword); err != nil {
-			return out
+			// Return an empty map on a partial read so every role reports a
+			// uniform null passwordType rather than a confusing mix.
+			return map[int64]string{}
 		}
 		out[oid] = classifyPassword(rolpassword)
+	}
+	if err := rows.Err(); err != nil {
+		return map[int64]string{}
 	}
 	return out
 }
@@ -66,8 +71,13 @@ func newPostgresRole(runtime *plugin.Runtime, systemID string, rows pgx.Rows, pa
 		"validUntil":         llx.TimeDataPtr(validUntil),
 		"config":             llx.ArrayData(strSliceToAny(config), types.String),
 	}
+	// When pg_authid is unreadable (non-superuser), the map is empty; mark the
+	// field explicitly null rather than leaving it unset (unset surfaces as a
+	// primitive with no type information).
 	if pt, ok := passwordTypes[oid]; ok {
 		fields["passwordType"] = llx.StringData(pt)
+	} else {
+		fields["passwordType"] = llx.NilData
 	}
 
 	res, err := CreateResource(runtime, "postgres.role", fields)
