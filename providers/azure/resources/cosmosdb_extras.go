@@ -87,6 +87,9 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlDatabases() ([]any, erro
 			return nil, err
 		}
 		for _, db := range page.Value {
+			if db == nil {
+				continue
+			}
 			mqlDb, err := sqlDatabaseToMQL(a.MqlRuntime, db)
 			if err != nil {
 				return nil, err
@@ -305,6 +308,9 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) containers() ([]
 			return nil, err
 		}
 		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
 			mqlC, err := sqlContainerToMQL(a.MqlRuntime, c)
 			if err != nil {
 				return nil, err

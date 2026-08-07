@@ -40,6 +40,13 @@ func (client *subscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) 
 			return nil, err
 		}
 		for _, s := range page.Value {
+			// This is the entry point for every Azure scan, so a nil element
+			// here panics before a single asset exists. It also makes the
+			// downstream *sub.SubscriptionID derefs in discovery safe by
+			// construction rather than by luck.
+			if s == nil || s.SubscriptionID == nil {
+				continue
+			}
 			if !filter.IsFilteredOut(*s.SubscriptionID) {
 				subs = append(subs, *s)
 			}

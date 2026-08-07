@@ -285,6 +285,9 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]any, err
 			return nil, err
 		}
 		for _, roleAssignment := range page.Value {
+			if roleAssignment == nil {
+				continue
+			}
 			mqlRoleAssignment, err := newMqlRoleAssignment(a.MqlRuntime, roleAssignment)
 			if err != nil {
 				return nil, err
@@ -421,6 +424,9 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, e
 			return nil, err
 		}
 		for _, v := range page.Value {
+			if v == nil {
+				continue
+			}
 			mqlManagedIdentity, err := newMqlManagedIdentity(a.MqlRuntime, v)
 			if err != nil {
 				return nil, err

@@ -126,6 +126,9 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) linkedServices() ([]any,
 			return nil, err
 		}
 		for _, ls := range page.Value {
+			if ls == nil {
+				continue
+			}
 			mqlLs, err := linkedServiceToMQL(a.MqlRuntime, ls)
 			if err != nil {
 				return nil, err

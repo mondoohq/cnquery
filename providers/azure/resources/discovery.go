@@ -636,22 +636,32 @@ func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
 	sub := subWithConfig.sub
 	conf := subWithConfig.conf
 	copyConf := conf.Clone(inventory.WithoutDiscovery())
-	platformId := "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + *sub.SubscriptionID
+	platformId := "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + convert.ToValue(sub.SubscriptionID)
 	tenantId := "unknown"
 	if sub.TenantID != nil {
 		tenantId = *sub.TenantID
 	}
+	// ARM omits displayName for subscriptions in some states -- deleted,
+	// disabled, and cross-tenant entries projected in by Lighthouse. The
+	// neighbouring TenantID is guarded for the same reason; this one was not, so
+	// one such subscription in a tenant panicked the whole scan before any asset
+	// was returned. Fall back to the id, which is always present here.
+	subID := convert.ToValue(sub.SubscriptionID)
+	displayName := subID
+	if sub.DisplayName != nil {
+		displayName = *sub.DisplayName
+	}
 	platform := &inventory.Platform{
-		TechnologyUrlSegments: []string{"azure", tenantId, *sub.SubscriptionID, "account"},
+		TechnologyUrlSegments: []string{"azure", tenantId, subID, "account"},
 	}
 	PlatformByName("azure").Apply(platform)
 	return &inventory.Asset{
 		Id:          platformId,
 		Platform:    platform,
-		Name:        fmt.Sprintf("Azure subscription %s", *sub.DisplayName),
+		Name:        fmt.Sprintf("Azure subscription %s", displayName),
 		Connections: []*inventory.Config{copyConf},
 		PlatformIds: []string{platformId},
-		Labels:      map[string]string{SubscriptionLabel: *sub.SubscriptionID},
+		Labels:      map[string]string{SubscriptionLabel: subID},
 	}
 }
 

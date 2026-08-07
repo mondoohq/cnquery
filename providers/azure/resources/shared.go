@@ -76,6 +76,23 @@ func missingResourceID(resourceName string) error {
 		resourceName, resourceName)
 }
 
+// orZero returns p when it is set, and a pointer to the zero value of T
+// otherwise, so a caller can read fields off it without a nil check.
+//
+// ARM models almost every nested block as an optional pointer, including the
+// `properties` of a list row. Reading entry.Properties.Field directly panics on
+// a row that omits it -- and a panic in a provider accessor is unrecoverable:
+// the executor runs blocks in goroutines, so it takes down the whole scan
+// rather than the one query. Going through this helper keeps the row in the
+// result with its fields reading null, which is the honest answer, instead of
+// dropping it or crashing.
+func orZero[T any](p *T) *T {
+	if p != nil {
+		return p
+	}
+	return new(T)
+}
+
 type assetIdentifier struct {
 	name string
 	id   string

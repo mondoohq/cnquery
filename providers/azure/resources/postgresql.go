@@ -317,8 +317,8 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]any, error)
 					"id":        llx.StringDataPtr(entry.ID),
 					"name":      llx.StringDataPtr(entry.Name),
 					"type":      llx.StringDataPtr(entry.Type),
-					"charset":   llx.StringDataPtr(entry.Properties.Charset),
-					"collation": llx.StringDataPtr(entry.Properties.Collation),
+					"charset":   llx.StringDataPtr(orZero(entry.Properties).Charset),
+					"collation": llx.StringDataPtr(orZero(entry.Properties).Collation),
 				})
 			if err != nil {
 				return nil, err
@@ -367,8 +367,8 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]any
 					"id":        llx.StringDataPtr(entry.ID),
 					"name":      llx.StringDataPtr(entry.Name),
 					"type":      llx.StringDataPtr(entry.Type),
-					"charset":   llx.StringDataPtr(entry.Properties.Charset),
-					"collation": llx.StringDataPtr(entry.Properties.Collation),
+					"charset":   llx.StringDataPtr(orZero(entry.Properties).Charset),
+					"collation": llx.StringDataPtr(orZero(entry.Properties).Collation),
 				})
 			if err != nil {
 				return nil, err
@@ -417,8 +417,8 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]any, er
 					"id":             llx.StringDataPtr(entry.ID),
 					"name":           llx.StringDataPtr(entry.Name),
 					"type":           llx.StringDataPtr(entry.Type),
-					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
-					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
+					"startIpAddress": llx.StringDataPtr(orZero(entry.Properties).StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(orZero(entry.Properties).EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -466,8 +466,8 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) firewallRules() ([
 					"id":             llx.StringDataPtr(entry.ID),
 					"name":           llx.StringDataPtr(entry.Name),
 					"type":           llx.StringDataPtr(entry.Type),
-					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
-					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
+					"startIpAddress": llx.StringDataPtr(orZero(entry.Properties).StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(orZero(entry.Properties).EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -516,12 +516,12 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]any, er
 					"id":            llx.StringDataPtr(entry.ID),
 					"name":          llx.StringDataPtr(entry.Name),
 					"type":          llx.StringDataPtr(entry.Type),
-					"value":         llx.StringDataPtr(entry.Properties.Value),
-					"description":   llx.StringDataPtr(entry.Properties.Description),
-					"defaultValue":  llx.StringDataPtr(entry.Properties.DefaultValue),
-					"dataType":      llx.StringDataPtr(entry.Properties.DataType),
-					"allowedValues": llx.StringDataPtr(entry.Properties.AllowedValues),
-					"source":        llx.StringDataPtr(entry.Properties.Source),
+					"value":         llx.StringDataPtr(orZero(entry.Properties).Value),
+					"description":   llx.StringDataPtr(orZero(entry.Properties).Description),
+					"defaultValue":  llx.StringDataPtr(orZero(entry.Properties).DefaultValue),
+					"dataType":      llx.StringDataPtr(orZero(entry.Properties).DataType),
+					"allowedValues": llx.StringDataPtr(orZero(entry.Properties).AllowedValues),
+					"source":        llx.StringDataPtr(orZero(entry.Properties).Source),
 				})
 			if err != nil {
 				return nil, err
@@ -571,12 +571,12 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) configuration() ([
 					"id":            llx.StringDataPtr(entry.ID),
 					"name":          llx.StringDataPtr(entry.Name),
 					"type":          llx.StringDataPtr(entry.Type),
-					"value":         llx.StringDataPtr(entry.Properties.Value),
-					"description":   llx.StringDataPtr(entry.Properties.Description),
-					"defaultValue":  llx.StringDataPtr(entry.Properties.DefaultValue),
-					"dataType":      llx.StringDataPtr((*string)(entry.Properties.DataType)),
-					"allowedValues": llx.StringDataPtr(entry.Properties.AllowedValues),
-					"source":        llx.StringDataPtr(entry.Properties.Source),
+					"value":         llx.StringDataPtr(orZero(entry.Properties).Value),
+					"description":   llx.StringDataPtr(orZero(entry.Properties).Description),
+					"defaultValue":  llx.StringDataPtr(orZero(entry.Properties).DefaultValue),
+					"dataType":      llx.StringDataPtr((*string)(orZero(entry.Properties).DataType)),
+					"allowedValues": llx.StringDataPtr(orZero(entry.Properties).AllowedValues),
+					"source":        llx.StringDataPtr(orZero(entry.Properties).Source),
 				})
 			if err != nil {
 				return nil, err

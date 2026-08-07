@@ -368,8 +368,8 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]any, error) {
 					"id":        llx.StringDataPtr(entry.ID),
 					"name":      llx.StringDataPtr(entry.Name),
 					"type":      llx.StringDataPtr(entry.Type),
-					"charset":   llx.StringDataPtr(entry.Properties.Charset),
-					"collation": llx.StringDataPtr(entry.Properties.Collation),
+					"charset":   llx.StringDataPtr(orZero(entry.Properties).Charset),
+					"collation": llx.StringDataPtr(orZero(entry.Properties).Collation),
 				})
 			if err != nil {
 				return nil, err
@@ -418,8 +418,8 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]any, error) 
 					"id":             llx.StringDataPtr(entry.ID),
 					"name":           llx.StringDataPtr(entry.Name),
 					"type":           llx.StringDataPtr(entry.Type),
-					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
-					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
+					"startIpAddress": llx.StringDataPtr(orZero(entry.Properties).StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(orZero(entry.Properties).EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -468,12 +468,12 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]any, error) 
 					"id":            llx.StringDataPtr(entry.ID),
 					"name":          llx.StringDataPtr(entry.Name),
 					"type":          llx.StringDataPtr(entry.Type),
-					"value":         llx.StringDataPtr(entry.Properties.Value),
-					"description":   llx.StringDataPtr(entry.Properties.Description),
-					"defaultValue":  llx.StringDataPtr(entry.Properties.DefaultValue),
-					"dataType":      llx.StringDataPtr(entry.Properties.DataType),
-					"allowedValues": llx.StringDataPtr(entry.Properties.AllowedValues),
-					"source":        llx.StringDataPtr(entry.Properties.Source),
+					"value":         llx.StringDataPtr(orZero(entry.Properties).Value),
+					"description":   llx.StringDataPtr(orZero(entry.Properties).Description),
+					"defaultValue":  llx.StringDataPtr(orZero(entry.Properties).DefaultValue),
+					"dataType":      llx.StringDataPtr(orZero(entry.Properties).DataType),
+					"allowedValues": llx.StringDataPtr(orZero(entry.Properties).AllowedValues),
+					"source":        llx.StringDataPtr(orZero(entry.Properties).Source),
 				})
 			if err != nil {
 				return nil, err
@@ -521,8 +521,8 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]any, err
 					"id":        llx.StringDataPtr(entry.ID),
 					"name":      llx.StringDataPtr(entry.Name),
 					"type":      llx.StringDataPtr(entry.Type),
-					"charset":   llx.StringDataPtr(entry.Properties.Charset),
-					"collation": llx.StringDataPtr(entry.Properties.Collation),
+					"charset":   llx.StringDataPtr(orZero(entry.Properties).Charset),
+					"collation": llx.StringDataPtr(orZero(entry.Properties).Collation),
 				})
 			if err != nil {
 				return nil, err
@@ -570,8 +570,8 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]any,
 					"id":             llx.StringDataPtr(entry.ID),
 					"name":           llx.StringDataPtr(entry.Name),
 					"type":           llx.StringDataPtr(entry.Type),
-					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
-					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
+					"startIpAddress": llx.StringDataPtr(orZero(entry.Properties).StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(orZero(entry.Properties).EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -620,12 +620,12 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any,
 					"id":            llx.StringDataPtr(entry.ID),
 					"name":          llx.StringDataPtr(entry.Name),
 					"type":          llx.StringDataPtr(entry.Type),
-					"value":         llx.StringDataPtr(entry.Properties.Value),
-					"description":   llx.StringDataPtr(entry.Properties.Description),
-					"defaultValue":  llx.StringDataPtr(entry.Properties.DefaultValue),
-					"dataType":      llx.StringDataPtr(entry.Properties.DataType),
-					"allowedValues": llx.StringDataPtr(entry.Properties.AllowedValues),
-					"source":        llx.StringDataPtr((*string)(entry.Properties.Source)),
+					"value":         llx.StringDataPtr(orZero(entry.Properties).Value),
+					"description":   llx.StringDataPtr(orZero(entry.Properties).Description),
+					"defaultValue":  llx.StringDataPtr(orZero(entry.Properties).DefaultValue),
+					"dataType":      llx.StringDataPtr(orZero(entry.Properties).DataType),
+					"allowedValues": llx.StringDataPtr(orZero(entry.Properties).AllowedValues),
+					"source":        llx.StringDataPtr((*string)(orZero(entry.Properties).Source)),
 				})
 			if err != nil {
 				return nil, err
@@ -717,10 +717,10 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) azureAdAdministrators()
 			}
 			var administratorType, login, sid, tenantId *string
 			if entry.Properties != nil {
-				administratorType = (*string)(entry.Properties.AdministratorType)
-				login = entry.Properties.Login
-				sid = entry.Properties.Sid
-				tenantId = entry.Properties.TenantID
+				administratorType = (*string)(orZero(entry.Properties).AdministratorType)
+				login = orZero(entry.Properties).Login
+				sid = orZero(entry.Properties).Sid
+				tenantId = orZero(entry.Properties).TenantID
 			}
 			mqlAdmin, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer.administrator",
 				map[string]*llx.RawData{

@@ -372,6 +372,9 @@ func (a *mqlAzureSubscriptionContainerAppService) managedEnvironments() ([]any, 
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlEnv, err := acaManagedEnvironmentToMQL(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err
@@ -744,6 +747,9 @@ func (a *mqlAzureSubscriptionContainerAppService) containerApps() ([]any, error)
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlApp, err := acaContainerAppToMQL(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err

@@ -65,6 +65,9 @@ func (a *mqlAzureSubscriptionContainerInstanceService) containerGroups() ([]any,
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
 			mqlGroup, err := aciContainerGroupToMQL(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err
