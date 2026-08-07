@@ -2815,12 +2815,11 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 	// Pre-validate all gateway IDs before launching any goroutines so that an
 	// early parse error can't leak in-flight workers.
 	type gwFetch struct {
-		rg    string
-		name  string
-		index int
+		rg   string
+		name string
 	}
 	fetches := make([]gwFetch, 0, len(gatewayIDs))
-	for i, strId := range gatewayIDs {
+	for _, strId := range gatewayIDs {
 		azureId, err := ParseResourceID(strId)
 		if err != nil {
 			return nil, err
@@ -2829,21 +2828,21 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 		if err != nil {
 			return nil, err
 		}
-		fetches = append(fetches, gwFetch{rg: azureId.ResourceGroup, name: gatewayName, index: i})
+		fetches = append(fetches, gwFetch{rg: azureId.ResourceGroup, name: gatewayName})
 	}
 
 	// Fetch the referenced application gateways in parallel; there is no
 	// batch endpoint, so a bounded errgroup is the cheapest fix.
-	results := make([]network.ApplicationGateway, len(gatewayIDs))
+	results := make([]network.ApplicationGateway, len(fetches))
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(10)
-	for _, f := range fetches {
+	for i, f := range fetches {
 		g.Go(func() error {
 			resp, err := client.Get(gctx, f.rg, f.name, &network.ApplicationGatewaysClientGetOptions{})
 			if err != nil {
 				return err
 			}
-			results[f.index] = resp.ApplicationGateway
+			results[i] = resp.ApplicationGateway
 			return nil
 		})
 	}
