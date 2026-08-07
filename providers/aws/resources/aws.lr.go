@@ -1014,7 +1014,7 @@ func init() {
 			Create: createAwsBillingBudget,
 		},
 		"aws.organization": {
-			// to override args, implement: initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsOrganization,
 			Create: createAwsOrganization,
 		},
 		"aws.organization.serviceControlPolicy": {

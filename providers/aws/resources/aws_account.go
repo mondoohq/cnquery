@@ -102,6 +102,44 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 	return res.(*mqlAwsOrganization), nil
 }
 
+// initAwsOrganization populates the organization from the API when it is
+// reached directly rather than through aws.account.organization. Without this,
+// a bare `aws.organization` query creates the resource with every field unset,
+// which surfaces client-side as null values with no attribution.
+func initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) >= 2 {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AwsConnection)
+	if !ok {
+		return nil, nil, errors.New("aws.organization requires an AWS connection")
+	}
+	client := conn.Organizations("") // no region for orgs, use configured region
+
+	org, err := client.DescribeOrganization(context.TODO(), &organizations.DescribeOrganizationInput{})
+	if err != nil {
+		return nil, nil, err
+	}
+	if org.Organization == nil {
+		return nil, nil, errors.New("aws.organization: no organization returned for this account")
+	}
+
+	res, err := CreateResource(runtime, ResourceAwsOrganization,
+		map[string]*llx.RawData{
+			"arn":                llx.StringDataPtr(org.Organization.Arn),
+			"id":                 llx.StringDataPtr(org.Organization.Id),
+			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),
+			"masterAccountId":    llx.StringDataPtr(org.Organization.MasterAccountId),
+			"masterAccountArn":   llx.StringDataPtr(org.Organization.MasterAccountArn),
+			"masterAccountEmail": llx.StringDataPtr(org.Organization.MasterAccountEmail),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
 func (a *mqlAwsOrganization) accounts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
