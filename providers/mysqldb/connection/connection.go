@@ -138,6 +138,13 @@ func (c *MysqldbConnection) ScopedDatabase() string {
 	return c.scopedDatabase
 }
 
+// Close releases the shared database handle.
+func (c *MysqldbConnection) Close() {
+	if c.client != nil {
+		c.client.Close()
+	}
+}
+
 // tlsParam resolves the go-sql-driver `tls` DSN parameter, registering a custom
 // TLS config when CA or client-certificate material is supplied.
 func (c *MysqldbConnection) tlsParam() (string, error) {

@@ -93,7 +93,7 @@ func (r *mqlMysqldbInstance) variables() ([]any, error) {
 			return nil, err
 		}
 		res, err := CreateResource(r.MqlRuntime, "mysqldb.variable", map[string]*llx.RawData{
-			"__id":  llx.StringData(r.ServerUuid.Data + "/var/" + name),
+			"__id":  llx.StringData(r.__id + "/var/" + name),
 			"name":  llx.StringData(name),
 			"value": llx.StringData(value),
 		})
@@ -126,7 +126,7 @@ func (r *mqlMysqldbInstance) plugins() ([]any, error) {
 			return nil, err
 		}
 		res, err := CreateResource(r.MqlRuntime, "mysqldb.plugin", map[string]*llx.RawData{
-			"__id":    llx.StringData(r.ServerUuid.Data + "/plugin/" + name),
+			"__id":    llx.StringData(r.__id + "/plugin/" + name),
 			"name":    llx.StringData(name),
 			"status":  llx.StringData(status),
 			"type":    llx.StringData(typ),
@@ -146,10 +146,14 @@ func (r *mqlMysqldbInstance) components() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	// mysql.component is MySQL 8+ only; MariaDB has no components.
+	// mysql.component is MySQL 8+ only; MariaDB has no such table. Treat a
+	// missing table or access-denied as no components, but surface real errors.
 	rows, err := db.QueryContext(mysqldbContext(), "SELECT component_urn FROM mysql.component")
 	if err != nil {
-		return []any{}, nil
+		if isMissingTable(err) || isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -165,7 +169,7 @@ func (r *mqlMysqldbInstance) components() ([]any, error) {
 		}
 		name = strings.TrimPrefix(name, "component_")
 		res, err := CreateResource(r.MqlRuntime, "mysqldb.component", map[string]*llx.RawData{
-			"__id": llx.StringData(r.ServerUuid.Data + "/component/" + urn),
+			"__id": llx.StringData(r.__id + "/component/" + urn),
 			"name": llx.StringData(name),
 			"urn":  llx.StringData(urn),
 		})
@@ -183,12 +187,16 @@ func (r *mqlMysqldbInstance) replicationChannels() ([]any, error) {
 		return nil, err
 	}
 	// performance_schema.replication_connection_configuration is MySQL/Percona;
-	// MariaDB exposes replication state differently, so treat absence as none.
+	// MariaDB exposes replication state differently. Treat a missing table or
+	// access-denied as no channels, but surface real errors.
 	rows, err := db.QueryContext(mysqldbContext(),
 		`SELECT CHANNEL_NAME, HOST, SSL_ALLOWED, SSL_VERIFY_SERVER_CERTIFICATE
 		 FROM performance_schema.replication_connection_configuration`)
 	if err != nil {
-		return []any{}, nil
+		if isMissingTable(err) || isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -199,7 +207,7 @@ func (r *mqlMysqldbInstance) replicationChannels() ([]any, error) {
 			return nil, err
 		}
 		res, err := CreateResource(r.MqlRuntime, "mysqldb.replicationChannel", map[string]*llx.RawData{
-			"__id":                llx.StringData(r.ServerUuid.Data + "/replchannel/" + channel),
+			"__id":                llx.StringData(r.__id + "/replchannel/" + channel),
 			"channel":             llx.StringData(channel),
 			"sourceHost":          llx.StringData(host),
 			"sslAllowed":          llx.BoolData(isYes(sslAllowed)),

@@ -45,6 +45,21 @@ func isAccessDenied(err error) bool {
 	}
 }
 
+// isMissingTable reports whether an error means the table or database does not
+// exist (for example a catalog present on MySQL but not MariaDB).
+func isMissingTable(err error) bool {
+	var myErr *mysqldriver.MySQLError
+	if !errors.As(err, &myErr) {
+		return false
+	}
+	switch myErr.Number {
+	case 1146, 1109, 1049: // no such table, unknown table, unknown database
+		return true
+	default:
+		return false
+	}
+}
+
 // grantee formats an account as the 'user'@'host' string information_schema uses.
 func grantee(user, host string) string {
 	return "'" + user + "'@'" + host + "'"
