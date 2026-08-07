@@ -3242,7 +3242,7 @@ func (c *mqlDatadogSharedDashboard) GetSharer() *plugin.TValue[*mqlDatadogUser] 
 type mqlDatadogAuthnMapping struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogAuthnMappingInternal it will be used here
+	mqlDatadogAuthnMappingInternal
 	Id             plugin.TValue[string]
 	AttributeKey   plugin.TValue[string]
 	AttributeValue plugin.TValue[string]

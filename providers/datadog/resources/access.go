@@ -6,6 +6,7 @@ package resources
 import (
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
@@ -217,7 +218,16 @@ func (r *mqlDatadog) authnMappings() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			all = append(all, res)
+
+			// The list response carries the role and team relationships, so
+			// seed them here rather than making the accessors re-fetch each
+			// mapping one at a time.
+			mqlMapping := res.(*mqlDatadogAuthnMapping)
+			if rels, ok := mapping.GetRelationshipsOk(); ok && rels != nil {
+				mqlMapping.cacheRoleId, mqlMapping.cacheTeamId = authnMappingGrants(mapping)
+				mqlMapping.grantsSeeded = true
+			}
+			all = append(all, mqlMapping)
 		}
 
 		if int64(len(data)) < pageSize {
@@ -228,12 +238,20 @@ func (r *mqlDatadog) authnMappings() ([]interface{}, error) {
 	return all, nil
 }
 
+type mqlDatadogAuthnMappingInternal struct {
+	grantsOnce   sync.Once
+	grantsSeeded bool
+	cacheRoleId  string
+	cacheTeamId  string
+	grantsErr    error
+}
+
 func (r *mqlDatadogAuthnMapping) id() (string, error) {
 	return "datadog.authnMapping/" + r.Id.Data, nil
 }
 
 func (r *mqlDatadogAuthnMapping) role() (*mqlDatadogRole, error) {
-	roleId, _, err := r.grantIds()
+	roleId, _, err := r.grants()
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +270,7 @@ func (r *mqlDatadogAuthnMapping) role() (*mqlDatadogRole, error) {
 }
 
 func (r *mqlDatadogAuthnMapping) team() (*mqlDatadogTeam, error) {
-	_, teamId, err := r.grantIds()
+	_, teamId, err := r.grants()
 	if err != nil {
 		return nil, err
 	}
@@ -270,31 +288,43 @@ func (r *mqlDatadogAuthnMapping) team() (*mqlDatadogTeam, error) {
 	return res.(*mqlDatadogTeam), nil
 }
 
-// grantIds returns the role and team a mapping grants. A mapping grants one or
-// the other, so at most one of the two is set. The relationships are not
-// carried on the resource, so the mapping is looked up again by ID.
-func (r *mqlDatadogAuthnMapping) grantIds() (string, string, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV2.NewAuthNMappingsApi(conn.ApiClient())
-
-	resp, httpResp, err := api.GetAuthNMapping(conn.AuthCtx(), r.Id.Data)
-	if err != nil {
-		if isNotFound(httpResp) || isForbidden(httpResp) {
-			return "", "", nil
+// grants returns the role and team a mapping grants. A mapping grants one or
+// the other, so at most one of the two is set.
+//
+// The list response carries the relationships, so the lister seeds them and no
+// request is made here. The per-mapping fetch is a fallback for a response that
+// omitted the relationships block, and runs at most once no matter how many of
+// the accessors read it.
+func (r *mqlDatadogAuthnMapping) grants() (string, string, error) {
+	r.grantsOnce.Do(func() {
+		if r.grantsSeeded {
+			return
 		}
-		return "", "", err
-	}
 
-	data := resp.GetData()
-	return authnMappingGrants(data)
+		conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+		api := datadogV2.NewAuthNMappingsApi(conn.ApiClient())
+
+		resp, httpResp, err := api.GetAuthNMapping(conn.AuthCtx(), r.Id.Data)
+		if err != nil {
+			if isNotFound(httpResp) || isForbidden(httpResp) {
+				log.Debug().Str("authnMapping", r.Id.Data).
+					Msg("datadog> cannot read the mapping, its role and team report null")
+				return
+			}
+			r.grantsErr = err
+			return
+		}
+		r.cacheRoleId, r.cacheTeamId = authnMappingGrants(resp.GetData())
+	})
+	return r.cacheRoleId, r.cacheTeamId, r.grantsErr
 }
 
 // authnMappingGrants extracts the role and team IDs from a mapping's
 // relationships, tolerating either being absent.
-func authnMappingGrants(mapping datadogV2.AuthNMapping) (string, string, error) {
+func authnMappingGrants(mapping datadogV2.AuthNMapping) (string, string) {
 	rels, ok := mapping.GetRelationshipsOk()
 	if !ok || rels == nil {
-		return "", "", nil
+		return "", ""
 	}
 
 	roleId := ""
@@ -310,7 +340,7 @@ func authnMappingGrants(mapping datadogV2.AuthNMapping) (string, string, error) 
 			teamId = data.GetId()
 		}
 	}
-	return roleId, teamId, nil
+	return roleId, teamId
 }
 
 // --- Log processing pipelines ---

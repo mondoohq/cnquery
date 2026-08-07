@@ -140,10 +140,7 @@ func TestAuthnMappingGrants(t *testing.T) {
 	mapping := datadogV2.NewAuthNMapping("mapping-1", datadogV2.AUTHNMAPPINGSTYPE_AUTHN_MAPPINGS)
 	mapping.SetRelationships(*rels)
 
-	gotRole, gotTeam, err := authnMappingGrants(*mapping)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	gotRole, gotTeam := authnMappingGrants(*mapping)
 	if gotRole != "role-1" {
 		t.Fatalf("expected role-1, got %q", gotRole)
 	}
@@ -164,10 +161,7 @@ func TestAuthnMappingGrantsTeam(t *testing.T) {
 	mapping := datadogV2.NewAuthNMapping("mapping-1", datadogV2.AUTHNMAPPINGSTYPE_AUTHN_MAPPINGS)
 	mapping.SetRelationships(*rels)
 
-	gotRole, gotTeam, err := authnMappingGrants(*mapping)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	gotRole, gotTeam := authnMappingGrants(*mapping)
 	if gotRole != "" {
 		t.Fatalf("expected no role, got %q", gotRole)
 	}
@@ -181,19 +175,13 @@ func TestAuthnMappingGrantsTeam(t *testing.T) {
 func TestAuthnMappingGrantsMissingRelationships(t *testing.T) {
 	mapping := datadogV2.NewAuthNMapping("mapping-1", datadogV2.AUTHNMAPPINGSTYPE_AUTHN_MAPPINGS)
 
-	gotRole, gotTeam, err := authnMappingGrants(*mapping)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	gotRole, gotTeam := authnMappingGrants(*mapping)
 	if gotRole != "" || gotTeam != "" {
 		t.Fatalf("expected empty IDs, got (%q, %q)", gotRole, gotTeam)
 	}
 
 	mapping.SetRelationships(*datadogV2.NewAuthNMappingRelationships())
-	gotRole, gotTeam, err = authnMappingGrants(*mapping)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	gotRole, gotTeam = authnMappingGrants(*mapping)
 	if gotRole != "" || gotTeam != "" {
 		t.Fatalf("expected empty IDs for an empty relationships block, got (%q, %q)", gotRole, gotTeam)
 	}
