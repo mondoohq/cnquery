@@ -1314,15 +1314,42 @@ private oci.network.vcn @defaults("name") {
   // Default DHCP options OCID for the VCN
   defaultDhcpOptionsId string
   // Default route table OCID for the VCN
-  defaultRouteTableId string
+  //
+  // Deprecated in favor of defaultRouteTable.
+  defaultRouteTableId @maturity("deprecated") string
+  // Route table applied to subnets that specify none of their own
+  defaultRouteTable() oci.network.routeTable
   // Default security list OCID for the VCN
-  defaultSecurityListId string
+  //
+  // Deprecated in favor of defaultSecurityList.
+  defaultSecurityListId @maturity("deprecated") string
+  // Security list applied to subnets that specify none of their own
+  defaultSecurityList() oci.network.securityList
   // DNS label for the VCN
   dnsLabel string
   // Free-form tags for resource management
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // Subnets carved out of the VCN address space
+  subnets() []oci.network.subnet
+  // Route tables defined in the VCN
+  routeTables() []oci.network.routeTable
+  // Security lists defined in the VCN
+  //
+  // The subnet-level firewall. OCI evaluates the union of a subnet's security
+  // lists and the network security groups on a VNIC, so a rule in either layer
+  // admits traffic on its own.
+  securityLists() []oci.network.securityList
+  // Network security groups defined in the VCN
+  networkSecurityGroups() []oci.network.networkSecurityGroup
+  // Internet gateways attached to the VCN
+  //
+  // A subnet reaches the internet only when its route table forwards a default
+  // route to one of these and that gateway's isEnabled is true.
+  internetGateways() []oci.network.internetGateway
+  // NAT gateways attached to the VCN
+  natGateways() []oci.network.natGateway
   // VCN flow logs (OCI logs with service=flowlogs whose resource is this VCN)
   flowLogs() []oci.logging.log
 }
@@ -1397,12 +1424,21 @@ private oci.network.securityList @defaults("name") {
   created time
   // Security list lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
-  // Egress security rules for outbound traffic
+  // Egress security rule dicts
   //
-  // Each entry: {description, stateless, protocol (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), destination, destinationType, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
-  egressSecurityRules []dict
-  // Ingress security rules for inbound traffic; same shape as egressSecurityRules but with source/sourceType instead of destination/destinationType
-  ingressSecurityRules []dict
+  // Deprecated in favor of egressRules, which resolves the port ranges nested
+  // inside tcpOptions and udpOptions into queryable fields. Each entry:
+  // {description, stateless, protocol (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), destination, destinationType, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
+  egressSecurityRules @maturity("deprecated") []dict
+  // Ingress security rule dicts
+  //
+  // Deprecated in favor of ingressRules. Same shape as egressSecurityRules but
+  // with source/sourceType instead of destination/destinationType.
+  ingressSecurityRules @maturity("deprecated") []dict
+  // Inbound rules the security list permits
+  ingressRules []oci.network.securityRule
+  // Outbound rules the security list permits
+  egressRules []oci.network.securityRule
   // Whether any rule (ingress or egress) is stateless
   hasStatelessRules() bool
   // VCN OCID
@@ -1445,16 +1481,101 @@ private oci.network.networkSecurityGroup @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
-  // Ingress security rules
+  // Ingress security rule dicts
   //
-  // Each entry: {direction, protocol (IANA number, e.g. "6"=TCP), description, source, sourceType, isStateless, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
-  ingressSecurityRules() []dict
-  // Egress security rules; same shape as ingressSecurityRules but with destination/destinationType instead of source/sourceType
-  egressSecurityRules() []dict
+  // Deprecated in favor of ingressRules, which resolves the port ranges nested
+  // inside tcpOptions and udpOptions into queryable fields. Each entry:
+  // {direction, protocol (IANA number, e.g. "6"=TCP), description, source, sourceType, isStateless, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
+  ingressSecurityRules() @maturity("deprecated") []dict
+  // Egress security rule dicts
+  //
+  // Deprecated in favor of egressRules. Same shape as ingressSecurityRules but
+  // with destination/destinationType instead of source/sourceType.
+  egressSecurityRules() @maturity("deprecated") []dict
+  // Inbound rules the group permits
+  ingressRules() []oci.network.securityRule
+  // Outbound rules the group permits
+  egressRules() []oci.network.securityRule
   // Whether any rule (ingress or egress) is stateless
   hasStatelessRules() bool
   // VNICs this NSG is attached to (from ListNetworkSecurityGroupVnics + GetVnic)
   attachedVnics() []oci.compute.vnic
+}
+
+// Security rule from a VCN security list or network security group
+//
+// A single inbound or outbound rule, with the port ranges that OCI nests
+// inside tcpOptions and udpOptions lifted into `sourcePortMin`,
+// `sourcePortMax`, `destinationPortMin`, and `destinationPortMax` so traffic
+// can be selected by port. `protocol` is the IANA protocol number as a string
+// ("6" for TCP, "17" for UDP, "1" for ICMP, "58" for ICMPv6) or "all" when the
+// rule covers every protocol. Rules from a security list apply to every VNIC
+// in the subnets referencing it, while rules from a network security group
+// apply only to the VNICs added to that group; OCI evaluates the union of
+// both, so a rule from either layer can admit traffic on its own.
+private oci.network.securityRule @defaults("direction protocol source destination destinationPortMin destinationPortMax") {
+  // Traffic direction the rule covers: INGRESS or EGRESS
+  direction string
+  // Transport protocol
+  //
+  // The IANA protocol number as a string ("6" for TCP, "17" for UDP, "1" for
+  // ICMP, "58" for ICMPv6), or "all" when the rule matches every protocol.
+  protocol string
+  // Rule description
+  description string
+  // Source the rule permits traffic from
+  //
+  // A CIDR block, the OCID of a network security group, or the name of a
+  // service CIDR label, depending on sourceType. Empty on egress rules.
+  source string
+  // How to read the source value
+  //
+  // One of CIDR_BLOCK, SERVICE_CIDR_BLOCK, or NETWORK_SECURITY_GROUP. Empty on
+  // egress rules.
+  sourceType string
+  // Destination the rule permits traffic to
+  //
+  // A CIDR block, the OCID of a network security group, or the name of a
+  // service CIDR label, depending on destinationType. Empty on ingress rules.
+  destination string
+  // How to read the destination value
+  //
+  // One of CIDR_BLOCK, SERVICE_CIDR_BLOCK, or NETWORK_SECURITY_GROUP. Empty on
+  // ingress rules.
+  destinationType string
+  // Whether the rule is stateless, so return traffic needs its own matching rule
+  stateless bool
+  // Lowest source port the rule covers
+  //
+  // Taken from the source port range of tcpOptions or udpOptions, whichever
+  // the protocol selects. Null when the rule sets no source port range, which
+  // means every source port, and on rules for protocols that carry no ports.
+  sourcePortMin int
+  // Highest source port the rule covers
+  //
+  // Null under the same conditions as sourcePortMin.
+  sourcePortMax int
+  // Lowest destination port the rule covers
+  //
+  // Taken from the destination port range of tcpOptions or udpOptions,
+  // whichever the protocol selects. Null when the rule sets no destination
+  // port range, which means every destination port, and on rules for protocols
+  // that carry no ports. A null therefore admits more traffic than any explicit
+  // range, so treat it as matching when selecting rules by port.
+  destinationPortMin int
+  // Highest destination port the rule covers
+  //
+  // Null under the same conditions as destinationPortMin.
+  destinationPortMax int
+  // ICMP message type the rule covers
+  //
+  // Null on rules for protocols other than ICMP and ICMPv6.
+  icmpType int
+  // ICMP message code the rule covers
+  //
+  // Null when the rule covers every code of its icmpType, and on rules for
+  // protocols other than ICMP and ICMPv6.
+  icmpCode int
 }
 
 // Oracle Cloud Infrastructure (OCI) internet gateway (connects VCN to the internet)

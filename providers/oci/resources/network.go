@@ -223,6 +223,15 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					return nil, err
 				}
 
+				typedEgress := make([]securityRule, 0, len(securityList.EgressSecurityRules))
+				for j := range securityList.EgressSecurityRules {
+					typedEgress = append(typedEgress, securityRuleFromEgress(securityList.EgressSecurityRules[j]))
+				}
+				egressRules, err := newSecurityRules(o.MqlRuntime, stringValue(securityList.Id), typedEgress)
+				if err != nil {
+					return nil, err
+				}
+
 				ingressSecurityRules := []ingressSecurityRule{}
 				for j := range securityList.IngressSecurityRules {
 					rule := securityList.IngressSecurityRules[j]
@@ -238,6 +247,15 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					})
 				}
 				ingress, err := convert.JsonToDictSlice(ingressSecurityRules)
+				if err != nil {
+					return nil, err
+				}
+
+				typedIngress := make([]securityRule, 0, len(securityList.IngressSecurityRules))
+				for j := range securityList.IngressSecurityRules {
+					typedIngress = append(typedIngress, securityRuleFromIngress(securityList.IngressSecurityRules[j]))
+				}
+				ingressRules, err := newSecurityRules(o.MqlRuntime, stringValue(securityList.Id), typedIngress)
 				if err != nil {
 					return nil, err
 				}
@@ -260,6 +278,8 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					"compartmentID":        llx.StringDataPtr(securityList.CompartmentId),
 					"egressSecurityRules":  llx.ArrayData(egress, types.Dict),
 					"ingressSecurityRules": llx.ArrayData(ingress, types.Dict),
+					"egressRules":          llx.ArrayData(egressRules, types.Resource("oci.network.securityRule")),
+					"ingressRules":         llx.ArrayData(ingressRules, types.Resource("oci.network.securityRule")),
 					"vcnId":                llx.StringDataPtr(securityList.VcnId),
 					"freeformTags":         llx.MapData(freeformTags, types.String),
 					"definedTags":          llx.MapData(definedTags, types.Any),
@@ -871,6 +891,8 @@ func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() (ingress []any,
 
 	ingressRules := []nsgSecurityRule{}
 	egressRules := []nsgSecurityRule{}
+	typedIngress := []securityRule{}
+	typedEgress := []securityRule{}
 
 	for i := range rules {
 		rule := rules[i]
@@ -890,8 +912,10 @@ func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() (ingress []any,
 
 		if rule.Direction == core.SecurityRuleDirectionIngress {
 			ingressRules = append(ingressRules, r)
+			typedIngress = append(typedIngress, securityRuleFromNsg(rule))
 		} else {
 			egressRules = append(egressRules, r)
+			typedEgress = append(typedEgress, securityRuleFromNsg(rule))
 		}
 	}
 
@@ -905,11 +929,37 @@ func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() (ingress []any,
 		return nil, nil, err
 	}
 
+	typedIngressRes, err := newSecurityRules(o.MqlRuntime, o.Id.Data, typedIngress)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	typedEgressRes, err := newSecurityRules(o.MqlRuntime, o.Id.Data, typedEgress)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	o.IngressSecurityRules = plugin.TValue[[]any]{Data: ingress, State: plugin.StateIsSet}
 	o.EgressSecurityRules = plugin.TValue[[]any]{Data: egress, State: plugin.StateIsSet}
+	o.IngressRules = plugin.TValue[[]any]{Data: typedIngressRes, State: plugin.StateIsSet}
+	o.EgressRules = plugin.TValue[[]any]{Data: typedEgressRes, State: plugin.StateIsSet}
 	o.fetched.Store(true)
 
 	return ingress, egress, nil
+}
+
+func (o *mqlOciNetworkNetworkSecurityGroup) ingressRules() ([]any, error) {
+	if _, _, err := o.fetchSecurityRules(); err != nil {
+		return nil, err
+	}
+	return o.IngressRules.Data, nil
+}
+
+func (o *mqlOciNetworkNetworkSecurityGroup) egressRules() ([]any, error) {
+	if _, _, err := o.fetchSecurityRules(); err != nil {
+		return nil, err
+	}
+	return o.EgressRules.Data, nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) ingressSecurityRules() ([]any, error) {
