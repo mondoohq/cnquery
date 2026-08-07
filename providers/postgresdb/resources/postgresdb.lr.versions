@@ -15,6 +15,7 @@ postgresdb.database.isTemplate 13.0.0
 postgresdb.database.name 13.0.0
 postgresdb.database.oid 13.0.0
 postgresdb.database.owner 13.0.0
+postgresdb.database.pgvectorVersion 13.0.1
 postgresdb.database.privileges 13.0.0
 postgresdb.database.publications 13.0.0
 postgresdb.database.schemas 13.0.0

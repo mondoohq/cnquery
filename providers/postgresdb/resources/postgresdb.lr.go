@@ -309,6 +309,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"postgresdb.database.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresdbDatabase).GetExtensions()).ToDataRes(types.Array(types.Resource("postgresdb.extension")))
 	},
+	"postgresdb.database.pgvectorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresdbDatabase).GetPgvectorVersion()).ToDataRes(types.String)
+	},
 	"postgresdb.database.foreignServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostgresdbDatabase).GetForeignServers()).ToDataRes(types.Array(types.Resource("postgresdb.foreignServer")))
 	},
@@ -758,6 +761,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"postgresdb.database.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostgresdbDatabase).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgresdb.database.pgvectorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresdbDatabase).PgvectorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"postgresdb.database.foreignServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1573,6 +1580,7 @@ type mqlPostgresdbDatabase struct {
 	Schemas          plugin.TValue[[]any]
 	Functions        plugin.TValue[[]any]
 	Extensions       plugin.TValue[[]any]
+	PgvectorVersion  plugin.TValue[string]
 	ForeignServers   plugin.TValue[[]any]
 	Publications     plugin.TValue[[]any]
 }
@@ -1718,6 +1726,12 @@ func (c *mqlPostgresdbDatabase) GetExtensions() *plugin.TValue[[]any] {
 		}
 
 		return c.extensions()
+	})
+}
+
+func (c *mqlPostgresdbDatabase) GetPgvectorVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PgvectorVersion, func() (string, error) {
+		return c.pgvectorVersion()
 	})
 }
 
