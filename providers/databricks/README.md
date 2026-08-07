@@ -27,7 +27,7 @@ access you want to audit (account admin for full account coverage, plus
 workspace entitlement for each workspace you want to reach).
 
 ```shell
-cnspec shell databricks \
+mql shell databricks \
   --account-id <account-id> \
   --client-id <client-id> \
   --client-secret <client-secret>
@@ -36,7 +36,7 @@ cnspec shell databricks \
 ### Personal access token (single workspace)
 
 ```shell
-cnspec shell databricks --host <workspace-url> --token <pat>
+mql shell databricks --host <workspace-url> --token <pat>
 ```
 
 ### Environment variables
@@ -58,13 +58,13 @@ Discovery is controlled with `--discover`:
 - `auto` / `all` (default) discovers every workspace.
 - `workspaces` is the explicit workspace target.
 
-## Example queries
+## Examples
 
 Account plane:
 
 ```shell
 # Service principals that are still active
-cnspec shell databricks --account-id <id> --client-id <id> --client-secret <secret> \
+mql shell databricks --account-id <id> --client-id <id> --client-secret <secret> \
   -c "databricks.servicePrincipals.where(active)"
 
 # Workspaces not protected by a customer-managed key

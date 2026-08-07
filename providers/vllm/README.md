@@ -5,6 +5,12 @@ inference server. It checks selected documentation, metadata, OpenAI-compatible,
 metrics, utility, and operational endpoints from the URL supplied to the
 connector.
 
+## Authentication
+
+Authenticated comparison probes use an API key from `--api-key`, inventory
+credentials, the `api-key` option, or `VLLM_API_KEY`. Explicit credentials in
+the connection configuration take precedence over environment variables.
+
 ## Usage
 
 ```bash
@@ -14,12 +20,6 @@ mql shell vllm https://vllm.example.com --api-key <token>
 
 Use `--insecure` only for lab or test endpoints where TLS certificate
 verification is intentionally disabled.
-
-## Authentication
-
-Authenticated comparison probes use an API key from `--api-key`, inventory
-credentials, the `api-key` option, or `VLLM_API_KEY`. Explicit credentials in
-the connection configuration take precedence over environment variables.
 
 ## Security Considerations
 

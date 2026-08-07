@@ -31,54 +31,6 @@ mql shell datadog --api-key <key> --app-key <key>
 mql shell datadog --api-key <key> --app-key <key> --site datadoghq.eu
 ```
 
-## Required Permissions
-
-By default, an unscoped Application Key inherits all permissions of the user who created it. For production use, Datadog supports [scoped Application Keys](https://docs.datadoghq.com/account_management/api-app-keys/) that restrict access to specific RBAC permissions.
-
-The table below lists the Datadog RBAC permission each resource requires. These are the same permission names shown in **Datadog > Organization Settings > Roles**.
-
-| Resource | Required RBAC Permission |
-|---|---|
-| `datadog.users` | `user_access_invite` |
-| `datadog.roles` | `user_access_invite` |
-| `datadog.serviceAccounts` | `user_access_invite` |
-| `datadog.monitors` | `monitors_read` |
-| `datadog.dashboards` | `dashboards_read` |
-| `datadog.slos` | `slos_read` |
-| `datadog.downtimes` | `monitors_downtime` |
-| `datadog.syntheticsTests` | `synthetics_read` |
-| `datadog.syntheticsGlobalVariables` | `synthetics_read` |
-| `datadog.syntheticsPrivateLocations` | `synthetics_read` |
-| `datadog.logIndexes` | `logs_read_index_data` |
-| `datadog.logsArchives` | `logs_read_archives` |
-| `datadog.securityRules` | `security_monitoring_rules_read` |
-| `datadog.securityFilters` | `security_monitoring_filters_read` |
-| `datadog.securitySuppressions` | `security_monitoring_suppressions_read` |
-| `datadog.sensitiveDataScannerGroups` | `data_scanner_read` |
-| `datadog.apiKeys` | `api_keys_read` |
-| `datadog.applicationKeys` | `user_app_keys` |
-| `datadog.ipAllowlistEntries` / `ipAllowlistEnabled` | `org_management` |
-| `datadog.integrationAwsAccounts` | `aws_configuration_read` |
-| `datadog.teams` | `teams_read` |
-| `datadog.rumApplications` | `rum_apps_read` |
-
-> **Tip**: For full access to all resources, use an unscoped Application Key (it inherits all permissions from its creator). Scoped keys are recommended for production use to follow least-privilege principles.
-
-> **Note**: Some resources require your Datadog plan to include the corresponding product. If the feature is not enabled, the API returns 403 Forbidden regardless of your key's permissions. The provider handles this gracefully by returning an empty list and logging a warning.
-
-### Plan-Gated Resources
-
-The following resources require specific Datadog products to be enabled in your organization:
-
-| Resource | Required Product |
-|---|---|
-| `datadog.securityRules` | Cloud SIEM |
-| `datadog.securityFilters` | Cloud SIEM |
-| `datadog.securitySuppressions` | Cloud SIEM |
-| `datadog.sensitiveDataScannerGroups` | Sensitive Data Scanner |
-
-To check which products are enabled, go to **Datadog > Organization Settings > Subscription** or contact your Datadog account representative.
-
 ## Examples
 
 **List all users**
@@ -144,3 +96,51 @@ mql> datadog.teams { name handle userCount }
 ```shell
 mql> datadog.logsArchives { name query state destinationType }
 ```
+
+## Required Permissions
+
+By default, an unscoped Application Key inherits all permissions of the user who created it. For production use, Datadog supports [scoped Application Keys](https://docs.datadoghq.com/account_management/api-app-keys/) that restrict access to specific RBAC permissions.
+
+The table below lists the Datadog RBAC permission each resource requires. These are the same permission names shown in **Datadog > Organization Settings > Roles**.
+
+| Resource | Required RBAC Permission |
+|---|---|
+| `datadog.users` | `user_access_invite` |
+| `datadog.roles` | `user_access_invite` |
+| `datadog.serviceAccounts` | `user_access_invite` |
+| `datadog.monitors` | `monitors_read` |
+| `datadog.dashboards` | `dashboards_read` |
+| `datadog.slos` | `slos_read` |
+| `datadog.downtimes` | `monitors_downtime` |
+| `datadog.syntheticsTests` | `synthetics_read` |
+| `datadog.syntheticsGlobalVariables` | `synthetics_read` |
+| `datadog.syntheticsPrivateLocations` | `synthetics_read` |
+| `datadog.logIndexes` | `logs_read_index_data` |
+| `datadog.logsArchives` | `logs_read_archives` |
+| `datadog.securityRules` | `security_monitoring_rules_read` |
+| `datadog.securityFilters` | `security_monitoring_filters_read` |
+| `datadog.securitySuppressions` | `security_monitoring_suppressions_read` |
+| `datadog.sensitiveDataScannerGroups` | `data_scanner_read` |
+| `datadog.apiKeys` | `api_keys_read` |
+| `datadog.applicationKeys` | `user_app_keys` |
+| `datadog.ipAllowlistEntries` / `ipAllowlistEnabled` | `org_management` |
+| `datadog.integrationAwsAccounts` | `aws_configuration_read` |
+| `datadog.teams` | `teams_read` |
+| `datadog.rumApplications` | `rum_apps_read` |
+
+> **Tip**: For full access to all resources, use an unscoped Application Key (it inherits all permissions from its creator). Scoped keys are recommended for production use to follow least-privilege principles.
+
+> **Note**: Some resources require your Datadog plan to include the corresponding product. If the feature is not enabled, the API returns 403 Forbidden regardless of your key's permissions. The provider handles this gracefully by returning an empty list and logging a warning.
+
+### Plan-Gated Resources
+
+The following resources require specific Datadog products to be enabled in your organization:
+
+| Resource | Required Product |
+|---|---|
+| `datadog.securityRules` | Cloud SIEM |
+| `datadog.securityFilters` | Cloud SIEM |
+| `datadog.securitySuppressions` | Cloud SIEM |
+| `datadog.sensitiveDataScannerGroups` | Sensitive Data Scanner |
+
+To check which products are enabled, go to **Datadog > Organization Settings > Subscription** or contact your Datadog account representative.

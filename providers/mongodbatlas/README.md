@@ -26,7 +26,7 @@ A public/private API key pair (HTTP Digest). Grant the key organization
 read-only access to audit the whole organization.
 
 ```shell
-cnspec shell mongodbatlas \
+mql shell mongodbatlas \
   --org-id <org-id> \
   --public-key <public-key> \
   --private-key <private-key>
@@ -35,7 +35,7 @@ cnspec shell mongodbatlas \
 ### Service account (OAuth2)
 
 ```shell
-cnspec shell mongodbatlas \
+mql shell mongodbatlas \
   --org-id <org-id> \
   --client-id <client-id> \
   --client-secret <client-secret>
@@ -58,13 +58,13 @@ Discovery is controlled with `--discover`:
 - `auto` / `all` (default) discovers every project.
 - `projects` is the explicit project target.
 
-## Example queries
+## Examples
 
 Organization plane:
 
 ```shell
 # Organizations that do not require multi-factor authentication
-cnspec shell mongodbatlas --org-id <id> --public-key <pub> --private-key <priv> \
+mql shell mongodbatlas --org-id <id> --public-key <pub> --private-key <priv> \
   -c "mongodbatlas.multiFactorAuthRequired"
 
 # API keys and their roles

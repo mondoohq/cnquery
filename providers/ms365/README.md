@@ -20,7 +20,7 @@ brew install --cask powershell
 ### Linux
 Please refer to the [documentation](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux) based on your distribution.
 
-## Authenticating
+## Authentication
 You will need to provide your app's client and tenant id as well certificate.
 ```
 export MS365_CLIENT_ID='your-client-id'
