@@ -28,53 +28,32 @@ func (o *mqlOciNetwork) id() (string, error) {
 func (o *mqlOciNetwork) vcns() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociRunRegionPool(o.getVcns(conn))
-}
-
-func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.Vcn, error) {
-	vcns := []core.Vcn{}
-	var page *string
-	for {
-		request := core.ListVcnsRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := networkClient.ListVcns(ctx, request)
-		if err != nil {
-			return nil, err
-		}
-
-		vcns = append(vcns, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
-	}
-
-	return vcns, nil
-}
-
-func (o *mqlOciNetwork) getVcns(conn *connection.OciConnection) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
 	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
+		return nil, err
 	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", *region.RegionKey)
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
 
-			svc, err := conn.NetworkClient(*region.RegionKey)
+	// ListVcns takes one compartment and has no subtree flag, so asking only for
+	// the tenancy root returned an empty VCN list for anyone who keeps their
+	// networking in a child compartment. Walking the compartment tree is what
+	// makes the whole network graph, subnets and route tables and gateways
+	// included, hang off something that actually exists.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
+
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []any
-			vcns, err := o.getVcnsForRegion(ctx, svc, conn.TenantID())
+			vcns, err := o.getVcnsForRegion(ctx, svc, compartmentID)
 			if err != nil {
 				return nil, err
 			}
@@ -119,11 +98,34 @@ func (o *mqlOciNetwork) getVcns(conn *connection.OciConnection) []*jobpool.Job {
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.Vcn, error) {
+	vcns := []core.Vcn{}
+	var page *string
+	for {
+		request := core.ListVcnsRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := networkClient.ListVcns(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		vcns = append(vcns, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+
+		page = response.OpcNextPage
 	}
-	return tasks
+
+	return vcns, nil
 }
 
 func initOciNetworkVcn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -164,95 +166,32 @@ func (o *mqlOciNetworkVcn) id() (string, error) {
 func (o *mqlOciNetwork) securityLists() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociRunRegionPool(o.getSecurityLists(conn))
-}
-
-func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.SecurityList, error) {
-	securityLists := []core.SecurityList{}
-	var page *string
-	for {
-		request := core.ListSecurityListsRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := networkClient.ListSecurityLists(ctx, request)
-		if err != nil {
-			return nil, err
-		}
-
-		securityLists = append(securityLists, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
-	}
-
-	return securityLists, nil
-}
-
-// OCI VCN SecurityList egress rule for allowing outbound IP packets
-type egressSecurityRule struct {
-	// Description of egress rule
-	Description string `json:"description,omitempty"`
-	// Indicates if this is a stateless rule. No omitempty: a stateful rule
-	// must emit `stateless: false`, not drop the key entirely.
-	Stateless bool `json:"stateless"`
-	// Transport protocol, follows http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-	Protocol string `json:"protocol,omitempty"`
-	// Range of allowed IP addresses
-	Destination string `json:"destination,omitempty"`
-	// Type of destination
-	DestinationType string `json:"destinationType,omitempty"`
-	// TCP options
-	TcpOptions *core.TcpOptions `json:"tcpOptions,omitempty"`
-	// Udp options
-	UdpOptions *core.UdpOptions `json:"udpOptions,omitempty"`
-	// Icmp options
-	IcmpOptions *core.IcmpOptions `json:"icmpOptions,omitempty"`
-}
-
-// OCI VCN SecurityList Ingress rule for allowing inbound IP packets
-type ingressSecurityRule struct {
-	// Description of ingress rule
-	Description string `json:"description,omitempty"`
-	// Indicates if this is a stateless rule. No omitempty: a stateful rule
-	// must emit `stateless: false`, not drop the key entirely.
-	Stateless bool `json:"stateless"`
-	// Transport protocol, follows http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-	Protocol string `json:"protocol,omitempty"`
-	// Range of allowed IP addresses
-	Source string `json:"source,omitempty"`
-	// Type of source
-	SourceType string `json:"sourceType,omitempty"`
-	// TCP options
-	TcpOptions *core.TcpOptions `json:"tcpOptions,omitempty"`
-	// Udp options
-	UdpOptions *core.UdpOptions `json:"udpOptions,omitempty"`
-	// Icmp options
-	IcmpOptions *core.IcmpOptions `json:"icmpOptions,omitempty"`
-}
-
-func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
 	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
+		return nil, err
 	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", *region.RegionKey)
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
 
-			svc, err := conn.NetworkClient(*region.RegionKey)
+	// Security lists live in the same compartment as the VCN they protect, and
+	// ListSecurityLists cannot search below the compartment it is given. Scanning
+	// only the tenancy root therefore reported a tenancy with no ingress rules
+	// anywhere, which reads as "nothing is exposed" when the truth is that
+	// nothing was looked at.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
+
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []any
-			securityLists, err := o.getSecurityListsForRegion(ctx, svc, conn.TenantID())
+			securityLists, err := o.getSecurityListsForRegion(ctx, svc, compartmentID)
 			if err != nil {
 				return nil, err
 			}
@@ -330,15 +269,80 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 				}
 				sl := mqlInstance.(*mqlOciNetworkSecurityList)
 				sl.cacheVcnId = stringValue(securityList.VcnId)
-				sl.cacheRegion = stringValue(region.RegionKey)
+				sl.cacheRegion = region
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.SecurityList, error) {
+	securityLists := []core.SecurityList{}
+	var page *string
+	for {
+		request := core.ListSecurityListsRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := networkClient.ListSecurityLists(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		securityLists = append(securityLists, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+
+		page = response.OpcNextPage
 	}
-	return tasks
+
+	return securityLists, nil
+}
+
+// OCI VCN SecurityList egress rule for allowing outbound IP packets
+type egressSecurityRule struct {
+	// Description of egress rule
+	Description string `json:"description,omitempty"`
+	// Indicates if this is a stateless rule. No omitempty: a stateful rule
+	// must emit `stateless: false`, not drop the key entirely.
+	Stateless bool `json:"stateless"`
+	// Transport protocol, follows http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+	Protocol string `json:"protocol,omitempty"`
+	// Range of allowed IP addresses
+	Destination string `json:"destination,omitempty"`
+	// Type of destination
+	DestinationType string `json:"destinationType,omitempty"`
+	// TCP options
+	TcpOptions *core.TcpOptions `json:"tcpOptions,omitempty"`
+	// Udp options
+	UdpOptions *core.UdpOptions `json:"udpOptions,omitempty"`
+	// Icmp options
+	IcmpOptions *core.IcmpOptions `json:"icmpOptions,omitempty"`
+}
+
+// OCI VCN SecurityList Ingress rule for allowing inbound IP packets
+type ingressSecurityRule struct {
+	// Description of ingress rule
+	Description string `json:"description,omitempty"`
+	// Indicates if this is a stateless rule. No omitempty: a stateful rule
+	// must emit `stateless: false`, not drop the key entirely.
+	Stateless bool `json:"stateless"`
+	// Transport protocol, follows http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+	Protocol string `json:"protocol,omitempty"`
+	// Range of allowed IP addresses
+	Source string `json:"source,omitempty"`
+	// Type of source
+	SourceType string `json:"sourceType,omitempty"`
+	// TCP options
+	TcpOptions *core.TcpOptions `json:"tcpOptions,omitempty"`
+	// Udp options
+	UdpOptions *core.UdpOptions `json:"udpOptions,omitempty"`
+	// Icmp options
+	IcmpOptions *core.IcmpOptions `json:"icmpOptions,omitempty"`
 }
 
 type mqlOciNetworkSecurityListInternal struct {
@@ -463,21 +467,16 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getSubnets(conn, list.Data))
-}
+	// Fanned out over the compartment tree, not just the tenancy root. The core
+	// list APIs have no subtree flag, so listing the root alone reported no
+	// subnets at all for any tenancy that groups its networking into child
+	// compartments - and left every typed reference to a subnet (load balancer
+	// exposure, database placement, stream pool networking) unable to resolve.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci subnets with region %s", region)
 
-func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci subnets with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -486,7 +485,7 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 			var page *string
 			for {
 				response, err := svc.ListSubnets(ctx, core.ListSubnetsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -545,11 +544,8 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 				res = append(res, mqlSub)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciNetworkSubnetInternal struct {
@@ -620,53 +616,22 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getNetworkSecurityGroups(conn, list.Data))
-}
+	// Network security groups are attached to VNICs that almost never live in the
+	// tenancy root, and ListNetworkSecurityGroups takes a single compartment with
+	// no way to descend. Enumerating per compartment is what lets an instance's
+	// nsgs resolve at all, instead of coming back empty and making every host
+	// look unprotected.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci NSGs with region %s", region)
 
-func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.NetworkSecurityGroup, error) {
-	nsgs := []core.NetworkSecurityGroup{}
-	var page *string
-	for {
-		request := core.ListNetworkSecurityGroupsRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := networkClient.ListNetworkSecurityGroups(ctx, request)
-		if err != nil {
-			return nil, err
-		}
-
-		nsgs = append(nsgs, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
-	}
-
-	return nsgs, nil
-}
-
-func (o *mqlOciNetwork) getNetworkSecurityGroups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci NSGs with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []any
-			nsgs, err := o.getNSGsForRegion(ctx, svc, conn.TenantID())
+			nsgs, err := o.getNSGsForRegion(ctx, svc, compartmentID)
 			if err != nil {
 				return nil, err
 			}
@@ -702,16 +667,39 @@ func (o *mqlOciNetwork) getNetworkSecurityGroups(conn *connection.OciConnection,
 					return nil, err
 				}
 				mqlNsg := mqlInstance.(*mqlOciNetworkNetworkSecurityGroup)
-				mqlNsg.region = regionResource.Id.Data
+				mqlNsg.region = region
 				mqlNsg.cacheVcnId = stringValue(nsg.VcnId)
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.NetworkSecurityGroup, error) {
+	nsgs := []core.NetworkSecurityGroup{}
+	var page *string
+	for {
+		request := core.ListNetworkSecurityGroupsRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := networkClient.ListNetworkSecurityGroups(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		nsgs = append(nsgs, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+
+		page = response.OpcNextPage
 	}
-	return tasks
+
+	return nsgs, nil
 }
 
 type mqlOciNetworkNetworkSecurityGroupInternal struct {
@@ -1316,21 +1304,16 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getRouteTables(conn, list.Data))
-}
+	// A route table is created alongside the VCN it belongs to, so a tenancy that
+	// puts its VCNs in child compartments has no route tables in the root at all.
+	// ListRouteTables offers no subtree search, so the fan-out below is the only
+	// way a subnet's routeTable reference finds its target and egress paths stay
+	// auditable.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci route tables with region %s", region)
 
-func (o *mqlOciNetwork) getRouteTables(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci route tables with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -1339,7 +1322,7 @@ func (o *mqlOciNetwork) getRouteTables(conn *connection.OciConnection, regions [
 			var page *string
 			for {
 				response, err := svc.ListRouteTables(ctx, core.ListRouteTablesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1407,11 +1390,8 @@ func (o *mqlOciNetwork) getRouteTables(conn *connection.OciConnection, regions [
 				res = append(res, mqlRt)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciNetworkRouteTableInternal struct {

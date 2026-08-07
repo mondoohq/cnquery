@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -36,21 +35,16 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getSecrets(conn, list.Data))
-}
+	// Secrets sit in the compartment of the application that consumes them, and
+	// ListSecrets accepts one compartment with no recursion. Asking only about
+	// the tenancy root left rotation status, expiry, and auto-generation checks
+	// with nothing to evaluate, which looked like a tenancy with no secrets
+	// rather than a scan that never reached them.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci vault secrets with region %s", region)
 
-func (o *mqlOciVault) getSecrets(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci vault secrets with region %s", regionResource.Id.Data)
-
-			svc, err := conn.VaultsClient(regionResource.Id.Data)
+			svc, err := conn.VaultsClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -59,7 +53,7 @@ func (o *mqlOciVault) getSecrets(conn *connection.OciConnection, regions []any) 
 			var page *string
 			for {
 				response, err := svc.ListSecrets(ctx, vault.ListSecretsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -121,7 +115,7 @@ func (o *mqlOciVault) getSecrets(conn *connection.OciConnection, regions []any) 
 				mqlS := mqlInstance.(*mqlOciVaultSecret)
 				mqlS.cacheKeyId = stringValue(s.KeyId)
 				mqlS.cacheVaultId = stringValue(s.VaultId)
-				mqlS.cacheRegion = regionResource.Id.Data
+				mqlS.cacheRegion = region
 				if s.RotationConfig != nil {
 					mqlS.cacheRotationInterval = stringValue(s.RotationConfig.RotationInterval)
 					mqlS.cacheIsScheduledRotationEnabled = s.RotationConfig.IsScheduledRotationEnabled
@@ -133,11 +127,8 @@ func (o *mqlOciVault) getSecrets(conn *connection.OciConnection, regions []any) 
 				res = append(res, mqlS)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciVaultSecretInternal struct {

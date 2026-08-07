@@ -37,21 +37,15 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 		return nil, list.Error
 	}
 
-	return ociRunRegionPool(o.getCertificates(conn, list.Data))
-}
+	// Certificates are issued into the compartment of the load balancer or
+	// gateway that terminates TLS, and ListCertificates cannot look below the
+	// compartment it is given. A root-only listing reported no certificates at
+	// all, so expiry and renewal checks silently had nothing to inspect.
+	return ociRunCompartmentRegionPool(conn, list.Data,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci certificates with region %s", region)
 
-func (o *mqlOciCertificates) getCertificates(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci certificates with region %s", regionResource.Id.Data)
-
-			svc, err := conn.CertificatesManagementClient(regionResource.Id.Data)
+			svc, err := conn.CertificatesManagementClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -60,7 +54,7 @@ func (o *mqlOciCertificates) getCertificates(conn *connection.OciConnection, reg
 			var page *string
 			for {
 				response, err := svc.ListCertificates(ctx, certificatesmanagement.ListCertificatesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -145,11 +139,8 @@ func (o *mqlOciCertificates) getCertificates(conn *connection.OciConnection, reg
 				mqlCert.cacheIssuerCaId = stringValue(c.IssuerCertificateAuthorityId)
 				res = append(res, mqlCert)
 			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciCertificatesCertificateInternal struct {
