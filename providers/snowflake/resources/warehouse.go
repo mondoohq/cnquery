@@ -71,6 +71,25 @@ func snowflakeWarehouseByName(runtime *plugin.Runtime, name string) (*mqlSnowfla
 	return nil, nil
 }
 
+// resolveWarehouseRef resolves a warehouse name to its warehouse, reporting the
+// reference as null when the name is empty or the warehouse is not one the
+// caller can list, rather than failing the surrounding query.
+func resolveWarehouseRef(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlSnowflakeWarehouse]) (*mqlSnowflakeWarehouse, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	wh, err := snowflakeWarehouseByName(runtime, name)
+	if err != nil {
+		return nil, err
+	}
+	if wh == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return wh, nil
+}
+
 func (r *mqlSnowflakeAccount) warehouses() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
