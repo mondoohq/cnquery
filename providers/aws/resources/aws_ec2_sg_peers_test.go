@@ -65,3 +65,23 @@ func TestPeerIsResolvable(t *testing.T) {
 		})
 	}
 }
+
+// initAwsVpcPeeringConnection treats region as a required lookup hint and
+// returns without fetching when it is absent, leaving a blank resource whose
+// fields are unset rather than null. That failure is invisible from the
+// accessor's side, so pin the argument set the accessor sends.
+//
+// The inits in this provider do not take a uniform argument set
+// (initAwsEc2Instance accepts only arn, initAwsVpc accepts arn or id), which is
+// what makes an omitted argument easy to ship.
+func TestPeeringConnectionLookupArgsIncludeRegion(t *testing.T) {
+	peer := &mqlAwsEc2SecuritygroupIppermissionPeer{}
+	peer.cachePeeringConnectionId = "pcx-abc"
+	peer.cacheRegion = "us-east-1"
+
+	args := peeringConnectionLookupArgs(peer.cachePeeringConnectionId, peer.cacheRegion)
+
+	assert.Equal(t, "pcx-abc", args["id"].Value)
+	assert.Equal(t, "us-east-1", args["region"].Value,
+		"region must be sent or the init falls through and builds a blank resource")
+}

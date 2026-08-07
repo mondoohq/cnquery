@@ -19921,7 +19921,11 @@ private aws.ec2.securitygroup.ippermission.peer @defaults("groupId accountId pee
   // here means the group was not resolvable, never that the rule does not
   // reference one.
   securityGroup() aws.ec2.securitygroup
-  // VPC of the referenced security group, when the reference crosses a peering connection
+  // VPC of the referenced security group
+  //
+  // Returned by AWS only when the reference crosses a VPC peering connection,
+  // since within one VPC the VPC is the rule's own. Null when the referenced
+  // group belongs to another account, whose VPC is not readable here.
   vpc() aws.vpc
   // VPC peering connection the reference crosses
   //

@@ -103,8 +103,15 @@ func (a *mqlAwsEc2SecuritygroupIppermissionPeer) securityGroup() (*mqlAwsEc2Secu
 // vpc resolves the VPC of the referenced group. AWS returns it only when the
 // reference crosses a peering connection; within one VPC the field is empty
 // because the VPC is the rule's own.
+//
+// Resolution is limited to the scanned account. initAwsVpc falls back to
+// scanning the cached VPC list and returns an error when it finds no match, so
+// a VPC on the far side of a cross-account peering would fail the query rather
+// than come back empty. Same-account peering, including across regions, still
+// resolves: the fallback searches every listed region.
 func (a *mqlAwsEc2SecuritygroupIppermissionPeer) vpc() (*mqlAwsVpc, error) {
-	if a.cacheVpcId == "" {
+	crossAccount := a.cacheAccountId != "" && a.cacheAccountId != a.cacheScanningAccountId
+	if a.cacheVpcId == "" || crossAccount {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -117,15 +124,32 @@ func (a *mqlAwsEc2SecuritygroupIppermissionPeer) vpc() (*mqlAwsVpc, error) {
 }
 
 // peeringConnection resolves the peering connection the reference crosses.
+//
+// The region is a required lookup hint, not a schema field:
+// initAwsVpcPeeringConnection returns without fetching when it is missing,
+// which would leave a blank resource whose fields are unset rather than null.
+// The rule's own region is the right hint because the peering connection is
+// visible from both sides, so it exists in this account's region even when the
+// referenced group belongs to another account.
 func (a *mqlAwsEc2SecuritygroupIppermissionPeer) peeringConnection() (*mqlAwsVpcPeeringConnection, error) {
 	if a.cachePeeringConnectionId == "" {
 		a.PeeringConnection.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "aws.vpc.peeringConnection",
-		map[string]*llx.RawData{"id": llx.StringData(a.cachePeeringConnectionId)})
+		peeringConnectionLookupArgs(a.cachePeeringConnectionId, a.cacheRegion))
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlAwsVpcPeeringConnection), nil
+}
+
+// peeringConnectionLookupArgs builds the argument set initAwsVpcPeeringConnection
+// needs. Both keys are required: without region the init returns early and the
+// runtime builds a blank resource instead of fetching.
+func peeringConnectionLookupArgs(peeringConnectionID, region string) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"id":     llx.StringData(peeringConnectionID),
+		"region": llx.StringData(region),
+	}
 }
