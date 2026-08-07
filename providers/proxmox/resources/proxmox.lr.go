@@ -27,6 +27,7 @@ const (
 	ResourceProxmoxVmSnapshot                 string = "proxmox.vm.snapshot"
 	ResourceProxmoxVmUpdate                   string = "proxmox.vm.update"
 	ResourceProxmoxStorage                    string = "proxmox.storage"
+	ResourceProxmoxStorageVolume              string = "proxmox.storage.volume"
 	ResourceProxmoxPool                       string = "proxmox.pool"
 	ResourceProxmoxNetwork                    string = "proxmox.network"
 	ResourceProxmoxDns                        string = "proxmox.dns"
@@ -123,6 +124,10 @@ func init() {
 		"proxmox.storage": {
 			Init:   initProxmoxStorage,
 			Create: createProxmoxStorage,
+		},
+		"proxmox.storage.volume": {
+			// to override args, implement: initProxmoxStorageVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxStorageVolume,
 		},
 		"proxmox.pool": {
 			// to override args, implement: initProxmoxPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -779,6 +784,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.vm.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetAliases()).ToDataRes(types.Array(types.Resource("proxmox.firewall.alias")))
 	},
+	"proxmox.vm.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetBackups()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.vm.lastBackupAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetLastBackupAt()).ToDataRes(types.Time)
+	},
 	"proxmox.vm.updates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetUpdates()).ToDataRes(types.Array(types.Resource("proxmox.vm.update")))
 	},
@@ -889,6 +900,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.storage.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxStorage).GetEncryptionKey()).ToDataRes(types.String)
+	},
+	"proxmox.storage.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetNodes()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetVolumes()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.storage.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetBackups()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.storage.volume.volid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVolid()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.storage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetStorage()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetNode()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetContentType()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetFormat()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetSize()).ToDataRes(types.Int)
+	},
+	"proxmox.storage.volume.used": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetUsed()).ToDataRes(types.Int)
+	},
+	"proxmox.storage.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"proxmox.storage.volume.vm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVm()).ToDataRes(types.Resource("proxmox.vm"))
+	},
+	"proxmox.storage.volume.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetContainer()).ToDataRes(types.Resource("proxmox.container"))
+	},
+	"proxmox.storage.volume.vmid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVmid()).ToDataRes(types.Int)
+	},
+	"proxmox.storage.volume.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"proxmox.storage.volume.encryptionFingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetEncryptionFingerprint()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.protected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetProtected()).ToDataRes(types.Bool)
+	},
+	"proxmox.storage.volume.verification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetVerification()).ToDataRes(types.Dict)
+	},
+	"proxmox.storage.volume.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetNotes()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetParent()).ToDataRes(types.String)
 	},
 	"proxmox.pool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxPool).GetId()).ToDataRes(types.String)
@@ -1390,6 +1461,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.container.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetAliases()).ToDataRes(types.Array(types.Resource("proxmox.firewall.alias")))
+	},
+	"proxmox.container.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetBackups()).ToDataRes(types.Array(types.Resource("proxmox.storage.volume")))
+	},
+	"proxmox.container.lastBackupAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetLastBackupAt()).ToDataRes(types.Time)
 	},
 	"proxmox.container.network.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainerNetwork).GetId()).ToDataRes(types.String)
@@ -2732,6 +2809,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxVm).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"proxmox.vm.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.lastBackupAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).LastBackupAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"proxmox.vm.updates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVm).Updates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2898,6 +2983,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.storage.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxStorage).EncryptionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Nodes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.storage.volume.volid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Volid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.storage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Storage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Node, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.used": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Used, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.vm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Vm, ok = plugin.RawToTValue[*mqlProxmoxVm](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Container, ok = plugin.RawToTValue[*mqlProxmoxContainer](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.vmid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Vmid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.encryptionFingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).EncryptionFingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.protected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.verification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Verification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"proxmox.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3642,6 +3811,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.container.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxContainer).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.lastBackupAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).LastBackupAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"proxmox.container.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6060,6 +6237,8 @@ type mqlProxmoxVm struct {
 	FirewallOptions plugin.TValue[*mqlProxmoxFirewallOptions]
 	Ipsets          plugin.TValue[[]any]
 	Aliases         plugin.TValue[[]any]
+	Backups         plugin.TValue[[]any]
+	LastBackupAt    plugin.TValue[*time.Time]
 	Updates         plugin.TValue[[]any]
 }
 
@@ -6454,6 +6633,28 @@ func (c *mqlProxmoxVm) GetAliases() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlProxmoxVm) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlProxmoxVm) GetLastBackupAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastBackupAt, func() (*time.Time, error) {
+		return c.lastBackupAt()
+	})
+}
+
 func (c *mqlProxmoxVm) GetUpdates() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Updates, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -6775,6 +6976,9 @@ type mqlProxmoxStorage struct {
 	UsagePercent  plugin.TValue[float64]
 	Encrypted     plugin.TValue[bool]
 	EncryptionKey plugin.TValue[string]
+	Nodes         plugin.TValue[string]
+	Volumes       plugin.TValue[[]any]
+	Backups       plugin.TValue[[]any]
 }
 
 // createProxmoxStorage creates a new instance of this resource
@@ -6860,6 +7064,190 @@ func (c *mqlProxmoxStorage) GetEncrypted() *plugin.TValue[bool] {
 
 func (c *mqlProxmoxStorage) GetEncryptionKey() *plugin.TValue[string] {
 	return &c.EncryptionKey
+}
+
+func (c *mqlProxmoxStorage) GetNodes() *plugin.TValue[string] {
+	return &c.Nodes
+}
+
+func (c *mqlProxmoxStorage) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+func (c *mqlProxmoxStorage) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlProxmoxStorageVolume for the proxmox.storage.volume resource
+type mqlProxmoxStorageVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlProxmoxStorageVolumeInternal
+	Volid                 plugin.TValue[string]
+	Storage               plugin.TValue[string]
+	Node                  plugin.TValue[string]
+	ContentType           plugin.TValue[string]
+	Format                plugin.TValue[string]
+	Size                  plugin.TValue[int64]
+	Used                  plugin.TValue[int64]
+	CreatedAt             plugin.TValue[*time.Time]
+	Vm                    plugin.TValue[*mqlProxmoxVm]
+	Container             plugin.TValue[*mqlProxmoxContainer]
+	Vmid                  plugin.TValue[int64]
+	Encrypted             plugin.TValue[bool]
+	EncryptionFingerprint plugin.TValue[string]
+	Protected             plugin.TValue[bool]
+	Verification          plugin.TValue[any]
+	Notes                 plugin.TValue[string]
+	Parent                plugin.TValue[string]
+}
+
+// createProxmoxStorageVolume creates a new instance of this resource
+func createProxmoxStorageVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxStorageVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.storage.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxStorageVolume) MqlName() string {
+	return "proxmox.storage.volume"
+}
+
+func (c *mqlProxmoxStorageVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxStorageVolume) GetVolid() *plugin.TValue[string] {
+	return &c.Volid
+}
+
+func (c *mqlProxmoxStorageVolume) GetStorage() *plugin.TValue[string] {
+	return &c.Storage
+}
+
+func (c *mqlProxmoxStorageVolume) GetNode() *plugin.TValue[string] {
+	return &c.Node
+}
+
+func (c *mqlProxmoxStorageVolume) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlProxmoxStorageVolume) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlProxmoxStorageVolume) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlProxmoxStorageVolume) GetUsed() *plugin.TValue[int64] {
+	return &c.Used
+}
+
+func (c *mqlProxmoxStorageVolume) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlProxmoxStorageVolume) GetVm() *plugin.TValue[*mqlProxmoxVm] {
+	return plugin.GetOrCompute[*mqlProxmoxVm](&c.Vm, func() (*mqlProxmoxVm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage.volume", c.__id, "vm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxVm), nil
+			}
+		}
+
+		return c.vm()
+	})
+}
+
+func (c *mqlProxmoxStorageVolume) GetContainer() *plugin.TValue[*mqlProxmoxContainer] {
+	return plugin.GetOrCompute[*mqlProxmoxContainer](&c.Container, func() (*mqlProxmoxContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage.volume", c.__id, "container")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxContainer), nil
+			}
+		}
+
+		return c.container()
+	})
+}
+
+func (c *mqlProxmoxStorageVolume) GetVmid() *plugin.TValue[int64] {
+	return &c.Vmid
+}
+
+func (c *mqlProxmoxStorageVolume) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlProxmoxStorageVolume) GetEncryptionFingerprint() *plugin.TValue[string] {
+	return &c.EncryptionFingerprint
+}
+
+func (c *mqlProxmoxStorageVolume) GetProtected() *plugin.TValue[bool] {
+	return &c.Protected
+}
+
+func (c *mqlProxmoxStorageVolume) GetVerification() *plugin.TValue[any] {
+	return &c.Verification
+}
+
+func (c *mqlProxmoxStorageVolume) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlProxmoxStorageVolume) GetParent() *plugin.TValue[string] {
+	return &c.Parent
 }
 
 // mqlProxmoxPool for the proxmox.pool resource
@@ -8408,6 +8796,8 @@ type mqlProxmoxContainer struct {
 	FirewallOptions    plugin.TValue[*mqlProxmoxFirewallOptions]
 	Ipsets             plugin.TValue[[]any]
 	Aliases            plugin.TValue[[]any]
+	Backups            plugin.TValue[[]any]
+	LastBackupAt       plugin.TValue[*time.Time]
 }
 
 // createProxmoxContainer creates a new instance of this resource
@@ -8748,6 +9138,28 @@ func (c *mqlProxmoxContainer) GetAliases() *plugin.TValue[[]any] {
 		}
 
 		return c.aliases()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.container", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetLastBackupAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastBackupAt, func() (*time.Time, error) {
+		return c.lastBackupAt()
 	})
 }
 

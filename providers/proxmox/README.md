@@ -65,6 +65,18 @@ proxmox.ceph.osds.where(status != "up" || inCluster == false) { id host status d
 
 # Confirm Ceph authentication has not been turned off
 proxmox.ceph.config.where(name == /^auth_.*_required$/) { section name value }
+
+# Guests that have never been backed up
+proxmox.vms.where(backups.length == 0) { id name }
+
+# When each guest was last actually captured
+proxmox.vms { name lastBackupAt }
+
+# Backups that are not protected from pruning
+proxmox.storages { backups.where(protected == false) { volid createdAt } }
+
+# Proxmox Backup Server archives that failed or skipped verification
+proxmox.storages { backups.where(verification['state'] != "ok") { volid createdAt } }
 ```
 
 On clusters without Ceph, `proxmox.ceph.available` is `false` and every Ceph
@@ -105,6 +117,7 @@ list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
 | `proxmox.ceph.pool`         | Ceph pool and its replication settings              |
 | `proxmox.ceph.filesystem`   | CephFS file system                                  |
 | `proxmox.ceph.configEntry`  | Entry in the Ceph configuration database            |
+| `proxmox.storage.volume`    | Volume on a storage: backup, ISO, template, or disk |
 
 ## Features
 
@@ -114,6 +127,7 @@ list is empty. Reading these fields needs `Sys.Audit` or `Datastore.Audit` on
 - **Updates**: Package update checks via QEMU Guest Agent (apt, dnf, Windows) and node APT
 - **Storage**: Storage pools with capacity monitoring
 - **Ceph**: Cluster health, monitors, managers, metadata servers, OSDs, pools, CephFS, and the Ceph config database
+- **Backups**: Backup archives actually present on each storage, with creation time, encryption, protection, and PBS verification state
 - **Access Control**: Users, API tokens, roles and privileges
 - **Firewall**: Rules at cluster, node, and VM level
 
