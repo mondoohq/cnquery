@@ -23,8 +23,8 @@ type armSecurityConn struct {
 	token          azcore.TokenCredential
 }
 
-func (a armSecurityConn) GetToken() (azcore.AccessToken, error) {
-	return a.token.GetToken(context.Background(), policy.TokenRequestOptions{
+func (a armSecurityConn) GetToken(ctx context.Context) (azcore.AccessToken, error) {
+	return a.token.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{"https://management.core.windows.net//.default"},
 	})
 }

@@ -782,7 +782,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateEndpointConnecti
 		next = *resp.NextLink
 	}
 	if next != "" {
-		err = fetchArmPages(ctx, armTokenFunc(ctx, conn), next, "mysql private endpoint connections", func(raw []byte) (string, error) {
+		err = fetchArmPages(ctx, armTokenFunc(conn), next, "mysql private endpoint connections", func(raw []byte) (string, error) {
 			page := flexible.PrivateEndpointConnectionListResult{}
 			if err := json.Unmarshal(raw, &page); err != nil {
 				return "", err

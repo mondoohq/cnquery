@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testToken() (azcore.AccessToken, error) {
+func testToken(context.Context) (azcore.AccessToken, error) {
 	return azcore.AccessToken{Token: "test-token"}, nil
 }
 
@@ -159,7 +159,7 @@ func TestFetchArmPagesPropagatesTokenErrors(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	badToken := func() (azcore.AccessToken, error) {
+	badToken := func(context.Context) (azcore.AccessToken, error) {
 		return azcore.AccessToken{}, assert.AnError
 	}
 	var got []string
@@ -177,4 +177,33 @@ func TestFetchArmPagesHonoursContextCancellation(t *testing.T) {
 
 	var got []string
 	require.Error(t, fetchArmPages(ctx, testToken, srv.URL, "things", collectPages(&got)))
+}
+
+// The per-page token refresh has to run under the walk's context, not one the
+// token getter closed over. A getter that reaches for context.Background()
+// keeps refreshing after the walk is cancelled.
+func TestFetchArmPagesPassesItsContextToTheTokenGetter(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/page1" {
+			fmt.Fprintf(w, `{"value":["a"],"nextLink":%q}`, srv.URL+"/page2")
+			return
+		}
+		fmt.Fprint(w, `{"value":["b"]}`)
+	}))
+	defer srv.Close()
+
+	type ctxKey struct{}
+	ctx := context.WithValue(context.Background(), ctxKey{}, "marker")
+
+	var seen []any
+	recordingToken := func(got context.Context) (azcore.AccessToken, error) {
+		seen = append(seen, got.Value(ctxKey{}))
+		return azcore.AccessToken{Token: "test-token"}, nil
+	}
+
+	var got []string
+	require.NoError(t, fetchArmPages(ctx, recordingToken, srv.URL+"/page1", "things", collectPages(&got)))
+	assert.Equal(t, []string{"a", "b"}, got)
+	assert.Equal(t, []any{"marker", "marker"}, seen, "every page's token refresh must see the walk's context")
 }

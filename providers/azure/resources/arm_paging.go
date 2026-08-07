@@ -42,8 +42,8 @@ var armHTTPClient = &http.Client{Timeout: armHTTPTimeout}
 
 // armTokenFunc adapts a connection's credential to the getter fetchArmPages
 // wants, for callers that are not going through armSecurityConn.
-func armTokenFunc(ctx context.Context, conn *connection.AzureConnection) func() (azcore.AccessToken, error) {
-	return func() (azcore.AccessToken, error) {
+func armTokenFunc(conn *connection.AzureConnection) func(context.Context) (azcore.AccessToken, error) {
+	return func(ctx context.Context) (azcore.AccessToken, error) {
 		return conn.Token().GetToken(ctx, policy.TokenRequestOptions{
 			Scopes: []string{"https://management.core.windows.net//.default"},
 		})
@@ -56,10 +56,11 @@ func armTokenFunc(ctx context.Context, conn *connection.AzureConnection) func() 
 //
 // The token is fetched per page rather than once up front: a walk over a large
 // collection can outlive a bearer token, and the credential caches, so asking
-// again is cheap and only refreshes near expiry.
+// again is cheap and only refreshes near expiry. getToken takes the walk's
+// context so a refresh cannot outlive a cancelled walk.
 func fetchArmPages(
 	ctx context.Context,
-	getToken func() (azcore.AccessToken, error),
+	getToken func(context.Context) (azcore.AccessToken, error),
 	firstURL string,
 	what string,
 	decode func(body []byte) (nextLink string, err error),
@@ -78,7 +79,7 @@ func fetchArmPages(
 		}
 		seen[next] = struct{}{}
 
-		token, err := getToken()
+		token, err := getToken(ctx)
 		if err != nil {
 			return err
 		}
