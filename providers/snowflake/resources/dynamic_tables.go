@@ -64,10 +64,10 @@ func newMqlSnowflakeDynamicTable(runtime *plugin.Runtime, table sdk.DynamicTable
 		"automaticClustering": llx.BoolData(table.AutomaticClustering),
 		"isClone":             llx.BoolData(table.IsClone),
 		"isReplica":           llx.BoolData(table.IsReplica),
-		"lastSuspendedOn":     llx.TimeData(table.LastSuspendedOn),
-		"dataTimestamp":       llx.TimeData(table.DataTimestamp),
+		"lastSuspendedOn":     snowflakeTime(table.LastSuspendedOn),
+		"dataTimestamp":       snowflakeTime(table.DataTimestamp),
 		"comment":             llx.StringData(table.Comment),
-		"createdAt":           llx.TimeData(table.CreatedOn),
+		"createdAt":           snowflakeTime(table.CreatedOn),
 	})
 	if err != nil {
 		return nil, err

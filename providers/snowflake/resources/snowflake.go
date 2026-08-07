@@ -44,6 +44,22 @@ func parseSnowflakeTime(value string) *llx.RawData {
 	return llx.NilData
 }
 
+// snowflakeTime converts a timestamp the SDK exposes as a plain time.Time into
+// time RawData, resolving the zero time to null.
+//
+// Several SHOW responses read nullable timestamp columns into sql.NullTime and
+// only copy the value through when it is valid (for example a dynamic table's
+// last_suspended_on, or an external table's last_refreshed_on). A column that
+// is NULL therefore reaches us as the zero time rather than as an absent value,
+// and rendering it directly would report 0001-01-01T00:00:00Z as though the
+// event had happened at the dawn of the common era.
+func snowflakeTime(value time.Time) *llx.RawData {
+	if value.IsZero() {
+		return llx.NilData
+	}
+	return llx.TimeData(value)
+}
+
 // splitCommaList parses a comma-separated value from Snowflake DESCRIBE output
 // (e.g. STORAGE_ALLOWED_LOCATIONS) into a slice. Snowflake sometimes wraps the
 // list in square brackets, so those are stripped first. Empty entries are

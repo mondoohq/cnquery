@@ -63,10 +63,10 @@ func newMqlSnowflakeExternalTable(runtime *plugin.Runtime, table sdk.ExternalTab
 		"notificationChannel": llx.StringData(table.NotificationChannel),
 		"invalid":             llx.BoolData(table.Invalid),
 		"invalidReason":       llx.StringData(table.InvalidReason),
-		"lastRefreshedOn":     llx.TimeData(table.LastRefreshedOn),
+		"lastRefreshedOn":     snowflakeTime(table.LastRefreshedOn),
 		"lastRefreshDetails":  llx.StringData(table.LastRefreshDetails),
 		"comment":             llx.StringData(table.Comment),
-		"createdAt":           llx.TimeData(table.CreatedOn),
+		"createdAt":           snowflakeTime(table.CreatedOn),
 	})
 	if err != nil {
 		return nil, err

@@ -65,6 +65,33 @@ func TestSnowflakeSchemaObjectID(t *testing.T) {
 	}
 }
 
+func TestSnowflakeTime(t *testing.T) {
+	// A nullable timestamp column reaches us as the zero time, because the SDK
+	// reads it into a sql.NullTime and only copies through a valid value. It
+	// must resolve to null rather than to the year 1.
+	t.Run("zero time is null", func(t *testing.T) {
+		got := snowflakeTime(time.Time{})
+		if got.Type != types.Nil {
+			t.Errorf("snowflakeTime(zero) type = %v, want Nil", got.Type)
+		}
+	})
+
+	t.Run("real time is preserved", func(t *testing.T) {
+		want := time.Date(2023, 1, 2, 15, 4, 5, 0, time.UTC)
+		got := snowflakeTime(want)
+		if got.Type != types.Time {
+			t.Fatalf("snowflakeTime(%v) type = %v, want Time", want, got.Type)
+		}
+		gotTime, ok := got.Value.(*time.Time)
+		if !ok {
+			t.Fatalf("snowflakeTime(%v) value is %T, want *time.Time", want, got.Value)
+		}
+		if !gotTime.Equal(want) {
+			t.Errorf("snowflakeTime(%v) = %v, want %v", want, gotTime, want)
+		}
+	})
+}
+
 func TestParseSnowflakeTime(t *testing.T) {
 	// null cases: empty and unparseable strings must resolve to null, never error.
 	nullCases := []struct {

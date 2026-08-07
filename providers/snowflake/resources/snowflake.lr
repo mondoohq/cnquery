@@ -1762,7 +1762,7 @@ snowflake.externalTable @defaults("name schemaName location") {
   invalid bool
   // Reason the external table is invalid, empty when it is valid
   invalidReason string
-  // Time the external table metadata was last refreshed
+  // Time the external table metadata was last refreshed, null when it has never been refreshed
   lastRefreshedOn time
   // Details of the last refresh, as reported by Snowflake
   lastRefreshDetails string
@@ -1819,9 +1819,9 @@ snowflake.materializedView @defaults("name schemaName isSecure") {
   invalidReason string
   // How far the materialized view trails its source table
   behindBy string
-  // Time the materialized view was last refreshed against its source table
+  // Time the materialized view was last refreshed against its source table, null when it has never been refreshed
   refreshedOn time
-  // Time the materialized view storage was last compacted
+  // Time the materialized view storage was last compacted, null when it has never been compacted
   compactedOn time
   // Name of the budget that tracks spend for the materialized view, empty when no budget is attached
   budget string
@@ -1886,7 +1886,7 @@ snowflake.dynamicTable @defaults("name schemaName targetLag") {
   isReplica bool
   // Time the dynamic table was last suspended, null when it has never been suspended
   lastSuspendedOn time
-  // Timestamp of the source data the current contents reflect
+  // Timestamp of the source data the current contents reflect, null before the first refresh
   dataTimestamp time
   // Comment on the dynamic table
   comment string

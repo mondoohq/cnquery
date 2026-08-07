@@ -53,7 +53,7 @@ func newMqlSnowflakeEventTable(runtime *plugin.Runtime, table sdk.EventTable) (*
 		"schemaName":    llx.StringData(table.SchemaName),
 		"ownerRoleType": llx.StringData(table.OwnerRoleType),
 		"comment":       llx.StringData(table.Comment),
-		"createdAt":     llx.TimeData(table.CreatedOn),
+		"createdAt":     snowflakeTime(table.CreatedOn),
 	})
 	if err != nil {
 		return nil, err
