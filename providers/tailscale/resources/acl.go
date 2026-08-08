@@ -7,14 +7,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"sync"
 	"sync/atomic"
 
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
 	"go.mondoo.com/mql/v13/types"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 // mqlTailscaleAclPolicyInternal caches the raw HuJSON body across `raw()`
@@ -64,6 +65,10 @@ func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, a
 	if err != nil {
 		return nil, err
 	}
+	grants, err := structSliceToDictSlice(acl.Grants)
+	if err != nil {
+		return nil, err
+	}
 	ssh, err := structSliceToDictSlice(acl.SSH)
 	if err != nil {
 		return nil, err
@@ -76,24 +81,37 @@ func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, a
 	if err != nil {
 		return nil, err
 	}
+	attrConfig, err := structMapToDictMap(acl.AttrConfig)
+	if err != nil {
+		return nil, err
+	}
+	derpRegions, omitDefaultDerpRegions, err := flattenDERPMap(acl.DERPMap)
+	if err != nil {
+		return nil, err
+	}
 
 	return CreateResource(runtime, "tailscale.aclPolicy", map[string]*llx.RawData{
-		"tailnet":               llx.StringData(tailnet),
-		"acls":                  llx.ArrayData(acls, types.Dict),
-		"groups":                llx.MapData(stringSliceMapToAny(acl.Groups), types.Array(types.String)),
-		"hosts":                 llx.MapData(stringMapToAny(acl.Hosts), types.String),
-		"tagOwners":             llx.MapData(stringSliceMapToAny(acl.TagOwners), types.Array(types.String)),
-		"ssh":                   llx.ArrayData(ssh, types.Dict),
-		"tests":                 llx.ArrayData(tests, types.Dict),
-		"nodeAttrs":             llx.ArrayData(nodeAttrs, types.Dict),
-		"autoApproverExitNodes": llx.ArrayData(autoApproverExitNodes, types.String),
-		"autoApproverRoutes":    llx.MapData(autoApproverRoutes, types.Array(types.String)),
-		"defaultSourcePosture":  llx.ArrayData(stringSliceToAny(acl.DefaultSourcePosture), types.String),
-		"postures":              llx.MapData(stringSliceMapToAny(acl.Postures), types.Array(types.String)),
-		"disableIPv4":           llx.BoolData(acl.DisableIPv4),
-		"oneCGNATRoute":         llx.StringData(acl.OneCGNATRoute),
-		"randomizeClientPort":   llx.BoolData(acl.RandomizeClientPort),
-		"etag":                  llx.StringData(acl.ETag),
+		"tailnet":                llx.StringData(tailnet),
+		"acls":                   llx.ArrayData(acls, types.Dict),
+		"grants":                 llx.ArrayData(grants, types.Dict),
+		"ipsets":                 llx.MapData(stringSliceMapToAny(acl.IPSets), types.Array(types.String)),
+		"attrConfig":             llx.MapData(attrConfig, types.Dict),
+		"derpRegions":            llx.ArrayData(derpRegions, types.Dict),
+		"omitDefaultDerpRegions": llx.BoolData(omitDefaultDerpRegions),
+		"groups":                 llx.MapData(stringSliceMapToAny(acl.Groups), types.Array(types.String)),
+		"hosts":                  llx.MapData(stringMapToAny(acl.Hosts), types.String),
+		"tagOwners":              llx.MapData(stringSliceMapToAny(acl.TagOwners), types.Array(types.String)),
+		"ssh":                    llx.ArrayData(ssh, types.Dict),
+		"tests":                  llx.ArrayData(tests, types.Dict),
+		"nodeAttrs":              llx.ArrayData(nodeAttrs, types.Dict),
+		"autoApproverExitNodes":  llx.ArrayData(autoApproverExitNodes, types.String),
+		"autoApproverRoutes":     llx.MapData(autoApproverRoutes, types.Array(types.String)),
+		"defaultSourcePosture":   llx.ArrayData(stringSliceToAny(acl.DefaultSourcePosture), types.String),
+		"postures":               llx.MapData(stringSliceMapToAny(acl.Postures), types.Array(types.String)),
+		"disableIPv4":            llx.BoolData(acl.DisableIPv4),
+		"oneCGNATRoute":          llx.StringData(acl.OneCGNATRoute),
+		"randomizeClientPort":    llx.BoolData(acl.RandomizeClientPort),
+		"etag":                   llx.StringData(acl.ETag),
 	})
 }
 
@@ -143,6 +161,58 @@ func structSliceToDictSlice[T any](in []T) ([]any, error) {
 		out = append(out, m)
 	}
 	return out, nil
+}
+
+// structMapToDictMap JSON-round-trips a map of policy structs into a map of
+// generic values, suitable for use as MQL map[string]dict. Any conversion error
+// is propagated so security-sensitive policy entries are never silently
+// dropped.
+func structMapToDictMap[T any](in map[string]T) (map[string]any, error) {
+	out := make(map[string]any, len(in))
+	for k := range in {
+		b, err := json.Marshal(in[k])
+		if err != nil {
+			return nil, fmt.Errorf("tailscale: failed to marshal policy entry %q: %w", k, err)
+		}
+		var m map[string]any
+		if err := json.Unmarshal(b, &m); err != nil {
+			return nil, fmt.Errorf("tailscale: failed to unmarshal policy entry %q: %w", k, err)
+		}
+		out[k] = m
+	}
+	return out, nil
+}
+
+// flattenDERPMap splits a policy's custom DERP configuration into the region
+// list and the omit-default flag the resource exposes. A policy with no derpMap
+// section yields an empty list rather than a null, so a query asserting that no
+// custom relay is configured reads an empty list instead of passing on a null
+// comparison.
+//
+// The regions arrive keyed by numeric region id. That id is also carried inside
+// each region as `regionID`, so the map is flattened to a list rather than
+// exposing a map whose keys duplicate a field of its values.
+func flattenDERPMap(derpMap *tsclient.ACLDERPMap) ([]any, bool, error) {
+	if derpMap == nil {
+		return []any{}, false, nil
+	}
+
+	regions := make([]*tsclient.ACLDERPRegion, 0, len(derpMap.Regions))
+	for _, region := range derpMap.Regions {
+		if region == nil {
+			continue
+		}
+		regions = append(regions, region)
+	}
+	// Map iteration order is random; sort so repeated scans of an unchanged
+	// policy produce an identical list.
+	sort.Slice(regions, func(i, j int) bool { return regions[i].RegionID < regions[j].RegionID })
+
+	out, err := structSliceToDictSlice(regions)
+	if err != nil {
+		return nil, false, err
+	}
+	return out, derpMap.OmitDefaultRegions, nil
 }
 
 func stringSliceMapToAny(in map[string][]string) map[string]any {

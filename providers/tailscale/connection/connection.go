@@ -15,7 +15,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 const (
@@ -103,10 +103,10 @@ func NewTailscaleConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		// less. Omitting the scope parameter issues a token carrying exactly
 		// the scopes the OAuth client itself holds, so the grant made in the
 		// Tailscale admin console is what decides access.
-		conn.client.HTTP = tsclient.OAuthConfig{
+		conn.client.Auth = &tsclient.OAuth{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
-		}.HTTPClient()
+		}
 		log.Info().Str("method", "OAuth").Msg("tailscale> authentication configured")
 
 	case TokenAuthMethod:
