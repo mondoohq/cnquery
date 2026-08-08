@@ -21737,12 +21737,7 @@ func createAlicloudCloudssoMfaDevice(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("alicloud.cloudsso.mfaDevice", res.__id)

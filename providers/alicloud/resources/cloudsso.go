@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	cloudssoclient "github.com/alibabacloud-go/cloudsso-20210515/client"
@@ -120,9 +121,14 @@ func (r *mqlAlicloudCloudsso) directories() ([]any, error) {
 }
 
 // mqlAlicloudCloudssoDirectoryInternal caches the service region the directory
-// was found in, which every subsequent call against the directory needs.
+// was found in, which every subsequent call against the directory needs, and
+// memoizes the sign-in preferences that back two separate fields.
 type mqlAlicloudCloudssoDirectoryInternal struct {
 	serviceRegion string
+
+	loginPreferenceOnce sync.Once
+	loginPreferenceData *cloudssoclient.GetLoginPreferenceResponseBodyLoginPreference
+	loginPreferenceErr  error
 }
 
 func newCloudssoDirectory(runtime *plugin.Runtime, region string, d *cloudssoclient.ListDirectoriesResponseBodyDirectories) (*mqlAlicloudCloudssoDirectory, error) {
@@ -346,7 +352,9 @@ func (r *mqlAlicloudCloudssoUser) mfaDevices() ([]any, error) {
 			continue
 		}
 		device, err := CreateResource(r.MqlRuntime, "alicloud.cloudsso.mfaDevice", map[string]*llx.RawData{
-			"__id":          llx.StringDataPtr(d.DeviceId),
+			// device IDs are unique within a directory, so the cache key is
+			// qualified by the directory the same way the other resources are
+			"__id":          llx.StringData(r.DirectoryId.Data + "/" + tea.StringValue(d.DeviceId)),
 			"deviceId":      llx.StringDataPtr(d.DeviceId),
 			"userId":        llx.StringDataPtr(d.UserId),
 			"deviceName":    llx.StringDataPtr(d.DeviceName),
@@ -575,9 +583,9 @@ func (r *mqlAlicloudCloudssoGroup) members() ([]any, error) {
 // alicloud.cloudsso.mfaDevice
 // ---------------------------------------------------------------------------
 
-func (r *mqlAlicloudCloudssoMfaDevice) id() (string, error) {
-	return r.DeviceId.Data, nil
-}
+// The MFA device has no id method: its cache key is qualified by the directory,
+// which the device resource itself does not carry, so the key is passed straight
+// to CreateResource as __id.
 
 // ---------------------------------------------------------------------------
 // alicloud.cloudsso.passwordPolicy and directory sign-in settings
@@ -658,23 +666,29 @@ func (r *mqlAlicloudCloudssoDirectory) loginNetworkMasks() (string, error) {
 	return tea.StringValue(pref.LoginNetworkMasks), nil
 }
 
-// loginPreference reads the directory sign-in preferences that back both
-// allowUserToGetCredentials and loginNetworkMasks.
+// loginPreference reads the directory sign-in preferences, once. Both
+// allowUserToGetCredentials and loginNetworkMasks come from this one response,
+// so querying them together costs a single GetLoginPreference call.
 func (r *mqlAlicloudCloudssoDirectory) loginPreference() (*cloudssoclient.GetLoginPreferenceResponseBodyLoginPreference, error) {
-	client, directoryID, err := r.cloudssoClient()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := client.GetLoginPreference(&cloudssoclient.GetLoginPreferenceRequest{
-		DirectoryId: tea.String(directoryID),
+	r.loginPreferenceOnce.Do(func() {
+		client, directoryID, err := r.cloudssoClient()
+		if err != nil {
+			r.loginPreferenceErr = err
+			return
+		}
+		resp, err := client.GetLoginPreference(&cloudssoclient.GetLoginPreferenceRequest{
+			DirectoryId: tea.String(directoryID),
+		})
+		if err != nil {
+			r.loginPreferenceErr = err
+			return
+		}
+		if resp == nil || resp.Body == nil {
+			return
+		}
+		r.loginPreferenceData = resp.Body.LoginPreference
 	})
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil || resp.Body == nil {
-		return nil, nil
-	}
-	return resp.Body.LoginPreference, nil
+	return r.loginPreferenceData, r.loginPreferenceErr
 }
 
 func (r *mqlAlicloudCloudssoDirectory) scimSynchronizationEnabled() (bool, error) {
