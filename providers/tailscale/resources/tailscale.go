@@ -8,11 +8,11 @@ import (
 	"sync"
 	"sync/atomic"
 
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 // mqlTailscaleInternal caches tailnet-level settings so multiple field accessors
@@ -43,7 +43,11 @@ func initTailscale(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 func (t *mqlTailscale) devices() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
-	devices, err := conn.Client().Devices().List(context.Background())
+	// The default field set omits subnet routes, posture identity, SSH state
+	// and connectivity. Requesting all fields fills them from this one call
+	// instead of a follow-up request per device.
+	devices, err := conn.Client().Devices().List(context.Background(),
+		tsclient.WithFields(tsclient.IncludeFieldsAll))
 	if err != nil {
 		return nil, err
 	}
@@ -156,6 +160,38 @@ func (t *mqlTailscale) postureIdentityCollectionEnabled() (bool, error) {
 		return false, err
 	}
 	return s.PostureIdentityCollectionOn, nil
+}
+
+func (t *mqlTailscale) regionalRoutingEnabled() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.RegionalRoutingOn, nil
+}
+
+func (t *mqlTailscale) httpsEnabled() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.HTTPSEnabled, nil
+}
+
+func (t *mqlTailscale) aclsExternallyManaged() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.ACLsExternallyManagedOn, nil
+}
+
+func (t *mqlTailscale) aclsExternalLink() (string, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return "", err
+	}
+	return s.ACLsExternalLink, nil
 }
 
 func (t *mqlTailscale) usersRoleAllowedToJoinExternalTailnets() (string, error) {

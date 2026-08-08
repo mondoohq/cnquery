@@ -5,18 +5,9 @@ package connection
 
 import (
 	"errors"
-	"regexp"
-	"strconv"
 
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
-
-// The Tailscale client models API failures as tsclient.APIError, but keeps the
-// HTTP status on an unexported field and only exposes tsclient.IsNotFound. The
-// status is however rendered into the error string by APIError.Error(), which
-// formats as "<message> (<status>)". We recover it from there so callers can
-// distinguish an authorization failure from a genuine absence.
-var apiStatusRe = regexp.MustCompile(`\((\d{3})\)$`)
 
 // APIStatusCode returns the HTTP status code of a Tailscale API error, or 0
 // when err is not a Tailscale API error (a transport failure, a context
@@ -26,22 +17,11 @@ func APIStatusCode(err error) int {
 		return 0
 	}
 
-	// Only trust the string form once we know this really is an APIError.
 	var apiErr tsclient.APIError
 	if !errors.As(err, &apiErr) {
 		return 0
 	}
-
-	match := apiStatusRe.FindStringSubmatch(apiErr.Error())
-	if match == nil {
-		return 0
-	}
-
-	code, convErr := strconv.Atoi(match[1])
-	if convErr != nil {
-		return 0
-	}
-	return code
+	return apiErr.Status
 }
 
 // IsAccessDenied reports whether err is a Tailscale API authorization failure:

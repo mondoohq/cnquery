@@ -207,6 +207,7 @@ PROVIDERS := \
 	aws \
 	azure \
 	bicep \
+	cassandra \
 	claude \
 	cloudflare \
 	cloudformation \
@@ -248,6 +249,7 @@ PROVIDERS := \
 	ollama \
 	opcua \
 	openai \
+	opensearch \
 	openstack \
 	os \
 	portainer \

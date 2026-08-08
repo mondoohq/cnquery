@@ -370,6 +370,9 @@ private vercel.team.sharedEnvironmentVariable @defaults("key type") {
 // A Vercel project and its deployment-protection and build posture. Query
 // `ssoProtectionDeploymentType`, `passwordProtectionDeploymentType`, and
 // `trustedIpsProtectionMode` for preview and production access controls;
+// `optionsAllowlistPaths` and `protectionConfig` for the routes and settings
+// that let traffic past those controls; `aliases` for the hostnames actually
+// serving each deployment;
 // `gitForkProtection`, `requireVerifiedCommits`, and `productionBranch` for
 // source controls; `oidcTokenConfig` for the workload identity backends trust;
 // `directoryListing` and `publicSource` for what a deployment exposes;
@@ -440,6 +443,20 @@ private vercel.project @defaults("name framework") {
   // Each entry carries the allowed value and an optional note. Empty when
   // trusted-IP protection is disabled.
   trustedIpsAddresses []dict
+  // Paths exempt from deployment protection for OPTIONS requests
+  //
+  // Requests using the OPTIONS method to these paths skip Vercel
+  // Authentication, password protection, and trusted-IP checks. A non-empty
+  // list means the protection reported by ssoProtectionDeploymentType,
+  // passwordProtectionDeploymentType, and trustedIpsProtectionMode does not
+  // cover every route. Empty when no paths are exempt.
+  optionsAllowlistPaths []string
+  // Additional deployment protection configuration
+  //
+  // Protection settings the project carries beyond the Vercel Authentication,
+  // password, and trusted-IP controls. Null when the project has no additional
+  // protection configuration.
+  protectionConfig dict
   // Git provider hosting the connected repository
   //
   // One of github, gitlab, or bitbucket, or null when no repository is connected.
@@ -583,6 +600,12 @@ private vercel.project @defaults("name framework") {
   environmentVariables() []vercel.project.environmentVariable
   // Deployments created for the project
   deployments() []vercel.deployment
+  // Aliases pointing at the project's deployments
+  //
+  // Each alias is a hostname serving traffic and the deployment behind it, so
+  // this is what a domain actually resolves to rather than what the project is
+  // configured to serve. Empty when the project has no aliases.
+  aliases() []vercel.alias
   // Domains bound to the project
   domains() []vercel.project.domain
   // Firewall configuration for the project
@@ -706,6 +729,64 @@ private vercel.deployment @defaults("name state target") {
   inspectorUrl string
   // Time the deployment was created
   createdAt time
+  // Project the deployment belongs to
+  project() vercel.project
+}
+
+// Vercel Alias
+//
+// A hostname bound to a deployment, which is what traffic to that hostname
+// actually reaches. An alias can outlive the release that configured it, so
+// comparing `deployment` against the project's current production deployment
+// surfaces hostnames still serving superseded builds. The
+// `protectionBypassCount` and `protectionBypassScopes` fields report automation
+// bypass entries registered for the alias, which let callers presenting the
+// bypass secret past deployment protection. The secret itself is never
+// exposed. Select an alias with
+// `vercel.projects.first.aliases.where(alias == "example.com")`.
+private vercel.alias @defaults("alias protectionBypassCount") {
+  // Unique alias identifier
+  id string
+  // Hostname serving the deployment
+  //
+  // Either a generated `.vercel.app` subdomain or a custom domain.
+  alias string
+  // Destination domain when the alias redirects instead of serving a deployment
+  //
+  // Null when the alias serves a deployment directly.
+  redirect string
+  // Status code returned for a redirecting alias
+  //
+  // One of 301, 302, 307, or 308, or null when the alias does not redirect.
+  redirectStatusCode int
+  // Identifier of the account that created the alias
+  creatorUid string
+  // Username of the account that created the alias
+  creatorUsername string
+  // Email of the account that created the alias
+  creatorEmail string
+  // Number of automation bypass entries registered for the alias
+  //
+  // Each entry is a secret that skips deployment protection for requests
+  // carrying it. Any value above zero means protection can be bypassed on this
+  // hostname regardless of the project's protection settings.
+  protectionBypassCount int
+  // Scopes of the automation bypass entries registered for the alias
+  //
+  // Empty when the alias has no bypass entries.
+  protectionBypassScopes []string
+  // Time the alias was created
+  createdAt time
+  // Time the alias was last updated
+  updatedAt time
+  // Time the alias was deleted, or null while the alias is active
+  deletedAt time
+  // Deployment the alias points at
+  //
+  // Null when the alias redirects instead of serving a deployment.
+  deployment() vercel.deployment
+  // Project the alias belongs to
+  project() vercel.project
 }
 
 // Vercel Domain
