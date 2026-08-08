@@ -13,12 +13,12 @@ require (
 	cloud.google.com/go/asset v1.28.0
 	cloud.google.com/go/backupdr v1.16.0
 	cloud.google.com/go/batch v1.21.0
-	cloud.google.com/go/bigquery v1.79.0
+	cloud.google.com/go/bigquery v1.79.1
 	cloud.google.com/go/bigtable v1.52.0
 	cloud.google.com/go/certificatemanager v1.15.0
 	cloud.google.com/go/cloudbuild v1.32.0
 	cloud.google.com/go/cloudtasks v1.19.0
-	cloud.google.com/go/compute v1.65.0
+	cloud.google.com/go/compute v1.66.0
 	cloud.google.com/go/container v1.53.1
 	cloud.google.com/go/containeranalysis v0.19.0
 	cloud.google.com/go/datastream v1.21.0
@@ -28,10 +28,10 @@ require (
 	cloud.google.com/go/documentai v1.49.0
 	cloud.google.com/go/eventarc v1.25.0
 	cloud.google.com/go/filestore v1.16.0
-	cloud.google.com/go/firestore v1.24.0
+	cloud.google.com/go/firestore v1.25.0
 	cloud.google.com/go/functions v1.25.0
 	cloud.google.com/go/gkebackup v1.14.0
-	cloud.google.com/go/iam v1.12.0
+	cloud.google.com/go/iam v1.13.0
 	cloud.google.com/go/iap v1.17.0
 	cloud.google.com/go/ids v1.11.0
 	cloud.google.com/go/kms v1.33.0
@@ -53,14 +53,14 @@ require (
 	cloud.google.com/go/securitycenter v1.46.0
 	cloud.google.com/go/serviceusage v1.15.0
 	cloud.google.com/go/spanner v1.94.0
-	github.com/aws/smithy-go v1.27.6
+	github.com/aws/smithy-go v1.27.7
 	github.com/cockroachdb/errors v1.14.0
 	github.com/google/go-containerregistry v0.21.9
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.30.1
+	go.mondoo.com/mql/v13 v13.32.2
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.292.0
@@ -135,7 +135,7 @@ require (
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260807010921-92ef02e456bd // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260808001139-ef2a665833b7 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
@@ -151,7 +151,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
 	k8s.io/kubelet v0.36.3 // indirect
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3 // indirect
-	modernc.org/libc v1.75.1 // indirect
+	modernc.org/libc v1.75.2 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.0 // indirect
 	modernc.org/sqlite v1.56.0 // indirect
@@ -163,7 +163,7 @@ require (
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/auth v0.22.0 // indirect
+	cloud.google.com/go/auth v0.23.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/binaryauthorization v1.16.0
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
@@ -185,7 +185,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.35 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.320.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.321.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.35.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.60.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.41.4 // indirect
@@ -289,8 +289,8 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260807164820-c8921c73eeea // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260807164820-c8921c73eeea // indirect
 	google.golang.org/grpc v1.83.0
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
