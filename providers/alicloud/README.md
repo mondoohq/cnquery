@@ -51,7 +51,9 @@ cnspec shell alicloud --access-key-id <id> --access-key-secret <secret>
 
 The credential needs read-only access. The `ReadOnlyAccess` system policy covers everything the provider queries. To scope it more tightly, grant the `Describe*`, `List*`, and `Get*` actions for the services you intend to query.
 
-Some services answer only in the region or partition that owns them. WAF, Cloud Firewall, and Anti-DDoS are center services reached through `cn-hangzhou` (China) or `ap-southeast-1` (international); CloudSSO through `cn-shanghai` or `us-east-1`. The provider probes both and reports an error only when neither answers, so a partition that legitimately has no such service reads as empty rather than failing the scan.
+Some services answer only in the region or partition that owns them. WAF, Cloud Firewall, Anti-DDoS, and Security Center are center services reached through `cn-hangzhou` (China) or `ap-southeast-1` (international); CloudSSO through `cn-shanghai` or `us-east-1`. The provider probes both and reports an error only when neither answers, so a partition that legitimately has no such service reads as empty rather than failing the scan.
+
+RAM, ActionTrail, Resource Management, and Cloud Enterprise Network are global and carry no region in their endpoint at all.
 
 ## Regions
 
@@ -141,6 +143,16 @@ alicloud.cloudsso.directories {
 
 # ActionTrail trails that are not logging
 alicloud.actiontrail.trails.where(status != "Enable") { name ossBucket { name } }
+
+# machines Security Center lists but is not actually protecting
+alicloud.sas.machines.where(clientStatus != "Online") {
+  instanceName ecsInstance { internetExposed }
+}
+
+# VPC reachability that security groups alone do not explain:
+# transit attachments and VPN tunnels
+alicloud.cen.instances { name attachments { childInstanceType childInstanceRegionId } }
+alicloud.vpc.vpnConnections { name localSubnet remoteSubnet ikeEncryptionAlgorithm }
 ```
 
 ## Development

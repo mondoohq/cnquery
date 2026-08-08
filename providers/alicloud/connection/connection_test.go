@@ -81,6 +81,22 @@ func TestEndpoint(t *testing.T) {
 		assert.Equal(t, "resourcemanager.aliyuncs.com", endpoint("resourcemanager", "ap-southeast-1"))
 	})
 
+	t.Run("Cloud Enterprise Network is global", func(t *testing.T) {
+		// CEN spans regions by design, so its endpoint carries none. Falling
+		// back to the usual layout would address a host that does not serve it.
+		assert.Equal(t, "cbn.aliyuncs.com", endpoint("cbn", "cn-hangzhou"))
+		assert.Equal(t, "cbn.aliyuncs.com", endpoint("cbn", "us-east-1"))
+	})
+
+	t.Run("Security Center and CloudSSO follow the usual layout", func(t *testing.T) {
+		// Both are reached at a fixed pair of regions rather than every region,
+		// but the endpoint itself is built the ordinary way.
+		assert.Equal(t, "sas.cn-hangzhou.aliyuncs.com", endpoint("sas", "cn-hangzhou"))
+		assert.Equal(t, "sas.ap-southeast-1.aliyuncs.com", endpoint("sas", "ap-southeast-1"))
+		assert.Equal(t, "cloudsso.cn-shanghai.aliyuncs.com", endpoint("cloudsso", "cn-shanghai"))
+		assert.Equal(t, "cloudsso.us-east-1.aliyuncs.com", endpoint("cloudsso", "us-east-1"))
+	})
+
 	t.Run("Cloud Config is a cn-shanghai center service", func(t *testing.T) {
 		// The region argument is ignored: Config resolves to the cn-shanghai
 		// center regardless of the caller's region.
