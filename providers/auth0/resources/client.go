@@ -154,3 +154,7 @@ func (c *mqlAuth0Client) enabledConnections() ([]any, error) {
 	}
 	return result, nil
 }
+
+func (r *mqlAuth0Client) id() (string, error) {
+	return "auth0.client/" + r.Id.Data, nil
+}

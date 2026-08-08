@@ -115,3 +115,7 @@ func (u *mqlAuth0User) roles() ([]any, error) {
 	}
 	return all, nil
 }
+
+func (r *mqlAuth0User) id() (string, error) {
+	return "auth0.user/" + r.Id.Data, nil
+}

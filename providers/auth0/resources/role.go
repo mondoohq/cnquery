@@ -119,3 +119,7 @@ func (r *mqlAuth0Role) users() ([]any, error) {
 	}
 	return all, nil
 }
+
+func (r *mqlAuth0Role) id() (string, error) {
+	return "auth0.role/" + r.Id.Data, nil
+}

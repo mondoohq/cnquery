@@ -85,3 +85,7 @@ func newMqlAuth0Action(runtime *plugin.Runtime, act *management.Action) (plugin.
 	}
 	return r, nil
 }
+
+func (r *mqlAuth0Action) id() (string, error) {
+	return "auth0.action/" + r.Id.Data, nil
+}

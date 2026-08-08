@@ -63,3 +63,7 @@ func newMqlAuth0LogStream(runtime *plugin.Runtime, ls *management.LogStream) (pl
 	}
 	return r, nil
 }
+
+func (r *mqlAuth0LogStream) id() (string, error) {
+	return "auth0.logStream/" + r.Id.Data, nil
+}
