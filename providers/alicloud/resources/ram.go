@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	ramclient "github.com/alibabacloud-go/ram-20150501/v2/client"
@@ -516,28 +517,75 @@ func (r *mqlAlicloudRamUser) groups() ([]any, error) {
 	return res, nil
 }
 
-func (r *mqlAlicloudRamUser) policies() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
-	if err != nil {
-		return nil, err
-	}
+// mqlAlicloudRamUserInternal memoizes the user's policy attachment list, which
+// both the policies and attachedPolicies fields read.
+type mqlAlicloudRamUserInternal struct {
+	attachmentsOnce sync.Once
+	attachments     []*ramclient.ListPoliciesForUserResponseBodyPoliciesPolicy
+	attachmentsErr  error
+}
 
-	userName := r.UserName.Data
-	resp, err := client.ListPoliciesForUser(&ramclient.ListPoliciesForUserRequest{UserName: &userName})
+// policyAttachments lists the policies attached to the user, once. Both
+// policies and attachedPolicies read the same response, so querying them
+// together costs one ListPoliciesForUser call rather than two.
+func (r *mqlAlicloudRamUser) policyAttachments() ([]*ramclient.ListPoliciesForUserResponseBodyPoliciesPolicy, error) {
+	r.attachmentsOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+		client, err := conn.RamClient()
+		if err != nil {
+			r.attachmentsErr = err
+			return
+		}
+
+		userName := r.UserName.Data
+		resp, err := client.ListPoliciesForUser(&ramclient.ListPoliciesForUserRequest{UserName: &userName})
+		if err != nil {
+			r.attachmentsErr = err
+			return
+		}
+		if resp == nil || resp.Body == nil || resp.Body.Policies == nil {
+			return
+		}
+		r.attachments = resp.Body.Policies.Policy
+	})
+	return r.attachments, r.attachmentsErr
+}
+
+func (r *mqlAlicloudRamUser) policies() ([]any, error) {
+	attachments, err := r.policyAttachments()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []any{}
-	if resp == nil || resp.Body == nil || resp.Body.Policies == nil {
-		return res, nil
-	}
-	for _, p := range resp.Body.Policies.Policy {
+	for _, p := range attachments {
 		if p == nil {
 			continue
 		}
 		res = append(res, ramPolicyAttachmentDict(p.PolicyName, p.PolicyType, p.DefaultVersion, p.Description, p.AttachDate))
+	}
+	return res, nil
+}
+
+func (r *mqlAlicloudRamUser) attachedPolicies() ([]any, error) {
+	attachments, err := r.policyAttachments()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, p := range attachments {
+		if p == nil {
+			continue
+		}
+		policy, err := resolveRamPolicy(r.MqlRuntime, p.PolicyName, p.PolicyType)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		res = append(res, policy)
 	}
 	return res, nil
 }
@@ -697,28 +745,73 @@ func (r *mqlAlicloudRamGroup) users() ([]any, error) {
 	return res, nil
 }
 
-func (r *mqlAlicloudRamGroup) policies() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
-	if err != nil {
-		return nil, err
-	}
+// mqlAlicloudRamGroupInternal memoizes the group's policy attachment list,
+// which both the policies and attachedPolicies fields read.
+type mqlAlicloudRamGroupInternal struct {
+	attachmentsOnce sync.Once
+	attachments     []*ramclient.ListPoliciesForGroupResponseBodyPoliciesPolicy
+	attachmentsErr  error
+}
 
-	groupName := r.GroupName.Data
-	resp, err := client.ListPoliciesForGroup(&ramclient.ListPoliciesForGroupRequest{GroupName: &groupName})
+// policyAttachments lists the policies attached to the group, once.
+func (r *mqlAlicloudRamGroup) policyAttachments() ([]*ramclient.ListPoliciesForGroupResponseBodyPoliciesPolicy, error) {
+	r.attachmentsOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+		client, err := conn.RamClient()
+		if err != nil {
+			r.attachmentsErr = err
+			return
+		}
+
+		groupName := r.GroupName.Data
+		resp, err := client.ListPoliciesForGroup(&ramclient.ListPoliciesForGroupRequest{GroupName: &groupName})
+		if err != nil {
+			r.attachmentsErr = err
+			return
+		}
+		if resp == nil || resp.Body == nil || resp.Body.Policies == nil {
+			return
+		}
+		r.attachments = resp.Body.Policies.Policy
+	})
+	return r.attachments, r.attachmentsErr
+}
+
+func (r *mqlAlicloudRamGroup) policies() ([]any, error) {
+	attachments, err := r.policyAttachments()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []any{}
-	if resp == nil || resp.Body == nil || resp.Body.Policies == nil {
-		return res, nil
-	}
-	for _, p := range resp.Body.Policies.Policy {
+	for _, p := range attachments {
 		if p == nil {
 			continue
 		}
 		res = append(res, ramPolicyAttachmentDict(p.PolicyName, p.PolicyType, p.DefaultVersion, p.Description, p.AttachDate))
+	}
+	return res, nil
+}
+
+func (r *mqlAlicloudRamGroup) attachedPolicies() ([]any, error) {
+	attachments, err := r.policyAttachments()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, p := range attachments {
+		if p == nil {
+			continue
+		}
+		policy, err := resolveRamPolicy(r.MqlRuntime, p.PolicyName, p.PolicyType)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		res = append(res, policy)
 	}
 	return res, nil
 }
@@ -748,11 +841,18 @@ func resolveRamRole(runtime *plugin.Runtime, roleName string) (*mqlAlicloudRamRo
 // which is required because GetRole (unlike ListRoles) does not return them.
 // Returns an empty map on any error so a resolved role is never a husk.
 func ramRoleTags(client *ramclient.Client, roleName string) map[string]any {
+	return ramTags(client, "role", roleName)
+}
+
+// ramTags reads the tags of a single RAM resource. GetRole and GetPolicy omit
+// tags that their List counterparts return, so the ref-resolved form of those
+// resources fills the gap from here.
+func ramTags(client *ramclient.Client, resourceType, resourceName string) map[string]any {
 	tags := map[string]any{}
-	resourceType := "role"
-	name := roleName
+	rt := resourceType
+	name := resourceName
 	resp, err := client.ListTagResources(&ramclient.ListTagResourcesRequest{
-		ResourceType:  &resourceType,
+		ResourceType:  &rt,
 		ResourceNames: []*string{&name},
 	})
 	if err != nil || resp == nil || resp.Body == nil {
@@ -836,24 +936,46 @@ func (r *mqlAlicloudRamRole) assumeRolePolicyDocument() (string, error) {
 	return ramStrVal(resp.Body.Role.AssumeRolePolicyDocument), nil
 }
 
-func (r *mqlAlicloudRamRole) policies() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
-	if err != nil {
-		return nil, err
-	}
+// mqlAlicloudRamRoleInternal memoizes the role's policy attachment list, which
+// both the policies and attachedPolicies fields read.
+type mqlAlicloudRamRoleInternal struct {
+	attachmentsOnce sync.Once
+	attachments     []*ramclient.ListPoliciesForRoleResponseBodyPoliciesPolicy
+	attachmentsErr  error
+}
 
-	roleName := r.RoleName.Data
-	resp, err := client.ListPoliciesForRole(&ramclient.ListPoliciesForRoleRequest{RoleName: &roleName})
+// policyAttachments lists the policies attached to the role, once.
+func (r *mqlAlicloudRamRole) policyAttachments() ([]*ramclient.ListPoliciesForRoleResponseBodyPoliciesPolicy, error) {
+	r.attachmentsOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+		client, err := conn.RamClient()
+		if err != nil {
+			r.attachmentsErr = err
+			return
+		}
+
+		roleName := r.RoleName.Data
+		resp, err := client.ListPoliciesForRole(&ramclient.ListPoliciesForRoleRequest{RoleName: &roleName})
+		if err != nil {
+			r.attachmentsErr = err
+			return
+		}
+		if resp == nil || resp.Body == nil || resp.Body.Policies == nil {
+			return
+		}
+		r.attachments = resp.Body.Policies.Policy
+	})
+	return r.attachments, r.attachmentsErr
+}
+
+func (r *mqlAlicloudRamRole) policies() ([]any, error) {
+	attachments, err := r.policyAttachments()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []any{}
-	if resp == nil || resp.Body == nil || resp.Body.Policies == nil {
-		return res, nil
-	}
-	for _, p := range resp.Body.Policies.Policy {
+	for _, p := range attachments {
 		if p == nil {
 			continue
 		}
@@ -862,8 +984,106 @@ func (r *mqlAlicloudRamRole) policies() ([]any, error) {
 	return res, nil
 }
 
+func (r *mqlAlicloudRamRole) attachedPolicies() ([]any, error) {
+	attachments, err := r.policyAttachments()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, p := range attachments {
+		if p == nil {
+			continue
+		}
+		policy, err := resolveRamPolicy(r.MqlRuntime, p.PolicyName, p.PolicyType)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		res = append(res, policy)
+	}
+	return res, nil
+}
+
 func (r *mqlAlicloudRamPolicy) id() (string, error) {
 	return r.PolicyType.Data + "/" + r.PolicyName.Data, nil
+}
+
+// initAlicloudRamPolicy resolves a single policy from its name and type.
+//
+// NewResource runs this before it consults the resource cache, so the cache
+// probe here is what keeps a policy that is attached to many users from costing
+// one GetPolicy call per attachment.
+func initAlicloudRamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	policyName, err := requiredStringArg(args, "policyName", "alicloud.ram.policy")
+	if err != nil {
+		return nil, nil, err
+	}
+	policyType, err := requiredStringArg(args, "policyType", "alicloud.ram.policy")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.ram.policy\x00" + policyType + "/" + policyName); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.RamClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetPolicy(&ramclient.GetPolicyRequest{
+		PolicyName: &policyName,
+		PolicyType: &policyType,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.Body == nil || resp.Body.Policy == nil {
+		return nil, nil, fmt.Errorf("alicloud.ram.policy %q of type %q not found", policyName, policyType)
+	}
+
+	p := resp.Body.Policy
+	res, err := CreateResource(runtime, "alicloud.ram.policy", map[string]*llx.RawData{
+		"__id":            llx.StringData(policyType + "/" + policyName),
+		"policyName":      llx.StringDataPtr(p.PolicyName),
+		"policyType":      llx.StringDataPtr(p.PolicyType),
+		"description":     llx.StringDataPtr(p.Description),
+		"defaultVersion":  llx.StringDataPtr(p.DefaultVersion),
+		"attachmentCount": llx.IntDataPtr(p.AttachmentCount),
+		"createDate":      llx.TimeDataPtr(ramParseTime(p.CreateDate)),
+		"updateDate":      llx.TimeDataPtr(ramParseTime(p.UpdateDate)),
+		"tags":            llx.MapData(ramTags(client, "policy", policyName), types.String),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+// resolveRamPolicy turns a policy name and type into a typed policy resource,
+// returning nil when either is blank.
+func resolveRamPolicy(runtime *plugin.Runtime, policyName, policyType *string) (*mqlAlicloudRamPolicy, error) {
+	name := ramStrVal(policyName)
+	policyKind := ramStrVal(policyType)
+	if name == "" || policyKind == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.ram.policy", map[string]*llx.RawData{
+		"policyName": llx.StringData(name),
+		"policyType": llx.StringData(policyKind),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudRamPolicy), nil
 }
 
 func (r *mqlAlicloudRamPolicy) policyDocument() (string, error) {
