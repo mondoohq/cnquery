@@ -332,7 +332,43 @@ func loadSingleProviderSchema(existing providers.Providers, providerName string)
 type providerListEntry struct {
 	Name       string   `json:"name"`
 	Version    string   `json:"version"`
+	Status     string   `json:"status"`
 	Connectors []string `json:"connectors"`
+}
+
+// providerStatus reports whether a provider is compiled into the binary
+// ("builtin") or loaded from disk ("installed"). Builtin providers have no
+// on-disk path.
+func providerStatus(p *providers.Provider) string {
+	if p.Path == "" {
+		return "builtin"
+	}
+	return "installed"
+}
+
+// buildProviderListEntries projects providers into the JSON list shape, sorted
+// by name, with hidden connectors omitted. Kept separate from listCmd so the
+// output contract can be unit-tested without touching the provider registry.
+func buildProviderListEntries(all []*providers.Provider) []providerListEntry {
+	entries := make([]providerListEntry, 0, len(all))
+	for _, p := range all {
+		conns := make([]string, 0, len(p.Connectors))
+		for _, c := range p.Connectors {
+			if !c.IsHidden {
+				conns = append(conns, c.Name)
+			}
+		}
+		entries = append(entries, providerListEntry{
+			Name:       p.Name,
+			Version:    p.Version,
+			Status:     providerStatus(p),
+			Connectors: conns,
+		})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name < entries[j].Name
+	})
+	return entries
 }
 
 func listCmd(cmd *cobra.Command) {
@@ -342,24 +378,7 @@ func listCmd(cmd *cobra.Command) {
 	}
 
 	if isJsonOutput(cmd) {
-		entries := make([]providerListEntry, 0, len(all))
-		for _, p := range all {
-			conns := make([]string, 0, len(p.Connectors))
-			for _, c := range p.Connectors {
-				if !c.IsHidden {
-					conns = append(conns, c.Name)
-				}
-			}
-			entries = append(entries, providerListEntry{
-				Name:       p.Name,
-				Version:    p.Version,
-				Connectors: conns,
-			})
-		}
-		sort.Slice(entries, func(i, j int) bool {
-			return entries[i].Name < entries[j].Name
-		})
-		if err := writeJSON(entries); err != nil {
+		if err := writeJSON(buildProviderListEntries(all)); err != nil {
 			log.Fatal().Err(err).Msg("failed to write JSON output")
 		}
 		return
@@ -394,6 +413,51 @@ type flagInfo struct {
 	Type    string `json:"type"`
 }
 
+// buildProviderInfoEntry projects a single provider into the info JSON shape,
+// omitting hidden connectors and hidden flags. Kept separate from infoProviders
+// so the output contract can be unit-tested with a fabricated provider.
+func buildProviderInfoEntry(p *providers.Provider) providerInfoEntry {
+	conns := make([]connectorInfo, 0, len(p.Connectors))
+	for _, c := range p.Connectors {
+		if c.IsHidden {
+			continue
+		}
+		flags := make([]flagInfo, 0, len(c.Flags))
+		for _, f := range c.Flags {
+			if f.Option&plugin.FlagOption_Hidden != 0 {
+				continue
+			}
+			flags = append(flags, flagInfo{
+				Long:    f.Long,
+				Short:   f.Short,
+				Default: f.Default,
+				Desc:    f.Desc,
+				Type:    flagTypeString(f.Type),
+			})
+		}
+		ci := connectorInfo{
+			Name:  c.Name,
+			Short: c.Short,
+			Flags: flags,
+		}
+		if len(c.Aliases) > 0 {
+			ci.Aliases = c.Aliases
+		}
+		if len(c.Discovery) > 0 {
+			ci.Discovery = c.Discovery
+		}
+		conns = append(conns, ci)
+	}
+
+	return providerInfoEntry{
+		Name:       p.Name,
+		ID:         p.ID,
+		Version:    p.Version,
+		Path:       p.Path,
+		Connectors: conns,
+	}
+}
+
 func infoProviders(cmd *cobra.Command, names []string) error {
 	existing, err := providers.ListActive()
 	if err != nil {
@@ -406,46 +470,7 @@ func infoProviders(cmd *cobra.Command, names []string) error {
 		if p == nil {
 			return fmt.Errorf("provider %q not found", name)
 		}
-
-		conns := make([]connectorInfo, 0, len(p.Connectors))
-		for _, c := range p.Connectors {
-			if c.IsHidden {
-				continue
-			}
-			flags := make([]flagInfo, 0, len(c.Flags))
-			for _, f := range c.Flags {
-				if f.Option&plugin.FlagOption_Hidden != 0 {
-					continue
-				}
-				flags = append(flags, flagInfo{
-					Long:    f.Long,
-					Short:   f.Short,
-					Default: f.Default,
-					Desc:    f.Desc,
-					Type:    flagTypeString(f.Type),
-				})
-			}
-			ci := connectorInfo{
-				Name:  c.Name,
-				Short: c.Short,
-				Flags: flags,
-			}
-			if len(c.Aliases) > 0 {
-				ci.Aliases = c.Aliases
-			}
-			if len(c.Discovery) > 0 {
-				ci.Discovery = c.Discovery
-			}
-			conns = append(conns, ci)
-		}
-
-		entries = append(entries, providerInfoEntry{
-			Name:       p.Name,
-			ID:         p.ID,
-			Version:    p.Version,
-			Path:       p.Path,
-			Connectors: conns,
-		})
+		entries = append(entries, buildProviderInfoEntry(p))
 	}
 
 	if isJsonOutput(cmd) {
@@ -505,13 +530,11 @@ type resourceSummary struct {
 	FieldCount int      `json:"field_count"`
 }
 
-func listResources(cmd *cobra.Command, providerName string) error {
-	excludeCoreNetwork, _ := cmd.Flags().GetBool("exclude-core-network")
-	schema, err := loadProviderSchema(providerName, !excludeCoreNetwork)
-	if err != nil {
-		return err
-	}
-
+// buildResourceList projects a schema into the resource-list JSON shape:
+// private resources are omitted and the remainder are sorted by name. Kept
+// separate from listResources so the output contract can be unit-tested with a
+// fabricated schema.
+func buildResourceList(schema resources.ResourcesSchema, providerName string) resourceList {
 	allResources := schema.AllResources()
 	summaries := make([]resourceSummary, 0, len(allResources))
 	for name, ri := range allResources {
@@ -542,17 +565,28 @@ func listResources(cmd *cobra.Command, providerName string) error {
 	sort.Slice(summaries, func(i, j int) bool {
 		return summaries[i].Name < summaries[j].Name
 	})
+	return resourceList{
+		Provider:       providerName,
+		TotalResources: len(summaries),
+		Resources:      summaries,
+	}
+}
 
-	if isJsonOutput(cmd) {
-		return writeJSON(resourceList{
-			Provider:       providerName,
-			TotalResources: len(summaries),
-			Resources:      summaries,
-		})
+func listResources(cmd *cobra.Command, providerName string) error {
+	excludeCoreNetwork, _ := cmd.Flags().GetBool("exclude-core-network")
+	schema, err := loadProviderSchema(providerName, !excludeCoreNetwork)
+	if err != nil {
+		return err
 	}
 
-	fmt.Printf("%s (%d resources)\n\n", theme.DefaultTheme.Primary(providerName), len(summaries))
-	for _, r := range summaries {
+	list := buildResourceList(schema, providerName)
+
+	if isJsonOutput(cmd) {
+		return writeJSON(list)
+	}
+
+	fmt.Printf("%s (%d resources)\n\n", theme.DefaultTheme.Primary(providerName), list.TotalResources)
+	for _, r := range list.Resources {
 		title := ""
 		if r.Title != "" {
 			title = " - " + r.Title
@@ -586,17 +620,11 @@ type fieldDetail struct {
 	IsMandatory bool   `json:"is_mandatory,omitempty"`
 }
 
-func showResource(cmd *cobra.Command, providerName string, resourceName string) error {
-	schema, err := loadProviderSchema(providerName, true)
-	if err != nil {
-		return err
-	}
-
-	ri := schema.Lookup(resourceName)
-	if ri == nil {
-		return fmt.Errorf("resource %q not found in provider %q", resourceName, providerName)
-	}
-
+// buildResourceDetail projects a resource into the detail JSON shape: private
+// fields are omitted and the remainder are sorted by name. Kept separate from
+// showResource so the output contract can be unit-tested with a fabricated
+// resource.
+func buildResourceDetail(ri *resources.ResourceInfo) resourceDetail {
 	fields := make([]fieldDetail, 0, len(ri.Fields))
 	for _, f := range ri.Fields {
 		if f.IsPrivate {
@@ -620,7 +648,7 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 		defaults = strings.Split(ri.Defaults, " ")
 	}
 
-	detail := resourceDetail{
+	return resourceDetail{
 		Name:       ri.Name,
 		Title:      ri.Title,
 		Desc:       ri.Desc,
@@ -631,21 +659,35 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 		FieldCount: len(fields),
 		Fields:     fields,
 	}
+}
+
+func showResource(cmd *cobra.Command, providerName string, resourceName string) error {
+	schema, err := loadProviderSchema(providerName, true)
+	if err != nil {
+		return err
+	}
+
+	ri := schema.Lookup(resourceName)
+	if ri == nil {
+		return fmt.Errorf("resource %q not found in provider %q", resourceName, providerName)
+	}
+
+	detail := buildResourceDetail(ri)
 
 	if isJsonOutput(cmd) {
 		return writeJSON(detail)
 	}
 
-	fmt.Printf("%s%s\n", theme.DefaultTheme.Primary(ri.Name), maturityTag(ri.Maturity))
-	if ri.Title != "" {
-		fmt.Printf("  %s\n", ri.Title)
+	fmt.Printf("%s%s\n", theme.DefaultTheme.Primary(detail.Name), maturityTag(detail.Maturity))
+	if detail.Title != "" {
+		fmt.Printf("  %s\n", detail.Title)
 	}
-	if ri.Desc != "" {
-		fmt.Printf("  %s\n", ri.Desc)
+	if detail.Desc != "" {
+		fmt.Printf("  %s\n", detail.Desc)
 	}
 	fmt.Println()
-	fmt.Printf("  Fields (%d):\n", len(fields))
-	for _, f := range fields {
+	fmt.Printf("  Fields (%d):\n", len(detail.Fields))
+	for _, f := range detail.Fields {
 		mandatory := ""
 		if f.IsMandatory {
 			mandatory = " (required)"
