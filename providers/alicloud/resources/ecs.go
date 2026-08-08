@@ -1095,7 +1095,6 @@ func resolveEcsInstance(runtime *plugin.Runtime, region, instanceID string) (*mq
 	return res.(*mqlAlicloudEcsInstance), nil
 }
 
-// resolveEcsSecuritygroup is the security group equivalent of resolveEcsImage.
 // resolveEcsSecuritygroups turns a list of security group IDs into typed group
 // resources. Blank and unresolvable entries are skipped rather than failing the
 // list, since a group may have been deleted while still referenced.
@@ -1120,6 +1119,9 @@ func resolveEcsSecuritygroups(runtime *plugin.Runtime, region string, ids []any)
 	return res, nil
 }
 
+// resolveEcsSecuritygroup returns the typed security group for an id within a
+// region, or (nil, nil) when sgID is empty. It is the security group equivalent
+// of resolveEcsImage.
 func resolveEcsSecuritygroup(runtime *plugin.Runtime, region, sgID string) (*mqlAlicloudEcsSecuritygroup, error) {
 	if sgID == "" {
 		return nil, nil
