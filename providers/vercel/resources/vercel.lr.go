@@ -27,6 +27,7 @@ const (
 	ResourceVercelProjectMember                 string = "vercel.project.member"
 	ResourceVercelProjectEnvironmentVariable    string = "vercel.project.environmentVariable"
 	ResourceVercelDeployment                    string = "vercel.deployment"
+	ResourceVercelAlias                         string = "vercel.alias"
 	ResourceVercelDomain                        string = "vercel.domain"
 	ResourceVercelDnsRecord                     string = "vercel.dnsRecord"
 	ResourceVercelCertificate                   string = "vercel.certificate"
@@ -90,8 +91,12 @@ func init() {
 			Create: createVercelProjectEnvironmentVariable,
 		},
 		"vercel.deployment": {
-			// to override args, implement: initVercelDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initVercelDeployment,
 			Create: createVercelDeployment,
+		},
+		"vercel.alias": {
+			// to override args, implement: initVercelAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelAlias,
 		},
 		"vercel.domain": {
 			// to override args, implement: initVercelDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -603,6 +608,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.trustedIpsAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetTrustedIpsAddresses()).ToDataRes(types.Array(types.Dict))
 	},
+	"vercel.project.optionsAllowlistPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetOptionsAllowlistPaths()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.project.protectionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetProtectionConfig()).ToDataRes(types.Dict)
+	},
 	"vercel.project.repositoryType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetRepositoryType()).ToDataRes(types.String)
 	},
@@ -747,6 +758,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetDeployments()).ToDataRes(types.Array(types.Resource("vercel.deployment")))
 	},
+	"vercel.project.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetAliases()).ToDataRes(types.Array(types.Resource("vercel.alias")))
+	},
 	"vercel.project.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetDomains()).ToDataRes(types.Array(types.Resource("vercel.project.domain")))
 	},
@@ -851,6 +865,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelDeployment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.deployment.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDeployment).GetProject()).ToDataRes(types.Resource("vercel.project"))
+	},
+	"vercel.alias.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetId()).ToDataRes(types.String)
+	},
+	"vercel.alias.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetAlias()).ToDataRes(types.String)
+	},
+	"vercel.alias.redirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetRedirect()).ToDataRes(types.String)
+	},
+	"vercel.alias.redirectStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetRedirectStatusCode()).ToDataRes(types.Int)
+	},
+	"vercel.alias.creatorUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetCreatorUid()).ToDataRes(types.String)
+	},
+	"vercel.alias.creatorUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetCreatorUsername()).ToDataRes(types.String)
+	},
+	"vercel.alias.creatorEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetCreatorEmail()).ToDataRes(types.String)
+	},
+	"vercel.alias.protectionBypassCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetProtectionBypassCount()).ToDataRes(types.Int)
+	},
+	"vercel.alias.protectionBypassScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetProtectionBypassScopes()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.alias.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.alias.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.alias.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"vercel.alias.deployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetDeployment()).ToDataRes(types.Resource("vercel.deployment"))
+	},
+	"vercel.alias.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelAlias).GetProject()).ToDataRes(types.Resource("vercel.project"))
 	},
 	"vercel.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelDomain).GetId()).ToDataRes(types.String)
@@ -1785,6 +1844,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProject).TrustedIpsAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vercel.project.optionsAllowlistPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).OptionsAllowlistPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.project.protectionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).ProtectionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"vercel.project.repositoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProject).RepositoryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1977,6 +2044,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProject).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vercel.project.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vercel.project.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProject).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2131,6 +2202,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelDeployment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.deployment.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDeployment).Project, ok = plugin.RawToTValue[*mqlVercelProject](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.alias.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.redirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).Redirect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.redirectStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).RedirectStatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.creatorUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).CreatorUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.creatorUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).CreatorUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.creatorEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).CreatorEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.protectionBypassCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).ProtectionBypassCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.protectionBypassScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).ProtectionBypassScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.deployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).Deployment, ok = plugin.RawToTValue[*mqlVercelDeployment](v.Value, v.Error)
+		return
+	},
+	"vercel.alias.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelAlias).Project, ok = plugin.RawToTValue[*mqlVercelProject](v.Value, v.Error)
 		return
 	},
 	"vercel.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3754,6 +3889,8 @@ type mqlVercelProject struct {
 	TrustedIpsProtectionMode             plugin.TValue[string]
 	TrustedIpsDeploymentType             plugin.TValue[string]
 	TrustedIpsAddresses                  plugin.TValue[[]any]
+	OptionsAllowlistPaths                plugin.TValue[[]any]
+	ProtectionConfig                     plugin.TValue[any]
 	RepositoryType                       plugin.TValue[string]
 	RepositoryOwner                      plugin.TValue[string]
 	RepositoryName                       plugin.TValue[string]
@@ -3802,6 +3939,7 @@ type mqlVercelProject struct {
 	ConnectConfigurations                plugin.TValue[[]any]
 	EnvironmentVariables                 plugin.TValue[[]any]
 	Deployments                          plugin.TValue[[]any]
+	Aliases                              plugin.TValue[[]any]
 	Domains                              plugin.TValue[[]any]
 	Firewall                             plugin.TValue[*mqlVercelFirewall]
 	Stores                               plugin.TValue[[]any]
@@ -3927,6 +4065,14 @@ func (c *mqlVercelProject) GetTrustedIpsDeploymentType() *plugin.TValue[string] 
 
 func (c *mqlVercelProject) GetTrustedIpsAddresses() *plugin.TValue[[]any] {
 	return &c.TrustedIpsAddresses
+}
+
+func (c *mqlVercelProject) GetOptionsAllowlistPaths() *plugin.TValue[[]any] {
+	return &c.OptionsAllowlistPaths
+}
+
+func (c *mqlVercelProject) GetProtectionConfig() *plugin.TValue[any] {
+	return &c.ProtectionConfig
 }
 
 func (c *mqlVercelProject) GetRepositoryType() *plugin.TValue[string] {
@@ -4154,6 +4300,22 @@ func (c *mqlVercelProject) GetDeployments() *plugin.TValue[[]any] {
 		}
 
 		return c.deployments()
+	})
+}
+
+func (c *mqlVercelProject) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.project", c.__id, "aliases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aliases()
 	})
 }
 
@@ -4442,7 +4604,7 @@ func (c *mqlVercelProjectEnvironmentVariable) GetUpdatedAt() *plugin.TValue[*tim
 type mqlVercelDeployment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelDeploymentInternal it will be used here
+	mqlVercelDeploymentInternal
 	Id              plugin.TValue[string]
 	Name            plugin.TValue[string]
 	Url             plugin.TValue[string]
@@ -4455,6 +4617,7 @@ type mqlVercelDeployment struct {
 	CreatorEmail    plugin.TValue[string]
 	InspectorUrl    plugin.TValue[string]
 	CreatedAt       plugin.TValue[*time.Time]
+	Project         plugin.TValue[*mqlVercelProject]
 }
 
 // createVercelDeployment creates a new instance of this resource
@@ -4540,6 +4703,160 @@ func (c *mqlVercelDeployment) GetInspectorUrl() *plugin.TValue[string] {
 
 func (c *mqlVercelDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlVercelDeployment) GetProject() *plugin.TValue[*mqlVercelProject] {
+	return plugin.GetOrCompute[*mqlVercelProject](&c.Project, func() (*mqlVercelProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.deployment", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVercelProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlVercelAlias for the vercel.alias resource
+type mqlVercelAlias struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVercelAliasInternal
+	Id                     plugin.TValue[string]
+	Alias                  plugin.TValue[string]
+	Redirect               plugin.TValue[string]
+	RedirectStatusCode     plugin.TValue[int64]
+	CreatorUid             plugin.TValue[string]
+	CreatorUsername        plugin.TValue[string]
+	CreatorEmail           plugin.TValue[string]
+	ProtectionBypassCount  plugin.TValue[int64]
+	ProtectionBypassScopes plugin.TValue[[]any]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+	DeletedAt              plugin.TValue[*time.Time]
+	Deployment             plugin.TValue[*mqlVercelDeployment]
+	Project                plugin.TValue[*mqlVercelProject]
+}
+
+// createVercelAlias creates a new instance of this resource
+func createVercelAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelAlias{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.alias", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelAlias) MqlName() string {
+	return "vercel.alias"
+}
+
+func (c *mqlVercelAlias) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelAlias) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelAlias) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlVercelAlias) GetRedirect() *plugin.TValue[string] {
+	return &c.Redirect
+}
+
+func (c *mqlVercelAlias) GetRedirectStatusCode() *plugin.TValue[int64] {
+	return &c.RedirectStatusCode
+}
+
+func (c *mqlVercelAlias) GetCreatorUid() *plugin.TValue[string] {
+	return &c.CreatorUid
+}
+
+func (c *mqlVercelAlias) GetCreatorUsername() *plugin.TValue[string] {
+	return &c.CreatorUsername
+}
+
+func (c *mqlVercelAlias) GetCreatorEmail() *plugin.TValue[string] {
+	return &c.CreatorEmail
+}
+
+func (c *mqlVercelAlias) GetProtectionBypassCount() *plugin.TValue[int64] {
+	return &c.ProtectionBypassCount
+}
+
+func (c *mqlVercelAlias) GetProtectionBypassScopes() *plugin.TValue[[]any] {
+	return &c.ProtectionBypassScopes
+}
+
+func (c *mqlVercelAlias) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelAlias) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlVercelAlias) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlVercelAlias) GetDeployment() *plugin.TValue[*mqlVercelDeployment] {
+	return plugin.GetOrCompute[*mqlVercelDeployment](&c.Deployment, func() (*mqlVercelDeployment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.alias", c.__id, "deployment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVercelDeployment), nil
+			}
+		}
+
+		return c.deployment()
+	})
+}
+
+func (c *mqlVercelAlias) GetProject() *plugin.TValue[*mqlVercelProject] {
+	return plugin.GetOrCompute[*mqlVercelProject](&c.Project, func() (*mqlVercelProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.alias", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVercelProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }
 
 // mqlVercelDomain for the vercel.domain resource
