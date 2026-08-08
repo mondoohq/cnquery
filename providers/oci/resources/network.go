@@ -412,20 +412,6 @@ func (o *mqlOciNetworkSecurityList) hasStatelessRules() (bool, error) {
 	return anyRuleStateless(o.EgressSecurityRules.Data, "stateless"), nil
 }
 
-func resolveOciCompartment(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciCompartment]) (*mqlOciCompartment, error) {
-	if id == "" {
-		field.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "oci.compartment", map[string]*llx.RawData{
-		"id": llx.StringData(id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciCompartment), nil
-}
-
 func anyRuleStateless(rules []any, key string) bool {
 	for _, r := range rules {
 		m, ok := r.(map[string]any)
