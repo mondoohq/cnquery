@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
@@ -110,8 +108,7 @@ type mqlOciApigatewayGatewayInternal struct {
 
 	// details fetched lazily from GetGateway (ip addresses, CA bundles,
 	// response cache) — not in the list summary.
-	detailsLock sync.Mutex
-	detailsDone atomic.Bool
+	details ociOnce
 }
 
 func (o *mqlOciApigatewayGateway) id() (string, error) {
@@ -167,58 +164,49 @@ func (o *mqlOciApigatewayGateway) certificate() (*mqlOciApigatewayCertificate, e
 // does not return: ipAddresses, caBundles, responseCacheDetails. Safe for
 // concurrent callers.
 func (o *mqlOciApigatewayGateway) fetchDetails() error {
-	if o.detailsDone.Load() {
-		return nil
-	}
-	o.detailsLock.Lock()
-	defer o.detailsLock.Unlock()
-	if o.detailsDone.Load() {
-		return nil
-	}
+	return o.details.do(func() error {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.ApiGatewayGatewayClient(o.region)
+		if err != nil {
+			return err
+		}
+		resp, err := svc.GetGateway(context.Background(), apigateway.GetGatewayRequest{
+			GatewayId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return err
+		}
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.ApiGatewayGatewayClient(o.region)
-	if err != nil {
-		return err
-	}
-	resp, err := svc.GetGateway(context.Background(), apigateway.GetGatewayRequest{
-		GatewayId: common.String(o.Id.Data),
+		ips := make([]any, 0, len(resp.IpAddresses))
+		for i := range resp.IpAddresses {
+			ips = append(ips, stringValue(resp.IpAddresses[i].IpAddress))
+		}
+		o.IpAddresses = plugin.TValue[[]any]{Data: ips, State: plugin.StateIsSet}
+
+		caBundles := make([]any, 0, len(resp.CaBundles))
+		for i := range resp.CaBundles {
+			switch cb := resp.CaBundles[i].(type) {
+			case apigateway.CertificatesCaBundle:
+				caBundles = append(caBundles, stringValue(cb.CaBundleId))
+			case apigateway.CertificatesCertificateAuthority:
+				caBundles = append(caBundles, stringValue(cb.CertificateAuthorityId))
+			}
+		}
+		o.CaBundleIds = plugin.TValue[[]any]{Data: caBundles, State: plugin.StateIsSet}
+
+		// response cache presence only — the concrete config may hold a
+		// Redis/external endpoint we don't want to expose carte-blanche.
+		hasCache := false
+		if resp.ResponseCacheDetails != nil {
+			// NoCache is modeled as a concrete type; anything else indicates
+			// a cache is configured.
+			if _, isNone := resp.ResponseCacheDetails.(apigateway.NoCache); !isNone {
+				hasCache = true
+			}
+		}
+		o.HasResponseCache = plugin.TValue[bool]{Data: hasCache, State: plugin.StateIsSet}
+		return nil
 	})
-	if err != nil {
-		return err
-	}
-
-	ips := make([]any, 0, len(resp.IpAddresses))
-	for i := range resp.IpAddresses {
-		ips = append(ips, stringValue(resp.IpAddresses[i].IpAddress))
-	}
-	o.IpAddresses = plugin.TValue[[]any]{Data: ips, State: plugin.StateIsSet}
-
-	caBundles := make([]any, 0, len(resp.CaBundles))
-	for i := range resp.CaBundles {
-		switch cb := resp.CaBundles[i].(type) {
-		case apigateway.CertificatesCaBundle:
-			caBundles = append(caBundles, stringValue(cb.CaBundleId))
-		case apigateway.CertificatesCertificateAuthority:
-			caBundles = append(caBundles, stringValue(cb.CertificateAuthorityId))
-		}
-	}
-	o.CaBundleIds = plugin.TValue[[]any]{Data: caBundles, State: plugin.StateIsSet}
-
-	// response cache presence only — the concrete config may hold a
-	// Redis/external endpoint we don't want to expose carte-blanche.
-	hasCache := false
-	if resp.ResponseCacheDetails != nil {
-		// NoCache is modeled as a concrete type; anything else indicates
-		// a cache is configured.
-		if _, isNone := resp.ResponseCacheDetails.(apigateway.NoCache); !isNone {
-			hasCache = true
-		}
-	}
-	o.HasResponseCache = plugin.TValue[bool]{Data: hasCache, State: plugin.StateIsSet}
-
-	o.detailsDone.Store(true)
-	return nil
 }
 
 func (o *mqlOciApigatewayGateway) ipAddresses() ([]any, error) {
@@ -321,10 +309,8 @@ type mqlOciApigatewayDeploymentInternal struct {
 	region         string
 	cacheGatewayId string
 
-	// specFetched + spec populate the request-policy-derived fields.
-	specLock    sync.Mutex
-	specFetched atomic.Bool
-	spec        *apigateway.ApiSpecification
+	// the deployment spec backs the request-policy-derived fields.
+	spec ociRetryLazy[*apigateway.ApiSpecification]
 }
 
 func (o *mqlOciApigatewayDeployment) id() (string, error) {
@@ -391,40 +377,32 @@ func (o *mqlOciApigatewayDeployment) gateway() (*mqlOciApigatewayGateway, error)
 // (routes, request policies, mTLS, CORS, rate limits). Subsequent callers
 // use the cached spec. The request is intentionally serialized behind a
 // mutex to avoid N concurrent GetDeployment calls on first access.
-func (o *mqlOciApigatewayDeployment) fetchSpec() error {
-	if o.specFetched.Load() {
-		return nil
-	}
-	o.specLock.Lock()
-	defer o.specLock.Unlock()
-	if o.specFetched.Load() {
-		return nil
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.ApiGatewayDeploymentClient(o.region)
-	if err != nil {
-		return err
-	}
-	resp, err := svc.GetDeployment(context.Background(), apigateway.GetDeploymentRequest{
-		DeploymentId: common.String(o.Id.Data),
+func (o *mqlOciApigatewayDeployment) getSpec() (*apigateway.ApiSpecification, error) {
+	return o.spec.get(func() (*apigateway.ApiSpecification, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.ApiGatewayDeploymentClient(o.region)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := svc.GetDeployment(context.Background(), apigateway.GetDeploymentRequest{
+			DeploymentId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return resp.Specification, nil
 	})
-	if err != nil {
-		return err
-	}
-	o.spec = resp.Specification
-	o.specFetched.Store(true)
-	return nil
 }
 
 func (o *mqlOciApigatewayDeployment) requestPolicies() (*apigateway.ApiSpecificationRequestPolicies, error) {
-	if err := o.fetchSpec(); err != nil {
+	spec, err := o.getSpec()
+	if err != nil {
 		return nil, err
 	}
-	if o.spec == nil {
+	if spec == nil {
 		return nil, nil
 	}
-	return o.spec.RequestPolicies, nil
+	return spec.RequestPolicies, nil
 }
 
 // flattenAuthenticationType maps the SDK's authentication-policy union type

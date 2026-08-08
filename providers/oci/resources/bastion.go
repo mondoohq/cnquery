@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/bastion"
@@ -91,9 +89,7 @@ type mqlOciBastionInstanceInternal struct {
 	cacheTargetSubnetId string
 	region              string
 
-	lock    sync.Mutex
-	fetched atomic.Bool
-	bastion *bastion.Bastion
+	bastion ociRetryLazy[*bastion.Bastion]
 }
 
 func (o *mqlOciBastionInstance) id() (string, error) {
@@ -106,34 +102,24 @@ func (o *mqlOciBastionInstance) id() (string, error) {
 // they are only reachable through this call. Five accessors share it, and the
 // runtime resolves them concurrently, so the fetch is guarded.
 func (o *mqlOciBastionInstance) getBastionDetails() (*bastion.Bastion, error) {
-	if o.fetched.Load() {
-		return o.bastion, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched.Load() {
-		return o.bastion, nil
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	region := o.region
-	if region == "" {
-		region = ociRegionFromOCID(o.Id.Data)
-	}
-	svc, err := conn.BastionClient(region)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := svc.GetBastion(context.Background(), bastion.GetBastionRequest{
-		BastionId: common.String(o.Id.Data),
+	return o.bastion.get(func() (*bastion.Bastion, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		region := o.region
+		if region == "" {
+			region = ociRegionFromOCID(o.Id.Data)
+		}
+		svc, err := conn.BastionClient(region)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := svc.GetBastion(context.Background(), bastion.GetBastionRequest{
+			BastionId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &resp.Bastion, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.bastion = &resp.Bastion
-	o.fetched.Store(true)
-	return o.bastion, nil
 }
 
 func (o *mqlOciBastionInstance) clientCidrBlockAllowList() ([]any, error) {

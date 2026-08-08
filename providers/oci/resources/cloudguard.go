@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/cloudguard"
@@ -22,16 +20,12 @@ import (
 // CloudGuard is a tenancy-level service that only operates in the home region,
 // unlike other OCI services that require per-region iteration.
 //
-// The home region and the configuration are guarded by separate mutexes: the
-// configuration fetch needs the home region to build its client, and a single
-// shared mutex would deadlock because sync.Mutex is not reentrant.
+// The home region and the configuration are two separate lazies rather than
+// one: the configuration fetch needs the home region to build its client, and
+// resolving it from inside the configuration's own fetch would deadlock.
 type mqlOciCloudGuardInternal struct {
-	configLock     sync.Mutex
-	configFetched  atomic.Bool
-	config         *cloudguard.Configuration
-	homeRegionLock sync.Mutex
-	homeRegionSet  atomic.Bool
-	homeRegion     string
+	config     ociRetryLazy[*cloudguard.Configuration]
+	homeRegion ociRetryLazy[string]
 }
 
 // ociCloudGuardProblemWindow is how far back the problem listing reaches.
@@ -57,39 +51,27 @@ func (o *mqlOciCloudGuard) id() (string, error) {
 }
 
 func (o *mqlOciCloudGuard) getHomeRegion() (string, error) {
-	if o.homeRegionSet.Load() {
-		return o.homeRegion, nil
-	}
-	o.homeRegionLock.Lock()
-	defer o.homeRegionLock.Unlock()
-	if o.homeRegionSet.Load() {
-		return o.homeRegion, nil
-	}
+	return o.homeRegion.get(func() (string, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		tenancy, err := conn.Tenant(context.Background())
+		if err != nil {
+			return "", err
+		}
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	tenancy, err := conn.Tenant(context.Background())
-	if err != nil {
-		return "", err
-	}
+		if tenancy.HomeRegionKey == nil {
+			return "", errors.New("no home region set")
+		}
 
-	if tenancy.HomeRegionKey == nil {
-		return "", errors.New("no home region set")
-	}
-
-	// HomeRegionKey returns the short region key (e.g., "IAD"), not the region name (e.g., "us-ashburn-1").
-	// The OCI SDK's SetRegion() accepts both formats.
-	o.homeRegion = *tenancy.HomeRegionKey
-	o.homeRegionSet.Store(true)
-	return o.homeRegion, nil
+		// HomeRegionKey returns the short region key (e.g., "IAD"), not the region name (e.g., "us-ashburn-1").
+		// The OCI SDK's SetRegion() accepts both formats.
+		return *tenancy.HomeRegionKey, nil
+	})
 }
 
 func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
-	if o.configFetched.Load() {
-		return o.config, nil
-	}
-
-	// Resolve the home region before taking configLock: getHomeRegion takes its
-	// own lock, and nesting it inside this critical section would deadlock.
+	// Resolve the home region before entering config's own critical section:
+	// getHomeRegion takes a lock of its own, and nesting it inside this one
+	// would deadlock. It caches, so this costs an atomic load once resolved.
 	//
 	// This is the one caller that must not use getServiceRegion. The reporting
 	// region is read *from* this configuration, so asking for it here would
@@ -99,29 +81,22 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 		return nil, err
 	}
 
-	o.configLock.Lock()
-	defer o.configLock.Unlock()
-	if o.configFetched.Load() {
-		return o.config, nil
-	}
+	return o.config.get(func() (*cloudguard.Configuration, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.CloudGuardClient(homeRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	client, err := conn.CloudGuardClient(homeRegion)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := client.GetConfiguration(context.Background(), cloudguard.GetConfigurationRequest{
-		CompartmentId: common.String(conn.TenantID()),
+		response, err := client.GetConfiguration(context.Background(), cloudguard.GetConfigurationRequest{
+			CompartmentId: common.String(conn.TenantID()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.Configuration, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.config = &response.Configuration
-	o.configFetched.Store(true)
-	return o.config, nil
 }
 
 // getServiceRegion returns the region Cloud Guard actually serves data from.

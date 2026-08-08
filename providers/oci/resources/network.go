@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -661,8 +659,7 @@ func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *cor
 type mqlOciNetworkNetworkSecurityGroupInternal struct {
 	region     string
 	cacheVcnId string
-	fetchLock  sync.Mutex
-	fetched    atomic.Bool
+	rules      ociOnce
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) id() (string, error) {
@@ -796,113 +793,105 @@ func (o *mqlOciNetworkNetworkSecurityGroup) getRulesForNSG(ctx context.Context, 
 	return rules, nil
 }
 
-func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() (ingress []any, egress []any, err error) {
-	if o.fetched.Load() {
-		return nil, nil, nil
-	}
-	o.fetchLock.Lock()
-	defer o.fetchLock.Unlock()
-	if o.fetched.Load() {
-		return nil, nil, nil
-	}
+// fetchSecurityRules populates the four rule fields from one ListNetworkSecurityGroupSecurityRules
+// call. It reports only an error: once it returns nil the fields are set, so
+// callers read them directly rather than taking a copy back out of the fetch.
+func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() error {
+	return o.rules.do(func() error {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		ctx := context.Background()
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	ctx := context.Background()
-
-	svc, err := conn.NetworkClient(o.region)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rules, err := o.getRulesForNSG(ctx, svc, o.Id.Data)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ingressRules := []nsgSecurityRule{}
-	egressRules := []nsgSecurityRule{}
-	typedIngress := []securityRule{}
-	typedEgress := []securityRule{}
-
-	for i := range rules {
-		rule := rules[i]
-		r := nsgSecurityRule{
-			Direction:       string(rule.Direction),
-			Protocol:        stringValue(rule.Protocol),
-			Description:     stringValue(rule.Description),
-			Source:          stringValue(rule.Source),
-			SourceType:      string(rule.SourceType),
-			Destination:     stringValue(rule.Destination),
-			DestinationType: string(rule.DestinationType),
-			IsStateless:     boolValue(rule.IsStateless),
-			TcpOptions:      rule.TcpOptions,
-			UdpOptions:      rule.UdpOptions,
-			IcmpOptions:     rule.IcmpOptions,
+		svc, err := conn.NetworkClient(o.region)
+		if err != nil {
+			return err
 		}
 
-		if rule.Direction == core.SecurityRuleDirectionIngress {
-			ingressRules = append(ingressRules, r)
-			typedIngress = append(typedIngress, securityRuleFromNsg(rule))
-		} else {
-			egressRules = append(egressRules, r)
-			typedEgress = append(typedEgress, securityRuleFromNsg(rule))
+		rules, err := o.getRulesForNSG(ctx, svc, o.Id.Data)
+		if err != nil {
+			return err
 		}
-	}
 
-	ingress, err = convert.JsonToDictSlice(ingressRules)
-	if err != nil {
-		return nil, nil, err
-	}
+		ingressRules := []nsgSecurityRule{}
+		egressRules := []nsgSecurityRule{}
+		typedIngress := []securityRule{}
+		typedEgress := []securityRule{}
 
-	egress, err = convert.JsonToDictSlice(egressRules)
-	if err != nil {
-		return nil, nil, err
-	}
+		for i := range rules {
+			rule := rules[i]
+			r := nsgSecurityRule{
+				Direction:       string(rule.Direction),
+				Protocol:        stringValue(rule.Protocol),
+				Description:     stringValue(rule.Description),
+				Source:          stringValue(rule.Source),
+				SourceType:      string(rule.SourceType),
+				Destination:     stringValue(rule.Destination),
+				DestinationType: string(rule.DestinationType),
+				IsStateless:     boolValue(rule.IsStateless),
+				TcpOptions:      rule.TcpOptions,
+				UdpOptions:      rule.UdpOptions,
+				IcmpOptions:     rule.IcmpOptions,
+			}
 
-	typedIngressRes, err := newSecurityRules(o.MqlRuntime, o.Id.Data, typedIngress)
-	if err != nil {
-		return nil, nil, err
-	}
+			if rule.Direction == core.SecurityRuleDirectionIngress {
+				ingressRules = append(ingressRules, r)
+				typedIngress = append(typedIngress, securityRuleFromNsg(rule))
+			} else {
+				egressRules = append(egressRules, r)
+				typedEgress = append(typedEgress, securityRuleFromNsg(rule))
+			}
+		}
 
-	typedEgressRes, err := newSecurityRules(o.MqlRuntime, o.Id.Data, typedEgress)
-	if err != nil {
-		return nil, nil, err
-	}
+		ingress, err := convert.JsonToDictSlice(ingressRules)
+		if err != nil {
+			return err
+		}
 
-	o.IngressSecurityRules = plugin.TValue[[]any]{Data: ingress, State: plugin.StateIsSet}
-	o.EgressSecurityRules = plugin.TValue[[]any]{Data: egress, State: plugin.StateIsSet}
-	o.IngressRules = plugin.TValue[[]any]{Data: typedIngressRes, State: plugin.StateIsSet}
-	o.EgressRules = plugin.TValue[[]any]{Data: typedEgressRes, State: plugin.StateIsSet}
-	o.fetched.Store(true)
+		egress, err := convert.JsonToDictSlice(egressRules)
+		if err != nil {
+			return err
+		}
 
-	return ingress, egress, nil
+		typedIngressRes, err := newSecurityRules(o.MqlRuntime, o.Id.Data, typedIngress)
+		if err != nil {
+			return err
+		}
+
+		typedEgressRes, err := newSecurityRules(o.MqlRuntime, o.Id.Data, typedEgress)
+		if err != nil {
+			return err
+		}
+
+		o.IngressSecurityRules = plugin.TValue[[]any]{Data: ingress, State: plugin.StateIsSet}
+		o.EgressSecurityRules = plugin.TValue[[]any]{Data: egress, State: plugin.StateIsSet}
+		o.IngressRules = plugin.TValue[[]any]{Data: typedIngressRes, State: plugin.StateIsSet}
+		o.EgressRules = plugin.TValue[[]any]{Data: typedEgressRes, State: plugin.StateIsSet}
+		return nil
+	})
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) ingressRules() ([]any, error) {
-	if _, _, err := o.fetchSecurityRules(); err != nil {
+	if err := o.fetchSecurityRules(); err != nil {
 		return nil, err
 	}
 	return o.IngressRules.Data, nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) egressRules() ([]any, error) {
-	if _, _, err := o.fetchSecurityRules(); err != nil {
+	if err := o.fetchSecurityRules(); err != nil {
 		return nil, err
 	}
 	return o.EgressRules.Data, nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) ingressSecurityRules() ([]any, error) {
-	_, _, err := o.fetchSecurityRules()
-	if err != nil {
+	if err := o.fetchSecurityRules(); err != nil {
 		return nil, err
 	}
 	return o.IngressSecurityRules.Data, nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) egressSecurityRules() ([]any, error) {
-	_, _, err := o.fetchSecurityRules()
-	if err != nil {
+	if err := o.fetchSecurityRules(); err != nil {
 		return nil, err
 	}
 	return o.EgressSecurityRules.Data, nil
@@ -913,20 +902,13 @@ func (o *mqlOciNetworkNetworkSecurityGroup) compartment() (*mqlOciCompartment, e
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) hasStatelessRules() (bool, error) {
-	ingress, egress, err := o.fetchSecurityRules()
-	if err != nil {
+	if err := o.fetchSecurityRules(); err != nil {
 		return false, err
 	}
-	if ingress == nil {
-		ingress = o.IngressSecurityRules.Data
-	}
-	if egress == nil {
-		egress = o.EgressSecurityRules.Data
-	}
-	if anyRuleStateless(ingress, "isStateless") {
+	if anyRuleStateless(o.IngressSecurityRules.Data, "isStateless") {
 		return true, nil
 	}
-	return anyRuleStateless(egress, "isStateless"), nil
+	return anyRuleStateless(o.EgressSecurityRules.Data, "isStateless"), nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) attachedVnics() ([]any, error) {

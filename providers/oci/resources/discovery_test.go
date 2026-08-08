@@ -260,10 +260,17 @@ func TestGetDiscoveryTargetsResolvesAliases(t *testing.T) {
 	})
 
 	t.Run("explicit targets pass through", func(t *testing.T) {
+		// Set equality, for the same reason the auto case above uses it: this
+		// path also ends in stringx.DedupStringArray, whose result comes out of
+		// a map and so has no stable order. Asserting the slice order made this
+		// subtest a coin flip on two elements rather than a check of anything.
 		got := getDiscoveryTargets(conf(DiscoveryUsers, DiscoveryBuckets))
 		want := []string{DiscoveryUsers, DiscoveryBuckets}
-		if !slices.Equal(got, want) {
-			t.Errorf("got %v, want %v", got, want)
+		gotSet := slices.Clone(got)
+		slices.Sort(gotSet)
+		slices.Sort(want)
+		if !slices.Equal(gotSet, want) {
+			t.Errorf("got %v, want the same set as %v", got, want)
 		}
 	})
 

@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -197,35 +195,25 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 }
 
 type mqlOciNetworkFirewallPolicyInternal struct {
-	region    string
-	fetched   atomic.Bool
-	detail    *networkfirewall.NetworkFirewallPolicy
-	fetchLock sync.Mutex
+	region string
+	detail ociRetryLazy[*networkfirewall.NetworkFirewallPolicy]
 }
 
 func (o *mqlOciNetworkFirewallPolicy) fetchDetail() (*networkfirewall.NetworkFirewallPolicy, error) {
-	if o.fetched.Load() {
-		return o.detail, nil
-	}
-	o.fetchLock.Lock()
-	defer o.fetchLock.Unlock()
-	if o.fetched.Load() {
-		return o.detail, nil
-	}
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.NetworkFirewallClient(o.region)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := svc.GetNetworkFirewallPolicy(context.Background(), networkfirewall.GetNetworkFirewallPolicyRequest{
-		NetworkFirewallPolicyId: common.String(o.Id.Data),
+	return o.detail.get(func() (*networkfirewall.NetworkFirewallPolicy, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.NetworkFirewallClient(o.region)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := svc.GetNetworkFirewallPolicy(context.Background(), networkfirewall.GetNetworkFirewallPolicyRequest{
+			NetworkFirewallPolicyId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &resp.NetworkFirewallPolicy, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	o.detail = &resp.NetworkFirewallPolicy
-	o.fetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciNetworkFirewallPolicy) description() (string, error) {

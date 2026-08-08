@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -91,10 +89,8 @@ func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *event
 }
 
 type mqlOciEventsRuleInternal struct {
-	lock    sync.Mutex
-	fetched atomic.Bool
-	rule    *events.Rule
-	region  string
+	rule   ociRetryLazy[*events.Rule]
+	region string
 }
 
 func (o *mqlOciEventsRule) id() (string, error) {
@@ -102,37 +98,24 @@ func (o *mqlOciEventsRule) id() (string, error) {
 }
 
 // getRuleDetails lazily loads the rule detail, which carries the actions the
-// list call omits. The lock-free fast path reads an atomic.Bool rather than the
-// pointer itself: the executor resolves fields concurrently, and a plain
-// pointer read racing the locked write has no happens-before edge, so a reader
-// could observe a non-nil rule whose fields were not yet visible.
+// list call omits.
 func (o *mqlOciEventsRule) getRuleDetails() (*events.Rule, error) {
-	if o.fetched.Load() {
-		return o.rule, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched.Load() {
-		return o.rule, nil
-	}
+	return o.rule.get(func() (*events.Rule, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.EventsClient(o.region)
+		if err != nil {
+			return nil, err
+		}
 
-	client, err := conn.EventsClient(o.region)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := client.GetRule(context.Background(), events.GetRuleRequest{
-		RuleId: common.String(o.Id.Data),
+		response, err := client.GetRule(context.Background(), events.GetRuleRequest{
+			RuleId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.Rule, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.rule = &response.Rule
-	o.fetched.Store(true)
-	return o.rule, nil
 }
 
 func (o *mqlOciEventsRule) actions() ([]any, error) {
