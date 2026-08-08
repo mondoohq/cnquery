@@ -29,13 +29,6 @@ var ociDnsZoneScopes = []dns.ListZonesScopeEnum{
 	dns.ListZonesScopePrivate,
 }
 
-// ociDnsSteeringPolicyScopes are the scopes a steering policy can live in.
-// The listing scopes the same way zones do, so both have to be asked for.
-var ociDnsSteeringPolicyScopes = []dns.ListSteeringPoliciesScopeEnum{
-	dns.ListSteeringPoliciesScopeGlobal,
-	dns.ListSteeringPoliciesScopePrivate,
-}
-
 func (o *mqlOciDns) zones() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
@@ -131,27 +124,22 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 				return nil, err
 			}
 
-			policies := []dns.SteeringPolicySummary{}
-			// Scoped the same way zones are, and for the same reason: the
-			// listing returns one scope at a time rather than the union, so
-			// asking only for the default reports a tenancy's private traffic
-			// management as absent.
-			for _, scope := range ociDnsSteeringPolicyScopes {
-				perScope, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.SteeringPolicySummary, *string, error) {
-					response, err := client.ListSteeringPolicies(ctx, dns.ListSteeringPoliciesRequest{
-						CompartmentId: common.String(compartmentID),
-						Scope:         scope,
-						Page:          page,
-					})
-					if err != nil {
-						return nil, nil, err
-					}
-					return response.Items, response.OpcNextPage, nil
+			// Unlike zones, steering policies exist only globally: the listing
+			// rejects any other scope with "query param scope must be one of
+			// [GLOBAL]", so asking for PRIVATE fails the whole call.
+			policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.SteeringPolicySummary, *string, error) {
+				response, err := client.ListSteeringPolicies(ctx, dns.ListSteeringPoliciesRequest{
+					CompartmentId: common.String(compartmentID),
+					Scope:         dns.ListSteeringPoliciesScopeGlobal,
+					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				policies = append(policies, perScope...)
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(policies))
