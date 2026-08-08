@@ -64,6 +64,9 @@ func (r *mqlAlicloudAlb) loadBalancers() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				if filteredOutByTags(conn, mqlLb.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlLb)
 			}
 			if resp.Body.NextToken == nil || *resp.Body.NextToken == "" {

@@ -3,7 +3,10 @@
 
 package resources
 
-import tea "github.com/alibabacloud-go/tea/tea"
+import (
+	tea "github.com/alibabacloud-go/tea/tea"
+	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+)
 
 // strPtrsToStrings converts a []*string SDK slice into a []string, dropping nil
 // and empty entries so downstream resolvers are never handed a blank id.
@@ -46,3 +49,29 @@ func int64PtrsToInts(in []*int64) []any {
 // ap-southeast-1 for the international partition. An account belongs to one of
 // them, so a call against the other partition returns no data (or an error).
 var alicloudCenterRegions = []string{"cn-hangzhou", "ap-southeast-1"}
+
+// filteredOutByTags reports whether a resource carrying these tags should be
+// dropped for the connection's --filters tag settings.
+//
+// Filters are applied in the listers rather than in discovery, so a scan and a
+// plain MQL query see the same set. Callers whose tags cost a separate API call
+// gate the lookup on conn.Filters.General.HasTags() first, so an unfiltered
+// scan does not pay for tags nobody asked for.
+func filteredOutByTags(conn *connection.AlicloudConnection, tags map[string]any) bool {
+	if !conn.Filters.General.HasTags() {
+		return false
+	}
+	return conn.Filters.General.IsFilteredOutByTags(tagsToStringMap(tags))
+}
+
+// tagsToStringMap narrows an MQL tag map to the string-valued entries the tag
+// filters compare against.
+func tagsToStringMap(tags map[string]any) map[string]string {
+	res := make(map[string]string, len(tags))
+	for k, v := range tags {
+		if s, ok := v.(string); ok {
+			res[k] = s
+		}
+	}
+	return res
+}

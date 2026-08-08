@@ -90,6 +90,9 @@ func (r *mqlAlicloudCs) clusters() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				if filteredOutByTags(conn, mqlCluster.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlCluster)
 			}
 

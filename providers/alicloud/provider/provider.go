@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -33,6 +34,36 @@ func stringFlag(flags map[string]*llx.Primitive, name string, envs ...string) st
 		}
 	}
 	return ""
+}
+
+// filterOptPrefixes are the --filters keys the provider understands. Anything
+// else is dropped rather than silently stored, so a typo surfaces as a filter
+// that plainly did nothing instead of one that appears accepted.
+var filterOptPrefixes = []string{
+	"regions",
+	"exclude:regions",
+	"tag:",
+	"exclude:tag:",
+}
+
+// parseFlagsToFiltersOpts flattens the --filters key-value flag into connection
+// options the connection reads back through DiscoveryFiltersFromOpts.
+func parseFlagsToFiltersOpts(flags map[string]*llx.Primitive) map[string]string {
+	opts := map[string]string{}
+
+	x, ok := flags["filters"]
+	if !ok || len(x.Map) == 0 {
+		return opts
+	}
+	for k, v := range x.Map {
+		for _, prefix := range filterOptPrefixes {
+			if strings.HasPrefix(k, prefix) {
+				opts[k] = string(v.Value)
+				break
+			}
+		}
+	}
+	return opts
 }
 
 type Service struct {
@@ -78,6 +109,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	secret := stringFlag(flags, "access-key-secret", "ALIBABA_CLOUD_ACCESS_KEY_SECRET", "ALICLOUD_SECRET_KEY")
 	if secret != "" {
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", secret))
+	}
+
+	for k, v := range parseFlagsToFiltersOpts(flags) {
+		conf.Options[k] = v
 	}
 
 	discoverTargets := []string{resources.DiscoveryAuto}

@@ -148,6 +148,10 @@ func (r *mqlAlicloudVpc) networks() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				if mqlNetwork, ok := network.(*mqlAlicloudVpcNetwork); ok &&
+					filteredOutByTags(conn, mqlNetwork.Tags.Data) {
+					continue
+				}
 				res = append(res, network)
 			}
 

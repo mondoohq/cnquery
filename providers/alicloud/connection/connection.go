@@ -49,6 +49,10 @@ type AlicloudConnection struct {
 	region       string
 	regionFilter []string
 
+	// Filters narrows which objects the listers return, and therefore which
+	// objects discovery turns into assets.
+	Filters DiscoveryFilters
+
 	accountID string
 
 	clientLock sync.Mutex
@@ -79,6 +83,8 @@ func NewAlicloudConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 			}
 		}
 	}
+
+	conn.Filters = DiscoveryFiltersFromOpts(opts)
 
 	accessKeyID := firstNonEmpty(opts[OptionAccessKeyID], os.Getenv("ALIBABA_CLOUD_ACCESS_KEY_ID"), os.Getenv("ALICLOUD_ACCESS_KEY"))
 	accessKeySecret := os.Getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
