@@ -115,9 +115,9 @@ func (o *mqlOciNetworkCpe) compartment() (*mqlOciCompartment, error) {
 // IPSec connections
 
 type mqlOciNetworkIpsecConnectionInternal struct {
-	region     string
-	cacheCpeId string
-	cacheDrgId string
+	cacheRegion string
+	cacheCpeID  string
+	cacheDrgID  string
 }
 
 func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
@@ -172,9 +172,9 @@ func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
 					return nil, err
 				}
 				mqlIpsc := mqlInstance.(*mqlOciNetworkIpsecConnection)
-				mqlIpsc.region = regionKey
-				mqlIpsc.cacheCpeId = stringValue(ipsc.CpeId)
-				mqlIpsc.cacheDrgId = stringValue(ipsc.DrgId)
+				mqlIpsc.cacheRegion = regionKey
+				mqlIpsc.cacheCpeID = stringValue(ipsc.CpeId)
+				mqlIpsc.cacheDrgID = stringValue(ipsc.DrgId)
 				res = append(res, mqlIpsc)
 			}
 
@@ -219,12 +219,12 @@ func (o *mqlOciNetworkIpsecConnection) compartment() (*mqlOciCompartment, error)
 }
 
 func (o *mqlOciNetworkIpsecConnection) cpe() (*mqlOciNetworkCpe, error) {
-	if !isOcid(o.cacheCpeId) {
+	if !isOcid(o.cacheCpeID) {
 		o.Cpe.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.network.cpe", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheCpeId),
+		"id": llx.StringData(o.cacheCpeID),
 	})
 	if err != nil {
 		return nil, err
@@ -233,12 +233,12 @@ func (o *mqlOciNetworkIpsecConnection) cpe() (*mqlOciNetworkCpe, error) {
 }
 
 func (o *mqlOciNetworkIpsecConnection) drg() (*mqlOciNetworkDrg, error) {
-	if !isOcid(o.cacheDrgId) {
+	if !isOcid(o.cacheDrgID) {
 		o.Drg.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.network.drg", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheDrgId),
+		"id": llx.StringData(o.cacheDrgID),
 	})
 	if err != nil {
 		return nil, err
@@ -248,7 +248,7 @@ func (o *mqlOciNetworkIpsecConnection) drg() (*mqlOciNetworkDrg, error) {
 
 func (o *mqlOciNetworkIpsecConnection) tunnels() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	region := o.region
+	region := o.cacheRegion
 	if region == "" {
 		region = ociRegionFromOCID(o.Id.Data)
 	}
@@ -306,7 +306,7 @@ func (o *mqlOciNetworkIpsecConnection) tunnels() ([]any, error) {
 			return nil, err
 		}
 		tun := mqlInstance.(*mqlOciNetworkIpsecConnectionTunnel)
-		tun.cacheIpscId = o.Id.Data
+		tun.cacheIpscID = o.Id.Data
 		tun.cacheRegion = region
 		res = append(res, tun)
 	}
@@ -318,7 +318,7 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) id() (string, error) {
 }
 
 type mqlOciNetworkIpsecConnectionTunnelInternal struct {
-	cacheIpscId string
+	cacheIpscID string
 	cacheRegion string
 	details     ociOnce
 	phaseOne    *core.TunnelPhaseOneDetails
@@ -332,7 +332,7 @@ type mqlOciNetworkIpsecConnectionTunnelInternal struct {
 // forever.
 func (o *mqlOciNetworkIpsecConnectionTunnel) fetchDetails() error {
 	return o.details.do(func() error {
-		if o.cacheIpscId == "" {
+		if o.cacheIpscID == "" {
 			return nil
 		}
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
@@ -345,7 +345,7 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) fetchDetails() error {
 			return err
 		}
 		resp, err := svc.GetIPSecConnectionTunnel(context.Background(), core.GetIPSecConnectionTunnelRequest{
-			IpscId:   common.String(o.cacheIpscId),
+			IpscId:   common.String(o.cacheIpscID),
 			TunnelId: common.String(o.Id.Data),
 		})
 		if err != nil {
@@ -605,7 +605,7 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) compartment() (*mqlOciCompartment, 
 // FastConnect virtual circuits
 
 type mqlOciNetworkVirtualCircuitInternal struct {
-	cacheDrgId string
+	cacheDrgID string
 }
 
 // crossConnectMapping is the subset of an OCI virtual-circuit cross-connect
@@ -695,7 +695,7 @@ func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 				}
 				mqlVc := mqlInstance.(*mqlOciNetworkVirtualCircuit)
 				if gw := stringValue(vc.GatewayId); ociResourceTypeFromOCID(gw) == "drg" {
-					mqlVc.cacheDrgId = gw
+					mqlVc.cacheDrgID = gw
 				}
 				res = append(res, mqlVc)
 			}
@@ -741,12 +741,12 @@ func (o *mqlOciNetworkVirtualCircuit) compartment() (*mqlOciCompartment, error) 
 }
 
 func (o *mqlOciNetworkVirtualCircuit) drg() (*mqlOciNetworkDrg, error) {
-	if !isOcid(o.cacheDrgId) {
+	if !isOcid(o.cacheDrgID) {
 		o.Drg.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.network.drg", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheDrgId),
+		"id": llx.StringData(o.cacheDrgID),
 	})
 	if err != nil {
 		return nil, err

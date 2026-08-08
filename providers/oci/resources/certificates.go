@@ -122,7 +122,7 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 					return nil, err
 				}
 				mqlCert := mqlInstance.(*mqlOciCertificatesCertificate)
-				mqlCert.cacheIssuerCaId = stringValue(c.IssuerCertificateAuthorityId)
+				mqlCert.cacheIssuerCaID = stringValue(c.IssuerCertificateAuthorityId)
 				res = append(res, mqlCert)
 			}
 			return res, nil
@@ -130,7 +130,7 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 }
 
 type mqlOciCertificatesCertificateInternal struct {
-	cacheIssuerCaId string
+	cacheIssuerCaID string
 }
 
 func (o *mqlOciCertificatesCertificate) id() (string, error) {
@@ -169,12 +169,12 @@ func initOciCertificatesCertificate(runtime *plugin.Runtime, args map[string]*ll
 }
 
 func (o *mqlOciCertificatesCertificate) issuerCertificateAuthority() (*mqlOciCertificatesCertificateAuthority, error) {
-	if o.cacheIssuerCaId == "" || !isOcid(o.cacheIssuerCaId) {
+	if o.cacheIssuerCaID == "" || !isOcid(o.cacheIssuerCaID) {
 		o.IssuerCertificateAuthority.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.certificates.certificateAuthority", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheIssuerCaId),
+		"id": llx.StringData(o.cacheIssuerCaID),
 	})
 	if err != nil {
 		return nil, err
@@ -292,8 +292,8 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 					return nil, err
 				}
 				mqlCa := mqlInstance.(*mqlOciCertificatesCertificateAuthority)
-				mqlCa.cacheIssuerCaId = stringValue(ca.IssuerCertificateAuthorityId)
-				mqlCa.cacheKmsKeyId = stringValue(ca.KmsKeyId)
+				mqlCa.cacheIssuerCaID = stringValue(ca.IssuerCertificateAuthorityId)
+				mqlCa.cacheKmsKeyID = stringValue(ca.KmsKeyId)
 				res = append(res, mqlCa)
 			}
 			return res, nil
@@ -301,8 +301,8 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 }
 
 type mqlOciCertificatesCertificateAuthorityInternal struct {
-	cacheIssuerCaId string
-	cacheKmsKeyId   string
+	cacheIssuerCaID string
+	cacheKmsKeyID   string
 }
 
 func (o *mqlOciCertificatesCertificateAuthority) id() (string, error) {
@@ -313,12 +313,12 @@ func (o *mqlOciCertificatesCertificateAuthority) issuerCertificateAuthority() (*
 	// Root CAs report themselves as their own issuer; treat that as
 	// "no separate issuer" to keep the typed traversal useful for
 	// subordinate-only queries.
-	if o.cacheIssuerCaId == "" || o.cacheIssuerCaId == o.Id.Data || !isOcid(o.cacheIssuerCaId) {
+	if o.cacheIssuerCaID == "" || o.cacheIssuerCaID == o.Id.Data || !isOcid(o.cacheIssuerCaID) {
 		o.IssuerCertificateAuthority.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.certificates.certificateAuthority", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheIssuerCaId),
+		"id": llx.StringData(o.cacheIssuerCaID),
 	})
 	if err != nil {
 		return nil, err
@@ -327,12 +327,12 @@ func (o *mqlOciCertificatesCertificateAuthority) issuerCertificateAuthority() (*
 }
 
 func (o *mqlOciCertificatesCertificateAuthority) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+	if o.cacheKmsKeyID == "" || !isOcid(o.cacheKmsKeyID) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err

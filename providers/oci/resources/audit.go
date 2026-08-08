@@ -202,7 +202,7 @@ func (o *mqlOciAudit) newAuditEvents(events []audit.AuditEvent) ([]any, error) {
 			return nil, err
 		}
 		mqlEventTyped := mqlEvent.(*mqlOciAuditEvent)
-		mqlEventTyped.cacheCompartmentId = stringValue(data.CompartmentId)
+		mqlEventTyped.cacheCompartmentID = stringValue(data.CompartmentId)
 		res = append(res, mqlEventTyped)
 	}
 
@@ -210,7 +210,7 @@ func (o *mqlOciAudit) newAuditEvents(events []audit.AuditEvent) ([]any, error) {
 }
 
 type mqlOciAuditEventInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 }
 
 func (o *mqlOciAuditEvent) id() (string, error) {
@@ -218,7 +218,7 @@ func (o *mqlOciAuditEvent) id() (string, error) {
 }
 
 func (o *mqlOciAuditEvent) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciAuditEvent) principal() (*mqlOciIdentityUser, error) {

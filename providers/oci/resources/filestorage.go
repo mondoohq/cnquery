@@ -85,8 +85,8 @@ func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 						return nil, err
 					}
 					mqlFs := mqlInstance.(*mqlOciFileStorageFileSystem)
-					mqlFs.cacheKmsKeyId = stringValue(fs.KmsKeyId)
-					mqlFs.cacheParentFileSystemId = parentFileSystemId
+					mqlFs.cacheKmsKeyID = stringValue(fs.KmsKeyId)
+					mqlFs.cacheParentFileSystemID = parentFileSystemId
 					res = append(res, mqlFs)
 				}
 			}
@@ -117,8 +117,8 @@ func (o *mqlOciFileStorage) getFileSystemsForAD(ctx context.Context, fsClient *f
 }
 
 type mqlOciFileStorageFileSystemInternal struct {
-	cacheKmsKeyId           string
-	cacheParentFileSystemId string
+	cacheKmsKeyID           string
+	cacheParentFileSystemID string
 }
 
 func (o *mqlOciFileStorageFileSystem) id() (string, error) {
@@ -126,12 +126,12 @@ func (o *mqlOciFileStorageFileSystem) id() (string, error) {
 }
 
 func (o *mqlOciFileStorageFileSystem) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+	if o.cacheKmsKeyID == "" || !isOcid(o.cacheKmsKeyID) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlKey, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err

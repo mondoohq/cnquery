@@ -139,7 +139,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					return nil, err
 				}
 				mqlCI := mqlInstance.(*mqlOciContainerInstancesInstance)
-				mqlCI.region = region
+				mqlCI.cacheRegion = region
 				res = append(res, mqlCI)
 			}
 
@@ -148,7 +148,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 }
 
 type mqlOciContainerInstancesInstanceInternal struct {
-	region string
+	cacheRegion string
 }
 
 func (o *mqlOciContainerInstancesInstance) id() (string, error) {
@@ -159,7 +159,7 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()
 
-	svc, err := conn.ContainerInstanceClient(o.region)
+	svc, err := conn.ContainerInstanceClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}

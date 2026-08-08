@@ -61,7 +61,7 @@ func (o *mqlOciLogging) logGroups() ([]any, error) {
 					return nil, err
 				}
 				// Store the region internally so logs() knows which region to query
-				mqlInstance.(*mqlOciLoggingLogGroup).region = region
+				mqlInstance.(*mqlOciLoggingLogGroup).cacheRegion = region
 				res = append(res, mqlInstance)
 			}
 
@@ -91,7 +91,7 @@ func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *loggi
 }
 
 type mqlOciLoggingLogGroupInternal struct {
-	region string
+	cacheRegion string
 }
 
 func initOciLoggingLogGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -135,7 +135,7 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 
 	logGroupId := o.Id.Data
 
-	svc, err := conn.LoggingClient(o.region)
+	svc, err := conn.LoggingClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlInstance.(*mqlOciLoggingLog).cacheLogGroupId = stringValue(l.LogGroupId)
+		mqlInstance.(*mqlOciLoggingLog).cacheLogGroupID = stringValue(l.LogGroupId)
 		res = append(res, mqlInstance)
 	}
 
@@ -210,7 +210,7 @@ func (o *mqlOciLoggingLogGroup) getLogsForGroup(ctx context.Context, client *log
 }
 
 type mqlOciLoggingLogInternal struct {
-	cacheLogGroupId string
+	cacheLogGroupID string
 }
 
 func (o *mqlOciLoggingLog) id() (string, error) {
@@ -218,12 +218,12 @@ func (o *mqlOciLoggingLog) id() (string, error) {
 }
 
 func (o *mqlOciLoggingLog) logGroup() (*mqlOciLoggingLogGroup, error) {
-	if o.cacheLogGroupId == "" {
+	if o.cacheLogGroupID == "" {
 		o.LogGroup.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlLg, err := NewResource(o.MqlRuntime, "oci.logging.logGroup", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheLogGroupId),
+		"id": llx.StringData(o.cacheLogGroupID),
 	})
 	if err != nil {
 		return nil, err

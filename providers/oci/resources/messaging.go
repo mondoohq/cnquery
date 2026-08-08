@@ -66,8 +66,8 @@ func (o *mqlOciStreaming) streams() ([]any, error) {
 					return nil, err
 				}
 				mqlStreamTyped := mqlStream.(*mqlOciStreamingStream)
-				mqlStreamTyped.cacheCompartmentId = stringValue(s.CompartmentId)
-				mqlStreamTyped.cacheStreamPoolId = stringValue(s.StreamPoolId)
+				mqlStreamTyped.cacheCompartmentID = stringValue(s.CompartmentId)
+				mqlStreamTyped.cacheStreamPoolID = stringValue(s.StreamPoolId)
 				res = append(res, mqlStreamTyped)
 			}
 
@@ -117,7 +117,7 @@ func (o *mqlOciStreaming) streamPools() ([]any, error) {
 					return nil, err
 				}
 				mqlPoolTyped := mqlPool.(*mqlOciStreamingStreamPool)
-				mqlPoolTyped.cacheCompartmentId = stringValue(p.CompartmentId)
+				mqlPoolTyped.cacheCompartmentID = stringValue(p.CompartmentId)
 				mqlPoolTyped.cacheRegion = region
 				res = append(res, mqlPoolTyped)
 			}
@@ -127,8 +127,8 @@ func (o *mqlOciStreaming) streamPools() ([]any, error) {
 }
 
 type mqlOciStreamingStreamInternal struct {
-	cacheCompartmentId string
-	cacheStreamPoolId  string
+	cacheCompartmentID string
+	cacheStreamPoolID  string
 }
 
 func (o *mqlOciStreamingStream) id() (string, error) {
@@ -136,16 +136,16 @@ func (o *mqlOciStreamingStream) id() (string, error) {
 }
 
 func (o *mqlOciStreamingStream) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciStreamingStream) streamPool() (*mqlOciStreamingStreamPool, error) {
-	if o.cacheStreamPoolId == "" {
+	if o.cacheStreamPoolID == "" {
 		o.StreamPool.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(o.MqlRuntime, "oci.streaming.streamPool", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheStreamPoolId),
+		"id": llx.StringData(o.cacheStreamPoolID),
 	})
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (o *mqlOciStreamingStream) streamPool() (*mqlOciStreamingStreamPool, error)
 // private-endpoint placement and the Kafka settings are detail-only, so they
 // share one fetch.
 type mqlOciStreamingStreamPoolInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	detail ociLazy[*streaming.StreamPool]
@@ -206,7 +206,7 @@ func (o *mqlOciStreamingStreamPool) id() (string, error) {
 }
 
 func (o *mqlOciStreamingStreamPool) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
@@ -365,7 +365,7 @@ func (o *mqlOciQueue) queues() ([]any, error) {
 					return nil, err
 				}
 				mqlQueueTyped := mqlQueue.(*mqlOciQueueQueue)
-				mqlQueueTyped.cacheCompartmentId = stringValue(q.CompartmentId)
+				mqlQueueTyped.cacheCompartmentID = stringValue(q.CompartmentId)
 				mqlQueueTyped.cacheRegion = region
 				res = append(res, mqlQueueTyped)
 			}
@@ -377,7 +377,7 @@ func (o *mqlOciQueue) queues() ([]any, error) {
 // The queue listing omits the encryption key and every timer, so all five
 // detail-backed fields share one fetch.
 type mqlOciQueueQueueInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	detail ociLazy[*queue.Queue]
@@ -388,7 +388,7 @@ func (o *mqlOciQueueQueue) id() (string, error) {
 }
 
 func (o *mqlOciQueueQueue) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
@@ -512,9 +512,9 @@ func (o *mqlOciKafka) clusters() ([]any, error) {
 					return nil, err
 				}
 				mqlClusterTyped := mqlCluster.(*mqlOciKafkaCluster)
-				mqlClusterTyped.cacheCompartmentId = stringValue(c.CompartmentId)
+				mqlClusterTyped.cacheCompartmentID = stringValue(c.CompartmentId)
 				mqlClusterTyped.cacheRegion = region
-				mqlClusterTyped.cacheSubnetIds = ociKafkaAccessSubnetIds(c.AccessSubnets)
+				mqlClusterTyped.cacheSubnetIDs = ociKafkaAccessSubnetIds(c.AccessSubnets)
 				res = append(res, mqlClusterTyped)
 			}
 
@@ -535,9 +535,9 @@ func ociKafkaAccessSubnetIds(sets []managedkafka.SubnetSet) []string {
 
 // The bootstrap URLs and the superuser secret are detail-only.
 type mqlOciKafkaClusterInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
-	cacheSubnetIds     []string
+	cacheSubnetIDs     []string
 
 	detail ociLazy[*managedkafka.KafkaCluster]
 }
@@ -547,12 +547,12 @@ func (o *mqlOciKafkaCluster) id() (string, error) {
 }
 
 func (o *mqlOciKafkaCluster) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciKafkaCluster) subnets() ([]any, error) {
-	res := make([]any, 0, len(o.cacheSubnetIds))
-	for _, id := range o.cacheSubnetIds {
+	res := make([]any, 0, len(o.cacheSubnetIDs))
+	for _, id := range o.cacheSubnetIDs {
 		if id == "" {
 			continue
 		}

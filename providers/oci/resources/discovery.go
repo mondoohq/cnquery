@@ -201,7 +201,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: d.Id.Data, name: d.Name.Data,
-				compartment: d.CompartmentID.Data, region: d.region,
+				compartment: d.CompartmentID.Data, region: d.cacheRegion,
 				labels: tagsToLabels(d.FreeformTags.Data),
 			}, true
 		},
@@ -273,7 +273,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: c.Id.Data, name: c.Name.Data,
-				compartment: c.CompartmentID.Data, region: c.region,
+				compartment: c.CompartmentID.Data, region: c.cacheRegion,
 				labels: tagsToLabels(c.FreeformTags.Data),
 			}, true
 		},

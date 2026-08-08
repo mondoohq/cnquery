@@ -207,28 +207,28 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 			return nil, err
 		}
 		mqlListener := mqlInstance.(*mqlOciLoadBalancerListener)
-		mqlListener.cacheCertificateIds = certificateIds
-		mqlListener.cacheTrustedCaIds = trustedCaIds
+		mqlListener.cacheCertificateIDs = certificateIds
+		mqlListener.cacheTrustedCaIDs = trustedCaIds
 		res = append(res, mqlInstance)
 	}
 	return res, nil
 }
 
 type mqlOciLoadBalancerListenerInternal struct {
-	cacheCertificateIds []any
-	cacheTrustedCaIds   []any
+	cacheCertificateIDs []any
+	cacheTrustedCaIDs   []any
 }
 
 func (o *mqlOciLoadBalancerListener) certificates() ([]any, error) {
-	return resolveOciCertificates(o.MqlRuntime, o.cacheCertificateIds)
+	return resolveOciCertificates(o.MqlRuntime, o.cacheCertificateIDs)
 }
 
 func (o *mqlOciLoadBalancerListener) trustedCertificateAuthorities() ([]any, error) {
-	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIds, "certificateauthority", "oci.certificates.certificateAuthority")
+	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIDs, "certificateauthority", "oci.certificates.certificateAuthority")
 }
 
 func (o *mqlOciLoadBalancerListener) trustedCaBundles() ([]any, error) {
-	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIds, "cabundle", "oci.certificates.caBundle")
+	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIDs, "cabundle", "oci.certificates.caBundle")
 }
 
 func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {

@@ -65,7 +65,7 @@ func (o *mqlOciResourceManager) stacks() ([]any, error) {
 					return nil, err
 				}
 				mqlStackTyped := mqlStack.(*mqlOciResourceManagerStack)
-				mqlStackTyped.cacheCompartmentId = stringValue(s.CompartmentId)
+				mqlStackTyped.cacheCompartmentID = stringValue(s.CompartmentId)
 				mqlStackTyped.cacheRegion = region
 				res = append(res, mqlStackTyped)
 			}
@@ -77,7 +77,7 @@ func (o *mqlOciResourceManager) stacks() ([]any, error) {
 // Drift status, the config source and the variable names are all detail-only,
 // so they share one fetch.
 type mqlOciResourceManagerStackInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	detail ociLazy[*resourcemanager.Stack]
@@ -88,7 +88,7 @@ func (o *mqlOciResourceManagerStack) id() (string, error) {
 }
 
 func (o *mqlOciResourceManagerStack) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciResourceManagerStack) getDetail() (*resourcemanager.Stack, error) {
@@ -216,8 +216,8 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 			return nil, err
 		}
 		mqlJobTyped := mqlJob.(*mqlOciResourceManagerJob)
-		mqlJobTyped.cacheCompartmentId = stringValue(job.CompartmentId)
-		mqlJobTyped.cacheStackId = stringValue(job.StackId)
+		mqlJobTyped.cacheCompartmentID = stringValue(job.CompartmentId)
+		mqlJobTyped.cacheStackID = stringValue(job.StackId)
 		res = append(res, mqlJobTyped)
 	}
 
@@ -225,8 +225,8 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 }
 
 type mqlOciResourceManagerJobInternal struct {
-	cacheCompartmentId string
-	cacheStackId       string
+	cacheCompartmentID string
+	cacheStackID       string
 }
 
 func (o *mqlOciResourceManagerJob) id() (string, error) {
@@ -234,16 +234,16 @@ func (o *mqlOciResourceManagerJob) id() (string, error) {
 }
 
 func (o *mqlOciResourceManagerJob) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciResourceManagerJob) stack() (*mqlOciResourceManagerStack, error) {
-	if o.cacheStackId == "" {
+	if o.cacheStackID == "" {
 		o.Stack.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(o.MqlRuntime, "oci.resourceManager.stack", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheStackId),
+		"id": llx.StringData(o.cacheStackID),
 	})
 	if err != nil {
 		return nil, err

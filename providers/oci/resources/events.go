@@ -59,7 +59,7 @@ func (o *mqlOciEvents) rules() ([]any, error) {
 				}
 
 				mqlRule := mqlInstance.(*mqlOciEventsRule)
-				mqlRule.region = region
+				mqlRule.cacheRegion = region
 
 				res = append(res, mqlInstance)
 			}
@@ -89,8 +89,8 @@ func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *event
 }
 
 type mqlOciEventsRuleInternal struct {
-	rule   ociRetryLazy[*events.Rule]
-	region string
+	rule        ociRetryLazy[*events.Rule]
+	cacheRegion string
 }
 
 func (o *mqlOciEventsRule) id() (string, error) {
@@ -103,7 +103,7 @@ func (o *mqlOciEventsRule) getRuleDetails() (*events.Rule, error) {
 	return o.rule.get(func() (*events.Rule, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-		client, err := conn.EventsClient(o.region)
+		client, err := conn.EventsClient(o.cacheRegion)
 		if err != nil {
 			return nil, err
 		}

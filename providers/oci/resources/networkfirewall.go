@@ -77,9 +77,9 @@ func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 					return nil, err
 				}
 				mqlFw := mqlInstance.(*mqlOciNetworkFirewallFirewall)
-				mqlFw.cacheSubnetId = stringValue(fw.SubnetId)
-				mqlFw.cachePolicyId = stringValue(fw.NetworkFirewallPolicyId)
-				mqlFw.region = region
+				mqlFw.cacheSubnetID = stringValue(fw.SubnetId)
+				mqlFw.cachePolicyID = stringValue(fw.NetworkFirewallPolicyId)
+				mqlFw.cacheRegion = region
 				res = append(res, mqlFw)
 			}
 
@@ -88,9 +88,9 @@ func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 }
 
 type mqlOciNetworkFirewallFirewallInternal struct {
-	cacheSubnetId string
-	cachePolicyId string
-	region        string
+	cacheSubnetID string
+	cachePolicyID string
+	cacheRegion   string
 }
 
 func (o *mqlOciNetworkFirewallFirewall) id() (string, error) {
@@ -99,7 +99,7 @@ func (o *mqlOciNetworkFirewallFirewall) id() (string, error) {
 
 func (o *mqlOciNetworkFirewallFirewall) healthStatus() (string, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.NetworkFirewallClient(o.region)
+	svc, err := conn.NetworkFirewallClient(o.cacheRegion)
 	if err != nil {
 		return "", err
 	}
@@ -113,12 +113,12 @@ func (o *mqlOciNetworkFirewallFirewall) healthStatus() (string, error) {
 }
 
 func (o *mqlOciNetworkFirewallFirewall) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetID == "" {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -127,12 +127,12 @@ func (o *mqlOciNetworkFirewallFirewall) subnet() (*mqlOciNetworkSubnet, error) {
 }
 
 func (o *mqlOciNetworkFirewallFirewall) policy() (*mqlOciNetworkFirewallPolicy, error) {
-	if o.cachePolicyId == "" {
+	if o.cachePolicyID == "" {
 		o.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlPolicy, err := NewResource(o.MqlRuntime, "oci.networkFirewall.policy", map[string]*llx.RawData{
-		"id": llx.StringData(o.cachePolicyId),
+		"id": llx.StringData(o.cachePolicyID),
 	})
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				mqlInstance.(*mqlOciNetworkFirewallPolicy).region = region
+				mqlInstance.(*mqlOciNetworkFirewallPolicy).cacheRegion = region
 				res = append(res, mqlInstance)
 			}
 
@@ -195,14 +195,14 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 }
 
 type mqlOciNetworkFirewallPolicyInternal struct {
-	region string
-	detail ociRetryLazy[*networkfirewall.NetworkFirewallPolicy]
+	cacheRegion string
+	detail      ociRetryLazy[*networkfirewall.NetworkFirewallPolicy]
 }
 
 func (o *mqlOciNetworkFirewallPolicy) fetchDetail() (*networkfirewall.NetworkFirewallPolicy, error) {
 	return o.detail.get(func() (*networkfirewall.NetworkFirewallPolicy, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-		svc, err := conn.NetworkFirewallClient(o.region)
+		svc, err := conn.NetworkFirewallClient(o.cacheRegion)
 		if err != nil {
 			return nil, err
 		}
@@ -272,7 +272,7 @@ func (o *mqlOciNetworkFirewallPolicy) id() (string, error) {
 
 func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.NetworkFirewallClient(o.region)
+	svc, err := conn.NetworkFirewallClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
 // with no rules at all was indistinguishable from a restrictive one.
 func (o *mqlOciNetworkFirewallPolicy) securityRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.NetworkFirewallClient(o.region)
+	svc, err := conn.NetworkFirewallClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func (o *mqlOciNetworkFirewallPolicy) securityRules() ([]any, error) {
 // sessions are decrypted for inspection and under which profile.
 func (o *mqlOciNetworkFirewallPolicy) decryptionRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	svc, err := conn.NetworkFirewallClient(o.region)
+	svc, err := conn.NetworkFirewallClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}

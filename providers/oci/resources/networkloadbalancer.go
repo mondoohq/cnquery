@@ -106,9 +106,9 @@ func (o *mqlOciNetworkLoadBalancer) newNetworkLoadBalancers(nlbs []networkloadba
 			return nil, err
 		}
 		mqlNlbTyped := mqlNlb.(*mqlOciNetworkLoadBalancerLoadBalancer)
-		mqlNlbTyped.cacheCompartmentId = stringValue(nlb.CompartmentId)
-		mqlNlbTyped.cacheSubnetId = stringValue(nlb.SubnetId)
-		mqlNlbTyped.cacheNsgIds = nlb.NetworkSecurityGroupIds
+		mqlNlbTyped.cacheCompartmentID = stringValue(nlb.CompartmentId)
+		mqlNlbTyped.cacheSubnetID = stringValue(nlb.SubnetId)
+		mqlNlbTyped.cacheNsgIDs = nlb.NetworkSecurityGroupIds
 		res = append(res, mqlNlbTyped)
 	}
 
@@ -224,7 +224,7 @@ func (o *mqlOciNetworkLoadBalancer) newBackends(backendSetID string, backends []
 			return nil, err
 		}
 		mqlBackendTyped := mqlBackend.(*mqlOciNetworkLoadBalancerBackend)
-		mqlBackendTyped.cacheTargetId = stringValue(backend.TargetId)
+		mqlBackendTyped.cacheTargetID = stringValue(backend.TargetId)
 		res = append(res, mqlBackendTyped)
 	}
 
@@ -232,9 +232,9 @@ func (o *mqlOciNetworkLoadBalancer) newBackends(backendSetID string, backends []
 }
 
 type mqlOciNetworkLoadBalancerLoadBalancerInternal struct {
-	cacheCompartmentId string
-	cacheSubnetId      string
-	cacheNsgIds        []string
+	cacheCompartmentID string
+	cacheSubnetID      string
+	cacheNsgIDs        []string
 }
 
 func (o *mqlOciNetworkLoadBalancerLoadBalancer) id() (string, error) {
@@ -242,16 +242,16 @@ func (o *mqlOciNetworkLoadBalancerLoadBalancer) id() (string, error) {
 }
 
 func (o *mqlOciNetworkLoadBalancerLoadBalancer) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkLoadBalancerLoadBalancer) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetID == "" {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -260,11 +260,11 @@ func (o *mqlOciNetworkLoadBalancerLoadBalancer) subnet() (*mqlOciNetworkSubnet, 
 }
 
 func (o *mqlOciNetworkLoadBalancerLoadBalancer) securityGroups() ([]any, error) {
-	return resolveOciSecurityGroups(o.MqlRuntime, stringsToAny(o.cacheNsgIds))
+	return resolveOciSecurityGroups(o.MqlRuntime, stringsToAny(o.cacheNsgIDs))
 }
 
 type mqlOciNetworkLoadBalancerBackendInternal struct {
-	cacheTargetId string
+	cacheTargetID string
 }
 
 func (o *mqlOciNetworkLoadBalancerBackend) instance() (*mqlOciComputeInstance, error) {
@@ -272,12 +272,12 @@ func (o *mqlOciNetworkLoadBalancerBackend) instance() (*mqlOciComputeInstance, e
 	// may point at something other than a compute instance. Only resolve what
 	// is actually an instance; anything else is reported as null rather than
 	// forced through a lookup that would fail.
-	if !strings.HasPrefix(o.cacheTargetId, "ocid1.instance.") {
+	if !strings.HasPrefix(o.cacheTargetID, "ocid1.instance.") {
 		o.Instance.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(o.MqlRuntime, "oci.compute.instance", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheTargetId),
+		"id": llx.StringData(o.cacheTargetID),
 	})
 	if err != nil {
 		return nil, err

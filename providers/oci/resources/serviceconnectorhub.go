@@ -65,7 +65,7 @@ func (o *mqlOciServiceConnectorHub) connectors() ([]any, error) {
 					return nil, err
 				}
 				mqlConnectorTyped := mqlConnector.(*mqlOciServiceConnectorHubConnector)
-				mqlConnectorTyped.cacheCompartmentId = stringValue(c.CompartmentId)
+				mqlConnectorTyped.cacheCompartmentID = stringValue(c.CompartmentId)
 				mqlConnectorTyped.cacheRegion = region
 				res = append(res, mqlConnectorTyped)
 			}
@@ -82,7 +82,7 @@ func (o *mqlOciServiceConnectorHub) connectors() ([]any, error) {
 // ociLazy, not ociRetryLazy: the five fields sharing this fetch would each
 // repeat the same failing request if only successes were remembered.
 type mqlOciServiceConnectorHubConnectorInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	detail ociLazy[*sch.ServiceConnector]
@@ -93,7 +93,7 @@ func (o *mqlOciServiceConnectorHubConnector) id() (string, error) {
 }
 
 func (o *mqlOciServiceConnectorHubConnector) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciServiceConnectorHubConnector) getDetail() (*sch.ServiceConnector, error) {

@@ -195,7 +195,7 @@ func (o *mqlOciAiAgents) agentEndpoints() ([]any, error) {
 					return nil, err
 				}
 				mqlEndpointTyped := mqlEndpoint.(*mqlOciAiAgentsEndpoint)
-				mqlEndpointTyped.cacheAgentId = stringValue(e.AgentId)
+				mqlEndpointTyped.cacheAgentID = stringValue(e.AgentId)
 				res = append(res, mqlEndpointTyped)
 			}
 			return res, nil
@@ -203,7 +203,7 @@ func (o *mqlOciAiAgents) agentEndpoints() ([]any, error) {
 }
 
 type mqlOciAiAgentsEndpointInternal struct {
-	cacheAgentId string
+	cacheAgentID string
 }
 
 func initOciAiAgentsEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -240,7 +240,7 @@ func (o *mqlOciAiAgentsEndpoint) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciAiAgentsEndpoint) agent() (*mqlOciAiAgentsAgent, error) {
-	return resolveOciAiAgent(o.MqlRuntime, o.cacheAgentId, &o.Agent)
+	return resolveOciAiAgent(o.MqlRuntime, o.cacheAgentID, &o.Agent)
 }
 
 // ----- knowledge bases -----
@@ -380,7 +380,7 @@ func (o *mqlOciAiAgents) dataSources() ([]any, error) {
 					return nil, err
 				}
 				mqlDsTyped := mqlDs.(*mqlOciAiAgentsDataSource)
-				mqlDsTyped.cacheKnowledgeBaseId = stringValue(ds.KnowledgeBaseId)
+				mqlDsTyped.cacheKnowledgeBaseID = stringValue(ds.KnowledgeBaseId)
 				res = append(res, mqlDsTyped)
 			}
 			return res, nil
@@ -388,7 +388,7 @@ func (o *mqlOciAiAgents) dataSources() ([]any, error) {
 }
 
 type mqlOciAiAgentsDataSourceInternal struct {
-	cacheKnowledgeBaseId string
+	cacheKnowledgeBaseID string
 }
 
 func initOciAiAgentsDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -425,12 +425,12 @@ func (o *mqlOciAiAgentsDataSource) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciAiAgentsDataSource) knowledgeBase() (*mqlOciAiAgentsKnowledgeBase, error) {
-	if o.cacheKnowledgeBaseId == "" {
+	if o.cacheKnowledgeBaseID == "" {
 		o.KnowledgeBase.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.ai.agents.knowledgeBase", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKnowledgeBaseId),
+		"id": llx.StringData(o.cacheKnowledgeBaseID),
 	})
 	if err != nil {
 		return nil, err
@@ -495,7 +495,7 @@ func (o *mqlOciAiAgents) tools() ([]any, error) {
 					return nil, err
 				}
 				mqlToolTyped := mqlTool.(*mqlOciAiAgentsTool)
-				mqlToolTyped.cacheAgentId = stringValue(t.AgentId)
+				mqlToolTyped.cacheAgentID = stringValue(t.AgentId)
 				res = append(res, mqlToolTyped)
 			}
 			return res, nil
@@ -503,7 +503,7 @@ func (o *mqlOciAiAgents) tools() ([]any, error) {
 }
 
 type mqlOciAiAgentsToolInternal struct {
-	cacheAgentId string
+	cacheAgentID string
 }
 
 func initOciAiAgentsTool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -540,7 +540,7 @@ func (o *mqlOciAiAgentsTool) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciAiAgentsTool) agent() (*mqlOciAiAgentsAgent, error) {
-	return resolveOciAiAgent(o.MqlRuntime, o.cacheAgentId, &o.Agent)
+	return resolveOciAiAgent(o.MqlRuntime, o.cacheAgentID, &o.Agent)
 }
 
 // ----- helpers -----

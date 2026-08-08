@@ -131,8 +131,8 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 					return nil, err
 				}
 				mqlCluster := mqlInstance.(*mqlOciOkeCluster)
-				mqlCluster.cacheVcnId = stringValue(cluster.VcnId)
-				mqlCluster.region = region
+				mqlCluster.cacheVcnID = stringValue(cluster.VcnId)
+				mqlCluster.cacheRegion = region
 				res = append(res, mqlCluster)
 			}
 
@@ -141,9 +141,9 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 }
 
 type mqlOciOkeClusterInternal struct {
-	cluster    ociRetryLazy[*containerengine.Cluster]
-	cacheVcnId string
-	region     string
+	cluster     ociRetryLazy[*containerengine.Cluster]
+	cacheVcnID  string
+	cacheRegion string
 }
 
 func (o *mqlOciOkeCluster) id() (string, error) {
@@ -193,12 +193,12 @@ func initOciOkeCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func (o *mqlOciOkeCluster) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func (o *mqlOciOkeCluster) fetchCluster() (*containerengine.Cluster, error) {
 	return o.cluster.get(func() (*containerengine.Cluster, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-		svc, err := conn.ContainerEngineClient(o.region)
+		svc, err := conn.ContainerEngineClient(o.cacheRegion)
 		if err != nil {
 			return nil, err
 		}
@@ -249,7 +249,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()
 
-	svc, err := conn.ContainerEngineClient(o.region)
+	svc, err := conn.ContainerEngineClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -322,10 +322,10 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			return nil, err
 		}
 		mqlPool := mqlInstance.(*mqlOciOkeNodePool)
-		mqlPool.cacheSubnetIds = subnetIds
-		mqlPool.cacheNsgIds = nsgIds
+		mqlPool.cacheSubnetIDs = subnetIds
+		mqlPool.cacheNsgIDs = nsgIds
 		mqlPool.cacheClusterID = stringValue(np.ClusterId)
-		mqlPool.cacheNodeImageId = nodeImageId
+		mqlPool.cacheNodeImageID = nodeImageId
 		res = append(res, mqlPool)
 	}
 
@@ -333,10 +333,10 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 }
 
 type mqlOciOkeNodePoolInternal struct {
-	cacheSubnetIds   []string
-	cacheNsgIds      []string
+	cacheSubnetIDs   []string
+	cacheNsgIDs      []string
 	cacheClusterID   string
-	cacheNodeImageId string
+	cacheNodeImageID string
 }
 
 func (o *mqlOciOkeNodePool) id() (string, error) {
@@ -344,12 +344,12 @@ func (o *mqlOciOkeNodePool) id() (string, error) {
 }
 
 func (o *mqlOciOkeNodePool) nodeImage() (*mqlOciComputeImage, error) {
-	return resolveOciImage(o.MqlRuntime, o.cacheNodeImageId, &o.NodeImage)
+	return resolveOciImage(o.MqlRuntime, o.cacheNodeImageID, &o.NodeImage)
 }
 
 func (o *mqlOciOkeNodePool) subnets() ([]any, error) {
-	res := make([]any, 0, len(o.cacheSubnetIds))
-	for _, id := range o.cacheSubnetIds {
+	res := make([]any, 0, len(o.cacheSubnetIDs))
+	for _, id := range o.cacheSubnetIDs {
 		mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
@@ -365,8 +365,8 @@ func (o *mqlOciOkeNodePool) subnets() ([]any, error) {
 }
 
 func (o *mqlOciOkeNodePool) networkSecurityGroups() ([]any, error) {
-	res := make([]any, 0, len(o.cacheNsgIds))
-	for _, id := range o.cacheNsgIds {
+	res := make([]any, 0, len(o.cacheNsgIDs))
+	for _, id := range o.cacheNsgIDs {
 		mqlNsg, err := NewResource(o.MqlRuntime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})

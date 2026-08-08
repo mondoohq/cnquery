@@ -95,9 +95,9 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 					return nil, err
 				}
 				mqlApp := mqlInstance.(*mqlOciFunctionsApplication)
-				mqlApp.region = region
-				mqlApp.cacheSubnetIds = app.SubnetIds
-				mqlApp.cacheNsgIds = app.NetworkSecurityGroupIds
+				mqlApp.cacheRegion = region
+				mqlApp.cacheSubnetIDs = app.SubnetIds
+				mqlApp.cacheNsgIDs = app.NetworkSecurityGroupIds
 				res = append(res, mqlApp)
 			}
 
@@ -107,9 +107,9 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 
 type mqlOciFunctionsApplicationInternal struct {
 	app            ociRetryLazy[*functions.Application]
-	region         string
-	cacheSubnetIds []string
-	cacheNsgIds    []string
+	cacheRegion    string
+	cacheSubnetIDs []string
+	cacheNsgIDs    []string
 }
 
 func (o *mqlOciFunctionsApplication) id() (string, error) {
@@ -120,7 +120,7 @@ func (o *mqlOciFunctionsApplication) fetchApplication() (*functions.Application,
 	return o.app.get(func() (*functions.Application, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-		svc, err := conn.FunctionsManagementClient(o.region)
+		svc, err := conn.FunctionsManagementClient(o.cacheRegion)
 		if err != nil {
 			return nil, err
 		}
@@ -157,8 +157,8 @@ func (o *mqlOciFunctionsApplication) syslogUrl() (string, error) {
 }
 
 func (o *mqlOciFunctionsApplication) subnets() ([]any, error) {
-	res := make([]any, 0, len(o.cacheSubnetIds))
-	for _, id := range o.cacheSubnetIds {
+	res := make([]any, 0, len(o.cacheSubnetIDs))
+	for _, id := range o.cacheSubnetIDs {
 		mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
@@ -174,8 +174,8 @@ func (o *mqlOciFunctionsApplication) subnets() ([]any, error) {
 }
 
 func (o *mqlOciFunctionsApplication) networkSecurityGroups() ([]any, error) {
-	res := make([]any, 0, len(o.cacheNsgIds))
-	for _, id := range o.cacheNsgIds {
+	res := make([]any, 0, len(o.cacheNsgIDs))
+	for _, id := range o.cacheNsgIDs {
 		mqlNsg, err := NewResource(o.MqlRuntime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
@@ -194,7 +194,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()
 
-	svc, err := conn.FunctionsManagementClient(o.region)
+	svc, err := conn.FunctionsManagementClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +262,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			return nil, err
 		}
 		mqlFn := mqlInstance.(*mqlOciFunctionsFunction)
-		mqlFn.region = o.region
+		mqlFn.cacheRegion = o.cacheRegion
 		res = append(res, mqlFn)
 	}
 
@@ -270,8 +270,8 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 }
 
 type mqlOciFunctionsFunctionInternal struct {
-	fn     ociRetryLazy[*functions.Function]
-	region string
+	fn          ociRetryLazy[*functions.Function]
+	cacheRegion string
 }
 
 func (o *mqlOciFunctionsFunction) id() (string, error) {
@@ -282,7 +282,7 @@ func (o *mqlOciFunctionsFunction) fetchFunction() (*functions.Function, error) {
 	return o.fn.get(func() (*functions.Function, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-		svc, err := conn.FunctionsManagementClient(o.region)
+		svc, err := conn.FunctionsManagementClient(o.cacheRegion)
 		if err != nil {
 			return nil, err
 		}

@@ -99,8 +99,8 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 					return nil, err
 				}
 				mqlClusterTyped := mqlCluster.(*mqlOciRedisCluster)
-				mqlClusterTyped.cacheSubnetId = stringValue(c.SubnetId)
-				mqlClusterTyped.cacheNsgIds = c.NsgIds
+				mqlClusterTyped.cacheSubnetID = stringValue(c.SubnetId)
+				mqlClusterTyped.cacheNsgIDs = c.NsgIds
 				mqlClusterTyped.cacheRegion = region
 				res = append(res, mqlClusterTyped)
 			}
@@ -110,8 +110,8 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 }
 
 type mqlOciRedisClusterInternal struct {
-	cacheSubnetId string
-	cacheNsgIds   []string
+	cacheSubnetID string
+	cacheNsgIDs   []string
 	cacheRegion   string
 }
 
@@ -159,12 +159,12 @@ func (o *mqlOciRedisCluster) id() (string, error) {
 }
 
 func (o *mqlOciRedisCluster) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetID == "" {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -173,11 +173,11 @@ func (o *mqlOciRedisCluster) subnet() (*mqlOciNetworkSubnet, error) {
 }
 
 func (o *mqlOciRedisCluster) networkSecurityGroups() ([]any, error) {
-	if len(o.cacheNsgIds) == 0 {
+	if len(o.cacheNsgIDs) == 0 {
 		return []any{}, nil
 	}
-	res := make([]any, 0, len(o.cacheNsgIds))
-	for _, nsgId := range o.cacheNsgIds {
+	res := make([]any, 0, len(o.cacheNsgIDs))
+	for _, nsgId := range o.cacheNsgIDs {
 		mqlNsg, err := NewResource(o.MqlRuntime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
 			"id": llx.StringData(nsgId),
 		})
