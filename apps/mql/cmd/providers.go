@@ -211,6 +211,10 @@ func maturityTag(maturity string) string {
 		color = colors.DefaultColorTheme.Medium
 	case resources.MaturityEOL:
 		color = colors.DefaultColorTheme.Critical
+	case resources.MaturityDeprecated:
+		// High (not Critical) is intentional: deprecated is the most common
+		// non-stable maturity and reads as a warning, matching printProvider.
+		color = colors.DefaultColorTheme.High
 	}
 	return " " + termenv.String("["+strings.ToLower(label)+"]").Foreground(color).String()
 }
