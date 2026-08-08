@@ -988,19 +988,40 @@ func (r *mqlAlicloudCloudssoAccessAssignment) account() (*mqlAlicloudResourceMan
 }
 
 func (r *mqlAlicloudCloudssoAccessAssignment) user() (*mqlAlicloudCloudssoUser, error) {
-	if r.PrincipalType.Data != "User" || r.PrincipalId.Data == "" {
+	if r.PrincipalType.Data != "User" {
 		r.User.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return resolveCloudssoUser(r.MqlRuntime, r.DirectoryId.Data, r.PrincipalId.Data)
+
+	user, err := resolveCloudssoUser(r.MqlRuntime, r.DirectoryId.Data, r.PrincipalId.Data)
+	if err != nil {
+		return nil, err
+	}
+	// resolveCloudssoUser reports a blank id or a user it could not read as a
+	// nil resource rather than an error, so the field has to be marked null
+	// here or the runtime never learns it was resolved.
+	if user == nil {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return user, nil
 }
 
 func (r *mqlAlicloudCloudssoAccessAssignment) group() (*mqlAlicloudCloudssoGroup, error) {
-	if r.PrincipalType.Data != "Group" || r.PrincipalId.Data == "" {
+	if r.PrincipalType.Data != "Group" {
 		r.Group.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return resolveCloudssoGroup(r.MqlRuntime, r.DirectoryId.Data, r.PrincipalId.Data)
+
+	group, err := resolveCloudssoGroup(r.MqlRuntime, r.DirectoryId.Data, r.PrincipalId.Data)
+	if err != nil {
+		return nil, err
+	}
+	// same as user above: a blank id or an unreadable group comes back as a nil
+	// resource, which must be marked null explicitly
+	if group == nil {
+		r.Group.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return group, nil
 }
 
 // ---------------------------------------------------------------------------
