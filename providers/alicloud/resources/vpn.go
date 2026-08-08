@@ -16,6 +16,42 @@ import (
 // vpnPageSize is the per-request item count for the page-numbered VPN APIs.
 const vpnPageSize int32 = 50
 
+// vpnCapabilityEnabled maps the enable/disable strings the VPN gateway API uses
+// for its IPsec and SSL capabilities to a bool, returning nil for an absent or
+// unrecognized value so the field reads as null rather than claiming the
+// capability is off.
+func vpnCapabilityEnabled(v *string) *bool {
+	if v == nil {
+		return nil
+	}
+	switch *v {
+	case "enable":
+		enabled := true
+		return &enabled
+	case "disable":
+		disabled := false
+		return &disabled
+	default:
+		return nil
+	}
+}
+
+// vpnGatewayTags flattens a gateway's tag list, so a caller can apply the tag
+// filters before paying to build the resource.
+func vpnGatewayTags(g *vpcclient.DescribeVpnGatewaysResponseBodyVpnGatewaysVpnGateway) map[string]any {
+	tags := map[string]any{}
+	if g.Tags == nil {
+		return tags
+	}
+	for _, t := range g.Tags.Tag {
+		if t == nil || t.Key == nil {
+			continue
+		}
+		tags[tea.StringValue(t.Key)] = tea.StringValue(t.Value)
+	}
+	return tags
+}
+
 // ---------------------------------------------------------------------------
 // alicloud.vpc.vpnGateway
 // ---------------------------------------------------------------------------
@@ -90,12 +126,15 @@ func vpnGatewaysInRegion(runtime *plugin.Runtime, conn *connection.AlicloudConne
 			if g == nil || g.VpnGatewayId == nil {
 				continue
 			}
-			gateway, err := newVpnGateway(runtime, region, g)
+			// check the tag filters before building the resource, so a
+			// filtered-out gateway is never cached
+			tags := vpnGatewayTags(g)
+			if filteredOutByTags(conn, tags) {
+				continue
+			}
+			gateway, err := newVpnGateway(runtime, region, g, tags)
 			if err != nil {
 				return nil, err
-			}
-			if filteredOutByTags(conn, gateway.Tags.Data) {
-				continue
 			}
 			res = append(res, gateway)
 		}
@@ -109,17 +148,7 @@ func vpnGatewaysInRegion(runtime *plugin.Runtime, conn *connection.AlicloudConne
 	return res, nil
 }
 
-func newVpnGateway(runtime *plugin.Runtime, region string, g *vpcclient.DescribeVpnGatewaysResponseBodyVpnGatewaysVpnGateway) (*mqlAlicloudVpcVpnGateway, error) {
-	tags := map[string]any{}
-	if g.Tags != nil {
-		for _, t := range g.Tags.Tag {
-			if t == nil || t.Key == nil {
-				continue
-			}
-			tags[tea.StringValue(t.Key)] = tea.StringValue(t.Value)
-		}
-	}
-
+func newVpnGateway(runtime *plugin.Runtime, region string, g *vpcclient.DescribeVpnGatewaysResponseBodyVpnGatewaysVpnGateway, tags map[string]any) (*mqlAlicloudVpcVpnGateway, error) {
 	resource, err := CreateResource(runtime, "alicloud.vpc.vpnGateway", map[string]*llx.RawData{
 		"__id":              llx.StringData(region + "/" + tea.StringValue(g.VpnGatewayId)),
 		"vpnGatewayId":      llx.StringDataPtr(g.VpnGatewayId),
@@ -129,8 +158,8 @@ func newVpnGateway(runtime *plugin.Runtime, region string, g *vpcclient.Describe
 		"status":            llx.StringDataPtr(g.Status),
 		"businessStatus":    llx.StringDataPtr(g.BusinessStatus),
 		"internetIp":        llx.StringDataPtr(g.InternetIp),
-		"ipsecVpn":          llx.StringDataPtr(g.IpsecVpn),
-		"sslVpn":            llx.StringDataPtr(g.SslVpn),
+		"ipsecVpnEnabled":   llx.BoolDataPtr(vpnCapabilityEnabled(g.IpsecVpn)),
+		"sslVpnEnabled":     llx.BoolDataPtr(vpnCapabilityEnabled(g.SslVpn)),
 		"sslMaxConnections": llx.IntDataPtr(g.SslMaxConnections),
 		"sslVpnInternetIp":  llx.StringDataPtr(g.SslVpnInternetIp),
 		"vpnType":           llx.StringDataPtr(g.VpnType),
@@ -287,7 +316,6 @@ func newVpnConnection(runtime *plugin.Runtime, region string, c *vpcclient.Descr
 		"vpnConnectionId":              llx.StringDataPtr(c.VpnConnectionId),
 		"name":                         llx.StringDataPtr(c.Name),
 		"regionId":                     llx.StringData(region),
-		"vpnGatewayId":                 llx.StringDataPtr(c.VpnGatewayId),
 		"customerGatewayId":            llx.StringDataPtr(c.CustomerGatewayId),
 		"status":                       llx.StringDataPtr(c.Status),
 		"state":                        llx.StringDataPtr(c.State),
@@ -354,7 +382,7 @@ func (r *mqlAlicloudVpcVpnConnection) vpnGateway() (*mqlAlicloudVpcVpnGateway, e
 		if g == nil || tea.StringValue(g.VpnGatewayId) != r.cacheGateway {
 			continue
 		}
-		return newVpnGateway(r.MqlRuntime, r.cacheRegion, g)
+		return newVpnGateway(r.MqlRuntime, r.cacheRegion, g, vpnGatewayTags(g))
 	}
 
 	r.VpnGateway.State = plugin.StateIsSet | plugin.StateIsNull

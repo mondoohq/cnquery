@@ -1396,7 +1396,6 @@ alicloud.vpc.vpnConnection.state 13.2.5
 alicloud.vpc.vpnConnection.status 13.2.5
 alicloud.vpc.vpnConnection.vpnConnectionId 13.2.5
 alicloud.vpc.vpnConnection.vpnGateway 13.2.5
-alicloud.vpc.vpnConnection.vpnGatewayId 13.2.5
 alicloud.vpc.vpnConnections 13.2.5
 alicloud.vpc.vpnGateway 13.2.5
 alicloud.vpc.vpnGateway.autoPropagate 13.2.5
@@ -1408,14 +1407,14 @@ alicloud.vpc.vpnGateway.description 13.2.5
 alicloud.vpc.vpnGateway.enableBgp 13.2.5
 alicloud.vpc.vpnGateway.endTime 13.2.5
 alicloud.vpc.vpnGateway.internetIp 13.2.5
-alicloud.vpc.vpnGateway.ipsecVpn 13.2.5
+alicloud.vpc.vpnGateway.ipsecVpnEnabled 13.2.5
 alicloud.vpc.vpnGateway.name 13.2.5
 alicloud.vpc.vpnGateway.networkType 13.2.5
 alicloud.vpc.vpnGateway.regionId 13.2.5
 alicloud.vpc.vpnGateway.resourceGroupId 13.2.5
 alicloud.vpc.vpnGateway.spec 13.2.5
 alicloud.vpc.vpnGateway.sslMaxConnections 13.2.5
-alicloud.vpc.vpnGateway.sslVpn 13.2.5
+alicloud.vpc.vpnGateway.sslVpnEnabled 13.2.5
 alicloud.vpc.vpnGateway.sslVpnInternetIp 13.2.5
 alicloud.vpc.vpnGateway.status 13.2.5
 alicloud.vpc.vpnGateway.tags 13.2.5

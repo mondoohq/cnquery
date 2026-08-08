@@ -4591,11 +4591,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.vpc.vpnGateway.internetIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnGateway).GetInternetIp()).ToDataRes(types.String)
 	},
-	"alicloud.vpc.vpnGateway.ipsecVpn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcVpnGateway).GetIpsecVpn()).ToDataRes(types.String)
+	"alicloud.vpc.vpnGateway.ipsecVpnEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVpnGateway).GetIpsecVpnEnabled()).ToDataRes(types.Bool)
 	},
-	"alicloud.vpc.vpnGateway.sslVpn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcVpnGateway).GetSslVpn()).ToDataRes(types.String)
+	"alicloud.vpc.vpnGateway.sslVpnEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVpnGateway).GetSslVpnEnabled()).ToDataRes(types.Bool)
 	},
 	"alicloud.vpc.vpnGateway.sslMaxConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnGateway).GetSslMaxConnections()).ToDataRes(types.Int)
@@ -4650,9 +4650,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.vpc.vpnConnection.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnConnection).GetRegionId()).ToDataRes(types.String)
-	},
-	"alicloud.vpc.vpnConnection.vpnGatewayId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudVpcVpnConnection).GetVpnGatewayId()).ToDataRes(types.String)
 	},
 	"alicloud.vpc.vpnConnection.customerGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnConnection).GetCustomerGatewayId()).ToDataRes(types.String)
@@ -10473,12 +10470,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudVpcVpnGateway).InternetIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"alicloud.vpc.vpnGateway.ipsecVpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcVpnGateway).IpsecVpn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.vpc.vpnGateway.ipsecVpnEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVpnGateway).IpsecVpnEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"alicloud.vpc.vpnGateway.sslVpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcVpnGateway).SslVpn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"alicloud.vpc.vpnGateway.sslVpnEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVpnGateway).SslVpnEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.vpnGateway.sslMaxConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10555,10 +10552,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.vpc.vpnConnection.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpcVpnConnection).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"alicloud.vpc.vpnConnection.vpnGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudVpcVpnConnection).VpnGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.vpnConnection.customerGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23764,8 +23757,8 @@ type mqlAlicloudVpcVpnGateway struct {
 	Status            plugin.TValue[string]
 	BusinessStatus    plugin.TValue[string]
 	InternetIp        plugin.TValue[string]
-	IpsecVpn          plugin.TValue[string]
-	SslVpn            plugin.TValue[string]
+	IpsecVpnEnabled   plugin.TValue[bool]
+	SslVpnEnabled     plugin.TValue[bool]
 	SslMaxConnections plugin.TValue[int64]
 	SslVpnInternetIp  plugin.TValue[string]
 	VpnType           plugin.TValue[string]
@@ -23848,12 +23841,12 @@ func (c *mqlAlicloudVpcVpnGateway) GetInternetIp() *plugin.TValue[string] {
 	return &c.InternetIp
 }
 
-func (c *mqlAlicloudVpcVpnGateway) GetIpsecVpn() *plugin.TValue[string] {
-	return &c.IpsecVpn
+func (c *mqlAlicloudVpcVpnGateway) GetIpsecVpnEnabled() *plugin.TValue[bool] {
+	return &c.IpsecVpnEnabled
 }
 
-func (c *mqlAlicloudVpcVpnGateway) GetSslVpn() *plugin.TValue[string] {
-	return &c.SslVpn
+func (c *mqlAlicloudVpcVpnGateway) GetSslVpnEnabled() *plugin.TValue[bool] {
+	return &c.SslVpnEnabled
 }
 
 func (c *mqlAlicloudVpcVpnGateway) GetSslMaxConnections() *plugin.TValue[int64] {
@@ -23960,7 +23953,6 @@ type mqlAlicloudVpcVpnConnection struct {
 	VpnConnectionId              plugin.TValue[string]
 	Name                         plugin.TValue[string]
 	RegionId                     plugin.TValue[string]
-	VpnGatewayId                 plugin.TValue[string]
 	CustomerGatewayId            plugin.TValue[string]
 	Status                       plugin.TValue[string]
 	State                        plugin.TValue[string]
@@ -24035,10 +24027,6 @@ func (c *mqlAlicloudVpcVpnConnection) GetName() *plugin.TValue[string] {
 
 func (c *mqlAlicloudVpcVpnConnection) GetRegionId() *plugin.TValue[string] {
 	return &c.RegionId
-}
-
-func (c *mqlAlicloudVpcVpnConnection) GetVpnGatewayId() *plugin.TValue[string] {
-	return &c.VpnGatewayId
 }
 
 func (c *mqlAlicloudVpcVpnConnection) GetCustomerGatewayId() *plugin.TValue[string] {

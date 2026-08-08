@@ -4405,14 +4405,13 @@ alicloud.vpc.vpnGateway @defaults("vpnGatewayId name status internetIp") {
   // Public IP address the gateway terminates tunnels on
   internetIp string
   // Whether the gateway accepts IPsec connections
-  //
-  // enable when IPsec-VPN is switched on, disable otherwise.
-  ipsecVpn string
+  ipsecVpnEnabled bool
   // Whether the gateway accepts SSL client connections
   //
-  // enable when SSL-VPN is switched on, disable otherwise. An SSL gateway lets
-  // individual clients dial into the VPC rather than joining a fixed network.
-  sslVpn string
+  // An SSL gateway lets individual clients dial into the VPC rather than
+  // joining a fixed network, so it widens reachability to anyone holding a
+  // client certificate.
+  sslVpnEnabled bool
   // Maximum number of concurrent SSL clients the gateway accepts
   sslMaxConnections int
   // Public IP address SSL clients connect to
@@ -4463,9 +4462,9 @@ alicloud.vpc.vpnConnection @defaults("vpnConnectionId name status") {
   name string
   // Region ID the connection lives in
   regionId string
-  // ID of the VPN gateway the connection terminates on
-  vpnGatewayId string
   // ID of the customer gateway representing the remote end
+  //
+  // The remote end is not modeled as a resource, so this stays a raw ID.
   customerGatewayId string
   // Connection status, for example ike_sa_established or active
   status string

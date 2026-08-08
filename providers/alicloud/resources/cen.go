@@ -59,6 +59,12 @@ func (r *mqlAlicloudCen) instances() ([]any, error) {
 				}
 			}
 
+			// check the tag filters before building the resource, so a
+			// filtered-out CEN is never cached
+			if filteredOutByTags(conn, tags) {
+				continue
+			}
+
 			cen, err := CreateResource(r.MqlRuntime, "alicloud.cen.instance", map[string]*llx.RawData{
 				"__id":            llx.StringDataPtr(c.CenId),
 				"cenId":           llx.StringDataPtr(c.CenId),
@@ -73,9 +79,6 @@ func (r *mqlAlicloudCen) instances() ([]any, error) {
 			})
 			if err != nil {
 				return nil, err
-			}
-			if filteredOutByTags(conn, tags) {
-				continue
 			}
 			res = append(res, cen)
 		}
