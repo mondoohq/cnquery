@@ -3321,6 +3321,339 @@ mongodb.conf {
   slowOpThresholdMs(params) int
 }
 
+// Apache Cassandra Server
+//
+// Cassandra server version as reported by the installed server binary. Use
+// cassandra.conf for the parsed cassandra.yaml, covering authentication and
+// authorization, client and internode encryption, at-rest encryption, audit
+// logging, network binding, and the feature toggles that widen the query
+// surface. JMX exposure lives in a shell script rather than in
+// cassandra.yaml, so it is reached through cassandra.env, and the snitch
+// topology through cassandra.rackdc.
+cassandra {
+  // Cassandra version (e.g., "5.0.2")
+  //
+  // Read by running the server binary, so it reports nothing over a
+  // transport that cannot run commands. The configuration files the other
+  // cassandra resources read are unaffected, since they come off the
+  // filesystem.
+  version() string
+}
+
+// Apache Cassandra cassandra.yaml file
+//
+// Settings from the main Cassandra configuration file on disk, useful for
+// auditing the cluster's declared posture without a CQL session or
+// credentials, and for detecting drift between the file and a running node
+// that has not been restarted since it was edited. The file is a nested YAML
+// document and has no include mechanism, so a parse reads exactly one file
+// and `params` holds the whole tree as written.
+//
+// Convenience fields flatten the branches that carry security posture:
+// authentication and authorization, client and internode encryption,
+// encryption at rest, audit and full query logging, network binding, the
+// feature toggles that widen the query surface, and storage durability. Each
+// reports the value the server would use, so an option left out of the file
+// reads as the server default rather than as empty. That matters most where
+// the default is permissive: `authenticator` and `authorizer` both default to
+// their AllowAll variants, which authenticate nobody and authorize everybody.
+//
+// Option names follow Cassandra 4.1 and later, which renamed most of
+// cassandra.yaml. Settings that name an implementation class are read in both
+// shapes the server accepts, a bare class name and a mapping carrying
+// `class_name`. By default the file is located by probing the well-known
+// paths for Debian/Ubuntu, RPM, and tarball installations; pass an explicit
+// path with `cassandra.conf("/path/to/cassandra.yaml")`.
+cassandra.conf {
+  init(path? string)
+  // Configuration file
+  file() file
+  // Full configuration tree as written in the file
+  params(file) dict
+
+  // cluster_name option, which every node in a ring must agree on
+  clusterName(params) string
+  // endpoint_snitch option, which decides how the cluster infers topology
+  endpointSnitch(params) string
+  // Class implementing seed discovery, from the seed_provider block
+  seedProviderClass(params) string
+  // Seed node addresses
+  //
+  // Read from the comma-delimited `seeds` parameter nested inside the
+  // seed_provider block, which is where the server keeps them.
+  seeds(params) []string
+
+  // listen_address option, the address used for internode communication
+  listenAddress(params) string
+  // broadcast_address option, the address other nodes are told to use
+  broadcastAddress(params) string
+  // rpc_address option, the address the native transport binds to
+  //
+  // 0.0.0.0 here binds every interface, which puts the CQL port on any
+  // network the host is attached to.
+  rpcAddress(params) string
+  // broadcast_rpc_address option, the address clients are told to use
+  broadcastRpcAddress(params) string
+  // start_native_transport option (true when unset)
+  startNativeTransport(params) bool
+  // native_transport_port option, the CQL port (9042 when unset)
+  nativeTransportPort(params) int
+  // native_transport_port_ssl option (0 when unset)
+  //
+  // When set, the server serves plaintext CQL on native_transport_port and
+  // encrypted CQL on this one, so the plaintext port stays open.
+  nativeTransportPortSsl(params) int
+  // storage_port option, the internode port (7000 when unset)
+  storagePort(params) int
+  // ssl_storage_port option (7001 when unset)
+  sslStoragePort(params) int
+
+  // authenticator option (AllowAllAuthenticator when unset)
+  authenticator(params) string
+  // authorizer option (AllowAllAuthorizer when unset)
+  authorizer(params) string
+  // role_manager option (CassandraRoleManager when unset)
+  roleManager(params) string
+  // network_authorizer option (AllowAllNetworkAuthorizer when unset)
+  networkAuthorizer(params) string
+  // internode_authenticator option, empty when the server accepts any peer
+  internodeAuthenticator(params) string
+  // Whether clients must present credentials
+  //
+  // False when the authenticator is AllowAllAuthenticator, which is the
+  // value the server uses when the option is absent, meaning any client that
+  // can reach the CQL port connects without credentials. The class name is
+  // matched on its trailing segment, so the short and fully qualified
+  // spellings read the same.
+  authenticationEnabled(params) bool
+  // Whether permissions are enforced
+  //
+  // False when the authorizer is AllowAllAuthorizer, which is the value the
+  // server uses when the option is absent. Enforcement is only meaningful
+  // alongside authentication, since AllowAllAuthenticator leaves every
+  // client authenticated as anonymous.
+  authorizationEnabled(params) bool
+  // Whether per-data-center role restrictions are enforced
+  networkAuthorizationEnabled(params) bool
+
+  // client_encryption_options.enabled option, TLS on the native transport
+  clientEncryptionEnabled(params) bool
+  // Whether the native transport still accepts unencrypted connections
+  //
+  // The client_encryption_options.optional default is conditional: true when
+  // client encryption is disabled, false when it is enabled. A cluster
+  // mid-rollout sets it true alongside enabled, which keeps the plaintext
+  // path open.
+  clientEncryptionOptional(params) bool
+  // client_encryption_options.keystore option
+  clientEncryptionKeystore(params) string
+  // client_encryption_options.truststore option, verifying client certificates
+  clientEncryptionTruststore(params) string
+  // client_encryption_options.require_client_auth option, requiring client certificates
+  clientEncryptionRequireClientAuth(params) bool
+  // client_encryption_options.require_endpoint_verification option, checking the certificate hostname
+  clientEncryptionRequireEndpointVerification(params) bool
+  // client_encryption_options.protocol option (TLS when unset)
+  clientEncryptionProtocol(params) string
+  // client_encryption_options.cipher_suites option
+  clientEncryptionCipherSuites(params) []string
+
+  // server_encryption_options.internode_encryption option
+  //
+  // One of none, dc, rack, or all, and none when unset. Anything short of
+  // all leaves some internode traffic in plaintext: dc encrypts only
+  // cross-data-center links, rack only cross-rack ones.
+  internodeEncryption(params) string
+  // Whether the storage port still accepts unencrypted internode connections
+  //
+  // The server_encryption_options.optional default is conditional: true when
+  // internode_encryption is none, false otherwise.
+  serverEncryptionOptional(params) bool
+  // server_encryption_options.keystore option
+  serverEncryptionKeystore(params) string
+  // server_encryption_options.outbound_keystore option
+  //
+  // Set to something other than the keystore to enable internode mutual TLS,
+  // where outbound connections present a client certificate of their own.
+  serverEncryptionOutboundKeystore(params) string
+  // server_encryption_options.truststore option
+  serverEncryptionTruststore(params) string
+  // server_encryption_options.require_client_auth option, verifying peer certificates
+  serverEncryptionRequireClientAuth(params) bool
+  // server_encryption_options.require_endpoint_verification option
+  serverEncryptionRequireEndpointVerification(params) bool
+  // server_encryption_options.protocol option (TLS when unset)
+  serverEncryptionProtocol(params) string
+  // server_encryption_options.cipher_suites option
+  serverEncryptionCipherSuites(params) []string
+  // server_encryption_options.legacy_ssl_storage_port_enabled option
+  //
+  // Opens an encrypted listener on ssl_storage_port, intended only for the
+  // duration of an upgrade to 4.0.
+  legacySslStoragePortEnabled(params) bool
+
+  // transparent_data_encryption_options.enabled option, encrypting commit log and hints on disk
+  transparentDataEncryptionEnabled(params) bool
+  // transparent_data_encryption_options.cipher option (e.g., "AES/CBC/PKCS5Padding")
+  transparentDataEncryptionCipher(params) string
+  // transparent_data_encryption_options.key_alias option, the key used for writes
+  transparentDataEncryptionKeyAlias(params) string
+  // Class supplying the at-rest encryption key, from the key_provider block
+  transparentDataEncryptionKeyProvider(params) string
+
+  // audit_logging_options.enabled option, recording CQL requests and authentication
+  auditLoggingEnabled(params) bool
+  // Class the audit log is written through (e.g., "BinAuditLogger")
+  auditLogger(params) string
+  // audit_logging_options.audit_logs_dir option
+  auditLogsDir(params) string
+  // audit_logging_options.included_keyspaces option, empty when every keyspace is audited
+  auditIncludedKeyspaces(params) []string
+  // audit_logging_options.excluded_keyspaces option
+  auditExcludedKeyspaces(params) []string
+  // audit_logging_options.included_categories option, empty when every category is audited
+  auditIncludedCategories(params) []string
+  // audit_logging_options.excluded_categories option
+  auditExcludedCategories(params) []string
+  // audit_logging_options.included_users option, empty when every user is audited
+  auditIncludedUsers(params) []string
+  // audit_logging_options.excluded_users option
+  auditExcludedUsers(params) []string
+  // full_query_logging_options.log_dir option
+  //
+  // Full query logging is switched on at runtime rather than in this file,
+  // so a directory here sets the default the runtime command uses.
+  fullQueryLogDir(params) string
+  // full_query_logging_options.allow_nodetool_archive_command option
+  //
+  // When true, anyone who can reach nodetool or JMX can have the server run
+  // a shell command of their choosing as the Cassandra user.
+  fullQueryLogAllowNodetoolArchiveCommand(params) bool
+
+  // user_defined_functions_enabled option, allowing user code to run in the server
+  userDefinedFunctionsEnabled(params) bool
+  // materialized_views_enabled option
+  materializedViewsEnabled(params) bool
+  // sasi_indexes_enabled option
+  sasiIndexesEnabled(params) bool
+  // drop_compact_storage_enabled option
+  dropCompactStorageEnabled(params) bool
+  // transient_replication_enabled option
+  transientReplicationEnabled(params) bool
+
+  // commitlog_sync option (periodic, group, or batch)
+  //
+  // periodic acknowledges a write before the commit log reaches disk, so a
+  // crash can lose the writes since the last sync.
+  commitlogSync(params) string
+  // commitlog_directory option
+  commitlogDirectory(params) string
+  // data_file_directories option
+  dataFileDirectories(params) []string
+  // hints_directory option
+  hintsDirectory(params) string
+  // saved_caches_directory option
+  savedCachesDirectory(params) string
+  // disk_failure_policy option (die, stop_paranoid, stop, best_effort, ignore)
+  diskFailurePolicy(params) string
+  // commit_failure_policy option (die, stop, stop_commit, ignore)
+  commitFailurePolicy(params) string
+  // incremental_backups option
+  incrementalBackups(params) bool
+  // auto_snapshot option, snapshotting before a drop or truncate (true when unset)
+  autoSnapshot(params) bool
+}
+
+// Apache Cassandra cassandra-env.sh file
+//
+// JMX exposure and the JVM system properties the launch script sets, read
+// from cassandra-env.sh. Cassandra keeps its JMX posture in this shell script
+// rather than in cassandra.yaml, and it is not reported by the running server
+// either, so this file is the only place the settings can be audited. `localJmx`
+// is the consequential one: Cassandra ships with JMX bound to localhost, and
+// turning that off exposes a port that can read and write cluster state, run
+// nodetool operations, and, with full query log archiving on, execute shell
+// commands.
+//
+// The file is a script rather than a configuration file, and it ships with
+// both a localhost-only and a remote branch of JMX settings present in the
+// text. The `if [ "$LOCAL_JMX" = "yes" ]` conditional that selects between
+// them is resolved, so `properties` holds only what the live branch sets and
+// `jmxAuthenticate` reports the value that actually applies. Any other
+// conditional in the file is treated as taken. Permissions on the files named
+// by `jmxPasswordFile` and `jmxAccessFile` are worth checking alongside these,
+// through the file resource. By default the script is located by probing the
+// well-known paths for Debian/Ubuntu, RPM, and tarball installations; pass an
+// explicit path with `cassandra.env("/path/to/cassandra-env.sh")`.
+cassandra.env @defaults("localJmx jmxPort jmxAuthenticate") {
+  init(path? string)
+  // Environment script
+  file() file
+  // Shell variable assignments that survive the script
+  //
+  // LOCAL_JMX is reported as the value the script resolves to, which is the
+  // assignment outside the unset-guard when there is one, the guard's own
+  // default when there is not, and yes when the script assigns it nowhere.
+  variables(file) map[string]string
+  // JVM system properties the script appends to JVM_OPTS
+  //
+  // Keyed without the -D prefix, with $VAR references expanded and only the
+  // live branch of the JMX conditional included.
+  properties(file) map[string]string
+
+  // Whether JMX is reachable from localhost only
+  //
+  // True when LOCAL_JMX resolves to yes, which is how Cassandra ships. False
+  // means the JMX port is bound for remote access, and the authentication
+  // and TLS fields decide what protects it.
+  localJmx(variables) bool
+  // Port JMX binds to (7199 when the script does not say)
+  jmxPort(properties) int
+  // Whether JMX requires authentication
+  //
+  // The shipped script turns authentication off for the localhost-only case
+  // and on for the remote case, so this reports false on a default install.
+  // That is only safe while localJmx is true.
+  jmxAuthenticate(properties) bool
+  // Whether JMX connections are encrypted
+  jmxSsl(properties) bool
+  // Whether JMX requires a client certificate
+  jmxSslRequireClientAuth(properties) bool
+  // Password file backing JMX authentication, empty when unset
+  jmxPasswordFile(properties) string
+  // Access file mapping JMX users to read or write roles, empty when unset
+  jmxAccessFile(properties) string
+  // Class delegating JMX authorization to the configured authorizer, empty when unset
+  jmxAuthorizer(properties) string
+  // JAAS login configuration entry used for JMX authentication, empty when unset
+  jmxLoginConfig(properties) string
+}
+
+// Apache Cassandra cassandra-rackdc.properties file
+//
+// Data center and rack this node reports to the cluster, which the
+// rack-aware snitches read to place replicas. A wrong or default value here
+// puts replicas that were meant to be spread across failure domains onto the
+// same one, and it decides which links `internodeEncryption` set to dc or
+// rack considers internal. By default the file is located by probing the
+// well-known paths for Debian/Ubuntu, RPM, and tarball installations; pass an
+// explicit path with `cassandra.rackdc("/path/to/cassandra-rackdc.properties")`.
+cassandra.rackdc @defaults("dc rack") {
+  init(path? string)
+  // Properties file
+  file() file
+  // All properties as written in the file
+  params(file) map[string]string
+  // dc property, the data center name this node reports
+  dc(params) string
+  // rack property, the rack name this node reports
+  rack(params) string
+  // prefer_local property, routing traffic over the private address within a data center
+  preferLocal(params) bool
+  // dc_suffix property, appended to the data center name the snitch derives
+  dcSuffix(params) string
+}
+
 // systemd journald configuration
 //
 // Configuration for the systemd journal daemon parsed from

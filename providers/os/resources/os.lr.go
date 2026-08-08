@@ -134,6 +134,10 @@ const (
 	ResourceMariadbConfUserOptionFile                     string = "mariadb.conf.userOptionFile"
 	ResourceMongodb                                       string = "mongodb"
 	ResourceMongodbConf                                   string = "mongodb.conf"
+	ResourceCassandra                                     string = "cassandra"
+	ResourceCassandraConf                                 string = "cassandra.conf"
+	ResourceCassandraEnv                                  string = "cassandra.env"
+	ResourceCassandraRackdc                               string = "cassandra.rackdc"
 	ResourceJournaldConfig                                string = "journald.config"
 	ResourceJournaldConfigSection                         string = "journald.config.section"
 	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
@@ -1012,6 +1016,22 @@ func init() {
 		"mongodb.conf": {
 			Init:   initMongodbConf,
 			Create: createMongodbConf,
+		},
+		"cassandra": {
+			// to override args, implement: initCassandra(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCassandra,
+		},
+		"cassandra.conf": {
+			Init:   initCassandraConf,
+			Create: createCassandraConf,
+		},
+		"cassandra.env": {
+			Init:   initCassandraEnv,
+			Create: createCassandraEnv,
+		},
+		"cassandra.rackdc": {
+			Init:   initCassandraRackdc,
+			Create: createCassandraRackdc,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -5558,6 +5578,273 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodb.conf.slowOpThresholdMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbConf).GetSlowOpThresholdMs()).ToDataRes(types.Int)
+	},
+	"cassandra.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandra).GetVersion()).ToDataRes(types.String)
+	},
+	"cassandra.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"cassandra.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetParams()).ToDataRes(types.Dict)
+	},
+	"cassandra.conf.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClusterName()).ToDataRes(types.String)
+	},
+	"cassandra.conf.endpointSnitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetEndpointSnitch()).ToDataRes(types.String)
+	},
+	"cassandra.conf.seedProviderClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetSeedProviderClass()).ToDataRes(types.String)
+	},
+	"cassandra.conf.seeds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetSeeds()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.listenAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetListenAddress()).ToDataRes(types.String)
+	},
+	"cassandra.conf.broadcastAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetBroadcastAddress()).ToDataRes(types.String)
+	},
+	"cassandra.conf.rpcAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetRpcAddress()).ToDataRes(types.String)
+	},
+	"cassandra.conf.broadcastRpcAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetBroadcastRpcAddress()).ToDataRes(types.String)
+	},
+	"cassandra.conf.startNativeTransport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetStartNativeTransport()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.nativeTransportPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetNativeTransportPort()).ToDataRes(types.Int)
+	},
+	"cassandra.conf.nativeTransportPortSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetNativeTransportPortSsl()).ToDataRes(types.Int)
+	},
+	"cassandra.conf.storagePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetStoragePort()).ToDataRes(types.Int)
+	},
+	"cassandra.conf.sslStoragePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetSslStoragePort()).ToDataRes(types.Int)
+	},
+	"cassandra.conf.authenticator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuthenticator()).ToDataRes(types.String)
+	},
+	"cassandra.conf.authorizer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuthorizer()).ToDataRes(types.String)
+	},
+	"cassandra.conf.roleManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetRoleManager()).ToDataRes(types.String)
+	},
+	"cassandra.conf.networkAuthorizer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetNetworkAuthorizer()).ToDataRes(types.String)
+	},
+	"cassandra.conf.internodeAuthenticator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetInternodeAuthenticator()).ToDataRes(types.String)
+	},
+	"cassandra.conf.authenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.authorizationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuthorizationEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.networkAuthorizationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetNetworkAuthorizationEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.clientEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.clientEncryptionOptional": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionOptional()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.clientEncryptionKeystore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionKeystore()).ToDataRes(types.String)
+	},
+	"cassandra.conf.clientEncryptionTruststore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionTruststore()).ToDataRes(types.String)
+	},
+	"cassandra.conf.clientEncryptionRequireClientAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionRequireClientAuth()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.clientEncryptionRequireEndpointVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionRequireEndpointVerification()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.clientEncryptionProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionProtocol()).ToDataRes(types.String)
+	},
+	"cassandra.conf.clientEncryptionCipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetClientEncryptionCipherSuites()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.internodeEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetInternodeEncryption()).ToDataRes(types.String)
+	},
+	"cassandra.conf.serverEncryptionOptional": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionOptional()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.serverEncryptionKeystore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionKeystore()).ToDataRes(types.String)
+	},
+	"cassandra.conf.serverEncryptionOutboundKeystore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionOutboundKeystore()).ToDataRes(types.String)
+	},
+	"cassandra.conf.serverEncryptionTruststore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionTruststore()).ToDataRes(types.String)
+	},
+	"cassandra.conf.serverEncryptionRequireClientAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionRequireClientAuth()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.serverEncryptionRequireEndpointVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionRequireEndpointVerification()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.serverEncryptionProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionProtocol()).ToDataRes(types.String)
+	},
+	"cassandra.conf.serverEncryptionCipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetServerEncryptionCipherSuites()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.legacySslStoragePortEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetLegacySslStoragePortEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.transparentDataEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetTransparentDataEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.transparentDataEncryptionCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetTransparentDataEncryptionCipher()).ToDataRes(types.String)
+	},
+	"cassandra.conf.transparentDataEncryptionKeyAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetTransparentDataEncryptionKeyAlias()).ToDataRes(types.String)
+	},
+	"cassandra.conf.transparentDataEncryptionKeyProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetTransparentDataEncryptionKeyProvider()).ToDataRes(types.String)
+	},
+	"cassandra.conf.auditLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.auditLogger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditLogger()).ToDataRes(types.String)
+	},
+	"cassandra.conf.auditLogsDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditLogsDir()).ToDataRes(types.String)
+	},
+	"cassandra.conf.auditIncludedKeyspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditIncludedKeyspaces()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.auditExcludedKeyspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditExcludedKeyspaces()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.auditIncludedCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditIncludedCategories()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.auditExcludedCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditExcludedCategories()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.auditIncludedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditIncludedUsers()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.auditExcludedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAuditExcludedUsers()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.fullQueryLogDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetFullQueryLogDir()).ToDataRes(types.String)
+	},
+	"cassandra.conf.fullQueryLogAllowNodetoolArchiveCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetFullQueryLogAllowNodetoolArchiveCommand()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.userDefinedFunctionsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetUserDefinedFunctionsEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.materializedViewsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetMaterializedViewsEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.sasiIndexesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetSasiIndexesEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.dropCompactStorageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetDropCompactStorageEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.transientReplicationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetTransientReplicationEnabled()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.commitlogSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetCommitlogSync()).ToDataRes(types.String)
+	},
+	"cassandra.conf.commitlogDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetCommitlogDirectory()).ToDataRes(types.String)
+	},
+	"cassandra.conf.dataFileDirectories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetDataFileDirectories()).ToDataRes(types.Array(types.String))
+	},
+	"cassandra.conf.hintsDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetHintsDirectory()).ToDataRes(types.String)
+	},
+	"cassandra.conf.savedCachesDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetSavedCachesDirectory()).ToDataRes(types.String)
+	},
+	"cassandra.conf.diskFailurePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetDiskFailurePolicy()).ToDataRes(types.String)
+	},
+	"cassandra.conf.commitFailurePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetCommitFailurePolicy()).ToDataRes(types.String)
+	},
+	"cassandra.conf.incrementalBackups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetIncrementalBackups()).ToDataRes(types.Bool)
+	},
+	"cassandra.conf.autoSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraConf).GetAutoSnapshot()).ToDataRes(types.Bool)
+	},
+	"cassandra.env.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"cassandra.env.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"cassandra.env.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"cassandra.env.localJmx": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetLocalJmx()).ToDataRes(types.Bool)
+	},
+	"cassandra.env.jmxPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxPort()).ToDataRes(types.Int)
+	},
+	"cassandra.env.jmxAuthenticate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxAuthenticate()).ToDataRes(types.Bool)
+	},
+	"cassandra.env.jmxSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxSsl()).ToDataRes(types.Bool)
+	},
+	"cassandra.env.jmxSslRequireClientAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxSslRequireClientAuth()).ToDataRes(types.Bool)
+	},
+	"cassandra.env.jmxPasswordFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxPasswordFile()).ToDataRes(types.String)
+	},
+	"cassandra.env.jmxAccessFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxAccessFile()).ToDataRes(types.String)
+	},
+	"cassandra.env.jmxAuthorizer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxAuthorizer()).ToDataRes(types.String)
+	},
+	"cassandra.env.jmxLoginConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraEnv).GetJmxLoginConfig()).ToDataRes(types.String)
+	},
+	"cassandra.rackdc.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRackdc).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"cassandra.rackdc.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRackdc).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"cassandra.rackdc.dc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRackdc).GetDc()).ToDataRes(types.String)
+	},
+	"cassandra.rackdc.rack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRackdc).GetRack()).ToDataRes(types.String)
+	},
+	"cassandra.rackdc.preferLocal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRackdc).GetPreferLocal()).ToDataRes(types.Bool)
+	},
+	"cassandra.rackdc.dcSuffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCassandraRackdc).GetDcSuffix()).ToDataRes(types.String)
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -17855,6 +18142,378 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodb.conf.slowOpThresholdMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbConf).SlowOpThresholdMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cassandra.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandra).__id, ok = v.Value.(string)
+		return
+	},
+	"cassandra.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandra).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).__id, ok = v.Value.(string)
+		return
+	},
+	"cassandra.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).Params, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.endpointSnitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).EndpointSnitch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.seedProviderClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).SeedProviderClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.seeds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).Seeds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.listenAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ListenAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.broadcastAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).BroadcastAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.rpcAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).RpcAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.broadcastRpcAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).BroadcastRpcAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.startNativeTransport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).StartNativeTransport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.nativeTransportPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).NativeTransportPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.nativeTransportPortSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).NativeTransportPortSsl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.storagePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).StoragePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.sslStoragePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).SslStoragePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.authenticator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).Authenticator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.authorizer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).Authorizer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.roleManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).RoleManager, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.networkAuthorizer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).NetworkAuthorizer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.internodeAuthenticator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).InternodeAuthenticator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.authenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.authorizationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuthorizationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.networkAuthorizationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).NetworkAuthorizationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionOptional": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionOptional, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionKeystore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionKeystore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionTruststore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionTruststore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionRequireClientAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionRequireClientAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionRequireEndpointVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionRequireEndpointVerification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.clientEncryptionCipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ClientEncryptionCipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.internodeEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).InternodeEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionOptional": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionOptional, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionKeystore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionKeystore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionOutboundKeystore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionOutboundKeystore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionTruststore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionTruststore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionRequireClientAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionRequireClientAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionRequireEndpointVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionRequireEndpointVerification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.serverEncryptionCipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).ServerEncryptionCipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.legacySslStoragePortEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).LegacySslStoragePortEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.transparentDataEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).TransparentDataEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.transparentDataEncryptionCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).TransparentDataEncryptionCipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.transparentDataEncryptionKeyAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).TransparentDataEncryptionKeyAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.transparentDataEncryptionKeyProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).TransparentDataEncryptionKeyProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditLogger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditLogger, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditLogsDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditLogsDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditIncludedKeyspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditIncludedKeyspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditExcludedKeyspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditExcludedKeyspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditIncludedCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditIncludedCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditExcludedCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditExcludedCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditIncludedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditIncludedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.auditExcludedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AuditExcludedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.fullQueryLogDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).FullQueryLogDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.fullQueryLogAllowNodetoolArchiveCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).FullQueryLogAllowNodetoolArchiveCommand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.userDefinedFunctionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).UserDefinedFunctionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.materializedViewsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).MaterializedViewsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.sasiIndexesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).SasiIndexesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.dropCompactStorageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).DropCompactStorageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.transientReplicationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).TransientReplicationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.commitlogSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).CommitlogSync, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.commitlogDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).CommitlogDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.dataFileDirectories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).DataFileDirectories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.hintsDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).HintsDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.savedCachesDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).SavedCachesDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.diskFailurePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).DiskFailurePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.commitFailurePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).CommitFailurePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.incrementalBackups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).IncrementalBackups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.conf.autoSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraConf).AutoSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).__id, ok = v.Value.(string)
+		return
+	},
+	"cassandra.env.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).Variables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.localJmx": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).LocalJmx, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxAuthenticate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxAuthenticate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxSslRequireClientAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxSslRequireClientAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxPasswordFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxPasswordFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxAccessFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxAccessFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxAuthorizer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxAuthorizer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.env.jmxLoginConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraEnv).JmxLoginConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.rackdc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).__id, ok = v.Value.(string)
+		return
+	},
+	"cassandra.rackdc.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"cassandra.rackdc.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"cassandra.rackdc.dc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).Dc, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.rackdc.rack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).Rack, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cassandra.rackdc.preferLocal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).PreferLocal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cassandra.rackdc.dcSuffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCassandraRackdc).DcSuffix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43696,6 +44355,1260 @@ func (c *mqlMongodbConf) GetSlowOpThresholdMs() *plugin.TValue[int64] {
 		}
 
 		return c.slowOpThresholdMs(vargParams.Data)
+	})
+}
+
+// mqlCassandra for the cassandra resource
+type mqlCassandra struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCassandraInternal it will be used here
+	Version plugin.TValue[string]
+}
+
+// createCassandra creates a new instance of this resource
+func createCassandra(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCassandra{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cassandra", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCassandra) MqlName() string {
+	return "cassandra"
+}
+
+func (c *mqlCassandra) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCassandra) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+// mqlCassandraConf for the cassandra.conf resource
+type mqlCassandraConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCassandraConfInternal it will be used here
+	File                                        plugin.TValue[*mqlFile]
+	Params                                      plugin.TValue[any]
+	ClusterName                                 plugin.TValue[string]
+	EndpointSnitch                              plugin.TValue[string]
+	SeedProviderClass                           plugin.TValue[string]
+	Seeds                                       plugin.TValue[[]any]
+	ListenAddress                               plugin.TValue[string]
+	BroadcastAddress                            plugin.TValue[string]
+	RpcAddress                                  plugin.TValue[string]
+	BroadcastRpcAddress                         plugin.TValue[string]
+	StartNativeTransport                        plugin.TValue[bool]
+	NativeTransportPort                         plugin.TValue[int64]
+	NativeTransportPortSsl                      plugin.TValue[int64]
+	StoragePort                                 plugin.TValue[int64]
+	SslStoragePort                              plugin.TValue[int64]
+	Authenticator                               plugin.TValue[string]
+	Authorizer                                  plugin.TValue[string]
+	RoleManager                                 plugin.TValue[string]
+	NetworkAuthorizer                           plugin.TValue[string]
+	InternodeAuthenticator                      plugin.TValue[string]
+	AuthenticationEnabled                       plugin.TValue[bool]
+	AuthorizationEnabled                        plugin.TValue[bool]
+	NetworkAuthorizationEnabled                 plugin.TValue[bool]
+	ClientEncryptionEnabled                     plugin.TValue[bool]
+	ClientEncryptionOptional                    plugin.TValue[bool]
+	ClientEncryptionKeystore                    plugin.TValue[string]
+	ClientEncryptionTruststore                  plugin.TValue[string]
+	ClientEncryptionRequireClientAuth           plugin.TValue[bool]
+	ClientEncryptionRequireEndpointVerification plugin.TValue[bool]
+	ClientEncryptionProtocol                    plugin.TValue[string]
+	ClientEncryptionCipherSuites                plugin.TValue[[]any]
+	InternodeEncryption                         plugin.TValue[string]
+	ServerEncryptionOptional                    plugin.TValue[bool]
+	ServerEncryptionKeystore                    plugin.TValue[string]
+	ServerEncryptionOutboundKeystore            plugin.TValue[string]
+	ServerEncryptionTruststore                  plugin.TValue[string]
+	ServerEncryptionRequireClientAuth           plugin.TValue[bool]
+	ServerEncryptionRequireEndpointVerification plugin.TValue[bool]
+	ServerEncryptionProtocol                    plugin.TValue[string]
+	ServerEncryptionCipherSuites                plugin.TValue[[]any]
+	LegacySslStoragePortEnabled                 plugin.TValue[bool]
+	TransparentDataEncryptionEnabled            plugin.TValue[bool]
+	TransparentDataEncryptionCipher             plugin.TValue[string]
+	TransparentDataEncryptionKeyAlias           plugin.TValue[string]
+	TransparentDataEncryptionKeyProvider        plugin.TValue[string]
+	AuditLoggingEnabled                         plugin.TValue[bool]
+	AuditLogger                                 plugin.TValue[string]
+	AuditLogsDir                                plugin.TValue[string]
+	AuditIncludedKeyspaces                      plugin.TValue[[]any]
+	AuditExcludedKeyspaces                      plugin.TValue[[]any]
+	AuditIncludedCategories                     plugin.TValue[[]any]
+	AuditExcludedCategories                     plugin.TValue[[]any]
+	AuditIncludedUsers                          plugin.TValue[[]any]
+	AuditExcludedUsers                          plugin.TValue[[]any]
+	FullQueryLogDir                             plugin.TValue[string]
+	FullQueryLogAllowNodetoolArchiveCommand     plugin.TValue[bool]
+	UserDefinedFunctionsEnabled                 plugin.TValue[bool]
+	MaterializedViewsEnabled                    plugin.TValue[bool]
+	SasiIndexesEnabled                          plugin.TValue[bool]
+	DropCompactStorageEnabled                   plugin.TValue[bool]
+	TransientReplicationEnabled                 plugin.TValue[bool]
+	CommitlogSync                               plugin.TValue[string]
+	CommitlogDirectory                          plugin.TValue[string]
+	DataFileDirectories                         plugin.TValue[[]any]
+	HintsDirectory                              plugin.TValue[string]
+	SavedCachesDirectory                        plugin.TValue[string]
+	DiskFailurePolicy                           plugin.TValue[string]
+	CommitFailurePolicy                         plugin.TValue[string]
+	IncrementalBackups                          plugin.TValue[bool]
+	AutoSnapshot                                plugin.TValue[bool]
+}
+
+// createCassandraConf creates a new instance of this resource
+func createCassandraConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCassandraConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cassandra.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCassandraConf) MqlName() string {
+	return "cassandra.conf"
+}
+
+func (c *mqlCassandraConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCassandraConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cassandra.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlCassandraConf) GetParams() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Params, func() (any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClusterName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClusterName, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.clusterName(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetEndpointSnitch() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointSnitch, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.endpointSnitch(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetSeedProviderClass() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SeedProviderClass, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.seedProviderClass(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetSeeds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Seeds, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.seeds(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetListenAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ListenAddress, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.listenAddress(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetBroadcastAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BroadcastAddress, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.broadcastAddress(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetRpcAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RpcAddress, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.rpcAddress(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetBroadcastRpcAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BroadcastRpcAddress, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.broadcastRpcAddress(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetStartNativeTransport() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StartNativeTransport, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.startNativeTransport(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetNativeTransportPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NativeTransportPort, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.nativeTransportPort(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetNativeTransportPortSsl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NativeTransportPortSsl, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.nativeTransportPortSsl(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetStoragePort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.StoragePort, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.storagePort(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetSslStoragePort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SslStoragePort, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.sslStoragePort(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuthenticator() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Authenticator, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.authenticator(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuthorizer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Authorizer, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.authorizer(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetRoleManager() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleManager, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.roleManager(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetNetworkAuthorizer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkAuthorizer, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.networkAuthorizer(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetInternodeAuthenticator() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InternodeAuthenticator, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.internodeAuthenticator(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuthenticationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuthenticationEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.authenticationEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuthorizationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuthorizationEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.authorizationEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetNetworkAuthorizationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NetworkAuthorizationEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.networkAuthorizationEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientEncryptionEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.clientEncryptionEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionOptional() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientEncryptionOptional, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.clientEncryptionOptional(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionKeystore() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClientEncryptionKeystore, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.clientEncryptionKeystore(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionTruststore() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClientEncryptionTruststore, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.clientEncryptionTruststore(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionRequireClientAuth() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientEncryptionRequireClientAuth, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.clientEncryptionRequireClientAuth(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionRequireEndpointVerification() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientEncryptionRequireEndpointVerification, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.clientEncryptionRequireEndpointVerification(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionProtocol() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClientEncryptionProtocol, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.clientEncryptionProtocol(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetClientEncryptionCipherSuites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientEncryptionCipherSuites, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.clientEncryptionCipherSuites(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetInternodeEncryption() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InternodeEncryption, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.internodeEncryption(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionOptional() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServerEncryptionOptional, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.serverEncryptionOptional(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionKeystore() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerEncryptionKeystore, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.serverEncryptionKeystore(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionOutboundKeystore() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerEncryptionOutboundKeystore, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.serverEncryptionOutboundKeystore(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionTruststore() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerEncryptionTruststore, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.serverEncryptionTruststore(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionRequireClientAuth() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServerEncryptionRequireClientAuth, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.serverEncryptionRequireClientAuth(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionRequireEndpointVerification() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServerEncryptionRequireEndpointVerification, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.serverEncryptionRequireEndpointVerification(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionProtocol() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerEncryptionProtocol, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.serverEncryptionProtocol(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetServerEncryptionCipherSuites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerEncryptionCipherSuites, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.serverEncryptionCipherSuites(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetLegacySslStoragePortEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LegacySslStoragePortEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.legacySslStoragePortEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetTransparentDataEncryptionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TransparentDataEncryptionEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.transparentDataEncryptionEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetTransparentDataEncryptionCipher() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TransparentDataEncryptionCipher, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.transparentDataEncryptionCipher(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetTransparentDataEncryptionKeyAlias() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TransparentDataEncryptionKeyAlias, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.transparentDataEncryptionKeyAlias(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetTransparentDataEncryptionKeyProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TransparentDataEncryptionKeyProvider, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.transparentDataEncryptionKeyProvider(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditLoggingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuditLoggingEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.auditLoggingEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditLogger() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogger, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.auditLogger(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditLogsDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogsDir, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.auditLogsDir(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditIncludedKeyspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditIncludedKeyspaces, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.auditIncludedKeyspaces(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditExcludedKeyspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditExcludedKeyspaces, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.auditExcludedKeyspaces(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditIncludedCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditIncludedCategories, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.auditIncludedCategories(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditExcludedCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditExcludedCategories, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.auditExcludedCategories(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditIncludedUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditIncludedUsers, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.auditIncludedUsers(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAuditExcludedUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditExcludedUsers, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.auditExcludedUsers(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetFullQueryLogDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FullQueryLogDir, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.fullQueryLogDir(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetFullQueryLogAllowNodetoolArchiveCommand() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FullQueryLogAllowNodetoolArchiveCommand, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.fullQueryLogAllowNodetoolArchiveCommand(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetUserDefinedFunctionsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UserDefinedFunctionsEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.userDefinedFunctionsEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetMaterializedViewsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MaterializedViewsEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.materializedViewsEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetSasiIndexesEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SasiIndexesEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.sasiIndexesEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetDropCompactStorageEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropCompactStorageEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.dropCompactStorageEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetTransientReplicationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TransientReplicationEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.transientReplicationEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetCommitlogSync() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CommitlogSync, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.commitlogSync(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetCommitlogDirectory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CommitlogDirectory, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.commitlogDirectory(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetDataFileDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataFileDirectories, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.dataFileDirectories(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetHintsDirectory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HintsDirectory, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.hintsDirectory(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetSavedCachesDirectory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SavedCachesDirectory, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.savedCachesDirectory(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetDiskFailurePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DiskFailurePolicy, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.diskFailurePolicy(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetCommitFailurePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CommitFailurePolicy, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.commitFailurePolicy(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetIncrementalBackups() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IncrementalBackups, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.incrementalBackups(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraConf) GetAutoSnapshot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutoSnapshot, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.autoSnapshot(vargParams.Data)
+	})
+}
+
+// mqlCassandraEnv for the cassandra.env resource
+type mqlCassandraEnv struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCassandraEnvInternal it will be used here
+	File                    plugin.TValue[*mqlFile]
+	Variables               plugin.TValue[map[string]any]
+	Properties              plugin.TValue[map[string]any]
+	LocalJmx                plugin.TValue[bool]
+	JmxPort                 plugin.TValue[int64]
+	JmxAuthenticate         plugin.TValue[bool]
+	JmxSsl                  plugin.TValue[bool]
+	JmxSslRequireClientAuth plugin.TValue[bool]
+	JmxPasswordFile         plugin.TValue[string]
+	JmxAccessFile           plugin.TValue[string]
+	JmxAuthorizer           plugin.TValue[string]
+	JmxLoginConfig          plugin.TValue[string]
+}
+
+// createCassandraEnv creates a new instance of this resource
+func createCassandraEnv(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCassandraEnv{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cassandra.env", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCassandraEnv) MqlName() string {
+	return "cassandra.env"
+}
+
+func (c *mqlCassandraEnv) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCassandraEnv) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cassandra.env", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlCassandraEnv) GetVariables() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Variables, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.variables(vargFile.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.properties(vargFile.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetLocalJmx() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocalJmx, func() (bool, error) {
+		vargVariables := c.GetVariables()
+		if vargVariables.Error != nil {
+			return false, vargVariables.Error
+		}
+
+		return c.localJmx(vargVariables.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.JmxPort, func() (int64, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return 0, vargProperties.Error
+		}
+
+		return c.jmxPort(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxAuthenticate() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.JmxAuthenticate, func() (bool, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return false, vargProperties.Error
+		}
+
+		return c.jmxAuthenticate(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxSsl() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.JmxSsl, func() (bool, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return false, vargProperties.Error
+		}
+
+		return c.jmxSsl(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxSslRequireClientAuth() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.JmxSslRequireClientAuth, func() (bool, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return false, vargProperties.Error
+		}
+
+		return c.jmxSslRequireClientAuth(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxPasswordFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JmxPasswordFile, func() (string, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return "", vargProperties.Error
+		}
+
+		return c.jmxPasswordFile(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxAccessFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JmxAccessFile, func() (string, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return "", vargProperties.Error
+		}
+
+		return c.jmxAccessFile(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxAuthorizer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JmxAuthorizer, func() (string, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return "", vargProperties.Error
+		}
+
+		return c.jmxAuthorizer(vargProperties.Data)
+	})
+}
+
+func (c *mqlCassandraEnv) GetJmxLoginConfig() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JmxLoginConfig, func() (string, error) {
+		vargProperties := c.GetProperties()
+		if vargProperties.Error != nil {
+			return "", vargProperties.Error
+		}
+
+		return c.jmxLoginConfig(vargProperties.Data)
+	})
+}
+
+// mqlCassandraRackdc for the cassandra.rackdc resource
+type mqlCassandraRackdc struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCassandraRackdcInternal it will be used here
+	File        plugin.TValue[*mqlFile]
+	Params      plugin.TValue[map[string]any]
+	Dc          plugin.TValue[string]
+	Rack        plugin.TValue[string]
+	PreferLocal plugin.TValue[bool]
+	DcSuffix    plugin.TValue[string]
+}
+
+// createCassandraRackdc creates a new instance of this resource
+func createCassandraRackdc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCassandraRackdc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cassandra.rackdc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCassandraRackdc) MqlName() string {
+	return "cassandra.rackdc"
+}
+
+func (c *mqlCassandraRackdc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCassandraRackdc) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cassandra.rackdc", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlCassandraRackdc) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlCassandraRackdc) GetDc() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Dc, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.dc(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraRackdc) GetRack() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Rack, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.rack(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraRackdc) GetPreferLocal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PreferLocal, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.preferLocal(vargParams.Data)
+	})
+}
+
+func (c *mqlCassandraRackdc) GetDcSuffix() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DcSuffix, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.dcSuffix(vargParams.Data)
 	})
 }
 
