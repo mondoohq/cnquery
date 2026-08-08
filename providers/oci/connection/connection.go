@@ -30,6 +30,10 @@ type OciConnection struct {
 	compartmentLock  sync.Mutex
 	compartmentList  []identity.Compartment
 	compartmentsDone bool
+
+	// Service clients, keyed by "<service>/<region-or-endpoint>". See
+	// cachedClient in clients.go for why they are shared rather than rebuilt.
+	clients sync.Map
 }
 
 func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OciConnection, error) {
