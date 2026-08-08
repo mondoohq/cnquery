@@ -51,12 +51,20 @@ func initTailscaleDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	return args, resource.(*mqlTailscaleDevice), nil
 }
 
-// lastSeenTime converts a device's last-seen timestamp for MQL. Tailscale
-// leaves it unset while the device holds a connection to the coordination
-// server, which the resource reports as null rather than substituting a
-// timestamp the API never gave us.
-func lastSeenTime(t *tsclient.Time) *time.Time {
-	if t == nil {
+// optionalTime converts a device timestamp for MQL, reporting null when
+// Tailscale did not supply one.
+//
+// Tailscale spells an absent timestamp three ways: JSON null (`lastSeen` on a
+// device connected to the coordination server), an empty string (`created` on a
+// device that has none, such as the hello service), and the zero instant
+// (`expires` on a device whose key never expires). The SDK folds the latter two
+// into the Go zero time, so absence has to be recognized here.
+//
+// Reporting the zero instant instead of null would date those devices to the
+// year 1, and a query for devices whose key has expired (`expiresAt <
+// time.now`) would then match every device whose key is set never to expire.
+func optionalTime(t *tsclient.Time) *time.Time {
+	if t == nil || t.IsZero() {
 		return nil
 	}
 	return &t.Time
@@ -110,9 +118,9 @@ func createTailscaleDeviceResource(runtime *plugin.Runtime, device *tsclient.Dev
 		"sshEnabled":                llx.BoolData(device.SSHEnabled),
 		"keyExpiryDisabled":         llx.BoolData(device.KeyExpiryDisabled),
 		"updateAvailable":           llx.BoolData(device.UpdateAvailable),
-		"createdAt":                 llx.TimeData(device.Created.Time),
-		"expiresAt":                 llx.TimeData(device.Expires.Time),
-		"lastSeenAt":                llx.TimeDataPtr(lastSeenTime(device.LastSeen)),
+		"createdAt":                 llx.TimeDataPtr(optionalTime(&device.Created)),
+		"expiresAt":                 llx.TimeDataPtr(optionalTime(&device.Expires)),
+		"lastSeenAt":                llx.TimeDataPtr(optionalTime(device.LastSeen)),
 		"tags":                      llx.ArrayData(convert.SliceAnyToInterface(device.Tags), types.String),
 		"addresses":                 llx.ArrayData(convert.SliceAnyToInterface(device.Addresses), types.String),
 		"advertisedRoutes":          llx.ArrayData(convert.SliceAnyToInterface(device.AdvertisedRoutes), types.String),

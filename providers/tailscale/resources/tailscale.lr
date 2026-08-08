@@ -134,9 +134,16 @@ tailscale.device @defaults("id hostname os") {
   keyExpiryDisabled bool
   // Whether a Tailscale client version upgrade is available (empty for external devices)
   updateAvailable bool
-  // Date when the device was added to the tailnet (empty for external devices)
+  // Date when the device was added to the tailnet
+  //
+  // Null for devices Tailscale reports no creation date for, which
+  // includes external devices shared into the tailnet.
   createdAt time
-  // Expiration date of the device's auth key
+  // Expiration date of the device's key
+  //
+  // Null when the key is set never to expire, which
+  // `keyExpiryDisabled` also reports. A comparison against this field
+  // therefore selects only devices whose key can expire.
   expiresAt time
   // When device was last active on the tailnet
   //
