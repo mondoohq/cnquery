@@ -1,0 +1,72 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+// PROTOTYPE - AI service coverage concept (Wave 4)
+// Schema design for a net-new Qdrant provider (vector-database archetype).
+// This .lr defines the resource surface only. Remaining steps before it builds:
+// config.go, connection/, provider/, gen/main.go, main.go, provider
+// registration, `mqlr generate`, resource implementation, and verification
+// against a live Qdrant instance. See providers/qdrant/README.md.
+
+option provider = "go.mondoo.com/mql/providers/qdrant"
+option go_package = "go.mondoo.com/mql/v13/providers/qdrant/resources"
+
+// Qdrant instance
+//
+// Vector database instance covering its version, transport security,
+// access-control posture, and the collections it hosts. Vector databases
+// store the embeddings that power retrieval-augmented generation and
+// often hold sensitive proprietary content, so the authentication, TLS,
+// and collection isolation surfaced here are security-critical.
+qdrant @defaults("version apiKeyRequired tlsEnabled") {
+  // Server version
+  version() string
+  // Whether an API key is required for requests
+  //
+  // When false the instance accepts unauthenticated requests, exposing
+  // all collections to anyone who can reach the endpoint.
+  apiKeyRequired() bool
+  // Whether read-only API keys are supported and in use
+  readOnlyApiKeySupported() bool
+  // Whether TLS is enabled for the API
+  tlsEnabled() bool
+  // Whether JWT-based role authorization is enabled
+  //
+  // When true, fine-grained access is enforced through signed tokens
+  // rather than a single shared API key with full access.
+  jwtRbacEnabled() bool
+  // Collections hosted on the instance
+  collections() []qdrant.collection
+}
+
+// Qdrant collection
+//
+// Named collection of vectors on a Qdrant instance, holding the
+// embeddings and payloads for one dataset. The `name` field selects the
+// collection, for example qdrant.collections.where(name == "documents").
+// Replication and sharding fields describe how the collection tolerates
+// node loss, and the payload-storage flag reports whether raw payloads
+// are kept on disk.
+qdrant.collection @defaults("name status vectorsCount") {
+  // Collection name
+  name string
+  // Collection status
+  //
+  // One of green, yellow, grey, or red.
+  status string
+  // Number of vectors stored in the collection
+  vectorsCount int
+  // Replication factor
+  //
+  // Number of replicas kept for each shard. A value of 1 means the
+  // collection cannot tolerate the loss of a node holding its shard.
+  replicationFactor int
+  // Number of shards the collection is split into
+  shardNumber int
+  // Distance metric used for similarity search
+  //
+  // One of Cosine, Euclid, Dot, or Manhattan.
+  distance string
+  // Whether payloads are stored on disk rather than in memory
+  onDiskPayload bool
+}
