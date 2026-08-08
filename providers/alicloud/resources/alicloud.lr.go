@@ -8927,7 +8927,7 @@ func (c *mqlAlicloudRam) GetSecurityPreference() *plugin.TValue[any] {
 type mqlAlicloudRamUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudRamUserInternal it will be used here
+	mqlAlicloudRamUserInternal
 	UserId           plugin.TValue[string]
 	UserName         plugin.TValue[string]
 	DisplayName      plugin.TValue[string]
@@ -9154,7 +9154,7 @@ func (c *mqlAlicloudRamAccessKey) GetCreateDate() *plugin.TValue[*time.Time] {
 type mqlAlicloudRamGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudRamGroupInternal it will be used here
+	mqlAlicloudRamGroupInternal
 	GroupId          plugin.TValue[string]
 	GroupName        plugin.TValue[string]
 	Comments         plugin.TValue[string]
@@ -9264,7 +9264,7 @@ func (c *mqlAlicloudRamGroup) GetAttachedPolicies() *plugin.TValue[[]any] {
 type mqlAlicloudRamRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudRamRoleInternal it will be used here
+	mqlAlicloudRamRoleInternal
 	RoleId                   plugin.TValue[string]
 	RoleName                 plugin.TValue[string]
 	Arn                      plugin.TValue[string]
