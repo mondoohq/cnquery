@@ -205,7 +205,10 @@ use (
    ./mql/providers/auth0
    ./mql/providers/aws
    ./mql/providers/azure
+   ./mql/providers/bitbucket
+   ./mql/providers/bitwarden
    ./mql/providers/cassandra
+   ./mql/providers/circleci
    ./mql/providers/claude
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
@@ -213,6 +216,7 @@ use (
    ./mql/providers/datadog
    ./mql/providers/depsdev
    ./mql/providers/digitalocean
+   ./mql/providers/dropbox
    ./mql/providers/elasticsearch
    ./mql/providers/equinix
    ./mql/providers/gcp
@@ -226,6 +230,7 @@ use (
    ./mql/providers/ipinfo
    ./mql/providers/ipmi
    ./mql/providers/iru
+   ./mql/providers/jenkins
    ./mql/providers/k8s
    ./mql/providers/mikrotik
    ./mql/providers/mistral
@@ -236,6 +241,7 @@ use (
    ./mql/providers/mysqldb
    ./mql/providers/nextdns
    ./mql/providers/nmap
+   ./mql/providers/notion
    ./mql/providers/nutanix
    ./mql/providers/oci
    ./mql/providers/okta
@@ -261,6 +267,7 @@ use (
    ./mql/providers/vsphere
    ./mql/providers/weaviate
    ./cnspec
+   ./mql/providers/zoom
 )
 ```
 

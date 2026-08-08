@@ -208,7 +208,10 @@ PROVIDERS := \
 	aws \
 	azure \
 	bicep \
+	bitbucket \
+	bitwarden \
 	cassandra \
+	circleci \
 	claude \
 	cloudflare \
 	cloudformation \
@@ -216,6 +219,7 @@ PROVIDERS := \
 	datadog \
 	depsdev \
 	digitalocean \
+	dropbox \
 	elasticsearch \
 	equinix \
 	gcp \
@@ -231,6 +235,7 @@ PROVIDERS := \
 	ipmi \
 	iru \
 	jamf \
+	jenkins \
 	k8s \
 	kustomize \
 	mikrotik \
@@ -244,6 +249,7 @@ PROVIDERS := \
 	network \
 	nextdns \
 	nmap \
+	notion \
 	nutanix \
 	oci \
 	okta \
@@ -269,7 +275,8 @@ PROVIDERS := \
 	vercel \
 	vllm \
 	vsphere \
-	weaviate
+	weaviate \
+	zoom
 
 .PHONY: providers/build
 providers/build: \

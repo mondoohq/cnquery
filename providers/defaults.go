@@ -192,6 +192,36 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"bitbucket": {
+		Provider: &plugin.Provider{
+			Name:            "bitbucket",
+			ID:              "go.mondoo.com/mql/providers/bitbucket",
+			ConnectionTypes: []string{"bitbucket"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "bitbucket",
+					Use:   "bitbucket --workspace WORKSPACE",
+					Short: "a Bitbucket Cloud workspace",
+				},
+			},
+		},
+	},
+
+	"bitwarden": {
+		Provider: &plugin.Provider{
+			Name:            "bitwarden",
+			ID:              "go.mondoo.com/mql/providers/bitwarden",
+			ConnectionTypes: []string{"bitwarden"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "bitwarden",
+					Use:   "bitwarden --client-id CLIENT_ID --client-secret CLIENT_SECRET",
+					Short: "a Bitwarden organization",
+				},
+			},
+		},
+	},
+
 	"cassandra": {
 		Provider: &plugin.Provider{
 			Name:            "cassandra",
@@ -217,6 +247,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "claude",
 					Use:   "claude",
 					Short: "a Claude AI platform account",
+				},
+			},
+		},
+	},
+
+	"circleci": {
+		Provider: &plugin.Provider{
+			Name:            "circleci",
+			ID:              "go.mondoo.com/mql/providers/circleci",
+			ConnectionTypes: []string{"circleci"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "circleci",
+					Use:   "circleci --token TOKEN",
+					Short: "a CircleCI organization",
 				},
 			},
 		},
@@ -316,6 +361,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "digitalocean",
 					Use:   "digitalocean",
 					Short: "a DigitalOcean account",
+				},
+			},
+		},
+	},
+
+	"dropbox": {
+		Provider: &plugin.Provider{
+			Name:            "dropbox",
+			ID:              "go.mondoo.com/mql/providers/dropbox",
+			ConnectionTypes: []string{"dropbox"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "dropbox",
+					Use:   "dropbox --token TEAM_TOKEN",
+					Short: "a Dropbox Business team",
 				},
 			},
 		},
@@ -546,6 +606,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"jenkins": {
+		Provider: &plugin.Provider{
+			Name:            "jenkins",
+			ID:              "go.mondoo.com/mql/providers/jenkins",
+			ConnectionTypes: []string{"jenkins"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "jenkins",
+					Use:   "jenkins --url URL --user USER --token TOKEN",
+					Short: "a Jenkins controller",
+				},
+			},
+		},
+	},
+
 	"junos": {
 		Provider: &plugin.Provider{
 			Name:            "junos",
@@ -751,6 +826,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "nmap",
 					Use:   "nmap",
 					Short: "a Nmap network scanner",
+				},
+			},
+		},
+	},
+
+	"notion": {
+		Provider: &plugin.Provider{
+			Name:            "notion",
+			ID:              "go.mondoo.com/mql/providers/notion",
+			ConnectionTypes: []string{"notion"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "notion",
+					Use:   "notion",
+					Short: "a Notion workspace",
 				},
 			},
 		},
@@ -1201,6 +1291,21 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"zoom": {
+		Provider: &plugin.Provider{
+			Name:            "zoom",
+			ID:              "go.mondoo.com/mql/providers/zoom",
+			ConnectionTypes: []string{"zoom"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "zoom",
+					Use:   "zoom --account-id ACCOUNT_ID --client-id CLIENT_ID --client-secret CLIENT_SECRET",
+					Short: "a Zoom account",
+				},
+			},
+		},
+	},
+
 	"networkdiscovery": {
 		Provider: &plugin.Provider{
 			Name:            "networkdiscovery",

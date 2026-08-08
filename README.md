@@ -112,6 +112,9 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | AWS EC2 EBS volume            | `aws ec2 ebs volume`       | `mql shell aws ec2 ebs volume VOLUMEID`                                                                                                         |
 | AWS EC2 Instance Connect      | `aws ec2 instance-connect` | `mql shell aws ec2 instance-connect ec2-user@INSTANCEID`                                                                                        |
 | AWS EC2 instances             | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |
+| Bitbucket workspaces          | `bitbucket`                | `mql shell bitbucket --workspace WORKSPACE --token TOKEN`                                                                                       |
+| Bitwarden organizations       | `bitwarden`                | `mql shell bitwarden --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                                                       |
+| CircleCI organizations        | `circleci`                 | `mql shell circleci --token TOKEN`                                                                                                              |
 | Cisco network devices         | `nd-ssh`                   | `mql shell nd-ssh admin@DEVICE_IP --password PASSWORD`                                                                                          |
 | Cisco Catalyst Center         | `ciscocatalyst`            | `mql shell ciscocatalyst --host HOST --user USER --password PASSWORD`                                                                           |
 | Cloudflare accounts           | `cloudflare`               | `mql shell cloudflare --token ACCESS_TOKEN`                                                                                                     |
@@ -122,6 +125,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Datadog organization          | `datadog`                  | `mql shell datadog --api-key API_KEY --app-key APP_KEY`                                                                                         |
 | Dockerfiles                   | `docker`                   | `mql shell docker file FILENAME`                                                                                                                |
 | DNS records                   | `host`                     | `mql shell host mondoo.com`                                                                                                                     |
+| Dropbox Business teams        | `dropbox`                  | `mql shell dropbox --token TEAM_TOKEN`                                                                                                          |
 | Elasticsearch cluster         | `elasticsearch`            | `mql shell elasticsearch localhost --user elastic --ask-pass`                                                                                   |
 | Equinix Metal project         | `equinix`                  | `mql shell equinix project PROJECT_ID --token API_TOKEN`                                                                                        |
 | F5 BIG-IP load balancers      | `bigip`                    | `mql shell bigip --hostname HOST --user USER --password PASSWORD`                                                                               |
@@ -139,6 +143,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | IP address information        | `ipinfo`                   | `mql shell ipinfo`                                                                                                                              |
 | IPMI-enabled devices          | `ipmi`                     | `mql shell ipmi user@HOST`                                                                                                                      |
 | Iru (formerly Kandji) tenants | `iru`                      | `mql shell iru --subdomain SUBDOMAIN --token API_TOKEN`                                                                                         |
+| Jenkins controllers           | `jenkins`                  | `mql shell jenkins --url URL --user USER --token TOKEN`                                                                                         |
 | Jira projects                 | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | Juniper Junos devices         | `junos`                    | `mql shell junos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Kubernetes cluster nodes      | `local`, `ssh`             | `mql shell ssh user@host`                                                                                                                       |
@@ -158,6 +163,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | MongoDB server (self-hosted)  | `mongo`                    | `mql shell mongo db.contoso.com --user admin --ask-pass`                                                                                        |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
 | NextDNS accounts              | `nextdns`                  | `mql shell nextdns --api-key API_KEY`                                                                                                           |
+| Notion workspaces             | `notion`                   | `mql shell notion --token INTEGRATION_TOKEN`                                                                                                    |
 | Nutanix cluster               | `nutanix`                  | `mql shell nutanix --endpoint ENDPOINT --user USER --password PASSWORD`                                                                         |
 | Okta org                      | `okta`                     | `mql shell okta --token TOKEN --organization ORGANIZATION`                                                                                      |
 | Ollama instance               | `ollama`                   | `mql shell ollama` or `mql shell ollama --host HOST --token TOKEN`                                                                              |
@@ -190,6 +196,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | VMware vSphere                | `vsphere`                  | `mql shell vsphere user@domain@host --ask-pass`                                                                                                 |
 | Weaviate vector database      | `weaviate`                 | `mql shell weaviate localhost --api-key API_KEY`                                                                                                |
 | Windows hosts                 | `local`, `ssh`, `winrm`    | `mql shell local`,<br></br>`mql shell ssh Administrator@IP_ADDRESS --ask-pass` or<br></br>`mql shell winrm Administrator@IP_ADDRESS --ask-pass` |
+| Zoom accounts                 | `zoom`                     | `mql shell zoom --account-id ACCOUNT_ID --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                                    |
 | YARA rule scanning            | `yara`                     | `mql run local -c "yara.scan('/path/to/rules.yar').result"`                                                                                     |
 
 ## What's next?
