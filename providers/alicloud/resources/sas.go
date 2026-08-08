@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strconv"
+	"sync"
 	"time"
 
 	sasclient "github.com/alibabacloud-go/sas-20181203/v3/client"
@@ -38,67 +39,72 @@ func (r *mqlAlicloudSas) id() (string, error) {
 	return "alicloud.sas", nil
 }
 
-// mqlAlicloudSasInternal caches the center region Security Center answered in,
-// so the listers do not each re-probe both centers.
+// mqlAlicloudSasInternal caches the result of the one-time center probe: the
+// client for the center that owns the account, and the DescribeVersionConfig
+// response that probe already paid for.
 type mqlAlicloudSasInternal struct {
-	centerRegion string
+	resolveOnce  sync.Once
+	centerClient *sasclient.Client
+	versionCfg   *sasclient.DescribeVersionConfigResponseBody
+	resolveErr   error
 }
 
-// sasClient returns a client for the center that owns this account, probing
-// both centers on the first call and remembering the answer.
+// resolveCenter probes both centers once and keeps what it learned.
+//
+// DescribeVersionConfig is both the cheapest call that proves a center owns the
+// account and the source of every scalar field on this resource, so the probe's
+// response is kept rather than discarded. Without this, a query for the whole
+// resource would issue one DescribeVersionConfig for the probe plus one per
+// field.
 //
 // ok is false when neither center serves the account, which is the normal state
-// for an account that has never subscribed to Security Center. err is returned
-// only when a center was reachable but failed.
-func (r *mqlAlicloudSas) sasClient() (client *sasclient.Client, ok bool, err error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+// for an account that has never subscribed to Security Center. An error is
+// returned only when a center was reachable but failed.
+func (r *mqlAlicloudSas) resolveCenter() (client *sasclient.Client, cfg *sasclient.DescribeVersionConfigResponseBody, ok bool, err error) {
+	r.resolveOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 
-	if r.centerRegion != "" {
-		c, err := conn.SasClient(r.centerRegion)
-		if err != nil {
-			return nil, false, err
+		var lastErr error
+		for _, region := range alicloudCenterRegions {
+			c, err := conn.SasClient(region)
+			if err != nil {
+				lastErr = err
+				continue
+			}
+			resp, err := c.DescribeVersionConfig(&sasclient.DescribeVersionConfigRequest{})
+			if err != nil {
+				lastErr = err
+				continue
+			}
+			r.centerClient = c
+			if resp != nil {
+				r.versionCfg = resp.Body
+			}
+			return
 		}
-		return c, true, nil
-	}
 
-	var lastErr error
-	for _, region := range alicloudCenterRegions {
-		c, err := conn.SasClient(region)
-		if err != nil {
-			lastErr = err
-			continue
+		if lastErr != nil {
+			log.Debug().Err(lastErr).Msg("alicloud: Security Center did not answer in either center region")
 		}
-		// DescribeVersionConfig is the cheapest call that proves the center
-		// owns the account
-		if _, err := c.DescribeVersionConfig(&sasclient.DescribeVersionConfigRequest{}); err != nil {
-			lastErr = err
-			continue
-		}
-		r.centerRegion = region
-		return c, true, nil
-	}
+	})
 
-	if lastErr != nil {
-		log.Debug().Err(lastErr).Msg("alicloud: Security Center did not answer in either center region")
+	if r.resolveErr != nil {
+		return nil, nil, false, r.resolveErr
 	}
-	return nil, false, nil
+	return r.centerClient, r.versionCfg, r.centerClient != nil, nil
 }
 
-// versionConfig reads the subscription details, which back every field on the
-// service resource.
+// sasClient returns a client for the center that owns this account.
+func (r *mqlAlicloudSas) sasClient() (*sasclient.Client, bool, error) {
+	client, _, ok, err := r.resolveCenter()
+	return client, ok, err
+}
+
+// versionConfig returns the subscription details backing every scalar field on
+// the service resource, read once during the center probe.
 func (r *mqlAlicloudSas) versionConfig() (*sasclient.DescribeVersionConfigResponseBody, error) {
-	client, ok, err := r.sasClient()
-	if err != nil || !ok {
-		return nil, err
-	}
-	resp, err := client.DescribeVersionConfig(&sasclient.DescribeVersionConfigRequest{})
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
-	return resp.Body, nil
+	_, cfg, _, err := r.resolveCenter()
+	return cfg, err
 }
 
 func (r *mqlAlicloudSas) enabled() (bool, error) {
