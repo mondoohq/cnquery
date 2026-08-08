@@ -57,23 +57,18 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 				return nil, err
 			}
 
-			clusters := []containerengine.ClusterSummary{}
-			var page *string
-			for {
+			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerengine.ClusterSummary, *string, error) {
 				response, err := svc.ListClusters(ctx, containerengine.ListClustersRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				clusters = append(clusters, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -298,24 +293,19 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 	}
 
 	clusterId := o.Id.Data
-	pools := []containerengine.NodePoolSummary{}
-	var page *string
-	for {
+	pools, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerengine.NodePoolSummary, *string, error) {
 		response, err := svc.ListNodePools(ctx, containerengine.ListNodePoolsRequest{
 			CompartmentId: common.String(o.CompartmentID.Data),
 			ClusterId:     common.String(clusterId),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		pools = append(pools, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(pools))

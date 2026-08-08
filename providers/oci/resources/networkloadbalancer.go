@@ -41,23 +41,18 @@ func (o *mqlOciNetworkLoadBalancer) loadBalancers() ([]any, error) {
 				return nil, err
 			}
 
-			nlbs := []networkloadbalancer.NetworkLoadBalancerSummary{}
-			var page *string
-			for {
+			nlbs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkloadbalancer.NetworkLoadBalancerSummary, *string, error) {
 				response, err := client.ListNetworkLoadBalancers(ctx, networkloadbalancer.ListNetworkLoadBalancersRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				nlbs = append(nlbs, response.NetworkLoadBalancerCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.NetworkLoadBalancerCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			return o.newNetworkLoadBalancers(nlbs)

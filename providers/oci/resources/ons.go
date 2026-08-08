@@ -83,9 +83,7 @@ func (o *mqlOciOns) topics() ([]any, error) {
 }
 
 func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.NotificationControlPlaneClient, compartmentID string) ([]ons.NotificationTopicSummary, error) {
-	topics := []ons.NotificationTopicSummary{}
-	var page *string
-	for {
+	topics, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]ons.NotificationTopicSummary, *string, error) {
 		request := ons.ListTopicsRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -93,16 +91,12 @@ func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.Notifica
 
 		response, err := client.ListTopics(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		topics = append(topics, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return topics, nil
@@ -158,9 +152,7 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 	topicId := o.Id.Data
 	ctx := context.Background()
 
-	subs := []ons.SubscriptionSummary{}
-	var page *string
-	for {
+	subs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]ons.SubscriptionSummary, *string, error) {
 		request := ons.ListSubscriptionsRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			TopicId:       common.String(topicId),
@@ -169,16 +161,12 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 
 		response, err := client.ListSubscriptions(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		subs = append(subs, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(subs))

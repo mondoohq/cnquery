@@ -208,9 +208,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 }
 
 func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Instance, error) {
-	instances := []core.Instance{}
-	var page *string
-	for {
+	instances, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Instance, *string, error) {
 		request := core.ListInstancesRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -218,16 +216,12 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 
 		response, err := computeClient.ListInstances(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		instances = append(instances, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return instances, nil
@@ -279,22 +273,19 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 		compartmentID = conn.TenantID()
 	}
 
-	var attachments []core.VnicAttachment
-	var page *string
-	for {
+	attachments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VnicAttachment, *string, error) {
 		response, err := computeSvc.ListVnicAttachments(ctx, core.ListVnicAttachmentsRequest{
 			CompartmentId: common.String(compartmentID),
 			InstanceId:    common.String(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		attachments = append(attachments, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(attachments))
@@ -365,9 +356,7 @@ func (o *mqlOciCompute) images() ([]any, error) {
 }
 
 func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Image, error) {
-	images := []core.Image{}
-	var page *string
-	for {
+	images, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Image, *string, error) {
 		request := core.ListImagesRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -375,16 +364,12 @@ func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeCl
 
 		response, err := computeClient.ListImages(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		images = append(images, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return images, nil
@@ -490,9 +475,7 @@ func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 }
 
 func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.Volume, error) {
-	volumes := []core.Volume{}
-	var page *string
-	for {
+	volumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Volume, *string, error) {
 		request := core.ListVolumesRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -500,16 +483,12 @@ func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *co
 
 		response, err := client.ListVolumes(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		volumes = append(volumes, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return volumes, nil
@@ -623,9 +602,7 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 }
 
 func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.BootVolume, error) {
-	bootVolumes := []core.BootVolume{}
-	var page *string
-	for {
+	bootVolumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.BootVolume, *string, error) {
 		request := core.ListBootVolumesRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -633,16 +610,12 @@ func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *cor
 
 		response, err := client.ListBootVolumes(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		bootVolumes = append(bootVolumes, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return bootVolumes, nil

@@ -78,9 +78,7 @@ func (o *mqlOciObjectStorage) buckets() ([]any, error) {
 }
 
 func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectStorageClient *objectstorage.ObjectStorageClient, compartmentID string, namespace string) ([]objectstorage.BucketSummary, error) {
-	entries := []objectstorage.BucketSummary{}
-	var page *string
-	for {
+	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]objectstorage.BucketSummary, *string, error) {
 		request := objectstorage.ListBucketsRequest{
 			NamespaceName: common.String(namespace),
 			CompartmentId: common.String(compartmentID),
@@ -89,16 +87,12 @@ func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectSto
 
 		response, err := objectStorageClient.ListBuckets(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		entries = append(entries, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return entries, nil
@@ -518,22 +512,19 @@ func (o *mqlOciObjectStorageBucket) retentionRules() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	var rules []objectstorage.RetentionRuleSummary
-	var page *string
-	for {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]objectstorage.RetentionRuleSummary, *string, error) {
 		response, err := client.ListRetentionRules(ctx, objectstorage.ListRetentionRulesRequest{
 			NamespaceName: common.String(namespace.Data),
 			BucketName:    common.String(name.Data),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		rules = append(rules, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(rules))
@@ -609,22 +600,19 @@ func (o *mqlOciObjectStorageBucket) preauthenticatedRequests() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	var pars []objectstorage.PreauthenticatedRequestSummary
-	var page *string
-	for {
+	pars, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]objectstorage.PreauthenticatedRequestSummary, *string, error) {
 		response, err := client.ListPreauthenticatedRequests(ctx, objectstorage.ListPreauthenticatedRequestsRequest{
 			NamespaceName: common.String(namespace.Data),
 			BucketName:    common.String(name.Data),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		pars = append(pars, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(pars))

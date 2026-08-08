@@ -54,23 +54,18 @@ func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any)
 				return nil, err
 			}
 
-			clusters := []redis.RedisClusterSummary{}
-			var page *string
-			for {
+			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]redis.RedisClusterSummary, *string, error) {
 				response, err := svc.ListRedisClusters(ctx, redis.ListRedisClustersRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				clusters = append(clusters, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(clusters))

@@ -39,9 +39,7 @@ func (o *mqlOciEvents) rules() ([]any, error) {
 }
 
 func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *events.EventsClient, compartmentID string) ([]events.RuleSummary, error) {
-	rules := []events.RuleSummary{}
-	var page *string
-	for {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]events.RuleSummary, *string, error) {
 		request := events.ListRulesRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -49,16 +47,12 @@ func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *event
 
 		response, err := client.ListRules(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		rules = append(rules, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return rules, nil

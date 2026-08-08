@@ -50,21 +50,18 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 				return nil, err
 			}
 
-			var items []certificatesmanagement.CertificateSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CertificateSummary, *string, error) {
 				response, err := svc.ListCertificates(ctx, certificatesmanagement.ListCertificatesRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -257,21 +254,18 @@ func (o *mqlOciCertificates) getCertificateAuthorities(conn *connection.OciConne
 				return nil, err
 			}
 
-			var items []certificatesmanagement.CertificateAuthoritySummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CertificateAuthoritySummary, *string, error) {
 				response, err := svc.ListCertificateAuthorities(ctx, certificatesmanagement.ListCertificateAuthoritiesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -445,21 +439,18 @@ func (o *mqlOciCertificates) getCaBundles(conn *connection.OciConnection, region
 				return nil, err
 			}
 
-			var items []certificatesmanagement.CaBundleSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CaBundleSummary, *string, error) {
 				response, err := svc.ListCaBundles(ctx, certificatesmanagement.ListCaBundlesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))

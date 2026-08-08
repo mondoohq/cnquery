@@ -41,23 +41,18 @@ func (o *mqlOciServiceConnectorHub) connectors() ([]any, error) {
 				return nil, err
 			}
 
-			connectors := []sch.ServiceConnectorSummary{}
-			var page *string
-			for {
+			connectors, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]sch.ServiceConnectorSummary, *string, error) {
 				response, err := client.ListServiceConnectors(ctx, sch.ListServiceConnectorsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				connectors = append(connectors, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(connectors))

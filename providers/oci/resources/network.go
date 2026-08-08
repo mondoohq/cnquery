@@ -103,9 +103,7 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 }
 
 func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.Vcn, error) {
-	vcns := []core.Vcn{}
-	var page *string
-	for {
+	vcns, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Vcn, *string, error) {
 		request := core.ListVcnsRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -113,16 +111,12 @@ func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *cor
 
 		response, err := networkClient.ListVcns(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		vcns = append(vcns, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return vcns, nil
@@ -298,9 +292,7 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 }
 
 func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.SecurityList, error) {
-	securityLists := []core.SecurityList{}
-	var page *string
-	for {
+	securityLists, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.SecurityList, *string, error) {
 		request := core.ListSecurityListsRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -308,16 +300,12 @@ func (s *mqlOciNetwork) getSecurityListsForRegion(ctx context.Context, networkCl
 
 		response, err := networkClient.ListSecurityLists(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		securityLists = append(securityLists, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return securityLists, nil
@@ -501,23 +489,18 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 				return nil, err
 			}
 
-			subnets := []core.Subnet{}
-			var page *string
-			for {
+			subnets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Subnet, *string, error) {
 				response, err := svc.ListSubnets(ctx, core.ListSubnetsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				subnets = append(subnets, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -697,9 +680,7 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 }
 
 func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *core.VirtualNetworkClient, compartmentID string) ([]core.NetworkSecurityGroup, error) {
-	nsgs := []core.NetworkSecurityGroup{}
-	var page *string
-	for {
+	nsgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NetworkSecurityGroup, *string, error) {
 		request := core.ListNetworkSecurityGroupsRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -707,16 +688,12 @@ func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *cor
 
 		response, err := networkClient.ListNetworkSecurityGroups(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		nsgs = append(nsgs, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return nsgs, nil
@@ -841,9 +818,7 @@ type nsgSecurityRule struct {
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) getRulesForNSG(ctx context.Context, networkClient *core.VirtualNetworkClient, nsgId string) ([]core.SecurityRule, error) {
-	rules := []core.SecurityRule{}
-	var page *string
-	for {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.SecurityRule, *string, error) {
 		request := core.ListNetworkSecurityGroupSecurityRulesRequest{
 			NetworkSecurityGroupId: common.String(nsgId),
 			Page:                   page,
@@ -851,16 +826,12 @@ func (o *mqlOciNetworkNetworkSecurityGroup) getRulesForNSG(ctx context.Context, 
 
 		response, err := networkClient.ListNetworkSecurityGroupSecurityRules(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		rules = append(rules, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return rules, nil
@@ -1008,21 +979,18 @@ func (o *mqlOciNetworkNetworkSecurityGroup) attachedVnics() ([]any, error) {
 		return nil, err
 	}
 
-	var attachments []core.NetworkSecurityGroupVnic
-	var page *string
-	for {
+	attachments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NetworkSecurityGroupVnic, *string, error) {
 		response, err := networkClient.ListNetworkSecurityGroupVnics(ctx, core.ListNetworkSecurityGroupVnicsRequest{
 			NetworkSecurityGroupId: common.String(o.Id.Data),
 			Page:                   page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		attachments = append(attachments, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(attachments))
@@ -1120,23 +1088,18 @@ func (o *mqlOciNetwork) getInternetGateways(conn *connection.OciConnection, regi
 				return nil, err
 			}
 
-			igws := []core.InternetGateway{}
-			var page *string
-			for {
+			igws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.InternetGateway, *string, error) {
 				response, err := svc.ListInternetGateways(ctx, core.ListInternetGatewaysRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				igws = append(igws, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -1239,23 +1202,18 @@ func (o *mqlOciNetwork) getNatGateways(conn *connection.OciConnection, regions [
 				return nil, err
 			}
 
-			natGws := []core.NatGateway{}
-			var page *string
-			for {
+			natGws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NatGateway, *string, error) {
 				response, err := svc.ListNatGateways(ctx, core.ListNatGatewaysRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				natGws = append(natGws, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -1368,23 +1326,18 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 				return nil, err
 			}
 
-			rts := []core.RouteTable{}
-			var page *string
-			for {
+			rts, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.RouteTable, *string, error) {
 				response, err := svc.ListRouteTables(ctx, core.ListRouteTablesRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				rts = append(rts, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -1554,8 +1507,7 @@ func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []a
 				core.ListPublicIpsLifetimeReserved,
 				core.ListPublicIpsLifetimeEphemeral,
 			} {
-				var page *string
-				for {
+				perLifetime, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
 					response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
 						Scope:         core.ListPublicIpsScopeRegion,
 						CompartmentId: common.String(conn.TenantID()),
@@ -1563,16 +1515,14 @@ func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []a
 						Page:          page,
 					})
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
-
-					publicIps = append(publicIps, response.Items...)
-
-					if response.OpcNextPage == nil {
-						break
-					}
-					page = response.OpcNextPage
+					return response.Items, response.OpcNextPage, nil
+				})
+				if err != nil {
+					return nil, err
 				}
+				publicIps = append(publicIps, perLifetime...)
 			}
 
 			var res []any

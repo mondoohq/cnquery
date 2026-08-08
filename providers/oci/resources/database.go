@@ -57,23 +57,18 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 				return nil, err
 			}
 
-			var items []database.DbSystemSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.DbSystemSummary, *string, error) {
 				response, err := svc.ListDbSystems(ctx, database.ListDbSystemsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				items = append(items, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -208,23 +203,18 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 				return nil, err
 			}
 
-			var items []database.AutonomousDatabaseSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.AutonomousDatabaseSummary, *string, error) {
 				response, err := svc.ListAutonomousDatabases(ctx, database.ListAutonomousDatabasesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				items = append(items, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -403,21 +393,18 @@ func (o *mqlOciDatabase) getDatabaseBackups(conn *connection.OciConnection, regi
 				return nil, err
 			}
 
-			var items []database.BackupSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.BackupSummary, *string, error) {
 				response, err := svc.ListBackups(ctx, database.ListBackupsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -572,21 +559,18 @@ func (o *mqlOciDatabase) getAutonomousDatabaseBackups(conn *connection.OciConnec
 				return nil, err
 			}
 
-			var items []database.AutonomousDatabaseBackupSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.AutonomousDatabaseBackupSummary, *string, error) {
 				response, err := svc.ListAutonomousDatabaseBackups(ctx, database.ListAutonomousDatabaseBackupsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))

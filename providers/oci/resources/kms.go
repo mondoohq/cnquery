@@ -83,9 +83,7 @@ func (o *mqlOciKms) vaults() ([]any, error) {
 }
 
 func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagement.KmsVaultClient, compartmentID string) ([]keymanagement.VaultSummary, error) {
-	entries := []keymanagement.VaultSummary{}
-	var page *string
-	for {
+	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]keymanagement.VaultSummary, *string, error) {
 		request := keymanagement.ListVaultsRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -93,15 +91,12 @@ func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagemen
 
 		response, err := client.ListVaults(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		entries = append(entries, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return entries, nil
@@ -199,9 +194,7 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 }
 
 func (o *mqlOciKmsVault) getKeysForVault(ctx context.Context, client *keymanagement.KmsManagementClient, compartmentID string) ([]keymanagement.KeySummary, error) {
-	entries := []keymanagement.KeySummary{}
-	var page *string
-	for {
+	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]keymanagement.KeySummary, *string, error) {
 		request := keymanagement.ListKeysRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -209,15 +202,12 @@ func (o *mqlOciKmsVault) getKeysForVault(ctx context.Context, client *keymanagem
 
 		response, err := client.ListKeys(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		entries = append(entries, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return entries, nil
@@ -335,23 +325,18 @@ func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
 		return nil, err
 	}
 
-	versions := []keymanagement.KeyVersionSummary{}
-	var page *string
-	for {
+	versions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]keymanagement.KeyVersionSummary, *string, error) {
 		response, err := svc.ListKeyVersions(ctx, keymanagement.ListKeyVersionsRequest{
 			KeyId: common.String(o.Id.Data),
 			Page:  page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		versions = append(versions, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(versions))

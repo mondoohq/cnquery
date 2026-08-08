@@ -65,21 +65,18 @@ func (o *mqlOciNetwork) getDrgs(conn *connection.OciConnection, regions []any) [
 				return nil, err
 			}
 
-			drgs := []core.Drg{}
-			var page *string
-			for {
+			drgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Drg, *string, error) {
 				response, err := svc.ListDrgs(ctx, core.ListDrgsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				drgs = append(drgs, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -166,9 +163,7 @@ func (o *mqlOciNetworkDrg) attachments() ([]any, error) {
 	}
 	ctx := context.Background()
 
-	atts := []core.DrgAttachment{}
-	var page *string
-	for {
+	atts, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.DrgAttachment, *string, error) {
 		// AttachmentType defaults to VCN server-side, so leaving it unset hid
 		// every IPSec tunnel, FastConnect virtual circuit and remote peering
 		// attachment - exactly the hybrid-connectivity edges this resource
@@ -181,13 +176,12 @@ func (o *mqlOciNetworkDrg) attachments() ([]any, error) {
 			Page:           page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		atts = append(atts, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(atts))
@@ -266,22 +260,19 @@ func (o *mqlOciNetworkDrg) remotePeeringConnections() ([]any, error) {
 	}
 	ctx := context.Background()
 
-	rpcs := []core.RemotePeeringConnection{}
-	var page *string
-	for {
+	rpcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.RemotePeeringConnection, *string, error) {
 		response, err := svc.ListRemotePeeringConnections(ctx, core.ListRemotePeeringConnectionsRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			DrgId:         common.String(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		rpcs = append(rpcs, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(rpcs))
@@ -451,21 +442,18 @@ func (o *mqlOciNetwork) getLocalPeeringGateways(conn *connection.OciConnection, 
 				return nil, err
 			}
 
-			lpgs := []core.LocalPeeringGateway{}
-			var page *string
-			for {
+			lpgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.LocalPeeringGateway, *string, error) {
 				response, err := svc.ListLocalPeeringGateways(ctx, core.ListLocalPeeringGatewaysRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				lpgs = append(lpgs, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -620,21 +608,18 @@ func (o *mqlOciNetwork) getServiceGateways(conn *connection.OciConnection, regio
 				return nil, err
 			}
 
-			sgws := []core.ServiceGateway{}
-			var page *string
-			for {
+			sgws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.ServiceGateway, *string, error) {
 				response, err := svc.ListServiceGateways(ctx, core.ListServiceGatewaysRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				sgws = append(sgws, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any

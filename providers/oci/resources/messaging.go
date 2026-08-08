@@ -41,23 +41,18 @@ func (o *mqlOciStreaming) streams() ([]any, error) {
 				return nil, err
 			}
 
-			streams := []streaming.StreamSummary{}
-			var page *string
-			for {
+			streams, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]streaming.StreamSummary, *string, error) {
 				response, err := client.ListStreams(ctx, streaming.ListStreamsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				streams = append(streams, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(streams))
@@ -102,23 +97,18 @@ func (o *mqlOciStreaming) streamPools() ([]any, error) {
 				return nil, err
 			}
 
-			pools := []streaming.StreamPoolSummary{}
-			var page *string
-			for {
+			pools, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]streaming.StreamPoolSummary, *string, error) {
 				response, err := client.ListStreamPools(ctx, streaming.ListStreamPoolsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				pools = append(pools, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(pools))
@@ -372,23 +362,18 @@ func (o *mqlOciQueue) queues() ([]any, error) {
 				return nil, err
 			}
 
-			queues := []queue.QueueSummary{}
-			var page *string
-			for {
+			queues, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]queue.QueueSummary, *string, error) {
 				response, err := client.ListQueues(ctx, queue.ListQueuesRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				queues = append(queues, response.QueueCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.QueueCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(queues))
@@ -540,23 +525,18 @@ func (o *mqlOciKafka) clusters() ([]any, error) {
 				return nil, err
 			}
 
-			clusters := []managedkafka.KafkaClusterSummary{}
-			var page *string
-			for {
+			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]managedkafka.KafkaClusterSummary, *string, error) {
 				response, err := client.ListKafkaClusters(ctx, managedkafka.ListKafkaClustersRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				clusters = append(clusters, response.KafkaClusterCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.KafkaClusterCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(clusters))

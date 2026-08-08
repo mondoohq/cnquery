@@ -39,23 +39,18 @@ func (o *mqlOciResourceManager) stacks() ([]any, error) {
 				return nil, err
 			}
 
-			stacks := []resourcemanager.StackSummary{}
-			var page *string
-			for {
+			stacks, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]resourcemanager.StackSummary, *string, error) {
 				response, err := client.ListStacks(ctx, resourcemanager.ListStacksRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				stacks = append(stacks, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(stacks))
@@ -218,23 +213,18 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	jobs := []resourcemanager.JobSummary{}
-	var page *string
-	for {
+	jobs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]resourcemanager.JobSummary, *string, error) {
 		response, err := client.ListJobs(ctx, resourcemanager.ListJobsRequest{
 			StackId: common.String(o.Id.Data),
 			Page:    page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		jobs = append(jobs, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(jobs))

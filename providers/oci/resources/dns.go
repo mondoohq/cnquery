@@ -59,24 +59,21 @@ func (o *mqlOciDns) zones() ([]any, error) {
 
 			zones := []dns.ZoneSummary{}
 			for _, scope := range ociDnsZoneScopes {
-				var page *string
-				for {
+				perScope, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.ZoneSummary, *string, error) {
 					response, err := client.ListZones(ctx, dns.ListZonesRequest{
 						CompartmentId: common.String(compartmentID),
 						Scope:         scope,
 						Page:          page,
 					})
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
-
-					zones = append(zones, response.Items...)
-
-					if response.OpcNextPage == nil {
-						break
-					}
-					page = response.OpcNextPage
+					return response.Items, response.OpcNextPage, nil
+				})
+				if err != nil {
+					return nil, err
 				}
+				zones = append(zones, perScope...)
 			}
 
 			return o.newZones(region, zones)
@@ -158,24 +155,21 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 			// asking only for the default reports a tenancy's private traffic
 			// management as absent.
 			for _, scope := range ociDnsSteeringPolicyScopes {
-				var page *string
-				for {
+				perScope, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.SteeringPolicySummary, *string, error) {
 					response, err := client.ListSteeringPolicies(ctx, dns.ListSteeringPoliciesRequest{
 						CompartmentId: common.String(compartmentID),
 						Scope:         scope,
 						Page:          page,
 					})
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
-
-					policies = append(policies, response.Items...)
-
-					if response.OpcNextPage == nil {
-						break
-					}
-					page = response.OpcNextPage
+					return response.Items, response.OpcNextPage, nil
+				})
+				if err != nil {
+					return nil, err
 				}
+				policies = append(policies, perScope...)
 			}
 
 			res := make([]any, 0, len(policies))
@@ -237,9 +231,7 @@ func (o *mqlOciDnsZone) records() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	records := []dns.Record{}
-	var page *string
-	for {
+	records, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]dns.Record, *string, error) {
 		response, err := client.GetZoneRecords(ctx, dns.GetZoneRecordsRequest{
 			ZoneNameOrId: common.String(o.Id.Data),
 			// A private zone is only addressable within its scope, and the
@@ -248,15 +240,12 @@ func (o *mqlOciDnsZone) records() ([]any, error) {
 			Page:  page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		records = append(records, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(records))

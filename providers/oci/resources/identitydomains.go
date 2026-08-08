@@ -107,27 +107,25 @@ func (o *mqlOciIdentity) domains() ([]any, error) {
 		}
 
 		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
-			// []any rather than []identity.DomainSummary: the collector joins
-			// results by asserting []any and silently drops anything else.
-			domains := []any{}
-			var page *string
-			for {
+			summaries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.DomainSummary, *string, error) {
 				response, err := client.ListDomains(ctx, identity.ListDomainsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
+			}
 
-				for i := range response.Items {
-					domains = append(domains, response.Items[i])
-				}
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+			// []any rather than []identity.DomainSummary: the collector joins
+			// results by asserting []any and silently drops anything else.
+			domains := make([]any, 0, len(summaries))
+			for i := range summaries {
+				domains = append(domains, summaries[i])
 			}
 
 			return jobpool.JobResult(domains), nil
@@ -238,25 +236,19 @@ func (o *mqlOciIdentityDomain) users() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	users := []identitydomains.User{}
-	startIndex := 1
-	for {
+	users, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.User, *int, error) {
 		response, err := client.ListUsers(ctx, identitydomains.ListUsersRequest{
 			StartIndex:    common.Int(startIndex),
 			Count:         common.Int(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, ociScimError(err, o.Name.Data, "users")
+			return nil, nil, ociScimError(err, o.Name.Data, "users")
 		}
-
-		users = append(users, response.Users.Resources...)
-
-		next, more := ociScimNextIndex(startIndex, len(response.Users.Resources), response.Users.TotalResults, ociScimPageSize)
-		if !more {
-			break
-		}
-		startIndex = next
+		return response.Users.Resources, response.Users.TotalResults, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(users))
@@ -354,25 +346,19 @@ func (o *mqlOciIdentityDomain) groups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	groups := []identitydomains.Group{}
-	startIndex := 1
-	for {
+	groups, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.Group, *int, error) {
 		response, err := client.ListGroups(ctx, identitydomains.ListGroupsRequest{
 			StartIndex:    common.Int(startIndex),
 			Count:         common.Int(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, ociScimError(err, o.Name.Data, "groups")
+			return nil, nil, ociScimError(err, o.Name.Data, "groups")
 		}
-
-		groups = append(groups, response.Groups.Resources...)
-
-		next, more := ociScimNextIndex(startIndex, len(response.Groups.Resources), response.Groups.TotalResults, ociScimPageSize)
-		if !more {
-			break
-		}
-		startIndex = next
+		return response.Groups.Resources, response.Groups.TotalResults, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(groups))
@@ -410,25 +396,19 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	policies := []identitydomains.PasswordPolicy{}
-	startIndex := 1
-	for {
+	policies, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.PasswordPolicy, *int, error) {
 		response, err := client.ListPasswordPolicies(ctx, identitydomains.ListPasswordPoliciesRequest{
 			StartIndex:    common.Int(startIndex),
 			Count:         common.Int(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, ociScimError(err, o.Name.Data, "password policies")
+			return nil, nil, ociScimError(err, o.Name.Data, "password policies")
 		}
-
-		policies = append(policies, response.PasswordPolicies.Resources...)
-
-		next, more := ociScimNextIndex(startIndex, len(response.PasswordPolicies.Resources), response.PasswordPolicies.TotalResults, ociScimPageSize)
-		if !more {
-			break
-		}
-		startIndex = next
+		return response.PasswordPolicies.Resources, response.PasswordPolicies.TotalResults, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(policies))
@@ -525,25 +505,19 @@ func (o *mqlOciIdentityDomain) apps() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	apps := []identitydomains.App{}
-	startIndex := 1
-	for {
+	apps, err := ociScimPaginate(ctx, func(ctx context.Context, startIndex int) ([]identitydomains.App, *int, error) {
 		response, err := client.ListApps(ctx, identitydomains.ListAppsRequest{
 			StartIndex:    common.Int(startIndex),
 			Count:         common.Int(ociScimPageSize),
 			AttributeSets: ociScimAttributeSets,
 		})
 		if err != nil {
-			return nil, ociScimError(err, o.Name.Data, "apps")
+			return nil, nil, ociScimError(err, o.Name.Data, "apps")
 		}
-
-		apps = append(apps, response.Apps.Resources...)
-
-		next, more := ociScimNextIndex(startIndex, len(response.Apps.Resources), response.Apps.TotalResults, ociScimPageSize)
-		if !more {
-			break
-		}
-		startIndex = next
+		return response.Apps.Resources, response.Apps.TotalResults, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(apps))

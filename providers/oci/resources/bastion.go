@@ -56,23 +56,18 @@ func (o *mqlOciBastion) getBastions(conn *connection.OciConnection, regions []an
 				return nil, err
 			}
 
-			bastions := []bastion.BastionSummary{}
-			var page *string
-			for {
+			bastions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]bastion.BastionSummary, *string, error) {
 				response, err := svc.ListBastions(ctx, bastion.ListBastionsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				bastions = append(bastions, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any

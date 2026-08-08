@@ -179,9 +179,7 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	targets := []cloudguard.TargetSummary{}
-	var page *string
-	for {
+	targets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.TargetSummary, *string, error) {
 		response, err := client.ListTargets(ctx, cloudguard.ListTargetsRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			// Cloud Guard targets are attached to sub-compartments far more
@@ -190,15 +188,12 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			Page:                   page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		targets = append(targets, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(targets))
@@ -262,8 +257,7 @@ func (o *mqlOciCloudGuard) problems() ([]any, error) {
 	// One pass per lifecycle state: the filter accepts a single value, and
 	// leaving it unset is not the union - the service falls back to ACTIVE.
 	for _, state := range ociCloudGuardProblemStates {
-		var page *string
-		for {
+		perState, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.ProblemSummary, *string, error) {
 			response, err := client.ListProblems(ctx, cloudguard.ListProblemsRequest{
 				CompartmentId: common.String(conn.TenantID()),
 				// Problems are raised against resources in sub-compartments, so
@@ -277,16 +271,14 @@ func (o *mqlOciCloudGuard) problems() ([]any, error) {
 				Page:                                 page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-
-			problems = append(problems, response.Items...)
-
-			if response.OpcNextPage == nil {
-				break
-			}
-			page = response.OpcNextPage
+			return response.Items, response.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
+		problems = append(problems, perState...)
 	}
 
 	res := make([]any, 0, len(problems))
@@ -387,9 +379,7 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	rules := []cloudguard.DetectorRecipeDetectorRuleSummary{}
-	var page *string
-	for {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.DetectorRecipeDetectorRuleSummary, *string, error) {
 		response, err := client.ListDetectorRecipeDetectorRules(ctx, cloudguard.ListDetectorRecipeDetectorRulesRequest{
 			DetectorRecipeId: common.String(o.Id.Data),
 			// Read from the cached value rather than the public compartmentID
@@ -400,15 +390,12 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		rules = append(rules, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(rules))
@@ -494,24 +481,19 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	recipes := []cloudguard.DetectorRecipeSummary{}
-	var page *string
-	for {
+	recipes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.DetectorRecipeSummary, *string, error) {
 		response, err := client.ListDetectorRecipes(ctx, cloudguard.ListDetectorRecipesRequest{
 			CompartmentId:          common.String(conn.TenantID()),
 			CompartmentIdInSubtree: common.Bool(true),
 			Page:                   page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		recipes = append(recipes, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(recipes))
@@ -563,9 +545,7 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	zones := []cloudguard.SecurityZoneSummary{}
-	var page *string
-	for {
+	zones, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SecurityZoneSummary, *string, error) {
 		// Security zones are attached to compartments and practically never to
 		// the tenancy root, so without the subtree flag a correctly zoned
 		// tenancy reported none at all.
@@ -575,15 +555,12 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 			Page:                             page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		zones = append(zones, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(zones))
@@ -630,23 +607,18 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	recipes := []cloudguard.SecurityRecipeSummary{}
-	var page *string
-	for {
+	recipes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SecurityRecipeSummary, *string, error) {
 		response, err := client.ListSecurityRecipes(ctx, cloudguard.ListSecurityRecipesRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		recipes = append(recipes, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(recipes))
@@ -693,23 +665,18 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	policies := []cloudguard.SecurityPolicySummary{}
-	var page *string
-	for {
+	policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.SecurityPolicySummary, *string, error) {
 		response, err := client.ListSecurityPolicies(ctx, cloudguard.ListSecurityPoliciesRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		policies = append(policies, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(policies))
