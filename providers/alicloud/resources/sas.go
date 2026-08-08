@@ -57,9 +57,12 @@ type mqlAlicloudSasInternal struct {
 // resource would issue one DescribeVersionConfig for the probe plus one per
 // field.
 //
-// ok is false when neither center serves the account, which is the normal state
-// for an account that has never subscribed to Security Center. An error is
-// returned only when a center was reachable but failed.
+// A failure in both centers is reported as an error rather than swallowed. An
+// account that has never subscribed still answers DescribeVersionConfig in its
+// own center, with version 0, so "no center answered" means the call genuinely
+// failed. Swallowing it would render an unreachable Security Center as one that
+// is switched off, with no findings, which is the wrong direction for the
+// question this resource exists to answer.
 func (r *mqlAlicloudSas) resolveCenter() (client *sasclient.Client, cfg *sasclient.DescribeVersionConfigResponseBody, ok bool, err error) {
 	r.resolveOnce.Do(func() {
 		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
@@ -73,6 +76,7 @@ func (r *mqlAlicloudSas) resolveCenter() (client *sasclient.Client, cfg *sasclie
 			}
 			resp, err := c.DescribeVersionConfig(&sasclient.DescribeVersionConfigRequest{})
 			if err != nil {
+				// the other center owns this account, or the call failed
 				lastErr = err
 				continue
 			}
@@ -83,9 +87,7 @@ func (r *mqlAlicloudSas) resolveCenter() (client *sasclient.Client, cfg *sasclie
 			return
 		}
 
-		if lastErr != nil {
-			log.Debug().Err(lastErr).Msg("alicloud: Security Center did not answer in either center region")
-		}
+		r.resolveErr = lastErr
 	})
 
 	if r.resolveErr != nil {
