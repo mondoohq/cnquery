@@ -8,6 +8,7 @@ require (
 	github.com/alibabacloud-go/actiontrail-20200706/v3 v3.5.0
 	github.com/alibabacloud-go/alb-20200616/v2 v2.3.2
 	github.com/alibabacloud-go/cloudfw-20171207/v8 v8.2.2
+	github.com/alibabacloud-go/cloudsso-20210515 v1.6.2
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
 	github.com/alibabacloud-go/cs-20151215/v6 v6.0.0
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
@@ -23,6 +24,7 @@ require (
 	github.com/alibabacloud-go/ram-20150501/v2 v2.2.1
 	github.com/alibabacloud-go/rds-20140815/v11 v11.1.1
 	github.com/alibabacloud-go/resourcemanager-20200331/v3 v3.5.1
+	github.com/alibabacloud-go/sas-20181203/v3 v3.4.0
 	github.com/alibabacloud-go/slb-20140515/v4 v4.0.14
 	github.com/alibabacloud-go/sls-20201230/v6 v6.13.0
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0

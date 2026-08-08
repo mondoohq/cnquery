@@ -300,6 +300,20 @@ func scopedInitArgs(runtime *plugin.Runtime, args map[string]*llx.RawData, scope
 	}
 }
 
+// scopedInitIDArgs is the single-identifier form of scopedInitArgs, for
+// resources whose init takes only an id and no region of its own.
+func scopedInitIDArgs(runtime *plugin.Runtime, args map[string]*llx.RawData, scopeOption, idField string) map[string]*llx.RawData {
+	if len(args) != 0 {
+		return args
+	}
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	id, _, ok := conn.ScopedObject(scopeOption)
+	if !ok {
+		return args
+	}
+	return map[string]*llx.RawData{idField: llx.StringData(id)}
+}
+
 // requiredStringArg reads a required non-empty string argument from an init
 // args map, returning a descriptive error when it is missing or blank.
 func requiredStringArg(args map[string]*llx.RawData, name, resource string) (string, error) {

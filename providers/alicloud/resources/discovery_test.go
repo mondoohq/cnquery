@@ -15,6 +15,7 @@ func TestHandleTargets(t *testing.T) {
 	fineGrained := []string{
 		DiscoveryK8sClusters, DiscoveryAlbs, DiscoveryNlbs,
 		DiscoveryVpcs, DiscoveryWaf, DiscoveryCloudFirewall,
+		DiscoveryOssBuckets, DiscoveryRdsInstances,
 	}
 
 	assert.ElementsMatch(t, fineGrained, handleTargets([]string{DiscoveryAuto}))

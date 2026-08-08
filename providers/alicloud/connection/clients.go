@@ -10,6 +10,7 @@ import (
 	actiontrailclient "github.com/alibabacloud-go/actiontrail-20200706/v3/client"
 	albclient "github.com/alibabacloud-go/alb-20200616/v2/client"
 	cloudfwclient "github.com/alibabacloud-go/cloudfw-20171207/v8/client"
+	cloudssoclient "github.com/alibabacloud-go/cloudsso-20210515/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
 	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -25,6 +26,7 @@ import (
 	ramclient "github.com/alibabacloud-go/ram-20150501/v2/client"
 	rdsclient "github.com/alibabacloud-go/rds-20140815/v11/client"
 	rmclient "github.com/alibabacloud-go/resourcemanager-20200331/v3/client"
+	sasclient "github.com/alibabacloud-go/sas-20181203/v3/client"
 	slbclient "github.com/alibabacloud-go/slb-20140515/v4/client"
 	slsclient "github.com/alibabacloud-go/sls-20201230/v6/client"
 	stsclient "github.com/alibabacloud-go/sts-20150401/v2/client"
@@ -79,6 +81,32 @@ func (c *AlicloudConnection) cachedClient(key string, build func() (any, error))
 	}
 	c.clients[key] = client
 	return client, nil
+}
+
+// SasClient returns a Security Center client for one of the two center regions.
+// Security Center answers only in the center that owns the account, so callers
+// probe both.
+func (c *AlicloudConnection) SasClient(region string) (*sasclient.Client, error) {
+	client, err := c.cachedClient("sas/"+region, func() (any, error) {
+		return sasclient.NewClient(c.config("sas", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*sasclient.Client), nil
+}
+
+// CloudSsoClient returns a CloudSSO client for one of the two service regions.
+// CloudSSO directories are hosted per-region, so callers probe both regions
+// rather than assuming which one an account uses.
+func (c *AlicloudConnection) CloudSsoClient(region string) (*cloudssoclient.Client, error) {
+	client, err := c.cachedClient("cloudsso/"+region, func() (any, error) {
+		return cloudssoclient.NewClient(c.config("cloudsso", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*cloudssoclient.Client), nil
 }
 
 func (c *AlicloudConnection) EcsClient(region string) (*ecsclient.Client, error) {
@@ -363,7 +391,7 @@ func (c *AlicloudConnection) ResourceManagerClient() (*rmclient.Client, error) {
 // account is enumerated via the ECS DescribeRegions API.
 func (c *AlicloudConnection) GetRegions() ([]string, error) {
 	if len(c.regionFilter) > 0 {
-		return c.regionFilter, nil
+		return c.Filters.General.applyRegionFilters(c.regionFilter), nil
 	}
 
 	client, err := c.EcsClient(c.region)
@@ -385,7 +413,7 @@ func (c *AlicloudConnection) GetRegions() ([]string, error) {
 			regions = append(regions, *r.RegionId)
 		}
 	}
-	return regions, nil
+	return c.Filters.General.applyRegionFilters(regions), nil
 }
 
 // Identify looks up the account (UID) the credential belongs to via the STS
