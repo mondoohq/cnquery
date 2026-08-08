@@ -206,6 +206,7 @@ use (
    ./mql/providers/azure
    ./mql/providers/cassandra
    ./mql/providers/claude
+   ./mql/providers/clickhousedb
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
    ./mql/providers/databricks
