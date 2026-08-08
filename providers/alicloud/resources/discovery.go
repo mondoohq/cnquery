@@ -25,6 +25,8 @@ const (
 	DiscoveryVpcs          = "vpcs"
 	DiscoveryWaf           = "waf"
 	DiscoveryCloudFirewall = "cloud-firewall"
+	DiscoveryOssBuckets    = "oss-buckets"
+	DiscoveryRdsInstances  = "rds-instances"
 )
 
 // Discover enumerates the major service objects in the account and returns one
@@ -55,6 +57,10 @@ func Discover(runtime *plugin.Runtime, conf *inventory.Config) (*inventory.Inven
 			assets, err = discoverWaf(runtime, conn, conf)
 		case DiscoveryCloudFirewall:
 			assets, err = discoverCloudFirewall(runtime, conn, conf)
+		case DiscoveryOssBuckets:
+			assets, err = discoverOssBuckets(runtime, conn, conf)
+		case DiscoveryRdsInstances:
+			assets, err = discoverRdsInstances(runtime, conn, conf)
 		case DiscoveryAccounts:
 			// the account is already returned as the connected root asset, so it
 			// contributes no discovered child assets
@@ -81,6 +87,8 @@ func handleTargets(targets []string) []string {
 			DiscoveryVpcs,
 			DiscoveryWaf,
 			DiscoveryCloudFirewall,
+			DiscoveryOssBuckets,
+			DiscoveryRdsInstances,
 		}
 	}
 	return targets
@@ -174,6 +182,52 @@ func discoverVpcs(runtime *plugin.Runtime, conn *connection.AlicloudConnection, 
 		assets = append(assets, newChildAsset(conf, conn.ID(), vpc.RegionId.Data,
 			connection.NewVpcIdentifier(id), connection.NewVpcPlatform(id),
 			nameOr(vpc.VpcName.Data, id), connection.OptionVpcID, id))
+	}
+	return assets, nil
+}
+
+func discoverOssBuckets(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.oss", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	buckets, err := res.(*mqlAlicloudOss).buckets()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(buckets))
+	for _, ib := range buckets {
+		bucket := ib.(*mqlAlicloudOssBucket)
+		name := bucket.Name.Data
+		if name == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), bucket.Region.Data,
+			connection.NewOssBucketIdentifier(name), connection.NewOssBucketPlatform(name),
+			name, connection.OptionOssBucket, name))
+	}
+	return assets, nil
+}
+
+func discoverRdsInstances(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.rds", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances, err := res.(*mqlAlicloudRds).instances()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(instances))
+	for _, ii := range instances {
+		inst := ii.(*mqlAlicloudRdsInstance)
+		id := inst.DbInstanceId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
+			connection.NewRdsInstanceIdentifier(id), connection.NewRdsInstancePlatform(id),
+			nameOr(inst.DbInstanceDescription.Data, id), connection.OptionRdsInstanceID, id))
 	}
 	return assets, nil
 }

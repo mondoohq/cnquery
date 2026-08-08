@@ -43,6 +43,8 @@ Examples:
 				resources.DiscoveryVpcs,
 				resources.DiscoveryWaf,
 				resources.DiscoveryCloudFirewall,
+				resources.DiscoveryOssBuckets,
+				resources.DiscoveryRdsInstances,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -86,6 +88,12 @@ Examples:
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Comma-separated list of regions to scan (default: all enabled regions)",
+				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter discovered assets, e.g., --filters regions=cn-hangzhou,ap-southeast-1 --filters exclude:regions=cn-beijing --filters tag:Environment=production --filters exclude:tag:Environment=dev",
 				},
 			},
 		},
