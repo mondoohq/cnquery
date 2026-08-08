@@ -45,37 +45,37 @@ func vcnChildren[T any](o *mqlOciNetworkVcn, list func(*mqlOciNetwork) *plugin.T
 func (o *mqlOciNetworkVcn) subnets() ([]any, error) {
 	return vcnChildren(o,
 		func(n *mqlOciNetwork) *plugin.TValue[[]any] { return n.GetSubnets() },
-		func(s *mqlOciNetworkSubnet) string { return s.cacheVcnId })
+		func(s *mqlOciNetworkSubnet) string { return s.cacheVcnID })
 }
 
 func (o *mqlOciNetworkVcn) routeTables() ([]any, error) {
 	return vcnChildren(o,
 		func(n *mqlOciNetwork) *plugin.TValue[[]any] { return n.GetRouteTables() },
-		func(r *mqlOciNetworkRouteTable) string { return r.cacheVcnId })
+		func(r *mqlOciNetworkRouteTable) string { return r.cacheVcnID })
 }
 
 func (o *mqlOciNetworkVcn) securityLists() ([]any, error) {
 	return vcnChildren(o,
 		func(n *mqlOciNetwork) *plugin.TValue[[]any] { return n.GetSecurityLists() },
-		func(s *mqlOciNetworkSecurityList) string { return s.cacheVcnId })
+		func(s *mqlOciNetworkSecurityList) string { return s.cacheVcnID })
 }
 
 func (o *mqlOciNetworkVcn) networkSecurityGroups() ([]any, error) {
 	return vcnChildren(o,
 		func(n *mqlOciNetwork) *plugin.TValue[[]any] { return n.GetNetworkSecurityGroups() },
-		func(g *mqlOciNetworkNetworkSecurityGroup) string { return g.cacheVcnId })
+		func(g *mqlOciNetworkNetworkSecurityGroup) string { return g.cacheVcnID })
 }
 
 func (o *mqlOciNetworkVcn) internetGateways() ([]any, error) {
 	return vcnChildren(o,
 		func(n *mqlOciNetwork) *plugin.TValue[[]any] { return n.GetInternetGateways() },
-		func(g *mqlOciNetworkInternetGateway) string { return g.cacheVcnId })
+		func(g *mqlOciNetworkInternetGateway) string { return g.cacheVcnID })
 }
 
 func (o *mqlOciNetworkVcn) natGateways() ([]any, error) {
 	return vcnChildren(o,
 		func(n *mqlOciNetwork) *plugin.TValue[[]any] { return n.GetNatGateways() },
-		func(g *mqlOciNetworkNatGateway) string { return g.cacheVcnId })
+		func(g *mqlOciNetworkNatGateway) string { return g.cacheVcnID })
 }
 
 // defaultRouteTable is the route table OCI applies to subnets that name none of

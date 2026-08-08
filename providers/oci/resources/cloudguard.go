@@ -286,8 +286,8 @@ func (o *mqlOciCloudGuard) problems() ([]any, error) {
 			return nil, err
 		}
 		mqlProblemTyped := mqlProblem.(*mqlOciCloudGuardProblem)
-		mqlProblemTyped.cacheCompartmentId = stringValue(problem.CompartmentId)
-		mqlProblemTyped.cacheTargetId = stringValue(problem.TargetId)
+		mqlProblemTyped.cacheCompartmentID = stringValue(problem.CompartmentId)
+		mqlProblemTyped.cacheTargetID = stringValue(problem.TargetId)
 		res = append(res, mqlProblemTyped)
 	}
 
@@ -295,8 +295,8 @@ func (o *mqlOciCloudGuard) problems() ([]any, error) {
 }
 
 type mqlOciCloudGuardProblemInternal struct {
-	cacheCompartmentId string
-	cacheTargetId      string
+	cacheCompartmentID string
+	cacheTargetID      string
 }
 
 func (o *mqlOciCloudGuardProblem) id() (string, error) {
@@ -304,11 +304,11 @@ func (o *mqlOciCloudGuardProblem) id() (string, error) {
 }
 
 func (o *mqlOciCloudGuardProblem) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCloudGuardProblem) target() (*mqlOciCloudGuardTarget, error) {
-	if o.cacheTargetId == "" {
+	if o.cacheTargetID == "" {
 		o.Target.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -327,7 +327,7 @@ func (o *mqlOciCloudGuardProblem) target() (*mqlOciCloudGuardTarget, error) {
 
 	for _, raw := range rawTargets.Data {
 		t, ok := raw.(*mqlOciCloudGuardTarget)
-		if ok && t.Id.Data == o.cacheTargetId {
+		if ok && t.Id.Data == o.cacheTargetID {
 			return t, nil
 		}
 	}
@@ -361,7 +361,7 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 			// field, which is marked deprecated in favour of compartment().
 			// Removing that field in a later major version would otherwise
 			// quietly scope this listing to the empty string.
-			CompartmentId: common.String(o.cacheCompartmentId),
+			CompartmentId: common.String(o.cacheCompartmentID),
 			Page:          page,
 		})
 		if err != nil {
@@ -495,7 +495,7 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 			return nil, err
 		}
 		mqlRecipe := mqlInstance.(*mqlOciCloudGuardDetectorRecipe)
-		mqlRecipe.cacheCompartmentId = stringValue(recipe.CompartmentId)
+		mqlRecipe.cacheCompartmentID = stringValue(recipe.CompartmentId)
 		res = append(res, mqlRecipe)
 	}
 
@@ -503,7 +503,7 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 }
 
 type mqlOciCloudGuardDetectorRecipeInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 }
 
 func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
@@ -561,7 +561,7 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 			return nil, err
 		}
 		mqlZone := mqlInstance.(*mqlOciCloudGuardSecurityZone)
-		mqlZone.cacheRecipeId = stringValue(zone.SecurityZoneRecipeId)
+		mqlZone.cacheRecipeID = stringValue(zone.SecurityZoneRecipeId)
 		res = append(res, mqlZone)
 	}
 
@@ -619,7 +619,7 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 			return nil, err
 		}
 		mqlRecipe := mqlInstance.(*mqlOciCloudGuardSecurityZoneRecipe)
-		mqlRecipe.cachePolicyIds = recipe.SecurityPolicies
+		mqlRecipe.cachePolicyIDs = recipe.SecurityPolicies
 		res = append(res, mqlRecipe)
 	}
 
@@ -691,11 +691,11 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 }
 
 type mqlOciCloudGuardSecurityZoneInternal struct {
-	cacheRecipeId string
+	cacheRecipeID string
 }
 
 type mqlOciCloudGuardSecurityZoneRecipeInternal struct {
-	cachePolicyIds []string
+	cachePolicyIDs []string
 }
 
 func (o *mqlOciCloudGuardTarget) id() (string, error) {
@@ -711,7 +711,7 @@ func (o *mqlOciCloudGuardSecurityZone) id() (string, error) {
 }
 
 func (o *mqlOciCloudGuardSecurityZone) securityZoneRecipe() (*mqlOciCloudGuardSecurityZoneRecipe, error) {
-	if o.cacheRecipeId == "" {
+	if o.cacheRecipeID == "" {
 		o.SecurityZoneRecipe.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -729,7 +729,7 @@ func (o *mqlOciCloudGuardSecurityZone) securityZoneRecipe() (*mqlOciCloudGuardSe
 
 	for _, raw := range rawRecipes.Data {
 		r := raw.(*mqlOciCloudGuardSecurityZoneRecipe)
-		if r.Id.Data == o.cacheRecipeId {
+		if r.Id.Data == o.cacheRecipeID {
 			return r, nil
 		}
 	}
@@ -743,7 +743,7 @@ func (o *mqlOciCloudGuardSecurityZoneRecipe) id() (string, error) {
 }
 
 func (o *mqlOciCloudGuardSecurityZoneRecipe) securityPolicies() ([]any, error) {
-	if len(o.cachePolicyIds) == 0 {
+	if len(o.cachePolicyIDs) == 0 {
 		return []any{}, nil
 	}
 
@@ -764,8 +764,8 @@ func (o *mqlOciCloudGuardSecurityZoneRecipe) securityPolicies() ([]any, error) {
 		byId[p.Id.Data] = p
 	}
 
-	res := make([]any, 0, len(o.cachePolicyIds))
-	for _, id := range o.cachePolicyIds {
+	res := make([]any, 0, len(o.cachePolicyIDs))
+	for _, id := range o.cachePolicyIDs {
 		if p, ok := byId[id]; ok {
 			res = append(res, p)
 		}

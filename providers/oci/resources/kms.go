@@ -64,7 +64,7 @@ func (o *mqlOciKms) vaults() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				mqlInstance.(*mqlOciKmsVault).region = region
+				mqlInstance.(*mqlOciKmsVault).cacheRegion = region
 				res = append(res, mqlInstance)
 			}
 
@@ -93,7 +93,7 @@ func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagemen
 }
 
 type mqlOciKmsVaultInternal struct {
-	region string
+	cacheRegion string
 }
 
 func initOciKmsVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

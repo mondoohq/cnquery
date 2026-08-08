@@ -74,9 +74,9 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 					return nil, err
 				}
 				mqlB := mqlInstance.(*mqlOciBastionInstance)
-				mqlB.cacheTargetVcnId = stringValue(b.TargetVcnId)
-				mqlB.cacheTargetSubnetId = stringValue(b.TargetSubnetId)
-				mqlB.region = region
+				mqlB.cacheTargetVcnID = stringValue(b.TargetVcnId)
+				mqlB.cacheTargetSubnetID = stringValue(b.TargetSubnetId)
+				mqlB.cacheRegion = region
 				res = append(res, mqlB)
 			}
 
@@ -85,9 +85,9 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 }
 
 type mqlOciBastionInstanceInternal struct {
-	cacheTargetVcnId    string
-	cacheTargetSubnetId string
-	region              string
+	cacheTargetVcnID    string
+	cacheTargetSubnetID string
+	cacheRegion         string
 
 	bastion ociRetryLazy[*bastion.Bastion]
 }
@@ -104,7 +104,7 @@ func (o *mqlOciBastionInstance) id() (string, error) {
 func (o *mqlOciBastionInstance) getBastionDetails() (*bastion.Bastion, error) {
 	return o.bastion.get(func() (*bastion.Bastion, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-		region := o.region
+		region := o.cacheRegion
 		if region == "" {
 			region = ociRegionFromOCID(o.Id.Data)
 		}
@@ -175,12 +175,12 @@ func (o *mqlOciBastionInstance) privateEndpointIpAddress() (string, error) {
 }
 
 func (o *mqlOciBastionInstance) targetSubnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheTargetSubnetId == "" {
+	if o.cacheTargetSubnetID == "" {
 		o.TargetSubnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheTargetSubnetId),
+		"id": llx.StringData(o.cacheTargetSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -189,12 +189,12 @@ func (o *mqlOciBastionInstance) targetSubnet() (*mqlOciNetworkSubnet, error) {
 }
 
 func (o *mqlOciBastionInstance) targetVcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheTargetVcnId == "" {
+	if o.cacheTargetVcnID == "" {
 		o.TargetVcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheTargetVcnId),
+		"id": llx.StringData(o.cacheTargetVcnID),
 	})
 	if err != nil {
 		return nil, err

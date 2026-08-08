@@ -88,8 +88,8 @@ func (o *mqlOciWaf) firewalls() ([]any, error) {
 					return nil, err
 				}
 				mqlFw := mqlInstance.(*mqlOciWafFirewall)
-				mqlFw.cachePolicyId = stringValue(lbWaf.WebAppFirewallPolicyId)
-				mqlFw.cacheLoadBalancerId = stringValue(lbWaf.LoadBalancerId)
+				mqlFw.cachePolicyID = stringValue(lbWaf.WebAppFirewallPolicyId)
+				mqlFw.cacheLoadBalancerID = stringValue(lbWaf.LoadBalancerId)
 				res = append(res, mqlFw)
 			}
 
@@ -98,8 +98,8 @@ func (o *mqlOciWaf) firewalls() ([]any, error) {
 }
 
 type mqlOciWafFirewallInternal struct {
-	cachePolicyId       string
-	cacheLoadBalancerId string
+	cachePolicyID       string
+	cacheLoadBalancerID string
 }
 
 func (o *mqlOciWafFirewall) id() (string, error) {
@@ -107,12 +107,12 @@ func (o *mqlOciWafFirewall) id() (string, error) {
 }
 
 func (o *mqlOciWafFirewall) policy() (*mqlOciWafPolicy, error) {
-	if o.cachePolicyId == "" {
+	if o.cachePolicyID == "" {
 		o.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlPolicy, err := NewResource(o.MqlRuntime, "oci.waf.policy", map[string]*llx.RawData{
-		"id": llx.StringData(o.cachePolicyId),
+		"id": llx.StringData(o.cachePolicyID),
 	})
 	if err != nil {
 		return nil, err
@@ -121,12 +121,12 @@ func (o *mqlOciWafFirewall) policy() (*mqlOciWafPolicy, error) {
 }
 
 func (o *mqlOciWafFirewall) loadBalancer() (*mqlOciLoadBalancerLoadBalancer, error) {
-	if o.cacheLoadBalancerId == "" {
+	if o.cacheLoadBalancerID == "" {
 		o.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlLb, err := NewResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheLoadBalancerId),
+		"id": llx.StringData(o.cacheLoadBalancerID),
 	})
 	if err != nil {
 		return nil, err

@@ -173,8 +173,8 @@ func (o *mqlOciIdentity) domains() ([]any, error) {
 			return nil, err
 		}
 		mqlDomainTyped := mqlDomain.(*mqlOciIdentityDomain)
-		mqlDomainTyped.cacheCompartmentId = stringValue(d.CompartmentId)
-		mqlDomainTyped.cacheUrl = stringValue(d.Url)
+		mqlDomainTyped.cacheCompartmentID = stringValue(d.CompartmentId)
+		mqlDomainTyped.cacheURL = stringValue(d.Url)
 		res = append(res, mqlDomainTyped)
 	}
 
@@ -182,10 +182,10 @@ func (o *mqlOciIdentity) domains() ([]any, error) {
 }
 
 type mqlOciIdentityDomainInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	// The domain's own SCIM endpoint. Every sub-collection is served from
 	// here rather than from a regional endpoint.
-	cacheUrl string
+	cacheURL string
 
 	// Every sub-collection accessor needs a client for this domain, so it is
 	// built once rather than per accessor.
@@ -203,7 +203,7 @@ func (o *mqlOciIdentityDomain) id() (string, error) {
 }
 
 func (o *mqlOciIdentityDomain) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityDomain) domainClient() (*identitydomains.IdentityDomainsClient, error) {
@@ -219,11 +219,11 @@ func (o *mqlOciIdentityDomain) domainClient() (*identitydomains.IdentityDomainsC
 		return client, nil
 	}
 
-	if o.cacheUrl == "" {
+	if o.cacheURL == "" {
 		return nil, errors.New("identity domain has no endpoint url: " + o.Id.Data)
 	}
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.IdentityDomainsClient(o.cacheUrl)
+	client, err := conn.IdentityDomainsClient(o.cacheURL)
 	if err != nil {
 		return nil, err
 	}

@@ -259,7 +259,7 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					return nil, err
 				}
 				sl := mqlInstance.(*mqlOciNetworkSecurityList)
-				sl.cacheVcnId = stringValue(securityList.VcnId)
+				sl.cacheVcnID = stringValue(securityList.VcnId)
 				sl.cacheRegion = region
 				res = append(res, mqlInstance)
 			}
@@ -331,7 +331,7 @@ type ingressSecurityRule struct {
 }
 
 type mqlOciNetworkSecurityListInternal struct {
-	cacheVcnId string
+	cacheVcnID string
 	// cacheRegion is the region key (e.g. "IAD") discovered when the security
 	// list was enumerated. Used by discovery to emit per-region platform IDs
 	// without re-parsing the OCID.
@@ -382,12 +382,12 @@ func (o *mqlOciNetworkSecurityList) id() (string, error) {
 }
 
 func (o *mqlOciNetworkSecurityList) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -508,9 +508,9 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 					return nil, err
 				}
 				mqlSub := mqlInstance.(*mqlOciNetworkSubnet)
-				mqlSub.cacheVcnId = stringValue(subnet.VcnId)
-				mqlSub.cacheRouteTableId = stringValue(subnet.RouteTableId)
-				mqlSub.cacheSecurityListIds = subnet.SecurityListIds
+				mqlSub.cacheVcnID = stringValue(subnet.VcnId)
+				mqlSub.cacheRouteTableID = stringValue(subnet.RouteTableId)
+				mqlSub.cacheSecurityListIDs = subnet.SecurityListIds
 				res = append(res, mqlSub)
 			}
 
@@ -519,9 +519,9 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 }
 
 type mqlOciNetworkSubnetInternal struct {
-	cacheVcnId           string
-	cacheRouteTableId    string
-	cacheSecurityListIds []string
+	cacheVcnID           string
+	cacheRouteTableID    string
+	cacheSecurityListIDs []string
 }
 
 func initOciNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -560,12 +560,12 @@ func (o *mqlOciNetworkSubnet) id() (string, error) {
 }
 
 func (o *mqlOciNetworkSubnet) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -627,8 +627,8 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 					return nil, err
 				}
 				mqlNsg := mqlInstance.(*mqlOciNetworkNetworkSecurityGroup)
-				mqlNsg.region = region
-				mqlNsg.cacheVcnId = stringValue(nsg.VcnId)
+				mqlNsg.cacheRegion = region
+				mqlNsg.cacheVcnID = stringValue(nsg.VcnId)
 				res = append(res, mqlInstance)
 			}
 
@@ -657,9 +657,9 @@ func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *cor
 }
 
 type mqlOciNetworkNetworkSecurityGroupInternal struct {
-	region     string
-	cacheVcnId string
-	rules      ociOnce
+	cacheRegion string
+	cacheVcnID  string
+	rules       ociOnce
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) id() (string, error) {
@@ -739,18 +739,18 @@ func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string
 		return nil, nil, err
 	}
 	mqlNsg := mqlInstance.(*mqlOciNetworkNetworkSecurityGroup)
-	mqlNsg.region = region
-	mqlNsg.cacheVcnId = stringValue(nsg.VcnId)
+	mqlNsg.cacheRegion = region
+	mqlNsg.cacheVcnID = stringValue(nsg.VcnId)
 	return args, mqlNsg, nil
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -801,7 +801,7 @@ func (o *mqlOciNetworkNetworkSecurityGroup) fetchSecurityRules() error {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 		ctx := context.Background()
 
-		svc, err := conn.NetworkClient(o.region)
+		svc, err := conn.NetworkClient(o.cacheRegion)
 		if err != nil {
 			return err
 		}
@@ -915,7 +915,7 @@ func (o *mqlOciNetworkNetworkSecurityGroup) attachedVnics() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()
 
-	networkClient, err := conn.NetworkClient(o.region)
+	networkClient, err := conn.NetworkClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -991,7 +991,7 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 		return nil, err
 	}
 	mqlVnic := res.(*mqlOciComputeVnic)
-	mqlVnic.cacheSubnetId = stringValue(vnic.SubnetId)
+	mqlVnic.cacheSubnetID = stringValue(vnic.SubnetId)
 	return mqlVnic, nil
 }
 
@@ -1056,7 +1056,7 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 					return nil, err
 				}
 				mqlIgw := mqlInstance.(*mqlOciNetworkInternetGateway)
-				mqlIgw.cacheVcnId = stringValue(igw.VcnId)
+				mqlIgw.cacheVcnID = stringValue(igw.VcnId)
 				res = append(res, mqlIgw)
 			}
 
@@ -1065,7 +1065,7 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 }
 
 type mqlOciNetworkInternetGatewayInternal struct {
-	cacheVcnId string
+	cacheVcnID string
 }
 
 func (o *mqlOciNetworkInternetGateway) id() (string, error) {
@@ -1073,12 +1073,12 @@ func (o *mqlOciNetworkInternetGateway) id() (string, error) {
 }
 
 func (o *mqlOciNetworkInternetGateway) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -1148,7 +1148,7 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 					return nil, err
 				}
 				mqlNgw := mqlInstance.(*mqlOciNetworkNatGateway)
-				mqlNgw.cacheVcnId = stringValue(ngw.VcnId)
+				mqlNgw.cacheVcnID = stringValue(ngw.VcnId)
 				res = append(res, mqlNgw)
 			}
 
@@ -1157,7 +1157,7 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 }
 
 type mqlOciNetworkNatGatewayInternal struct {
-	cacheVcnId string
+	cacheVcnID string
 }
 
 func (o *mqlOciNetworkNatGateway) id() (string, error) {
@@ -1165,12 +1165,12 @@ func (o *mqlOciNetworkNatGateway) id() (string, error) {
 }
 
 func (o *mqlOciNetworkNatGateway) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -1274,7 +1274,7 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 					return nil, err
 				}
 				mqlRt := mqlInstance.(*mqlOciNetworkRouteTable)
-				mqlRt.cacheVcnId = stringValue(rt.VcnId)
+				mqlRt.cacheVcnID = stringValue(rt.VcnId)
 				res = append(res, mqlRt)
 			}
 
@@ -1283,7 +1283,7 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 }
 
 type mqlOciNetworkRouteTableInternal struct {
-	cacheVcnId string
+	cacheVcnID string
 }
 
 func initOciNetworkRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1322,12 +1322,12 @@ func (o *mqlOciNetworkRouteTable) id() (string, error) {
 }
 
 func (o *mqlOciNetworkRouteTable) vcn() (*mqlOciNetworkVcn, error) {
-	if o.cacheVcnId == "" || !isOcid(o.cacheVcnId) {
+	if o.cacheVcnID == "" || !isOcid(o.cacheVcnID) {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVcnId),
+		"id": llx.StringData(o.cacheVcnID),
 	})
 	if err != nil {
 		return nil, err
@@ -1338,12 +1338,12 @@ func (o *mqlOciNetworkRouteTable) vcn() (*mqlOciNetworkVcn, error) {
 // Subnet route table reference
 
 func (o *mqlOciNetworkSubnet) routeTable() (*mqlOciNetworkRouteTable, error) {
-	if o.cacheRouteTableId == "" || !isOcid(o.cacheRouteTableId) {
+	if o.cacheRouteTableID == "" || !isOcid(o.cacheRouteTableID) {
 		o.RouteTable.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlRt, err := NewResource(o.MqlRuntime, "oci.network.routeTable", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheRouteTableId),
+		"id": llx.StringData(o.cacheRouteTableID),
 	})
 	if err != nil {
 		return nil, err

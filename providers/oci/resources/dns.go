@@ -110,7 +110,7 @@ func (o *mqlOciDns) newZones(region string, zones []dns.ZoneSummary) ([]any, err
 			return nil, err
 		}
 		mqlZoneTyped := mqlZone.(*mqlOciDnsZone)
-		mqlZoneTyped.cacheCompartmentId = stringValue(zone.CompartmentId)
+		mqlZoneTyped.cacheCompartmentID = stringValue(zone.CompartmentId)
 		mqlZoneTyped.cacheRegion = region
 		mqlZoneTyped.cacheScope = zone.Scope
 		res = append(res, mqlZoneTyped)
@@ -173,7 +173,7 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 					return nil, err
 				}
 				mqlPolicyTyped := mqlPolicy.(*mqlOciDnsSteeringPolicy)
-				mqlPolicyTyped.cacheCompartmentId = stringValue(policy.CompartmentId)
+				mqlPolicyTyped.cacheCompartmentID = stringValue(policy.CompartmentId)
 				res = append(res, mqlPolicyTyped)
 			}
 
@@ -186,7 +186,7 @@ func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 }
 
 type mqlOciDnsZoneInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 	cacheScope         dns.ScopeEnum
 }
@@ -196,7 +196,7 @@ func (o *mqlOciDnsZone) id() (string, error) {
 }
 
 func (o *mqlOciDnsZone) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 // records fetches the zone's resource records on demand.
@@ -261,7 +261,7 @@ func (o *mqlOciDnsZone) records() ([]any, error) {
 }
 
 type mqlOciDnsSteeringPolicyInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 }
 
 func (o *mqlOciDnsSteeringPolicy) id() (string, error) {
@@ -269,5 +269,5 @@ func (o *mqlOciDnsSteeringPolicy) id() (string, error) {
 }
 
 func (o *mqlOciDnsSteeringPolicy) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }

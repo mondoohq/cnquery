@@ -89,10 +89,10 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 					return nil, err
 				}
 				mqlGw := mqlInstance.(*mqlOciApigatewayGateway)
-				mqlGw.region = region
-				mqlGw.cacheSubnetId = stringValue(g.SubnetId)
-				mqlGw.cacheCertificateId = stringValue(g.CertificateId)
-				mqlGw.cacheNsgIds = append([]string(nil), g.NetworkSecurityGroupIds...)
+				mqlGw.cacheRegion = region
+				mqlGw.cacheSubnetID = stringValue(g.SubnetId)
+				mqlGw.cacheCertificateID = stringValue(g.CertificateId)
+				mqlGw.cacheNsgIDs = append([]string(nil), g.NetworkSecurityGroupIds...)
 				res = append(res, mqlGw)
 			}
 
@@ -101,10 +101,10 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 }
 
 type mqlOciApigatewayGatewayInternal struct {
-	region             string
-	cacheSubnetId      string
-	cacheCertificateId string
-	cacheNsgIds        []string
+	cacheRegion        string
+	cacheSubnetID      string
+	cacheCertificateID string
+	cacheNsgIDs        []string
 
 	// details fetched lazily from GetGateway (ip addresses, CA bundles,
 	// response cache) — not in the list summary.
@@ -116,12 +116,12 @@ func (o *mqlOciApigatewayGateway) id() (string, error) {
 }
 
 func (o *mqlOciApigatewayGateway) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetID == "" {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -130,8 +130,8 @@ func (o *mqlOciApigatewayGateway) subnet() (*mqlOciNetworkSubnet, error) {
 }
 
 func (o *mqlOciApigatewayGateway) networkSecurityGroups() ([]any, error) {
-	res := make([]any, 0, len(o.cacheNsgIds))
-	for _, nsgId := range o.cacheNsgIds {
+	res := make([]any, 0, len(o.cacheNsgIDs))
+	for _, nsgId := range o.cacheNsgIDs {
 		if nsgId == "" {
 			continue
 		}
@@ -147,12 +147,12 @@ func (o *mqlOciApigatewayGateway) networkSecurityGroups() ([]any, error) {
 }
 
 func (o *mqlOciApigatewayGateway) certificate() (*mqlOciApigatewayCertificate, error) {
-	if o.cacheCertificateId == "" {
+	if o.cacheCertificateID == "" {
 		o.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.apigateway.certificate", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheCertificateId),
+		"id": llx.StringData(o.cacheCertificateID),
 	})
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (o *mqlOciApigatewayGateway) certificate() (*mqlOciApigatewayCertificate, e
 func (o *mqlOciApigatewayGateway) fetchDetails() error {
 	return o.details.do(func() error {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-		svc, err := conn.ApiGatewayGatewayClient(o.region)
+		svc, err := conn.ApiGatewayGatewayClient(o.cacheRegion)
 		if err != nil {
 			return err
 		}
@@ -296,8 +296,8 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 					return nil, err
 				}
 				mqlDep := mqlInstance.(*mqlOciApigatewayDeployment)
-				mqlDep.region = region
-				mqlDep.cacheGatewayId = stringValue(d.GatewayId)
+				mqlDep.cacheRegion = region
+				mqlDep.cacheGatewayID = stringValue(d.GatewayId)
 				res = append(res, mqlDep)
 			}
 
@@ -306,8 +306,8 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 }
 
 type mqlOciApigatewayDeploymentInternal struct {
-	region         string
-	cacheGatewayId string
+	cacheRegion    string
+	cacheGatewayID string
 
 	// the deployment spec backs the request-policy-derived fields.
 	spec ociRetryLazy[*apigateway.ApiSpecification]
@@ -360,12 +360,12 @@ func initOciApigatewayDeployment(runtime *plugin.Runtime, args map[string]*llx.R
 }
 
 func (o *mqlOciApigatewayDeployment) gateway() (*mqlOciApigatewayGateway, error) {
-	if o.cacheGatewayId == "" {
+	if o.cacheGatewayID == "" {
 		o.Gateway.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.apigateway.gateway", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheGatewayId),
+		"id": llx.StringData(o.cacheGatewayID),
 	})
 	if err != nil {
 		return nil, err
@@ -380,7 +380,7 @@ func (o *mqlOciApigatewayDeployment) gateway() (*mqlOciApigatewayGateway, error)
 func (o *mqlOciApigatewayDeployment) getSpec() (*apigateway.ApiSpecification, error) {
 	return o.spec.get(func() (*apigateway.ApiSpecification, error) {
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-		svc, err := conn.ApiGatewayDeploymentClient(o.region)
+		svc, err := conn.ApiGatewayDeploymentClient(o.cacheRegion)
 		if err != nil {
 			return nil, err
 		}

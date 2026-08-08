@@ -96,9 +96,9 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					return nil, err
 				}
 				mqlDb := mqlInstance.(*mqlOciDatabaseDbSystem)
-				mqlDb.cacheKmsKeyId = stringValue(s.KmsKeyId)
-				mqlDb.cacheSubnetId = stringValue(s.SubnetId)
-				mqlDb.cacheSourceDbSystemId = stringValue(s.SourceDbSystemId)
+				mqlDb.cacheKmsKeyID = stringValue(s.KmsKeyId)
+				mqlDb.cacheSubnetID = stringValue(s.SubnetId)
+				mqlDb.cacheSourceDbSystemID = stringValue(s.SourceDbSystemId)
 				res = append(res, mqlDb)
 			}
 
@@ -107,9 +107,9 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
-	cacheKmsKeyId         string
-	cacheSubnetId         string
-	cacheSourceDbSystemId string
+	cacheKmsKeyID         string
+	cacheSubnetID         string
+	cacheSourceDbSystemID string
 }
 
 func (o *mqlOciDatabaseDbSystem) id() (string, error) {
@@ -117,12 +117,12 @@ func (o *mqlOciDatabaseDbSystem) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseDbSystem) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+	if o.cacheKmsKeyID == "" || !isOcid(o.cacheKmsKeyID) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err
@@ -131,12 +131,12 @@ func (o *mqlOciDatabaseDbSystem) kmsKey() (*mqlOciKmsKey, error) {
 }
 
 func (o *mqlOciDatabaseDbSystem) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" || !isOcid(o.cacheSubnetId) {
+	if o.cacheSubnetID == "" || !isOcid(o.cacheSubnetID) {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -247,10 +247,10 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					return nil, err
 				}
 				mqlAdb := mqlInstance.(*mqlOciDatabaseAutonomousDatabase)
-				mqlAdb.cacheKmsKeyId = stringValue(a.KmsKeyId)
-				mqlAdb.cacheVaultId = stringValue(a.VaultId)
-				mqlAdb.cacheSubnetId = stringValue(a.SubnetId)
-				mqlAdb.cacheSourceId = stringValue(a.SourceId)
+				mqlAdb.cacheKmsKeyID = stringValue(a.KmsKeyId)
+				mqlAdb.cacheVaultID = stringValue(a.VaultId)
+				mqlAdb.cacheSubnetID = stringValue(a.SubnetId)
+				mqlAdb.cacheSourceID = stringValue(a.SourceId)
 				res = append(res, mqlAdb)
 			}
 
@@ -259,10 +259,10 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 }
 
 type mqlOciDatabaseAutonomousDatabaseInternal struct {
-	cacheKmsKeyId string
-	cacheVaultId  string
-	cacheSubnetId string
-	cacheSourceId string
+	cacheKmsKeyID string
+	cacheVaultID  string
+	cacheSubnetID string
+	cacheSourceID string
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {
@@ -270,12 +270,12 @@ func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+	if o.cacheKmsKeyID == "" || !isOcid(o.cacheKmsKeyID) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err
@@ -284,12 +284,12 @@ func (o *mqlOciDatabaseAutonomousDatabase) kmsKey() (*mqlOciKmsKey, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) kmsVault() (*mqlOciKmsVault, error) {
-	if o.cacheVaultId == "" || !isOcid(o.cacheVaultId) {
+	if o.cacheVaultID == "" || !isOcid(o.cacheVaultID) {
 		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVaultId),
+		"id": llx.StringData(o.cacheVaultID),
 	})
 	if err != nil {
 		return nil, err
@@ -298,12 +298,12 @@ func (o *mqlOciDatabaseAutonomousDatabase) kmsVault() (*mqlOciKmsVault, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" || !isOcid(o.cacheSubnetId) {
+	if o.cacheSubnetID == "" || !isOcid(o.cacheSubnetID) {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -383,8 +383,8 @@ func (o *mqlOciDatabase) backups() ([]any, error) {
 					return nil, err
 				}
 				mqlBackup := mqlInstance.(*mqlOciDatabaseBackup)
-				mqlBackup.cacheKmsKeyId = stringValue(b.KmsKeyId)
-				mqlBackup.cacheVaultId = stringValue(b.VaultId)
+				mqlBackup.cacheKmsKeyID = stringValue(b.KmsKeyId)
+				mqlBackup.cacheVaultID = stringValue(b.VaultId)
 				res = append(res, mqlBackup)
 			}
 
@@ -393,8 +393,8 @@ func (o *mqlOciDatabase) backups() ([]any, error) {
 }
 
 type mqlOciDatabaseBackupInternal struct {
-	cacheKmsKeyId string
-	cacheVaultId  string
+	cacheKmsKeyID string
+	cacheVaultID  string
 }
 
 func (o *mqlOciDatabaseBackup) id() (string, error) {
@@ -402,12 +402,12 @@ func (o *mqlOciDatabaseBackup) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseBackup) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+	if o.cacheKmsKeyID == "" || !isOcid(o.cacheKmsKeyID) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err
@@ -416,12 +416,12 @@ func (o *mqlOciDatabaseBackup) kmsKey() (*mqlOciKmsKey, error) {
 }
 
 func (o *mqlOciDatabaseBackup) kmsVault() (*mqlOciKmsVault, error) {
-	if o.cacheVaultId == "" || !isOcid(o.cacheVaultId) {
+	if o.cacheVaultID == "" || !isOcid(o.cacheVaultID) {
 		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVaultId),
+		"id": llx.StringData(o.cacheVaultID),
 	})
 	if err != nil {
 		return nil, err
@@ -501,9 +501,9 @@ func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
 					return nil, err
 				}
 				mqlBackup := mqlInstance.(*mqlOciDatabaseAutonomousDatabaseBackup)
-				mqlBackup.cacheAutonomousDatabaseId = stringValue(b.AutonomousDatabaseId)
-				mqlBackup.cacheKmsKeyId = stringValue(b.KmsKeyId)
-				mqlBackup.cacheVaultId = stringValue(b.VaultId)
+				mqlBackup.cacheAutonomousDatabaseID = stringValue(b.AutonomousDatabaseId)
+				mqlBackup.cacheKmsKeyID = stringValue(b.KmsKeyId)
+				mqlBackup.cacheVaultID = stringValue(b.VaultId)
 				res = append(res, mqlBackup)
 			}
 
@@ -529,7 +529,7 @@ func (o *mqlOciDatabaseAutonomousDatabase) backups() ([]any, error) {
 	res := []any{}
 	for _, r := range raw.Data {
 		b := r.(*mqlOciDatabaseAutonomousDatabaseBackup)
-		if b.cacheAutonomousDatabaseId == dbID {
+		if b.cacheAutonomousDatabaseID == dbID {
 			res = append(res, b)
 		}
 	}
@@ -537,9 +537,9 @@ func (o *mqlOciDatabaseAutonomousDatabase) backups() ([]any, error) {
 }
 
 type mqlOciDatabaseAutonomousDatabaseBackupInternal struct {
-	cacheAutonomousDatabaseId string
-	cacheKmsKeyId             string
-	cacheVaultId              string
+	cacheAutonomousDatabaseID string
+	cacheKmsKeyID             string
+	cacheVaultID              string
 }
 
 func (o *mqlOciDatabaseAutonomousDatabaseBackup) id() (string, error) {
@@ -547,12 +547,12 @@ func (o *mqlOciDatabaseAutonomousDatabaseBackup) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabaseBackup) autonomousDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
-	if o.cacheAutonomousDatabaseId == "" || !isOcid(o.cacheAutonomousDatabaseId) {
+	if o.cacheAutonomousDatabaseID == "" || !isOcid(o.cacheAutonomousDatabaseID) {
 		o.AutonomousDatabase.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheAutonomousDatabaseId),
+		"id": llx.StringData(o.cacheAutonomousDatabaseID),
 	})
 	if err != nil {
 		return nil, err
@@ -561,12 +561,12 @@ func (o *mqlOciDatabaseAutonomousDatabaseBackup) autonomousDatabase() (*mqlOciDa
 }
 
 func (o *mqlOciDatabaseAutonomousDatabaseBackup) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+	if o.cacheKmsKeyID == "" || !isOcid(o.cacheKmsKeyID) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err
@@ -575,12 +575,12 @@ func (o *mqlOciDatabaseAutonomousDatabaseBackup) kmsKey() (*mqlOciKmsKey, error)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabaseBackup) kmsVault() (*mqlOciKmsVault, error) {
-	if o.cacheVaultId == "" || !isOcid(o.cacheVaultId) {
+	if o.cacheVaultID == "" || !isOcid(o.cacheVaultID) {
 		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := NewResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVaultId),
+		"id": llx.StringData(o.cacheVaultID),
 	})
 	if err != nil {
 		return nil, err

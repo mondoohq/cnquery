@@ -114,7 +114,7 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					return nil, err
 				}
 				mqlSystemTyped := mqlSystem.(*mqlOciMysqlDbSystem)
-				mqlSystemTyped.cacheCompartmentId = stringValue(s.CompartmentId)
+				mqlSystemTyped.cacheCompartmentID = stringValue(s.CompartmentId)
 				mqlSystemTyped.cacheRegion = region
 				res = append(res, mqlSystemTyped)
 			}
@@ -127,7 +127,7 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 // subnet, security groups, the data-at-rest key and the TLS certificate all
 // come from one shared detail call rather than four.
 type mqlOciMysqlDbSystemInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	// ociLazy, not ociRetryLazy: a DB system we are not allowed to read is
@@ -140,7 +140,7 @@ func (o *mqlOciMysqlDbSystem) id() (string, error) {
 }
 
 func (o *mqlOciMysqlDbSystem) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciMysqlDbSystem) getDetail() (*mysql.DbSystem, error) {
@@ -293,7 +293,7 @@ func (o *mqlOciPostgresql) dbSystems() ([]any, error) {
 					return nil, err
 				}
 				mqlSystemTyped := mqlSystem.(*mqlOciPostgresqlDbSystem)
-				mqlSystemTyped.cacheCompartmentId = stringValue(s.CompartmentId)
+				mqlSystemTyped.cacheCompartmentID = stringValue(s.CompartmentId)
 				mqlSystemTyped.cacheRegion = region
 				res = append(res, mqlSystemTyped)
 			}
@@ -306,7 +306,7 @@ func (o *mqlOciPostgresql) dbSystems() ([]any, error) {
 // admin user, storage and the backup policy - everything the security posture
 // depends on - are detail-only, so they share one fetch.
 type mqlOciPostgresqlDbSystemInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	detail ociLazy[*psql.DbSystem]
@@ -317,7 +317,7 @@ func (o *mqlOciPostgresqlDbSystem) id() (string, error) {
 }
 
 func (o *mqlOciPostgresqlDbSystem) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciPostgresqlDbSystem) getDetail() (*psql.DbSystem, error) {
@@ -490,7 +490,7 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 					return nil, err
 				}
 				mqlTableTyped := mqlTable.(*mqlOciNosqlTable)
-				mqlTableTyped.cacheCompartmentId = stringValue(t.CompartmentId)
+				mqlTableTyped.cacheCompartmentID = stringValue(t.CompartmentId)
 				res = append(res, mqlTableTyped)
 			}
 
@@ -499,7 +499,7 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 }
 
 type mqlOciNosqlTableInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 }
 
 func (o *mqlOciNosqlTable) id() (string, error) {
@@ -507,7 +507,7 @@ func (o *mqlOciNosqlTable) id() (string, error) {
 }
 
 func (o *mqlOciNosqlTable) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 // ----- Search with OpenSearch -----
@@ -580,7 +580,7 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 					return nil, err
 				}
 				mqlClusterTyped := mqlCluster.(*mqlOciOpensearchCluster)
-				mqlClusterTyped.cacheCompartmentId = stringValue(c.CompartmentId)
+				mqlClusterTyped.cacheCompartmentID = stringValue(c.CompartmentId)
 				mqlClusterTyped.cacheRegion = region
 				res = append(res, mqlClusterTyped)
 			}
@@ -593,7 +593,7 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 // or what it answers on, so the network placement and endpoints share a detail
 // call. securityMasterUserPasswordHash is deliberately not exposed.
 type mqlOciOpensearchClusterInternal struct {
-	cacheCompartmentId string
+	cacheCompartmentID string
 	cacheRegion        string
 
 	detail ociLazy[*opensearch.OpensearchCluster]
@@ -604,7 +604,7 @@ func (o *mqlOciOpensearchCluster) id() (string, error) {
 }
 
 func (o *mqlOciOpensearchCluster) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciOpensearchCluster) getDetail() (*opensearch.OpensearchCluster, error) {
@@ -755,9 +755,9 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 					return nil, err
 				}
 				mqlDeploymentTyped := mqlDeployment.(*mqlOciGoldenGateDeployment)
-				mqlDeploymentTyped.cacheCompartmentId = stringValue(d.CompartmentId)
-				mqlDeploymentTyped.cacheSubnetId = stringValue(d.SubnetId)
-				mqlDeploymentTyped.cacheLoadBalancerId = stringValue(d.LoadBalancerId)
+				mqlDeploymentTyped.cacheCompartmentID = stringValue(d.CompartmentId)
+				mqlDeploymentTyped.cacheSubnetID = stringValue(d.SubnetId)
+				mqlDeploymentTyped.cacheLoadBalancerID = stringValue(d.LoadBalancerId)
 				mqlDeploymentTyped.cacheRegion = region
 				res = append(res, mqlDeploymentTyped)
 			}
@@ -769,9 +769,9 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 // The deployment listing carries the subnet but not the network security
 // groups, so only securityGroups needs the detail call.
 type mqlOciGoldenGateDeploymentInternal struct {
-	cacheCompartmentId  string
-	cacheSubnetId       string
-	cacheLoadBalancerId string
+	cacheCompartmentID  string
+	cacheSubnetID       string
+	cacheLoadBalancerID string
 	cacheRegion         string
 
 	detail ociLazy[*goldengate.Deployment]
@@ -782,20 +782,20 @@ func (o *mqlOciGoldenGateDeployment) id() (string, error) {
 }
 
 func (o *mqlOciGoldenGateDeployment) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentId, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciGoldenGateDeployment) subnet() (*mqlOciNetworkSubnet, error) {
-	return resolveOciSubnet(o.MqlRuntime, o.cacheSubnetId, &o.Subnet)
+	return resolveOciSubnet(o.MqlRuntime, o.cacheSubnetID, &o.Subnet)
 }
 
 func (o *mqlOciGoldenGateDeployment) loadBalancer() (*mqlOciLoadBalancerLoadBalancer, error) {
-	if o.cacheLoadBalancerId == "" {
+	if o.cacheLoadBalancerID == "" {
 		o.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheLoadBalancerId),
+		"id": llx.StringData(o.cacheLoadBalancerID),
 	})
 	if err != nil {
 		return nil, err

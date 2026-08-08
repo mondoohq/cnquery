@@ -310,7 +310,7 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 }
 
 type mqlOciComputeVnicInternal struct {
-	cacheSubnetId string
+	cacheSubnetID string
 }
 
 func (o *mqlOciComputeVnic) id() (string, error) {
@@ -318,12 +318,12 @@ func (o *mqlOciComputeVnic) id() (string, error) {
 }
 
 func (o *mqlOciComputeVnic) subnet() (*mqlOciNetworkSubnet, error) {
-	if o.cacheSubnetId == "" {
+	if o.cacheSubnetID == "" {
 		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSubnetId),
+		"id": llx.StringData(o.cacheSubnetID),
 	})
 	if err != nil {
 		return nil, err
@@ -495,7 +495,7 @@ func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 					return nil, err
 				}
 				mqlBV := mqlInstance.(*mqlOciComputeBlockVolume)
-				mqlBV.cacheKmsKeyId = stringValue(vol.KmsKeyId)
+				mqlBV.cacheKmsKeyID = stringValue(vol.KmsKeyId)
 				mqlBV.cacheSourceVolumeID = sourceVolumeID
 				res = append(res, mqlBV)
 			}
@@ -525,7 +525,7 @@ func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *co
 }
 
 type mqlOciComputeBlockVolumeInternal struct {
-	cacheKmsKeyId       string
+	cacheKmsKeyID       string
 	cacheSourceVolumeID string
 }
 
@@ -534,12 +534,12 @@ func (o *mqlOciComputeBlockVolume) id() (string, error) {
 }
 
 func (o *mqlOciComputeBlockVolume) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" {
+	if o.cacheKmsKeyID == "" {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlKey, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err
@@ -597,7 +597,7 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 					return nil, err
 				}
 				mqlBV := mqlInstance.(*mqlOciComputeBootVolume)
-				mqlBV.cacheKmsKeyId = stringValue(bv.KmsKeyId)
+				mqlBV.cacheKmsKeyID = stringValue(bv.KmsKeyId)
 				mqlBV.cacheSourceBootVolumeID = sourceBootVolumeID
 				res = append(res, mqlBV)
 			}
@@ -627,7 +627,7 @@ func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *cor
 }
 
 type mqlOciComputeBootVolumeInternal struct {
-	cacheKmsKeyId           string
+	cacheKmsKeyID           string
 	cacheSourceBootVolumeID string
 }
 
@@ -636,12 +636,12 @@ func (o *mqlOciComputeBootVolume) id() (string, error) {
 }
 
 func (o *mqlOciComputeBootVolume) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" {
+	if o.cacheKmsKeyID == "" {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlKey, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKmsKeyId),
+		"id": llx.StringData(o.cacheKmsKeyID),
 	})
 	if err != nil {
 		return nil, err

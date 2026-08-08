@@ -98,8 +98,8 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 					return nil, err
 				}
 				mqlS := mqlInstance.(*mqlOciVaultSecret)
-				mqlS.cacheKeyId = stringValue(s.KeyId)
-				mqlS.cacheVaultId = stringValue(s.VaultId)
+				mqlS.cacheKeyID = stringValue(s.KeyId)
+				mqlS.cacheVaultID = stringValue(s.VaultId)
 				mqlS.cacheRegion = region
 				if s.RotationConfig != nil {
 					mqlS.cacheRotationInterval = stringValue(s.RotationConfig.RotationInterval)
@@ -117,8 +117,8 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 }
 
 type mqlOciVaultSecretInternal struct {
-	cacheKeyId   string
-	cacheVaultId string
+	cacheKeyID   string
+	cacheVaultID string
 	cacheRegion  string
 
 	// Rotation config fields from SecretSummary.RotationConfig
@@ -174,12 +174,12 @@ func initOciVaultSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 }
 
 func (o *mqlOciVaultSecret) kmsVault() (*mqlOciKmsVault, error) {
-	if o.cacheVaultId == "" {
+	if o.cacheVaultID == "" {
 		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlVault, err := NewResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheVaultId),
+		"id": llx.StringData(o.cacheVaultID),
 	})
 	if err != nil {
 		return nil, err
@@ -188,12 +188,12 @@ func (o *mqlOciVaultSecret) kmsVault() (*mqlOciKmsVault, error) {
 }
 
 func (o *mqlOciVaultSecret) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKeyId == "" {
+	if o.cacheKeyID == "" {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlKey, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheKeyId),
+		"id": llx.StringData(o.cacheKeyID),
 	})
 	if err != nil {
 		return nil, err

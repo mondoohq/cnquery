@@ -63,7 +63,7 @@ func (o *mqlOciOns) topics() ([]any, error) {
 				}
 
 				mqlTopic := mqlInstance.(*mqlOciOnsTopic)
-				mqlTopic.region = region
+				mqlTopic.cacheRegion = region
 
 				res = append(res, mqlInstance)
 			}
@@ -93,7 +93,7 @@ func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.Notifica
 }
 
 type mqlOciOnsTopicInternal struct {
-	region string
+	cacheRegion string
 }
 
 func initOciOnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -134,7 +134,7 @@ func (o *mqlOciOnsTopic) id() (string, error) {
 func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	client, err := conn.NotificationDataPlaneClient(o.region)
+	client, err := conn.NotificationDataPlaneClient(o.cacheRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlInstance.(*mqlOciOnsSubscription).cacheTopicId = stringValue(sub.TopicId)
+		mqlInstance.(*mqlOciOnsSubscription).cacheTopicID = stringValue(sub.TopicId)
 		res = append(res, mqlInstance)
 	}
 
@@ -187,7 +187,7 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 }
 
 type mqlOciOnsSubscriptionInternal struct {
-	cacheTopicId string
+	cacheTopicID string
 }
 
 func (o *mqlOciOnsSubscription) id() (string, error) {
@@ -195,12 +195,12 @@ func (o *mqlOciOnsSubscription) id() (string, error) {
 }
 
 func (o *mqlOciOnsSubscription) topic() (*mqlOciOnsTopic, error) {
-	if o.cacheTopicId == "" {
+	if o.cacheTopicID == "" {
 		o.Topic.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlTopic, err := NewResource(o.MqlRuntime, "oci.ons.topic", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheTopicId),
+		"id": llx.StringData(o.cacheTopicID),
 	})
 	if err != nil {
 		return nil, err
