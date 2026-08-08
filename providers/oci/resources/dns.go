@@ -39,18 +39,9 @@ var ociDnsSteeringPolicyScopes = []dns.ListSteeringPoliciesScopeEnum{
 func (o *mqlOciDns) zones() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	regions := ociResource.(*mqlOci).GetRegions()
-	if regions.Error != nil {
-		return nil, regions.Error
-	}
-
 	// Deduplicated: a global zone is returned by every regional DNS
 	// endpoint, so the region fan-out sees it once per subscribed region.
-	items, err := ociRunCompartmentRegionPool(conn, regions.Data,
+	items, err := ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.DnsClient(region)
 			if err != nil {
@@ -131,18 +122,9 @@ func (o *mqlOciDns) newZones(region string, zones []dns.ZoneSummary) ([]any, err
 func (o *mqlOciDns) steeringPolicies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	regions := ociResource.(*mqlOci).GetRegions()
-	if regions.Error != nil {
-		return nil, regions.Error
-	}
-
 	// Deduplicated: a global steering policy is returned by every regional DNS
 	// endpoint, so the region fan-out sees it once per subscribed region.
-	items, err := ociRunCompartmentRegionPool(conn, regions.Data,
+	items, err := ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.DnsClient(region)
 			if err != nil {

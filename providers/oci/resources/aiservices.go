@@ -24,7 +24,7 @@ import (
 // subscribed region concurrently and flattens the results. Regions where the
 // service is not available are skipped (see ociRegionServiceUnavailable).
 func ociListRegionalAI(runtime *plugin.Runtime, fetch func(region string) ([]any, error)) ([]any, error) {
-	regions, err := ociAgentRegions(runtime)
+	regions, err := ociRegionsFor(runtime)
 	if err != nil {
 		return nil, err
 	}

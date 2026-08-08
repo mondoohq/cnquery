@@ -132,10 +132,13 @@ func (o *mqlOciIdentity) domains() ([]any, error) {
 		}))
 	}
 
-	// The same accounting the resource listers use: a compartment the caller
-	// cannot read is skipped, but every compartment refusing access is an
-	// under-scoped token rather than a tenancy without identity domains.
-	collected, err := ociCollectCompartmentJobs(jobs)
+	// The same accounting the resource listers get from ociCollect, applied
+	// directly because identity domains are global: they are listed per
+	// compartment but not per region, so there is no region dimension to fan out
+	// over. A compartment the caller cannot read is skipped, but every
+	// compartment refusing access is an under-scoped token rather than a tenancy
+	// without identity domains.
+	collected, err := ociJoinCompartmentJobs(jobs, ociScopeAllCompartments.concurrency())
 	if err != nil {
 		return nil, err
 	}

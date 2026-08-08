@@ -15,7 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -24,23 +23,9 @@ import (
 
 func (o *mqlOciNetwork) cpes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getCpes(conn, regions))
-}
-
-func (o *mqlOciNetwork) getCpes(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci CPEs with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -50,7 +35,7 @@ func (o *mqlOciNetwork) getCpes(conn *connection.OciConnection, regions []any) [
 
 			cpes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Cpe, *string, error) {
 				response, err := svc.ListCpes(ctx, core.ListCpesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -88,11 +73,8 @@ func (o *mqlOciNetwork) getCpes(conn *connection.OciConnection, regions []any) [
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func initOciNetworkCpe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -141,23 +123,9 @@ type mqlOciNetworkIpsecConnectionInternal struct {
 
 func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getIpsecConnections(conn, regions))
-}
-
-func (o *mqlOciNetwork) getIpsecConnections(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci IPSec connections with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -167,7 +135,7 @@ func (o *mqlOciNetwork) getIpsecConnections(conn *connection.OciConnection, regi
 
 			conns, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.IpSecConnection, *string, error) {
 				response, err := svc.ListIPSecConnections(ctx, core.ListIPSecConnectionsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -211,11 +179,8 @@ func (o *mqlOciNetwork) getIpsecConnections(conn *connection.OciConnection, regi
 				res = append(res, mqlIpsc)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func initOciNetworkIpsecConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -663,23 +628,9 @@ type crossConnectMapping struct {
 
 func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getVirtualCircuits(conn, regions))
-}
-
-func (o *mqlOciNetwork) getVirtualCircuits(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci virtual circuits with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -689,7 +640,7 @@ func (o *mqlOciNetwork) getVirtualCircuits(conn *connection.OciConnection, regio
 
 			vcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VirtualCircuit, *string, error) {
 				response, err := svc.ListVirtualCircuits(ctx, core.ListVirtualCircuitsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -756,11 +707,8 @@ func (o *mqlOciNetwork) getVirtualCircuits(conn *connection.OciConnection, regio
 				res = append(res, mqlVc)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func initOciNetworkVirtualCircuit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -817,23 +765,9 @@ func (o *mqlOciNetworkVirtualCircuit) drg() (*mqlOciNetworkDrg, error) {
 
 func (o *mqlOciNetwork) crossConnects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getCrossConnects(conn, regions))
-}
-
-func (o *mqlOciNetwork) getCrossConnects(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci cross-connects with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -843,7 +777,7 @@ func (o *mqlOciNetwork) getCrossConnects(conn *connection.OciConnection, regions
 
 			xcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.CrossConnect, *string, error) {
 				response, err := svc.ListCrossConnects(ctx, core.ListCrossConnectsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -883,11 +817,8 @@ func (o *mqlOciNetwork) getCrossConnects(conn *connection.OciConnection, regions
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func (o *mqlOciNetworkCrossConnect) id() (string, error) {

@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -14,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -26,65 +24,24 @@ func (o *mqlOciFileStorage) id() (string, error) {
 func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
-	return ociRunRegionPool(o.getFileSystems(conn, list.Data))
-}
-
-func (o *mqlOciFileStorage) getFileSystemsForAD(ctx context.Context, fsClient *filestorage.FileStorageClient, compartmentID string, availabilityDomain string) ([]filestorage.FileSystemSummary, error) {
-	fileSystems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.FileSystemSummary, *string, error) {
-		request := filestorage.ListFileSystemsRequest{
-			CompartmentId:      common.String(compartmentID),
-			AvailabilityDomain: common.String(availabilityDomain),
-			Page:               page,
-		}
-
-		response, err := fsClient.ListFileSystems(ctx, request)
-		if err != nil {
-			return nil, nil, err
-		}
-		return response.Items, response.OpcNextPage, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return fileSystems, nil
-}
-
-func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
 
 			// Get availability domains for this region
-			identityClient, err := conn.IdentityClientWithRegion(regionResource.Id.Data)
+			identityClient, err := conn.IdentityClientWithRegion(region)
 			if err != nil {
 				return nil, err
 			}
 
 			adResponse, err := identityClient.ListAvailabilityDomains(ctx, identity.ListAvailabilityDomainsRequest{
-				CompartmentId: common.String(conn.TenantID()),
+				CompartmentId: common.String(compartmentID),
 			})
 			if err != nil {
 				return nil, err
 			}
 
-			fsClient, err := conn.FileStorageClient(regionResource.Id.Data)
+			fsClient, err := conn.FileStorageClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -134,11 +91,29 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 				}
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciFileStorage) getFileSystemsForAD(ctx context.Context, fsClient *filestorage.FileStorageClient, compartmentID string, availabilityDomain string) ([]filestorage.FileSystemSummary, error) {
+	fileSystems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.FileSystemSummary, *string, error) {
+		request := filestorage.ListFileSystemsRequest{
+			CompartmentId:      common.String(compartmentID),
+			AvailabilityDomain: common.String(availabilityDomain),
+			Page:               page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := fsClient.ListFileSystems(ctx, request)
+		if err != nil {
+			return nil, nil, err
+		}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+
+	return fileSystems, nil
 }
 
 type mqlOciFileStorageFileSystemInternal struct {

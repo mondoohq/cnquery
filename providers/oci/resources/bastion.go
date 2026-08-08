@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -27,38 +25,18 @@ func (o *mqlOciBastion) id() (string, error) {
 func (o *mqlOciBastion) bastions() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci bastion with region %s", region)
 
-	return ociRunRegionPool(o.getBastions(conn, list.Data))
-}
-
-func (o *mqlOciBastion) getBastions(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci bastion with region %s", regionResource.Id.Data)
-
-			svc, err := conn.BastionClient(regionResource.Id.Data)
+			svc, err := conn.BastionClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			bastions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]bastion.BastionSummary, *string, error) {
 				response, err := svc.ListBastions(ctx, bastion.ListBastionsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -100,15 +78,12 @@ func (o *mqlOciBastion) getBastions(conn *connection.OciConnection, regions []an
 				mqlB := mqlInstance.(*mqlOciBastionInstance)
 				mqlB.cacheTargetVcnId = stringValue(b.TargetVcnId)
 				mqlB.cacheTargetSubnetId = stringValue(b.TargetSubnetId)
-				mqlB.region = regionResource.Id.Data
+				mqlB.region = region
 				res = append(res, mqlB)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciBastionInstanceInternal struct {

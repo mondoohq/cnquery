@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -27,21 +26,11 @@ func (o *mqlOciCertificates) id() (string, error) {
 func (o *mqlOciCertificates) certificates() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Certificates are issued into the compartment of the load balancer or
 	// gateway that terminates TLS, and ListCertificates cannot look below the
 	// compartment it is given. A root-only listing reported no certificates at
 	// all, so expiry and renewal checks silently had nothing to inspect.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci certificates with region %s", region)
 
@@ -225,38 +214,18 @@ func initOciCertificatesCertificateAuthority(runtime *plugin.Runtime, args map[s
 func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci certificate authorities with region %s", region)
 
-	return ociRunRegionPool(o.getCertificateAuthorities(conn, list.Data))
-}
-
-func (o *mqlOciCertificates) getCertificateAuthorities(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci certificate authorities with region %s", regionResource.Id.Data)
-
-			svc, err := conn.CertificatesManagementClient(regionResource.Id.Data)
+			svc, err := conn.CertificatesManagementClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CertificateAuthoritySummary, *string, error) {
 				response, err := svc.ListCertificateAuthorities(ctx, certificatesmanagement.ListCertificateAuthoritiesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -327,11 +296,8 @@ func (o *mqlOciCertificates) getCertificateAuthorities(conn *connection.OciConne
 				mqlCa.cacheKmsKeyId = stringValue(ca.KmsKeyId)
 				res = append(res, mqlCa)
 			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciCertificatesCertificateAuthorityInternal struct {
@@ -410,38 +376,18 @@ func initOciCertificatesCaBundle(runtime *plugin.Runtime, args map[string]*llx.R
 func (o *mqlOciCertificates) caBundles() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci CA bundles with region %s", region)
 
-	return ociRunRegionPool(o.getCaBundles(conn, list.Data))
-}
-
-func (o *mqlOciCertificates) getCaBundles(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci CA bundles with region %s", regionResource.Id.Data)
-
-			svc, err := conn.CertificatesManagementClient(regionResource.Id.Data)
+			svc, err := conn.CertificatesManagementClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]certificatesmanagement.CaBundleSummary, *string, error) {
 				response, err := svc.ListCaBundles(ctx, certificatesmanagement.ListCaBundlesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -486,11 +432,8 @@ func (o *mqlOciCertificates) getCaBundles(conn *connection.OciConnection, region
 				}
 				res = append(res, mqlInstance)
 			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func (o *mqlOciCertificatesCaBundle) id() (string, error) {

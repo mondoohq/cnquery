@@ -5,13 +5,11 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -23,38 +21,18 @@ func (o *mqlOciMonitoring) id() (string, error) {
 func (o *mqlOciMonitoring) alarms() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci monitoring with region %s", region)
 
-	return ociRunRegionPool(o.getAlarms(conn, list.Data))
-}
-
-func (o *mqlOciMonitoring) getAlarms(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci monitoring with region %s", regionResource.Id.Data)
-
-			svc, err := conn.MonitoringClient(regionResource.Id.Data)
+			svc, err := conn.MonitoringClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			alarms, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]monitoring.AlarmSummary, *string, error) {
 				response, err := svc.ListAlarms(ctx, monitoring.ListAlarmsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					// Alarms are normally created in a workload compartment,
 					// not the tenancy root.
 					CompartmentIdInSubtree: common.Bool(true),
@@ -96,11 +74,8 @@ func (o *mqlOciMonitoring) getAlarms(conn *connection.OciConnection, regions []a
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func (o *mqlOciMonitoringAlarm) id() (string, error) {

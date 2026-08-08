@@ -14,7 +14,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -26,18 +25,13 @@ func (e *mqlOciCompute) id() (string, error) {
 func (o *mqlOciCompute) instances() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	// fetch regions
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	// The lister receives the region as a key, so index the oci.regions
+	// collection to let it set a typed region field on each instance.
+	regions, err := ociRegionsFor(o.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
-	regionsByID, err := ociRegionsByID(list.Data)
+	regionsByID, err := ociRegionsByID(regions)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +41,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 	// one compartment it is handed. Restricting the scan to the tenancy root
 	// meant a fleet of hundreds of hosts reported as zero instances, taking
 	// every patch, agent, and IMDS check down with it.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci with region %s", region)
 
@@ -340,53 +334,27 @@ func (o *mqlOciComputeVnic) subnet() (*mqlOciNetworkSubnet, error) {
 func (o *mqlOciCompute) images() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	// fetch regions
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	// The lister receives the region as a key, so index the oci.regions
+	// collection to let it set a typed region field on each image.
+	regions, err := ociRegionsFor(o.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
-	// fetch images
-	return ociRunRegionPool(o.getComputeImage(conn, list.Data))
-}
-
-func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Image, error) {
-	images, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Image, *string, error) {
-		request := core.ListImagesRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := computeClient.ListImages(ctx, request)
-		if err != nil {
-			return nil, nil, err
-		}
-		return response.Items, response.OpcNextPage, nil
-	})
+	regionsByID, err := ociRegionsByID(regions)
 	if err != nil {
 		return nil, err
 	}
 
-	return images, nil
-}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
 
-func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
+			regionResource, ok := regionsByID[region]
+			if !ok {
+				return nil, errors.New("no oci.region resource for region " + region)
+			}
 
-			svc, err := conn.ComputeClient(regionResource.Id.Data)
+			svc, err := conn.ComputeClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -443,11 +411,28 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Image, error) {
+	images, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Image, *string, error) {
+		request := core.ListImagesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := computeClient.ListImages(ctx, request)
+		if err != nil {
+			return nil, nil, err
+		}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+
+	return images, nil
 }
 
 type mqlOciComputeImageInternal struct {
@@ -461,51 +446,11 @@ func (o *mqlOciComputeImage) id() (string, error) {
 func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
 
-	return ociRunRegionPool(o.getBlockVolumes(conn, list.Data))
-}
-
-func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.Volume, error) {
-	volumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Volume, *string, error) {
-		request := core.ListVolumesRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := client.ListVolumes(ctx, request)
-		if err != nil {
-			return nil, nil, err
-		}
-		return response.Items, response.OpcNextPage, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return volumes, nil
-}
-
-func (o *mqlOciCompute) getBlockVolumes(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
-
-			svc, err := conn.BlockstorageClient(regionResource.Id.Data)
+			svc, err := conn.BlockstorageClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -555,11 +500,28 @@ func (o *mqlOciCompute) getBlockVolumes(conn *connection.OciConnection, regions 
 				res = append(res, mqlBV)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.Volume, error) {
+	volumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Volume, *string, error) {
+		request := core.ListVolumesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := client.ListVolumes(ctx, request)
+		if err != nil {
+			return nil, nil, err
+		}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+
+	return volumes, nil
 }
 
 type mqlOciComputeBlockVolumeInternal struct {
@@ -588,51 +550,11 @@ func (o *mqlOciComputeBlockVolume) kmsKey() (*mqlOciKmsKey, error) {
 func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
 
-	return ociRunRegionPool(o.getBootVolumes(conn, list.Data))
-}
-
-func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.BootVolume, error) {
-	bootVolumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.BootVolume, *string, error) {
-		request := core.ListBootVolumesRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := client.ListBootVolumes(ctx, request)
-		if err != nil {
-			return nil, nil, err
-		}
-		return response.Items, response.OpcNextPage, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return bootVolumes, nil
-}
-
-func (o *mqlOciCompute) getBootVolumes(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
-
-			svc, err := conn.BlockstorageClient(regionResource.Id.Data)
+			svc, err := conn.BlockstorageClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -680,11 +602,28 @@ func (o *mqlOciCompute) getBootVolumes(conn *connection.OciConnection, regions [
 				res = append(res, mqlBV)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *core.BlockstorageClient, compartmentID string) ([]core.BootVolume, error) {
+	bootVolumes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.BootVolume, *string, error) {
+		request := core.ListBootVolumesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := client.ListBootVolumes(ctx, request)
+		if err != nil {
+			return nil, nil, err
+		}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+
+	return bootVolumes, nil
 }
 
 type mqlOciComputeBootVolumeInternal struct {

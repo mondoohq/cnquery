@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -27,38 +25,18 @@ func (o *mqlOciFunctions) id() (string, error) {
 func (o *mqlOciFunctions) applications() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci functions with region %s", region)
 
-	return ociRunRegionPool(o.getApplications(conn, list.Data))
-}
-
-func (o *mqlOciFunctions) getApplications(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci functions with region %s", regionResource.Id.Data)
-
-			svc, err := conn.FunctionsManagementClient(regionResource.Id.Data)
+			svc, err := conn.FunctionsManagementClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]functions.ApplicationSummary, *string, error) {
 				response, err := svc.ListApplications(ctx, functions.ListApplicationsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -119,17 +97,14 @@ func (o *mqlOciFunctions) getApplications(conn *connection.OciConnection, region
 					return nil, err
 				}
 				mqlApp := mqlInstance.(*mqlOciFunctionsApplication)
-				mqlApp.region = regionResource.Id.Data
+				mqlApp.region = region
 				mqlApp.cacheSubnetIds = app.SubnetIds
 				mqlApp.cacheNsgIds = app.NetworkSecurityGroupIds
 				res = append(res, mqlApp)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciFunctionsApplicationInternal struct {

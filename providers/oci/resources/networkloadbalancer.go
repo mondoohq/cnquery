@@ -25,16 +25,7 @@ func (o *mqlOciNetworkLoadBalancer) id() (string, error) {
 func (o *mqlOciNetworkLoadBalancer) loadBalancers() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	regions := ociResource.(*mqlOci).GetRegions()
-	if regions.Error != nil {
-		return nil, regions.Error
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.NetworkLoadBalancerClient(region)
 			if err != nil {

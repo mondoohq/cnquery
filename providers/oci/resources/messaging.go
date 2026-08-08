@@ -29,12 +29,7 @@ func (o *mqlOciStreaming) id() (string, error) {
 func (o *mqlOciStreaming) streams() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.StreamAdminClient(region)
 			if err != nil {
@@ -85,12 +80,7 @@ func (o *mqlOciStreaming) streams() ([]any, error) {
 func (o *mqlOciStreaming) streamPools() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.StreamAdminClient(region)
 			if err != nil {
@@ -350,12 +340,7 @@ func (o *mqlOciQueue) id() (string, error) {
 func (o *mqlOciQueue) queues() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.QueueAdminClient(region)
 			if err != nil {
@@ -513,12 +498,7 @@ func (o *mqlOciKafka) id() (string, error) {
 func (o *mqlOciKafka) clusters() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.KafkaClusterClient(region)
 			if err != nil {

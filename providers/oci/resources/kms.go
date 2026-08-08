@@ -24,22 +24,12 @@ func (o *mqlOciKms) id() (string, error) {
 func (o *mqlOciKms) vaults() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Vaults are almost always created in the compartment of the service they
 	// encrypt, and ListVaults answers for one compartment with no way to recurse.
 	// A root-only listing therefore came back empty, and every typed vault
 	// reference from a database, bucket, or stream pool then had nothing to
 	// resolve against.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci kms with region %s", region)
 

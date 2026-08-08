@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 )
@@ -205,45 +204,24 @@ func ociRegionServiceUnavailable(err error) bool {
 	return false
 }
 
-// ociRunRegionPool runs a set of per-region jobs and returns the union of the
-// ones that succeeded, skipping only the regions where the service genuinely
-// has no endpoint.
+// ociRunRegionPool joins a set of jobs the caller built itself, under the same
+// error policy ociCollect applies to the tenancy-root scope.
 //
-// The distinction matters in both directions. Failing the whole collection
-// when any region errors turned one unsubscribed or undeployed region into a
-// tenancy-wide failure. But skipping *every* error is just as wrong the other
-// way: a 403 from an IAM gap, a 429 throttle or a 500 would silently
-// under-report resources, and an authoritative-looking short list is worse
-// than an error in an inventory tool.
+// It is the escape hatch for the handful of collections that are not a
+// (region, compartment) fan-out and so cannot go through ociCollect:
 //
-// So ociRegionServiceUnavailable decides. An absent endpoint is an expected
-// condition and is skipped; anything else is a real problem and is reported,
-// joined across regions so a broken token names every region it affected.
+//   - OCI IAM is global within a realm. Every regional identity endpoint serves
+//     the same tenancy-wide set, so users, groups and policies run as a single
+//     job. Fanning them out over regions returned each one once per subscribed
+//     region, and because CreateResource hands back the cached instance for a
+//     repeated __id, the result held N copies of one pointer and every count was
+//     inflated N-fold.
+//   - The AI services wrap their per-region fetch in their own helper so an
+//     undeployed region is skipped per-region rather than per-job.
+//
+// Anything that is a plain (region, compartment) fan-out should use ociCollect,
+// which names its scope. This exists so those two cases do not have to pretend
+// to be one.
 func ociRunRegionPool(jobs []*jobpool.Job) ([]any, error) {
-	poolOfJobs := jobpool.CreatePool(jobs, 5)
-	poolOfJobs.Run()
-
-	res := []any{}
-	var hardErr error
-	for i := range poolOfJobs.Jobs {
-		job := poolOfJobs.Jobs[i]
-		if job.Err != nil {
-			if ociRegionServiceUnavailable(job.Err) {
-				log.Debug().Err(job.Err).Msg("skipping oci region where the service is unavailable")
-				continue
-			}
-			hardErr = errors.Join(hardErr, job.Err)
-			continue
-		}
-		items, ok := job.Result.([]any)
-		if !ok {
-			continue
-		}
-		res = append(res, items...)
-	}
-
-	if hardErr != nil {
-		return nil, hardErr
-	}
-	return res, nil
+	return ociJoinRegionJobs(jobs, ociScopeTenancyRoot.concurrency())
 }

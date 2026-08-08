@@ -25,22 +25,12 @@ func (o *mqlOciVault) id() (string, error) {
 func (o *mqlOciVault) secrets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Secrets sit in the compartment of the application that consumes them, and
 	// ListSecrets accepts one compartment with no recursion. Asking only about
 	// the tenancy root left rotation status, expiry, and auto-generation checks
 	// with nothing to evaluate, which looked like a tenancy with no secrets
 	// rather than a scan that never reached them.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci vault secrets with region %s", region)
 
