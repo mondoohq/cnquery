@@ -4,8 +4,8 @@
 package connection
 
 import (
-	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -57,152 +57,142 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/waf"
 )
 
-func (c *OciConnection) IdentityClient() (identity.IdentityClient, error) {
-	return identity.NewIdentityClientWithConfigurationProvider(c.config)
-}
-
-func (c *OciConnection) TenantID() string {
-	return c.tenancyOcid
-}
-
-func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
-	oClient, err := c.IdentityClient()
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := oClient.GetTenancy(ctx, identity.GetTenancyRequest{
-		TenancyId: &c.tenancyOcid,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &resp.Tenancy, nil
-}
-
-// GetCompartments returns the tenancy root plus every active compartment
-// beneath it.
+// Every OCI service client this provider talks to is built here, once per
+// (service, region), and shared from then on.
 //
-// The result is memoized for the lifetime of the connection. A dozen listers
-// fan out over the compartment tree, and each one asking for it separately
-// meant walking the same paginated ListCompartments a dozen times per scan.
+// Sharing is the point. A lister fans out over every (region, compartment) pair
+// in the tenancy, and each job used to construct its own client. Because
+// common.NewClientWithConfig gives each client a fresh OciHTTPTransportWrapper,
+// and therefore its own connection pool, a fifty-compartment tenancy across
+// five regions built 250 clients that shared no TCP connections and repeated
+// the TLS handshake for every one. Reusing a client per region is what lets the
+// SDK's transport pool do its job.
 //
-// A failure is not cached: an Identity call that fails on a throttle should be
-// retried by the next lister rather than turning one bad moment into a scan
-// with no compartments at all.
-func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compartment, error) {
-	c.compartmentLock.Lock()
-	defer c.compartmentLock.Unlock()
-	if c.compartmentsDone {
-		return c.compartmentList, nil
-	}
+// The safety condition is narrow and worth stating: a shared client must never
+// be mutated after it is published. BaseClient.Call takes a value receiver and
+// prepareRequest writes nothing back to the client, so concurrent requests are
+// safe - but SetRegion, SetCustomClientConfiguration and the HTTPClient swap in
+// failFastOnUnreachableRegion all write to the client. Those happen inside the
+// build closure below, before the client is ever visible to another goroutine,
+// and nothing outside this file touches a client afterwards.
 
-	oClient, err := c.IdentityClient()
-	if err != nil {
-		return nil, err
-	}
-
-	compartments := make([]identity.Compartment, 0)
-
-	req := identity.GetCompartmentRequest{
-		CompartmentId: &c.tenancyOcid,
-	}
-
-	resp, err := oClient.GetCompartment(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	compartments = append(compartments, resp.Compartment)
-
-	var page *string
-	for {
-		request := identity.ListCompartmentsRequest{
-			CompartmentId:          common.String(c.tenancyOcid),
-			CompartmentIdInSubtree: common.Bool(true),
-			LifecycleState:         identity.CompartmentLifecycleStateActive,
-			Page:                   page,
+// cachedClient returns the client stored under key, building it on first use.
+//
+// A build failure is deliberately not cached: an auth or config error that
+// resolves (a refreshed instance-principal token, say) should be retried by the
+// next caller rather than poisoning the key for the rest of the scan.
+//
+// Two goroutines racing on a cold key may both build, but LoadOrStore publishes
+// only one and both callers receive it, so "one client per key" holds even
+// though "one build per key" does not.
+//
+// The type assertions are checked rather than bare. The compiler already
+// guarantees that an accessor's constructor matches its declared return type,
+// but nothing checks the key strings, and two accessors for differently-typed
+// clients sharing one key would otherwise panic here. A panic inside a lister
+// takes down the whole scan, so a shared key is reported as an error against
+// the offending key instead.
+func cachedClient[T any](c *OciConnection, key string, build func() (T, error)) (T, error) {
+	if cached, ok := c.clients.Load(key); ok {
+		client, ok := cached.(T)
+		if !ok {
+			var zero T
+			return zero, fmt.Errorf("oci client cache key %q already holds a %T: two accessors share a key", key, cached)
 		}
+		return client, nil
+	}
 
-		response, err := oClient.ListCompartments(ctx, request)
+	client, err := build()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	shared, _ := c.clients.LoadOrStore(key, client)
+	typed, ok := shared.(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("oci client cache key %q already holds a %T: two accessors share a key", key, shared)
+	}
+	return typed, nil
+}
+
+// ociClient constrains PT to *T for a client type whose region is set through a
+// pointer receiver, which is every regional client in the OCI SDK.
+type ociClient[T any] interface {
+	*T
+	SetRegion(region string)
+}
+
+// regionalClient builds, points at a region, and caches a standard OCI service
+// client. The SDK constructors return the client by value, so the pointer is
+// taken here and the region applied to it before anything else can see it.
+func regionalClient[T any, PT ociClient[T]](
+	c *OciConnection,
+	service string,
+	region string,
+	build func(common.ConfigurationProvider) (T, error),
+) (PT, error) {
+	return cachedClient(c, service+"/"+region, func() (PT, error) {
+		client, err := build(c.config)
 		if err != nil {
-			return nil, errors.Join(errors.New("failed to list compartments in tenancy: "+c.tenancyOcid), err)
+			return nil, err
 		}
-
-		for i := range response.Items {
-			compartments = append(compartments, response.Items[i])
-		}
-
-		page = response.OpcNextPage
-		if response.OpcNextPage == nil {
-			break
-		}
-	}
-
-	c.compartmentList = compartments
-	c.compartmentsDone = true
-	return compartments, nil
+		regioned := PT(&client)
+		regioned.SetRegion(region)
+		return regioned, nil
+	})
 }
 
-func (c *OciConnection) GetRegions(ctx context.Context) ([]identity.RegionSubscription, error) {
-	oClient, err := c.IdentityClient()
-	if err != nil {
-		return nil, err
-	}
-
-	request := identity.ListRegionSubscriptionsRequest{
-		TenancyId: common.String(c.tenancyOcid),
-	}
-
-	response, err := oClient.ListRegionSubscriptions(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-
-	regions := make([]identity.RegionSubscription, 0)
-	for _, region := range response.Items {
-		if region.Status != identity.RegionSubscriptionStatusReady {
-			continue
+// aiClient builds a regional client for one of the AI services, which are
+// deployed in only a subset of regions and need the fail-fast treatment below.
+//
+// It exists so that adding an AI service cannot quietly skip that step: the
+// only way to reach these constructors is through a helper that applies it. The
+// base accessor is passed in because common.BaseClient is an embedded field
+// rather than an interface method, so there is no way to reach it generically.
+func aiClient[T any, PT ociClient[T]](
+	c *OciConnection,
+	service string,
+	region string,
+	build func(common.ConfigurationProvider) (T, error),
+	base func(PT) *common.BaseClient,
+) (PT, error) {
+	return cachedClient(c, service+"/"+region, func() (PT, error) {
+		client, err := build(c.config)
+		if err != nil {
+			return nil, err
 		}
-		regions = append(regions, region)
-	}
-
-	return regions, nil
+		regioned := PT(&client)
+		regioned.SetRegion(region)
+		failFastOnUnreachableRegion(base(regioned))
+		return regioned, nil
+	})
 }
 
-func (c *OciConnection) ComputeClient(region string) (*core.ComputeClient, error) {
-	client, err := core.NewComputeClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+// endpointClient caches a client addressed by an explicit endpoint rather than
+// a region. Identity domains and KMS management both publish per-resource
+// endpoints, so the endpoint is the cache key.
+func endpointClient[T any](c *OciConnection, service, endpoint string, build func() (T, error)) (T, error) {
+	return cachedClient(c, service+"/"+endpoint, build)
+}
+
+// --- Identity ---------------------------------------------------------------
+
+// IdentityClient talks to IAM in the region the configuration provider names.
+// OCI IAM is global within a realm, so unlike the accessors below this one is
+// not addressed by region.
+// The key is deliberately not "identity/" + something: IdentityClientWithRegion
+// builds "identity/<region>", and an empty region would land on the same key
+// with a different client type.
+func (c *OciConnection) IdentityClient() (identity.IdentityClient, error) {
+	return cachedClient(c, "identity-global", func() (identity.IdentityClient, error) {
+		return identity.NewIdentityClientWithConfigurationProvider(c.config)
+	})
 }
 
 func (c *OciConnection) IdentityClientWithRegion(region string) (*identity.IdentityClient, error) {
-	client, err := identity.NewIdentityClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient, error) {
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
-	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+	return regionalClient(c, "identity", region, identity.NewIdentityClientWithConfigurationProvider)
 }
 
 // IdentityDomainsClient builds a client for one identity domain.
@@ -215,381 +205,248 @@ func (c *OciConnection) IdentityDomainsClient(endpoint string) (*identitydomains
 	if endpoint == "" {
 		return nil, errors.New("an identity domain endpoint is required")
 	}
-	client, err := identitydomains.NewIdentityDomainsClientWithConfigurationProvider(c.config, endpoint)
-	if err != nil {
-		return nil, err
-	}
-	return &client, nil
+	return endpointClient(c, "identitydomains", endpoint, func() (*identitydomains.IdentityDomainsClient, error) {
+		client, err := identitydomains.NewIdentityDomainsClientWithConfigurationProvider(c.config, endpoint)
+		if err != nil {
+			return nil, err
+		}
+		return &client, nil
+	})
 }
 
-func (c *OciConnection) ResourceManagerClient(region string) (*resourcemanager.ResourceManagerClient, error) {
-	client, err := resourcemanager.NewResourceManagerClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+// --- Core (compute, networking, block storage) ------------------------------
+
+func (c *OciConnection) ComputeClient(region string) (*core.ComputeClient, error) {
+	return regionalClient(c, "compute", region, core.NewComputeClientWithConfigurationProvider)
 }
 
-func (c *OciConnection) StreamAdminClient(region string) (*streaming.StreamAdminClient, error) {
-	client, err := streaming.NewStreamAdminClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) QueueAdminClient(region string) (*queue.QueueAdminClient, error) {
-	client, err := queue.NewQueueAdminClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) KafkaClusterClient(region string) (*managedkafka.KafkaClusterClient, error) {
-	client, err := managedkafka.NewKafkaClusterClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) MysqlDbSystemClient(region string) (*mysql.DbSystemClient, error) {
-	client, err := mysql.NewDbSystemClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) PostgresqlClient(region string) (*psql.PostgresqlClient, error) {
-	client, err := psql.NewPostgresqlClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) NosqlClient(region string) (*nosql.NosqlClient, error) {
-	client, err := nosql.NewNosqlClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) OpensearchClusterClient(region string) (*opensearch.OpensearchClusterClient, error) {
-	client, err := opensearch.NewOpensearchClusterClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) GoldenGateClient(region string) (*goldengate.GoldenGateClient, error) {
-	client, err := goldengate.NewGoldenGateClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) DnsClient(region string) (*dns.DnsClient, error) {
-	client, err := dns.NewDnsClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) ServiceConnectorClient(region string) (*sch.ServiceConnectorClient, error) {
-	client, err := sch.NewServiceConnectorClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
-	client, err := objectstorage.NewObjectStorageClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient, error) {
+	return regionalClient(c, "vcn", region, core.NewVirtualNetworkClientWithConfigurationProvider)
 }
 
 func (c *OciConnection) BlockstorageClient(region string) (*core.BlockstorageClient, error) {
-	client, err := core.NewBlockstorageClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+	return regionalClient(c, "blockstorage", region, core.NewBlockstorageClientWithConfigurationProvider)
+}
+
+// --- Storage ----------------------------------------------------------------
+
+func (c *OciConnection) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
+	return regionalClient(c, "objectstorage", region, objectstorage.NewObjectStorageClientWithConfigurationProvider)
 }
 
 func (c *OciConnection) FileStorageClient(region string) (*filestorage.FileStorageClient, error) {
-	client, err := filestorage.NewFileStorageClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+	return regionalClient(c, "filestorage", region, filestorage.NewFileStorageClientWithConfigurationProvider)
 }
 
-func (c *OciConnection) LoggingClient(region string) (*logging.LoggingManagementClient, error) {
-	client, err := logging.NewLoggingManagementClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) KmsVaultClient(region string) (*keymanagement.KmsVaultClient, error) {
-	client, err := keymanagement.NewKmsVaultClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) KmsManagementClient(endpoint string) (*keymanagement.KmsManagementClient, error) {
-	client, err := keymanagement.NewKmsManagementClientWithConfigurationProvider(c.config, endpoint)
-	if err != nil {
-		return nil, err
-	}
-	return &client, nil
-}
-
-func (c *OciConnection) EventsClient(region string) (*events.EventsClient, error) {
-	client, err := events.NewEventsClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) NotificationControlPlaneClient(region string) (*ons.NotificationControlPlaneClient, error) {
-	client, err := ons.NewNotificationControlPlaneClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) CloudGuardClient(region string) (*cloudguard.CloudGuardClient, error) {
-	client, err := cloudguard.NewCloudGuardClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) NotificationDataPlaneClient(region string) (*ons.NotificationDataPlaneClient, error) {
-	client, err := ons.NewNotificationDataPlaneClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) BastionClient(region string) (*bastion.BastionClient, error) {
-	client, err := bastion.NewBastionClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) MonitoringClient(region string) (*monitoring.MonitoringClient, error) {
-	client, err := monitoring.NewMonitoringClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) VaultsClient(region string) (*vault.VaultsClient, error) {
-	client, err := vault.NewVaultsClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) LoadBalancerClient(region string) (*loadbalancer.LoadBalancerClient, error) {
-	client, err := loadbalancer.NewLoadBalancerClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) NetworkFirewallClient(region string) (*networkfirewall.NetworkFirewallClient, error) {
-	client, err := networkfirewall.NewNetworkFirewallClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) NetworkLoadBalancerClient(region string) (*networkloadbalancer.NetworkLoadBalancerClient, error) {
-	client, err := networkloadbalancer.NewNetworkLoadBalancerClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) ContainerEngineClient(region string) (*containerengine.ContainerEngineClient, error) {
-	client, err := containerengine.NewContainerEngineClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) WafClient(region string) (*waf.WafClient, error) {
-	client, err := waf.NewWafClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
+// --- Databases --------------------------------------------------------------
 
 func (c *OciConnection) DatabaseClient(region string) (*database.DatabaseClient, error) {
-	client, err := database.NewDatabaseClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+	return regionalClient(c, "database", region, database.NewDatabaseClientWithConfigurationProvider)
 }
 
-func (c *OciConnection) DataSafeClient(region string) (*datasafe.DataSafeClient, error) {
-	client, err := datasafe.NewDataSafeClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+func (c *OciConnection) MysqlDbSystemClient(region string) (*mysql.DbSystemClient, error) {
+	return regionalClient(c, "mysql", region, mysql.NewDbSystemClientWithConfigurationProvider)
 }
 
-func (c *OciConnection) FunctionsManagementClient(region string) (*functions.FunctionsManagementClient, error) {
-	client, err := functions.NewFunctionsManagementClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+func (c *OciConnection) PostgresqlClient(region string) (*psql.PostgresqlClient, error) {
+	return regionalClient(c, "postgresql", region, psql.NewPostgresqlClientWithConfigurationProvider)
 }
 
-func (c *OciConnection) ContainerInstanceClient(region string) (*containerinstances.ContainerInstanceClient, error) {
-	client, err := containerinstances.NewContainerInstanceClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+func (c *OciConnection) NosqlClient(region string) (*nosql.NosqlClient, error) {
+	return regionalClient(c, "nosql", region, nosql.NewNosqlClientWithConfigurationProvider)
 }
 
-func (c *OciConnection) ApiGatewayClient(region string) (*apigateway.ApiGatewayClient, error) {
-	client, err := apigateway.NewApiGatewayClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) ApiGatewayGatewayClient(region string) (*apigateway.GatewayClient, error) {
-	client, err := apigateway.NewGatewayClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) ApiGatewayDeploymentClient(region string) (*apigateway.DeploymentClient, error) {
-	client, err := apigateway.NewDeploymentClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
-}
-
-func (c *OciConnection) CertificatesManagementClient(region string) (*certificatesmanagement.CertificatesManagementClient, error) {
-	client, err := certificatesmanagement.NewCertificatesManagementClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+func (c *OciConnection) OpensearchClusterClient(region string) (*opensearch.OpensearchClusterClient, error) {
+	return regionalClient(c, "opensearch", region, opensearch.NewOpensearchClusterClientWithConfigurationProvider)
 }
 
 func (c *OciConnection) RedisClusterClient(region string) (*redis.RedisClusterClient, error) {
-	client, err := redis.NewRedisClusterClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+	return regionalClient(c, "redis", region, redis.NewRedisClusterClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) GoldenGateClient(region string) (*goldengate.GoldenGateClient, error) {
+	return regionalClient(c, "goldengate", region, goldengate.NewGoldenGateClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) DataSafeClient(region string) (*datasafe.DataSafeClient, error) {
+	return regionalClient(c, "datasafe", region, datasafe.NewDataSafeClientWithConfigurationProvider)
+}
+
+// --- Messaging --------------------------------------------------------------
+
+func (c *OciConnection) StreamAdminClient(region string) (*streaming.StreamAdminClient, error) {
+	return regionalClient(c, "streaming", region, streaming.NewStreamAdminClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) QueueAdminClient(region string) (*queue.QueueAdminClient, error) {
+	return regionalClient(c, "queue", region, queue.NewQueueAdminClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) KafkaClusterClient(region string) (*managedkafka.KafkaClusterClient, error) {
+	return regionalClient(c, "kafka", region, managedkafka.NewKafkaClusterClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) EventsClient(region string) (*events.EventsClient, error) {
+	return regionalClient(c, "events", region, events.NewEventsClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) NotificationControlPlaneClient(region string) (*ons.NotificationControlPlaneClient, error) {
+	return regionalClient(c, "ons-controlplane", region, ons.NewNotificationControlPlaneClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) NotificationDataPlaneClient(region string) (*ons.NotificationDataPlaneClient, error) {
+	return regionalClient(c, "ons-dataplane", region, ons.NewNotificationDataPlaneClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) ServiceConnectorClient(region string) (*sch.ServiceConnectorClient, error) {
+	return regionalClient(c, "sch", region, sch.NewServiceConnectorClientWithConfigurationProvider)
+}
+
+// --- Networking edge --------------------------------------------------------
+
+func (c *OciConnection) LoadBalancerClient(region string) (*loadbalancer.LoadBalancerClient, error) {
+	return regionalClient(c, "loadbalancer", region, loadbalancer.NewLoadBalancerClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) NetworkLoadBalancerClient(region string) (*networkloadbalancer.NetworkLoadBalancerClient, error) {
+	return regionalClient(c, "networkloadbalancer", region, networkloadbalancer.NewNetworkLoadBalancerClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) NetworkFirewallClient(region string) (*networkfirewall.NetworkFirewallClient, error) {
+	return regionalClient(c, "networkfirewall", region, networkfirewall.NewNetworkFirewallClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) WafClient(region string) (*waf.WafClient, error) {
+	return regionalClient(c, "waf", region, waf.NewWafClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) DnsClient(region string) (*dns.DnsClient, error) {
+	return regionalClient(c, "dns", region, dns.NewDnsClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) BastionClient(region string) (*bastion.BastionClient, error) {
+	return regionalClient(c, "bastion", region, bastion.NewBastionClientWithConfigurationProvider)
+}
+
+// --- API gateway ------------------------------------------------------------
+
+func (c *OciConnection) ApiGatewayClient(region string) (*apigateway.ApiGatewayClient, error) {
+	return regionalClient(c, "apigateway", region, apigateway.NewApiGatewayClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) ApiGatewayGatewayClient(region string) (*apigateway.GatewayClient, error) {
+	return regionalClient(c, "apigateway-gateway", region, apigateway.NewGatewayClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) ApiGatewayDeploymentClient(region string) (*apigateway.DeploymentClient, error) {
+	return regionalClient(c, "apigateway-deployment", region, apigateway.NewDeploymentClientWithConfigurationProvider)
+}
+
+// --- Containers and functions ----------------------------------------------
+
+func (c *OciConnection) ContainerEngineClient(region string) (*containerengine.ContainerEngineClient, error) {
+	return regionalClient(c, "containerengine", region, containerengine.NewContainerEngineClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) ContainerInstanceClient(region string) (*containerinstances.ContainerInstanceClient, error) {
+	return regionalClient(c, "containerinstances", region, containerinstances.NewContainerInstanceClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) FunctionsManagementClient(region string) (*functions.FunctionsManagementClient, error) {
+	return regionalClient(c, "functions", region, functions.NewFunctionsManagementClientWithConfigurationProvider)
+}
+
+// --- Keys, secrets, certificates -------------------------------------------
+
+func (c *OciConnection) KmsVaultClient(region string) (*keymanagement.KmsVaultClient, error) {
+	return regionalClient(c, "kms-vault", region, keymanagement.NewKmsVaultClientWithConfigurationProvider)
+}
+
+// KmsManagementClient talks to one vault's management endpoint. A KMS vault
+// serves key operations only from the endpoint it publishes, so like the
+// identity-domains client this one is addressed by endpoint rather than region.
+func (c *OciConnection) KmsManagementClient(endpoint string) (*keymanagement.KmsManagementClient, error) {
+	return endpointClient(c, "kms-management", endpoint, func() (*keymanagement.KmsManagementClient, error) {
+		client, err := keymanagement.NewKmsManagementClientWithConfigurationProvider(c.config, endpoint)
+		if err != nil {
+			return nil, err
+		}
+		return &client, nil
+	})
+}
+
+func (c *OciConnection) VaultsClient(region string) (*vault.VaultsClient, error) {
+	return regionalClient(c, "vaults", region, vault.NewVaultsClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) CertificatesManagementClient(region string) (*certificatesmanagement.CertificatesManagementClient, error) {
+	return regionalClient(c, "certificatesmanagement", region, certificatesmanagement.NewCertificatesManagementClientWithConfigurationProvider)
+}
+
+// --- Governance and observability ------------------------------------------
+
+func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
+	return regionalClient(c, "audit", region, audit.NewAuditClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) CloudGuardClient(region string) (*cloudguard.CloudGuardClient, error) {
+	return regionalClient(c, "cloudguard", region, cloudguard.NewCloudGuardClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) LoggingClient(region string) (*logging.LoggingManagementClient, error) {
+	return regionalClient(c, "logging", region, logging.NewLoggingManagementClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) MonitoringClient(region string) (*monitoring.MonitoringClient, error) {
+	return regionalClient(c, "monitoring", region, monitoring.NewMonitoringClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) ResourceManagerClient(region string) (*resourcemanager.ResourceManagerClient, error) {
+	return regionalClient(c, "resourcemanager", region, resourcemanager.NewResourceManagerClientWithConfigurationProvider)
 }
 
 func (c *OciConnection) VulnerabilityScanningClient(region string) (*vulnerabilityscanning.VulnerabilityScanningClient, error) {
-	client, err := vulnerabilityscanning.NewVulnerabilityScanningClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	return &client, nil
+	return regionalClient(c, "vulnerabilityscanning", region, vulnerabilityscanning.NewVulnerabilityScanningClientWithConfigurationProvider)
+}
+
+// --- AI services ------------------------------------------------------------
+//
+// These go through aiClient so that failFastOnUnreachableRegion is applied to
+// every one of them. See the comment on that function for why.
+
+func (c *OciConnection) GenerativeAiClient(region string) (*generativeai.GenerativeAiClient, error) {
+	return aiClient(c, "generativeai", region, generativeai.NewGenerativeAiClientWithConfigurationProvider,
+		func(p *generativeai.GenerativeAiClient) *common.BaseClient { return &p.BaseClient })
 }
 
 func (c *OciConnection) GenerativeAiAgentClient(region string) (*generativeaiagent.GenerativeAiAgentClient, error) {
-	client, err := generativeaiagent.NewGenerativeAiAgentClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
+	return aiClient(c, "generativeaiagent", region, generativeaiagent.NewGenerativeAiAgentClientWithConfigurationProvider,
+		func(p *generativeaiagent.GenerativeAiAgentClient) *common.BaseClient { return &p.BaseClient })
 }
 
 func (c *OciConnection) DataScienceClient(region string) (*datascience.DataScienceClient, error) {
-	client, err := datascience.NewDataScienceClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
+	return aiClient(c, "datascience", region, datascience.NewDataScienceClientWithConfigurationProvider,
+		func(p *datascience.DataScienceClient) *common.BaseClient { return &p.BaseClient })
+}
+
+func (c *OciConnection) AILanguageClient(region string) (*ailanguage.AIServiceLanguageClient, error) {
+	return aiClient(c, "ailanguage", region, ailanguage.NewAIServiceLanguageClientWithConfigurationProvider,
+		func(p *ailanguage.AIServiceLanguageClient) *common.BaseClient { return &p.BaseClient })
+}
+
+func (c *OciConnection) AIVisionClient(region string) (*aivision.AIServiceVisionClient, error) {
+	return aiClient(c, "aivision", region, aivision.NewAIServiceVisionClientWithConfigurationProvider,
+		func(p *aivision.AIServiceVisionClient) *common.BaseClient { return &p.BaseClient })
+}
+
+func (c *OciConnection) AISpeechClient(region string) (*aispeech.AIServiceSpeechClient, error) {
+	return aiClient(c, "aispeech", region, aispeech.NewAIServiceSpeechClientWithConfigurationProvider,
+		func(p *aispeech.AIServiceSpeechClient) *common.BaseClient { return &p.BaseClient })
+}
+
+func (c *OciConnection) AIDocumentClient(region string) (*aidocument.AIServiceDocumentClient, error) {
+	return aiClient(c, "aidocument", region, aidocument.NewAIServiceDocumentClientWithConfigurationProvider,
+		func(p *aidocument.AIServiceDocumentClient) *common.BaseClient { return &p.BaseClient })
 }
 
 // failFastOnUnreachableRegion caps the per-request timeout and narrows the
@@ -629,53 +486,3 @@ func failFastOnUnreachableRegion(bc *common.BaseClient) {
 // while staying short enough that an undeployed wildcard-DNS region does not
 // stall the scan.
 const unreachableRegionTimeout = 45 * time.Second
-
-func (c *OciConnection) GenerativeAiClient(region string) (*generativeai.GenerativeAiClient, error) {
-	client, err := generativeai.NewGenerativeAiClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
-}
-
-func (c *OciConnection) AILanguageClient(region string) (*ailanguage.AIServiceLanguageClient, error) {
-	client, err := ailanguage.NewAIServiceLanguageClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
-}
-
-func (c *OciConnection) AIVisionClient(region string) (*aivision.AIServiceVisionClient, error) {
-	client, err := aivision.NewAIServiceVisionClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
-}
-
-func (c *OciConnection) AISpeechClient(region string) (*aispeech.AIServiceSpeechClient, error) {
-	client, err := aispeech.NewAIServiceSpeechClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
-}
-
-func (c *OciConnection) AIDocumentClient(region string) (*aidocument.AIServiceDocumentClient, error) {
-	client, err := aidocument.NewAIServiceDocumentClientWithConfigurationProvider(c.config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetRegion(region)
-	failFastOnUnreachableRegion(&client.BaseClient)
-	return &client, nil
-}
