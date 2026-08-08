@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
-	"sync/atomic"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/managedkafka"
@@ -162,10 +160,7 @@ type mqlOciStreamingStreamPoolInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *streaming.StreamPool
-	detailErr     error
+	detail ociLazy[*streaming.StreamPool]
 }
 
 // initOciStreamingStreamPool resolves a stream pool by OCID.
@@ -215,38 +210,21 @@ func (o *mqlOciStreamingStreamPool) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciStreamingStreamPool) getDetail() (*streaming.StreamPool, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*streaming.StreamPool, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.StreamAdminClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.StreamAdminClient(o.cacheRegion)
-	if err != nil {
-		// Cache the failure next to the value. Otherwise every detail-backed
-		// field on this resource re-issues the same denied or missing lookup.
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetStreamPool(context.Background(), streaming.GetStreamPoolRequest{
-		StreamPoolId: common.String(o.Id.Data),
+		response, err := client.GetStreamPool(context.Background(), streaming.GetStreamPoolRequest{
+			StreamPoolId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.StreamPool, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.StreamPool
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciStreamingStreamPool) endpointFqdn() (string, error) {
@@ -402,10 +380,7 @@ type mqlOciQueueQueueInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *queue.Queue
-	detailErr     error
+	detail ociLazy[*queue.Queue]
 }
 
 func (o *mqlOciQueueQueue) id() (string, error) {
@@ -417,36 +392,21 @@ func (o *mqlOciQueueQueue) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciQueueQueue) getDetail() (*queue.Queue, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*queue.Queue, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.QueueAdminClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.QueueAdminClient(o.cacheRegion)
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetQueue(context.Background(), queue.GetQueueRequest{
-		QueueId: common.String(o.Id.Data),
+		response, err := client.GetQueue(context.Background(), queue.GetQueueRequest{
+			QueueId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.Queue, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.Queue
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciQueueQueue) encryptionKey() (*mqlOciKmsKey, error) {
@@ -579,10 +539,7 @@ type mqlOciKafkaClusterInternal struct {
 	cacheRegion        string
 	cacheSubnetIds     []string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *managedkafka.KafkaCluster
-	detailErr     error
+	detail ociLazy[*managedkafka.KafkaCluster]
 }
 
 func (o *mqlOciKafkaCluster) id() (string, error) {
@@ -613,36 +570,21 @@ func (o *mqlOciKafkaCluster) subnets() ([]any, error) {
 }
 
 func (o *mqlOciKafkaCluster) getDetail() (*managedkafka.KafkaCluster, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*managedkafka.KafkaCluster, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.KafkaClusterClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.KafkaClusterClient(o.cacheRegion)
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetKafkaCluster(context.Background(), managedkafka.GetKafkaClusterRequest{
-		KafkaClusterId: common.String(o.Id.Data),
+		response, err := client.GetKafkaCluster(context.Background(), managedkafka.GetKafkaClusterRequest{
+			KafkaClusterId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.KafkaCluster, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.KafkaCluster
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciKafkaCluster) bootstrapUrls() ([]any, error) {

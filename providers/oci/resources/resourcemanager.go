@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 	"sort"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -82,10 +80,7 @@ type mqlOciResourceManagerStackInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *resourcemanager.Stack
-	detailErr     error
+	detail ociLazy[*resourcemanager.Stack]
 }
 
 func (o *mqlOciResourceManagerStack) id() (string, error) {
@@ -97,38 +92,21 @@ func (o *mqlOciResourceManagerStack) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciResourceManagerStack) getDetail() (*resourcemanager.Stack, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*resourcemanager.Stack, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.ResourceManagerClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.ResourceManagerClient(o.cacheRegion)
-	if err != nil {
-		// Hold on to the error as well, so a stack that cannot be read is not
-		// requested again by every field that depends on this call.
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetStack(context.Background(), resourcemanager.GetStackRequest{
-		StackId: common.String(o.Id.Data),
+		response, err := client.GetStack(context.Background(), resourcemanager.GetStackRequest{
+			StackId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.Stack, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.Stack
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciResourceManagerStack) driftStatus() (string, error) {

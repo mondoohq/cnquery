@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
@@ -132,10 +130,9 @@ type mqlOciMysqlDbSystemInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *mysql.DbSystem
-	detailErr     error
+	// ociLazy, not ociRetryLazy: a DB system we are not allowed to read is
+	// asked for once instead of once per field sharing the fetch.
+	detail ociLazy[*mysql.DbSystem]
 }
 
 func (o *mqlOciMysqlDbSystem) id() (string, error) {
@@ -147,38 +144,21 @@ func (o *mqlOciMysqlDbSystem) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciMysqlDbSystem) getDetail() (*mysql.DbSystem, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*mysql.DbSystem, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.MysqlDbSystemClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.MysqlDbSystemClient(o.cacheRegion)
-	if err != nil {
-		// A failed detail call is remembered as well, so a DB system we are
-		// not allowed to read is asked for once instead of once per field.
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetDbSystem(context.Background(), mysql.GetDbSystemRequest{
-		DbSystemId: common.String(o.Id.Data),
+		response, err := client.GetDbSystem(context.Background(), mysql.GetDbSystemRequest{
+			DbSystemId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.DbSystem, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.DbSystem
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciMysqlDbSystem) subnet() (*mqlOciNetworkSubnet, error) {
@@ -329,10 +309,7 @@ type mqlOciPostgresqlDbSystemInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *psql.DbSystem
-	detailErr     error
+	detail ociLazy[*psql.DbSystem]
 }
 
 func (o *mqlOciPostgresqlDbSystem) id() (string, error) {
@@ -344,36 +321,21 @@ func (o *mqlOciPostgresqlDbSystem) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciPostgresqlDbSystem) getDetail() (*psql.DbSystem, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*psql.DbSystem, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.PostgresqlClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.PostgresqlClient(o.cacheRegion)
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetDbSystem(context.Background(), psql.GetDbSystemRequest{
-		DbSystemId: common.String(o.Id.Data),
+		response, err := client.GetDbSystem(context.Background(), psql.GetDbSystemRequest{
+			DbSystemId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.DbSystem, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.DbSystem
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciPostgresqlDbSystem) description() (string, error) {
@@ -634,10 +596,7 @@ type mqlOciOpensearchClusterInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *opensearch.OpensearchCluster
-	detailErr     error
+	detail ociLazy[*opensearch.OpensearchCluster]
 }
 
 func (o *mqlOciOpensearchCluster) id() (string, error) {
@@ -649,36 +608,21 @@ func (o *mqlOciOpensearchCluster) compartment() (*mqlOciCompartment, error) {
 }
 
 func (o *mqlOciOpensearchCluster) getDetail() (*opensearch.OpensearchCluster, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*opensearch.OpensearchCluster, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.OpensearchClusterClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.OpensearchClusterClient(o.cacheRegion)
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetOpensearchCluster(context.Background(), opensearch.GetOpensearchClusterRequest{
-		OpensearchClusterId: common.String(o.Id.Data),
+		response, err := client.GetOpensearchCluster(context.Background(), opensearch.GetOpensearchClusterRequest{
+			OpensearchClusterId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.OpensearchCluster, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.OpensearchCluster
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciOpensearchCluster) securityMasterUserName() (string, error) {
@@ -830,10 +774,7 @@ type mqlOciGoldenGateDeploymentInternal struct {
 	cacheLoadBalancerId string
 	cacheRegion         string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *goldengate.Deployment
-	detailErr     error
+	detail ociLazy[*goldengate.Deployment]
 }
 
 func (o *mqlOciGoldenGateDeployment) id() (string, error) {
@@ -863,36 +804,21 @@ func (o *mqlOciGoldenGateDeployment) loadBalancer() (*mqlOciLoadBalancerLoadBala
 }
 
 func (o *mqlOciGoldenGateDeployment) getDetail() (*goldengate.Deployment, error) {
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*goldengate.Deployment, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.GoldenGateClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.GoldenGateClient(o.cacheRegion)
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetDeployment(context.Background(), goldengate.GetDeploymentRequest{
-		DeploymentId: common.String(o.Id.Data),
+		response, err := client.GetDeployment(context.Background(), goldengate.GetDeploymentRequest{
+			DeploymentId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.Deployment, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.Deployment
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciGoldenGateDeployment) securityGroups() ([]any, error) {

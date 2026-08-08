@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/sch"
@@ -81,18 +79,13 @@ func (o *mqlOciServiceConnectorHub) connectors() ([]any, error) {
 // call, so source, target and tasks share one lazy fetch rather than issuing
 // three.
 //
-// detailFetched is an atomic.Bool rather than a plain bool because getDetail
-// reads it once before taking the lock. A plain bool read outside the mutex
-// races with the write inside it - the same reason cloudguard.go uses
-// atomic.Bool for its configFetched and homeRegionSet flags.
+// ociLazy, not ociRetryLazy: the five fields sharing this fetch would each
+// repeat the same failing request if only successes were remembered.
 type mqlOciServiceConnectorHubConnectorInternal struct {
 	cacheCompartmentId string
 	cacheRegion        string
 
-	detailLock    sync.Mutex
-	detailFetched atomic.Bool
-	detail        *sch.ServiceConnector
-	detailErr     error
+	detail ociLazy[*sch.ServiceConnector]
 }
 
 func (o *mqlOciServiceConnectorHubConnector) id() (string, error) {
@@ -104,40 +97,21 @@ func (o *mqlOciServiceConnectorHubConnector) compartment() (*mqlOciCompartment, 
 }
 
 func (o *mqlOciServiceConnectorHubConnector) getDetail() (*sch.ServiceConnector, error) {
-	// Fast path: five computed fields share this fetch, so after the first one
-	// the rest should not queue on the mutex just to read a cached pointer.
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
+	return o.detail.get(func() (*sch.ServiceConnector, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		client, err := conn.ServiceConnectorClient(o.cacheRegion)
+		if err != nil {
+			return nil, err
+		}
 
-	o.detailLock.Lock()
-	defer o.detailLock.Unlock()
-	if o.detailFetched.Load() {
-		return o.detail, o.detailErr
-	}
-
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	client, err := conn.ServiceConnectorClient(o.cacheRegion)
-	if err != nil {
-		// The error is kept too. The fields sharing this fetch would each
-		// repeat the same failing request if only successes were remembered.
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	response, err := client.GetServiceConnector(context.Background(), sch.GetServiceConnectorRequest{
-		ServiceConnectorId: common.String(o.Id.Data),
+		response, err := client.GetServiceConnector(context.Background(), sch.GetServiceConnectorRequest{
+			ServiceConnectorId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &response.ServiceConnector, nil
 	})
-	if err != nil {
-		o.detailErr = err
-		o.detailFetched.Store(true)
-		return nil, err
-	}
-
-	o.detail = &response.ServiceConnector
-	o.detailFetched.Store(true)
-	return o.detail, nil
 }
 
 func (o *mqlOciServiceConnectorHubConnector) sourceKind() (string, error) {

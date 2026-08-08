@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -108,9 +106,7 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 }
 
 type mqlOciFunctionsApplicationInternal struct {
-	lock           sync.Mutex
-	fetched        atomic.Bool
-	app            *functions.Application
+	app            ociRetryLazy[*functions.Application]
 	region         string
 	cacheSubnetIds []string
 	cacheNsgIds    []string
@@ -121,32 +117,22 @@ func (o *mqlOciFunctionsApplication) id() (string, error) {
 }
 
 func (o *mqlOciFunctionsApplication) fetchApplication() (*functions.Application, error) {
-	if o.fetched.Load() {
-		return o.app, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched.Load() {
-		return o.app, nil
-	}
+	return o.app.get(func() (*functions.Application, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.FunctionsManagementClient(o.region)
+		if err != nil {
+			return nil, err
+		}
 
-	svc, err := conn.FunctionsManagementClient(o.region)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := svc.GetApplication(context.Background(), functions.GetApplicationRequest{
-		ApplicationId: common.String(o.Id.Data),
+		resp, err := svc.GetApplication(context.Background(), functions.GetApplicationRequest{
+			ApplicationId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &resp.Application, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.app = &resp.Application
-	o.fetched.Store(true)
-	return o.app, nil
 }
 
 func (o *mqlOciFunctionsApplication) config() (map[string]interface{}, error) {
@@ -284,10 +270,8 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 }
 
 type mqlOciFunctionsFunctionInternal struct {
-	lock    sync.Mutex
-	fetched atomic.Bool
-	fn      *functions.Function
-	region  string
+	fn     ociRetryLazy[*functions.Function]
+	region string
 }
 
 func (o *mqlOciFunctionsFunction) id() (string, error) {
@@ -295,32 +279,22 @@ func (o *mqlOciFunctionsFunction) id() (string, error) {
 }
 
 func (o *mqlOciFunctionsFunction) fetchFunction() (*functions.Function, error) {
-	if o.fetched.Load() {
-		return o.fn, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched.Load() {
-		return o.fn, nil
-	}
+	return o.fn.get(func() (*functions.Function, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.FunctionsManagementClient(o.region)
+		if err != nil {
+			return nil, err
+		}
 
-	svc, err := conn.FunctionsManagementClient(o.region)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := svc.GetFunction(context.Background(), functions.GetFunctionRequest{
-		FunctionId: common.String(o.Id.Data),
+		resp, err := svc.GetFunction(context.Background(), functions.GetFunctionRequest{
+			FunctionId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &resp.Function, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.fn = &resp.Function
-	o.fetched.Store(true)
-	return o.fn, nil
 }
 
 func (o *mqlOciFunctionsFunction) config() (map[string]interface{}, error) {

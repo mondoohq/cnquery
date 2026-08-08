@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -143,9 +141,7 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 }
 
 type mqlOciOkeClusterInternal struct {
-	lock       sync.Mutex
-	fetched    atomic.Bool
-	cluster    *containerengine.Cluster
+	cluster    ociRetryLazy[*containerengine.Cluster]
 	cacheVcnId string
 	region     string
 }
@@ -211,32 +207,22 @@ func (o *mqlOciOkeCluster) vcn() (*mqlOciNetworkVcn, error) {
 }
 
 func (o *mqlOciOkeCluster) fetchCluster() (*containerengine.Cluster, error) {
-	if o.fetched.Load() {
-		return o.cluster, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched.Load() {
-		return o.cluster, nil
-	}
+	return o.cluster.get(func() (*containerengine.Cluster, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.ContainerEngineClient(o.region)
+		if err != nil {
+			return nil, err
+		}
 
-	svc, err := conn.ContainerEngineClient(o.region)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := svc.GetCluster(context.Background(), containerengine.GetClusterRequest{
-		ClusterId: common.String(o.Id.Data),
+		resp, err := svc.GetCluster(context.Background(), containerengine.GetClusterRequest{
+			ClusterId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &resp.Cluster, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.cluster = &resp.Cluster
-	o.fetched.Store(true)
-	return o.cluster, nil
 }
 
 func (o *mqlOciOkeCluster) kmsKey() (*mqlOciKmsKey, error) {

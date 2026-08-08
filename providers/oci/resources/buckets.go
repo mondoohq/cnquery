@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -157,9 +155,7 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 }
 
 type mqlOciObjectStorageBucketInternal struct {
-	lock    sync.Mutex
-	fetched atomic.Bool
-	bucket  *objectstorage.Bucket
+	bucket ociRetryLazy[*objectstorage.Bucket]
 }
 
 // ociBucketCacheKey is the bucket's cache key. It is passed explicitly as
@@ -251,64 +247,56 @@ func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.Ra
 // accessors share it, and the runtime resolves them concurrently, so the fetch
 // is guarded rather than racing sixteen identical GetBucket calls.
 func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, error) {
-	if o.fetched.Load() {
-		return o.bucket, nil
-	}
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched.Load() {
-		return o.bucket, nil
-	}
+	return o.bucket.get(func() (*objectstorage.Bucket, error) {
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		region := o.GetRegion()
+		if region.Error != nil {
+			return nil, region.Error
+		}
 
-	region := o.GetRegion()
-	if region.Error != nil {
-		return nil, region.Error
-	}
+		if region.Data == nil {
+			return nil, errors.New("oci.objectStorage.bucket: region is required to fetch bucket details")
+		}
 
-	if region.Data == nil {
-		return nil, errors.New("oci.objectStorage.bucket: region is required to fetch bucket details")
-	}
+		r := region.Data
+		client, err := conn.ObjectStorageClient(r.Id.Data)
+		if err != nil {
+			return nil, err
+		}
 
-	r := region.Data
-	client, err := conn.ObjectStorageClient(r.Id.Data)
-	if err != nil {
-		return nil, err
-	}
+		namespace := o.GetNamespace()
+		if namespace.Error != nil {
+			return nil, namespace.Error
+		}
 
-	namespace := o.GetNamespace()
-	if namespace.Error != nil {
-		return nil, namespace.Error
-	}
+		name := o.GetName()
+		if name.Error != nil {
+			return nil, name.Error
+		}
 
-	name := o.GetName()
-	if name.Error != nil {
-		return nil, name.Error
-	}
+		response, err := client.GetBucket(context.Background(), objectstorage.GetBucketRequest{
+			NamespaceName: common.String(namespace.Data),
+			BucketName:    common.String(name.Data),
+			Fields: []objectstorage.GetBucketFieldsEnum{
+				objectstorage.GetBucketFieldsApproximatecount,
+				objectstorage.GetBucketFieldsApproximatesize,
+				objectstorage.GetBucketFieldsAutotiering,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
 
-	response, err := client.GetBucket(context.Background(), objectstorage.GetBucketRequest{
-		NamespaceName: common.String(namespace.Data),
-		BucketName:    common.String(name.Data),
-		Fields: []objectstorage.GetBucketFieldsEnum{
-			objectstorage.GetBucketFieldsApproximatecount,
-			objectstorage.GetBucketFieldsApproximatesize,
-			objectstorage.GetBucketFieldsAutotiering,
-		},
+		// ListBuckets returns a BucketSummary, which carries no Id at all, so
+		// the bucket OCID is only knowable from this call. Populate it here so
+		// both the collection path and the single-bucket init resolve `id`
+		// identically.
+		if response.Bucket.Id != nil {
+			o.Id = plugin.TValue[string]{Data: *response.Bucket.Id, State: plugin.StateIsSet}
+		}
+		return &response.Bucket, nil
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	o.bucket = &response.Bucket
-	// ListBuckets returns a BucketSummary, which carries no Id at all, so the
-	// bucket OCID is only knowable from this call. Populate it here so both the
-	// collection path and the single-bucket init resolve `id` identically.
-	if o.bucket.Id != nil {
-		o.Id = plugin.TValue[string]{Data: *o.bucket.Id, State: plugin.StateIsSet}
-	}
-	o.fetched.Store(true)
-	return o.bucket, nil
 }
 
 func (o *mqlOciObjectStorageBucket) publicAccessType() (string, error) {

@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -321,8 +320,7 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) id() (string, error) {
 type mqlOciNetworkIpsecConnectionTunnelInternal struct {
 	cacheIpscId string
 	cacheRegion string
-	lock        sync.Mutex
-	fetched     bool
+	details     ociOnce
 	phaseOne    *core.TunnelPhaseOneDetails
 	phaseTwo    *core.TunnelPhaseTwoDetails
 }
@@ -330,38 +328,33 @@ type mqlOciNetworkIpsecConnectionTunnelInternal struct {
 // fetchDetails lazily loads the tunnel detail, which carries the negotiated
 // phase 1/2 crypto that the list call does not populate. The result is cached
 // so the phase accessors share a single API call. A transient failure is not
-// cached (fetched is set only on success), so a later access retries rather
-// than returning the stale error forever.
+// cached, so a later access retries rather than returning the stale error
+// forever.
 func (o *mqlOciNetworkIpsecConnectionTunnel) fetchDetails() error {
-	o.lock.Lock()
-	defer o.lock.Unlock()
-	if o.fetched {
+	return o.details.do(func() error {
+		if o.cacheIpscId == "" {
+			return nil
+		}
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		region := o.cacheRegion
+		if region == "" {
+			region = ociRegionFromOCID(o.Id.Data)
+		}
+		svc, err := conn.NetworkClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err := svc.GetIPSecConnectionTunnel(context.Background(), core.GetIPSecConnectionTunnelRequest{
+			IpscId:   common.String(o.cacheIpscId),
+			TunnelId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			return err
+		}
+		o.phaseOne = resp.PhaseOneDetails
+		o.phaseTwo = resp.PhaseTwoDetails
 		return nil
-	}
-	if o.cacheIpscId == "" {
-		o.fetched = true
-		return nil
-	}
-	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	region := o.cacheRegion
-	if region == "" {
-		region = ociRegionFromOCID(o.Id.Data)
-	}
-	svc, err := conn.NetworkClient(region)
-	if err != nil {
-		return err
-	}
-	resp, err := svc.GetIPSecConnectionTunnel(context.Background(), core.GetIPSecConnectionTunnelRequest{
-		IpscId:   common.String(o.cacheIpscId),
-		TunnelId: common.String(o.Id.Data),
 	})
-	if err != nil {
-		return err
-	}
-	o.phaseOne = resp.PhaseOneDetails
-	o.phaseTwo = resp.PhaseTwoDetails
-	o.fetched = true
-	return nil
 }
 
 // ociTunnelCryptoValue reports a tunnel crypto parameter, marking the field
