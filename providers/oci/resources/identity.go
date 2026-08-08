@@ -30,9 +30,7 @@ func (o *mqlOciIdentity) users() ([]any, error) {
 }
 
 func (s *mqlOciIdentity) listUsers(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.User, error) {
-	users := []identity.User{}
-	var page *string
-	for {
+	users, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.User, *string, error) {
 		request := identity.ListUsersRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -40,16 +38,12 @@ func (s *mqlOciIdentity) listUsers(ctx context.Context, identityClient identity.
 
 		response, err := identityClient.ListUsers(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		users = append(users, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return users, nil
@@ -373,26 +367,25 @@ func (o *mqlOciIdentityUser) groups() ([]any, error) {
 
 	ctx := context.Background()
 	grpMember := map[string]bool{}
-	var page *string
-	for {
-		memberships, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
+	memberships, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.UserGroupMembership, *string, error) {
+		response, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
 			CompartmentId: common.String(compartmentID),
 			UserId:        common.String(userId),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		for i := range memberships.Items {
-			m := memberships.Items[i]
-			if m.GroupId != nil {
-				grpMember[*m.GroupId] = true
-			}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	for i := range memberships {
+		m := memberships[i]
+		if m.GroupId != nil {
+			grpMember[*m.GroupId] = true
 		}
-		if memberships.OpcNextPage == nil {
-			break
-		}
-		page = memberships.OpcNextPage
 	}
 
 	// fetch all groups and filter the groups
@@ -426,9 +419,7 @@ func (o *mqlOciIdentity) groups() ([]any, error) {
 }
 
 func (s *mqlOciIdentity) listGroups(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.Group, error) {
-	groups := []identity.Group{}
-	var page *string
-	for {
+	groups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.Group, *string, error) {
 		request := identity.ListGroupsRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -436,16 +427,12 @@ func (s *mqlOciIdentity) listGroups(ctx context.Context, identityClient identity
 
 		response, err := identityClient.ListGroups(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		groups = append(groups, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return groups, nil
@@ -520,9 +507,7 @@ func (o *mqlOciIdentity) policies() ([]any, error) {
 }
 
 func (s *mqlOciIdentity) listPolicies(ctx context.Context, identityClient identity.IdentityClient, compartmentID string) ([]identity.Policy, error) {
-	policies := []identity.Policy{}
-	var page *string
-	for {
+	policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.Policy, *string, error) {
 		request := identity.ListPoliciesRequest{
 			CompartmentId: common.String(compartmentID),
 			Page:          page,
@@ -530,16 +515,12 @@ func (s *mqlOciIdentity) listPolicies(ctx context.Context, identityClient identi
 
 		response, err := identityClient.ListPolicies(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		policies = append(policies, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return policies, nil
@@ -663,23 +644,18 @@ func (o *mqlOciIdentityUser) mfaDevices() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	var page *string
-	var devices []identity.MfaTotpDeviceSummary
-	for {
+	devices, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.MfaTotpDeviceSummary, *string, error) {
 		response, err := client.ListMfaTotpDevices(ctx, identity.ListMfaTotpDevicesRequest{
 			UserId: common.String(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		devices = append(devices, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(devices))
@@ -726,26 +702,25 @@ func (o *mqlOciIdentityGroup) members() ([]any, error) {
 
 	ctx := context.Background()
 	userMember := map[string]bool{}
-	var page *string
-	for {
-		memberships, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
+	memberships, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.UserGroupMembership, *string, error) {
+		response, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
 			CompartmentId: common.String(o.CompartmentID.Data),
 			GroupId:       common.String(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		for i := range memberships.Items {
-			m := memberships.Items[i]
-			if m.UserId != nil {
-				userMember[*m.UserId] = true
-			}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	for i := range memberships {
+		m := memberships[i]
+		if m.UserId != nil {
+			userMember[*m.UserId] = true
 		}
-		if memberships.OpcNextPage == nil {
-			break
-		}
-		page = memberships.OpcNextPage
 	}
 
 	obj, err := NewResource(o.MqlRuntime, "oci.identity", nil)
@@ -778,35 +753,35 @@ func (o *mqlOciIdentityUser) dbCredentials() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	res := []any{}
-	var page *string
-	for {
+	creds, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.DbCredentialSummary, *string, error) {
 		resp, err := client.ListDbCredentials(ctx, identity.ListDbCredentialsRequest{
 			UserId: common.String(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range creds {
+		cred := creds[i]
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dbCredential", map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(cred.Id),
+			"description": llx.StringDataPtr(cred.Description),
+			"created":     sdkTimeData(cred.TimeCreated),
+			"expires":     sdkTimeData(cred.TimeExpires),
+			"state":       llx.StringData(string(cred.LifecycleState)),
+		})
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			cred := resp.Items[i]
-
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dbCredential", map[string]*llx.RawData{
-				"id":          llx.StringDataPtr(cred.Id),
-				"description": llx.StringDataPtr(cred.Description),
-				"created":     sdkTimeData(cred.TimeCreated),
-				"expires":     sdkTimeData(cred.TimeExpires),
-				"state":       llx.StringData(string(cred.LifecycleState)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlInstance)
-		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
@@ -872,51 +847,51 @@ func (o *mqlOciIdentityUser) oauth2ClientCredentials() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	res := []any{}
-	var page *string
-	for {
+	creds, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.OAuth2ClientCredentialSummary, *string, error) {
 		resp, err := client.ListOAuthClientCredentials(ctx, identity.ListOAuthClientCredentialsRequest{
 			UserId: common.String(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range creds {
+		cred := creds[i]
+
+		scopes := make([]ociOauthScope, 0, len(cred.Scopes))
+		for j := range cred.Scopes {
+			s := cred.Scopes[j]
+			scopes = append(scopes, ociOauthScope{
+				Audience: stringValue(s.Audience),
+				Scope:    stringValue(s.Scope),
+			})
+		}
+		scopesDict, err := convert.JsonToDictSlice(scopes)
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			cred := resp.Items[i]
 
-			scopes := make([]ociOauthScope, 0, len(cred.Scopes))
-			for j := range cred.Scopes {
-				s := cred.Scopes[j]
-				scopes = append(scopes, ociOauthScope{
-					Audience: stringValue(s.Audience),
-					Scope:    stringValue(s.Scope),
-				})
-			}
-			scopesDict, err := convert.JsonToDictSlice(scopes)
-			if err != nil {
-				return nil, err
-			}
-
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.oauth2ClientCredential", map[string]*llx.RawData{
-				"id":            llx.StringDataPtr(cred.Id),
-				"name":          llx.StringDataPtr(cred.Name),
-				"description":   llx.StringDataPtr(cred.Description),
-				"compartmentID": llx.StringDataPtr(cred.CompartmentId),
-				"scopes":        llx.ArrayData(scopesDict, types.Dict),
-				"created":       sdkTimeData(cred.TimeCreated),
-				"expires":       sdkTimeData(cred.ExpiresOn),
-				"state":         llx.StringData(string(cred.LifecycleState)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlInstance)
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.oauth2ClientCredential", map[string]*llx.RawData{
+			"id":            llx.StringDataPtr(cred.Id),
+			"name":          llx.StringDataPtr(cred.Name),
+			"description":   llx.StringDataPtr(cred.Description),
+			"compartmentID": llx.StringDataPtr(cred.CompartmentId),
+			"scopes":        llx.ArrayData(scopesDict, types.Dict),
+			"created":       sdkTimeData(cred.TimeCreated),
+			"expires":       sdkTimeData(cred.ExpiresOn),
+			"state":         llx.StringData(string(cred.LifecycleState)),
+		})
+		if err != nil {
+			return nil, err
 		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
@@ -935,39 +910,39 @@ func (o *mqlOciIdentity) dynamicGroups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	res := []any{}
-	var page *string
-	for {
+	groups, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.DynamicGroup, *string, error) {
 		resp, err := client.ListDynamicGroups(ctx, identity.ListDynamicGroupsRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range groups {
+		dg := groups[i]
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dynamicGroup", map[string]*llx.RawData{
+			"id":            llx.StringDataPtr(dg.Id),
+			"compartmentID": llx.StringDataPtr(dg.CompartmentId),
+			"name":          llx.StringDataPtr(dg.Name),
+			"description":   llx.StringDataPtr(dg.Description),
+			"matchingRule":  llx.StringDataPtr(dg.MatchingRule),
+			"created":       sdkTimeData(dg.TimeCreated),
+			"state":         llx.StringData(string(dg.LifecycleState)),
+			"freeformTags":  llx.MapData(strMapToAny(dg.FreeformTags), types.String),
+			"definedTags":   llx.MapData(definedTagsToAny(dg.DefinedTags), types.Any),
+		})
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			dg := resp.Items[i]
-
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dynamicGroup", map[string]*llx.RawData{
-				"id":            llx.StringDataPtr(dg.Id),
-				"compartmentID": llx.StringDataPtr(dg.CompartmentId),
-				"name":          llx.StringDataPtr(dg.Name),
-				"description":   llx.StringDataPtr(dg.Description),
-				"matchingRule":  llx.StringDataPtr(dg.MatchingRule),
-				"created":       sdkTimeData(dg.TimeCreated),
-				"state":         llx.StringData(string(dg.LifecycleState)),
-				"freeformTags":  llx.MapData(strMapToAny(dg.FreeformTags), types.String),
-				"definedTags":   llx.MapData(definedTagsToAny(dg.DefinedTags), types.Any),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlInstance)
-		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
@@ -986,9 +961,7 @@ func (o *mqlOciIdentity) identityProviders() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	res := []any{}
-	var page *string
-	for {
+	providers, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.IdentityProvider, *string, error) {
 		// SAML2 is the only federation protocol the ListIdentityProviders API accepts.
 		resp, err := client.ListIdentityProviders(ctx, identity.ListIdentityProvidersRequest{
 			Protocol:      identity.ListIdentityProvidersProtocolSaml2,
@@ -996,48 +969,50 @@ func (o *mqlOciIdentity) identityProviders() ([]any, error) {
 			Page:          page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range providers {
+		idp := providers[i]
+
+		args := map[string]*llx.RawData{
+			"id":                 llx.StringDataPtr(idp.GetId()),
+			"compartmentID":      llx.StringDataPtr(idp.GetCompartmentId()),
+			"name":               llx.StringDataPtr(idp.GetName()),
+			"description":        llx.StringDataPtr(idp.GetDescription()),
+			"productType":        llx.StringDataPtr(idp.GetProductType()),
+			"created":            sdkTimeData(idp.GetTimeCreated()),
+			"state":              llx.StringData(string(idp.GetLifecycleState())),
+			"freeformTags":       llx.MapData(strMapToAny(idp.GetFreeformTags()), types.String),
+			"definedTags":        llx.MapData(definedTagsToAny(idp.GetDefinedTags()), types.Any),
+			"protocol":           llx.StringData(""),
+			"metadataUrl":        llx.StringData(""),
+			"signingCertificate": llx.StringData(""),
+			"redirectUrl":        llx.StringData(""),
+		}
+		if saml, ok := idp.(identity.Saml2IdentityProvider); ok {
+			args["protocol"] = llx.StringData("SAML2")
+			args["metadataUrl"] = llx.StringDataPtr(saml.MetadataUrl)
+			args["signingCertificate"] = llx.StringDataPtr(saml.SigningCertificate)
+			args["redirectUrl"] = llx.StringDataPtr(saml.RedirectUrl)
+		} else {
+			// SAML2 is the only protocol ListIdentityProviders accepts today;
+			// warn if OCI ever returns another so the gap is noticed.
+			log.Warn().Str("id", stringValue(idp.GetId())).
+				Msgf("oci.identity.identityProvider: unexpected provider type %T, SAML2-specific fields left empty", idp)
+		}
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.identityProvider", args)
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			idp := resp.Items[i]
-
-			args := map[string]*llx.RawData{
-				"id":                 llx.StringDataPtr(idp.GetId()),
-				"compartmentID":      llx.StringDataPtr(idp.GetCompartmentId()),
-				"name":               llx.StringDataPtr(idp.GetName()),
-				"description":        llx.StringDataPtr(idp.GetDescription()),
-				"productType":        llx.StringDataPtr(idp.GetProductType()),
-				"created":            sdkTimeData(idp.GetTimeCreated()),
-				"state":              llx.StringData(string(idp.GetLifecycleState())),
-				"freeformTags":       llx.MapData(strMapToAny(idp.GetFreeformTags()), types.String),
-				"definedTags":        llx.MapData(definedTagsToAny(idp.GetDefinedTags()), types.Any),
-				"protocol":           llx.StringData(""),
-				"metadataUrl":        llx.StringData(""),
-				"signingCertificate": llx.StringData(""),
-				"redirectUrl":        llx.StringData(""),
-			}
-			if saml, ok := idp.(identity.Saml2IdentityProvider); ok {
-				args["protocol"] = llx.StringData("SAML2")
-				args["metadataUrl"] = llx.StringDataPtr(saml.MetadataUrl)
-				args["signingCertificate"] = llx.StringDataPtr(saml.SigningCertificate)
-				args["redirectUrl"] = llx.StringDataPtr(saml.RedirectUrl)
-			} else {
-				// SAML2 is the only protocol ListIdentityProviders accepts today;
-				// warn if OCI ever returns another so the gap is noticed.
-				log.Warn().Str("id", stringValue(idp.GetId())).
-					Msgf("oci.identity.identityProvider: unexpected provider type %T, SAML2-specific fields left empty", idp)
-			}
-
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.identityProvider", args)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlInstance)
-		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
@@ -1064,53 +1039,53 @@ func (o *mqlOciIdentity) networkSources() ([]any, error) {
 
 	ctx := context.Background()
 	res := []any{}
-	var page *string
-	for {
+	sources, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.NetworkSourcesSummary, *string, error) {
 		resp, err := client.ListNetworkSources(ctx, identity.ListNetworkSourcesRequest{
 			CompartmentId: common.String(conn.TenantID()),
 			Page:          page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range sources {
+		ns := sources[i]
+
+		virtual := make([]ociNetworkVirtualSource, 0, len(ns.VirtualSourceList))
+		for j := range ns.VirtualSourceList {
+			v := ns.VirtualSourceList[j]
+			virtual = append(virtual, ociNetworkVirtualSource{
+				VcnId:    stringValue(v.VcnId),
+				IpRanges: v.IpRanges,
+			})
+		}
+		virtualDict, err := convert.JsonToDictSlice(virtual)
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			ns := resp.Items[i]
 
-			virtual := make([]ociNetworkVirtualSource, 0, len(ns.VirtualSourceList))
-			for j := range ns.VirtualSourceList {
-				v := ns.VirtualSourceList[j]
-				virtual = append(virtual, ociNetworkVirtualSource{
-					VcnId:    stringValue(v.VcnId),
-					IpRanges: v.IpRanges,
-				})
-			}
-			virtualDict, err := convert.JsonToDictSlice(virtual)
-			if err != nil {
-				return nil, err
-			}
-
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.networkSource", map[string]*llx.RawData{
-				"id":                llx.StringDataPtr(ns.Id),
-				"compartmentID":     llx.StringDataPtr(ns.CompartmentId),
-				"name":              llx.StringDataPtr(ns.Name),
-				"description":       llx.StringDataPtr(ns.Description),
-				"publicSourceList":  llx.ArrayData(stringsToAny(ns.PublicSourceList), types.String),
-				"virtualSourceList": llx.ArrayData(virtualDict, types.Dict),
-				"services":          llx.ArrayData(stringsToAny(ns.Services), types.String),
-				"created":           sdkTimeData(ns.TimeCreated),
-				"state":             llx.StringData(string(ns.LifecycleState)),
-				"freeformTags":      llx.MapData(strMapToAny(ns.FreeformTags), types.String),
-				"definedTags":       llx.MapData(definedTagsToAny(ns.DefinedTags), types.Any),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlInstance)
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.networkSource", map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(ns.Id),
+			"compartmentID":     llx.StringDataPtr(ns.CompartmentId),
+			"name":              llx.StringDataPtr(ns.Name),
+			"description":       llx.StringDataPtr(ns.Description),
+			"publicSourceList":  llx.ArrayData(stringsToAny(ns.PublicSourceList), types.String),
+			"virtualSourceList": llx.ArrayData(virtualDict, types.Dict),
+			"services":          llx.ArrayData(stringsToAny(ns.Services), types.String),
+			"created":           sdkTimeData(ns.TimeCreated),
+			"state":             llx.StringData(string(ns.LifecycleState)),
+			"freeformTags":      llx.MapData(strMapToAny(ns.FreeformTags), types.String),
+			"definedTags":       llx.MapData(definedTagsToAny(ns.DefinedTags), types.Any),
+		})
+		if err != nil {
+			return nil, err
 		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil

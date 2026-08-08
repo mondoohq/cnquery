@@ -69,21 +69,18 @@ func (o *mqlOciAiGenerativeAi) dedicatedAiClusters() ([]any, error) {
 
 func (o *mqlOciAiGenerativeAi) fetchDedicatedAiClusters(svc *generativeai.GenerativeAiClient, _ string) ([]any, error) {
 	ctx := context.Background()
-	var items []generativeai.DedicatedAiClusterSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeai.DedicatedAiClusterSummary, *string, error) {
 		resp, err := svc.ListDedicatedAiClusters(ctx, generativeai.ListDedicatedAiClustersRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -137,21 +134,18 @@ func (o *mqlOciAiGenerativeAi) models() ([]any, error) {
 
 func (o *mqlOciAiGenerativeAi) fetchModels(svc *generativeai.GenerativeAiClient, _ string) ([]any, error) {
 	ctx := context.Background()
-	var items []generativeai.ModelSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeai.ModelSummary, *string, error) {
 		resp, err := svc.ListModels(ctx, generativeai.ListModelsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -223,21 +217,18 @@ func (o *mqlOciAiGenerativeAi) endpoints() ([]any, error) {
 
 func (o *mqlOciAiGenerativeAi) fetchEndpoints(svc *generativeai.GenerativeAiClient, region string) ([]any, error) {
 	ctx := context.Background()
-	var items []generativeai.EndpointSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeai.EndpointSummary, *string, error) {
 		resp, err := svc.ListEndpoints(ctx, generativeai.ListEndpointsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))

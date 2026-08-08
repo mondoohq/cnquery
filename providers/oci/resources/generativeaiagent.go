@@ -66,25 +66,22 @@ func (o *mqlOciAiAgents) getAgents(conn *connection.OciConnection, regions []any
 				return nil, err
 			}
 
-			items := []generativeaiagent.AgentSummary{}
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeaiagent.AgentSummary, *string, error) {
 				response, err := svc.ListAgents(ctx, generativeaiagent.ListAgentsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					if ociRegionServiceUnavailable(err) {
-						log.Debug().Str("region", regionResource.Id.Data).Msg("generative ai agents not available in region, skipping")
-						return jobpool.JobResult([]any{}), nil
-					}
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				if ociRegionServiceUnavailable(err) {
+					log.Debug().Str("region", regionResource.Id.Data).Msg("generative ai agents not available in region, skipping")
+					return jobpool.JobResult([]any{}), nil
 				}
-				page = response.OpcNextPage
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -181,24 +178,21 @@ func (o *mqlOciAiAgents) getAgentEndpoints(conn *connection.OciConnection, regio
 				return nil, err
 			}
 
-			items := []generativeaiagent.AgentEndpointSummary{}
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeaiagent.AgentEndpointSummary, *string, error) {
 				response, err := svc.ListAgentEndpoints(ctx, generativeaiagent.ListAgentEndpointsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					if ociRegionServiceUnavailable(err) {
-						return jobpool.JobResult([]any{}), nil
-					}
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				if ociRegionServiceUnavailable(err) {
+					return jobpool.JobResult([]any{}), nil
 				}
-				page = response.OpcNextPage
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -322,24 +316,21 @@ func (o *mqlOciAiAgents) getKnowledgeBases(conn *connection.OciConnection, regio
 				return nil, err
 			}
 
-			items := []generativeaiagent.KnowledgeBaseSummary{}
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeaiagent.KnowledgeBaseSummary, *string, error) {
 				response, err := svc.ListKnowledgeBases(ctx, generativeaiagent.ListKnowledgeBasesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					if ociRegionServiceUnavailable(err) {
-						return jobpool.JobResult([]any{}), nil
-					}
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				if ociRegionServiceUnavailable(err) {
+					return jobpool.JobResult([]any{}), nil
 				}
-				page = response.OpcNextPage
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -429,24 +420,21 @@ func (o *mqlOciAiAgents) getDataSources(conn *connection.OciConnection, regions 
 				return nil, err
 			}
 
-			items := []generativeaiagent.DataSourceSummary{}
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeaiagent.DataSourceSummary, *string, error) {
 				response, err := svc.ListDataSources(ctx, generativeaiagent.ListDataSourcesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					if ociRegionServiceUnavailable(err) {
-						return jobpool.JobResult([]any{}), nil
-					}
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				if ociRegionServiceUnavailable(err) {
+					return jobpool.JobResult([]any{}), nil
 				}
-				page = response.OpcNextPage
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -557,24 +545,21 @@ func (o *mqlOciAiAgents) getTools(conn *connection.OciConnection, regions []any)
 				return nil, err
 			}
 
-			items := []generativeaiagent.ToolSummary{}
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]generativeaiagent.ToolSummary, *string, error) {
 				response, err := svc.ListTools(ctx, generativeaiagent.ListToolsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					if ociRegionServiceUnavailable(err) {
-						return jobpool.JobResult([]any{}), nil
-					}
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				if ociRegionServiceUnavailable(err) {
+					return jobpool.JobResult([]any{}), nil
 				}
-				page = response.OpcNextPage
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))

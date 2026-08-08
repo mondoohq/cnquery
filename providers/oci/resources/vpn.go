@@ -48,21 +48,18 @@ func (o *mqlOciNetwork) getCpes(conn *connection.OciConnection, regions []any) [
 				return nil, err
 			}
 
-			cpes := []core.Cpe{}
-			var page *string
-			for {
+			cpes, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Cpe, *string, error) {
 				response, err := svc.ListCpes(ctx, core.ListCpesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				cpes = append(cpes, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -168,21 +165,18 @@ func (o *mqlOciNetwork) getIpsecConnections(conn *connection.OciConnection, regi
 				return nil, err
 			}
 
-			conns := []core.IpSecConnection{}
-			var page *string
-			for {
+			conns, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.IpSecConnection, *string, error) {
 				response, err := svc.ListIPSecConnections(ctx, core.ListIPSecConnectionsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				conns = append(conns, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -300,21 +294,18 @@ func (o *mqlOciNetworkIpsecConnection) tunnels() ([]any, error) {
 	}
 	ctx := context.Background()
 
-	tunnels := []core.IpSecConnectionTunnel{}
-	var page *string
-	for {
+	tunnels, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.IpSecConnectionTunnel, *string, error) {
 		response, err := svc.ListIPSecConnectionTunnels(ctx, core.ListIPSecConnectionTunnelsRequest{
 			IpscId: common.String(o.Id.Data),
 			Page:   page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		tunnels = append(tunnels, response.Items...)
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(tunnels))
@@ -696,21 +687,18 @@ func (o *mqlOciNetwork) getVirtualCircuits(conn *connection.OciConnection, regio
 				return nil, err
 			}
 
-			vcs := []core.VirtualCircuit{}
-			var page *string
-			for {
+			vcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.VirtualCircuit, *string, error) {
 				response, err := svc.ListVirtualCircuits(ctx, core.ListVirtualCircuitsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				vcs = append(vcs, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -853,21 +841,18 @@ func (o *mqlOciNetwork) getCrossConnects(conn *connection.OciConnection, regions
 				return nil, err
 			}
 
-			xcs := []core.CrossConnect{}
-			var page *string
-			for {
+			xcs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.CrossConnect, *string, error) {
 				response, err := svc.ListCrossConnects(ctx, core.ListCrossConnectsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				xcs = append(xcs, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any

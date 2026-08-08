@@ -40,9 +40,7 @@ func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 }
 
 func (o *mqlOciFileStorage) getFileSystemsForAD(ctx context.Context, fsClient *filestorage.FileStorageClient, compartmentID string, availabilityDomain string) ([]filestorage.FileSystemSummary, error) {
-	fileSystems := []filestorage.FileSystemSummary{}
-	var page *string
-	for {
+	fileSystems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]filestorage.FileSystemSummary, *string, error) {
 		request := filestorage.ListFileSystemsRequest{
 			CompartmentId:      common.String(compartmentID),
 			AvailabilityDomain: common.String(availabilityDomain),
@@ -51,16 +49,12 @@ func (o *mqlOciFileStorage) getFileSystemsForAD(ctx context.Context, fsClient *f
 
 		response, err := fsClient.ListFileSystems(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		fileSystems = append(fileSystems, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return fileSystems, nil

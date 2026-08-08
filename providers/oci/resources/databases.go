@@ -56,23 +56,18 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 				return nil, err
 			}
 
-			systems := []mysql.DbSystemSummary{}
-			var page *string
-			for {
+			systems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]mysql.DbSystemSummary, *string, error) {
 				response, err := client.ListDbSystems(ctx, mysql.ListDbSystemsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				systems = append(systems, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(systems))
@@ -288,23 +283,18 @@ func (o *mqlOciPostgresql) dbSystems() ([]any, error) {
 				return nil, err
 			}
 
-			systems := []psql.DbSystemSummary{}
-			var page *string
-			for {
+			systems, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]psql.DbSystemSummary, *string, error) {
 				response, err := client.ListDbSystems(ctx, psql.ListDbSystemsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				systems = append(systems, response.DbSystemCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.DbSystemCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(systems))
@@ -508,23 +498,18 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 				return nil, err
 			}
 
-			tables := []nosql.TableSummary{}
-			var page *string
-			for {
+			tables, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]nosql.TableSummary, *string, error) {
 				response, err := client.ListTables(ctx, nosql.ListTablesRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				tables = append(tables, response.TableCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.TableCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(tables))
@@ -599,23 +584,18 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				return nil, err
 			}
 
-			clusters := []opensearch.OpensearchClusterSummary{}
-			var page *string
-			for {
+			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]opensearch.OpensearchClusterSummary, *string, error) {
 				response, err := client.ListOpensearchClusters(ctx, opensearch.ListOpensearchClustersRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				clusters = append(clusters, response.OpensearchClusterCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.OpensearchClusterCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(clusters))
@@ -808,23 +788,18 @@ func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 				return nil, err
 			}
 
-			deployments := []goldengate.DeploymentSummary{}
-			var page *string
-			for {
+			deployments, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]goldengate.DeploymentSummary, *string, error) {
 				response, err := client.ListDeployments(ctx, goldengate.ListDeploymentsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				deployments = append(deployments, response.DeploymentCollection.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.DeploymentCollection.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(deployments))

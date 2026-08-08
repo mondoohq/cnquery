@@ -56,23 +56,18 @@ func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, reg
 				return nil, err
 			}
 
-			firewalls := []networkfirewall.NetworkFirewallSummary{}
-			var page *string
-			for {
+			firewalls, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NetworkFirewallSummary, *string, error) {
 				response, err := svc.ListNetworkFirewalls(ctx, networkfirewall.ListNetworkFirewallsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				firewalls = append(firewalls, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -203,23 +198,18 @@ func (o *mqlOciNetworkFirewall) getPolicies(conn *connection.OciConnection, regi
 				return nil, err
 			}
 
-			policies := []networkfirewall.NetworkFirewallPolicySummary{}
-			var page *string
-			for {
+			policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NetworkFirewallPolicySummary, *string, error) {
 				response, err := svc.ListNetworkFirewallPolicies(ctx, networkfirewall.ListNetworkFirewallPoliciesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				policies = append(policies, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -349,21 +339,18 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
 
 	// The list returns summaries only (name/type); the blocking booleans
 	// require a per-profile Get.
-	summaries := []networkfirewall.DecryptionProfileSummary{}
-	var page *string
-	for {
+	summaries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.DecryptionProfileSummary, *string, error) {
 		resp, err := svc.ListDecryptionProfiles(ctx, networkfirewall.ListDecryptionProfilesRequest{
 			NetworkFirewallPolicyId: common.String(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		summaries = append(summaries, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(summaries))
@@ -401,36 +388,36 @@ func (o *mqlOciNetworkFirewallPolicy) securityRules() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	res := []any{}
-	var page *string
-	for {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.SecurityRuleSummary, *string, error) {
 		resp, err := svc.ListSecurityRules(ctx, networkfirewall.ListSecurityRulesRequest{
 			NetworkFirewallPolicyId: common.String(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range rules {
+		r := rules[i]
+		name := stringValue(r.Name)
+		mqlRule, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.securityRule", map[string]*llx.RawData{
+			"__id":          llx.StringData(o.Id.Data + "/securityRule/" + name),
+			"name":          llx.StringData(name),
+			"action":        llx.StringData(string(r.Action)),
+			"inspection":    llx.StringData(string(r.Inspection)),
+			"priorityOrder": llx.IntDataPtr(r.PriorityOrder),
+			"description":   llx.StringDataPtr(r.Description),
+		})
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			r := resp.Items[i]
-			name := stringValue(r.Name)
-			mqlRule, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.securityRule", map[string]*llx.RawData{
-				"__id":          llx.StringData(o.Id.Data + "/securityRule/" + name),
-				"name":          llx.StringData(name),
-				"action":        llx.StringData(string(r.Action)),
-				"inspection":    llx.StringData(string(r.Inspection)),
-				"priorityOrder": llx.IntDataPtr(r.PriorityOrder),
-				"description":   llx.StringDataPtr(r.Description),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlRule)
-		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlRule)
 	}
 	return res, nil
 }
@@ -445,37 +432,37 @@ func (o *mqlOciNetworkFirewallPolicy) decryptionRules() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	res := []any{}
-	var page *string
-	for {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.DecryptionRuleSummary, *string, error) {
 		resp, err := svc.ListDecryptionRules(ctx, networkfirewall.ListDecryptionRulesRequest{
 			NetworkFirewallPolicyId: common.String(o.Id.Data),
 			Page:                    page,
 		})
 		if err != nil {
+			return nil, nil, err
+		}
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range rules {
+		r := rules[i]
+		name := stringValue(r.Name)
+		mqlRule, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.decryptionRule", map[string]*llx.RawData{
+			"__id":              llx.StringData(o.Id.Data + "/decryptionRule/" + name),
+			"name":              llx.StringData(name),
+			"action":            llx.StringData(string(r.Action)),
+			"decryptionProfile": llx.StringDataPtr(r.DecryptionProfile),
+			"secret":            llx.StringDataPtr(r.Secret),
+			"priorityOrder":     llx.IntDataPtr(r.PriorityOrder),
+			"description":       llx.StringDataPtr(r.Description),
+		})
+		if err != nil {
 			return nil, err
 		}
-		for i := range resp.Items {
-			r := resp.Items[i]
-			name := stringValue(r.Name)
-			mqlRule, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.decryptionRule", map[string]*llx.RawData{
-				"__id":              llx.StringData(o.Id.Data + "/decryptionRule/" + name),
-				"name":              llx.StringData(name),
-				"action":            llx.StringData(string(r.Action)),
-				"decryptionProfile": llx.StringDataPtr(r.DecryptionProfile),
-				"secret":            llx.StringDataPtr(r.Secret),
-				"priorityOrder":     llx.IntDataPtr(r.PriorityOrder),
-				"description":       llx.StringDataPtr(r.Description),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlRule)
-		}
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		res = append(res, mqlRule)
 	}
 	return res, nil
 }

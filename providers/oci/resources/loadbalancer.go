@@ -49,23 +49,18 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 				return nil, err
 			}
 
-			lbs := []loadbalancer.LoadBalancer{}
-			var page *string
-			for {
+			lbs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]loadbalancer.LoadBalancer, *string, error) {
 				response, err := svc.ListLoadBalancers(ctx, loadbalancer.ListLoadBalancersRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				lbs = append(lbs, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any

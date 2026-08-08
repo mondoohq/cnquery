@@ -54,23 +54,18 @@ func (o *mqlOciWaf) getFirewalls(conn *connection.OciConnection, regions []any) 
 				return nil, err
 			}
 
-			var items []waf.WebAppFirewallSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]waf.WebAppFirewallSummary, *string, error) {
 				response, err := svc.ListWebAppFirewalls(ctx, waf.ListWebAppFirewallsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				items = append(items, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -195,23 +190,18 @@ func (o *mqlOciWaf) getPolicies(conn *connection.OciConnection, regions []any) [
 				return nil, err
 			}
 
-			var items []waf.WebAppFirewallPolicySummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]waf.WebAppFirewallPolicySummary, *string, error) {
 				response, err := svc.ListWebAppFirewallPolicies(ctx, waf.ListWebAppFirewallPoliciesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				items = append(items, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any

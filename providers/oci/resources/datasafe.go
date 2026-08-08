@@ -166,23 +166,20 @@ func (o *mqlOciDataSafe) targetDatabases() ([]any, error) {
 				return nil, err
 			}
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
-			items := []datasafe.TargetDatabaseSummary{}
-			var page *string
-			for {
-				resp, err := svc.ListTargetDatabases(context.Background(), datasafe.ListTargetDatabasesRequest{
+			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.TargetDatabaseSummary, *string, error) {
+				resp, err := svc.ListTargetDatabases(ctx, datasafe.ListTargetDatabasesRequest{
 					CompartmentId:          common.String(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
 				if err != nil {
-					log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe target databases")
-					return jobpool.JobResult([]any{}), nil
+					return nil, nil, err
 				}
-				items = append(items, resp.Items...)
-				if resp.OpcNextPage == nil {
-					break
-				}
-				page = resp.OpcNextPage
+				return resp.Items, resp.OpcNextPage, nil
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe target databases")
+				return jobpool.JobResult([]any{}), nil
 			}
 
 			res := make([]any, 0, len(items))
@@ -237,23 +234,20 @@ func (o *mqlOciDataSafe) securityAssessments() ([]any, error) {
 				return nil, err
 			}
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
-			items := []datasafe.SecurityAssessmentSummary{}
-			var page *string
-			for {
-				resp, err := svc.ListSecurityAssessments(context.Background(), datasafe.ListSecurityAssessmentsRequest{
+			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.SecurityAssessmentSummary, *string, error) {
+				resp, err := svc.ListSecurityAssessments(ctx, datasafe.ListSecurityAssessmentsRequest{
 					CompartmentId:          common.String(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
 				if err != nil {
-					log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe security assessments")
-					return jobpool.JobResult([]any{}), nil
+					return nil, nil, err
 				}
-				items = append(items, resp.Items...)
-				if resp.OpcNextPage == nil {
-					break
-				}
-				page = resp.OpcNextPage
+				return resp.Items, resp.OpcNextPage, nil
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe security assessments")
+				return jobpool.JobResult([]any{}), nil
 			}
 
 			res := make([]any, 0, len(items))
@@ -307,23 +301,20 @@ func (o *mqlOciDataSafe) userAssessments() ([]any, error) {
 				return nil, err
 			}
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
-			items := []datasafe.UserAssessmentSummary{}
-			var page *string
-			for {
-				resp, err := svc.ListUserAssessments(context.Background(), datasafe.ListUserAssessmentsRequest{
+			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.UserAssessmentSummary, *string, error) {
+				resp, err := svc.ListUserAssessments(ctx, datasafe.ListUserAssessmentsRequest{
 					CompartmentId:          common.String(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
 				if err != nil {
-					log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe user assessments")
-					return jobpool.JobResult([]any{}), nil
+					return nil, nil, err
 				}
-				items = append(items, resp.Items...)
-				if resp.OpcNextPage == nil {
-					break
-				}
-				page = resp.OpcNextPage
+				return resp.Items, resp.OpcNextPage, nil
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe user assessments")
+				return jobpool.JobResult([]any{}), nil
 			}
 
 			res := make([]any, 0, len(items))
@@ -377,23 +368,20 @@ func (o *mqlOciDataSafe) sensitiveDataModels() ([]any, error) {
 				return nil, err
 			}
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
-			items := []datasafe.SensitiveDataModelSummary{}
-			var page *string
-			for {
-				resp, err := svc.ListSensitiveDataModels(context.Background(), datasafe.ListSensitiveDataModelsRequest{
+			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.SensitiveDataModelSummary, *string, error) {
+				resp, err := svc.ListSensitiveDataModels(ctx, datasafe.ListSensitiveDataModelsRequest{
 					CompartmentId:          common.String(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
 				if err != nil {
-					log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe sensitive data models")
-					return jobpool.JobResult([]any{}), nil
+					return nil, nil, err
 				}
-				items = append(items, resp.Items...)
-				if resp.OpcNextPage == nil {
-					break
-				}
-				page = resp.OpcNextPage
+				return resp.Items, resp.OpcNextPage, nil
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe sensitive data models")
+				return jobpool.JobResult([]any{}), nil
 			}
 
 			res := make([]any, 0, len(items))
@@ -446,23 +434,20 @@ func (o *mqlOciDataSafe) sensitiveTypes() ([]any, error) {
 				return nil, err
 			}
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
-			items := []datasafe.SensitiveTypeSummary{}
-			var page *string
-			for {
-				resp, err := svc.ListSensitiveTypes(context.Background(), datasafe.ListSensitiveTypesRequest{
+			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.SensitiveTypeSummary, *string, error) {
+				resp, err := svc.ListSensitiveTypes(ctx, datasafe.ListSensitiveTypesRequest{
 					CompartmentId:          common.String(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
 				if err != nil {
-					log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe sensitive types")
-					return jobpool.JobResult([]any{}), nil
+					return nil, nil, err
 				}
-				items = append(items, resp.Items...)
-				if resp.OpcNextPage == nil {
-					break
-				}
-				page = resp.OpcNextPage
+				return resp.Items, resp.OpcNextPage, nil
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe sensitive types")
+				return jobpool.JobResult([]any{}), nil
 			}
 
 			res := make([]any, 0, len(items))
@@ -515,23 +500,20 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 				return nil, err
 			}
 			compartmentId, subtree := dataSafeFromTenantSubtree(conn.TenantID())
-			items := []datasafe.MaskingPolicySummary{}
-			var page *string
-			for {
-				resp, err := svc.ListMaskingPolicies(context.Background(), datasafe.ListMaskingPoliciesRequest{
+			items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]datasafe.MaskingPolicySummary, *string, error) {
+				resp, err := svc.ListMaskingPolicies(ctx, datasafe.ListMaskingPoliciesRequest{
 					CompartmentId:          common.String(compartmentId),
 					CompartmentIdInSubtree: subtree,
 					Page:                   page,
 				})
 				if err != nil {
-					log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe masking policies")
-					return jobpool.JobResult([]any{}), nil
+					return nil, nil, err
 				}
-				items = append(items, resp.Items...)
-				if resp.OpcNextPage == nil {
-					break
-				}
-				page = resp.OpcNextPage
+				return resp.Items, resp.OpcNextPage, nil
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not list Data Safe masking policies")
+				return jobpool.JobResult([]any{}), nil
 			}
 
 			res := make([]any, 0, len(items))

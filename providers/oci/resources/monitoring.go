@@ -52,9 +52,7 @@ func (o *mqlOciMonitoring) getAlarms(conn *connection.OciConnection, regions []a
 				return nil, err
 			}
 
-			alarms := []monitoring.AlarmSummary{}
-			var page *string
-			for {
+			alarms, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]monitoring.AlarmSummary, *string, error) {
 				response, err := svc.ListAlarms(ctx, monitoring.ListAlarmsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					// Alarms are normally created in a workload compartment,
@@ -63,15 +61,12 @@ func (o *mqlOciMonitoring) getAlarms(conn *connection.OciConnection, regions []a
 					Page:                   page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				alarms = append(alarms, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any

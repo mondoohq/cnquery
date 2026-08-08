@@ -59,21 +59,18 @@ func (o *mqlOciApigateway) getGateways(conn *connection.OciConnection, regions [
 				return nil, err
 			}
 
-			var items []apigateway.GatewaySummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apigateway.GatewaySummary, *string, error) {
 				response, err := svc.ListGateways(ctx, apigateway.ListGatewaysRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -303,21 +300,18 @@ func (o *mqlOciApigateway) getDeployments(conn *connection.OciConnection, region
 				return nil, err
 			}
 
-			var items []apigateway.DeploymentSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apigateway.DeploymentSummary, *string, error) {
 				response, err := svc.ListDeployments(ctx, apigateway.ListDeploymentsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))
@@ -714,21 +708,18 @@ func (o *mqlOciApigateway) getCertificates(conn *connection.OciConnection, regio
 				return nil, err
 			}
 
-			var items []apigateway.CertificateSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]apigateway.CertificateSummary, *string, error) {
 				response, err := svc.ListCertificates(ctx, apigateway.ListCertificatesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				items = append(items, response.Items...)
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			res := make([]any, 0, len(items))

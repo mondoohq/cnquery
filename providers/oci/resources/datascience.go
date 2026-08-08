@@ -69,21 +69,18 @@ func (o *mqlOciAiDataScience) projects() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchProjects(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.ProjectSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ProjectSummary, *string, error) {
 		resp, err := svc.ListProjects(ctx, datascience.ListProjectsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -128,21 +125,18 @@ func (o *mqlOciAiDataScience) notebookSessions() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchNotebookSessions(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.NotebookSessionSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.NotebookSessionSummary, *string, error) {
 		resp, err := svc.ListNotebookSessions(ctx, datascience.ListNotebookSessionsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -233,21 +227,18 @@ func (o *mqlOciAiDataScience) models() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchModels(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.ModelSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ModelSummary, *string, error) {
 		resp, err := svc.ListModels(ctx, datascience.ListModelsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -325,21 +316,18 @@ func (o *mqlOciAiDataScience) modelVersionSets() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchModelVersionSets(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.ModelVersionSetSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ModelVersionSetSummary, *string, error) {
 		resp, err := svc.ListModelVersionSets(ctx, datascience.ListModelVersionSetsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -396,21 +384,18 @@ func (o *mqlOciAiDataScience) modelDeployments() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchModelDeployments(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.ModelDeploymentSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.ModelDeploymentSummary, *string, error) {
 		resp, err := svc.ListModelDeployments(ctx, datascience.ListModelDeploymentsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -479,21 +464,18 @@ func (o *mqlOciAiDataScience) jobs() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchJobs(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.JobSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.JobSummary, *string, error) {
 		resp, err := svc.ListJobs(ctx, datascience.ListJobsRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))
@@ -548,21 +530,18 @@ func (o *mqlOciAiDataScience) pipelines() ([]any, error) {
 
 func (o *mqlOciAiDataScience) fetchPipelines(svc *datascience.DataScienceClient) ([]any, error) {
 	ctx := context.Background()
-	var items []datascience.PipelineSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]datascience.PipelineSummary, *string, error) {
 		resp, err := svc.ListPipelines(ctx, datascience.ListPipelinesRequest{
 			CompartmentId: common.String(o.compartmentID()),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		items = append(items, resp.Items...)
-		if resp.OpcNextPage == nil {
-			break
-		}
-		page = resp.OpcNextPage
+		return resp.Items, resp.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))

@@ -40,9 +40,7 @@ func (o *mqlOciLogging) logGroups() ([]any, error) {
 }
 
 func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *logging.LoggingManagementClient, compartmentID string) ([]logging.LogGroupSummary, error) {
-	entries := []logging.LogGroupSummary{}
-	var page *string
-	for {
+	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]logging.LogGroupSummary, *string, error) {
 		request := logging.ListLogGroupsRequest{
 			CompartmentId:            common.String(compartmentID),
 			IsCompartmentIdInSubtree: common.Bool(true),
@@ -51,15 +49,12 @@ func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *loggi
 
 		response, err := client.ListLogGroups(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		entries = append(entries, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return entries, nil
@@ -219,9 +214,7 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 }
 
 func (o *mqlOciLoggingLogGroup) getLogsForGroup(ctx context.Context, client *logging.LoggingManagementClient, logGroupId string) ([]logging.LogSummary, error) {
-	entries := []logging.LogSummary{}
-	var page *string
-	for {
+	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]logging.LogSummary, *string, error) {
 		request := logging.ListLogsRequest{
 			LogGroupId: common.String(logGroupId),
 			Page:       page,
@@ -229,15 +222,12 @@ func (o *mqlOciLoggingLogGroup) getLogsForGroup(ctx context.Context, client *log
 
 		response, err := client.ListLogs(ctx, request)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		entries = append(entries, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return entries, nil

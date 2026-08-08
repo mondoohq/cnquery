@@ -90,9 +90,7 @@ func (o *mqlOciAudit) events() ([]any, error) {
 				return nil, err
 			}
 
-			events := []audit.AuditEvent{}
-			var page *string
-			for {
+			events, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]audit.AuditEvent, *string, error) {
 				response, err := client.ListEvents(ctx, audit.ListEventsRequest{
 					CompartmentId: common.String(compartmentID),
 					StartTime:     &common.SDKTime{Time: startTime},
@@ -100,15 +98,12 @@ func (o *mqlOciAudit) events() ([]any, error) {
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				events = append(events, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			return o.newAuditEvents(events)

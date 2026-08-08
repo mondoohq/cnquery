@@ -97,23 +97,18 @@ func (o *mqlOciContainerInstances) getContainerInstances(conn *connection.OciCon
 				return nil, err
 			}
 
-			var items []containerinstances.ContainerInstanceSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerinstances.ContainerInstanceSummary, *string, error) {
 				response, err := svc.ListContainerInstances(ctx, containerinstances.ListContainerInstancesRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				items = append(items, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -194,24 +189,19 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 		return nil, err
 	}
 
-	var items []containerinstances.ContainerSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerinstances.ContainerSummary, *string, error) {
 		response, err := svc.ListContainers(ctx, containerinstances.ListContainersRequest{
 			CompartmentId:       common.String(o.CompartmentID.Data),
 			ContainerInstanceId: common.String(o.Id.Data),
 			Page:                page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		items = append(items, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))

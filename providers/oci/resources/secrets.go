@@ -49,23 +49,18 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 				return nil, err
 			}
 
-			secrets := []vault.SecretSummary{}
-			var page *string
-			for {
+			secrets, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]vault.SecretSummary, *string, error) {
 				response, err := svc.ListSecrets(ctx, vault.ListSecretsRequest{
 					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				secrets = append(secrets, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -241,23 +236,18 @@ func (o *mqlOciVaultSecret) secretVersions() ([]any, error) {
 		return nil, err
 	}
 
-	versions := []vault.SecretVersionSummary{}
-	var page *string
-	for {
+	versions, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]vault.SecretVersionSummary, *string, error) {
 		response, err := svc.ListSecretVersions(ctx, vault.ListSecretVersionsRequest{
 			SecretId: common.String(o.Id.Data),
 			Page:     page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		versions = append(versions, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(versions))

@@ -56,23 +56,18 @@ func (o *mqlOciFunctions) getApplications(conn *connection.OciConnection, region
 				return nil, err
 			}
 
-			var items []functions.ApplicationSummary
-			var page *string
-			for {
+			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]functions.ApplicationSummary, *string, error) {
 				response, err := svc.ListApplications(ctx, functions.ListApplicationsRequest{
 					CompartmentId: common.String(conn.TenantID()),
 					Page:          page,
 				})
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-
-				items = append(items, response.Items...)
-
-				if response.OpcNextPage == nil {
-					break
-				}
-				page = response.OpcNextPage
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
 			}
 
 			var res []any
@@ -243,23 +238,18 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 		return nil, err
 	}
 
-	var items []functions.FunctionSummary
-	var page *string
-	for {
+	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]functions.FunctionSummary, *string, error) {
 		response, err := svc.ListFunctions(ctx, functions.ListFunctionsRequest{
 			ApplicationId: common.String(o.Id.Data),
 			Page:          page,
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
-		items = append(items, response.Items...)
-
-		if response.OpcNextPage == nil {
-			break
-		}
-		page = response.OpcNextPage
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := make([]any, 0, len(items))

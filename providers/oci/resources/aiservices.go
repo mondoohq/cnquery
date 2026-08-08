@@ -99,20 +99,17 @@ func (o *mqlOciAiLanguage) id() (string, error) { return "oci.ai.language", nil 
 func (o *mqlOciAiLanguage) projects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AILanguageClient, func(svc *ailanguage.AIServiceLanguageClient) ([]any, error) {
-		var items []ailanguage.ProjectSummary
-		var page *string
-		for {
-			resp, err := svc.ListProjects(context.Background(), ailanguage.ListProjectsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]ailanguage.ProjectSummary, *string, error) {
+			resp, err := svc.ListProjects(ctx, ailanguage.ListProjectsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -140,20 +137,17 @@ func (o *mqlOciAiLanguage) projects() ([]any, error) {
 func (o *mqlOciAiLanguage) models() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AILanguageClient, func(svc *ailanguage.AIServiceLanguageClient) ([]any, error) {
-		var items []ailanguage.ModelSummary
-		var page *string
-		for {
-			resp, err := svc.ListModels(context.Background(), ailanguage.ListModelsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]ailanguage.ModelSummary, *string, error) {
+			resp, err := svc.ListModels(ctx, ailanguage.ListModelsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -189,20 +183,17 @@ func (o *mqlOciAiLanguage) models() ([]any, error) {
 func (o *mqlOciAiLanguage) endpoints() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AILanguageClient, func(svc *ailanguage.AIServiceLanguageClient) ([]any, error) {
-		var items []ailanguage.EndpointSummary
-		var page *string
-		for {
-			resp, err := svc.ListEndpoints(context.Background(), ailanguage.ListEndpointsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]ailanguage.EndpointSummary, *string, error) {
+			resp, err := svc.ListEndpoints(ctx, ailanguage.ListEndpointsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -317,20 +308,17 @@ func (o *mqlOciAiVision) id() (string, error) { return "oci.ai.vision", nil }
 func (o *mqlOciAiVision) projects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AIVisionClient, func(svc *aivision.AIServiceVisionClient) ([]any, error) {
-		var items []aivision.ProjectSummary
-		var page *string
-		for {
-			resp, err := svc.ListProjects(context.Background(), aivision.ListProjectsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]aivision.ProjectSummary, *string, error) {
+			resp, err := svc.ListProjects(ctx, aivision.ListProjectsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -357,20 +345,17 @@ func (o *mqlOciAiVision) projects() ([]any, error) {
 func (o *mqlOciAiVision) models() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AIVisionClient, func(svc *aivision.AIServiceVisionClient) ([]any, error) {
-		var items []aivision.ModelSummary
-		var page *string
-		for {
-			resp, err := svc.ListModels(context.Background(), aivision.ListModelsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]aivision.ModelSummary, *string, error) {
+			resp, err := svc.ListModels(ctx, aivision.ListModelsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -448,20 +433,17 @@ func (o *mqlOciAiSpeech) id() (string, error) { return "oci.ai.speech", nil }
 func (o *mqlOciAiSpeech) customizations() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AISpeechClient, func(svc *aispeech.AIServiceSpeechClient) ([]any, error) {
-		var items []aispeech.CustomizationSummary
-		var page *string
-		for {
-			resp, err := svc.ListCustomizations(context.Background(), aispeech.ListCustomizationsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]aispeech.CustomizationSummary, *string, error) {
+			resp, err := svc.ListCustomizations(ctx, aispeech.ListCustomizationsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -507,20 +489,17 @@ func (o *mqlOciAiDocument) id() (string, error) { return "oci.ai.document", nil 
 func (o *mqlOciAiDocument) projects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AIDocumentClient, func(svc *aidocument.AIServiceDocumentClient) ([]any, error) {
-		var items []aidocument.ProjectSummary
-		var page *string
-		for {
-			resp, err := svc.ListProjects(context.Background(), aidocument.ListProjectsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]aidocument.ProjectSummary, *string, error) {
+			resp, err := svc.ListProjects(ctx, aidocument.ListProjectsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
@@ -548,20 +527,17 @@ func (o *mqlOciAiDocument) projects() ([]any, error) {
 func (o *mqlOciAiDocument) models() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	return ociListRegionalAIClient(o.MqlRuntime, conn.AIDocumentClient, func(svc *aidocument.AIServiceDocumentClient) ([]any, error) {
-		var items []aidocument.ModelSummary
-		var page *string
-		for {
-			resp, err := svc.ListModels(context.Background(), aidocument.ListModelsRequest{
+		items, err := ociPaginate(context.Background(), func(ctx context.Context, page *string) ([]aidocument.ModelSummary, *string, error) {
+			resp, err := svc.ListModels(ctx, aidocument.ListModelsRequest{
 				CompartmentId: common.String(conn.TenantID()), Page: page,
 			})
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			items = append(items, resp.Items...)
-			if resp.OpcNextPage == nil {
-				break
-			}
-			page = resp.OpcNextPage
+			return resp.Items, resp.OpcNextPage, nil
+		})
+		if err != nil {
+			return nil, err
 		}
 		res := make([]any, 0, len(items))
 		for i := range items {
