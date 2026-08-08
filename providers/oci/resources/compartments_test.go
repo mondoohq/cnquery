@@ -157,7 +157,7 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 	}
 
 	t.Run("all compartments succeed", func(t *testing.T) {
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok("a"), ok("b", "c")})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{ok("a"), ok("b", "c")}, ociScopeAllCompartments.concurrency())
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []any{"a", "b", "c"}, res)
 	})
@@ -165,7 +165,7 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 	t.Run("a denied compartment does not discard the readable ones", func(t *testing.T) {
 		// The whole point of the fan-out: a scanning principal with read on
 		// some compartments is correctly configured, not broken.
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok("a"), denied(), ok("b")})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{ok("a"), denied(), ok("b")}, ociScopeAllCompartments.concurrency())
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []any{"a", "b"}, res)
 	})
@@ -173,7 +173,7 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 	t.Run("every compartment denied is an error, not an empty tenancy", func(t *testing.T) {
 		// The failure this guard exists for: an under-scoped token must not
 		// render as a clean scan of a tenancy with nothing in it.
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{denied(), denied()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{denied(), denied()}, ociScopeAllCompartments.concurrency())
 		require.Error(t, err)
 		assert.Nil(t, res)
 		assert.Contains(t, err.Error(), "NotAuthorizedOrNotFound")
@@ -185,14 +185,14 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 		// regional endpoint made an under-scoped token return a clean, empty
 		// scan of the whole tenancy - the exact outcome the denied counter
 		// exists to prevent.
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{denied404(), denied404()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{denied404(), denied404()}, ociScopeAllCompartments.concurrency())
 		require.Error(t, err)
 		assert.Nil(t, res)
 		assert.Contains(t, err.Error(), "NotAuthorizedOrNotFound")
 	})
 
 	t.Run("a 404-denied compartment does not discard the readable ones", func(t *testing.T) {
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok("a"), denied404(), ok("b")})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{ok("a"), denied404(), ok("b")}, ociScopeAllCompartments.concurrency())
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []any{"a", "b"}, res)
 	})
@@ -201,14 +201,14 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 		// The two 404s differ only by code. The denial still has to win, or a
 		// single undeployed region would push a broken token back onto the
 		// success path.
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{unavailable(), denied404()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{unavailable(), denied404()}, ociScopeAllCompartments.concurrency())
 		require.Error(t, err)
 		assert.Nil(t, res)
 	})
 
 	t.Run("a readable but empty compartment counts as success", func(t *testing.T) {
 		// Distinguishes "read everything, found nothing" from "could not read".
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok(), denied()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{ok(), denied()}, ociScopeAllCompartments.concurrency())
 		require.NoError(t, err)
 		assert.Empty(t, res)
 	})
@@ -216,32 +216,32 @@ func TestOciCollectCompartmentJobs(t *testing.T) {
 	t.Run("an unavailable region is skipped without counting as denied", func(t *testing.T) {
 		// A service with no endpoint in a region is an expected absence, so it
 		// must not push an otherwise all-denied run into the success path.
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{unavailable(), denied()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{unavailable(), denied()}, ociScopeAllCompartments.concurrency())
 		require.Error(t, err)
 		assert.Nil(t, res)
 	})
 
 	t.Run("every region unavailable is an empty result, not an error", func(t *testing.T) {
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{unavailable(), unavailable()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{unavailable(), unavailable()}, ociScopeAllCompartments.concurrency())
 		require.NoError(t, err)
 		assert.Empty(t, res)
 	})
 
 	t.Run("a throttled compartment is reported", func(t *testing.T) {
 		// Silently dropping a 429 would under-report resources that exist.
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok("a"), throttled()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{ok("a"), throttled()}, ociScopeAllCompartments.concurrency())
 		require.Error(t, err)
 		assert.Nil(t, res)
 	})
 
 	t.Run("a hard error wins over partial success", func(t *testing.T) {
-		res, err := ociCollectCompartmentJobs([]*jobpool.Job{ok("a"), denied(), throttled()})
+		res, err := ociJoinCompartmentJobs([]*jobpool.Job{ok("a"), denied(), throttled()}, ociScopeAllCompartments.concurrency())
 		require.Error(t, err)
 		assert.Nil(t, res)
 	})
 
 	t.Run("no jobs", func(t *testing.T) {
-		res, err := ociCollectCompartmentJobs(nil)
+		res, err := ociJoinCompartmentJobs(nil, ociScopeAllCompartments.concurrency())
 		require.NoError(t, err)
 		assert.Empty(t, res)
 	})

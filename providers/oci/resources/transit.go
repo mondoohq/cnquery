@@ -14,24 +14,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
-
-// regionResources returns the tenancy's subscribed regions as []*mqlOciRegion
-// wrapped in []any, ready to hand to a jobpool fan-out.
-func (o *mqlOciNetwork) regionResources() ([]any, error) {
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	list := ociResource.(*mqlOci).GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-	return list.Data, nil
-}
 
 // Dynamic Routing Gateways
 
@@ -41,23 +26,9 @@ type mqlOciNetworkDrgInternal struct {
 
 func (o *mqlOciNetwork) drgs() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getDrgs(conn, regions))
-}
-
-func (o *mqlOciNetwork) getDrgs(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci DRGs with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -67,7 +38,7 @@ func (o *mqlOciNetwork) getDrgs(conn *connection.OciConnection, regions []any) [
 
 			drgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.Drg, *string, error) {
 				response, err := svc.ListDrgs(ctx, core.ListDrgsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -105,11 +76,8 @@ func (o *mqlOciNetwork) getDrgs(conn *connection.OciConnection, regions []any) [
 				res = append(res, mqlDrg)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func initOciNetworkDrg(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -418,23 +386,9 @@ type mqlOciNetworkLocalPeeringGatewayInternal struct {
 
 func (o *mqlOciNetwork) localPeeringGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getLocalPeeringGateways(conn, regions))
-}
-
-func (o *mqlOciNetwork) getLocalPeeringGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci local peering gateways with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -444,7 +398,7 @@ func (o *mqlOciNetwork) getLocalPeeringGateways(conn *connection.OciConnection, 
 
 			lpgs, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.LocalPeeringGateway, *string, error) {
 				response, err := svc.ListLocalPeeringGateways(ctx, core.ListLocalPeeringGatewaysRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -487,11 +441,8 @@ func (o *mqlOciNetwork) getLocalPeeringGateways(conn *connection.OciConnection, 
 				res = append(res, mqlLpg)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func initOciNetworkLocalPeeringGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -584,23 +535,9 @@ type mqlOciNetworkServiceGatewayInternal struct {
 
 func (o *mqlOciNetwork) serviceGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := o.regionResources()
-	if err != nil {
-		return nil, err
-	}
-	return ociRunRegionPool(o.getServiceGateways(conn, regions))
-}
-
-func (o *mqlOciNetwork) getServiceGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			regionKey := regionResource.Id.Data
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			regionKey := region
 			log.Debug().Msgf("calling oci service gateways with region %s", regionKey)
 
 			svc, err := conn.NetworkClient(regionKey)
@@ -610,7 +547,7 @@ func (o *mqlOciNetwork) getServiceGateways(conn *connection.OciConnection, regio
 
 			sgws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.ServiceGateway, *string, error) {
 				response, err := svc.ListServiceGateways(ctx, core.ListServiceGatewaysRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -657,11 +594,8 @@ func (o *mqlOciNetwork) getServiceGateways(conn *connection.OciConnection, regio
 				res = append(res, mqlSgw)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func initOciNetworkServiceGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

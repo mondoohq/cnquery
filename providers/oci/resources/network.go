@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -28,22 +27,12 @@ func (o *mqlOciNetwork) id() (string, error) {
 func (o *mqlOciNetwork) vcns() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// ListVcns takes one compartment and has no subtree flag, so asking only for
 	// the tenancy root returned an empty VCN list for anyone who keeps their
 	// networking in a child compartment. Walking the compartment tree is what
 	// makes the whole network graph, subnets and route tables and gateways
 	// included, hang off something that actually exists.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci with region %s", region)
 
@@ -160,22 +149,12 @@ func (o *mqlOciNetworkVcn) id() (string, error) {
 func (o *mqlOciNetwork) securityLists() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Security lists live in the same compartment as the VCN they protect, and
 	// ListSecurityLists cannot search below the compartment it is given. Scanning
 	// only the tenancy root therefore reported a tenancy with no ingress rules
 	// anywhere, which reads as "nothing is exposed" when the truth is that
 	// nothing was looked at.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci with region %s", region)
 
@@ -465,22 +444,12 @@ func anyRuleStateless(rules []any, key string) bool {
 func (o *mqlOciNetwork) subnets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Fanned out over the compartment tree, not just the tenancy root. The core
 	// list APIs have no subtree flag, so listing the root alone reported no
 	// subnets at all for any tenancy that groups its networking into child
 	// compartments - and left every typed reference to a subnet (load balancer
 	// exposure, database placement, stream pool networking) unable to resolve.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci subnets with region %s", region)
 
@@ -609,22 +578,12 @@ func (o *mqlOciNetworkSubnet) vcn() (*mqlOciNetworkVcn, error) {
 func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Network security groups are attached to VNICs that almost never live in the
 	// tenancy root, and ListNetworkSecurityGroups takes a single compartment with
 	// no way to descend. Enumerating per compartment is what lets an instance's
 	// nsgs resolve at all, instead of coming back empty and making every host
 	// look unprotected.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci NSGs with region %s", region)
 
@@ -1059,38 +1018,18 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci internet gateways with region %s", region)
 
-	return ociRunRegionPool(o.getInternetGateways(conn, list.Data))
-}
-
-func (o *mqlOciNetwork) getInternetGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci internet gateways with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			igws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.InternetGateway, *string, error) {
 				response, err := svc.ListInternetGateways(ctx, core.ListInternetGatewaysRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1139,11 +1078,8 @@ func (o *mqlOciNetwork) getInternetGateways(conn *connection.OciConnection, regi
 				res = append(res, mqlIgw)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciNetworkInternetGatewayInternal struct {
@@ -1173,38 +1109,18 @@ func (o *mqlOciNetworkInternetGateway) vcn() (*mqlOciNetworkVcn, error) {
 func (o *mqlOciNetwork) natGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci NAT gateways with region %s", region)
 
-	return ociRunRegionPool(o.getNatGateways(conn, list.Data))
-}
-
-func (o *mqlOciNetwork) getNatGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci NAT gateways with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			natGws, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.NatGateway, *string, error) {
 				response, err := svc.ListNatGateways(ctx, core.ListNatGatewaysRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -1254,11 +1170,8 @@ func (o *mqlOciNetwork) getNatGateways(conn *connection.OciConnection, regions [
 				res = append(res, mqlNgw)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciNetworkNatGatewayInternal struct {
@@ -1302,22 +1215,12 @@ type routeRule struct {
 func (o *mqlOciNetwork) routeTables() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// A route table is created alongside the VCN it belongs to, so a tenancy that
 	// puts its VCNs in child compartments has no route tables in the root at all.
 	// ListRouteTables offers no subtree search, so the fan-out below is the only
 	// way a subnet's routeTable reference finds its target and egress paths stay
 	// auditable.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci route tables with region %s", region)
 
@@ -1469,31 +1372,11 @@ func (o *mqlOciNetworkSubnet) routeTable() (*mqlOciNetworkRouteTable, error) {
 func (o *mqlOciNetwork) publicIps() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci public ips with region %s", region)
 
-	return ociRunRegionPool(o.getPublicIps(conn, list.Data))
-}
-
-func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci public ips with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			svc, err := conn.NetworkClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -1510,7 +1393,7 @@ func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []a
 				perLifetime, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
 					response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
 						Scope:         core.ListPublicIpsScopeRegion,
-						CompartmentId: common.String(conn.TenantID()),
+						CompartmentId: common.String(compartmentID),
 						Lifetime:      lifetime,
 						Page:          page,
 					})
@@ -1553,11 +1436,8 @@ func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []a
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 func (o *mqlOciNetworkPublicIp) id() (string, error) {

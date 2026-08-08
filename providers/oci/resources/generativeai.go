@@ -30,7 +30,7 @@ func (o *mqlOciAiGenerativeAi) compartmentID() string {
 // not available are skipped (see ociRegionServiceUnavailable).
 func (o *mqlOciAiGenerativeAi) listRegional(fetch func(svc *generativeai.GenerativeAiClient, region string) ([]any, error)) ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := ociAgentRegions(o.MqlRuntime)
+	regions, err := ociRegionsFor(o.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}

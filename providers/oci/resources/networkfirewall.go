@@ -15,7 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -27,38 +26,18 @@ func (o *mqlOciNetworkFirewall) id() (string, error) {
 func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci network firewall with region %s", region)
 
-	return ociRunRegionPool(o.getFirewalls(conn, list.Data))
-}
-
-func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci network firewall with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkFirewallClient(regionResource.Id.Data)
+			svc, err := conn.NetworkFirewallClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			firewalls, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NetworkFirewallSummary, *string, error) {
 				response, err := svc.ListNetworkFirewalls(ctx, networkfirewall.ListNetworkFirewallsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -102,15 +81,12 @@ func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, reg
 				mqlFw := mqlInstance.(*mqlOciNetworkFirewallFirewall)
 				mqlFw.cacheSubnetId = stringValue(fw.SubnetId)
 				mqlFw.cachePolicyId = stringValue(fw.NetworkFirewallPolicyId)
-				mqlFw.region = regionResource.Id.Data
+				mqlFw.region = region
 				res = append(res, mqlFw)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciNetworkFirewallFirewallInternal struct {
@@ -169,38 +145,18 @@ func (o *mqlOciNetworkFirewallFirewall) policy() (*mqlOciNetworkFirewallPolicy, 
 func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci network firewall policies with region %s", region)
 
-	return ociRunRegionPool(o.getPolicies(conn, list.Data))
-}
-
-func (o *mqlOciNetworkFirewall) getPolicies(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci network firewall policies with region %s", regionResource.Id.Data)
-
-			svc, err := conn.NetworkFirewallClient(regionResource.Id.Data)
+			svc, err := conn.NetworkFirewallClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			policies, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]networkfirewall.NetworkFirewallPolicySummary, *string, error) {
 				response, err := svc.ListNetworkFirewallPolicies(ctx, networkfirewall.ListNetworkFirewallPoliciesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -232,15 +188,12 @@ func (o *mqlOciNetworkFirewall) getPolicies(conn *connection.OciConnection, regi
 				if err != nil {
 					return nil, err
 				}
-				mqlInstance.(*mqlOciNetworkFirewallPolicy).region = regionResource.Id.Data
+				mqlInstance.(*mqlOciNetworkFirewallPolicy).region = region
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciNetworkFirewallPolicyInternal struct {

@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
@@ -25,51 +23,11 @@ func (o *mqlOciEvents) id() (string, error) {
 func (o *mqlOciEvents) rules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci with region %s", region)
 
-	return ociRunRegionPool(o.getEventRules(conn, list.Data))
-}
-
-func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *events.EventsClient, compartmentID string) ([]events.RuleSummary, error) {
-	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]events.RuleSummary, *string, error) {
-		request := events.ListRulesRequest{
-			CompartmentId: common.String(compartmentID),
-			Page:          page,
-		}
-
-		response, err := client.ListRules(ctx, request)
-		if err != nil {
-			return nil, nil, err
-		}
-		return response.Items, response.OpcNextPage, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return rules, nil
-}
-
-func (o *mqlOciEvents) getEventRules(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
-
-			svc, err := conn.EventsClient(regionResource.Id.Data)
+			svc, err := conn.EventsClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -103,16 +61,33 @@ func (o *mqlOciEvents) getEventRules(conn *connection.OciConnection, regions []a
 				}
 
 				mqlRule := mqlInstance.(*mqlOciEventsRule)
-				mqlRule.region = regionResource.Id.Data
+				mqlRule.region = region
 
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *events.EventsClient, compartmentID string) ([]events.RuleSummary, error) {
+	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]events.RuleSummary, *string, error) {
+		request := events.ListRulesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := client.ListRules(ctx, request)
+		if err != nil {
+			return nil, nil, err
+		}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+
+	return rules, nil
 }
 
 type mqlOciEventsRuleInternal struct {

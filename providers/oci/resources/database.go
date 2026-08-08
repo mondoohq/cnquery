@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -14,7 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -28,38 +26,18 @@ func (o *mqlOciDatabase) id() (string, error) {
 func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci DB systems with region %s", region)
 
-	return ociRunRegionPool(o.getDbSystems(conn, list.Data))
-}
-
-func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci DB systems with region %s", regionResource.Id.Data)
-
-			svc, err := conn.DatabaseClient(regionResource.Id.Data)
+			svc, err := conn.DatabaseClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.DbSystemSummary, *string, error) {
 				response, err := svc.ListDbSystems(ctx, database.ListDbSystemsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -124,11 +102,8 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 				res = append(res, mqlDb)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
@@ -174,38 +149,18 @@ func (o *mqlOciDatabaseDbSystem) subnet() (*mqlOciNetworkSubnet, error) {
 func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci autonomous databases with region %s", region)
 
-	return ociRunRegionPool(o.getAutonomousDatabases(conn, list.Data))
-}
-
-func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci autonomous databases with region %s", regionResource.Id.Data)
-
-			svc, err := conn.DatabaseClient(regionResource.Id.Data)
+			svc, err := conn.DatabaseClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.AutonomousDatabaseSummary, *string, error) {
 				response, err := svc.ListAutonomousDatabases(ctx, database.ListAutonomousDatabasesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -299,11 +254,8 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 				res = append(res, mqlAdb)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciDatabaseAutonomousDatabaseInternal struct {
@@ -364,38 +316,18 @@ func (o *mqlOciDatabaseAutonomousDatabase) subnet() (*mqlOciNetworkSubnet, error
 func (o *mqlOciDatabase) backups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci database backups with region %s", region)
 
-	return ociRunRegionPool(o.getDatabaseBackups(conn, list.Data))
-}
-
-func (o *mqlOciDatabase) getDatabaseBackups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci database backups with region %s", regionResource.Id.Data)
-
-			svc, err := conn.DatabaseClient(regionResource.Id.Data)
+			svc, err := conn.DatabaseClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.BackupSummary, *string, error) {
 				response, err := svc.ListBackups(ctx, database.ListBackupsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -456,11 +388,8 @@ func (o *mqlOciDatabase) getDatabaseBackups(conn *connection.OciConnection, regi
 				res = append(res, mqlBackup)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciDatabaseBackupInternal struct {
@@ -505,63 +434,18 @@ func (o *mqlOciDatabaseBackup) kmsVault() (*mqlOciKmsVault, error) {
 func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci autonomous database backups with region %s", region)
 
-	return ociRunRegionPool(o.getAutonomousDatabaseBackups(conn, list.Data))
-}
-
-// backups on an individual autonomous database returns its backups by
-// filtering the service-wide listing. We rely on the tenancy-wide listing
-// being cached and filter client-side, which avoids fanning out region calls
-// per-database when the parent list is already fetched.
-func (o *mqlOciDatabaseAutonomousDatabase) backups() ([]any, error) {
-	dbObj, err := CreateResource(o.MqlRuntime, "oci.database", nil)
-	if err != nil {
-		return nil, err
-	}
-	db := dbObj.(*mqlOciDatabase)
-	raw := db.GetAutonomousDatabaseBackups()
-	if raw.Error != nil {
-		return nil, raw.Error
-	}
-	dbID := o.Id.Data
-	res := []any{}
-	for _, r := range raw.Data {
-		b := r.(*mqlOciDatabaseAutonomousDatabaseBackup)
-		if b.cacheAutonomousDatabaseId == dbID {
-			res = append(res, b)
-		}
-	}
-	return res, nil
-}
-
-func (o *mqlOciDatabase) getAutonomousDatabaseBackups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci autonomous database backups with region %s", regionResource.Id.Data)
-
-			svc, err := conn.DatabaseClient(regionResource.Id.Data)
+			svc, err := conn.DatabaseClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]database.AutonomousDatabaseBackupSummary, *string, error) {
 				response, err := svc.ListAutonomousDatabaseBackups(ctx, database.ListAutonomousDatabaseBackupsRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -623,11 +507,33 @@ func (o *mqlOciDatabase) getAutonomousDatabaseBackups(conn *connection.OciConnec
 				res = append(res, mqlBackup)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
+			return res, nil
+		})
+}
+
+// backups on an individual autonomous database returns its backups by
+// filtering the service-wide listing. We rely on the tenancy-wide listing
+// being cached and filter client-side, which avoids fanning out region calls
+// per-database when the parent list is already fetched.
+func (o *mqlOciDatabaseAutonomousDatabase) backups() ([]any, error) {
+	dbObj, err := CreateResource(o.MqlRuntime, "oci.database", nil)
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+	db := dbObj.(*mqlOciDatabase)
+	raw := db.GetAutonomousDatabaseBackups()
+	if raw.Error != nil {
+		return nil, raw.Error
+	}
+	dbID := o.Id.Data
+	res := []any{}
+	for _, r := range raw.Data {
+		b := r.(*mqlOciDatabaseAutonomousDatabaseBackup)
+		if b.cacheAutonomousDatabaseId == dbID {
+			res = append(res, b)
+		}
+	}
+	return res, nil
 }
 
 type mqlOciDatabaseAutonomousDatabaseBackupInternal struct {

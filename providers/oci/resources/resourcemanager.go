@@ -27,12 +27,7 @@ func (o *mqlOciResourceManager) id() (string, error) {
 func (o *mqlOciResourceManager) stacks() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.ResourceManagerClient(region)
 			if err != nil {

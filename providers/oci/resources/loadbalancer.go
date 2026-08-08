@@ -25,22 +25,12 @@ func (o *mqlOciLoadBalancer) id() (string, error) {
 func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Load balancers belong to the compartment of the application they front, and
 	// ListLoadBalancers has no subtree flag. Scanning only the tenancy root meant
 	// the exposure surface an internet-facing balancer represents, along with its
 	// listener TLS settings and backend sets, never appeared in the inventory at
 	// all.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci load balancer with region %s", region)
 

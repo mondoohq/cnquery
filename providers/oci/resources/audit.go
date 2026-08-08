@@ -65,15 +65,6 @@ func (o *mqlOciAudit) retentionPeriodDays() (int64, error) {
 func (o *mqlOciAudit) events() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	regions := ociResource.(*mqlOci).GetRegions()
-	if regions.Error != nil {
-		return nil, regions.Error
-	}
-
 	// Audit events are recorded per region and per compartment, and the API
 	// offers no subtree flag, so both dimensions have to be walked.
 	// Truncated to the minute because the Audit API requires it: both bounds
@@ -83,7 +74,7 @@ func (o *mqlOciAudit) events() ([]any, error) {
 	endTime := time.Now().UTC().Truncate(time.Minute)
 	startTime := endTime.Add(-ociAuditEventWindow)
 
-	return ociRunCompartmentRegionPool(conn, regions.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.AuditClient(region)
 			if err != nil {

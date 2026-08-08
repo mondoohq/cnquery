@@ -44,12 +44,7 @@ func (o *mqlOciMysql) id() (string, error) {
 func (o *mqlOciMysql) dbSystems() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.MysqlDbSystemClient(region)
 			if err != nil {
@@ -271,12 +266,7 @@ func (o *mqlOciPostgresql) id() (string, error) {
 func (o *mqlOciPostgresql) dbSystems() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.PostgresqlClient(region)
 			if err != nil {
@@ -486,12 +476,7 @@ func (o *mqlOciNosql) id() (string, error) {
 func (o *mqlOciNosql) tables() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.NosqlClient(region)
 			if err != nil {
@@ -572,12 +557,7 @@ func (o *mqlOciOpensearch) id() (string, error) {
 func (o *mqlOciOpensearch) clusters() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.OpensearchClusterClient(region)
 			if err != nil {
@@ -776,12 +756,7 @@ func (o *mqlOciGoldenGate) id() (string, error) {
 func (o *mqlOciGoldenGate) deployments() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	regions, err := ociRegionsFor(o.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	return ociRunCompartmentRegionPool(conn, regions,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			client, err := conn.GoldenGateClient(region)
 			if err != nil {

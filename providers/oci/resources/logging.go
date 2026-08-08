@@ -14,7 +14,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -26,52 +25,11 @@ func (o *mqlOciLogging) id() (string, error) {
 func (o *mqlOciLogging) logGroups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci logging with region %s", region)
 
-	return ociRunRegionPool(o.getLogGroups(conn, list.Data))
-}
-
-func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *logging.LoggingManagementClient, compartmentID string) ([]logging.LogGroupSummary, error) {
-	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]logging.LogGroupSummary, *string, error) {
-		request := logging.ListLogGroupsRequest{
-			CompartmentId:            common.String(compartmentID),
-			IsCompartmentIdInSubtree: common.Bool(true),
-			Page:                     page,
-		}
-
-		response, err := client.ListLogGroups(ctx, request)
-		if err != nil {
-			return nil, nil, err
-		}
-		return response.Items, response.OpcNextPage, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return entries, nil
-}
-
-func (o *mqlOciLogging) getLogGroups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci logging with region %s", regionResource.Id.Data)
-
-			svc, err := conn.LoggingClient(regionResource.Id.Data)
+			svc, err := conn.LoggingClient(region)
 			if err != nil {
 				return nil, err
 			}
@@ -103,15 +61,33 @@ func (o *mqlOciLogging) getLogGroups(conn *connection.OciConnection, regions []a
 					return nil, err
 				}
 				// Store the region internally so logs() knows which region to query
-				mqlInstance.(*mqlOciLoggingLogGroup).region = regionResource.Id.Data
+				mqlInstance.(*mqlOciLoggingLogGroup).region = region
 				res = append(res, mqlInstance)
 			}
 
-			return jobpool.JobResult(res), nil
+			return res, nil
+		})
+}
+
+func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *logging.LoggingManagementClient, compartmentID string) ([]logging.LogGroupSummary, error) {
+	entries, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]logging.LogGroupSummary, *string, error) {
+		request := logging.ListLogGroupsRequest{
+			CompartmentId:            common.String(compartmentID),
+			IsCompartmentIdInSubtree: common.Bool(true),
+			Page:                     page,
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
+
+		response, err := client.ListLogGroups(ctx, request)
+		if err != nil {
+			return nil, nil, err
+		}
+		return response.Items, response.OpcNextPage, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return tasks
+
+	return entries, nil
 }
 
 type mqlOciLoggingLogGroupInternal struct {

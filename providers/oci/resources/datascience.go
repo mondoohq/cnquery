@@ -26,7 +26,7 @@ func (o *mqlOciAiDataScience) id() (string, error) {
 // not available are skipped (see ociRegionServiceUnavailable).
 func (o *mqlOciAiDataScience) listRegional(fetch func(svc *datascience.DataScienceClient) ([]any, error)) ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	regions, err := ociAgentRegions(o.MqlRuntime)
+	regions, err := ociRegionsFor(o.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}

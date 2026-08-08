@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -25,38 +24,18 @@ func (o *mqlOciRedis) id() (string, error) {
 func (o *mqlOciRedis) clusters() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	regions := oci.GetRegions()
-	if regions.Error != nil {
-		return nil, regions.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci redis cluster with region %s", region)
 
-	return ociRunRegionPool(o.getClusters(conn, regions.Data))
-}
-
-func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci redis cluster with region %s", regionResource.Id.Data)
-
-			svc, err := conn.RedisClusterClient(regionResource.Id.Data)
+			svc, err := conn.RedisClusterClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			clusters, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]redis.RedisClusterSummary, *string, error) {
 				response, err := svc.ListRedisClusters(ctx, redis.ListRedisClustersRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -122,15 +101,12 @@ func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any)
 				mqlClusterTyped := mqlCluster.(*mqlOciRedisCluster)
 				mqlClusterTyped.cacheSubnetId = stringValue(c.SubnetId)
 				mqlClusterTyped.cacheNsgIds = c.NsgIds
-				mqlClusterTyped.cacheRegion = regionResource.Id.Data
+				mqlClusterTyped.cacheRegion = region
 				res = append(res, mqlClusterTyped)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciRedisClusterInternal struct {

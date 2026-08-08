@@ -23,21 +23,11 @@ func (o *mqlOciOns) id() (string, error) {
 func (o *mqlOciOns) topics() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-
 	// Notification topics are created next to the alarms and connectors that
 	// publish to them, which puts them in child compartments. ListTopics has no
 	// subtree option, so a root-only sweep reported no topics and broke the alarm
 	// and Connector Hub destination references that point at them.
-	return ociRunCompartmentRegionPool(conn, list.Data,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci with region %s", region)
 

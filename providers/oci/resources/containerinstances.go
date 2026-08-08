@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -13,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -68,38 +66,18 @@ func (o *mqlOciContainerInstances) id() (string, error) {
 func (o *mqlOciContainerInstances) instances() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
-	if err != nil {
-		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
+	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
+			log.Debug().Msgf("calling oci container instances with region %s", region)
 
-	return ociRunRegionPool(o.getContainerInstances(conn, list.Data))
-}
-
-func (o *mqlOciContainerInstances) getContainerInstances(conn *connection.OciConnection, regions []any) []*jobpool.Job {
-	ctx := context.Background()
-	tasks := make([]*jobpool.Job, 0)
-	for _, region := range regions {
-		regionResource, ok := region.(*mqlOciRegion)
-		if !ok {
-			return jobErr(errors.New("invalid region type"))
-		}
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci container instances with region %s", regionResource.Id.Data)
-
-			svc, err := conn.ContainerInstanceClient(regionResource.Id.Data)
+			svc, err := conn.ContainerInstanceClient(region)
 			if err != nil {
 				return nil, err
 			}
 
 			items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerinstances.ContainerInstanceSummary, *string, error) {
 				response, err := svc.ListContainerInstances(ctx, containerinstances.ListContainerInstancesRequest{
-					CompartmentId: common.String(conn.TenantID()),
+					CompartmentId: common.String(compartmentID),
 					Page:          page,
 				})
 				if err != nil {
@@ -161,15 +139,12 @@ func (o *mqlOciContainerInstances) getContainerInstances(conn *connection.OciCon
 					return nil, err
 				}
 				mqlCI := mqlInstance.(*mqlOciContainerInstancesInstance)
-				mqlCI.region = regionResource.Id.Data
+				mqlCI.region = region
 				res = append(res, mqlCI)
 			}
 
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+			return res, nil
+		})
 }
 
 type mqlOciContainerInstancesInstanceInternal struct {
