@@ -80,7 +80,10 @@ func (r *mqlAlicloudVpc) vpnGateways() ([]any, error) {
 		gateways, err := vpnGatewaysInRegion(r.MqlRuntime, conn, region, "")
 		if err != nil {
 			// a region may be un-activated or access-denied; skip it rather
-			// than failing the whole scan
+			// than failing the whole scan, but leave a trace so a region
+			// missing from the results can be explained
+			log.Debug().Err(err).Str("region", region).
+				Msg("alicloud: could not list VPN gateways in region")
 			continue
 		}
 		res = append(res, gateways...)
@@ -225,6 +228,11 @@ func (r *mqlAlicloudVpc) vpnConnections() ([]any, error) {
 	for _, region := range regions {
 		connections, err := vpnConnectionsInRegion(r.MqlRuntime, conn, region, "")
 		if err != nil {
+			// a region may be un-activated or access-denied; skip it rather
+			// than failing the whole scan, but leave a trace so a region
+			// missing from the results can be explained
+			log.Debug().Err(err).Str("region", region).
+				Msg("alicloud: could not list VPN connections in region")
 			continue
 		}
 		res = append(res, connections...)
@@ -372,9 +380,15 @@ func (r *mqlAlicloudVpcVpnConnection) vpnGateway() (*mqlAlicloudVpcVpnGateway, e
 		RegionId:     tea.String(r.cacheRegion),
 		VpnGatewayId: tea.String(r.cacheGateway),
 	})
-	if err != nil || resp == nil || resp.Body == nil || resp.Body.VpnGateways == nil {
-		log.Debug().Err(err).Str("gateway", r.cacheGateway).
-			Msg("alicloud: could not resolve VPN gateway behind connection")
+	// A failed call is not the same as a gateway that is gone. Reporting a rate
+	// limit or a timeout as a null gateway would hide the edge this resource
+	// exists to expose, so only an empty answer resolves to null.
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.Body == nil || resp.Body.VpnGateways == nil {
+		log.Debug().Str("gateway", r.cacheGateway).
+			Msg("alicloud: no VPN gateway returned for the connection's gateway id")
 		r.VpnGateway.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
