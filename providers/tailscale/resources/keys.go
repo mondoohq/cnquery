@@ -8,11 +8,11 @@ import (
 	"errors"
 	"time"
 
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
 	"go.mondoo.com/mql/v13/types"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 func (r *mqlTailscaleAuthKey) id() (string, error) {
@@ -74,18 +74,44 @@ func createTailscaleAuthKeyResource(runtime *plugin.Runtime, key *tsclient.Key) 
 	for _, t := range caps.Tags {
 		tags = append(tags, t)
 	}
+	scopes := make([]any, 0, len(key.Scopes))
+	for _, s := range key.Scopes {
+		scopes = append(scopes, s)
+	}
+	claimRules := make(map[string]any, len(key.CustomClaimRules))
+	for k, v := range key.CustomClaimRules {
+		claimRules[k] = v
+	}
+
+	// An OAuth client or federated identity carries its ACL tags on the key
+	// itself, while a pre-auth key carries them under the device-create
+	// capability. Only one of the two is ever populated.
+	if len(key.Tags) > 0 {
+		tags = tags[:0]
+		for _, t := range key.Tags {
+			tags = append(tags, t)
+		}
+	}
+
 	return CreateResource(runtime, "tailscale.authKey", map[string]*llx.RawData{
-		"id":            llx.StringData(key.ID),
-		"description":   llx.StringData(key.Description),
-		"userId":        llx.StringData(key.UserID),
-		"created":       llx.TimeData(key.Created),
-		"expires":       llx.TimeData(key.Expires),
-		"revoked":       llx.TimeData(key.Revoked),
-		"invalid":       llx.BoolData(key.Invalid),
-		"reusable":      llx.BoolData(caps.Reusable),
-		"ephemeral":     llx.BoolData(caps.Ephemeral),
-		"preauthorized": llx.BoolData(caps.Preauthorized),
-		"tags":          llx.ArrayData(tags, types.String),
+		"id":               llx.StringData(key.ID),
+		"keyType":          llx.StringData(key.KeyType),
+		"description":      llx.StringData(key.Description),
+		"userId":           llx.StringData(key.UserID),
+		"scopes":           llx.ArrayData(scopes, types.String),
+		"audience":         llx.StringData(key.Audience),
+		"issuer":           llx.StringData(key.Issuer),
+		"subject":          llx.StringData(key.Subject),
+		"customClaimRules": llx.MapData(claimRules, types.String),
+		"created":          llx.TimeData(key.Created),
+		"updated":          llx.TimeData(key.Updated),
+		"expires":          llx.TimeData(key.Expires),
+		"revoked":          llx.TimeData(key.Revoked),
+		"invalid":          llx.BoolData(key.Invalid),
+		"reusable":         llx.BoolData(caps.Reusable),
+		"ephemeral":        llx.BoolData(caps.Ephemeral),
+		"preauthorized":    llx.BoolData(caps.Preauthorized),
+		"tags":             llx.ArrayData(tags, types.String),
 	})
 }
 

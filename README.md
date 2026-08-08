@@ -102,6 +102,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Alibaba Cloud accounts        | `alicloud`                 | `mql shell alicloud --access-key-id ID --access-key-secret SECRET`                                                                              |
 | Claude AI platform            | `claude`                   | `mql shell claude --token YOUR_API_KEY`                                                                                                         |
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
+| Apache Cassandra cluster      | `cassandra`                | `mql shell cassandra localhost --user cassandra --ask-pass`                                                                                     |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | AWS accounts                  | `aws`                      | `mql shell aws`                                                                                                                                 |
@@ -161,6 +162,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Ollama instance               | `ollama`                   | `mql shell ollama` or `mql shell ollama --host HOST --token TOKEN`                                                                              |
 | OpenAI account                | `openai`                   | `mql shell openai --token TOKEN`                                                                                                                |
 | Oracle Cloud Interface (OCI)  | `oci`                      | `mql shell oci`                                                                                                                                 |
+| OpenSearch cluster            | `opensearch`               | `mql shell opensearch localhost --user admin --ask-pass --tls-insecure`                                                                        |
 | OpenStack project             | `openstack`                | `mql shell openstack --cloud CLOUD_NAME` or<br></br>`mql shell openstack --auth-url AUTH_URL --username USER --password PASSWORD --project-name PROJECT` |
 | Portainer server              | `portainer`                | `mql shell portainer HOST --access-token TOKEN`                                                                                                 |
 | PostgreSQL server             | `postgresdb`               | `mql shell postgresdb --host db.contoso.com --user postgres --ask-pass`                                                                        |

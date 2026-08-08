@@ -177,6 +177,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"cassandra": {
+		Provider: &plugin.Provider{
+			Name:            "cassandra",
+			ID:              "go.mondoo.com/mql/v13/providers/cassandra",
+			ConnectionTypes: []string{"cassandra"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "cassandra",
+					Use:   "cassandra [host]",
+					Short: "an Apache Cassandra cluster",
+				},
+			},
+		},
+	},
+
 	"claude": {
 		Provider: &plugin.Provider{
 			Name:            "claude",
@@ -811,6 +826,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "openai",
 					Use:   "openai [--token TOKEN]",
 					Short: "an OpenAI account",
+				},
+			},
+		},
+	},
+
+	"opensearch": {
+		Provider: &plugin.Provider{
+			Name:            "opensearch",
+			ID:              "go.mondoo.com/mql/v13/providers/opensearch",
+			ConnectionTypes: []string{"opensearch"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "opensearch",
+					Use:   "opensearch [host]",
+					Short: "an OpenSearch cluster",
 				},
 			},
 		},

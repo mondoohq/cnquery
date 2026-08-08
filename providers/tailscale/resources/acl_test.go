@@ -5,10 +5,11 @@ package resources
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tsclient "github.com/tailscale/tailscale-client-go/v2"
+	tsclient "tailscale.com/client/tailscale/v2"
 )
 
 func TestStructSliceToDictSlice_ACLEntries(t *testing.T) {
@@ -49,14 +50,15 @@ func TestStructSliceToDictSlice_ACLEntries(t *testing.T) {
 }
 
 func TestStructSliceToDictSlice_ValuesAreJSONNative(t *testing.T) {
-	// llx dicts accept only JSON-native values. ACLSSH carries a Duration,
-	// which must arrive as a string rather than a time.Duration.
+	// llx dicts accept only JSON-native values. ACLSSH carries an
+	// SSHCheckPeriod, which must arrive as a string rather than a
+	// time.Duration.
 	ssh := []tsclient.ACLSSH{{
 		Action:          "check",
 		Users:           []string{"autogroup:nonroot"},
 		Source:          []string{"autogroup:member"},
 		Destination:     []string{"autogroup:self"},
-		CheckPeriod:     tsclient.Duration(20 * 60 * 60 * 1000 * 1000 * 1000),
+		CheckPeriod:     tsclient.SSHCheckPeriod(20 * time.Hour),
 		EnforceRecorder: true,
 	}}
 

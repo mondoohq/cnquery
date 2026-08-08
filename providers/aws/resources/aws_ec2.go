@@ -619,9 +619,14 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		permissionID := a.groupId + "-" + strconv.Itoa(p)
+		peers, err := buildSecurityGroupPeers(a.MqlRuntime, permissionID, a.region, accountId, permission.UserIdGroupPairs)
+		if err != nil {
+			return nil, err
+		}
 		mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, ResourceAwsEc2SecuritygroupIppermission,
 			map[string]*llx.RawData{
-				"id":               llx.StringData(a.groupId + "-" + strconv.Itoa(p)),
+				"id":               llx.StringData(permissionID),
 				"fromPort":         llx.IntDataDefault(permission.FromPort, -1),
 				"toPort":           llx.IntDataDefault(permission.ToPort, -1),
 				"ipProtocol":       llx.StringDataPtr(permission.IpProtocol),
@@ -631,6 +636,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 				"ipv6RangeDetails": llx.ArrayData(ipv6RangeDetails, types.Any),
 				"prefixListIds":    llx.ArrayData(prefixListIds, types.Any),
 				"userIdGroupPairs": llx.ArrayData(userIdGroupPairs, types.Any),
+				"peers":            llx.ArrayData(peers, types.Resource("aws.ec2.securitygroup.ippermission.peer")),
 			})
 		if err != nil {
 			return nil, err
@@ -661,9 +667,14 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		permissionID := a.groupId + "-" + strconv.Itoa(p) + "-egress"
+		peers, err := buildSecurityGroupPeers(a.MqlRuntime, permissionID, a.region, accountId, permission.UserIdGroupPairs)
+		if err != nil {
+			return nil, err
+		}
 		mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, ResourceAwsEc2SecuritygroupIppermission,
 			map[string]*llx.RawData{
-				"id":               llx.StringData(a.groupId + "-" + strconv.Itoa(p) + "-egress"),
+				"id":               llx.StringData(permissionID),
 				"fromPort":         llx.IntDataDefault(permission.FromPort, -1),
 				"toPort":           llx.IntDataDefault(permission.ToPort, -1),
 				"ipProtocol":       llx.StringDataPtr(permission.IpProtocol),
@@ -673,6 +684,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
 				"ipv6RangeDetails": llx.ArrayData(ipv6RangeDetails, types.Any),
 				"prefixListIds":    llx.ArrayData(prefixListIds, types.Any),
 				"userIdGroupPairs": llx.ArrayData(userIdGroupPairs, types.Any),
+				"peers":            llx.ArrayData(peers, types.Resource("aws.ec2.securitygroup.ippermission.peer")),
 			})
 		if err != nil {
 			return nil, err

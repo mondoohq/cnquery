@@ -3863,6 +3863,16 @@ aws.ec2.securitygroup.ippermission.ipRangeDetails 13.23.2
 aws.ec2.securitygroup.ippermission.ipRanges 11.15.2
 aws.ec2.securitygroup.ippermission.ipv6RangeDetails 13.23.2
 aws.ec2.securitygroup.ippermission.ipv6Ranges 11.15.2
+aws.ec2.securitygroup.ippermission.peer 13.52.2
+aws.ec2.securitygroup.ippermission.peer.accountId 13.52.2
+aws.ec2.securitygroup.ippermission.peer.description 13.52.2
+aws.ec2.securitygroup.ippermission.peer.groupId 13.52.2
+aws.ec2.securitygroup.ippermission.peer.groupName 13.52.2
+aws.ec2.securitygroup.ippermission.peer.peeringConnection 13.52.2
+aws.ec2.securitygroup.ippermission.peer.peeringStatus 13.52.2
+aws.ec2.securitygroup.ippermission.peer.securityGroup 13.52.2
+aws.ec2.securitygroup.ippermission.peer.vpc 13.52.2
+aws.ec2.securitygroup.ippermission.peers 13.52.2
 aws.ec2.securitygroup.ippermission.prefixListIds 11.15.2
 aws.ec2.securitygroup.ippermission.prefixLists 13.23.2
 aws.ec2.securitygroup.ippermission.toPort 11.15.2

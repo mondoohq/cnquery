@@ -204,6 +204,7 @@ use (
    ./mql/providers/atlassian
    ./mql/providers/aws
    ./mql/providers/azure
+   ./mql/providers/cassandra
    ./mql/providers/claude
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
@@ -240,6 +241,7 @@ use (
    ./mql/providers/ollama
    ./mql/providers/opcua
    ./mql/providers/openai
+   ./mql/providers/opensearch
    ./mql/providers/openstack
    ./mql/providers/portainer
    ./mql/providers/postgresdb

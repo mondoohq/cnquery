@@ -137,6 +137,33 @@ type projectRecord struct {
 	GitComments                          *gitCommentsRecord    `json:"gitComments"`
 	Link                                 *projectLink          `json:"link"`
 	Crons                                *cronsRecord          `json:"crons"`
+	OptionsAllowlist                     *optionsAllowlist     `json:"optionsAllowlist"`
+	ProtectionConfig                     map[string]any        `json:"protectionConfig"`
+}
+
+// optionsAllowlist carries the paths a project exempts from deployment
+// protection for OPTIONS requests. Vercel wraps each path in an object rather
+// than returning a plain string list.
+type optionsAllowlist struct {
+	Paths []struct {
+		Value string `json:"value"`
+	} `json:"paths"`
+}
+
+// allowlistPaths flattens the wrapped path objects to the bare path strings.
+// Entries with an empty value are dropped, so an allowlist that reports paths
+// never yields blank ones.
+func allowlistPaths(a *optionsAllowlist) []any {
+	if a == nil {
+		return []any{}
+	}
+	paths := []any{}
+	for _, p := range a.Paths {
+		if p.Value != "" {
+			paths = append(paths, p.Value)
+		}
+	}
+	return paths
 }
 
 func holderType(h *deploymentTypeHolder) *string {
@@ -238,6 +265,8 @@ func newVercelProject(runtime *plugin.Runtime, teamID string, rec *projectRecord
 		"trustedIpsProtectionMode":         llx.StringDataPtr(trustedMode),
 		"trustedIpsDeploymentType":         llx.StringDataPtr(trustedType),
 		"trustedIpsAddresses":              llx.ArrayData(trustedAddresses, types.Dict),
+		"optionsAllowlistPaths":            llx.ArrayData(allowlistPaths(rec.OptionsAllowlist), types.String),
+		"protectionConfig":                 llx.DictData(dictOrNil(rec.ProtectionConfig)),
 		"repositoryType":                   llx.StringDataPtr(repoType),
 		"repositoryOwner":                  llx.StringDataPtr(repoOwner),
 		"repositoryName":                   llx.StringDataPtr(repoName),
@@ -509,8 +538,18 @@ type deploymentCreator struct {
 	Username string `json:"username"`
 }
 
+// mqlVercelDeploymentInternal caches the team and project a deployment belongs
+// to so project() can resolve without re-listing deployments.
+type mqlVercelDeploymentInternal struct {
+	teamID    string
+	projectID string
+}
+
 type deploymentRecord struct {
+	// The list endpoint keys deployments by uid, the detail endpoint by id.
+	ID           string             `json:"id"`
 	UID          string             `json:"uid"`
+	ProjectID    string             `json:"projectId"`
 	Name         string             `json:"name"`
 	URL          string             `json:"url"`
 	State        string             `json:"state"`
@@ -535,41 +574,110 @@ func (c *mqlVercelProject) deployments() ([]any, error) {
 
 	var res []any
 	for i := range records {
-		rec := records[i]
-		state := rec.State
-		if state == "" {
-			state = rec.ReadyState
-		}
-		created := rec.Created.Time()
-		if created == nil {
-			created = rec.CreatedAt.Time()
-		}
-		var creatorUID, creatorUsername, creatorEmail string
-		if rec.Creator != nil {
-			creatorUID = rec.Creator.UID
-			creatorUsername = rec.Creator.Username
-			creatorEmail = rec.Creator.Email
-		}
-		deployment, err := CreateResource(c.MqlRuntime, "vercel.deployment", map[string]*llx.RawData{
-			"id":              llx.StringData(rec.UID),
-			"name":            llx.StringData(rec.Name),
-			"url":             llx.StringData(rec.URL),
-			"state":           llx.StringData(state),
-			"target":          llx.StringDataPtr(rec.Target),
-			"source":          llx.StringData(rec.Source),
-			"deploymentType":  llx.StringData(rec.Type),
-			"creatorUid":      llx.StringData(creatorUID),
-			"creatorUsername": llx.StringData(creatorUsername),
-			"creatorEmail":    llx.StringData(creatorEmail),
-			"inspectorUrl":    llx.StringData(rec.InspectorURL),
-			"createdAt":       llx.TimeDataPtr(created),
-		})
+		deployment, err := newVercelDeployment(c.MqlRuntime, c.teamID, c.Id.Data, &records[i])
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, deployment)
 	}
 	return res, nil
+}
+
+// newVercelDeployment maps a deployment record onto the resource. projectID is
+// the project the deployment was reached through, used only when the record
+// itself does not carry one.
+func newVercelDeployment(runtime *plugin.Runtime, teamID, projectID string, rec *deploymentRecord) (*mqlVercelDeployment, error) {
+	id := rec.UID
+	if id == "" {
+		id = rec.ID
+	}
+	state := rec.State
+	if state == "" {
+		state = rec.ReadyState
+	}
+	created := rec.Created.Time()
+	if created == nil {
+		created = rec.CreatedAt.Time()
+	}
+	var creatorUID, creatorUsername, creatorEmail string
+	if rec.Creator != nil {
+		creatorUID = rec.Creator.UID
+		creatorUsername = rec.Creator.Username
+		creatorEmail = rec.Creator.Email
+	}
+
+	res, err := CreateResource(runtime, "vercel.deployment", map[string]*llx.RawData{
+		"id":              llx.StringData(id),
+		"name":            llx.StringData(rec.Name),
+		"url":             llx.StringData(rec.URL),
+		"state":           llx.StringData(state),
+		"target":          llx.StringDataPtr(rec.Target),
+		"source":          llx.StringData(rec.Source),
+		"deploymentType":  llx.StringData(rec.Type),
+		"creatorUid":      llx.StringData(creatorUID),
+		"creatorUsername": llx.StringData(creatorUsername),
+		"creatorEmail":    llx.StringData(creatorEmail),
+		"inspectorUrl":    llx.StringData(rec.InspectorURL),
+		"createdAt":       llx.TimeDataPtr(created),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deployment := res.(*mqlVercelDeployment)
+	deployment.teamID = teamID
+	deployment.projectID = projectID
+	if rec.ProjectID != "" {
+		deployment.projectID = rec.ProjectID
+	}
+	return deployment, nil
+}
+
+func initVercelDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	deploymentID := ""
+	if idData, ok := args["id"]; ok {
+		if s, ok := idData.Value.(string); ok {
+			deploymentID = s
+		}
+	}
+	if deploymentID == "" {
+		return nil, nil, errors.New("vercel.deployment requires a deployment id")
+	}
+
+	conn := runtime.Connection.(*connection.VercelConnection)
+	teamID := conn.TeamID()
+
+	var rec deploymentRecord
+	if err := conn.Get(context.Background(), "/v13/deployments/"+deploymentID, connection.TeamQuery(teamID), &rec); err != nil {
+		return nil, nil, err
+	}
+	if rec.UID == "" && rec.ID == "" {
+		rec.ID = deploymentID
+	}
+
+	deployment, err := newVercelDeployment(runtime, teamID, "", &rec)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, deployment, nil
+}
+
+func (c *mqlVercelDeployment) project() (*mqlVercelProject, error) {
+	if c.projectID == "" {
+		c.Project.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(c.MqlRuntime, "vercel.project", map[string]*llx.RawData{
+		"id": llx.StringData(c.projectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVercelProject), nil
 }
 
 func (c *mqlVercelDeployment) id() (string, error) {
