@@ -40,7 +40,7 @@ func init() {
 	listProvidersCmd.Flags().Bool("json", false, "Output in JSON format")
 	infoProviderCmd.Flags().Bool("json", false, "Output in JSON format")
 	resourcesProviderCmd.Flags().Bool("json", false, "Output in JSON format")
-	resourcesProviderCmd.Flags().Bool("exclude-core-network", false, "List only the provider's own resources, excluding the core and network resources available to every provider (list mode only)")
+	resourcesProviderCmd.Flags().Bool("exclude-core-network", false, "When listing resources, show only the provider's own resources and omit the core and network resources available to every provider")
 	installProviderCmd.Flags().StringP("file", "f", "", "Install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "Install a provider via a URL")
 	installProviderCmd.Flags().Bool("schema-only", false, "Install only the provider's config and resource schema, without its binary")
