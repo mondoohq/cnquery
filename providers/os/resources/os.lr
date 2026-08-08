@@ -3321,6 +3321,247 @@ mongodb.conf {
   slowOpThresholdMs(params) int
 }
 
+// Redis or Valkey Server
+//
+// Server version and product as reported by the installed server binary.
+// Valkey is reported here too, since it is a fork of Redis that keeps the
+// binary layout and the configuration file format. Use redis.conf for the
+// parsed configuration file, covering network exposure, authentication and
+// access control, TLS, the command surface, and persistence.
+redis @defaults("flavor version") {
+  // Server version (e.g., "7.4.1")
+  //
+  // Read by running the server binary, so it reports nothing over a
+  // transport that cannot run commands. The configuration file redis.conf
+  // reads is unaffected, since it comes off the filesystem.
+  version() string
+  // Product the server binary belongs to
+  //
+  // Either "redis" or "valkey". Empty when no server binary could be read.
+  flavor() string
+}
+
+// Redis or Valkey configuration file
+//
+// Settings from redis.conf, which Valkey uses unchanged as valkey.conf,
+// useful for auditing a server without credentials or network access and for
+// detecting drift between the file and a running server. Drift matters more
+// here than for most servers: CONFIG SET changes the running configuration
+// and does not persist unless CONFIG REWRITE follows, so a setting present in
+// one and not the other reverts at the next restart.
+//
+// The format is a directive name followed by whitespace-separated arguments,
+// and only a whole line can be a comment, so a `#` inside a value is part of
+// that value. `include` directives are resolved, including globs, and the
+// fragments are spliced in where the include appears, so a directive after an
+// include overrides the file it pulled in. `files` lists everything that was
+// read.
+//
+// Convenience fields flatten the settings that carry security posture:
+// network exposure, authentication and access control, TLS, the command
+// surface, and persistence. Each reports the value the server would use, so
+// an option left out of the file reads as the server default rather than as
+// empty. That matters most where the default is the exposed one: with no
+// `bind` directive at all the server listens on every interface, and with no
+// `save` directive it snapshots on the built-in schedule. Directives Valkey
+// renamed are read under both spellings, so `replicationAuthSet` is correct
+// whether the file says masterauth or primaryauth.
+//
+// By default the file is located by probing the well-known paths for
+// Debian/Ubuntu, RPM, Homebrew, and Valkey installations; pass an explicit
+// path with `redis.conf("/path/to/redis.conf")`.
+redis.conf @defaults("flavor port bindsAllInterfaces protectedMode requirepassSet") {
+  init(path? string)
+  // Primary configuration file
+  file() file
+  // All configuration files (main file plus resolved includes, in load order)
+  files(file) []file
+  // Flattened directives across the main file and includes
+  //
+  // The last value wins, and arguments are joined with a single space. The
+  // directives that accumulate rather than replace (save, rename-command,
+  // user) are only complete in their own fields.
+  params(file) map[string]string
+
+  // Product the configuration belongs to
+  //
+  // Either "redis" or "valkey", decided by directives Valkey introduced
+  // rather than by the file name, so a Valkey install that kept the
+  // redis.conf name is still identified.
+  flavor(file) string
+
+  // Plaintext TCP port, or 0 when the plaintext listener is disabled
+  port(file) int
+  // Interfaces the server binds to, empty when no bind directive is set
+  //
+  // The leading `-` that marks an address the server may skip is stripped.
+  bind(file) []string
+  // Whether the server accepts connections on every interface
+  //
+  // True when no bind directive is set at all, which is the server default
+  // and the most exposed configuration, or when a wildcard address such as
+  // 0.0.0.0 or :: is present.
+  bindsAllInterfaces(file) bool
+  // Whether protected mode is enabled (true when unset)
+  //
+  // Protected mode refuses connections from outside loopback when no
+  // password and no explicit bind are set, so it is the backstop for a
+  // server that binds every interface. Turning it off without setting a
+  // password opens the server to anyone who can reach the port.
+  protectedMode(file) bool
+  // Whether a password is configured
+  //
+  // The password itself is never exposed, only whether one is set. False
+  // means unauthenticated clients that reach the port are served.
+  requirepassSet(file) bool
+  // Unix socket path, empty when no socket is configured
+  unixSocket(file) string
+  // Unix socket mode as written, for example "700"
+  unixSocketPerm(file) string
+
+  // TLS port, or 0 when TLS is disabled
+  tlsPort(file) int
+  // Whether the TLS listener is enabled
+  tlsEnabled(file) bool
+  // Client-certificate policy: "yes", "no", or "optional"
+  //
+  // "yes" is the default and requires a client certificate (mutual TLS).
+  // "optional" accepts connections without one.
+  tlsAuthClients(file) string
+  // tls-cert-file directive
+  tlsCertFile(file) string
+  // tls-key-file directive
+  tlsKeyFile(file) string
+  // tls-ca-cert-file directive (root CA used to verify client certificates)
+  tlsCaCertFile(file) string
+  // tls-protocols directive, for example "TLSv1.2 TLSv1.3"
+  tlsProtocols(file) string
+  // tls-ciphers directive (TLSv1.2 and below)
+  tlsCiphers(file) string
+  // tls-ciphersuites directive (TLSv1.3)
+  tlsCiphersuites(file) string
+  // Whether replication traffic uses TLS
+  tlsReplication(file) bool
+  // Whether cluster bus traffic uses TLS
+  tlsCluster(file) bool
+
+  // External ACL file path, empty when access-control rules are inline
+  aclFile(file) string
+  // Default channel permission for new users: "resetchannels" or "allchannels"
+  aclPubsubDefault(file) string
+  // Access-control users defined inline in the configuration
+  //
+  // Only the users written as `user` directives in the file. When aclFile is
+  // set, the rules live in that file instead and this is empty.
+  users(file) []redis.conf.user
+  // Renamed commands, mapping the original name to its replacement
+  //
+  // An empty value means the command was removed rather than renamed.
+  // Renaming or removing CONFIG is common hardening and is also what stops
+  // the running configuration from being read over the wire.
+  renamedCommands(file) map[string]string
+  // Commands removed outright by renaming them to the empty string
+  disabledCommands(file) []string
+  // Whether the protected configuration parameters can be changed at runtime
+  //
+  // One of "no" (the default), "yes", or "local", where local permits changes
+  // from loopback connections only.
+  enableProtectedConfigs(file) string
+  // Whether the DEBUG command is available: "no" (the default), "yes", or "local"
+  //
+  // DEBUG can stall or crash the server and read internal state.
+  enableDebugCommand(file) string
+  // Whether the MODULE command is available: "no" (the default), "yes", or "local"
+  //
+  // MODULE LOAD runs native code inside the server process.
+  enableModuleCommand(file) string
+
+  // Whether this server authenticates to its replication source
+  //
+  // Read from masterauth and from the primaryauth spelling Valkey renamed it
+  // to, so the answer is correct on either product. The password itself is
+  // never exposed.
+  replicationAuthSet(file) bool
+  // Replication username, empty when none is set
+  //
+  // Read from masteruser and from the primaryuser spelling Valkey renamed it to.
+  replicationUser(file) string
+
+  // RDB snapshot schedule
+  //
+  // Each entry carries `seconds` and `changes`, the elapsed time and write
+  // count that together trigger a snapshot. A file with no save directive
+  // gets the built-in schedule rather than none, and `save ""` clears it.
+  savePoints(file) []dict
+  // Whether RDB snapshotting is enabled
+  rdbEnabled(file) bool
+  // Whether append-only file persistence is enabled
+  appendOnly(file) bool
+  // Append-only fsync policy: "everysec" (the default), "always", or "no"
+  appendFsync(file) string
+  // Maximum memory in bytes, or 0 for no limit
+  maxmemory(file) int
+  // Eviction policy when maxmemory is reached, for example "noeviction" or "allkeys-lru"
+  maxmemoryPolicy(file) string
+
+  // Log file path, empty when logging goes to standard output
+  logfile(file) string
+  // Whether logging also goes to syslog
+  syslogEnabled(file) bool
+  // Working directory where the RDB and AOF files are written
+  dir(file) string
+  // RDB file name
+  dbFilename(file) string
+  // Whether the server daemonizes on start
+  daemonize(file) bool
+  // Supervision mode: "no", "upstart", "systemd", or "auto"
+  supervised(file) string
+  // PID file path, empty when none is configured
+  pidFile(file) string
+}
+
+// Redis or Valkey access-control user
+//
+// A single access-control user written as a `user` directive in the
+// configuration file, and the rules that govern it: whether it is enabled,
+// whether it has no password, and the key patterns, channel patterns, and
+// command rules it is granted. The name field selects the user, for example
+// `redis.conf.users.where(name == "default")`.
+private redis.conf.user @defaults("name enabled nopass") {
+  // User name
+  name string
+  // Whether this is the built-in default user
+  isDefault bool
+  // Whether the user is enabled and can authenticate
+  //
+  // A user is disabled unless a rule turns it on, so a directive that never
+  // says `on` defines an account that cannot log in.
+  enabled bool
+  // Whether the user has no password
+  //
+  // An enabled default user with no password means anyone who reaches the
+  // port has that user's access.
+  nopass bool
+  // Number of passwords configured for the user
+  //
+  // A count of the configured passwords and password hashes; neither is
+  // exposed. A `resetpass` rule drops the ones written before it.
+  passwordCount int
+  // Key patterns the user may access
+  //
+  // Glob patterns of the keys the user may operate on, where a single "*"
+  // means all keys. Read- and write-scoped patterns keep their `%R~`, `%W~`,
+  // or `%RW~` prefix, since a read-only grant is not full access.
+  keyPatterns []string
+  // Pub/sub channel patterns the user may access, where a single "*" means all channels
+  channelPatterns []string
+  // Command rules granted to the user
+  //
+  // The allow and deny rules in the order they were written, for example
+  // "+@all" or "-@all +get +set". Categories are prefixed with @.
+  commandRules []string
+}
+
 // Apache Cassandra Server
 //
 // Cassandra server version as reported by the installed server binary. Use

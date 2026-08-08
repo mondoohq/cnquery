@@ -134,6 +134,9 @@ const (
 	ResourceMariadbConfUserOptionFile                     string = "mariadb.conf.userOptionFile"
 	ResourceMongodb                                       string = "mongodb"
 	ResourceMongodbConf                                   string = "mongodb.conf"
+	ResourceRedis                                         string = "redis"
+	ResourceRedisConf                                     string = "redis.conf"
+	ResourceRedisConfUser                                 string = "redis.conf.user"
 	ResourceCassandra                                     string = "cassandra"
 	ResourceCassandraConf                                 string = "cassandra.conf"
 	ResourceCassandraEnv                                  string = "cassandra.env"
@@ -1016,6 +1019,18 @@ func init() {
 		"mongodb.conf": {
 			Init:   initMongodbConf,
 			Create: createMongodbConf,
+		},
+		"redis": {
+			// to override args, implement: initRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRedis,
+		},
+		"redis.conf": {
+			Init:   initRedisConf,
+			Create: createRedisConf,
+		},
+		"redis.conf.user": {
+			// to override args, implement: initRedisConfUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRedisConfUser,
 		},
 		"cassandra": {
 			// to override args, implement: initCassandra(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5578,6 +5593,171 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodb.conf.slowOpThresholdMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbConf).GetSlowOpThresholdMs()).ToDataRes(types.Int)
+	},
+	"redis.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedis).GetVersion()).ToDataRes(types.String)
+	},
+	"redis.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedis).GetFlavor()).ToDataRes(types.String)
+	},
+	"redis.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"redis.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"redis.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"redis.conf.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetFlavor()).ToDataRes(types.String)
+	},
+	"redis.conf.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetPort()).ToDataRes(types.Int)
+	},
+	"redis.conf.bind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetBind()).ToDataRes(types.Array(types.String))
+	},
+	"redis.conf.bindsAllInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetBindsAllInterfaces()).ToDataRes(types.Bool)
+	},
+	"redis.conf.protectedMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetProtectedMode()).ToDataRes(types.Bool)
+	},
+	"redis.conf.requirepassSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetRequirepassSet()).ToDataRes(types.Bool)
+	},
+	"redis.conf.unixSocket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetUnixSocket()).ToDataRes(types.String)
+	},
+	"redis.conf.unixSocketPerm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetUnixSocketPerm()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsPort()).ToDataRes(types.Int)
+	},
+	"redis.conf.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsEnabled()).ToDataRes(types.Bool)
+	},
+	"redis.conf.tlsAuthClients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsAuthClients()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsCertFile()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsKeyFile()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsCaCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsCaCertFile()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsProtocols()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsCiphers()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsCiphersuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsCiphersuites()).ToDataRes(types.String)
+	},
+	"redis.conf.tlsReplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsReplication()).ToDataRes(types.Bool)
+	},
+	"redis.conf.tlsCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetTlsCluster()).ToDataRes(types.Bool)
+	},
+	"redis.conf.aclFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetAclFile()).ToDataRes(types.String)
+	},
+	"redis.conf.aclPubsubDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetAclPubsubDefault()).ToDataRes(types.String)
+	},
+	"redis.conf.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetUsers()).ToDataRes(types.Array(types.Resource("redis.conf.user")))
+	},
+	"redis.conf.renamedCommands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetRenamedCommands()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"redis.conf.disabledCommands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetDisabledCommands()).ToDataRes(types.Array(types.String))
+	},
+	"redis.conf.enableProtectedConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetEnableProtectedConfigs()).ToDataRes(types.String)
+	},
+	"redis.conf.enableDebugCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetEnableDebugCommand()).ToDataRes(types.String)
+	},
+	"redis.conf.enableModuleCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetEnableModuleCommand()).ToDataRes(types.String)
+	},
+	"redis.conf.replicationAuthSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetReplicationAuthSet()).ToDataRes(types.Bool)
+	},
+	"redis.conf.replicationUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetReplicationUser()).ToDataRes(types.String)
+	},
+	"redis.conf.savePoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetSavePoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"redis.conf.rdbEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetRdbEnabled()).ToDataRes(types.Bool)
+	},
+	"redis.conf.appendOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetAppendOnly()).ToDataRes(types.Bool)
+	},
+	"redis.conf.appendFsync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetAppendFsync()).ToDataRes(types.String)
+	},
+	"redis.conf.maxmemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetMaxmemory()).ToDataRes(types.Int)
+	},
+	"redis.conf.maxmemoryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetMaxmemoryPolicy()).ToDataRes(types.String)
+	},
+	"redis.conf.logfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetLogfile()).ToDataRes(types.String)
+	},
+	"redis.conf.syslogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetSyslogEnabled()).ToDataRes(types.Bool)
+	},
+	"redis.conf.dir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetDir()).ToDataRes(types.String)
+	},
+	"redis.conf.dbFilename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetDbFilename()).ToDataRes(types.String)
+	},
+	"redis.conf.daemonize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetDaemonize()).ToDataRes(types.Bool)
+	},
+	"redis.conf.supervised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetSupervised()).ToDataRes(types.String)
+	},
+	"redis.conf.pidFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConf).GetPidFile()).ToDataRes(types.String)
+	},
+	"redis.conf.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetName()).ToDataRes(types.String)
+	},
+	"redis.conf.user.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"redis.conf.user.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"redis.conf.user.nopass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetNopass()).ToDataRes(types.Bool)
+	},
+	"redis.conf.user.passwordCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetPasswordCount()).ToDataRes(types.Int)
+	},
+	"redis.conf.user.keyPatterns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetKeyPatterns()).ToDataRes(types.Array(types.String))
+	},
+	"redis.conf.user.channelPatterns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetChannelPatterns()).ToDataRes(types.Array(types.String))
+	},
+	"redis.conf.user.commandRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedisConfUser).GetCommandRules()).ToDataRes(types.Array(types.String))
 	},
 	"cassandra.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCassandra).GetVersion()).ToDataRes(types.String)
@@ -18142,6 +18322,238 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodb.conf.slowOpThresholdMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbConf).SlowOpThresholdMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedis).__id, ok = v.Value.(string)
+		return
+	},
+	"redis.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedis).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedis).Flavor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).__id, ok = v.Value.(string)
+		return
+	},
+	"redis.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"redis.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Flavor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redis.conf.bind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Bind, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.bindsAllInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).BindsAllInterfaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.protectedMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).ProtectedMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.requirepassSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).RequirepassSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.unixSocket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).UnixSocket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.unixSocketPerm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).UnixSocketPerm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsAuthClients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsAuthClients, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsCaCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsCaCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsProtocols, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsCiphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsCiphersuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsCiphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsReplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsReplication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.tlsCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).TlsCluster, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.aclFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).AclFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.aclPubsubDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).AclPubsubDefault, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.renamedCommands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).RenamedCommands, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.disabledCommands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).DisabledCommands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.enableProtectedConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).EnableProtectedConfigs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.enableDebugCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).EnableDebugCommand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.enableModuleCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).EnableModuleCommand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.replicationAuthSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).ReplicationAuthSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.replicationUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).ReplicationUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.savePoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).SavePoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.rdbEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).RdbEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.appendOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).AppendOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.appendFsync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).AppendFsync, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.maxmemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Maxmemory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redis.conf.maxmemoryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).MaxmemoryPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.logfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Logfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.syslogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).SyslogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.dir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Dir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.dbFilename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).DbFilename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.daemonize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Daemonize, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.supervised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).Supervised, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.pidFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConf).PidFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).__id, ok = v.Value.(string)
+		return
+	},
+	"redis.conf.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.nopass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).Nopass, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.passwordCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).PasswordCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.keyPatterns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).KeyPatterns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.channelPatterns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).ChannelPatterns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redis.conf.user.commandRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedisConfUser).CommandRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cassandra.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44356,6 +44768,757 @@ func (c *mqlMongodbConf) GetSlowOpThresholdMs() *plugin.TValue[int64] {
 
 		return c.slowOpThresholdMs(vargParams.Data)
 	})
+}
+
+// mqlRedis for the redis resource
+type mqlRedis struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRedisInternal
+	Version plugin.TValue[string]
+	Flavor  plugin.TValue[string]
+}
+
+// createRedis creates a new instance of this resource
+func createRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRedis{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("redis", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRedis) MqlName() string {
+	return "redis"
+}
+
+func (c *mqlRedis) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRedis) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlRedis) GetFlavor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Flavor, func() (string, error) {
+		return c.flavor()
+	})
+}
+
+// mqlRedisConf for the redis.conf resource
+type mqlRedisConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRedisConfInternal
+	File                   plugin.TValue[*mqlFile]
+	Files                  plugin.TValue[[]any]
+	Params                 plugin.TValue[map[string]any]
+	Flavor                 plugin.TValue[string]
+	Port                   plugin.TValue[int64]
+	Bind                   plugin.TValue[[]any]
+	BindsAllInterfaces     plugin.TValue[bool]
+	ProtectedMode          plugin.TValue[bool]
+	RequirepassSet         plugin.TValue[bool]
+	UnixSocket             plugin.TValue[string]
+	UnixSocketPerm         plugin.TValue[string]
+	TlsPort                plugin.TValue[int64]
+	TlsEnabled             plugin.TValue[bool]
+	TlsAuthClients         plugin.TValue[string]
+	TlsCertFile            plugin.TValue[string]
+	TlsKeyFile             plugin.TValue[string]
+	TlsCaCertFile          plugin.TValue[string]
+	TlsProtocols           plugin.TValue[string]
+	TlsCiphers             plugin.TValue[string]
+	TlsCiphersuites        plugin.TValue[string]
+	TlsReplication         plugin.TValue[bool]
+	TlsCluster             plugin.TValue[bool]
+	AclFile                plugin.TValue[string]
+	AclPubsubDefault       plugin.TValue[string]
+	Users                  plugin.TValue[[]any]
+	RenamedCommands        plugin.TValue[map[string]any]
+	DisabledCommands       plugin.TValue[[]any]
+	EnableProtectedConfigs plugin.TValue[string]
+	EnableDebugCommand     plugin.TValue[string]
+	EnableModuleCommand    plugin.TValue[string]
+	ReplicationAuthSet     plugin.TValue[bool]
+	ReplicationUser        plugin.TValue[string]
+	SavePoints             plugin.TValue[[]any]
+	RdbEnabled             plugin.TValue[bool]
+	AppendOnly             plugin.TValue[bool]
+	AppendFsync            plugin.TValue[string]
+	Maxmemory              plugin.TValue[int64]
+	MaxmemoryPolicy        plugin.TValue[string]
+	Logfile                plugin.TValue[string]
+	SyslogEnabled          plugin.TValue[bool]
+	Dir                    plugin.TValue[string]
+	DbFilename             plugin.TValue[string]
+	Daemonize              plugin.TValue[bool]
+	Supervised             plugin.TValue[string]
+	PidFile                plugin.TValue[string]
+}
+
+// createRedisConf creates a new instance of this resource
+func createRedisConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRedisConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("redis.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRedisConf) MqlName() string {
+	return "redis.conf"
+}
+
+func (c *mqlRedisConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRedisConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("redis.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlRedisConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("redis.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetFlavor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Flavor, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.flavor(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Port, func() (int64, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return 0, vargFile.Error
+		}
+
+		return c.port(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetBind() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bind, func() ([]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.bind(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetBindsAllInterfaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BindsAllInterfaces, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.bindsAllInterfaces(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetProtectedMode() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProtectedMode, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.protectedMode(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetRequirepassSet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RequirepassSet, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.requirepassSet(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetUnixSocket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UnixSocket, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.unixSocket(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetUnixSocketPerm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UnixSocketPerm, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.unixSocketPerm(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TlsPort, func() (int64, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return 0, vargFile.Error
+		}
+
+		return c.tlsPort(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsEnabled, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.tlsEnabled(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsAuthClients() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsAuthClients, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsAuthClients(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCertFile, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsCertFile(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsKeyFile, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsKeyFile(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsCaCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCaCertFile, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsCaCertFile(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsProtocols() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsProtocols, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsProtocols(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsCiphers() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCiphers, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsCiphers(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsCiphersuites() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCiphersuites, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.tlsCiphersuites(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsReplication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsReplication, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.tlsReplication(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetTlsCluster() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsCluster, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.tlsCluster(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetAclFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AclFile, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.aclFile(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetAclPubsubDefault() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AclPubsubDefault, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.aclPubsubDefault(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("redis.conf", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.users(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetRenamedCommands() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.RenamedCommands, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.renamedCommands(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetDisabledCommands() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DisabledCommands, func() ([]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.disabledCommands(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetEnableProtectedConfigs() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EnableProtectedConfigs, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.enableProtectedConfigs(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetEnableDebugCommand() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EnableDebugCommand, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.enableDebugCommand(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetEnableModuleCommand() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EnableModuleCommand, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.enableModuleCommand(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetReplicationAuthSet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReplicationAuthSet, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.replicationAuthSet(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetReplicationUser() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReplicationUser, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.replicationUser(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetSavePoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SavePoints, func() ([]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.savePoints(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetRdbEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RdbEnabled, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.rdbEnabled(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetAppendOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AppendOnly, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.appendOnly(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetAppendFsync() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AppendFsync, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.appendFsync(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetMaxmemory() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Maxmemory, func() (int64, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return 0, vargFile.Error
+		}
+
+		return c.maxmemory(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetMaxmemoryPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaxmemoryPolicy, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.maxmemoryPolicy(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetLogfile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Logfile, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.logfile(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetSyslogEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SyslogEnabled, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.syslogEnabled(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Dir, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.dir(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetDbFilename() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DbFilename, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.dbFilename(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetDaemonize() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Daemonize, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.daemonize(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetSupervised() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Supervised, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.supervised(vargFile.Data)
+	})
+}
+
+func (c *mqlRedisConf) GetPidFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PidFile, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.pidFile(vargFile.Data)
+	})
+}
+
+// mqlRedisConfUser for the redis.conf.user resource
+type mqlRedisConfUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlRedisConfUserInternal it will be used here
+	Name            plugin.TValue[string]
+	IsDefault       plugin.TValue[bool]
+	Enabled         plugin.TValue[bool]
+	Nopass          plugin.TValue[bool]
+	PasswordCount   plugin.TValue[int64]
+	KeyPatterns     plugin.TValue[[]any]
+	ChannelPatterns plugin.TValue[[]any]
+	CommandRules    plugin.TValue[[]any]
+}
+
+// createRedisConfUser creates a new instance of this resource
+func createRedisConfUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRedisConfUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("redis.conf.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRedisConfUser) MqlName() string {
+	return "redis.conf.user"
+}
+
+func (c *mqlRedisConfUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRedisConfUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlRedisConfUser) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlRedisConfUser) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlRedisConfUser) GetNopass() *plugin.TValue[bool] {
+	return &c.Nopass
+}
+
+func (c *mqlRedisConfUser) GetPasswordCount() *plugin.TValue[int64] {
+	return &c.PasswordCount
+}
+
+func (c *mqlRedisConfUser) GetKeyPatterns() *plugin.TValue[[]any] {
+	return &c.KeyPatterns
+}
+
+func (c *mqlRedisConfUser) GetChannelPatterns() *plugin.TValue[[]any] {
+	return &c.ChannelPatterns
+}
+
+func (c *mqlRedisConfUser) GetCommandRules() *plugin.TValue[[]any] {
+	return &c.CommandRules
 }
 
 // mqlCassandra for the cassandra resource
