@@ -1,0 +1,194 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+// PROTOTYPE - AI service coverage concept (Wave 3)
+// Schema design for a net-new Cohere provider (Tier-1 foundation-model SaaS).
+// This .lr defines the resource surface only. Remaining steps before it builds:
+// config.go, connection/, provider/, gen/main.go, main.go, provider
+// registration, `mqlr generate`, resource implementation, and verification
+// against the live Cohere API. See providers/cohere/README.md.
+
+option provider = "go.mondoo.com/mql/providers/cohere"
+option go_package = "go.mondoo.com/mql/v13/providers/cohere/resources"
+
+// Cohere account
+//
+// Online API inventory for a Cohere account, spanning the available
+// models, datasets, fine-tuned models, retrieval connectors, and the
+// organization membership and API keys reachable through the account.
+// Backs AI security posture assessment and AI Bill of Materials
+// generation, letting you audit model lineage, who can access the
+// account, and which external systems retrieval connectors can reach.
+cohere @defaults("host") @maturity("preview") {
+  // API host address
+  host() string
+  // Available models
+  models() []cohere.model
+  // Uploaded datasets
+  datasets() []cohere.dataset
+  // Fine-tuned models owned by the organization
+  fineTunedModels() []cohere.fineTunedModel
+  // Retrieval connectors registered for grounded generation
+  connectors() []cohere.connector
+}
+
+// Cohere organization
+//
+// Organization that owns the Cohere account, exposing its members and
+// API keys. Query this resource to audit who holds access, what roles
+// they carry, and which credentials authenticate against the API.
+// Requires an admin-scoped API key.
+cohere.organization @defaults("id name") {
+  // Organization identifier
+  id string
+  // Organization display name
+  name string
+  // Members of the organization (requires an admin API key)
+  members() []cohere.organization.member
+  // API keys issued for the organization (requires an admin API key)
+  apiKeys() []cohere.organization.apiKey
+}
+
+// Cohere organization member
+//
+// Member of a Cohere organization, with the role that grants their
+// privilege level and the email address the account is bound to. The
+// `role` field surfaces who holds administrative control.
+cohere.organization.member @defaults("id email role") {
+  // Member identifier
+  id string
+  // Member email address
+  email string
+  // Organization role
+  //
+  // One of admin or member.
+  role string
+}
+
+// Cohere organization API key
+//
+// API key issued for programmatic access to the Cohere API. Each key is
+// either a rate-limited trial key or a paid production key. Audit key
+// type, age, and last use to spot stale or over-privileged credentials.
+cohere.organization.apiKey @defaults("id name keyType") {
+  // API key identifier
+  id string
+  // API key display name
+  name string
+  // Key type
+  //
+  // One of trial or production. Trial keys are rate limited and intended
+  // for evaluation, production keys are billed and intended for live use.
+  keyType string
+  // Timestamp when the key was created
+  createdAt time
+  // Timestamp when the key was last used, null if never used
+  lastUsedAt time
+}
+
+// Cohere model
+//
+// AI model available to the Cohere account, covering the generation,
+// embedding, and rerank model families. The `name` field is the model
+// identifier used in API calls and selects the model, for example
+// cohere.models.where(name == "command-r-plus"). The `endpoints` field
+// lists which API endpoints the model serves and `isFinetuned`
+// distinguishes base models from organization fine-tunes for AIBOM
+// lineage tracking.
+cohere.model @defaults("name endpoints") @maturity("preview") {
+  // Model identifier used in API calls
+  name string
+  // API endpoints the model serves
+  //
+  // For example generate, chat, embed, or rerank.
+  endpoints []string
+  // Maximum context length in tokens
+  contextLength int
+  // Whether this is an organization fine-tuned model
+  isFinetuned bool
+}
+
+// Cohere dataset
+//
+// Dataset uploaded to the Cohere platform for fine-tuning or embedding
+// jobs. Records the dataset type, validation status, and retention of
+// the originally uploaded file. Audit these to track what data was
+// uploaded to the organization and for what purpose. A dataset is
+// selected by its identifier, for example
+// cohere.datasets.where(id == "abc123").
+cohere.dataset @defaults("id name datasetType") @maturity("preview") {
+  // Dataset identifier
+  id string
+  // Dataset display name
+  name string
+  // Dataset type
+  //
+  // For example embed-input, chat-finetune-input, or rerank-finetune-input.
+  datasetType string
+  // Validation status
+  //
+  // One of unknown, queued, processing, failed, validated, or skipped.
+  validationStatus string
+  // Whether Cohere retains the original uploaded file
+  //
+  // When true the raw source file is kept after processing, which
+  // extends how long the uploaded data persists on the platform.
+  keepOriginalFile bool
+  // Creation timestamp
+  createdAt time
+}
+
+// Cohere fine-tuned model
+//
+// Fine-tuned model produced by customizing a Cohere base model on
+// organization-provided training data. Records the training status, the
+// base model it derives from, and usage timestamps, so you can audit
+// model lineage: which base model was fine-tuned and what was produced.
+cohere.fineTunedModel @defaults("id name status") @maturity("preview") {
+  // Fine-tuned model identifier
+  id string
+  // Fine-tuned model display name
+  name string
+  // Training status
+  //
+  // One of STATUS_QUEUED, STATUS_TRAINING, STATUS_READY, STATUS_FAILED,
+  // STATUS_DELETED, STATUS_PAUSED, or STATUS_TEMPORARILY_OFFLINE.
+  status string
+  // Base model this fine-tune derives from
+  baseModel string
+  // Creation timestamp
+  createdAt time
+  // Timestamp when the model was last used, null if never used
+  lastUsedAt time
+}
+
+// Cohere retrieval connector
+//
+// Connector that grounds Cohere generation in an external data source
+// for retrieval-augmented generation. Because a connector reaches into
+// a third-party system on the account's behalf, its authentication mode,
+// target URL, and active state are security-relevant. The `authType`
+// field reports how the connector authenticates to its backing system
+// and `active` reports whether it is currently serving requests.
+cohere.connector @defaults("id name active") @maturity("preview") {
+  // Connector identifier
+  id string
+  // Connector display name
+  name string
+  // Target URL the connector queries
+  url string
+  // Authentication mode toward the backing system
+  //
+  // One of none, oauth, or service-token. A value of none means the
+  // connector queries its target without authenticating.
+  authType string
+  // Whether the connector is active and serving retrieval requests
+  active bool
+  // Whether continued access uses OAuth on behalf of the end user
+  //
+  // When true the connector performs the retrieval as the querying user
+  // through OAuth rather than with a single shared service credential.
+  oauthUserAuth bool
+  // Creation timestamp
+  createdAt time
+}
