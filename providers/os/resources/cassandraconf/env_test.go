@@ -159,6 +159,57 @@ fi
 	assert.Equal(t, "4G", env.Variables["MAX_HEAP_SIZE"])
 }
 
+// A trailing comment is not part of the value. Getting this wrong on
+// LOCAL_JMX reports remote JMX on a host that is localhost-only, and on
+// JMX_PORT it silently falls back to 7199 rather than the configured port.
+func TestParseEnvInlineComments(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		script   string
+		localJMX bool
+		port     int64
+	}{
+		{"unquoted", "LOCAL_JMX=yes # local mode\nJMX_PORT=7299 # custom\n", true, 7299},
+		{"quoted", "LOCAL_JMX=\"yes\" # local mode\nJMX_PORT=\"7299\" # custom\n", true, 7299},
+		{"single quoted", "LOCAL_JMX='no' # remote\nJMX_PORT='7299'\n", false, 7299},
+		{"tab before comment", "LOCAL_JMX=no\t# remote\n", false, 7199},
+		{"separator and comment", "LOCAL_JMX=no; export FOO=1 # note\n", false, 7199},
+		{"no comment", "LOCAL_JMX=yes\nJMX_PORT=7299\n", true, 7299},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := cassandraconf.ParseEnv(tc.script)
+			assert.Equal(t, tc.localJMX, env.LocalJMX())
+			assert.Equal(t, tc.port, env.JMXPort())
+		})
+	}
+}
+
+// A `#` only opens a comment at the start of a word, and one inside quotes is
+// not a comment at all, so neither may be cut out of a value.
+func TestParseEnvHashInsideValueIsNotAComment(t *testing.T) {
+	env := cassandraconf.ParseEnv(`
+CASSANDRA_TAG=build#1234
+CASSANDRA_NOTE="a # inside quotes"
+CASSANDRA_SEMI="keep;this"
+`)
+
+	assert.Equal(t, "build#1234", env.Variables["CASSANDRA_TAG"])
+	assert.Equal(t, "a # inside quotes", env.Variables["CASSANDRA_NOTE"])
+	assert.Equal(t, "keep;this", env.Variables["CASSANDRA_SEMI"])
+}
+
+// A note after the closing quote is prose, not configuration, so a -D flag
+// mentioned in it must not be collected.
+func TestParseEnvIgnoresPropertiesInTrailingComments(t *testing.T) {
+	env := cassandraconf.ParseEnv(`
+JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=true" # not -Dcom.sun.management.jmxremote.ssl=true
+`)
+
+	assert.True(t, env.Bool(cassandraconf.PropJMXAuthenticate, false))
+	assert.False(t, env.Bool(cassandraconf.PropJMXSSL, false), "the commented flag must not be collected")
+	assert.NotContains(t, env.Properties, cassandraconf.PropJMXSSL)
+}
+
 func TestParseEnvVariableExpansion(t *testing.T) {
 	env := cassandraconf.ParseEnv(`
 CASSANDRA_CONF=/etc/cassandra

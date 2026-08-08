@@ -138,7 +138,9 @@ func ParseEnv(content string) *Env {
 			}
 		}
 
-		for _, m := range reSysProp.FindAllStringSubmatch(text, -1) {
+		// Scan for properties past the inline comment, so a line that ends
+		// in a note mentioning another -D flag does not contribute it.
+		for _, m := range reSysProp.FindAllStringSubmatch(cutUnquoted(text), -1) {
 			env.Properties[m[1]] = expand(m[2], env.Variables)
 		}
 	}
@@ -212,16 +214,47 @@ func resolveLocalJMX(lines []string) string {
 	return "yes"
 }
 
-// unquote strips one layer of surrounding quotes and any trailing inline
-// comment or statement separator.
+// unquote strips any trailing inline comment or statement separator, then one
+// layer of surrounding quotes.
+//
+// The trailing part has to go first and has to be quote-aware, because the
+// two orderings disagree on `LOCAL_JMX="yes" # local mode`: cutting the
+// comment first leaves a value the quote strip recognizes, while checking the
+// quotes first sees a value that ends in `e` and hands back the comment as
+// part of it. On LOCAL_JMX that reads as remote JMX on a host that has none.
 func unquote(v string) string {
-	v = strings.TrimSpace(v)
-	if i := strings.IndexAny(v, ";"); i >= 0 && !strings.HasPrefix(v, `"`) && !strings.HasPrefix(v, `'`) {
-		v = strings.TrimSpace(v[:i])
-	}
+	v = strings.TrimSpace(cutUnquoted(strings.TrimSpace(v)))
 	if len(v) >= 2 {
 		if (v[0] == '"' && v[len(v)-1] == '"') || (v[0] == '\'' && v[len(v)-1] == '\'') {
 			return v[1 : len(v)-1]
+		}
+	}
+	return v
+}
+
+// cutUnquoted trims a shell fragment at the first statement separator or
+// inline comment that falls outside quotes.
+//
+// A `#` only opens a comment at the start of a word, which is why it counts
+// only at the start of the fragment or after whitespace: `a#b` is the literal
+// value a#b, while `a #b` is the value a.
+func cutUnquoted(v string) string {
+	var quote byte
+	for i := 0; i < len(v); i++ {
+		c := v[i]
+		if quote != 0 {
+			if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		switch {
+		case c == '"' || c == '\'':
+			quote = c
+		case c == ';':
+			return v[:i]
+		case c == '#' && (i == 0 || v[i-1] == ' ' || v[i-1] == '\t'):
+			return v[:i]
 		}
 	}
 	return v
