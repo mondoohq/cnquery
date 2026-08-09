@@ -58,15 +58,6 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					created = &s.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(s.FreeformTags))
-				for k, v := range s.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(s.DefinedTags))
-				for k, v := range s.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.dbSystem", map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(s.Id),
 					"name":                 llx.StringDataPtr(s.DisplayName),
@@ -88,8 +79,8 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					"backupNetworkNsgIds":  llx.ArrayData(convert.SliceAnyToInterface(s.BackupNetworkNsgIds), types.String),
 					"state":                llx.StringData(string(s.LifecycleState)),
 					"created":              llx.TimeDataPtr(created),
-					"freeformTags":         llx.MapData(freeformTags, types.String),
-					"definedTags":          llx.MapData(definedTags, types.Any),
+					"freeformTags":         llx.MapData(strMapToAny(s.FreeformTags), types.String),
+					"definedTags":          llx.MapData(definedTagsToAny(s.DefinedTags), types.Any),
 					"systemTags":           llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -181,15 +172,6 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					created = &a.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(a.FreeformTags))
-				for k, v := range a.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(a.DefinedTags))
-				for k, v := range a.DefinedTags {
-					definedTags[k] = v
-				}
-
 				var connectionUrls map[string]any
 				if a.ConnectionUrls != nil {
 					connectionUrls, err = convert.JsonToDict(a.ConnectionUrls)
@@ -239,8 +221,8 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					"publicConnectionUrls":        llx.DictData(publicConnectionUrls),
 					"state":                       llx.StringData(string(a.LifecycleState)),
 					"created":                     llx.TimeDataPtr(created),
-					"freeformTags":                llx.MapData(freeformTags, types.String),
-					"definedTags":                 llx.MapData(definedTags, types.Any),
+					"freeformTags":                llx.MapData(strMapToAny(a.FreeformTags), types.String),
+					"definedTags":                 llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
 					"systemTags":                  llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
 				})
 				if err != nil {

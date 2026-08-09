@@ -62,15 +62,6 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					created = &lb.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(lb.FreeformTags))
-				for k, v := range lb.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(lb.DefinedTags))
-				for k, v := range lb.DefinedTags {
-					definedTags[k] = v
-				}
-
 				ipAddresses := make([]any, 0, len(lb.IpAddresses))
 				for _, ip := range lb.IpAddresses {
 					// isPublic is optional on the SDK model, and exposure()
@@ -99,8 +90,8 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),
-					"freeformTags":              llx.MapData(freeformTags, types.String),
-					"definedTags":               llx.MapData(definedTags, types.Any),
+					"freeformTags":              llx.MapData(strMapToAny(lb.FreeformTags), types.String),
+					"definedTags":               llx.MapData(definedTagsToAny(lb.DefinedTags), types.Any),
 					"systemTags":                llx.MapData(definedTagsToAny(lb.SystemTags), types.Dict),
 				})
 				if err != nil {

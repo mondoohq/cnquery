@@ -64,15 +64,6 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 					nodeMemory = float64(*c.NodeMemoryInGBs)
 				}
 
-				freeformTags := make(map[string]interface{}, len(c.FreeformTags))
-				for k, v := range c.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(c.DefinedTags))
-				for k, v := range c.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlCluster, err := CreateResource(o.MqlRuntime, "oci.redis.cluster", map[string]*llx.RawData{
 					"id":                         llx.StringDataPtr(c.Id),
 					"name":                       llx.StringDataPtr(c.DisplayName),
@@ -91,8 +82,8 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 					"state":                      llx.StringData(string(c.LifecycleState)),
 					"created":                    llx.TimeDataPtr(created),
 					"timeUpdated":                llx.TimeDataPtr(updated),
-					"freeformTags":               llx.MapData(freeformTags, types.String),
-					"definedTags":                llx.MapData(definedTags, types.Any),
+					"freeformTags":               llx.MapData(strMapToAny(c.FreeformTags), types.String),
+					"definedTags":                llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
 					"systemTags":                 llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 				})
 				if err != nil {

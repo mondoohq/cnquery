@@ -53,16 +53,6 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 					created = &vcn.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{})
-				for k, v := range vcn.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{})
-				for k, v := range vcn.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
 					"id":                    llx.StringDataPtr(vcn.Id),
 					"name":                  llx.StringDataPtr(vcn.DisplayName),
@@ -76,8 +66,8 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 					"defaultRouteTableId":   llx.StringDataPtr(vcn.DefaultRouteTableId),
 					"defaultSecurityListId": llx.StringDataPtr(vcn.DefaultSecurityListId),
 					"dnsLabel":              llx.StringDataPtr(vcn.DnsLabel),
-					"freeformTags":          llx.MapData(freeformTags, types.String),
-					"definedTags":           llx.MapData(definedTags, types.Any),
+					"freeformTags":          llx.MapData(strMapToAny(vcn.FreeformTags), types.String),
+					"definedTags":           llx.MapData(definedTagsToAny(vcn.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -231,16 +221,6 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					return nil, err
 				}
 
-				freeformTags := make(map[string]interface{})
-				for k, v := range securityList.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{})
-				for k, v := range securityList.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.securityList", map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(securityList.Id),
 					"name":                 llx.StringDataPtr(securityList.DisplayName),
@@ -252,8 +232,8 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					"egressRules":          llx.ArrayData(egressRules, types.Resource("oci.network.securityRule")),
 					"ingressRules":         llx.ArrayData(ingressRules, types.Resource("oci.network.securityRule")),
 					"vcnId":                llx.StringDataPtr(securityList.VcnId),
-					"freeformTags":         llx.MapData(freeformTags, types.String),
-					"definedTags":          llx.MapData(definedTags, types.Any),
+					"freeformTags":         llx.MapData(strMapToAny(securityList.FreeformTags), types.String),
+					"definedTags":          llx.MapData(definedTagsToAny(securityList.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -465,16 +445,6 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 					created = &subnet.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(subnet.FreeformTags))
-				for k, v := range subnet.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{}, len(subnet.DefinedTags))
-				for k, v := range subnet.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
 					"id":                      llx.StringDataPtr(subnet.Id),
 					"name":                    llx.StringDataPtr(subnet.DisplayName),
@@ -487,8 +457,8 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 					"prohibitPublicIpOnVnic":  llx.BoolDataPtr(subnet.ProhibitPublicIpOnVnic),
 					"prohibitInternetIngress": llx.BoolDataPtr(subnet.ProhibitInternetIngress),
 					"created":                 llx.TimeDataPtr(created),
-					"freeformTags":            llx.MapData(freeformTags, types.String),
-					"definedTags":             llx.MapData(definedTags, types.Any),
+					"freeformTags":            llx.MapData(strMapToAny(subnet.FreeformTags), types.String),
+					"definedTags":             llx.MapData(definedTagsToAny(subnet.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -590,24 +560,14 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 					created = &nsg.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{})
-				for k, v := range nsg.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{})
-				for k, v := range nsg.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(nsg.Id),
 					"name":          llx.StringDataPtr(nsg.DisplayName),
 					"compartmentID": llx.StringDataPtr(nsg.CompartmentId),
 					"state":         llx.StringData(string(nsg.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -702,24 +662,14 @@ func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string
 		created = &nsg.TimeCreated.Time
 	}
 
-	freeformTags := make(map[string]interface{})
-	for k, v := range nsg.FreeformTags {
-		freeformTags[k] = v
-	}
-
-	definedTags := make(map[string]interface{})
-	for k, v := range nsg.DefinedTags {
-		definedTags[k] = v
-	}
-
 	mqlInstance, err := CreateResource(runtime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
 		"id":            llx.StringDataPtr(nsg.Id),
 		"name":          llx.StringDataPtr(nsg.DisplayName),
 		"compartmentID": llx.StringDataPtr(nsg.CompartmentId),
 		"state":         llx.StringData(string(nsg.LifecycleState)),
 		"created":       llx.TimeDataPtr(created),
-		"freeformTags":  llx.MapData(freeformTags, types.String),
-		"definedTags":   llx.MapData(definedTags, types.Any),
+		"freeformTags":  llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
+		"definedTags":   llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -947,15 +897,6 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 		created = &vnic.TimeCreated.Time
 	}
 
-	freeformTags := make(map[string]interface{}, len(vnic.FreeformTags))
-	for k, v := range vnic.FreeformTags {
-		freeformTags[k] = v
-	}
-	definedTags := make(map[string]interface{}, len(vnic.DefinedTags))
-	for k, v := range vnic.DefinedTags {
-		definedTags[k] = v
-	}
-
 	res, err := CreateResource(runtime, "oci.compute.vnic", map[string]*llx.RawData{
 		"id":                  llx.StringDataPtr(vnic.Id),
 		"name":                llx.StringDataPtr(vnic.DisplayName),
@@ -970,8 +911,8 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 		"skipSourceDestCheck": llx.BoolDataPtr(vnic.SkipSourceDestCheck),
 		"state":               llx.StringData(string(vnic.LifecycleState)),
 		"created":             llx.TimeDataPtr(created),
-		"freeformTags":        llx.MapData(freeformTags, types.String),
-		"definedTags":         llx.MapData(definedTags, types.Any),
+		"freeformTags":        llx.MapData(strMapToAny(vnic.FreeformTags), types.String),
+		"definedTags":         llx.MapData(definedTagsToAny(vnic.DefinedTags), types.Any),
 	})
 	if err != nil {
 		return nil, err
@@ -1018,16 +959,6 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 					created = &igw.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(igw.FreeformTags))
-				for k, v := range igw.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{}, len(igw.DefinedTags))
-				for k, v := range igw.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.internetGateway", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(igw.Id),
 					"name":          llx.StringDataPtr(igw.DisplayName),
@@ -1035,8 +966,8 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 					"isEnabled":     llx.BoolDataPtr(igw.IsEnabled),
 					"state":         llx.StringData(string(igw.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(igw.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(igw.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -1109,16 +1040,6 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 					created = &ngw.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(ngw.FreeformTags))
-				for k, v := range ngw.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{}, len(ngw.DefinedTags))
-				for k, v := range ngw.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.natGateway", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(ngw.Id),
 					"name":          llx.StringDataPtr(ngw.DisplayName),
@@ -1127,8 +1048,8 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 					"natIp":         llx.StringDataPtr(ngw.NatIp),
 					"state":         llx.StringData(string(ngw.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(ngw.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(ngw.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -1236,16 +1157,6 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 					return nil, err
 				}
 
-				freeformTags := make(map[string]interface{}, len(rt.FreeformTags))
-				for k, v := range rt.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{}, len(rt.DefinedTags))
-				for k, v := range rt.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.routeTable", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(rt.Id),
 					"name":          llx.StringDataPtr(rt.DisplayName),
@@ -1253,8 +1164,8 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 					"routeRules":    llx.ArrayData(routeRules, types.Dict),
 					"state":         llx.StringData(string(rt.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(rt.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(rt.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err

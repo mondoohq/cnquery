@@ -62,15 +62,6 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 					updated = &g.TimeUpdated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(g.FreeformTags))
-				for k, v := range g.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(g.DefinedTags))
-				for k, v := range g.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.apigateway.gateway", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(g.Id),
 					"name":          llx.StringDataPtr(g.DisplayName),
@@ -81,8 +72,8 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 					"state":         llx.StringData(string(g.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
 					"timeUpdated":   llx.TimeDataPtr(updated),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(g.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(g.DefinedTags), types.Any),
 					"systemTags":    llx.MapData(definedTagsToAny(g.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -270,15 +261,6 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 					updated = &d.TimeUpdated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(d.FreeformTags))
-				for k, v := range d.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(d.DefinedTags))
-				for k, v := range d.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.apigateway.deployment", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(d.Id),
 					"name":          llx.StringDataPtr(d.DisplayName),
@@ -288,8 +270,8 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 					"state":         llx.StringData(string(d.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
 					"timeUpdated":   llx.TimeDataPtr(updated),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(d.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(d.DefinedTags), types.Any),
 					"systemTags":    llx.MapData(definedTagsToAny(d.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -650,15 +632,6 @@ func (o *mqlOciApigateway) certificates() ([]any, error) {
 
 				subjectNames := convert.SliceAnyToInterface(c.SubjectNames)
 
-				freeformTags := make(map[string]interface{}, len(c.FreeformTags))
-				for k, v := range c.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(c.DefinedTags))
-				for k, v := range c.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.apigateway.certificate", map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(c.Id),
 					"name":              llx.StringDataPtr(c.DisplayName),
@@ -668,8 +641,8 @@ func (o *mqlOciApigateway) certificates() ([]any, error) {
 					"state":             llx.StringData(string(c.LifecycleState)),
 					"created":           llx.TimeDataPtr(created),
 					"timeUpdated":       llx.TimeDataPtr(updated),
-					"freeformTags":      llx.MapData(freeformTags, types.String),
-					"definedTags":       llx.MapData(definedTags, types.Any),
+					"freeformTags":      llx.MapData(strMapToAny(c.FreeformTags), types.String),
+					"definedTags":       llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
 					"systemTags":        llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 				})
 				if err != nil {

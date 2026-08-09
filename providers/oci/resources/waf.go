@@ -64,15 +64,6 @@ func (o *mqlOciWaf) firewalls() ([]any, error) {
 					timeUpdated = &lbWaf.TimeUpdated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(lbWaf.FreeformTags))
-				for k, v := range lbWaf.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(lbWaf.DefinedTags))
-				for k, v := range lbWaf.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.waf.firewall", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(lbWaf.Id),
 					"name":          llx.StringDataPtr(lbWaf.DisplayName),
@@ -80,8 +71,8 @@ func (o *mqlOciWaf) firewalls() ([]any, error) {
 					"state":         llx.StringData(string(lbWaf.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
 					"timeUpdated":   llx.TimeDataPtr(timeUpdated),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(lbWaf.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(lbWaf.DefinedTags), types.Any),
 					"systemTags":    llx.MapData(definedTagsToAny(lbWaf.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -173,15 +164,6 @@ func (o *mqlOciWaf) policies() ([]any, error) {
 					timeUpdated = &p.TimeUpdated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(p.FreeformTags))
-				for k, v := range p.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(p.DefinedTags))
-				for k, v := range p.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.waf.policy", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(p.Id),
 					"name":          llx.StringDataPtr(p.DisplayName),
@@ -189,8 +171,8 @@ func (o *mqlOciWaf) policies() ([]any, error) {
 					"state":         llx.StringData(string(p.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
 					"timeUpdated":   llx.TimeDataPtr(timeUpdated),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(p.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
 					"systemTags":    llx.MapData(definedTagsToAny(p.SystemTags), types.Dict),
 				})
 				if err != nil {

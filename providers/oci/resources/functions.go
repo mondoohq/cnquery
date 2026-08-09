@@ -69,15 +69,6 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 					return nil, err
 				}
 
-				freeformTags := make(map[string]interface{}, len(app.FreeformTags))
-				for k, v := range app.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(app.DefinedTags))
-				for k, v := range app.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.functions.application", map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(app.Id),
 					"name":              llx.StringDataPtr(app.DisplayName),
@@ -88,8 +79,8 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 					"imagePolicyConfig": llx.DictData(imagePolicyConfig),
 					"created":           llx.TimeDataPtr(created),
 					"timeUpdated":       llx.TimeDataPtr(timeUpdated),
-					"freeformTags":      llx.MapData(freeformTags, types.String),
-					"definedTags":       llx.MapData(definedTags, types.Any),
+					"freeformTags":      llx.MapData(strMapToAny(app.FreeformTags), types.String),
+					"definedTags":       llx.MapData(definedTagsToAny(app.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -231,15 +222,6 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			return nil, err
 		}
 
-		freeformTags := make(map[string]interface{}, len(fn.FreeformTags))
-		for k, v := range fn.FreeformTags {
-			freeformTags[k] = v
-		}
-		definedTags := make(map[string]interface{}, len(fn.DefinedTags))
-		for k, v := range fn.DefinedTags {
-			definedTags[k] = v
-		}
-
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.functions.function", map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(fn.Id),
 			"name":             llx.StringDataPtr(fn.DisplayName),
@@ -255,8 +237,8 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			"traceConfig":      llx.DictData(traceConfig),
 			"created":          llx.TimeDataPtr(created),
 			"timeUpdated":      llx.TimeDataPtr(timeUpdated),
-			"freeformTags":     llx.MapData(freeformTags, types.String),
-			"definedTags":      llx.MapData(definedTags, types.Any),
+			"freeformTags":     llx.MapData(strMapToAny(fn.FreeformTags), types.String),
+			"definedTags":      llx.MapData(definedTagsToAny(fn.DefinedTags), types.Any),
 		})
 		if err != nil {
 			return nil, err
