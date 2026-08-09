@@ -70,6 +70,37 @@ func (m *ApiExtension) get(ctx context.Context, url string, out any) (*http.Resp
 	return resp, nil
 }
 
+// getPaged walks every page of a collection endpoint, following the `Link:
+// rel="next"` header until Okta stops offering one, and returns the
+// concatenated items. The returned http.Response is the first page's, so
+// callers can branch on its status code to treat a 404 as an empty result.
+//
+// It is a free function rather than a method because Go does not allow type
+// parameters on methods.
+func getPaged[T any](ctx context.Context, m *ApiExtension, path string) ([]T, *http.Response, error) {
+	items := []T{}
+	nextURL := m.url(path)
+	var firstResp *http.Response
+
+	for nextURL != "" {
+		var page []T
+		resp, err := m.get(ctx, nextURL, &page)
+		if firstResp == nil {
+			firstResp = resp
+		}
+		if err != nil {
+			return nil, resp, err
+		}
+		items = append(items, page...)
+		if resp == nil {
+			break
+		}
+		nextURL = nextLinkURL(resp.Header.Values("Link"))
+	}
+
+	return items, firstResp, nil
+}
+
 // url builds an absolute org URL for the given API path (e.g. "/api/v1/zones").
 func (m *ApiExtension) url(path string) string {
 	return fmt.Sprintf("https://%s%s", m.Host, path)

@@ -299,13 +299,7 @@ func (o *mqlOktaResourceSetResource) application() (*mqlOktaApplication, error) 
 		o.Application.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	r, err := NewResource(o.MqlRuntime, "okta.application", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheTargetID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return r.(*mqlOktaApplication), nil
+	return resolveOktaApplicationRef(o.MqlRuntime, o.cacheTargetID, &o.Application)
 }
 
 func (o *mqlOktaResourceSetResource) user() (*mqlOktaUser, error) {
@@ -358,6 +352,20 @@ func resolveOktaGroupRef(runtime *plugin.Runtime, id string, field *plugin.TValu
 		return nil, err
 	}
 	return r.(*mqlOktaGroup), nil
+}
+
+func resolveOktaApplicationRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOktaApplication]) (*mqlOktaApplication, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(runtime, "okta.application", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOktaApplication), nil
 }
 
 func resolveOktaCustomRoleRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOktaCustomRole]) (*mqlOktaCustomRole, error) {

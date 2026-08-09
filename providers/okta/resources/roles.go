@@ -14,13 +14,19 @@ import (
 type mqlOktaRoleInternal struct {
 	cacheUserID        string
 	cacheGroupID       string
+	cacheClientID      string
 	cacheCustomRoleID  string
 	cacheResourceSetID string
 }
 
-// newMqlOktaRole maps an Okta role assignment. principalType is "user" or
-// "group" and principalID is the account or group the assignment was read from,
-// which becomes the assignment's principal back-reference.
+type mqlOktaRoleAppTargetInternal struct {
+	cacheApplicationID string
+}
+
+// newMqlOktaRole maps an Okta role assignment. principalType is "user",
+// "group", or "client" and principalID is the account, group, or OAuth client
+// the assignment was read from, which becomes the assignment's principal
+// back-reference and the key its scope targets are looked up under.
 func newMqlOktaRole(runtime *plugin.Runtime, role *okta.Role, principalType, principalID string) (*mqlOktaRole, error) {
 	r, err := CreateResource(runtime, "okta.role", map[string]*llx.RawData{
 		"id":             llx.StringData(oktaStr(role.Id)),
@@ -41,6 +47,8 @@ func newMqlOktaRole(runtime *plugin.Runtime, role *okta.Role, principalType, pri
 		mqlRole.cacheUserID = principalID
 	case "group":
 		mqlRole.cacheGroupID = principalID
+	case "client":
+		mqlRole.cacheClientID = principalID
 	}
 	mqlRole.cacheCustomRoleID, mqlRole.cacheResourceSetID = oktaRoleTypedRefs(role)
 	return mqlRole, nil
