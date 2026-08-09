@@ -58,7 +58,6 @@ func initMssqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["name"] = llx.StringData(name.String)
 	args["machineName"] = llx.StringData(machine.String)
 	args["instanceName"] = llx.StringData(instanceName)
-	args["port"] = llx.IntData(int64(conn.Port()))
 	args["version"] = llx.StringData(version.String)
 	args["productVersion"] = llx.StringData(productVersion.String)
 	args["productLevel"] = llx.StringData(productLevel.String)
@@ -72,6 +71,28 @@ func initMssqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 func (c *mqlMssqlServer) instanceID() string {
 	return mssqlConnection(c.MqlRuntime).InstanceID()
+}
+
+// port reports the TCP port the instance is listening on, taken from the
+// scanning session's own row in sys.dm_exec_connections. A session always sees
+// its own connection, so no VIEW SERVER STATE is required. The port the scan
+// dialed is only a fallback: it is the wrong answer whenever a port mapping or
+// proxy sits in front of the instance, which is exactly the case the
+// non-standard-port audit needs to get right.
+func (c *mqlMssqlServer) port() (int64, error) {
+	fallback := int64(mssqlConnection(c.MqlRuntime).Port())
+
+	client, err := mssqlClient(c.MqlRuntime)
+	if err != nil {
+		return fallback, nil
+	}
+	const q = `SELECT local_tcp_port FROM sys.dm_exec_connections WHERE session_id = @@SPID`
+	var v sql.NullInt64
+	if err := client.QueryRowContext(mssqlContext(), q).Scan(&v); err != nil || !v.Valid || v.Int64 == 0 {
+		// Shared memory and named-pipe sessions report no TCP port.
+		return fallback, nil
+	}
+	return v.Int64, nil
 }
 
 // --- registry-backed fields -------------------------------------------------

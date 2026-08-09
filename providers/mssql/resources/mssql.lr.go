@@ -1660,7 +1660,9 @@ func (c *mqlMssqlServer) GetInstanceName() *plugin.TValue[string] {
 }
 
 func (c *mqlMssqlServer) GetPort() *plugin.TValue[int64] {
-	return &c.Port
+	return plugin.GetOrCompute[int64](&c.Port, func() (int64, error) {
+		return c.port()
+	})
 }
 
 func (c *mqlMssqlServer) GetVersion() *plugin.TValue[string] {

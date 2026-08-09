@@ -103,6 +103,11 @@ Examples:
 					Type:    plugin.FlagType_String,
 					Default: "sql",
 					Desc:    "Authentication mode: sql, windows, kerberos, or azure",
+					// Not persisted to the CLI config: cnquery's own config
+					// reserves the top-level `auth` key for an authentication
+					// map, and binding a string flag onto it makes every
+					// mssql invocation fail to load the config.
+					ConfigEntry: "-",
 				},
 				{
 					Long:    "encrypt",
