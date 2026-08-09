@@ -23,6 +23,7 @@ const (
 	ResourceAlicloudRamGroup                     string = "alicloud.ram.group"
 	ResourceAlicloudRamRole                      string = "alicloud.ram.role"
 	ResourceAlicloudRamPolicy                    string = "alicloud.ram.policy"
+	ResourceAlicloudRamPolicyStatement           string = "alicloud.ram.policy.statement"
 	ResourceAlicloudRamPasswordPolicy            string = "alicloud.ram.passwordPolicy"
 	ResourceAlicloudEcs                          string = "alicloud.ecs"
 	ResourceAlicloudEcsInstance                  string = "alicloud.ecs.instance"
@@ -147,6 +148,10 @@ func init() {
 		"alicloud.ram.policy": {
 			Init:   initAlicloudRamPolicy,
 			Create: createAlicloudRamPolicy,
+		},
+		"alicloud.ram.policy.statement": {
+			// to override args, implement: initAlicloudRamPolicyStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudRamPolicyStatement,
 		},
 		"alicloud.ram.passwordPolicy": {
 			// to override args, implement: initAlicloudRamPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -646,6 +651,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ram.user.attachedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamUser).GetAttachedPolicies()).ToDataRes(types.Array(types.Resource("alicloud.ram.policy")))
 	},
+	"alicloud.ram.user.effectivePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetEffectivePolicies()).ToDataRes(types.Array(types.Resource("alicloud.ram.policy")))
+	},
 	"alicloud.ram.user.mfaDevice": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamUser).GetMfaDevice()).ToDataRes(types.Dict)
 	},
@@ -747,6 +755,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.ram.policy.policyDocument": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamPolicy).GetPolicyDocument()).ToDataRes(types.String)
+	},
+	"alicloud.ram.policy.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicy).GetStatements()).ToDataRes(types.Array(types.Resource("alicloud.ram.policy.statement")))
+	},
+	"alicloud.ram.policy.allowsAdminAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicy).GetAllowsAdminAccess()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.policy.hasWildcardAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicy).GetHasWildcardAction()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.policy.hasUnscopedResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicy).GetHasUnscopedResource()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.policy.statement.effect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetEffect()).ToDataRes(types.String)
+	},
+	"alicloud.ram.policy.statement.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetAction()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.policy.statement.notAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetNotAction()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.policy.statement.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetResource()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.policy.statement.notResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetNotResource()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.policy.statement.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetCondition()).ToDataRes(types.Dict)
 	},
 	"alicloud.ram.passwordPolicy.minimumPasswordLength": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamPasswordPolicy).GetMinimumPasswordLength()).ToDataRes(types.Int)
@@ -1695,6 +1733,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.oss.bucket.blockPublicAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudOssBucket).GetBlockPublicAccess()).ToDataRes(types.Bool)
+	},
+	"alicloud.oss.bucket.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"alicloud.slb.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudSlb).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("alicloud.slb.loadBalancer")))
@@ -4834,6 +4875,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRamUser).AttachedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.ram.user.effectivePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).EffectivePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.ram.user.mfaDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRamUser).MfaDevice, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -4984,6 +5029,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.ram.policy.policyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRamPolicy).PolicyDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.allowsAdminAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicy).AllowsAdminAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.hasWildcardAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicy).HasWildcardAction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.hasUnscopedResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicy).HasUnscopedResource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ram.policy.statement.effect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).Effect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).Action, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.notAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).NotAction, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).Resource, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.notResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).NotResource, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).Condition, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"alicloud.ram.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6316,6 +6405,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.oss.bucket.blockPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudOssBucket).BlockPublicAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"alicloud.slb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10877,21 +10970,22 @@ type mqlAlicloudRamUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudRamUserInternal
-	UserId           plugin.TValue[string]
-	UserName         plugin.TValue[string]
-	DisplayName      plugin.TValue[string]
-	Email            plugin.TValue[string]
-	MobilePhone      plugin.TValue[string]
-	Comments         plugin.TValue[string]
-	CreateDate       plugin.TValue[*time.Time]
-	UpdateDate       plugin.TValue[*time.Time]
-	LastLoginDate    plugin.TValue[*time.Time]
-	AccessKeys       plugin.TValue[[]any]
-	Groups           plugin.TValue[[]any]
-	Policies         plugin.TValue[[]any]
-	AttachedPolicies plugin.TValue[[]any]
-	MfaDevice        plugin.TValue[any]
-	LoginProfile     plugin.TValue[any]
+	UserId            plugin.TValue[string]
+	UserName          plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Email             plugin.TValue[string]
+	MobilePhone       plugin.TValue[string]
+	Comments          plugin.TValue[string]
+	CreateDate        plugin.TValue[*time.Time]
+	UpdateDate        plugin.TValue[*time.Time]
+	LastLoginDate     plugin.TValue[*time.Time]
+	AccessKeys        plugin.TValue[[]any]
+	Groups            plugin.TValue[[]any]
+	Policies          plugin.TValue[[]any]
+	AttachedPolicies  plugin.TValue[[]any]
+	EffectivePolicies plugin.TValue[[]any]
+	MfaDevice         plugin.TValue[any]
+	LoginProfile      plugin.TValue[any]
 }
 
 // createAlicloudRamUser creates a new instance of this resource
@@ -11020,6 +11114,22 @@ func (c *mqlAlicloudRamUser) GetAttachedPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.attachedPolicies()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetEffectivePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectivePolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ram.user", c.__id, "effectivePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectivePolicies()
 	})
 }
 
@@ -11328,16 +11438,20 @@ func (c *mqlAlicloudRamRole) GetAttachedPolicies() *plugin.TValue[[]any] {
 type mqlAlicloudRamPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudRamPolicyInternal it will be used here
-	PolicyName      plugin.TValue[string]
-	PolicyType      plugin.TValue[string]
-	Description     plugin.TValue[string]
-	DefaultVersion  plugin.TValue[string]
-	AttachmentCount plugin.TValue[int64]
-	CreateDate      plugin.TValue[*time.Time]
-	UpdateDate      plugin.TValue[*time.Time]
-	Tags            plugin.TValue[map[string]any]
-	PolicyDocument  plugin.TValue[string]
+	mqlAlicloudRamPolicyInternal
+	PolicyName          plugin.TValue[string]
+	PolicyType          plugin.TValue[string]
+	Description         plugin.TValue[string]
+	DefaultVersion      plugin.TValue[string]
+	AttachmentCount     plugin.TValue[int64]
+	CreateDate          plugin.TValue[*time.Time]
+	UpdateDate          plugin.TValue[*time.Time]
+	Tags                plugin.TValue[map[string]any]
+	PolicyDocument      plugin.TValue[string]
+	Statements          plugin.TValue[[]any]
+	AllowsAdminAccess   plugin.TValue[bool]
+	HasWildcardAction   plugin.TValue[bool]
+	HasUnscopedResource plugin.TValue[bool]
 }
 
 // createAlicloudRamPolicy creates a new instance of this resource
@@ -11413,6 +11527,109 @@ func (c *mqlAlicloudRamPolicy) GetPolicyDocument() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.PolicyDocument, func() (string, error) {
 		return c.policyDocument()
 	})
+}
+
+func (c *mqlAlicloudRamPolicy) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ram.policy", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
+	})
+}
+
+func (c *mqlAlicloudRamPolicy) GetAllowsAdminAccess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsAdminAccess, func() (bool, error) {
+		return c.allowsAdminAccess()
+	})
+}
+
+func (c *mqlAlicloudRamPolicy) GetHasWildcardAction() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardAction, func() (bool, error) {
+		return c.hasWildcardAction()
+	})
+}
+
+func (c *mqlAlicloudRamPolicy) GetHasUnscopedResource() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnscopedResource, func() (bool, error) {
+		return c.hasUnscopedResource()
+	})
+}
+
+// mqlAlicloudRamPolicyStatement for the alicloud.ram.policy.statement resource
+type mqlAlicloudRamPolicyStatement struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudRamPolicyStatementInternal it will be used here
+	Effect      plugin.TValue[string]
+	Action      plugin.TValue[[]any]
+	NotAction   plugin.TValue[[]any]
+	Resource    plugin.TValue[[]any]
+	NotResource plugin.TValue[[]any]
+	Condition   plugin.TValue[any]
+}
+
+// createAlicloudRamPolicyStatement creates a new instance of this resource
+func createAlicloudRamPolicyStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudRamPolicyStatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ram.policy.statement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudRamPolicyStatement) MqlName() string {
+	return "alicloud.ram.policy.statement"
+}
+
+func (c *mqlAlicloudRamPolicyStatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetEffect() *plugin.TValue[string] {
+	return &c.Effect
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetAction() *plugin.TValue[[]any] {
+	return &c.Action
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetNotAction() *plugin.TValue[[]any] {
+	return &c.NotAction
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetResource() *plugin.TValue[[]any] {
+	return &c.Resource
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetNotResource() *plugin.TValue[[]any] {
+	return &c.NotResource
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetCondition() *plugin.TValue[any] {
+	return &c.Condition
 }
 
 // mqlAlicloudRamPasswordPolicy for the alicloud.ram.passwordPolicy resource
@@ -14088,6 +14305,7 @@ type mqlAlicloudOssBucket struct {
 	CrossRegionReplication plugin.TValue[string]
 	DataRedundancyType     plugin.TValue[string]
 	BlockPublicAccess      plugin.TValue[bool]
+	IsPublic               plugin.TValue[bool]
 }
 
 // createAlicloudOssBucket creates a new instance of this resource
@@ -14250,6 +14468,12 @@ func (c *mqlAlicloudOssBucket) GetDataRedundancyType() *plugin.TValue[string] {
 func (c *mqlAlicloudOssBucket) GetBlockPublicAccess() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.BlockPublicAccess, func() (bool, error) {
 		return c.blockPublicAccess()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 

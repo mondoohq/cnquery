@@ -454,3 +454,39 @@ func (a *mqlAlicloudOssBucket) blockPublicAccess() (bool, error) {
 	}
 	return *info.BlockPublicAccess, nil
 }
+
+// isPublic folds the two ways a bucket reaches anonymous callers, a public
+// canned ACL and a bucket policy naming a "*" principal, into one verdict.
+// Block public access overrides both, so it is checked first. The fields are
+// read through their generated accessors so a query asking for isPublic
+// alongside acl or policy costs one call each rather than two.
+func (a *mqlAlicloudOssBucket) isPublic() (bool, error) {
+	blocked := a.GetBlockPublicAccess()
+	if blocked.Error != nil {
+		return false, blocked.Error
+	}
+	if blocked.Data {
+		return false, nil
+	}
+
+	acl := a.GetAcl()
+	if acl.Error != nil {
+		return false, acl.Error
+	}
+	switch strings.ToLower(strings.TrimSpace(acl.Data)) {
+	case "public-read", "public-read-write":
+		return true, nil
+	}
+
+	policy := a.GetPolicy()
+	if policy.Error != nil {
+		return false, policy.Error
+	}
+	statements, err := parsePolicyDocument(policy.Data)
+	if err != nil {
+		// an unparseable policy is not evidence of exposure, and the raw
+		// document stays available through the policy field
+		return false, nil
+	}
+	return policyGrantsAnonymousAccess(statements), nil
+}
