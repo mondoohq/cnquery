@@ -614,6 +614,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.protectionConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetProtectionConfig()).ToDataRes(types.Dict)
 	},
+	"vercel.project.protectionBypassCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetProtectionBypassCount()).ToDataRes(types.Int)
+	},
+	"vercel.project.protectionBypassScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetProtectionBypassScopes()).ToDataRes(types.Array(types.String))
+	},
 	"vercel.project.repositoryType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetRepositoryType()).ToDataRes(types.String)
 	},
@@ -1850,6 +1856,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.project.protectionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProject).ProtectionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"vercel.project.protectionBypassCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).ProtectionBypassCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.project.protectionBypassScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).ProtectionBypassScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.project.repositoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3891,6 +3905,8 @@ type mqlVercelProject struct {
 	TrustedIpsAddresses                  plugin.TValue[[]any]
 	OptionsAllowlistPaths                plugin.TValue[[]any]
 	ProtectionConfig                     plugin.TValue[any]
+	ProtectionBypassCount                plugin.TValue[int64]
+	ProtectionBypassScopes               plugin.TValue[[]any]
 	RepositoryType                       plugin.TValue[string]
 	RepositoryOwner                      plugin.TValue[string]
 	RepositoryName                       plugin.TValue[string]
@@ -4073,6 +4089,14 @@ func (c *mqlVercelProject) GetOptionsAllowlistPaths() *plugin.TValue[[]any] {
 
 func (c *mqlVercelProject) GetProtectionConfig() *plugin.TValue[any] {
 	return &c.ProtectionConfig
+}
+
+func (c *mqlVercelProject) GetProtectionBypassCount() *plugin.TValue[int64] {
+	return &c.ProtectionBypassCount
+}
+
+func (c *mqlVercelProject) GetProtectionBypassScopes() *plugin.TValue[[]any] {
+	return &c.ProtectionBypassScopes
 }
 
 func (c *mqlVercelProject) GetRepositoryType() *plugin.TValue[string] {
