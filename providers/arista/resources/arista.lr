@@ -55,8 +55,10 @@ arista.eos {
   bgp() arista.eos.bgp
   // MLAG high-availability configuration
   mlag() arista.eos.mlag
-  // Standard IP access control lists
+  // IP access control lists (standard, extended, and IPv6)
   acls() []arista.eos.acl
+  // Every place an access-list is applied
+  aclBindings() []arista.eos.aclBinding
   // Hardware environment and inventory
   hardware() arista.eos.hardware
   // AAA (Authentication, Authorization, Accounting) configuration
@@ -641,37 +643,122 @@ private arista.eos.mlag.interface @defaults("name mlagId") {
   mlagId string
 }
 
-// Arista EOS standard IP access control list
+// Arista EOS IP access control list
 //
-// A single standard IP access control list, selected by `name` (for
-// example `arista.eos.acl(name: "management")`). The ordered `entries`
-// give each rule's permit or deny action, source address, prefix
-// length, and per-rule logging, for connectivity audits and
-// ingress-filtering reviews. The `type` field reports the ACL type
-// (currently only "standard" is supported by the EOS SDK).
-arista.eos.acl @defaults("name") {
+// A single access control list, selected by `name` (for example
+// `arista.eos.acl(name: "MGMT-ACCESS")`). Covers the standard, extended, and
+// IPv6 forms: `family` reports whether the list matches IPv4 or IPv6 traffic
+// and `type` reports whether it matches on source address alone (standard)
+// or on the full five-tuple (extended).
+//
+// The ordered `entries` give each rule's action, protocol, source and
+// destination, port matches, and per-rule logging. To find where a list is
+// actually applied, and therefore what it protects, see
+// `arista.eos.aclBindings`.
+arista.eos.acl @defaults("name family type") {
   // ACL name
   name string
-  // ACL type (currently only "standard" supported by SDK)
+  // Address family the list matches, `ipv4` or `ipv6`
+  family string
+  // ACL form
+  //
+  // Either `standard`, which matches on source address alone, or
+  // `extended`, which matches on protocol, source, destination, and
+  // ports. A list declared without an explicit keyword is extended.
   type string
-  // ACL entries (rules)
+  // ACL entries (rules), ordered by sequence number
   entries() []arista.eos.acl.entry
 }
 
 // Arista EOS ACL entry (rule)
-private arista.eos.acl.entry @defaults("sequenceNumber action") {
+//
+// One rule inside an access-list. `text` carries the rule exactly as
+// configured: the structured fields cover the forms the device emits, but the
+// rule grammar accepts qualifiers that are not broken out separately, so
+// `text` is what guarantees a rule is never reduced to less than it says.
+private arista.eos.acl.entry @defaults("sequenceNumber action text") {
   // ACL name this entry belongs to
   aclName string
   // Sequence number (determines evaluation order)
   sequenceNumber int
-  // Action: "permit" or "deny"
+  // Rule action
+  //
+  // One of `permit`, `deny`, or `remark` for a comment entry.
   action string
-  // Source IP address
+  // Protocol matched by the rule
+  //
+  // For example `ip`, `tcp`, `udp`, `icmp`, `ipv6`, or a protocol number.
+  // Empty on standard lists, which match on source address alone.
+  protocol string
+  // Source IP address, or `any` for a wildcard match
   srcAddress string
   // Source prefix length (CIDR notation, e.g., 24 for /24)
   srcPrefixLen int
+  // Source port match operator
+  //
+  // One of `eq`, `neq`, `lt`, `gt`, or `range`. Empty when the rule does
+  // not match on source port.
+  srcPortOperator string
+  // Source port operands for srcPortOperator
+  srcPorts []string
+  // Destination IP address, or `any` for a wildcard match
+  //
+  // Empty on standard lists, which have no destination match.
+  dstAddress string
+  // Destination prefix length (CIDR notation, e.g., 24 for /24)
+  dstPrefixLen int
+  // Destination port match operator
+  //
+  // One of `eq`, `neq`, `lt`, `gt`, or `range`. Empty when the rule does
+  // not match on destination port.
+  dstPortOperator string
+  // Destination port operands for dstPortOperator
+  dstPorts []string
+  // Whether the rule matches only packets belonging to an existing TCP session
+  established bool
   // Whether logging is enabled for this rule
   log bool
+  // Comment text on a `remark` entry
+  remark string
+  // The rule as written, without its sequence number
+  text string
+}
+
+// Arista EOS access-list binding
+//
+// One place an access-list is applied. Knowing which access-lists exist says
+// nothing about what they protect: a list that is written but never applied
+// filters nothing, and a question like "is management access restricted to
+// the admin network?" cannot be answered from the rules alone.
+//
+// `target` reports what the list is bound to, one of `interface`,
+// `managementSsh`, `managementTelnet`, `managementApi`, or `controlPlane`.
+// `targetName` carries the interface name for interface bindings and is empty
+// for the management services and the control plane, which are singletons.
+// `acl` resolves to the list itself, so a single query can walk from a
+// binding to the rules it enforces.
+private arista.eos.aclBinding @defaults("target targetName direction aclName") {
+  // What the list is applied to
+  //
+  // One of `interface`, `managementSsh`, `managementTelnet`,
+  // `managementApi`, or `controlPlane`.
+  target string
+  // Interface name for interface bindings, empty for the singleton targets
+  targetName string
+  // Traffic direction, `in` or `out`
+  //
+  // A binding written without a direction is inbound, matching how the
+  // device applies it.
+  direction string
+  // Address family of the binding, `ipv4` or `ipv6`
+  family string
+  // Name of the applied access-list
+  aclName string
+  // The applied access-list, resolved from aclName
+  //
+  // Null when the binding names a list that is not defined on the device,
+  // which permits all traffic in that direction.
+  acl() arista.eos.acl
 }
 
 // Arista EOS hardware environment and inventory

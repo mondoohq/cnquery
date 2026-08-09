@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -1090,27 +1092,57 @@ func (v *mqlAristaEosAcl) id() (string, error) {
 	return "arista.eos.acl/" + v.Name.Data, v.Name.Error
 }
 
-type mqlAristaEosAclInternal struct {
-	cachedEntries module.AclEntryMap
+// initAristaEosAcl resolves a standalone `arista.eos.acl(name: "...")` lookup.
+// Without it the resource would be created from the name alone, leaving
+// `family` and `type` unset.
+func initAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// List-element creation already carries the full field set.
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		// No selector given: a bare resource is a valid empty state.
+		return args, nil, nil
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arista.eos.acl name must be a string")
+	}
+
+	rc, err := fetchRunningConfig(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, acl := range eos.ParseAccessLists(rc) {
+		if acl.Name != name {
+			continue
+		}
+		args["family"] = llx.StringData(acl.Family)
+		args["type"] = llx.StringData(acl.Type)
+		return args, nil, nil
+	}
+
+	return nil, nil, fmt.Errorf("arista.eos.acl with name %q not found", name)
 }
 
 func (a *mqlAristaEos) acls() ([]any, error) {
-	eosClient := aristaClient(a.MqlRuntime)
-	aclConfigs := eosClient.AclConfigs()
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	acls := eos.ParseAccessLists(rc)
 
-	res := []any{}
-	for name, aclConfig := range aclConfigs {
+	res := make([]any, 0, len(acls))
+	for _, acl := range acls {
 		mqlAcl, err := CreateResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
-			"name": llx.StringData(name),
-			"type": llx.StringData(aclConfig.Type()),
+			"name":   llx.StringData(acl.Name),
+			"family": llx.StringData(acl.Family),
+			"type":   llx.StringData(acl.Type),
 		})
 		if err != nil {
 			return nil, err
 		}
-
-		// Cache the entries to avoid re-fetching all ACLs in entries()
-		mqlAcl.(*mqlAristaEosAcl).cachedEntries = aclConfig.Entries()
-
 		res = append(res, mqlAcl)
 	}
 
@@ -1123,41 +1155,38 @@ func (a *mqlAristaEosAcl) entries() ([]any, error) {
 	}
 	aclName := a.Name.Data
 
-	// Use cached entries if available (pre-fetched in acls())
-	rawEntries := a.cachedEntries
-	if rawEntries == nil {
-		// Fallback for standalone ACL lookups
-		eosClient := aristaClient(a.MqlRuntime)
-		aclConfigs := eosClient.AclConfigs()
-
-		aclConfig, ok := aclConfigs[aclName]
-		if !ok {
-			return []any{}, nil
-		}
-		rawEntries = aclConfig.Entries()
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
 	}
 
-	// Parse and sort entries by sequence number
-	parsed := make([]eos.AclEntryParsed, 0, len(rawEntries))
-	for seqNum, entry := range rawEntries {
-		p, err := eos.ParseAclEntry(seqNum, entry.Action(), entry.SrcAddr(), entry.SrcLen(), entry.Log())
-		if err != nil {
-			log.Warn().Err(err).Str("acl", aclName).Msg("skipping invalid ACL entry")
-			continue
+	var entries []eos.AccessListEntry
+	for _, acl := range eos.ParseAccessLists(rc) {
+		if acl.Name == aclName {
+			entries = acl.Entries
+			break
 		}
-		parsed = append(parsed, p)
 	}
-	eos.SortAclEntries(parsed)
 
-	res := make([]any, 0, len(parsed))
-	for _, p := range parsed {
+	res := make([]any, 0, len(entries))
+	for _, e := range entries {
 		mqlEntry, err := CreateResource(a.MqlRuntime, "arista.eos.acl.entry", map[string]*llx.RawData{
-			"aclName":        llx.StringData(aclName),
-			"sequenceNumber": llx.IntData(int64(p.SequenceNumber)),
-			"action":         llx.StringData(p.Action),
-			"srcAddress":     llx.StringData(p.SrcAddress),
-			"srcPrefixLen":   llx.IntData(int64(p.SrcPrefixLen)),
-			"log":            llx.BoolData(p.Log),
+			"aclName":         llx.StringData(aclName),
+			"sequenceNumber":  llx.IntData(int64(e.SequenceNumber)),
+			"action":          llx.StringData(e.Action),
+			"protocol":        llx.StringData(e.Protocol),
+			"srcAddress":      llx.StringData(e.SrcAddress),
+			"srcPrefixLen":    llx.IntData(int64(e.SrcPrefixLen)),
+			"srcPortOperator": llx.StringData(e.SrcPortOperator),
+			"srcPorts":        llx.ArrayData(stringSliceToAny(e.SrcPorts), types.String),
+			"dstAddress":      llx.StringData(e.DstAddress),
+			"dstPrefixLen":    llx.IntData(int64(e.DstPrefixLen)),
+			"dstPortOperator": llx.StringData(e.DstPortOperator),
+			"dstPorts":        llx.ArrayData(stringSliceToAny(e.DstPorts), types.String),
+			"established":     llx.BoolData(e.Established),
+			"log":             llx.BoolData(e.Log),
+			"remark":          llx.StringData(e.Remark),
+			"text":            llx.StringData(e.Text),
 		})
 		if err != nil {
 			return nil, err
