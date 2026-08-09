@@ -47,6 +47,7 @@ digitalocean.app.alert.slackWebhookCount 13.10.2
 digitalocean.app.alert.value 13.10.2
 digitalocean.app.alert.window 13.10.2
 digitalocean.app.alerts 13.10.2
+digitalocean.app.corsPolicies 13.14.5
 digitalocean.app.createdAt 13.0.1
 digitalocean.app.defaultIngress 13.6.2
 digitalocean.app.deployment 13.10.2
@@ -72,6 +73,8 @@ digitalocean.app.deployment.updatedAt 13.10.2
 digitalocean.app.deployment.workers 13.10.2
 digitalocean.app.deployments 13.10.2
 digitalocean.app.domains 13.6.2
+digitalocean.app.enhancedThreatControlEnabled 13.14.5
+digitalocean.app.envVars 13.14.5
 digitalocean.app.id 13.0.1
 digitalocean.app.instances 13.10.2
 digitalocean.app.isPublic 13.14.5
@@ -81,6 +84,9 @@ digitalocean.app.name 13.0.1
 digitalocean.app.project 13.6.2
 digitalocean.app.projectId 13.6.2
 digitalocean.app.region 13.6.2
+digitalocean.app.secureHeaderKey 13.14.5
+digitalocean.app.secureHeaderRemoved 13.14.5
+digitalocean.app.secureHeaderValue 13.14.5
 digitalocean.app.spec 13.0.1
 digitalocean.app.tierSlug 13.6.2
 digitalocean.app.updatedAt 13.0.1
@@ -698,6 +704,15 @@ digitalocean.loadBalancer.httpIdleTimeoutSeconds 13.6.2
 digitalocean.loadBalancer.id 13.0.1
 digitalocean.loadBalancer.ip 13.0.1
 digitalocean.loadBalancer.ipv6 13.6.2
+digitalocean.loadBalancer.listener 13.14.5
+digitalocean.loadBalancer.listener.certificate 13.14.5
+digitalocean.loadBalancer.listener.entryPort 13.14.5
+digitalocean.loadBalancer.listener.entryProtocol 13.14.5
+digitalocean.loadBalancer.listener.loadBalancerId 13.14.5
+digitalocean.loadBalancer.listener.targetPort 13.14.5
+digitalocean.loadBalancer.listener.targetProtocol 13.14.5
+digitalocean.loadBalancer.listener.tlsPassthrough 13.14.5
+digitalocean.loadBalancer.listeners 13.14.5
 digitalocean.loadBalancer.name 13.0.1
 digitalocean.loadBalancer.network 13.6.2
 digitalocean.loadBalancer.networkStack 13.6.2

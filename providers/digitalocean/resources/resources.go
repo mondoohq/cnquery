@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // --- Database sub-resources ---
@@ -702,6 +703,8 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 				activeDeploymentId = app.ActiveDeployment.ID
 			}
 
+			secureHeaderKey, secureHeaderValue, secureHeaderRemoved := appSecureHeader(app.Spec)
+
 			domains := make([]interface{}, len(app.Domains))
 			for i, d := range app.Domains {
 				domainName := ""
@@ -731,6 +734,13 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 				"projectId":              llx.StringData(app.ProjectID),
 				"activeDeploymentId":     llx.StringData(activeDeploymentId),
 				"domains":                llx.ArrayData(domains, "\x13"),
+
+				"enhancedThreatControlEnabled": llx.BoolData(app.Spec != nil && app.Spec.EnhancedThreatControlEnabled),
+				"secureHeaderKey":              llx.StringData(secureHeaderKey),
+				"secureHeaderValue":            llx.StringData(secureHeaderValue),
+				"secureHeaderRemoved":          llx.BoolData(secureHeaderRemoved),
+				"corsPolicies":                 llx.ArrayData(appCorsPolicies(app.Spec), types.Dict),
+				"envVars":                      llx.ArrayData(appEnvVars(app.Spec), types.Dict),
 			})
 			if err != nil {
 				return nil, err

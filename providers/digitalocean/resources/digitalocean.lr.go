@@ -34,6 +34,7 @@ const (
 	ResourceDigitaloceanDomainRecord                                    string = "digitalocean.domain.record"
 	ResourceDigitaloceanVolume                                          string = "digitalocean.volume"
 	ResourceDigitaloceanLoadBalancer                                    string = "digitalocean.loadBalancer"
+	ResourceDigitaloceanLoadBalancerListener                            string = "digitalocean.loadBalancer.listener"
 	ResourceDigitaloceanVpc                                             string = "digitalocean.vpc"
 	ResourceDigitaloceanVpcPeering                                      string = "digitalocean.vpcPeering"
 	ResourceDigitaloceanKubernetesCluster                               string = "digitalocean.kubernetes.cluster"
@@ -170,6 +171,10 @@ func init() {
 		"digitalocean.loadBalancer": {
 			Init:   initDigitaloceanLoadBalancer,
 			Create: createDigitaloceanLoadBalancer,
+		},
+		"digitalocean.loadBalancer.listener": {
+			// to override args, implement: initDigitaloceanLoadBalancerListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanLoadBalancerListener,
 		},
 		"digitalocean.vpc": {
 			// to override args, implement: initDigitaloceanVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1204,6 +1209,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.loadBalancer.forwardingRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetForwardingRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"digitalocean.loadBalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancer).GetListeners()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer.listener")))
+	},
 	"digitalocean.loadBalancer.healthCheck": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetHealthCheck()).ToDataRes(types.Dict)
 	},
@@ -1260,6 +1268,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetExposure()).ToDataRes(types.Resource("digitalocean.network.exposure"))
+	},
+	"digitalocean.loadBalancer.listener.loadBalancerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetLoadBalancerId()).ToDataRes(types.String)
+	},
+	"digitalocean.loadBalancer.listener.entryProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetEntryProtocol()).ToDataRes(types.String)
+	},
+	"digitalocean.loadBalancer.listener.entryPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetEntryPort()).ToDataRes(types.Int)
+	},
+	"digitalocean.loadBalancer.listener.targetProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetTargetProtocol()).ToDataRes(types.String)
+	},
+	"digitalocean.loadBalancer.listener.targetPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetTargetPort()).ToDataRes(types.Int)
+	},
+	"digitalocean.loadBalancer.listener.tlsPassthrough": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetTlsPassthrough()).ToDataRes(types.Bool)
+	},
+	"digitalocean.loadBalancer.listener.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancerListener).GetCertificate()).ToDataRes(types.Resource("digitalocean.certificate"))
 	},
 	"digitalocean.vpc.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpc).GetId()).ToDataRes(types.String)
@@ -1746,6 +1775,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.app.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanApp).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"digitalocean.app.enhancedThreatControlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetEnhancedThreatControlEnabled()).ToDataRes(types.Bool)
+	},
+	"digitalocean.app.secureHeaderKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetSecureHeaderKey()).ToDataRes(types.String)
+	},
+	"digitalocean.app.secureHeaderValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetSecureHeaderValue()).ToDataRes(types.String)
+	},
+	"digitalocean.app.secureHeaderRemoved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetSecureHeaderRemoved()).ToDataRes(types.Bool)
+	},
+	"digitalocean.app.corsPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetCorsPolicies()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.app.envVars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetEnvVars()).ToDataRes(types.Array(types.Dict))
 	},
 	"digitalocean.app.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAppDeployment).GetId()).ToDataRes(types.String)
@@ -4335,6 +4382,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanLoadBalancer).ForwardingRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.loadBalancer.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.loadBalancer.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanLoadBalancer).HealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -4409,6 +4460,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlDigitaloceanNetworkExposure](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.loadBalancer.listener.loadBalancerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).LoadBalancerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.entryProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).EntryProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.entryPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).EntryPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.targetProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).TargetProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.targetPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).TargetPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.tlsPassthrough": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).TlsPassthrough, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.listener.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancerListener).Certificate, ok = plugin.RawToTValue[*mqlDigitaloceanCertificate](v.Value, v.Error)
 		return
 	},
 	"digitalocean.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5117,6 +5200,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.app.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanApp).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.enhancedThreatControlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).EnhancedThreatControlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.secureHeaderKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).SecureHeaderKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.secureHeaderValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).SecureHeaderValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.secureHeaderRemoved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).SecureHeaderRemoved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.corsPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).CorsPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.envVars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).EnvVars, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.app.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10105,6 +10212,7 @@ type mqlDigitaloceanLoadBalancer struct {
 	Droplets                     plugin.TValue[[]any]
 	Tags                         plugin.TValue[[]any]
 	ForwardingRules              plugin.TValue[[]any]
+	Listeners                    plugin.TValue[[]any]
 	HealthCheck                  plugin.TValue[any]
 	StickySessions               plugin.TValue[any]
 	DisableLetsEncryptDnsRecords plugin.TValue[bool]
@@ -10251,6 +10359,22 @@ func (c *mqlDigitaloceanLoadBalancer) GetForwardingRules() *plugin.TValue[[]any]
 	return &c.ForwardingRules
 }
 
+func (c *mqlDigitaloceanLoadBalancer) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.loadBalancer", c.__id, "listeners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.listeners()
+	})
+}
+
 func (c *mqlDigitaloceanLoadBalancer) GetHealthCheck() *plugin.TValue[any] {
 	return &c.HealthCheck
 }
@@ -10360,6 +10484,92 @@ func (c *mqlDigitaloceanLoadBalancer) GetExposure() *plugin.TValue[*mqlDigitaloc
 		}
 
 		return c.exposure()
+	})
+}
+
+// mqlDigitaloceanLoadBalancerListener for the digitalocean.loadBalancer.listener resource
+type mqlDigitaloceanLoadBalancerListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanLoadBalancerListenerInternal
+	LoadBalancerId plugin.TValue[string]
+	EntryProtocol  plugin.TValue[string]
+	EntryPort      plugin.TValue[int64]
+	TargetProtocol plugin.TValue[string]
+	TargetPort     plugin.TValue[int64]
+	TlsPassthrough plugin.TValue[bool]
+	Certificate    plugin.TValue[*mqlDigitaloceanCertificate]
+}
+
+// createDigitaloceanLoadBalancerListener creates a new instance of this resource
+func createDigitaloceanLoadBalancerListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanLoadBalancerListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.loadBalancer.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) MqlName() string {
+	return "digitalocean.loadBalancer.listener"
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetLoadBalancerId() *plugin.TValue[string] {
+	return &c.LoadBalancerId
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetEntryProtocol() *plugin.TValue[string] {
+	return &c.EntryProtocol
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetEntryPort() *plugin.TValue[int64] {
+	return &c.EntryPort
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetTargetProtocol() *plugin.TValue[string] {
+	return &c.TargetProtocol
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetTargetPort() *plugin.TValue[int64] {
+	return &c.TargetPort
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetTlsPassthrough() *plugin.TValue[bool] {
+	return &c.TlsPassthrough
+}
+
+func (c *mqlDigitaloceanLoadBalancerListener) GetCertificate() *plugin.TValue[*mqlDigitaloceanCertificate] {
+	return plugin.GetOrCompute[*mqlDigitaloceanCertificate](&c.Certificate, func() (*mqlDigitaloceanCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.loadBalancer.listener", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanCertificate), nil
+			}
+		}
+
+		return c.certificate()
 	})
 }
 
@@ -11876,26 +12086,32 @@ type mqlDigitaloceanApp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanAppInternal it will be used here
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	LiveUrl                plugin.TValue[string]
-	CreatedAt              plugin.TValue[*time.Time]
-	UpdatedAt              plugin.TValue[*time.Time]
-	ActiveDeploymentStatus plugin.TValue[string]
-	Spec                   plugin.TValue[any]
-	Region                 plugin.TValue[string]
-	TierSlug               plugin.TValue[string]
-	DefaultIngress         plugin.TValue[string]
-	LiveDomain             plugin.TValue[string]
-	ProjectId              plugin.TValue[string]
-	Project                plugin.TValue[*mqlDigitaloceanProject]
-	ActiveDeploymentId     plugin.TValue[string]
-	Domains                plugin.TValue[[]any]
-	Deployments            plugin.TValue[[]any]
-	ActiveDeployment       plugin.TValue[*mqlDigitaloceanAppDeployment]
-	Alerts                 plugin.TValue[[]any]
-	Instances              plugin.TValue[[]any]
-	IsPublic               plugin.TValue[bool]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	LiveUrl                      plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                    plugin.TValue[*time.Time]
+	ActiveDeploymentStatus       plugin.TValue[string]
+	Spec                         plugin.TValue[any]
+	Region                       plugin.TValue[string]
+	TierSlug                     plugin.TValue[string]
+	DefaultIngress               plugin.TValue[string]
+	LiveDomain                   plugin.TValue[string]
+	ProjectId                    plugin.TValue[string]
+	Project                      plugin.TValue[*mqlDigitaloceanProject]
+	ActiveDeploymentId           plugin.TValue[string]
+	Domains                      plugin.TValue[[]any]
+	Deployments                  plugin.TValue[[]any]
+	ActiveDeployment             plugin.TValue[*mqlDigitaloceanAppDeployment]
+	Alerts                       plugin.TValue[[]any]
+	Instances                    plugin.TValue[[]any]
+	IsPublic                     plugin.TValue[bool]
+	EnhancedThreatControlEnabled plugin.TValue[bool]
+	SecureHeaderKey              plugin.TValue[string]
+	SecureHeaderValue            plugin.TValue[string]
+	SecureHeaderRemoved          plugin.TValue[bool]
+	CorsPolicies                 plugin.TValue[[]any]
+	EnvVars                      plugin.TValue[[]any]
 }
 
 // createDigitaloceanApp creates a new instance of this resource
@@ -12065,6 +12281,30 @@ func (c *mqlDigitaloceanApp) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
 	})
+}
+
+func (c *mqlDigitaloceanApp) GetEnhancedThreatControlEnabled() *plugin.TValue[bool] {
+	return &c.EnhancedThreatControlEnabled
+}
+
+func (c *mqlDigitaloceanApp) GetSecureHeaderKey() *plugin.TValue[string] {
+	return &c.SecureHeaderKey
+}
+
+func (c *mqlDigitaloceanApp) GetSecureHeaderValue() *plugin.TValue[string] {
+	return &c.SecureHeaderValue
+}
+
+func (c *mqlDigitaloceanApp) GetSecureHeaderRemoved() *plugin.TValue[bool] {
+	return &c.SecureHeaderRemoved
+}
+
+func (c *mqlDigitaloceanApp) GetCorsPolicies() *plugin.TValue[[]any] {
+	return &c.CorsPolicies
+}
+
+func (c *mqlDigitaloceanApp) GetEnvVars() *plugin.TValue[[]any] {
+	return &c.EnvVars
 }
 
 // mqlDigitaloceanAppDeployment for the digitalocean.app.deployment resource
