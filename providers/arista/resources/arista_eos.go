@@ -893,6 +893,17 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 		neighbors = nil
 	}
 
+	// The operational view says whether a session is up; the configured view
+	// says whether it is protected. Both are needed to describe a peer.
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	configuredPeers := map[string]eos.BgpNeighborConfig{}
+	for _, n := range eos.ParseBgpConfig(rc).Neighbors {
+		configuredPeers[n.VRF+"/"+n.PeerAddress] = n
+	}
+
 	// Pre-build neighbor lookup maps to avoid O(n²) linear searches
 	type neighborInfo struct {
 		Description      string
@@ -929,17 +940,37 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 				}
 			}
 
+			// A peer present operationally but absent from the config we
+			// parsed keeps the zero values, which read as "no protection
+			// configured" — the same conclusion an empty setting warrants.
+			conf := configuredPeers[vrfName+"/"+peerAddr]
+			// The config is the better source for the policy names: it holds
+			// them even for a session that never came up.
+			if inRouteMap == "" {
+				inRouteMap = conf.InboundRouteMap
+			}
+			if outRouteMap == "" {
+				outRouteMap = conf.OutboundRouteMap
+			}
+
 			mqlPeer, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.peer", map[string]*llx.RawData{
-				"vrfName":          llx.StringData(vrfName),
-				"peerAddress":      llx.StringData(peerAddr),
-				"remoteAs":         llx.StringData(peerData.ASN),
-				"state":            llx.StringData(peerData.PeerState),
-				"uptime":           llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
-				"prefixesReceived": llx.IntData(peerData.PrefixReceived),
-				"prefixesAccepted": llx.IntData(peerData.PrefixAccepted),
-				"inboundRouteMap":  llx.StringData(inRouteMap),
-				"outboundRouteMap": llx.StringData(outRouteMap),
-				"description":      llx.StringData(description),
+				"vrfName":                llx.StringData(vrfName),
+				"peerAddress":            llx.StringData(peerAddr),
+				"remoteAs":               llx.StringData(peerData.ASN),
+				"state":                  llx.StringData(peerData.PeerState),
+				"uptime":                 llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
+				"prefixesReceived":       llx.IntData(peerData.PrefixReceived),
+				"prefixesAccepted":       llx.IntData(peerData.PrefixAccepted),
+				"inboundRouteMap":        llx.StringData(inRouteMap),
+				"outboundRouteMap":       llx.StringData(outRouteMap),
+				"description":            llx.StringData(description),
+				"passwordConfigured":     llx.BoolData(conf.PasswordConfigured),
+				"passwordEncryptionType": llx.StringData(conf.PasswordEncryptionType),
+				"ttlMaximumHops":         llx.IntData(int64(conf.TtlMaximumHops)),
+				"maximumRoutes":          llx.IntData(int64(conf.MaximumRoutes)),
+				"shutdown":               llx.BoolData(conf.Shutdown),
+				"updateSource":           llx.StringData(conf.UpdateSource),
+				"ebgpMultihop":           llx.IntData(int64(conf.EbgpMultihop)),
 			})
 			if err != nil {
 				return nil, err
