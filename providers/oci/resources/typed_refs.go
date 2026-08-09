@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -11,70 +12,95 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-// resolveOciImage resolves a typed image resource from an image OCID. Returns
-// (nil, nil) and marks the field as null when the OCID is empty.
+// A resource that points at another one - an instance at its image, a key at
+// its vault - stores the target's OCID and resolves it on read. Every such
+// accessor is the same six steps, and there were thirteen copies of them: five
+// named helpers and eight written out inline.
+//
+// Two of those steps are easy to get wrong in a way nothing catches:
+//
+//   - The null marking. A singular resource accessor that returns (nil, nil)
+//     without first setting StateIsNull leaves the runtime unable to tell the
+//     field was resolved, so it re-fetches or panics on read rather than
+//     reporting null. It has to happen on every empty-id path, in every copy.
+//   - The type assertion. All thirteen ended in a bare res.(*mqlOciX), which
+//     panics if the resource name and the target type ever disagree - and a
+//     panic inside an accessor takes down the whole scan, not one field.
+//
+// resolveRef does both once.
+
+// resolveRef resolves a typed resource from an OCID, marking the field null
+// when there is no id to resolve.
+//
+// A null here is a real answer rather than a missing one: a service using
+// Oracle-managed encryption has no customer key to point at, and an instance
+// not launched from a boot volume has no source. Null is how the absence is
+// reported.
+func resolveRef[T plugin.Resource](runtime *plugin.Runtime, resourceName, id string, field *plugin.TValue[T]) (T, error) {
+	var zero T
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return zero, nil
+	}
+
+	res, err := NewResource(runtime, resourceName, map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return zero, err
+	}
+
+	// Reported rather than asserted. This can only fail if resourceName and T
+	// disagree, which is a bug in the caller - but a failed bare assertion is a
+	// panic, and the executor runs accessors in goroutines where a panic ends
+	// the scan instead of the query.
+	typed, ok := any(res).(T)
+	if !ok {
+		return zero, errors.New("oci: " + resourceName + " resolved to an unexpected resource type")
+	}
+	return typed, nil
+}
+
+// ocidOrEmpty reports id, or "" when it is not an OCID.
+//
+// OCI returns placeholder values where an OCID would go - ORACLE_MANAGED_KEY
+// for a service-managed encryption key is the common one. Passing that to
+// resolveRef would send it to an init that cannot find it and surface a
+// not-found error on a field whose honest answer is "nothing is referenced
+// here". Callers whose upstream field carries such placeholders wrap the id in
+// this; the rest pass the id straight through, which is the behaviour those
+// accessors already had.
+func ocidOrEmpty(id string) string {
+	if !isOcid(id) {
+		return ""
+	}
+	return id
+}
+
+// resolveOciImage resolves a typed image resource from an image OCID.
 func resolveOciImage(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciComputeImage]) (*mqlOciComputeImage, error) {
-	if id == "" {
-		field.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "oci.compute.image", map[string]*llx.RawData{
-		"id": llx.StringData(id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciComputeImage), nil
+	return resolveRef(runtime, "oci.compute.image", id, field)
 }
 
-// resolveOciVault resolves a typed vault resource from a vault OCID. Returns
-// (nil, nil) and marks the field as null when the OCID is empty.
+// resolveOciVault resolves a typed vault resource from a vault OCID.
 func resolveOciVault(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciKmsVault]) (*mqlOciKmsVault, error) {
-	if id == "" {
-		field.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "oci.kms.vault", map[string]*llx.RawData{
-		"id": llx.StringData(id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciKmsVault), nil
+	return resolveRef(runtime, "oci.kms.vault", id, field)
 }
 
-// resolveOciKmsKey resolves a typed KMS key resource from a key OCID. Returns
-// (nil, nil) and marks the field as null when the OCID is empty, which is what
-// a service using Oracle-managed encryption reports: there is no customer key
-// to point at, and a null key is the signal that no customer key is in use.
+// resolveOciKmsKey resolves a typed KMS key resource from a key OCID.
 func resolveOciKmsKey(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciKmsKey]) (*mqlOciKmsKey, error) {
-	if id == "" {
-		field.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "oci.kms.key", map[string]*llx.RawData{
-		"id": llx.StringData(id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciKmsKey), nil
+	return resolveRef(runtime, "oci.kms.key", id, field)
 }
 
 // resolveOciSubnet resolves a typed subnet resource from a subnet OCID.
-// Returns (nil, nil) and marks the field as null when the OCID is empty.
 func resolveOciSubnet(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciNetworkSubnet]) (*mqlOciNetworkSubnet, error) {
-	if id == "" {
-		field.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "oci.network.subnet", map[string]*llx.RawData{
-		"id": llx.StringData(id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciNetworkSubnet), nil
+	return resolveRef(runtime, "oci.network.subnet", id, field)
+}
+
+// resolveOciCompartment resolves the compartment a resource lives in. It is by
+// far the most used of these, since almost every resource reports its owner.
+func resolveOciCompartment(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciCompartment]) (*mqlOciCompartment, error) {
+	return resolveRef(runtime, "oci.compartment", id, field)
 }
 
 // resolveOciSecurityGroups resolves a list of typed network security group
@@ -497,73 +523,23 @@ func (o *mqlOciComputeImage) baseImage() (*mqlOciComputeImage, error) {
 }
 
 func (o *mqlOciComputeInstance) bootVolume() (*mqlOciComputeBootVolume, error) {
-	if o.cacheBootVolumeID == "" || !isOcid(o.cacheBootVolumeID) {
-		o.BootVolume.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.compute.bootVolume", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheBootVolumeID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciComputeBootVolume), nil
+	return resolveRef(o.MqlRuntime, "oci.compute.bootVolume", ocidOrEmpty(o.cacheBootVolumeID), &o.BootVolume)
 }
 
 func (o *mqlOciComputeBlockVolume) sourceVolume() (*mqlOciComputeBlockVolume, error) {
-	if o.cacheSourceVolumeID == "" || !isOcid(o.cacheSourceVolumeID) {
-		o.SourceVolume.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.compute.blockVolume", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSourceVolumeID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciComputeBlockVolume), nil
+	return resolveRef(o.MqlRuntime, "oci.compute.blockVolume", ocidOrEmpty(o.cacheSourceVolumeID), &o.SourceVolume)
 }
 
 func (o *mqlOciComputeBootVolume) sourceBootVolume() (*mqlOciComputeBootVolume, error) {
-	if o.cacheSourceBootVolumeID == "" || !isOcid(o.cacheSourceBootVolumeID) {
-		o.SourceBootVolume.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.compute.bootVolume", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSourceBootVolumeID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciComputeBootVolume), nil
+	return resolveRef(o.MqlRuntime, "oci.compute.bootVolume", ocidOrEmpty(o.cacheSourceBootVolumeID), &o.SourceBootVolume)
 }
 
 func (o *mqlOciIdentityUser) identityProvider() (*mqlOciIdentityIdentityProvider, error) {
-	if o.cacheIdentityProviderID == "" || !isOcid(o.cacheIdentityProviderID) {
-		o.IdentityProvider.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.identity.identityProvider", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheIdentityProviderID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciIdentityIdentityProvider), nil
+	return resolveRef(o.MqlRuntime, "oci.identity.identityProvider", ocidOrEmpty(o.cacheIdentityProviderID), &o.IdentityProvider)
 }
 
 func (o *mqlOciOkeNodePool) cluster() (*mqlOciOkeCluster, error) {
-	if o.cacheClusterID == "" || !isOcid(o.cacheClusterID) {
-		o.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.oke.cluster", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheClusterID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciOkeCluster), nil
+	return resolveRef(o.MqlRuntime, "oci.oke.cluster", ocidOrEmpty(o.cacheClusterID), &o.Cluster)
 }
 
 func (o *mqlOciLoadBalancerLoadBalancer) subnets() ([]any, error) {
@@ -601,43 +577,13 @@ func (o *mqlOciNetworkSubnet) securityLists() ([]any, error) {
 }
 
 func (o *mqlOciFileStorageFileSystem) parentFileSystem() (*mqlOciFileStorageFileSystem, error) {
-	if o.cacheParentFileSystemID == "" || !isOcid(o.cacheParentFileSystemID) {
-		o.ParentFileSystem.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.fileStorage.fileSystem", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheParentFileSystemID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciFileStorageFileSystem), nil
+	return resolveRef(o.MqlRuntime, "oci.fileStorage.fileSystem", ocidOrEmpty(o.cacheParentFileSystemID), &o.ParentFileSystem)
 }
 
 func (o *mqlOciDatabaseDbSystem) sourceDbSystem() (*mqlOciDatabaseDbSystem, error) {
-	if o.cacheSourceDbSystemID == "" || !isOcid(o.cacheSourceDbSystemID) {
-		o.SourceDbSystem.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.database.dbSystem", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSourceDbSystemID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciDatabaseDbSystem), nil
+	return resolveRef(o.MqlRuntime, "oci.database.dbSystem", ocidOrEmpty(o.cacheSourceDbSystemID), &o.SourceDbSystem)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) sourceDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
-	if o.cacheSourceID == "" || !isOcid(o.cacheSourceID) {
-		o.SourceDatabase.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheSourceID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOciDatabaseAutonomousDatabase), nil
+	return resolveRef(o.MqlRuntime, "oci.database.autonomousDatabase", ocidOrEmpty(o.cacheSourceID), &o.SourceDatabase)
 }
