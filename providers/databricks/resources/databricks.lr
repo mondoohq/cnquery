@@ -76,6 +76,14 @@ databricks {
   jobs() []databricks.job
   // Delta Live Tables pipelines defined in the workspace
   pipelines() []databricks.pipeline
+  // Git folders checked out into the workspace
+  repos() []databricks.repo
+  // Git provider credentials stored in the workspace
+  gitCredentials() []databricks.gitCredential
+  // Artifact allowlists governing what shared-access clusters may load
+  artifactAllowlists() []databricks.artifactAllowlist
+  // Instance pools backing the workspace's compute
+  instancePools() []databricks.instancePool
 }
 
 // Databricks workspace
@@ -478,6 +486,22 @@ databricks.cluster @defaults("clusterName dataSecurityMode state") {
   policy() databricks.clusterPolicy
   // AWS instance profile the cluster nodes assume
   instanceProfile() databricks.instanceProfile
+  // Instance pool the cluster draws its nodes from
+  instancePool() databricks.instancePool
+  // Whether the cluster's current settings satisfy the policy it was created against
+  //
+  // Null when no policy is attached, since there is nothing to comply with.
+  // A cluster can drift out of compliance after the policy is tightened, so
+  // this reports the live comparison rather than the state at creation. Pair
+  // it with a policy check, as `policy != null && policyCompliant`, because a
+  // null on an unpoliced cluster would otherwise read as a pass.
+  policyCompliant() bool
+  // Settings that violate the attached policy, keyed by setting path
+  //
+  // Each key names a cluster setting the policy rejects, such as
+  // `spark_version` or `num_workers`, and its value describes the violation.
+  // Empty on a compliant cluster and null when no policy is attached.
+  policyViolations() map[string]string
   // Workspace access control list of the cluster
   permissions() []databricks.permission
 }
@@ -1437,6 +1461,17 @@ databricks.job @defaults("name runAs format") {
   tasks() []databricks.job.task
   // Reusable compute definitions shared by the job's tasks
   jobClusters() []databricks.clusterSpec
+  // Whether the job's compute satisfies the policies its job clusters are created against
+  //
+  // A job drifts out of compliance when a policy is tightened after the job
+  // was defined, so this reports the live comparison. True for a job whose
+  // clusters reference no policy, since there is nothing to violate.
+  policyCompliant() bool
+  // Settings that violate the policies the job's clusters are created against
+  //
+  // Each key names a cluster setting the policy rejects and its value
+  // describes the violation. Empty on a compliant job.
+  policyViolations() map[string]string
   // Workspace access control list of the job
   permissions() []databricks.permission
 }
@@ -1577,5 +1612,160 @@ databricks.pipeline @defaults("name state runAs") {
   // Compute definitions the pipeline creates for its updates
   clusters() []databricks.clusterSpec
   // Workspace access control list of the pipeline
+  permissions() []databricks.permission
+}
+
+// Git folder in the workspace
+//
+// A Git repository checked out into the workspace, keyed by its numeric id.
+// Git folders are how external source enters the workspace, so auditing them
+// surfaces the remote URL and hosting provider, the branch and commit the
+// checkout currently sits on, the workspace path the code is mounted at, the
+// sparse-checkout patterns limiting what is pulled, and the access control
+// list governing who can change any of it. Select a folder by path, for
+// example `databricks.repos.where(path == "/Repos/prod/etl")`.
+databricks.repo @defaults("path url branch") {
+  // Numeric identifier of the Git folder
+  id int
+  // Workspace path the repository is checked out at
+  path string
+  // Remote URL the repository is cloned from
+  url string
+  // Git hosting provider, such as gitHub, gitLab, bitbucketCloud, or azureDevOpsServices
+  provider string
+  // Branch the checkout tracks, empty when pinned to a tag or commit
+  branch string
+  // Commit the checkout currently sits on
+  headCommitId string
+  // Directory patterns limiting what the checkout pulls
+  //
+  // Empty when the whole repository is checked out. A sparse checkout narrows
+  // what reaches the workspace but does not restrict what a user with write
+  // access can add later.
+  sparseCheckoutPatterns []string
+  // Workspace access control list of the Git folder
+  permissions() []databricks.permission
+}
+
+// Git provider credential
+//
+// A credential the workspace stores to authenticate against a Git hosting
+// provider, keyed by its numeric id. These credentials let jobs and Git
+// folders reach private repositories, so auditing them surfaces which
+// providers the workspace can authenticate to and under which account. The
+// token itself is write-only in the API and is never returned. Select a
+// credential by provider, for example
+// `databricks.gitCredentials.where(gitProvider == "gitHub")`.
+databricks.gitCredential @defaults("gitProvider gitUsername") {
+  // Numeric identifier of the credential
+  id int
+  // Credential name, empty when none is set
+  name string
+  // Git hosting provider the credential authenticates to, such as gitHub, gitLab, or bitbucketCloud
+  gitProvider string
+  // Account name the credential authenticates as
+  gitUsername string
+  // Email address recorded on commits made with the credential
+  gitEmail string
+  // Whether the credential is used by default for its provider
+  isDefaultForProvider bool
+}
+
+// Unity Catalog artifact allowlist
+//
+// The set of artifacts a metastore permits on compute running in a shared
+// access mode, keyed by artifact type. Shared-access clusters refuse init
+// scripts and libraries that are not allowlisted, which is what keeps one
+// user's code from running in another user's session, so an empty allowlist
+// for a type means nothing of that type may load. Select an allowlist by type,
+// for example
+// `databricks.artifactAllowlists.where(artifactType == "INIT_SCRIPT")`.
+databricks.artifactAllowlist @defaults("artifactType") {
+  // Kind of artifact the allowlist governs
+  //
+  // One of INIT_SCRIPT, LIBRARY_JAR, or LIBRARY_MAVEN.
+  artifactType string
+  // Permitted artifacts, keyed by the artifact path or coordinate
+  //
+  // Each key is a storage path, volume path, or Maven coordinate, and its
+  // value is how the key is compared: PREFIX_MATCH allows everything beneath
+  // the path. An empty map means no artifact of this type may load on
+  // shared-access compute.
+  matchers map[string]string
+  // Id of the metastore the allowlist belongs to
+  metastoreId string
+  // When the allowlist was last set
+  createdAt time
+  // User who last set the allowlist
+  createdBy string
+}
+
+// Databricks instance pool
+//
+// A pool of idle cloud instances that clusters draw nodes from, keyed by its
+// pool id. A pool fixes node-level settings for every cluster that attaches to
+// it, so the AWS instance profile, the preloaded container images, and the
+// custom tags recorded here apply to workloads the pool's own definition never
+// names. Select a pool by name, for example
+// `databricks.instancePools.where(name == "shared-pool")`.
+databricks.instancePool @defaults("name nodeTypeId state") {
+  // Pool id
+  id string
+  // Pool name
+  name string
+  // Current state (ACTIVE, STOPPED, or DELETED)
+  state string
+  // Cloud node type the pool provisions
+  nodeTypeId string
+  // Instances kept warm and ready for attachment
+  minIdleInstances int
+  // Upper bound on instances the pool may hold, 0 when uncapped
+  maxCapacity int
+  // Minutes an idle instance is kept before being released, 0 when kept indefinitely
+  idleInstanceAutoterminationMinutes int
+  // Whether managed disks are added automatically as local storage fills
+  enableElasticDisk bool
+  // Custom tags applied to every instance in the pool
+  customTags map[string]string
+  // Tags Databricks applies to every instance in the pool
+  defaultTags map[string]string
+  // Databricks Runtime versions kept preloaded on idle instances
+  preloadedSparkVersions []string
+  // URLs of container images kept preloaded on idle instances
+  //
+  // Every cluster attaching to the pool can boot from these images without a
+  // pull. Registry credentials that may accompany an image are not exposed.
+  preloadedDockerImageUrls []string
+  // AWS instance profile the pool's nodes assume
+  //
+  // Every cluster attaching to the pool inherits this identity, so it grants
+  // cloud access that no individual cluster definition records.
+  instanceProfile() databricks.instanceProfile
+  // Purchasing model for AWS instances, ON_DEMAND or SPOT
+  awsAvailability string
+  // AWS availability zone the pool provisions into
+  awsZoneId string
+  // Bid price for AWS spot instances, as a percentage of the on-demand price
+  awsSpotBidPricePercent int
+  // Purchasing model for Azure instances, ON_DEMAND_AZURE or SPOT_AZURE
+  azureAvailability string
+  // Maximum bid price for Azure spot instances, -1 when bidding at the on-demand price
+  azureSpotBidMaxPrice float
+  // Purchasing model for GCP instances, ON_DEMAND_GCP, PREEMPTIBLE_GCP, or PREEMPTIBLE_WITH_FALLBACK_GCP
+  gcpAvailability string
+  // GCP availability zone the pool provisions into
+  gcpZoneId string
+  // Local SSDs attached to each GCP instance
+  gcpLocalSsdCount int
+  // Number of managed disks attached to each instance
+  diskCount int
+  // Size of each attached disk in GB
+  diskSize int
+  // Type of the attached disks
+  //
+  // GENERAL_PURPOSE_SSD or THROUGHPUT_OPTIMIZED_HDD on AWS, or the Azure disk
+  // volume type. Empty when the pool attaches no managed disks.
+  diskType string
+  // Workspace access control list of the pool
   permissions() []databricks.permission
 }

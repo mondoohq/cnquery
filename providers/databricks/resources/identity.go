@@ -33,6 +33,10 @@ type mqlDatabricksInternal struct {
 	instanceProfilesByARN map[string]compute.InstanceProfile
 	instanceProfilesErr   error
 
+	instancePoolsOnce sync.Once
+	instancePoolsByID map[string]compute.InstancePoolAndStats
+	instancePoolsErr  error
+
 	networksOnce sync.Once
 	networksByID map[string]provisioning.Network
 	networksErr  error

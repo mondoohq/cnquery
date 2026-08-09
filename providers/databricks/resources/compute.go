@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -17,6 +18,12 @@ import (
 type mqlDatabricksClusterInternal struct {
 	cachePolicyId           string
 	cacheInstanceProfileArn string
+	cacheInstancePoolId     string
+
+	// policyCompliant and policyViolations come from one call, fetched at most
+	// once per cluster.
+	policyComplianceOnce sync.Once
+	policyCompliance     clusterCompliance
 }
 
 // initScriptsToDict normalizes the cluster init scripts into a list of dicts,
@@ -230,6 +237,7 @@ func newMqlDatabricksCluster(runtime *plugin.Runtime, c compute.ClusterDetails) 
 	}
 	mqlCluster := res.(*mqlDatabricksCluster)
 	mqlCluster.cachePolicyId = c.PolicyId
+	mqlCluster.cacheInstancePoolId = c.InstancePoolId
 	if c.AwsAttributes != nil {
 		mqlCluster.cacheInstanceProfileArn = c.AwsAttributes.InstanceProfileArn
 	}

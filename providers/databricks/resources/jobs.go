@@ -26,6 +26,11 @@ type mqlDatabricksJobInternal struct {
 	detailFetched atomic.Bool
 	detail        *jobs.Job
 	detailLock    sync.Mutex
+
+	// policyCompliant and policyViolations come from one call, fetched at most
+	// once per job.
+	policyComplianceOnce sync.Once
+	policyCompliance     jobCompliance
 }
 
 // runAsOf resolves the identity a job executes as. Exactly one of the three name
