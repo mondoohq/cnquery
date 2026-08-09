@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 )
 
 // Administrator role assignments can be narrowed to a set of groups or
@@ -60,7 +59,7 @@ func (o *mqlOktaRole) groupTargets() ([]any, error) {
 		}
 
 	case o.cacheClientID != "":
-		apiSupplement := &sdk.ApiExtension{Host: conn.OrganizationID(), Token: conn.Token()}
+		apiSupplement := conn.ApiExtension()
 		slice, resp, err := apiSupplement.ListClientRoleGroupTargets(ctx, o.cacheClientID, roleID)
 		if err != nil {
 			if isOktaRawFeatureUnavailable(resp) {
@@ -125,7 +124,7 @@ func (o *mqlOktaRole) appTargets() ([]any, error) {
 		}
 
 	case o.cacheClientID != "":
-		apiSupplement := &sdk.ApiExtension{Host: conn.OrganizationID(), Token: conn.Token()}
+		apiSupplement := conn.ApiExtension()
 		slice, resp, err := apiSupplement.ListClientRoleAppTargets(ctx, o.cacheClientID, roleID)
 		if err != nil {
 			if isOktaRawFeatureUnavailable(resp) {
