@@ -204,6 +204,7 @@ use (
    ./mql/providers/atlassian
    ./mql/providers/aws
    ./mql/providers/azure
+   ./mql/providers/bitwarden
    ./mql/providers/cassandra
    ./mql/providers/claude
    ./mql/providers/clickhousecloud

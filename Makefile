@@ -207,6 +207,7 @@ PROVIDERS := \
 	aws \
 	azure \
 	bicep \
+	bitwarden \
 	cassandra \
 	claude \
 	clickhousecloud \
