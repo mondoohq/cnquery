@@ -267,7 +267,12 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   rootCertType string
   // Time the cluster was created
   createDate time
-  // Per-region configuration, each with providerName, regionName, instanceSize, nodeCount, diskSizeGB, and priority
+  // Per-region configuration
+  //
+  // Each entry carries providerName, regionName, instanceSize, nodeCount,
+  // diskSizeGB, and priority. A shared tier deployment reports a providerName
+  // of TENANT and adds backingProviderName naming the cloud that actually
+  // hosts it.
   regionConfigs []dict
   // Resource tags applied to the cluster
   tags map[string]string
@@ -291,13 +296,21 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   employeeAccessGrantType string
   // Time the MongoDB employee access grant expires, null when no grant is active
   employeeAccessGrantExpiration time
-  // Feature compatibility version the cluster is pinned to, null when not pinned
+  // Feature compatibility version in effect for the cluster
+  //
+  // The version whose features the cluster accepts, which lags the running
+  // MongoDB version while an upgrade is being validated. Pinning it to an
+  // older version holds back new features, and only a pinned version carries a
+  // featureCompatibilityVersionExpirationDate.
   featureCompatibilityVersion string
-  // Time the pinned feature compatibility version expires, null when not pinned
+  // Time the pinned feature compatibility version expires, null when the version is not pinned
   featureCompatibilityVersionExpirationDate time
   // Whether the BI Connector for Atlas is enabled
   biConnectorEnabled bool
-  // Nodes the BI Connector reads from (PRIMARY, SECONDARY, or ANALYTICS), null when the BI Connector is disabled
+  // Nodes the BI Connector reads from (PRIMARY, SECONDARY, or ANALYTICS)
+  //
+  // Atlas reports the configured preference whether or not the BI Connector is
+  // enabled, so read biConnectorEnabled to tell whether it is in effect.
   biConnectorReadPreference string
   // Config server management for a sharded cluster (ATLAS_MANAGED or FIXED_TO_DEDICATED), null for a replica set
   configServerManagementMode string

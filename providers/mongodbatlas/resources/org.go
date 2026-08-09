@@ -210,10 +210,12 @@ func (r *mqlMongodbatlas) orgTeamsByID() (map[string]admin.TeamResponse, error) 
 			resp, httpResp, err := client.TeamsApi.ListOrganizationTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 			if err != nil {
 				// A project-scoped credential without org privilege cannot list
-				// teams; degrade to no resolvable teams rather than failing every
-				// user's teams() through the cached error.
+				// teams; record the denial rather than failing every user's
+				// teams() through the cached error. Callers render null, since
+				// no team could be resolved rather than none being held.
 				if isAccessDenied(httpResp) {
 					r.teamsByID = map[string]admin.TeamResponse{}
+					r.teamsDenied = true
 					return
 				}
 				r.teamsErr = err
@@ -241,6 +243,13 @@ func (r *mqlMongodbatlasOrgUser) teams() ([]any, error) {
 	teamsByID, err := root.orgTeamsByID()
 	if err != nil {
 		return nil, err
+	}
+	// The team listing was denied, so the member's memberships could not be
+	// resolved. Reporting an empty list here would read as "belongs to no
+	// team", which is a different and unverified claim.
+	if root.teamsDenied {
+		r.Teams.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	out := []any{}
