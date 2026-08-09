@@ -272,7 +272,8 @@ PROVIDERS := \
 	vercel \
 	vllm \
 	vsphere \
-	weaviate
+	weaviate \
+	zoom
 
 .PHONY: providers/build
 providers/build: \
