@@ -31,7 +31,7 @@ func (r *mqlDropbox) team() (*mqlDropboxTeam, error) {
 	conn := r.conn()
 	client := conn.Client()
 
-	info, err := client.GetInfo()
+	info, err := conn.TeamInfo()
 	if err != nil {
 		return nil, err
 	}
