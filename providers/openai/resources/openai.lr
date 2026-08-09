@@ -62,6 +62,72 @@ openai @defaults("organization") @maturity("preview") {
   spendLimitEnforcement() string
   // Spend alerts configured for the organization (requires admin API key)
   spendAlerts() []openai.spendAlert
+  // Certificates uploaded to the organization (requires admin API key)
+  certificates() []openai.certificate
+  // Code interpreter containers
+  containers() []openai.container
+}
+
+// OpenAI certificate
+//
+// Certificate uploaded to an organization for mutual TLS authentication,
+// activated either across the organization or for individual projects.
+// The `active` field reports whether the certificate is in force at the
+// scope it was read from, and `validAt` and `expiresAt` bound the window
+// it authenticates in, so certificates that have expired or are close to
+// expiring can be found before connections start failing.
+openai.certificate @defaults("name active expiresAt") @maturity("preview") {
+  // Certificate identifier
+  id string
+  // Certificate name
+  name string
+  // Whether the certificate is active at the scope it was read from
+  active bool
+  // Upload timestamp
+  createdAt time
+  // Timestamp the certificate becomes valid
+  validAt time
+  // Expiration timestamp
+  expiresAt time
+}
+
+// OpenAI container
+//
+// Sandbox that runs code on a model's behalf through the code
+// interpreter tool. The `networkPolicyType` field reports whether
+// outbound access is turned off or restricted to an allowlist, and
+// `networkPolicyAllowedDomains` names the destinations an allowlisted
+// container can reach, which bounds where code the model wrote is able
+// to send data. The `lastActiveAt` and `expiresAfterMinutes` fields show
+// how long an idle sandbox lingers before it is torn down.
+openai.container @defaults("name status networkPolicyType") @maturity("preview") {
+  // Container identifier
+  id string
+  // Container name
+  name string
+  // Container status
+  status string
+  // Creation timestamp
+  createdAt time
+  // Last activity timestamp (null when the container has not been used)
+  lastActiveAt time
+  // Reference point the expiration is measured from, null when no expiration is set
+  //
+  // Currently always last_active_at.
+  expiresAfterAnchor string
+  // Minutes after the anchor at which the container expires, null when no expiration is set
+  expiresAfterMinutes int
+  // Outbound network policy mode
+  //
+  // One of allowlist, where only the listed domains are reachable, or
+  // disabled, where the container has no outbound access at all. Null
+  // when the container reports no network policy.
+  networkPolicyType string
+  // Domains an allowlisted container may reach
+  //
+  // Empty under a disabled policy, and null when the container reports
+  // no network policy.
+  networkPolicyAllowedDomains []string
 }
 
 // OpenAI spend alert
@@ -313,6 +379,8 @@ openai.project @defaults("id name status") @maturity("preview") {
   spendLimitEnforcement() string
   // Spend alerts configured for this project (requires admin API key)
   spendAlerts() []openai.spendAlert
+  // Certificates activated for this project (requires admin API key)
+  certificates() []openai.certificate
 }
 
 // OpenAI project rate limit
