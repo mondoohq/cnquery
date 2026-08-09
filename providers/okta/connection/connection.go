@@ -24,10 +24,6 @@ import (
 // orgs prohibit them outright. A service application authenticates with a
 // private key JWT instead and holds only the scopes it was granted, so it can
 // be given read-only access.
-const (
-	authModeSSWS       = "SSWS"
-	authModePrivateKey = "PrivateKey"
-)
 
 // accessTokenCacheTTL bounds how long a minted access token is reused for the
 // requests issued outside the generated SDK. Each entry is also stored under
@@ -46,6 +42,10 @@ type OktaConnection struct {
 	// the generated SDK, so the raw endpoints in resources/sdk authenticate the
 	// same way the SDK-served ones do.
 	authorize func(req *http.Request) error
+	// apiExtension is the client for the endpoints the generated SDK does not
+	// serve correctly. It is immutable once built, so it is shared rather than
+	// rebuilt by each caller.
+	apiExtension *sdk.ApiExtension
 }
 
 func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OktaConnection, error) {
@@ -85,7 +85,7 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 
 	orgURL := "https://" + org
 	options := []okta.ConfigSetter{okta.WithOrgUrl(orgURL)}
-	authMode := authModeSSWS
+	serviceApp := false
 
 	switch {
 	case privateKey != "":
@@ -102,9 +102,9 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 			return nil, errors.New("okta service app authentication requires the scopes to request, pass --scopes or set OKTA_API_SCOPES")
 		}
 
-		authMode = authModePrivateKey
+		serviceApp = true
 		options = append(options,
-			okta.WithAuthorizationMode(authModePrivateKey),
+			okta.WithAuthorizationMode("PrivateKey"),
 			okta.WithClientId(clientID),
 			okta.WithScopes(scopes),
 			okta.WithPrivateKey(privateKey),
@@ -127,7 +127,7 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	// Build the authorizer from the finished configuration so requests issued
 	// outside the generated SDK carry the same user agent and rate-limit
 	// settings the SDK-served ones do.
-	if authMode == authModePrivateKey {
+	if serviceApp {
 		conn.authorize = privateKeyAuthorizer(config)
 	} else {
 		conn.authorize = sswsAuthorizer(token)
@@ -136,6 +136,9 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	conn.organization = org
 	conn.client = client
 	conn.token = token
+	// Neither field changes after this point, so the raw-endpoint client is
+	// built once rather than per call.
+	conn.apiExtension = &sdk.ApiExtension{Host: org, Authorize: conn.authorize}
 
 	return conn, nil
 }
@@ -215,14 +218,11 @@ func (c *OktaConnection) Token() string {
 	return c.token
 }
 
-// ApiExtension returns a client for the Okta endpoints the generated SDK does
+// ApiExtension returns the client for the Okta endpoints the generated SDK does
 // not serve correctly. It carries this connection's authorization, so the raw
 // path works under service app credentials as well as an API token.
 func (c *OktaConnection) ApiExtension() *sdk.ApiExtension {
-	return &sdk.ApiExtension{
-		Host:      c.organization,
-		Authorize: c.authorize,
-	}
+	return c.apiExtension
 }
 
 func (c *OktaConnection) Identifier() (string, error) {

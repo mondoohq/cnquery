@@ -75,7 +75,10 @@ func TestSswsAuthorizer(t *testing.T) {
 // the service app configuration is reported on its own terms. Okta answers all
 // of them with the same opaque 401, so the check has to happen here.
 func TestNewOktaConnectionRejectsIncompleteServiceApp(t *testing.T) {
-	const pem = "-----BEGIN PRIVATE KEY-----\nnot-a-real-key\n-----END PRIVATE KEY-----"
+	// Every case here is rejected before the key reaches the SDK, so the
+	// credential only has to be non-empty. A placeholder rather than a
+	// PEM-shaped literal keeps secret scanners from flagging the fixture.
+	const placeholderKey = "test-private-key-material"
 
 	tests := []struct {
 		name    string
@@ -104,7 +107,7 @@ func TestNewOktaConnectionRejectsIncompleteServiceApp(t *testing.T) {
 			conf := &inventory.Config{
 				Type:        "okta",
 				Options:     tt.options,
-				Credentials: []*vault.Credential{vault.NewPrivateKeyCredential("", []byte(pem), "")},
+				Credentials: []*vault.Credential{vault.NewPrivateKeyCredential("", []byte(placeholderKey), "")},
 			}
 
 			_, err := NewOktaConnection(0, &inventory.Asset{}, conf)
@@ -145,6 +148,8 @@ func TestNewOktaConnectionTokenModeAuthorizesRawRequests(t *testing.T) {
 	ext := conn.ApiExtension()
 	require.NotNil(t, ext.Authorize, "the raw path must carry the connection's credential")
 	assert.Equal(t, "dev-12345.okta.com", ext.Host)
+	// The client holds no per-call state, so every caller shares one instance.
+	assert.Same(t, ext, conn.ApiExtension())
 
 	req, err := http.NewRequest(http.MethodGet, "https://dev-12345.okta.com/api/v1/zones", nil)
 	require.NoError(t, err)
