@@ -134,13 +134,18 @@ func (r *mqlDatabricks) artifactAllowlists() ([]any, error) {
 }
 
 // cachedInstancePools lists the workspace instance pools at most once per scan,
-// caching them on the root databricks resource keyed by pool id so that
-// per-cluster resolutions (databricks.clusters { instancePool }) share a single
-// List rather than one Get per cluster.
-func cachedInstancePools(runtime *plugin.Runtime) (map[string]compute.InstancePoolAndStats, error) {
+// caching them on the root databricks resource so that the pool listing
+// (databricks.instancePools) and the per-cluster resolutions
+// (databricks.clusters { instancePool }) share a single List rather than one
+// List each plus one Get per cluster.
+//
+// Both shapes are kept: the slice preserves the order the API returned, which
+// the listing reports, and the map keyed by pool id serves the per-cluster
+// lookups. Ranging over the map for the listing would reorder it on every scan.
+func cachedInstancePools(runtime *plugin.Runtime) ([]compute.InstancePoolAndStats, map[string]compute.InstancePoolAndStats, error) {
 	rootRes, err := NewResource(runtime, "databricks", map[string]*llx.RawData{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	root := rootRes.(*mqlDatabricks)
 	root.instancePoolsOnce.Do(func() {
@@ -158,9 +163,10 @@ func cachedInstancePools(runtime *plugin.Runtime) (map[string]compute.InstancePo
 		for i := range pools {
 			byID[pools[i].InstancePoolId] = pools[i]
 		}
+		root.instancePoolList = pools
 		root.instancePoolsByID = byID
 	})
-	return root.instancePoolsByID, root.instancePoolsErr
+	return root.instancePoolList, root.instancePoolsByID, root.instancePoolsErr
 }
 
 // listInstancePools drains the pool listing iterator. The instance pools API
@@ -272,12 +278,7 @@ type mqlDatabricksInstancePoolInternal struct {
 }
 
 func (r *mqlDatabricks) instancePools() ([]any, error) {
-	ws, err := workspaceClient(r.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	pools, err := listInstancePools(ws.InstancePools)
+	pools, _, err := cachedInstancePools(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +322,7 @@ func (r *mqlDatabricksCluster) instancePool() (*mqlDatabricksInstancePool, error
 		r.InstancePool.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	byID, err := cachedInstancePools(r.MqlRuntime)
+	_, byID, err := cachedInstancePools(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}

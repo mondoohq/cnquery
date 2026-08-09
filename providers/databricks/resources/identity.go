@@ -34,6 +34,7 @@ type mqlDatabricksInternal struct {
 	instanceProfilesErr   error
 
 	instancePoolsOnce sync.Once
+	instancePoolList  []compute.InstancePoolAndStats
 	instancePoolsByID map[string]compute.InstancePoolAndStats
 	instancePoolsErr  error
 
