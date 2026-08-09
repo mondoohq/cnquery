@@ -17,6 +17,7 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceOllama             string = "ollama"
+	ResourceOllamaAccount      string = "ollama.account"
 	ResourceOllamaModel        string = "ollama.model"
 	ResourceOllamaModelInfo    string = "ollama.model.info"
 	ResourceOllamaRunningModel string = "ollama.runningModel"
@@ -29,6 +30,10 @@ func init() {
 		"ollama": {
 			// to override args, implement: initOllama(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOllama,
+		},
+		"ollama.account": {
+			// to override args, implement: initOllamaAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOllamaAccount,
 		},
 		"ollama.model": {
 			Init:   initOllamaModel,
@@ -116,11 +121,41 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ollama.host": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllama).GetHost()).ToDataRes(types.String)
 	},
+	"ollama.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetVersion()).ToDataRes(types.String)
+	},
+	"ollama.tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetTls()).ToDataRes(types.Bool)
+	},
+	"ollama.isLocal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetIsLocal()).ToDataRes(types.Bool)
+	},
+	"ollama.authenticationRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetAuthenticationRequired()).ToDataRes(types.Bool)
+	},
+	"ollama.cloudEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetCloudEnabled()).ToDataRes(types.Bool)
+	},
+	"ollama.cloudAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetCloudAccount()).ToDataRes(types.Resource("ollama.account"))
+	},
 	"ollama.models": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllama).GetModels()).ToDataRes(types.Array(types.Resource("ollama.model")))
 	},
 	"ollama.runningModels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllama).GetRunningModels()).ToDataRes(types.Array(types.Resource("ollama.runningModel")))
+	},
+	"ollama.account.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaAccount).GetId()).ToDataRes(types.String)
+	},
+	"ollama.account.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaAccount).GetEmail()).ToDataRes(types.String)
+	},
+	"ollama.account.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaAccount).GetName()).ToDataRes(types.String)
+	},
+	"ollama.account.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaAccount).GetPlan()).ToDataRes(types.String)
 	},
 	"ollama.model.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaModel).GetName()).ToDataRes(types.String)
@@ -154,6 +189,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ollama.model.parentModel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaModel).GetParentModel()).ToDataRes(types.String)
+	},
+	"ollama.model.registry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetRegistry()).ToDataRes(types.String)
+	},
+	"ollama.model.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetNamespace()).ToDataRes(types.String)
+	},
+	"ollama.model.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetRepository()).ToDataRes(types.String)
+	},
+	"ollama.model.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetTag()).ToDataRes(types.String)
+	},
+	"ollama.model.remoteModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetRemoteModel()).ToDataRes(types.String)
+	},
+	"ollama.model.remoteHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetRemoteHost()).ToDataRes(types.String)
+	},
+	"ollama.model.adapters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetAdapters()).ToDataRes(types.Array(types.String))
 	},
 	"ollama.model.license": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaModel).GetLicense()).ToDataRes(types.String)
@@ -242,6 +298,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ollama.runningModel.model": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaRunningModel).GetModel()).ToDataRes(types.Resource("ollama.model"))
 	},
+	"ollama.runningModel.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaRunningModel).GetDigest()).ToDataRes(types.String)
+	},
 	"ollama.runningModel.expiresAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaRunningModel).GetExpiresAt()).ToDataRes(types.Time)
 	},
@@ -271,12 +330,56 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOllama).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"ollama.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).Tls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ollama.isLocal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).IsLocal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ollama.authenticationRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).AuthenticationRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ollama.cloudEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).CloudEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ollama.cloudAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).CloudAccount, ok = plugin.RawToTValue[*mqlOllamaAccount](v.Value, v.Error)
+		return
+	},
 	"ollama.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOllama).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ollama.runningModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOllama).RunningModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ollama.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"ollama.account.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.account.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaAccount).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.account.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaAccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.account.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaAccount).Plan, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ollama.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -325,6 +428,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ollama.model.parentModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOllamaModel).ParentModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.registry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Registry, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.remoteModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).RemoteModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.remoteHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).RemoteHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.adapters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Adapters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ollama.model.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -451,6 +582,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOllamaRunningModel).Model, ok = plugin.RawToTValue[*mqlOllamaModel](v.Value, v.Error)
 		return
 	},
+	"ollama.runningModel.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaRunningModel).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"ollama.runningModel.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOllamaRunningModel).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -492,9 +627,15 @@ type mqlOllama struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOllamaInternal it will be used here
-	Host          plugin.TValue[string]
-	Models        plugin.TValue[[]any]
-	RunningModels plugin.TValue[[]any]
+	Host                   plugin.TValue[string]
+	Version                plugin.TValue[string]
+	Tls                    plugin.TValue[bool]
+	IsLocal                plugin.TValue[bool]
+	AuthenticationRequired plugin.TValue[bool]
+	CloudEnabled           plugin.TValue[bool]
+	CloudAccount           plugin.TValue[*mqlOllamaAccount]
+	Models                 plugin.TValue[[]any]
+	RunningModels          plugin.TValue[[]any]
 }
 
 // createOllama creates a new instance of this resource
@@ -540,6 +681,52 @@ func (c *mqlOllama) GetHost() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlOllama) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlOllama) GetTls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Tls, func() (bool, error) {
+		return c.tls()
+	})
+}
+
+func (c *mqlOllama) GetIsLocal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsLocal, func() (bool, error) {
+		return c.isLocal()
+	})
+}
+
+func (c *mqlOllama) GetAuthenticationRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuthenticationRequired, func() (bool, error) {
+		return c.authenticationRequired()
+	})
+}
+
+func (c *mqlOllama) GetCloudEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CloudEnabled, func() (bool, error) {
+		return c.cloudEnabled()
+	})
+}
+
+func (c *mqlOllama) GetCloudAccount() *plugin.TValue[*mqlOllamaAccount] {
+	return plugin.GetOrCompute[*mqlOllamaAccount](&c.CloudAccount, func() (*mqlOllamaAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ollama", c.__id, "cloudAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOllamaAccount), nil
+			}
+		}
+
+		return c.cloudAccount()
+	})
+}
+
 func (c *mqlOllama) GetModels() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -572,6 +759,65 @@ func (c *mqlOllama) GetRunningModels() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlOllamaAccount for the ollama.account resource
+type mqlOllamaAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOllamaAccountInternal it will be used here
+	Id    plugin.TValue[string]
+	Email plugin.TValue[string]
+	Name  plugin.TValue[string]
+	Plan  plugin.TValue[string]
+}
+
+// createOllamaAccount creates a new instance of this resource
+func createOllamaAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOllamaAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ollama.account", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOllamaAccount) MqlName() string {
+	return "ollama.account"
+}
+
+func (c *mqlOllamaAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOllamaAccount) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOllamaAccount) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlOllamaAccount) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOllamaAccount) GetPlan() *plugin.TValue[string] {
+	return &c.Plan
+}
+
 // mqlOllamaModel for the ollama.model resource
 type mqlOllamaModel struct {
 	MqlRuntime *plugin.Runtime
@@ -588,6 +834,13 @@ type mqlOllamaModel struct {
 	ParameterSize     plugin.TValue[string]
 	QuantizationLevel plugin.TValue[string]
 	ParentModel       plugin.TValue[string]
+	Registry          plugin.TValue[string]
+	Namespace         plugin.TValue[string]
+	Repository        plugin.TValue[string]
+	Tag               plugin.TValue[string]
+	RemoteModel       plugin.TValue[string]
+	RemoteHost        plugin.TValue[string]
+	Adapters          plugin.TValue[[]any]
 	License           plugin.TValue[string]
 	Modelfile         plugin.TValue[string]
 	System            plugin.TValue[string]
@@ -675,6 +928,36 @@ func (c *mqlOllamaModel) GetQuantizationLevel() *plugin.TValue[string] {
 
 func (c *mqlOllamaModel) GetParentModel() *plugin.TValue[string] {
 	return &c.ParentModel
+}
+
+func (c *mqlOllamaModel) GetRegistry() *plugin.TValue[string] {
+	return &c.Registry
+}
+
+func (c *mqlOllamaModel) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlOllamaModel) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlOllamaModel) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlOllamaModel) GetRemoteModel() *plugin.TValue[string] {
+	return &c.RemoteModel
+}
+
+func (c *mqlOllamaModel) GetRemoteHost() *plugin.TValue[string] {
+	return &c.RemoteHost
+}
+
+func (c *mqlOllamaModel) GetAdapters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Adapters, func() ([]any, error) {
+		return c.adapters()
+	})
 }
 
 func (c *mqlOllamaModel) GetLicense() *plugin.TValue[string] {
@@ -879,6 +1162,7 @@ type mqlOllamaRunningModel struct {
 	// optional: if you define mqlOllamaRunningModelInternal it will be used here
 	Name          plugin.TValue[string]
 	Model         plugin.TValue[*mqlOllamaModel]
+	Digest        plugin.TValue[string]
 	ExpiresAt     plugin.TValue[*time.Time]
 	SizeVram      plugin.TValue[int64]
 	ContextLength plugin.TValue[int64]
@@ -939,6 +1223,10 @@ func (c *mqlOllamaRunningModel) GetModel() *plugin.TValue[*mqlOllamaModel] {
 
 		return c.model()
 	})
+}
+
+func (c *mqlOllamaRunningModel) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
 }
 
 func (c *mqlOllamaRunningModel) GetExpiresAt() *plugin.TValue[*time.Time] {

@@ -11,13 +11,70 @@ option go_package = "go.mondoo.com/mql/v13/providers/ollama/resources"
 // for inference. Works against both a local Ollama server and Ollama
 // Cloud, selected by the configured host and optional API token
 // authentication.
-ollama @defaults("host") {
+//
+// The server version, transport encryption, whether the address is
+// reachable beyond the local machine, whether unauthenticated callers are
+// accepted, and whether inference may be offloaded to Ollama Cloud are all
+// queryable, so an instance can be audited for exposure and for the
+// advisories that apply to the version it runs.
+ollama @defaults("host version") {
   // Host address of the Ollama instance
   host() string
+  // Ollama server version
+  //
+  // Version reported by the instance, for example "0.12.6". Matches the
+  // instance against published Ollama advisories.
+  version() string
+  // Whether the connection to the instance is encrypted
+  //
+  // False when the API is served over plain HTTP, in which case prompts,
+  // completions, and any API token sent to the instance travel in the clear.
+  tls() bool
+  // Whether the instance is served from a loopback address
+  //
+  // True when the configured host is a loopback address, so the API is only
+  // reachable from the machine running the server. False means the API accepts
+  // connections from other hosts, and authenticationRequired and tls decide
+  // who can reach it and on what terms.
+  isLocal() bool
+  // Whether the API rejects unauthenticated requests
+  //
+  // Determined by re-issuing a read-only request with the authorization header
+  // removed. False means any client that can reach the host can list, pull,
+  // delete, and run models without credentials. Ollama does not require
+  // authentication by default.
+  authenticationRequired() bool
+  // Whether the instance may offload inference to Ollama Cloud
+  //
+  // When enabled, prompts and completions for cloud-hosted models leave the
+  // instance and are processed by Ollama Cloud. Null on instances that do not
+  // report a cloud status.
+  cloudEnabled() bool
+  // Ollama Cloud account the instance is signed in to
+  //
+  // Null when the instance is not signed in, in which case it cannot reach
+  // cloud-hosted models or the account behind them.
+  cloudAccount() ollama.account
   // Installed models
   models() []ollama.model
   // Currently running models loaded in memory
   runningModels() []ollama.runningModel
+}
+
+// Ollama Cloud account
+//
+// Account an Ollama instance is signed in to, identifying who owns the
+// cloud-side usage the instance can drive and which subscription plan
+// backs it.
+private ollama.account @defaults("email name plan") {
+  // Account identifier
+  id string
+  // Account email address
+  email string
+  // Account display name
+  name string
+  // Subscription plan backing the account
+  plan string
 }
 
 // Ollama model
@@ -57,6 +114,45 @@ ollama.model @defaults("name family parameterSize") {
   quantizationLevel string
   // Parent model this was derived from
   parentModel string
+  // Registry the model name resolves to
+  //
+  // For example registry.ollama.ai for the default Ollama registry. A model
+  // pulled from any other registry carries the trust assumptions of whoever
+  // operates that registry, including the contents of the model weights.
+  registry string
+  // Namespace within the registry
+  //
+  // For example library for the curated Ollama catalog, or a user or
+  // organization name for community-published models.
+  namespace string
+  // Repository name within the namespace
+  //
+  // For example llama3.1, the model name without its registry, namespace,
+  // or tag.
+  repository string
+  // Tag identifying which build of the repository is installed
+  //
+  // For example latest or 8b. Tags are mutable, so the same tag can resolve
+  // to different content over time. The digest field identifies the exact
+  // content that is installed.
+  tag string
+  // Model on a remote instance that inference is forwarded to
+  //
+  // Set when the model does not execute on this instance. Empty for models
+  // that execute locally.
+  remoteModel string
+  // Host that inference for this model is forwarded to
+  //
+  // Set when the model does not execute on this instance, in which case
+  // prompts and completions for it leave the instance and are processed by
+  // the named host. Empty for models that execute locally.
+  remoteHost string
+  // Adapters applied on top of the base model
+  //
+  // Targets of the ADAPTER instructions in the Modelfile, each a path or
+  // model reference. An adapter changes how the base model behaves,
+  // including the alignment and refusal behavior it shipped with.
+  adapters() []string
   // License text
   license() string
   // Raw Modelfile content
@@ -147,6 +243,12 @@ ollama.runningModel @defaults("name") {
   name string
   // Installed model with full metadata
   model() ollama.model
+  // Content digest (SHA-256) of the model loaded in memory
+  //
+  // Comparing this against the digest of the installed model of the same
+  // name detects content that was replaced under the same tag after the
+  // model was loaded.
+  digest string
   // Time when the model will be unloaded from memory
   expiresAt time
   // VRAM usage in bytes

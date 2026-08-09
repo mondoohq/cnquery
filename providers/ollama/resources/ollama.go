@@ -7,10 +7,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/ollama/ollama/api"
+	modeltypes "github.com/ollama/ollama/types/model"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/ollama/connection"
@@ -27,6 +31,107 @@ func (r *mqlOllama) id() (string, error) {
 
 func (r *mqlOllama) host() (string, error) {
 	return ollamaConn(r.MqlRuntime).Host(), nil
+}
+
+func (r *mqlOllama) version() (string, error) {
+	return ollamaConn(r.MqlRuntime).Version(context.Background())
+}
+
+func (r *mqlOllama) tls() (bool, error) {
+	return ollamaConn(r.MqlRuntime).TLS(), nil
+}
+
+func (r *mqlOllama) isLocal() (bool, error) {
+	return ollamaConn(r.MqlRuntime).IsLocal(), nil
+}
+
+func (r *mqlOllama) authenticationRequired() (bool, error) {
+	code, err := ollamaConn(r.MqlRuntime).AnonymousStatus(context.Background())
+	if err != nil {
+		return false, err
+	}
+
+	switch code {
+	case http.StatusOK:
+		return false, nil
+	case http.StatusUnauthorized, http.StatusForbidden, http.StatusProxyAuthRequired:
+		return true, nil
+	}
+
+	// Anything else (a redirect to a login page, a gateway error) says nothing
+	// reliable about the instance's own authentication, and guessing either way
+	// would be worse than reporting that we could not tell.
+	return false, fmt.Errorf("cannot determine whether authentication is required: unauthenticated request answered with status %d", code)
+}
+
+func (r *mqlOllama) cloudEnabled() (bool, error) {
+	status, err := ollamaConn(r.MqlRuntime).Client().CloudStatusExperimental(context.Background())
+	if err != nil {
+		if isEndpointUnavailable(err) {
+			r.CloudEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+			return false, nil
+		}
+		return false, err
+	}
+	return !status.Cloud.Disabled, nil
+}
+
+func (r *mqlOllama) cloudAccount() (*mqlOllamaAccount, error) {
+	user, err := ollamaConn(r.MqlRuntime).Client().Whoami(context.Background())
+	if err != nil {
+		// An instance that is not signed in rejects the request, and one built
+		// before cloud accounts existed does not serve the endpoint at all.
+		// Both mean there is no account to report.
+		if isEndpointUnavailable(err) || isUnauthenticated(err) {
+			r.CloudAccount.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	id := user.ID.String()
+	if user.Email == "" && user.Name == "" {
+		r.CloudAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(r.MqlRuntime, "ollama.account", map[string]*llx.RawData{
+		"__id":  llx.StringData(id),
+		"id":    llx.StringData(id),
+		"email": llx.StringData(user.Email),
+		"name":  llx.StringData(user.Name),
+		"plan":  llx.StringData(user.Plan),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOllamaAccount), nil
+}
+
+// isEndpointUnavailable reports whether the instance answered as though it does
+// not serve the endpoint at all, which is how an Ollama build older than the
+// endpoint responds. The caller treats it as "no answer available" rather than
+// as a failure, so one old server does not fail a whole scan.
+func isEndpointUnavailable(err error) bool {
+	var statusErr api.StatusError
+	if !errors.As(err, &statusErr) {
+		return false
+	}
+	switch statusErr.StatusCode {
+	case http.StatusNotFound, http.StatusMethodNotAllowed, http.StatusNotImplemented:
+		return true
+	}
+	return false
+}
+
+// isUnauthenticated reports whether the instance refused the request for lack
+// of credentials.
+func isUnauthenticated(err error) bool {
+	var statusErr api.StatusError
+	if !errors.As(err, &statusErr) {
+		return false
+	}
+	return statusErr.StatusCode == http.StatusUnauthorized || statusErr.StatusCode == http.StatusForbidden
 }
 
 func (r *mqlOllama) models() ([]interface{}, error) {
@@ -61,6 +166,8 @@ func ollamaModelArgs(m api.ListModelResponse) map[string]*llx.RawData {
 		families[i] = f
 	}
 
+	registry, namespace, repository, tag := modelRef(m.Name)
+
 	return map[string]*llx.RawData{
 		"__id":              llx.StringData(m.Name),
 		"name":              llx.StringData(m.Name),
@@ -74,7 +181,28 @@ func ollamaModelArgs(m api.ListModelResponse) map[string]*llx.RawData {
 		"parameterSize":     llx.StringData(m.Details.ParameterSize),
 		"quantizationLevel": llx.StringData(m.Details.QuantizationLevel),
 		"parentModel":       llx.StringData(m.Details.ParentModel),
+		"registry":          llx.StringData(registry),
+		"namespace":         llx.StringData(namespace),
+		"repository":        llx.StringData(repository),
+		"tag":               llx.StringData(tag),
+		"remoteModel":       llx.StringData(m.RemoteModel),
+		"remoteHost":        llx.StringData(m.RemoteHost),
 	}
+}
+
+// modelRef splits a model name into the registry coordinates it resolves to.
+// Ollama fills in its defaults (registry.ollama.ai, library, latest) for the
+// parts a short name leaves out, so an unqualified name such as
+// "llama3.1:latest" still reports where the content came from. A name Ollama
+// cannot parse yields empty parts rather than guessed ones, because reporting
+// the default registry for a name we failed to read would claim provenance we
+// never established.
+func modelRef(name string) (registry, namespace, repository, tag string) {
+	ref := modeltypes.ParseName(name)
+	if !ref.IsValid() {
+		return "", "", "", ""
+	}
+	return ref.Host, ref.Namespace, ref.Model, ref.Tag
 }
 
 // initOllamaModel resolves an installed model from just its name, so a
@@ -128,6 +256,7 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 		mqlRunning, err := CreateResource(r.MqlRuntime, "ollama.runningModel", map[string]*llx.RawData{
 			"__id":          llx.StringData("running/" + m.Name),
 			"name":          llx.StringData(m.Name),
+			"digest":        llx.StringData(m.Digest),
 			"expiresAt":     llx.TimeData(m.ExpiresAt),
 			"sizeVram":      llx.IntData(m.SizeVRAM),
 			"contextLength": llx.IntData(int64(m.ContextLength)),
@@ -187,6 +316,51 @@ func (r *mqlOllamaModel) modelfile() (string, error) {
 		return "", err
 	}
 	return show.Modelfile, nil
+}
+
+func (r *mqlOllamaModel) adapters() ([]interface{}, error) {
+	show, err := r.fetchShow()
+	if err != nil {
+		return nil, err
+	}
+
+	targets := modelfileAdapters(show.Modelfile)
+	res := make([]interface{}, len(targets))
+	for i, t := range targets {
+		res[i] = t
+	}
+	return res, nil
+}
+
+// modelfileAdapters returns the target of every ADAPTER instruction in a
+// Modelfile. Instruction names are case-insensitive and separated from their
+// target by whitespace; targets may be quoted. Comment lines are skipped,
+// because `ollama show` emits a commented FROM header that would otherwise
+// read as an instruction.
+func modelfileAdapters(modelfile string) []string {
+	var res []string
+
+	for _, line := range strings.Split(modelfile, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		sep := strings.IndexFunc(line, unicode.IsSpace)
+		if sep < 0 || !strings.EqualFold(line[:sep], "ADAPTER") {
+			continue
+		}
+
+		target := strings.TrimSpace(line[sep:])
+		if unquoted, err := strconv.Unquote(target); err == nil {
+			target = unquoted
+		}
+		if target != "" {
+			res = append(res, target)
+		}
+	}
+
+	return res
 }
 
 func (r *mqlOllamaModel) system() (string, error) {
