@@ -29,6 +29,11 @@ const maxItems = 100000
 
 const userAgent = "mondoo-jumpcloud-provider"
 
+// maxBodyBytes caps how much of a response body is buffered into memory. It
+// guards against a misbehaving or compromised endpoint forcing the provider to
+// buffer an unbounded response; real JumpCloud pages stay far under it.
+const maxBodyBytes = 64 << 20 // 64 MiB
+
 // Client is a thin, read-only HTTP client for the JumpCloud REST API. It
 // authenticates with an API key (and an optional organization id for
 // multi-tenant admins) and knows how to page through both the v1 envelope
@@ -81,7 +86,7 @@ func (c *Client) getJSON(ctx context.Context, path string, q url.Values, out any
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBodyBytes))
 	if err != nil {
 		return err
 	}

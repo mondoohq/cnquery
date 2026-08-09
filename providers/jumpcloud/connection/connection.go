@@ -146,6 +146,13 @@ func (c *JumpcloudConnection) Applications(ctx context.Context) ([]*Application,
 // runs the fetch; every later caller reuses the result, so a query that walks
 // the membership graph across many parents still fetches each collection only
 // once.
+//
+// The fetch runs under sync.Once, so a fetch error is memoized too: every
+// later call returns the same error without retrying. This is intentional for
+// the short-lived scan sessions this provider runs in, where a mid-scan retry
+// storm against an already-failing endpoint is worse than failing fast and
+// consistently. Do not layer retry logic on top of this; a retry policy
+// belongs in the HTTP client, not here.
 type listCache[T any] struct {
 	once sync.Once
 	list []*T
