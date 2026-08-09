@@ -426,12 +426,6 @@ func (eos *Eos) MlagConfig() *module.MlagConfig {
 	return mlagModule.Get()
 }
 
-// AclConfigs returns all standard IP ACLs using the goeapi module
-func (eos *Eos) AclConfigs() map[string]*module.AclConfig {
-	aclModule := module.Acl(eos.node)
-	return aclModule.GetAll()
-}
-
 // showEnvironmentPower represents the response from "show system environment power"
 type showEnvironmentPower struct {
 	PowerSupplies map[string]PowerSupply `json:"powerSupplies"`

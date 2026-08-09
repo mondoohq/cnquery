@@ -38,6 +38,7 @@ const (
 	ResourceAristaEosMlagInterface         string = "arista.eos.mlag.interface"
 	ResourceAristaEosAcl                   string = "arista.eos.acl"
 	ResourceAristaEosAclEntry              string = "arista.eos.acl.entry"
+	ResourceAristaEosAclBinding            string = "arista.eos.aclBinding"
 	ResourceAristaEosHardware              string = "arista.eos.hardware"
 	ResourceAristaEosHardwarePowerSupply   string = "arista.eos.hardware.powerSupply"
 	ResourceAristaEosHardwareFan           string = "arista.eos.hardware.fan"
@@ -153,12 +154,16 @@ func init() {
 			Create: createAristaEosMlagInterface,
 		},
 		"arista.eos.acl": {
-			// to override args, implement: initAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAristaEosAcl,
 			Create: createAristaEosAcl,
 		},
 		"arista.eos.acl.entry": {
 			// to override args, implement: initAristaEosAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosAclEntry,
+		},
+		"arista.eos.aclBinding": {
+			// to override args, implement: initAristaEosAclBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosAclBinding,
 		},
 		"arista.eos.hardware": {
 			// to override args, implement: initAristaEosHardware(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -374,6 +379,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.acls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetAcls()).ToDataRes(types.Array(types.Resource("arista.eos.acl")))
+	},
+	"arista.eos.aclBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetAclBindings()).ToDataRes(types.Array(types.Resource("arista.eos.aclBinding")))
 	},
 	"arista.eos.hardware": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetHardware()).ToDataRes(types.Resource("arista.eos.hardware"))
@@ -807,6 +815,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.acl.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAcl).GetName()).ToDataRes(types.String)
 	},
+	"arista.eos.acl.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAcl).GetFamily()).ToDataRes(types.String)
+	},
 	"arista.eos.acl.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAcl).GetType()).ToDataRes(types.String)
 	},
@@ -822,14 +833,62 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.acl.entry.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetAction()).ToDataRes(types.String)
 	},
+	"arista.eos.acl.entry.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetProtocol()).ToDataRes(types.String)
+	},
 	"arista.eos.acl.entry.srcAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetSrcAddress()).ToDataRes(types.String)
 	},
 	"arista.eos.acl.entry.srcPrefixLen": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetSrcPrefixLen()).ToDataRes(types.Int)
 	},
+	"arista.eos.acl.entry.srcPortOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetSrcPortOperator()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.srcPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetSrcPorts()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.acl.entry.dstAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetDstAddress()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.dstPrefixLen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetDstPrefixLen()).ToDataRes(types.Int)
+	},
+	"arista.eos.acl.entry.dstPortOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetDstPortOperator()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.dstPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetDstPorts()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.acl.entry.established": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetEstablished()).ToDataRes(types.Bool)
+	},
 	"arista.eos.acl.entry.log": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetLog()).ToDataRes(types.Bool)
+	},
+	"arista.eos.acl.entry.remark": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetRemark()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.text": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetText()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetTarget()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.targetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetTargetName()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetDirection()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetFamily()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.aclName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetAclName()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetAcl()).ToDataRes(types.Resource("arista.eos.acl"))
 	},
 	"arista.eos.hardware.powerSupplies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosHardware).GetPowerSupplies()).ToDataRes(types.Array(types.Resource("arista.eos.hardware.powerSupply")))
@@ -1437,6 +1496,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).AclBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.hardware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2099,6 +2162,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAcl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"arista.eos.acl.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAcl).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"arista.eos.acl.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAcl).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2123,6 +2190,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAclEntry).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"arista.eos.acl.entry.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"arista.eos.acl.entry.srcAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAclEntry).SrcAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2131,8 +2202,72 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAclEntry).SrcPrefixLen, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"arista.eos.acl.entry.srcPortOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).SrcPortOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.srcPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).SrcPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.dstAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).DstAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.dstPrefixLen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).DstPrefixLen, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.dstPortOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).DstPortOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.dstPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).DstPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.established": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).Established, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"arista.eos.acl.entry.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAclEntry).Log, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.remark": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).Remark, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.text": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).Text, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.aclBinding.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.targetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).TargetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).Acl, ok = plugin.RawToTValue[*mqlAristaEosAcl](v.Value, v.Error)
 		return
 	},
 	"arista.eos.hardware.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2980,6 +3115,7 @@ type mqlAristaEos struct {
 	Bgp                 plugin.TValue[*mqlAristaEosBgp]
 	Mlag                plugin.TValue[*mqlAristaEosMlag]
 	Acls                plugin.TValue[[]any]
+	AclBindings         plugin.TValue[[]any]
 	Hardware            plugin.TValue[*mqlAristaEosHardware]
 	Aaa                 plugin.TValue[*mqlAristaEosAaa]
 	SshSettings         plugin.TValue[*mqlAristaEosSshSettings]
@@ -3248,6 +3384,22 @@ func (c *mqlAristaEos) GetAcls() *plugin.TValue[[]any] {
 		}
 
 		return c.acls()
+	})
+}
+
+func (c *mqlAristaEos) GetAclBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AclBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "aclBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aclBindings()
 	})
 }
 
@@ -5136,8 +5288,9 @@ func (c *mqlAristaEosMlagInterface) GetMlagId() *plugin.TValue[string] {
 type mqlAristaEosAcl struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAristaEosAclInternal
+	// optional: if you define mqlAristaEosAclInternal it will be used here
 	Name    plugin.TValue[string]
+	Family  plugin.TValue[string]
 	Type    plugin.TValue[string]
 	Entries plugin.TValue[[]any]
 }
@@ -5183,6 +5336,10 @@ func (c *mqlAristaEosAcl) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlAristaEosAcl) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
 func (c *mqlAristaEosAcl) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
@@ -5208,12 +5365,22 @@ type mqlAristaEosAclEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAristaEosAclEntryInternal it will be used here
-	AclName        plugin.TValue[string]
-	SequenceNumber plugin.TValue[int64]
-	Action         plugin.TValue[string]
-	SrcAddress     plugin.TValue[string]
-	SrcPrefixLen   plugin.TValue[int64]
-	Log            plugin.TValue[bool]
+	AclName         plugin.TValue[string]
+	SequenceNumber  plugin.TValue[int64]
+	Action          plugin.TValue[string]
+	Protocol        plugin.TValue[string]
+	SrcAddress      plugin.TValue[string]
+	SrcPrefixLen    plugin.TValue[int64]
+	SrcPortOperator plugin.TValue[string]
+	SrcPorts        plugin.TValue[[]any]
+	DstAddress      plugin.TValue[string]
+	DstPrefixLen    plugin.TValue[int64]
+	DstPortOperator plugin.TValue[string]
+	DstPorts        plugin.TValue[[]any]
+	Established     plugin.TValue[bool]
+	Log             plugin.TValue[bool]
+	Remark          plugin.TValue[string]
+	Text            plugin.TValue[string]
 }
 
 // createAristaEosAclEntry creates a new instance of this resource
@@ -5265,6 +5432,10 @@ func (c *mqlAristaEosAclEntry) GetAction() *plugin.TValue[string] {
 	return &c.Action
 }
 
+func (c *mqlAristaEosAclEntry) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
 func (c *mqlAristaEosAclEntry) GetSrcAddress() *plugin.TValue[string] {
 	return &c.SrcAddress
 }
@@ -5273,8 +5444,130 @@ func (c *mqlAristaEosAclEntry) GetSrcPrefixLen() *plugin.TValue[int64] {
 	return &c.SrcPrefixLen
 }
 
+func (c *mqlAristaEosAclEntry) GetSrcPortOperator() *plugin.TValue[string] {
+	return &c.SrcPortOperator
+}
+
+func (c *mqlAristaEosAclEntry) GetSrcPorts() *plugin.TValue[[]any] {
+	return &c.SrcPorts
+}
+
+func (c *mqlAristaEosAclEntry) GetDstAddress() *plugin.TValue[string] {
+	return &c.DstAddress
+}
+
+func (c *mqlAristaEosAclEntry) GetDstPrefixLen() *plugin.TValue[int64] {
+	return &c.DstPrefixLen
+}
+
+func (c *mqlAristaEosAclEntry) GetDstPortOperator() *plugin.TValue[string] {
+	return &c.DstPortOperator
+}
+
+func (c *mqlAristaEosAclEntry) GetDstPorts() *plugin.TValue[[]any] {
+	return &c.DstPorts
+}
+
+func (c *mqlAristaEosAclEntry) GetEstablished() *plugin.TValue[bool] {
+	return &c.Established
+}
+
 func (c *mqlAristaEosAclEntry) GetLog() *plugin.TValue[bool] {
 	return &c.Log
+}
+
+func (c *mqlAristaEosAclEntry) GetRemark() *plugin.TValue[string] {
+	return &c.Remark
+}
+
+func (c *mqlAristaEosAclEntry) GetText() *plugin.TValue[string] {
+	return &c.Text
+}
+
+// mqlAristaEosAclBinding for the arista.eos.aclBinding resource
+type mqlAristaEosAclBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosAclBindingInternal it will be used here
+	Target     plugin.TValue[string]
+	TargetName plugin.TValue[string]
+	Direction  plugin.TValue[string]
+	Family     plugin.TValue[string]
+	AclName    plugin.TValue[string]
+	Acl        plugin.TValue[*mqlAristaEosAcl]
+}
+
+// createAristaEosAclBinding creates a new instance of this resource
+func createAristaEosAclBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosAclBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.aclBinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosAclBinding) MqlName() string {
+	return "arista.eos.aclBinding"
+}
+
+func (c *mqlAristaEosAclBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosAclBinding) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAristaEosAclBinding) GetTargetName() *plugin.TValue[string] {
+	return &c.TargetName
+}
+
+func (c *mqlAristaEosAclBinding) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAristaEosAclBinding) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlAristaEosAclBinding) GetAclName() *plugin.TValue[string] {
+	return &c.AclName
+}
+
+func (c *mqlAristaEosAclBinding) GetAcl() *plugin.TValue[*mqlAristaEosAcl] {
+	return plugin.GetOrCompute[*mqlAristaEosAcl](&c.Acl, func() (*mqlAristaEosAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.aclBinding", c.__id, "acl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosAcl), nil
+			}
+		}
+
+		return c.acl()
+	})
 }
 
 // mqlAristaEosHardware for the arista.eos.hardware resource

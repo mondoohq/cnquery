@@ -84,6 +84,46 @@ func ParseConfig(in io.Reader) map[string]any {
 	return stack[0]
 }
 
+// EachTopLevelBlock invokes fn once per top-level configuration block,
+// passing the unindented header line and the indented body beneath it.
+// Standalone top-level lines are reported with an empty body.
+//
+// This is the counterpart to GetSection for callers that do not know the
+// section headers in advance, such as the ACL parser, which has to discover
+// every `ip access-list <name>` block on the device.
+func EachTopLevelBlock(runningConfig string, fn func(header, body string)) {
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+
+	header := ""
+	var body strings.Builder
+	flush := func() {
+		if header != "" {
+			fn(header, body.String())
+		}
+		header = ""
+		body.Reset()
+	}
+
+	for scanner.Scan() {
+		raw := scanner.Text()
+		line := strings.TrimSpace(raw)
+		if line == "" || strings.HasPrefix(line, "!") || line == "end" {
+			continue
+		}
+
+		if CountLeadingSpace(raw) == 0 {
+			flush()
+			header = line
+			continue
+		}
+		if header != "" {
+			body.WriteString(line)
+			body.WriteByte('\n')
+		}
+	}
+	flush()
+}
+
 func GetSection(in io.Reader, section string) string {
 	keyStack := []string{}
 	keyStack = append(keyStack, "")
