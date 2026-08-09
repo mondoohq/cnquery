@@ -72,14 +72,18 @@ func firstPasswordCredential(conf *inventory.Config) ([]byte, bool) {
 }
 
 // getOptionValueFrom resolves a value that may be set through an environment
-// variable or a CLI flag, giving the environment variable precedence over
-// a flag left at its zero value only when the flag itself is unset.
+// variable or a CLI flag, giving the environment variable precedence over the
+// flag. This matches the doc comments on GetAccountID/GetClientID and the
+// env-first behavior of GetClientSecret.
 func getOptionValueFrom(options map[string]string, envVar string, option string) (string, bool) {
-	// env variable
-	value := os.Getenv(envVar)
-	// flag
+	// flag first
+	value := ""
 	if v, ok := options[option]; ok && len(v) != 0 {
 		value = v
+	}
+	// environment variable takes precedence
+	if envVal := os.Getenv(envVar); envVal != "" {
+		value = envVal
 	}
 	return value, len(value) != 0
 }

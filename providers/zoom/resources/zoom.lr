@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/mql/providers/zoom"
 option go_package = "go.mondoo.com/mql/v13/providers/zoom/resources"
 
-// Zoom account
+// Zoom account root
 //
 // Entry point for a Zoom account reached through Server-to-Server OAuth.
 // Exposes the account's security-relevant configuration (`account`), its
@@ -15,7 +15,7 @@ option go_package = "go.mondoo.com/mql/v13/providers/zoom/resources"
 zoom {
   // Account-level settings, including meeting, recording, and sign-in security
   account() zoom.account
-  // Users provisioned on the account
+  // Active users provisioned on the account (excludes inactive and pending)
   users() []zoom.user
   // Roles that can be assigned to users
   roles() []zoom.role
