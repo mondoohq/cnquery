@@ -500,8 +500,12 @@ func (c *mqlVercelProject) environmentVariables() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[envRecord](context.Background(), conn, "/v9/projects/"+c.Id.Data+"/env", connection.TeamQuery(c.teamID), "envs")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.EnvironmentVariables.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -708,8 +712,12 @@ func (c *mqlVercelProject) domains() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[projectDomainRecord](context.Background(), conn, "/v9/projects/"+c.Id.Data+"/domains", connection.TeamQuery(c.teamID), "domains")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Domains.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}

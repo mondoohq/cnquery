@@ -164,9 +164,16 @@ func (f *mqlVercelFirewall) bypassRules() ([]any, error) {
 
 	records, err := f.fetchBypassRules(conn)
 	if err != nil {
-		// System bypass is gated with the rest of the configurable firewall;
-		// treat an absent or forbidden list as empty rather than failing.
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			f.BypassRules.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err
@@ -240,7 +247,16 @@ func (f *mqlVercelFirewall) attackAnomalies() ([]any, error) {
 		Anomalies []map[string]any `json:"anomalies"`
 	}
 	if err := conn.Get(context.Background(), "/v1/security/firewall/attack-status", query, &resp); err != nil {
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			f.AttackAnomalies.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err

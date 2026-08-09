@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/vercel/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -23,8 +24,12 @@ func (c *mqlVercelTeam) certificates() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[certRecord](context.Background(), conn, "/v7/certs", connection.TeamQuery(c.Id.Data), "certs")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
