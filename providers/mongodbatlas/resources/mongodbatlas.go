@@ -21,9 +21,10 @@ type mqlMongodbatlasInternal struct {
 	orgSettingsDone bool
 	orgSettings     *admin.OrganizationSettings
 
-	teamsOnce sync.Once
-	teamsByID map[string]admin.TeamResponse
-	teamsErr  error
+	teamsOnce   sync.Once
+	teamsByID   map[string]admin.TeamResponse
+	teamsErr    error
+	teamsDenied bool
 
 	clustersOnce   sync.Once
 	clustersByName map[string]*mqlMongodbatlasCluster

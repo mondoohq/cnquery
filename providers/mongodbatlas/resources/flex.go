@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -26,8 +27,14 @@ func (r *mqlMongodbatlas) flexClusters() ([]any, error) {
 	for page := 1; ; page++ {
 		resp, httpResp, err := client.FlexClustersApi.ListFlexClusters(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
+			// Flex deployments are invisible in the clusters listing, so this
+			// call is the only thing that reports them. A credential that may
+			// not read it has established nothing, and an empty list would put
+			// the project back to looking Flex-free, which is the exact blind
+			// spot this accessor exists to close. Render null instead.
 			if isAccessDenied(httpResp) {
-				return []any{}, nil
+				r.FlexClusters.State = plugin.StateIsSet | plugin.StateIsNull
+				return nil, nil
 			}
 			return nil, err
 		}

@@ -165,10 +165,13 @@ func (r *mqlMongodbatlas) snapshotExportBuckets() ([]any, error) {
 	for page := 1; ; page++ {
 		resp, httpResp, err := client.CloudBackupsApi.ListExportBuckets(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
-			// A credential without the backup role cannot list export buckets;
-			// degrade to none configured rather than failing the whole query.
+			// An export bucket is a path for backup data to leave Atlas, so an
+			// empty list is read as "no such path exists". A credential without
+			// the backup role has not established that, and must not assert it;
+			// render null instead of failing the whole query.
 			if isAccessDenied(httpResp) {
-				return []any{}, nil
+				r.SnapshotExportBuckets.State = plugin.StateIsSet | plugin.StateIsNull
+				return nil, nil
 			}
 			return nil, err
 		}

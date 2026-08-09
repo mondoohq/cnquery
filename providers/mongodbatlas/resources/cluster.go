@@ -32,6 +32,12 @@ func newMqlMongodbatlasCluster(runtime *plugin.Runtime, pid string, c admin.Clus
 				"regionName":   rc.GetRegionName(),
 				"priority":     int64(rc.GetPriority()),
 			}
+			// A shared tier deployment reports providerName as TENANT and names
+			// the cloud actually hosting it here, so without this the hosting
+			// cloud of every shared cluster is unreadable.
+			if backing := rc.GetBackingProviderName(); backing != "" {
+				entry["backingProviderName"] = backing
+			}
 			if es, ok := rc.GetElectableSpecsOk(); ok {
 				entry["instanceSize"] = es.GetInstanceSize()
 				entry["nodeCount"] = int64(es.GetNodeCount())

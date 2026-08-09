@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -18,11 +19,17 @@ func (r *mqlMongodbatlas) resourcePolicies() ([]any, error) {
 	}
 	policies, httpResp, err := atlasClient(r.MqlRuntime).ResourcePoliciesApi.ListOrgResourcePolicies(context.Background(), oid).Execute()
 	if err != nil {
-		// Resource policies are a feature-gated org capability; a credential
-		// without access or an org without the feature degrades to an empty
-		// list rather than failing the scan, matching the singleton settings.
-		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
+		// Resource policies are the org-wide guardrails, so an empty list says
+		// "nothing constrains this organization". A credential without access
+		// has not established that, and returning a nil slice would still
+		// render as empty, so the field is marked null explicitly.
+		if isAccessDenied(httpResp) {
+			r.ResourcePolicies.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
+		}
+		// An org without the feature genuinely has no policies.
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return []any{}, nil
 		}
 		return nil, err
 	}

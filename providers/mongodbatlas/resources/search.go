@@ -17,8 +17,7 @@ import (
 // searchIndexes lists the Atlas Search and Atlas Vector Search indexes defined
 // on the cluster. A single cluster-wide call returns every index across all
 // databases and collections, discriminated by the type field ("search" versus
-// "vectorSearch"). Search may be unavailable on some cluster tiers or states;
-// such responses degrade to an empty list rather than failing the scan.
+// "vectorSearch").
 func (c *mqlMongodbatlasCluster) searchIndexes() ([]any, error) {
 	pid, err := projectID(c.MqlRuntime)
 	if err != nil {
@@ -29,9 +28,17 @@ func (c *mqlMongodbatlasCluster) searchIndexes() ([]any, error) {
 	indexes, httpResp, err := atlasClient(c.MqlRuntime).AtlasSearchApi.
 		ListAtlasSearchIndexesCluster(context.Background(), pid, name).Execute()
 	if err != nil {
-		// Atlas Search is not available on every cluster tier or state; degrade
-		// to an empty list rather than failing the scan when it cannot be read.
-		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
+		// A credential that may not read the endpoint has not established
+		// anything about the cluster's indexes, so the field renders null. An
+		// empty list would assert the cluster has none, which is the claim a
+		// search-index audit reads and would wrongly pass on.
+		if isAccessDenied(httpResp) {
+			c.SearchIndexes.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// Atlas Search is not offered on every cluster tier or state. That
+		// genuinely answers the question with "no indexes", so it stays empty.
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			return []any{}, nil
 		}
 		return nil, err
