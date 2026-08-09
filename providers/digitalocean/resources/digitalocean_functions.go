@@ -72,6 +72,20 @@ func owTruthy(v interface{}) bool {
 	}
 }
 
+// openWhiskWebUrl builds the endpoint a web-exported action is published on.
+// OpenWhisk serves web actions at /api/v1/web/<namespace>/<package>/<action>,
+// and places actions that are not in a package in the "default" package.
+// Actions that are not web-exported have no such endpoint and return "".
+func openWhiskWebUrl(apiHost, namespace, pkg, action string, webExported bool) string {
+	if !webExported || apiHost == "" || namespace == "" {
+		return ""
+	}
+	if pkg == "" {
+		pkg = "default"
+	}
+	return strings.TrimRight(apiHost, "/") + "/api/v1/web/" + namespace + "/" + pkg + "/" + action
+}
+
 func owString(v interface{}) string {
 	if s, ok := v.(string); ok {
 		return s
@@ -181,10 +195,11 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 
 	all := make([]interface{}, 0, len(actions))
 	for _, a := range actions {
-		// The action's namespace field is "<nsUuid>" or "<nsUuid>/<package>".
-		pkg := ""
+		// The action's namespace field is "<namespace>" or
+		// "<namespace>/<package>".
+		nsName, pkg := a.Namespace, ""
 		if idx := strings.IndexByte(a.Namespace, '/'); idx >= 0 {
-			pkg = a.Namespace[idx+1:]
+			nsName, pkg = a.Namespace[:idx], a.Namespace[idx+1:]
 		}
 
 		runtime := ""
@@ -223,6 +238,7 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 			"runtime":        llx.StringData(runtime),
 			"webExported":    llx.BoolData(webExported),
 			"requiresApiKey": llx.BoolData(requiresApiKey),
+			"webUrl":         llx.StringData(openWhiskWebUrl(ns.ApiHost, nsName, pkg, a.Name, webExported)),
 			"timeoutMs":      llx.IntData(timeoutMs),
 			"memoryMb":       llx.IntData(memoryMb),
 			"logSizeMb":      llx.IntData(logSizeMb),

@@ -783,10 +783,20 @@ digitalocean.loadBalancer @defaults("id name status") {
   tags []string
   // Forwarding rules
   //
-  // Listener mappings from incoming connections to backend targets. Each
-  // dict has keys entryProtocol, entryPort, targetProtocol, targetPort,
-  // certificateId, and tlsPassthrough.
-  forwardingRules []dict
+  // Deprecated in favor of listeners, which resolves the certificate each
+  // rule presents. Listener mappings from incoming connections to backend
+  // targets. Each dict has keys entryProtocol, entryPort, targetProtocol,
+  // targetPort, certificateId, and tlsPassthrough.
+  forwardingRules @maturity("deprecated") []dict
+  // Listeners the load balancer accepts connections on
+  //
+  // One entry per forwarding rule, carrying the protocol and port traffic
+  // arrives on, the protocol and port it is forwarded to, and the
+  // certificate the listener presents. Reaching the certificate makes the
+  // full TLS posture queryable in one place: a plaintext listener, a
+  // certificate about to expire, or a rule that passes TLS straight
+  // through to the backend.
+  listeners() []digitalocean.loadBalancer.listener
   // Health check configuration
   //
   // Probe used to decide whether a backend is healthy. Dict with keys
@@ -832,6 +842,31 @@ digitalocean.loadBalancer @defaults("id name status") {
   targetLoadBalancers() []digitalocean.loadBalancer
   // Internet-exposure breakdown (public IP combined with the load balancer firewall)
   exposure() digitalocean.network.exposure
+}
+
+// DigitalOcean load balancer listener
+//
+// A single forwarding rule on a load balancer: the protocol and port
+// connections arrive on, the protocol and port they are forwarded to on
+// the backend, and the certificate the listener presents. A listener on
+// http or tcp carries no certificate and moves traffic in the clear,
+// while tlsPassthrough hands the encrypted connection to the backend
+// untouched, so the load balancer presents no certificate of its own.
+private digitalocean.loadBalancer.listener @defaults("entryProtocol entryPort targetProtocol targetPort") {
+  // ID of the load balancer the listener belongs to
+  loadBalancerId string
+  // Protocol connections arrive on (http, https, http2, http3, tcp, udp)
+  entryProtocol string
+  // Port connections arrive on
+  entryPort int
+  // Protocol traffic is forwarded to the backend with (http, https, http2, tcp, udp)
+  targetProtocol string
+  // Port traffic is forwarded to on the backend
+  targetPort int
+  // Whether the encrypted connection is handed to the backend untouched, leaving the load balancer without a certificate of its own
+  tlsPassthrough bool
+  // Certificate the listener presents; null when it terminates no TLS
+  certificate() digitalocean.certificate
 }
 
 // DigitalOcean VPC
@@ -982,6 +1017,17 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   availableUpgradeVersions() []string
   // Node pools
   nodePools() []digitalocean.kubernetes.nodePool
+  // Internet reachability of the cluster's API server
+  //
+  // Managed Kubernetes control planes are published on a public endpoint,
+  // so the API server is reachable from any address unless the
+  // control-plane firewall is enabled and its allowed source addresses
+  // exclude the whole internet. hasPublicIp reflects the published
+  // endpoint, and firewallAllowsIngress is true when the firewall is off
+  // or admits 0.0.0.0/0 or ::/0. openIngressRules stays empty because the
+  // control-plane firewall is a source address list rather than a set of
+  // cloud-firewall rules.
+  exposure() digitalocean.network.exposure
 }
 
 // DigitalOcean Kubernetes node pool
@@ -1365,6 +1411,41 @@ digitalocean.app @defaults("id name") {
   //
   // Each entry: componentName, componentType (SERVICE, WORKER, JOB), instanceName, instanceAlias.
   instances() []dict
+  // Whether the app serves traffic to the internet
+  //
+  // True when the app has a live URL or a default ingress hostname and its
+  // spec declares at least one component that App Platform routes publicly:
+  // a service, a static site, or a functions component. An app built only
+  // from workers and jobs runs without a public route.
+  isPublic() bool
+  // Whether enhanced threat control is enabled
+  //
+  // Layer 7 denial-of-service protection that answers suspicious API
+  // requests with 403 Forbidden.
+  enhancedThreatControlEnabled bool
+  // Name of the response header the ingress sets, or of the request header it strips; empty when no secure header is configured
+  secureHeaderKey string
+  // Value the ingress sets the secure header to; empty when the header is stripped rather than set
+  secureHeaderValue string
+  // Whether the secure header is stripped from incoming requests instead of set on responses
+  secureHeaderRemoved bool
+  // CORS policies configured on the app's ingress routes
+  //
+  // Each entry: path (the route the policy applies to), allowOrigins,
+  // allowMethods, allowHeaders, exposeHeaders, maxAge, allowCredentials.
+  // Each allowOrigins entry is written as "<kind>:<value>" where kind is
+  // exact, prefix, or regex, because the kind decides how broadly the
+  // origin matches. A policy that allows credentials alongside a
+  // permissive origin lets any site read authenticated responses.
+  corsPolicies []dict
+  // Environment variables defined for the app and its components
+  //
+  // Each entry: component (empty for variables shared by the whole app),
+  // key, scope, and type. A type of SECRET means the value is encrypted at
+  // rest, GENERAL means it is stored in plain text. Values are never
+  // exposed, so this reports where a credential is held rather than what
+  // it is.
+  envVars []dict
 }
 
 // DigitalOcean App Platform deployment
@@ -1641,6 +1722,24 @@ digitalocean.spacesBucket @defaults("name region publicAccessBlocked encryptionE
   //
   // Each entry: id, status, prefix, expirationDays, noncurrentVersionExpirationDays, abortIncompleteMultipartUploadDays.
   lifecycleRules []dict
+  // Whether the bucket's contents are reachable by anyone on the internet
+  //
+  // True when an ACL grant targets the all-users or authenticated-users
+  // group, or the bucket policy allows the wildcard principal, and public
+  // access is not blocked. The authenticated-users group covers every
+  // account on the platform rather than only this one, so it counts as
+  // public. publicAccessBlocked is only set when all four block-public-access
+  // settings are on, so a bucket with a public grant and partial blocking is
+  // reported as public.
+  isPublic() bool
+  // Whether the bucket policy allows the wildcard principal
+  //
+  // True when any Allow statement in the bucket policy names "*" as its
+  // principal, which grants the action to every requester. This describes
+  // the policy alone; isPublic combines it with the ACL grants and the
+  // block-public-access settings to say whether the bucket is actually
+  // reachable.
+  hasWildcardPolicy() bool
 }
 
 // DigitalOcean image
@@ -1855,6 +1954,15 @@ private digitalocean.function.action @defaults("name runtime updatedAt") {
   concurrency int
   // Time the action was last updated
   updatedAt time
+  // Web endpoint the action is published on; empty when the action is not web-exported
+  webUrl string
+  // Whether anyone on the internet can invoke the action
+  //
+  // True when the action is web-exported and does not require an API key,
+  // which leaves the webUrl endpoint open to unauthenticated callers. A
+  // web-exported action that requires a key is still published, but only
+  // answers callers holding that key.
+  isPublic() bool
 }
 
 // DigitalOcean Functions trigger
@@ -2258,6 +2366,13 @@ digitalocean.gradientai.agent @defaults("uuid name region") {
   versions() []digitalocean.gradientai.agent.version
   // API keys issued for the agent (secret values are never exposed)
   apiKeys() []digitalocean.gradientai.agent.apiKey
+  // Whether the agent's deployment answers anyone on the internet
+  //
+  // True when deploymentVisibility marks the deployment public, which
+  // publishes deploymentUrl as an endpoint anyone can send prompts to
+  // without credentials. A private deployment is reachable only with an
+  // agent API key.
+  isPublic() bool
 }
 
 // DigitalOcean GradientAI agent guardrail
