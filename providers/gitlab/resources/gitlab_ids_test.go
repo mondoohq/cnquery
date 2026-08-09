@@ -81,6 +81,35 @@ func TestScopedIDsDistinguishParents(t *testing.T) {
 			userScopedID("gitlab.user.externalIdentity", 2, "ldapmain", ""))
 	})
 
+	t.Run("same CI/CD credential id under different projects", func(t *testing.T) {
+		// Trigger tokens, schedules, secure files, agents and mirrors are all
+		// numbered per project, so id 1 exists in every project on the
+		// instance. Without the project in the key, scanning a group would
+		// report the first project's credentials for all of them.
+		for _, resource := range []string{
+			"gitlab.project.pipelineTrigger",
+			"gitlab.project.pipelineSchedule",
+			"gitlab.project.secureFile",
+			"gitlab.project.clusterAgent",
+			"gitlab.project.remoteMirror",
+		} {
+			assert.NotEqual(t,
+				projectScopedID(resource, 1, "1"),
+				projectScopedID(resource, 2, "1"), resource)
+		}
+	})
+
+	t.Run("same agent token id under different agents", func(t *testing.T) {
+		// Agent token ids are unique per agent, not per project, so the agent
+		// has to be in the key as well as the project.
+		assert.NotEqual(t,
+			projectScopedID("gitlab.project.clusterAgent.token", 1, "10", "5"),
+			projectScopedID("gitlab.project.clusterAgent.token", 1, "20", "5"))
+		assert.NotEqual(t,
+			projectScopedID("gitlab.project.clusterAgent.token", 1, "10", "5"),
+			projectScopedID("gitlab.project.clusterAgent.token", 2, "10", "5"))
+	})
+
 	t.Run("singleton children still differ per parent", func(t *testing.T) {
 		// containerExpirationPolicy, approvalSetting and codeowners have no
 		// child key at all — the parent id is the only thing separating them.
