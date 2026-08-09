@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // --- Database sub-resources ---
@@ -28,9 +29,14 @@ func (r *mqlDigitaloceanDatabase) users() ([]interface{}, error) {
 		}
 		for _, u := range users {
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.database.user", map[string]*llx.RawData{
-				"databaseId": llx.StringData(r.Id.Data),
-				"name":       llx.StringData(u.Name),
-				"role":       llx.StringData(u.Role),
+				"databaseId":     llx.StringData(r.Id.Data),
+				"name":           llx.StringData(u.Name),
+				"role":           llx.StringData(u.Role),
+				"authPlugin":     llx.StringData(databaseUserAuthPlugin(&u)),
+				"kafkaAcls":      llx.ArrayData(databaseUserKafkaAcls(&u), types.Dict),
+				"opensearchAcls": llx.ArrayData(databaseUserOpenSearchAcls(&u), types.Dict),
+				"mongoDatabases": llx.ArrayData(databaseUserMongoDatabases(&u), types.String),
+				"mongoRole":      llx.StringData(databaseUserMongoRole(&u)),
 			})
 			if err != nil {
 				return nil, err
