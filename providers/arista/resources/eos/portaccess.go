@@ -232,7 +232,10 @@ func ParseDhcpSnooping(runningConfig string) *DhcpSnoopingConfig {
 				cfg.Vlans = []string{}
 				continue
 			}
-			cfg.Vlans = splitVlanList(strings.TrimPrefix(line, "ip dhcp snooping vlan "))
+			// Coverage accumulates across lines. A device that renders one
+			// line per VLAN would lose all but the last if this replaced.
+			cfg.Vlans = appendVlans(cfg.Vlans,
+				splitVlanList(strings.TrimPrefix(line, "ip dhcp snooping vlan ")))
 		}
 	}
 
@@ -301,7 +304,9 @@ func ParseArpInspection(runningConfig string) *ArpInspectionConfig {
 		if len(fields) == 0 {
 			continue
 		}
-		cfg.Vlans = splitVlanList(fields[0])
+		// DAI is commonly configured a VLAN at a time, so coverage
+		// accumulates across lines rather than replacing.
+		cfg.Vlans = appendVlans(cfg.Vlans, splitVlanList(fields[0]))
 	}
 	cfg.Enabled = len(cfg.Vlans) > 0
 
@@ -328,6 +333,23 @@ func interfaceBlockHasLine(block, want string) bool {
 		}
 	}
 	return false
+}
+
+// appendVlans adds VLAN tokens to a coverage list, skipping ones already
+// present so a configuration that repeats a VLAN across lines does not report
+// it twice.
+func appendVlans(existing, added []string) []string {
+	seen := make(map[string]bool, len(existing))
+	for _, v := range existing {
+		seen[v] = true
+	}
+	for _, v := range added {
+		if !seen[v] {
+			seen[v] = true
+			existing = append(existing, v)
+		}
+	}
+	return existing
 }
 
 // splitVlanList splits a comma-separated VLAN list. Range tokens are kept as

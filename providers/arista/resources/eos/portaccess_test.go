@@ -126,6 +126,28 @@ interface Ethernet48
 	assert.Equal(t, []string{"Ethernet1", "Ethernet48"}, c.TrustedInterfaces)
 }
 
+func TestParseDhcpSnooping_VlanCoverageAccumulates(t *testing.T) {
+	// A device that renders one line per VLAN must not have all but the last
+	// silently dropped. A VLAN repeated across lines is reported once.
+	cfg := `ip dhcp snooping
+ip dhcp snooping vlan 100
+ip dhcp snooping vlan 200,300
+ip dhcp snooping vlan 200
+`
+	c := ParseDhcpSnooping(cfg)
+	assert.Equal(t, []string{"100", "200", "300"}, c.Vlans)
+}
+
+func TestParseArpInspection_VlanCoverageAccumulates(t *testing.T) {
+	cfg := `ip arp inspection vlan 100
+ip arp inspection vlan 200 logging acl-match matchlog
+ip arp inspection vlan 100
+`
+	c := ParseArpInspection(cfg)
+	assert.True(t, c.Enabled)
+	assert.Equal(t, []string{"100", "200"}, c.Vlans)
+}
+
 func TestParseDhcpSnooping_None(t *testing.T) {
 	c := ParseDhcpSnooping("interface Ethernet1\n   description X\n")
 	assert.False(t, c.Enabled)
