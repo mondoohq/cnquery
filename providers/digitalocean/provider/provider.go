@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"slices"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -20,6 +21,33 @@ import (
 const (
 	DefaultConnectionType = "digitalocean"
 )
+
+// filterOptPrefixes are the --filters keys the provider understands. Anything
+// else is dropped rather than silently stored, so a typo surfaces as a filter
+// that plainly did nothing instead of one that appears accepted.
+var filterOptPrefixes = []string{
+	"regions",
+	"exclude:regions",
+	"tags",
+	"exclude:tags",
+}
+
+// parseFlagsToFiltersOpts flattens the --filters key-value flag into connection
+// options the connection reads back through DiscoveryFiltersFromOpts.
+func parseFlagsToFiltersOpts(flags map[string]*llx.Primitive) map[string]string {
+	opts := map[string]string{}
+
+	x, ok := flags["filters"]
+	if !ok || len(x.Map) == 0 {
+		return opts
+	}
+	for k, v := range x.Map {
+		if slices.Contains(filterOptPrefixes, k) {
+			opts[k] = string(v.Value)
+		}
+	}
+	return opts
+}
 
 type Service struct {
 	*plugin.Service
@@ -66,6 +94,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	}
 	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
+	for k, v := range parseFlagsToFiltersOpts(flags) {
+		conf.Options[k] = v
+	}
 
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},

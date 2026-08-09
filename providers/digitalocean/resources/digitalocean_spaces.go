@@ -144,6 +144,12 @@ func listSpacesBucketRefs(conn *connection.DigitaloceanConnection, regions []str
 	)
 	jobs := make([]*jobpool.Job, 0, len(regions))
 	for _, region := range regions {
+		// Filtering here rather than per bucket skips the ListBuckets call for
+		// regions nothing can match. Buckets carry no tags, so an include-tag
+		// filter rules out every region.
+		if skipSpacesBucket(conn.Filters.General, region) {
+			continue
+		}
 		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
 			client, err := conn.SpacesClient(region)
 			if err != nil {

@@ -57,6 +57,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				return nil, err
 			}
 			for _, db := range dbs {
+				if skipDatabase(conn.Filters.General, &db) {
+					continue
+				}
 				assets = append(assets, childAsset(
 					connection.DatabasePlatform(),
 					connection.NewDatabaseIdentifier(accountUUID, db.ID),
@@ -83,6 +86,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				return nil, err
 			}
 			for _, c := range clusters {
+				if skipKubernetesCluster(conn.Filters.General, c) {
+					continue
+				}
 				assets = append(assets, childAsset(
 					connection.KubernetesPlatform(),
 					connection.NewKubernetesIdentifier(accountUUID, c.ID),
@@ -109,6 +115,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				return nil, err
 			}
 			for _, lb := range lbs {
+				if skipLoadBalancer(conn.Filters.General, &lb) {
+					continue
+				}
 				assets = append(assets, childAsset(
 					connection.LoadBalancerPlatform(),
 					connection.NewLoadBalancerIdentifier(accountUUID, lb.ID),
@@ -135,6 +144,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				return nil, err
 			}
 			for _, fw := range firewalls {
+				if skipFirewall(conn.Filters.General, &fw) {
+					continue
+				}
 				assets = append(assets, childAsset(
 					connection.FirewallPlatform(),
 					connection.NewFirewallIdentifier(accountUUID, fw.ID),
@@ -192,7 +204,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				return nil, err
 			}
 			for _, a := range agents {
-				if a == nil {
+				if a == nil || skipGradientaiAgent(conn.Filters.General, a) {
 					continue
 				}
 				assets = append(assets, childAsset(
