@@ -40,6 +40,7 @@ const (
 	ResourceDigitaloceanKubernetesNodePool                              string = "digitalocean.kubernetes.nodePool"
 	ResourceDigitaloceanKubernetesNode                                  string = "digitalocean.kubernetes.node"
 	ResourceDigitaloceanProject                                         string = "digitalocean.project"
+	ResourceDigitaloceanProjectResource                                 string = "digitalocean.project.resource"
 	ResourceDigitaloceanSshKey                                          string = "digitalocean.sshKey"
 	ResourceDigitaloceanCertificate                                     string = "digitalocean.certificate"
 	ResourceDigitaloceanRegistry                                        string = "digitalocean.registry"
@@ -194,6 +195,10 @@ func init() {
 		"digitalocean.project": {
 			// to override args, implement: initDigitaloceanProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanProject,
+		},
+		"digitalocean.project.resource": {
+			// to override args, implement: initDigitaloceanProjectResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanProjectResource,
 		},
 		"digitalocean.sshKey": {
 			// to override args, implement: initDigitaloceanSshKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -976,6 +981,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.database.user.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabaseUser).GetRole()).ToDataRes(types.String)
 	},
+	"digitalocean.database.user.authPlugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabaseUser).GetAuthPlugin()).ToDataRes(types.String)
+	},
+	"digitalocean.database.user.kafkaAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabaseUser).GetKafkaAcls()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.database.user.opensearchAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabaseUser).GetOpensearchAcls()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.database.user.mongoDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabaseUser).GetMongoDatabases()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.database.user.mongoRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabaseUser).GetMongoRole()).ToDataRes(types.String)
+	},
 	"digitalocean.database.replica.databaseId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabaseReplica).GetDatabaseId()).ToDataRes(types.String)
 	},
@@ -1503,6 +1523,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.project.ownerUuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanProject).GetOwnerUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.project.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProject).GetResources()).ToDataRes(types.Array(types.Resource("digitalocean.project.resource")))
+	},
+	"digitalocean.project.resource.urn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProjectResource).GetUrn()).ToDataRes(types.String)
+	},
+	"digitalocean.project.resource.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProjectResource).GetProjectId()).ToDataRes(types.String)
+	},
+	"digitalocean.project.resource.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProjectResource).GetResourceType()).ToDataRes(types.String)
+	},
+	"digitalocean.project.resource.assignedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProjectResource).GetAssignedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.project.resource.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProjectResource).GetStatus()).ToDataRes(types.String)
 	},
 	"digitalocean.sshKey.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanSshKey).GetId()).ToDataRes(types.Int)
@@ -3978,6 +4016,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDatabaseUser).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"digitalocean.database.user.authPlugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabaseUser).AuthPlugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.database.user.kafkaAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabaseUser).KafkaAcls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.database.user.opensearchAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabaseUser).OpensearchAcls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.database.user.mongoDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabaseUser).MongoDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.database.user.mongoRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabaseUser).MongoRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"digitalocean.database.replica.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDatabaseReplica).__id, ok = v.Value.(string)
 		return
@@ -4736,6 +4794,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.project.ownerUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanProject).OwnerUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.project.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProject).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.project.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProjectResource).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.project.resource.urn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProjectResource).Urn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.project.resource.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProjectResource).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.project.resource.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProjectResource).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.project.resource.assignedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProjectResource).AssignedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.project.resource.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProjectResource).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"digitalocean.sshKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9284,10 +9370,15 @@ type mqlDigitaloceanDatabaseUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanDatabaseUserInternal it will be used here
-	DatabaseId plugin.TValue[string]
-	Database   plugin.TValue[*mqlDigitaloceanDatabase]
-	Name       plugin.TValue[string]
-	Role       plugin.TValue[string]
+	DatabaseId     plugin.TValue[string]
+	Database       plugin.TValue[*mqlDigitaloceanDatabase]
+	Name           plugin.TValue[string]
+	Role           plugin.TValue[string]
+	AuthPlugin     plugin.TValue[string]
+	KafkaAcls      plugin.TValue[[]any]
+	OpensearchAcls plugin.TValue[[]any]
+	MongoDatabases plugin.TValue[[]any]
+	MongoRole      plugin.TValue[string]
 }
 
 // createDigitaloceanDatabaseUser creates a new instance of this resource
@@ -9353,6 +9444,26 @@ func (c *mqlDigitaloceanDatabaseUser) GetName() *plugin.TValue[string] {
 
 func (c *mqlDigitaloceanDatabaseUser) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+func (c *mqlDigitaloceanDatabaseUser) GetAuthPlugin() *plugin.TValue[string] {
+	return &c.AuthPlugin
+}
+
+func (c *mqlDigitaloceanDatabaseUser) GetKafkaAcls() *plugin.TValue[[]any] {
+	return &c.KafkaAcls
+}
+
+func (c *mqlDigitaloceanDatabaseUser) GetOpensearchAcls() *plugin.TValue[[]any] {
+	return &c.OpensearchAcls
+}
+
+func (c *mqlDigitaloceanDatabaseUser) GetMongoDatabases() *plugin.TValue[[]any] {
+	return &c.MongoDatabases
+}
+
+func (c *mqlDigitaloceanDatabaseUser) GetMongoRole() *plugin.TValue[string] {
+	return &c.MongoRole
 }
 
 // mqlDigitaloceanDatabaseReplica for the digitalocean.database.replica resource
@@ -10994,6 +11105,7 @@ type mqlDigitaloceanProject struct {
 	UpdatedAt   plugin.TValue[*time.Time]
 	IsDefault   plugin.TValue[bool]
 	OwnerUuid   plugin.TValue[string]
+	Resources   plugin.TValue[[]any]
 }
 
 // createDigitaloceanProject creates a new instance of this resource
@@ -11067,6 +11179,86 @@ func (c *mqlDigitaloceanProject) GetIsDefault() *plugin.TValue[bool] {
 
 func (c *mqlDigitaloceanProject) GetOwnerUuid() *plugin.TValue[string] {
 	return &c.OwnerUuid
+}
+
+func (c *mqlDigitaloceanProject) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.project", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
+}
+
+// mqlDigitaloceanProjectResource for the digitalocean.project.resource resource
+type mqlDigitaloceanProjectResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanProjectResourceInternal it will be used here
+	Urn          plugin.TValue[string]
+	ProjectId    plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	AssignedAt   plugin.TValue[*time.Time]
+	Status       plugin.TValue[string]
+}
+
+// createDigitaloceanProjectResource creates a new instance of this resource
+func createDigitaloceanProjectResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanProjectResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.project.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanProjectResource) MqlName() string {
+	return "digitalocean.project.resource"
+}
+
+func (c *mqlDigitaloceanProjectResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanProjectResource) GetUrn() *plugin.TValue[string] {
+	return &c.Urn
+}
+
+func (c *mqlDigitaloceanProjectResource) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlDigitaloceanProjectResource) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlDigitaloceanProjectResource) GetAssignedAt() *plugin.TValue[*time.Time] {
+	return &c.AssignedAt
+}
+
+func (c *mqlDigitaloceanProjectResource) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlDigitaloceanSshKey for the digitalocean.sshKey resource

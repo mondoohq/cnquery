@@ -108,6 +108,19 @@ Check managed databases reachable from the internet:
 digitalocean.databases.where(internetReachable)
 ```
 
+Review what each managed-database user is authorized to do, beyond its
+cluster-wide role:
+
+```mql
+digitalocean.databases { name engine users { name role authPlugin kafkaAcls opensearchAcls } }
+```
+
+See what actually sits in each project, including anything left in the default one:
+
+```mql
+digitalocean.projects { name isDefault resources { urn resourceType assignedAt } }
+```
+
 Review App Platform deployment history and configured alerts:
 
 ```mql

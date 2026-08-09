@@ -518,6 +518,27 @@ private digitalocean.database.user @defaults("name role") {
   name string
   // Role (primary, normal)
   role string
+  // Authentication plugin the user authenticates with
+  //
+  // MySQL only, one of caching_sha2_password or mysql_native_password.
+  // Empty on every other engine.
+  authPlugin string
+  // Kafka topic permissions granted to the user
+  //
+  // Each entry: id, topic (the topic or topic pattern the grant covers),
+  // permission (the access it grants on that topic). A user may hold more
+  // than one grant on the same topic. Empty on every other engine.
+  kafkaAcls []dict
+  // OpenSearch index permissions granted to the user
+  //
+  // Each entry: index (the index or index pattern the grant covers),
+  // permission (the access it grants on that index). Empty on every other
+  // engine.
+  opensearchAcls []dict
+  // MongoDB databases the user's role applies to; empty on every other engine
+  mongoDatabases []string
+  // Role the user holds on its MongoDB databases; empty on every other engine
+  mongoRole string
 }
 
 // DigitalOcean database replica
@@ -1051,6 +1072,30 @@ digitalocean.project @defaults("id name environment") {
   isDefault bool
   // UUID of the account that owns the project
   ownerUuid string
+  // Resources assigned to the project
+  resources() []digitalocean.project.resource
+}
+
+// Resource assigned to a DigitalOcean project
+//
+// A single resource that has been placed in a project, which is how
+// DigitalOcean groups an account's infrastructure for ownership and
+// billing. The urn field carries the resource's uniform resource name
+// (for example do:droplet:123 or do:kubernetes:a1b2c3), resourceType
+// names the kind of resource that URN points at, and assignedAt records
+// when it joined the project. Listing these tells you what actually sits
+// in a given project, including anything left behind in the default one.
+private digitalocean.project.resource @defaults("urn resourceType") {
+  // Uniform resource name identifying the assigned resource
+  urn string
+  // ID of the project the resource is assigned to
+  projectId string
+  // Kind of resource the URN points at (e.g. droplet, kubernetes, dbaas, loadbalancer, space)
+  resourceType string
+  // Time the resource was assigned to the project
+  assignedAt time
+  // Assignment status reported by the platform
+  status string
 }
 
 // DigitalOcean SSH key

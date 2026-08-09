@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/digitalocean/godo"
@@ -617,6 +618,56 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 
 func (r *mqlDigitaloceanKubernetesCluster) id() (string, error) {
 	return "digitalocean.kubernetes.cluster/" + r.Id.Data, nil
+}
+
+// projectResourceType pulls the resource kind out of a DigitalOcean URN, which
+// is shaped "do:<type>:<identifier>" (for example do:droplet:123). Returns ""
+// for anything that does not follow that shape.
+func projectResourceType(urn string) string {
+	parts := strings.Split(urn, ":")
+	if len(parts) < 3 {
+		return ""
+	}
+	return parts[1]
+}
+
+// resources lists the resources assigned to the project, which is how an
+// account's infrastructure is grouped for ownership and billing.
+func (r *mqlDigitaloceanProject) resources() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+
+	var all []interface{}
+	opt := &godo.ListOptions{PerPage: 200}
+	for {
+		items, resp, err := client.Projects.ListResources(context.Background(), r.Id.Data, opt)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items {
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.project.resource", map[string]*llx.RawData{
+				"__id":         llx.StringData("digitalocean.project.resource/" + r.Id.Data + "/" + item.URN),
+				"urn":          llx.StringData(item.URN),
+				"projectId":    llx.StringData(r.Id.Data),
+				"resourceType": llx.StringData(projectResourceType(item.URN)),
+				"assignedAt":   llx.TimeDataPtr(parseDoTime(item.AssignedAt)),
+				"status":       llx.StringData(item.Status),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+		if resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			return nil, err
+		}
+		opt.Page = page + 1
+	}
+	return all, nil
 }
 
 func (r *mqlDigitalocean) projects() ([]interface{}, error) {
