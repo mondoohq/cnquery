@@ -323,12 +323,12 @@ stripe.balance @defaults("available pending") {
   // Funds available for payout, per currency
   //
   // List of {amount, currency} entries where amount is in the smallest
-  // currency unit.
+  // currency unit and may be negative (for example a debited Connect balance).
   available []dict
   // Funds not yet available for payout, per currency
   //
   // List of {amount, currency} entries where amount is in the smallest
-  // currency unit.
+  // currency unit and may be negative (for example a debited Connect balance).
   pending []dict
   // Whether the balance reflects live-mode funds
   livemode bool

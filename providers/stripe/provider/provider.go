@@ -47,6 +47,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OptionAccount] = account
 	}
 
+	if baseURL := stringFlag(flags, connection.OptionBaseURL); baseURL != "" {
+		conf.Options[connection.OptionBaseURL] = baseURL
+	}
+
 	token := stringFlag(flags, connection.OptionToken)
 	if token == "" {
 		token = strings.TrimSpace(os.Getenv("STRIPE_API_KEY"))

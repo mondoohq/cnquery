@@ -57,7 +57,7 @@ func initStripeProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	idArg, ok := args["id"]
 	if !ok || idArg.Value == nil {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stripe.product requires an id")
 	}
 	id, _ := idArg.Value.(string)
 	if id == "" {

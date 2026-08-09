@@ -59,7 +59,7 @@ func initStripeCustomer(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	idArg, ok := args["id"]
 	if !ok || idArg.Value == nil {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stripe.customer requires an id")
 	}
 	id, _ := idArg.Value.(string)
 	if id == "" {

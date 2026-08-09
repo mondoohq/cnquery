@@ -29,6 +29,9 @@ const (
 	// OptionAccount is the CLI flag/option name carrying an optional connected
 	// account ID (Stripe Connect), sent as the Stripe-Account header.
 	OptionAccount = "account"
+	// OptionBaseURL overrides the Stripe API root. It is useful for pointing at
+	// a Stripe-compatible proxy or a mock server (including in tests).
+	OptionBaseURL = "base-url"
 )
 
 type StripeConnection struct {
@@ -43,22 +46,35 @@ type StripeConnection struct {
 }
 
 func NewStripeConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*StripeConnection, error) {
+	baseURL := apiBaseURL
+	if conf.Options != nil {
+		if raw := strings.TrimSpace(conf.Options[OptionBaseURL]); raw != "" {
+			baseURL = raw
+		}
+	}
+
 	conn := &StripeConnection{
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
-		baseURL:    apiBaseURL,
+		baseURL:    baseURL,
 		client:     &http.Client{Timeout: 60 * time.Second},
 	}
 
-	token := strings.TrimSpace(os.Getenv("STRIPE_API_KEY"))
-	if token == "" {
-		token = strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
-	}
+	// The credential populated by ParseCLI (from --token or the env var) is the
+	// authoritative source. The env var is only a fallback for connections
+	// built from an inventory config that never went through ParseCLI.
+	token := ""
 	for _, cred := range conf.Credentials {
 		if cred.Type == vault.CredentialType_password && len(cred.Secret) > 0 {
 			token = strings.TrimSpace(string(cred.Secret))
 		}
+	}
+	if token == "" {
+		token = strings.TrimSpace(os.Getenv("STRIPE_API_KEY"))
+	}
+	if token == "" {
+		token = strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
 	}
 	if token == "" {
 		return nil, errors.New("a valid Stripe secret key is required (set STRIPE_API_KEY or use --token)")

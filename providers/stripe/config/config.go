@@ -44,6 +44,12 @@ Notes:
 					Default: "",
 					Desc:    "Optional connected account ID to scope the connection to (Stripe Connect)",
 				},
+				{
+					Long:    "base-url",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Override the Stripe API base URL (for a Stripe-compatible proxy)",
+				},
 			},
 		},
 	},
