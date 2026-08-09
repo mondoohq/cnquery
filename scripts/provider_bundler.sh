@@ -118,6 +118,36 @@ BUILDS=(
   "windows arm64"
 )
 
+# A provider may drop build targets its dependencies cannot compile for (for
+# example a dependency that assumes a 64-bit int fails to build on 32-bit
+# targets). List one "GOOS GOARCH [GOARM]" target per line, matching the entries
+# above, in providers/<name>/.build-skip. Blank lines and # comments are ignored.
+SKIP_FILE="${PROVIDER_PATH}/.build-skip"
+if [ -f "$SKIP_FILE" ]; then
+  FILTERED=()
+  for build in "${BUILDS[@]}"; do
+    keep=1
+    while IFS= read -r line || [ -n "$line" ]; do
+      line="${line%%#*}"
+      # Trim leading and trailing whitespace in pure bash (no subshell, no glob
+      # expansion of * or ? that xargs would perform).
+      line="${line#"${line%%[![:space:]]*}"}"
+      line="${line%"${line##*[![:space:]]}"}"
+      [ -z "$line" ] && continue
+      if [ "$build" = "$line" ]; then
+        keep=0
+        break
+      fi
+    done < "$SKIP_FILE"
+    if [ "$keep" -eq 1 ]; then
+      FILTERED+=("$build")
+    else
+      echo "  - Skipping ${build} for ${PROVIDER_NAME} (listed in .build-skip)"
+    fi
+  done
+  BUILDS=("${FILTERED[@]}")
+fi
+
 echo "  - Building ${#BUILDS[@]} architecture targets (max parallel: ${MAX_PARALLEL})..."
 
 # Kill all background build processes on interrupt/termination
