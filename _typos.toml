@@ -70,6 +70,9 @@ tre = "tre"
 ue = "ue"
 # Company name.
 automattic = "automattic"
+# Python package on PyPI providing Mozilla's CA bundle. The project spells it
+# without the trailing "y", so every reference to it must stay verbatim.
+certifi = "certifi"
 # Misspelled JSON serialization tag kept for wire/persisted-data compatibility
 # (the Go field itself is spelled correctly).
 reciever = "reciever"
