@@ -17,6 +17,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/datadog/resources"
 // ipAllowlistEntries. Identity provider attribute mappings, log processing
 // pipelines, log forwarding destinations and log restriction queries cover how
 // privilege is granted at login and where log data is read and sent.
+// identityProviders lists the login methods available to members,
+// oauthClients the third-party applications holding standing access, and
+// orgConnections the other Datadog organizations this one shares data with.
 datadog {
   // Organization the credentials authenticate against
   org() datadog.organization
@@ -80,6 +83,12 @@ datadog {
   logsCustomDestinations() []datadog.logsCustomDestination
   // Queries that restrict which logs a role can read
   logsRestrictionQueries() []datadog.logsRestrictionQuery
+  // Third-party OAuth clients the organization has authorized
+  oauthClients() []datadog.oauthClient
+  // Identity providers users can authenticate through
+  identityProviders() []datadog.identityProvider
+  // Connections that share data with other Datadog organizations
+  orgConnections() []datadog.orgConnection
 }
 
 // Datadog Restriction Policy
@@ -1178,4 +1187,104 @@ datadog.syntheticsPrivateLocation @defaults("id name") {
   // allowed to use this private location. Empty when the location is
   // not restricted to specific roles.
   metadata() dict
+}
+
+// Third-party OAuth client authorized against the organization
+//
+// An OAuth2 application that members of the organization have granted
+// standing access to Datadog data. Each client is listed once for the whole
+// organization, with `userCount` reporting how many people have authorized
+// it and `lastExercised` when its access was most recently used. `disabled`
+// records an organization-wide revocation, which blocks the client for
+// everyone regardless of individual consent. The authorizations hold the
+// per-person grants, including the scopes each member handed over, so a
+// client with a large `userCount` and broad scopes is worth reviewing even
+// when nobody remembers approving it. Clients that stop appearing in
+// `lastExercised` for long periods are candidates for revocation.
+datadog.oauthClient @defaults("clientId userCount disabled") {
+  // Identifier of the authorization record
+  id string
+  // Identifier of the OAuth2 client the organization authorized
+  clientId string
+  // Whether the organization has revoked this client for all members
+  disabled bool
+  // Number of members who have authorized this client
+  userCount int
+  // When the client last used its authorization
+  lastExercised time
+  // Individual grants members have made to this client
+  authorizations() []datadog.oauthClient.authorization
+}
+
+// Grant a member made to a third-party OAuth client
+//
+// One person's authorization of an OAuth2 application, holding the scopes
+// they consented to and the times the grant was created, changed and last
+// used. `disabled` reflects a revocation by the member themselves, while
+// `orgDisabled` reflects an organization-wide revocation of the client; a
+// grant is only live when both are false. The scopes are the actual
+// permissions the application can exercise on that member's behalf, which is
+// what makes this the level to audit rather than the client as a whole. The
+// user field identifies whose access is delegated.
+datadog.oauthClient.authorization @defaults("id disabled scopes") {
+  // Identifier of the authorization
+  id string
+  // Scopes the member granted to the client
+  scopes []string
+  // Whether the member has revoked this grant
+  disabled bool
+  // Whether the organization has revoked the client for all members
+  orgDisabled bool
+  // When the grant was created
+  createdAt time
+  // When the grant was last modified
+  modifiedAt time
+  // When the client last used this grant
+  lastExercised time
+  // Member who granted the access
+  user() datadog.user
+}
+
+// Identity provider members can authenticate through
+//
+// A login method configured for the organization, reported one row per
+// provider with `authenticationMethod` naming the mechanism and `enabled`
+// recording whether members can currently use it. This is the view that
+// shows what remains available alongside single sign-on, so an organization
+// that has rolled out SAML but left another method enabled is visible here
+// rather than in the SAML settings on the org resource.
+datadog.identityProvider @defaults("id authenticationMethod enabled") {
+  // Identifier of the identity provider
+  id string
+  // Mechanism members authenticate with
+  authenticationMethod string
+  // Whether members can currently authenticate through this provider
+  enabled bool
+}
+
+// Connection sharing data with another Datadog organization
+//
+// A link between this organization and another one, letting telemetry cross
+// an organizational boundary. `sourceOrgId` and `sourceOrgName` name the
+// organization data flows out of, `sinkOrgId` and `sinkOrgName` the one it
+// flows into, so comparing them against the organization publicId shows
+// which direction a given connection runs. `connectionTypes` lists the kinds
+// of data covered by the link, and createdBy identifies who established it.
+datadog.orgConnection @defaults("id connectionTypes") {
+  // Identifier of the connection
+  id string
+  // Kinds of data the connection covers
+  connectionTypes []string
+  // When the connection was created
+  createdAt time
+  // Identifier of the organization data flows out of
+  sourceOrgId string
+  // Name of the organization data flows out of
+  sourceOrgName string
+  // Identifier of the organization data flows into
+  sinkOrgId string
+  // Name of the organization data flows into
+  sinkOrgName string
+  // Member who created the connection
+  createdBy() datadog.user
 }

@@ -46,6 +46,10 @@ const (
 	ResourceDatadogRumApplication            string = "datadog.rumApplication"
 	ResourceDatadogSyntheticsGlobalVariable  string = "datadog.syntheticsGlobalVariable"
 	ResourceDatadogSyntheticsPrivateLocation string = "datadog.syntheticsPrivateLocation"
+	ResourceDatadogOauthClient               string = "datadog.oauthClient"
+	ResourceDatadogOauthClientAuthorization  string = "datadog.oauthClient.authorization"
+	ResourceDatadogIdentityProvider          string = "datadog.identityProvider"
+	ResourceDatadogOrgConnection             string = "datadog.orgConnection"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -171,6 +175,22 @@ func init() {
 		"datadog.syntheticsPrivateLocation": {
 			// to override args, implement: initDatadogSyntheticsPrivateLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatadogSyntheticsPrivateLocation,
+		},
+		"datadog.oauthClient": {
+			// to override args, implement: initDatadogOauthClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogOauthClient,
+		},
+		"datadog.oauthClient.authorization": {
+			// to override args, implement: initDatadogOauthClientAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogOauthClientAuthorization,
+		},
+		"datadog.identityProvider": {
+			// to override args, implement: initDatadogIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIdentityProvider,
+		},
+		"datadog.orgConnection": {
+			// to override args, implement: initDatadogOrgConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogOrgConnection,
 		},
 	}
 }
@@ -329,6 +349,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"datadog.logsRestrictionQueries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadog).GetLogsRestrictionQueries()).ToDataRes(types.Array(types.Resource("datadog.logsRestrictionQuery")))
+	},
+	"datadog.oauthClients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetOauthClients()).ToDataRes(types.Array(types.Resource("datadog.oauthClient")))
+	},
+	"datadog.identityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIdentityProviders()).ToDataRes(types.Array(types.Resource("datadog.identityProvider")))
+	},
+	"datadog.orgConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetOrgConnections()).ToDataRes(types.Array(types.Resource("datadog.orgConnection")))
 	},
 	"datadog.restrictionPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogRestrictionPolicy).GetId()).ToDataRes(types.String)
@@ -1158,6 +1187,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.syntheticsPrivateLocation.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSyntheticsPrivateLocation).GetMetadata()).ToDataRes(types.Dict)
 	},
+	"datadog.oauthClient.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClient).GetId()).ToDataRes(types.String)
+	},
+	"datadog.oauthClient.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClient).GetClientId()).ToDataRes(types.String)
+	},
+	"datadog.oauthClient.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClient).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"datadog.oauthClient.userCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClient).GetUserCount()).ToDataRes(types.Int)
+	},
+	"datadog.oauthClient.lastExercised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClient).GetLastExercised()).ToDataRes(types.Time)
+	},
+	"datadog.oauthClient.authorizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClient).GetAuthorizations()).ToDataRes(types.Array(types.Resource("datadog.oauthClient.authorization")))
+	},
+	"datadog.oauthClient.authorization.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetId()).ToDataRes(types.String)
+	},
+	"datadog.oauthClient.authorization.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.oauthClient.authorization.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"datadog.oauthClient.authorization.orgDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetOrgDisabled()).ToDataRes(types.Bool)
+	},
+	"datadog.oauthClient.authorization.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"datadog.oauthClient.authorization.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetModifiedAt()).ToDataRes(types.Time)
+	},
+	"datadog.oauthClient.authorization.lastExercised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetLastExercised()).ToDataRes(types.Time)
+	},
+	"datadog.oauthClient.authorization.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOauthClientAuthorization).GetUser()).ToDataRes(types.Resource("datadog.user"))
+	},
+	"datadog.identityProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIdentityProvider).GetId()).ToDataRes(types.String)
+	},
+	"datadog.identityProvider.authenticationMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIdentityProvider).GetAuthenticationMethod()).ToDataRes(types.String)
+	},
+	"datadog.identityProvider.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIdentityProvider).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.orgConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetId()).ToDataRes(types.String)
+	},
+	"datadog.orgConnection.connectionTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetConnectionTypes()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.orgConnection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"datadog.orgConnection.sourceOrgId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetSourceOrgId()).ToDataRes(types.String)
+	},
+	"datadog.orgConnection.sourceOrgName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetSourceOrgName()).ToDataRes(types.String)
+	},
+	"datadog.orgConnection.sinkOrgId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetSinkOrgId()).ToDataRes(types.String)
+	},
+	"datadog.orgConnection.sinkOrgName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetSinkOrgName()).ToDataRes(types.String)
+	},
+	"datadog.orgConnection.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogOrgConnection).GetCreatedBy()).ToDataRes(types.Resource("datadog.user"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1288,6 +1392,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.logsRestrictionQueries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadog).LogsRestrictionQueries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).OauthClients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.identityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).OrgConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"datadog.restrictionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2510,6 +2626,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatadogSyntheticsPrivateLocation).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"datadog.oauthClient.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.oauthClient.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.userCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).UserCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.lastExercised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).LastExercised, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClient).Authorizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.oauthClient.authorization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.orgDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).OrgDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.lastExercised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).LastExercised, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"datadog.oauthClient.authorization.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOauthClientAuthorization).User, ok = plugin.RawToTValue[*mqlDatadogUser](v.Value, v.Error)
+		return
+	},
+	"datadog.identityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIdentityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.identityProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIdentityProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.identityProvider.authenticationMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIdentityProvider).AuthenticationMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.identityProvider.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIdentityProvider).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.orgConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.connectionTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).ConnectionTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.sourceOrgId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).SourceOrgId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.sourceOrgName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).SourceOrgName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.sinkOrgId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).SinkOrgId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.sinkOrgName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).SinkOrgName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.orgConnection.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogOrgConnection).CreatedBy, ok = plugin.RawToTValue[*mqlDatadogUser](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2568,6 +2800,9 @@ type mqlDatadog struct {
 	LogsPipelines              plugin.TValue[[]any]
 	LogsCustomDestinations     plugin.TValue[[]any]
 	LogsRestrictionQueries     plugin.TValue[[]any]
+	OauthClients               plugin.TValue[[]any]
+	IdentityProviders          plugin.TValue[[]any]
+	OrgConnections             plugin.TValue[[]any]
 }
 
 // createDatadog creates a new instance of this resource
@@ -3048,6 +3283,54 @@ func (c *mqlDatadog) GetLogsRestrictionQueries() *plugin.TValue[[]any] {
 		}
 
 		return c.logsRestrictionQueries()
+	})
+}
+
+func (c *mqlDatadog) GetOauthClients() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OauthClients, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "oauthClients")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.oauthClients()
+	})
+}
+
+func (c *mqlDatadog) GetIdentityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "identityProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityProviders()
+	})
+}
+
+func (c *mqlDatadog) GetOrgConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OrgConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "orgConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.orgConnections()
 	})
 }
 
@@ -5978,5 +6261,342 @@ func (c *mqlDatadogSyntheticsPrivateLocation) GetTags() *plugin.TValue[[]any] {
 func (c *mqlDatadogSyntheticsPrivateLocation) GetMetadata() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Metadata, func() (any, error) {
 		return c.metadata()
+	})
+}
+
+// mqlDatadogOauthClient for the datadog.oauthClient resource
+type mqlDatadogOauthClient struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogOauthClientInternal it will be used here
+	Id             plugin.TValue[string]
+	ClientId       plugin.TValue[string]
+	Disabled       plugin.TValue[bool]
+	UserCount      plugin.TValue[int64]
+	LastExercised  plugin.TValue[*time.Time]
+	Authorizations plugin.TValue[[]any]
+}
+
+// createDatadogOauthClient creates a new instance of this resource
+func createDatadogOauthClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogOauthClient{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.oauthClient", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogOauthClient) MqlName() string {
+	return "datadog.oauthClient"
+}
+
+func (c *mqlDatadogOauthClient) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogOauthClient) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogOauthClient) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlDatadogOauthClient) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlDatadogOauthClient) GetUserCount() *plugin.TValue[int64] {
+	return &c.UserCount
+}
+
+func (c *mqlDatadogOauthClient) GetLastExercised() *plugin.TValue[*time.Time] {
+	return &c.LastExercised
+}
+
+func (c *mqlDatadogOauthClient) GetAuthorizations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Authorizations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog.oauthClient", c.__id, "authorizations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizations()
+	})
+}
+
+// mqlDatadogOauthClientAuthorization for the datadog.oauthClient.authorization resource
+type mqlDatadogOauthClientAuthorization struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDatadogOauthClientAuthorizationInternal
+	Id            plugin.TValue[string]
+	Scopes        plugin.TValue[[]any]
+	Disabled      plugin.TValue[bool]
+	OrgDisabled   plugin.TValue[bool]
+	CreatedAt     plugin.TValue[*time.Time]
+	ModifiedAt    plugin.TValue[*time.Time]
+	LastExercised plugin.TValue[*time.Time]
+	User          plugin.TValue[*mqlDatadogUser]
+}
+
+// createDatadogOauthClientAuthorization creates a new instance of this resource
+func createDatadogOauthClientAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogOauthClientAuthorization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.oauthClient.authorization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogOauthClientAuthorization) MqlName() string {
+	return "datadog.oauthClient.authorization"
+}
+
+func (c *mqlDatadogOauthClientAuthorization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetOrgDisabled() *plugin.TValue[bool] {
+	return &c.OrgDisabled
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.ModifiedAt
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetLastExercised() *plugin.TValue[*time.Time] {
+	return &c.LastExercised
+}
+
+func (c *mqlDatadogOauthClientAuthorization) GetUser() *plugin.TValue[*mqlDatadogUser] {
+	return plugin.GetOrCompute[*mqlDatadogUser](&c.User, func() (*mqlDatadogUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog.oauthClient.authorization", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatadogUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+// mqlDatadogIdentityProvider for the datadog.identityProvider resource
+type mqlDatadogIdentityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIdentityProviderInternal it will be used here
+	Id                   plugin.TValue[string]
+	AuthenticationMethod plugin.TValue[string]
+	Enabled              plugin.TValue[bool]
+}
+
+// createDatadogIdentityProvider creates a new instance of this resource
+func createDatadogIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIdentityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.identityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIdentityProvider) MqlName() string {
+	return "datadog.identityProvider"
+}
+
+func (c *mqlDatadogIdentityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIdentityProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogIdentityProvider) GetAuthenticationMethod() *plugin.TValue[string] {
+	return &c.AuthenticationMethod
+}
+
+func (c *mqlDatadogIdentityProvider) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlDatadogOrgConnection for the datadog.orgConnection resource
+type mqlDatadogOrgConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDatadogOrgConnectionInternal
+	Id              plugin.TValue[string]
+	ConnectionTypes plugin.TValue[[]any]
+	CreatedAt       plugin.TValue[*time.Time]
+	SourceOrgId     plugin.TValue[string]
+	SourceOrgName   plugin.TValue[string]
+	SinkOrgId       plugin.TValue[string]
+	SinkOrgName     plugin.TValue[string]
+	CreatedBy       plugin.TValue[*mqlDatadogUser]
+}
+
+// createDatadogOrgConnection creates a new instance of this resource
+func createDatadogOrgConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogOrgConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.orgConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogOrgConnection) MqlName() string {
+	return "datadog.orgConnection"
+}
+
+func (c *mqlDatadogOrgConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogOrgConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogOrgConnection) GetConnectionTypes() *plugin.TValue[[]any] {
+	return &c.ConnectionTypes
+}
+
+func (c *mqlDatadogOrgConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatadogOrgConnection) GetSourceOrgId() *plugin.TValue[string] {
+	return &c.SourceOrgId
+}
+
+func (c *mqlDatadogOrgConnection) GetSourceOrgName() *plugin.TValue[string] {
+	return &c.SourceOrgName
+}
+
+func (c *mqlDatadogOrgConnection) GetSinkOrgId() *plugin.TValue[string] {
+	return &c.SinkOrgId
+}
+
+func (c *mqlDatadogOrgConnection) GetSinkOrgName() *plugin.TValue[string] {
+	return &c.SinkOrgName
+}
+
+func (c *mqlDatadogOrgConnection) GetCreatedBy() *plugin.TValue[*mqlDatadogUser] {
+	return plugin.GetOrCompute[*mqlDatadogUser](&c.CreatedBy, func() (*mqlDatadogUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog.orgConnection", c.__id, "createdBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatadogUser), nil
+			}
+		}
+
+		return c.createdBy()
 	})
 }
