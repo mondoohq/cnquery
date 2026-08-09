@@ -14,13 +14,17 @@ import (
 
 // ApiExtension handles cases where Okta's SDK doesn't expose a particular API.
 // The v5 SDK no longer ships a public RequestExecutor, so we issue the raw
-// authenticated requests ourselves using the org host and SSWS token carried by
-// the connection.
+// authenticated requests ourselves against the org host carried by the
+// connection.
 type ApiExtension struct {
 	// Host is the org host (e.g. "dev-12345.okta.com"), without scheme.
 	Host string
-	// Token is the Okta API token used for SSWS authorization.
-	Token string
+	// Authorize stamps the Authorization header onto each outgoing request.
+	// The connection supplies it so this path authenticates the same way the
+	// generated SDK does, whether that is an SSWS API token or a service app's
+	// private key JWT. A nil Authorize sends the request unauthenticated,
+	// which Okta answers with a 401.
+	Authorize func(req *http.Request) error
 	// HTTPClient issues the requests. When nil, http.DefaultClient is used.
 	// Tests inject a client with a custom transport so pagination can be
 	// exercised without mutating any global state.
@@ -47,7 +51,11 @@ func (m *ApiExtension) get(ctx context.Context, url string, out any) (*http.Resp
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "SSWS "+m.Token)
+	if m.Authorize != nil {
+		if err := m.Authorize(req); err != nil {
+			return nil, err
+		}
+	}
 
 	resp, err := m.httpClient().Do(req)
 	if err != nil {

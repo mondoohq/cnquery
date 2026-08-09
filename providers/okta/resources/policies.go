@@ -55,10 +55,7 @@ func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error)
 	conn := runtime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	respList, resp, err := apiSupplement.ListPolicies(ctx, string(policyType), queryLimit)
 	if err != nil {
@@ -157,7 +154,7 @@ func (o *mqlOktaPolicy) rules() ([]any, error) {
 	}
 
 	if o.Type.Data == ACCESS_POLICY {
-		return getAccessPolicyRules(ctx, o.MqlRuntime, o.Id.Data, conn.OrganizationID(), conn.Token())
+		return getAccessPolicyRules(ctx, o.MqlRuntime, o.Id.Data, conn.ApiExtension())
 	}
 
 	rules, resp, err := client.PolicyAPI.ListPolicyRules(ctx, o.Id.Data).Execute()
@@ -208,8 +205,8 @@ func (o *mqlOktaPolicy) rules() ([]any, error) {
 	return list, nil
 }
 
-func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId, host, token string) ([]any, error) {
-	rules, err := fetchAccessPolicyRules(ctx, policyId, host, token)
+func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId string, apiSupplement *sdk.ApiExtension) ([]any, error) {
+	rules, err := fetchAccessPolicyRules(ctx, policyId, apiSupplement)
 	if err != nil {
 		return nil, err
 	}
@@ -255,8 +252,7 @@ func (o *mqlOktaPolicyRule) id() (string, error) {
 
 // see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesn't let you fetch
 // type-specific rules which differ between the different policies. as such, we fetch those manually.
-func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]oktaPolicyRuleRaw, error) {
-	apiSupplement := &sdk.ApiExtension{Host: host, Token: token}
+func fetchAccessPolicyRules(ctx context.Context, policyid string, apiSupplement *sdk.ApiExtension) ([]oktaPolicyRuleRaw, error) {
 	raws, err := apiSupplement.ListPolicyRules(ctx, policyid, queryLimit)
 	if err != nil {
 		return nil, err

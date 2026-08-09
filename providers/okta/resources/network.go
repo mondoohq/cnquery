@@ -18,10 +18,7 @@ func (o *mqlOkta) networks() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	zones, err := apiSupplement.ListNetworkZones(ctx, queryLimit)
 	if err != nil {

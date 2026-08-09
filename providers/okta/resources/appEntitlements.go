@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 )
 
 type mqlOktaApplicationScopeConsentGrantInternal struct {
@@ -239,10 +238,7 @@ func (a *mqlOktaApplication) adminRoles() ([]any, error) {
 
 	conn := a.MqlRuntime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	roles, resp, err := apiSupplement.ListClientRoles(ctx, clientID)
 	if err != nil {

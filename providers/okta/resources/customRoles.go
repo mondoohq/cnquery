@@ -20,10 +20,7 @@ func (o *mqlOkta) customRoles() ([]any, error) {
 	conn := runtime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	respList, resp, err := apiSupplement.ListCustomRoles(ctx)
 	if err != nil {
