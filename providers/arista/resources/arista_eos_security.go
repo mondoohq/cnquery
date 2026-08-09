@@ -151,7 +151,15 @@ func (a *mqlAristaEos) snmpCommunities() ([]any, error) {
 }
 
 func (a *mqlAristaEosSnmpCommunity) aclResource() (*mqlAristaEosAcl, error) {
-	mqlAcl, err := resolveAcl(a.MqlRuntime, a.cacheAcl)
+	if a.Ipv6.Error != nil {
+		return nil, a.Ipv6.Error
+	}
+	// The community line's `ipv6` keyword says which namespace its ACL is in.
+	family := "ipv4"
+	if a.Ipv6.Data {
+		family = "ipv6"
+	}
+	mqlAcl, err := resolveAcl(a.MqlRuntime, a.cacheAcl, family)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +384,9 @@ func (a *mqlAristaEosNtp) serveAccessGroupAcl() (*mqlAristaEosAcl, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlAcl, err := resolveAcl(a.MqlRuntime, eos.ParseNtpServeState(rc).AccessGroup)
+	// The serve access-group is reported without its address-family
+	// qualifier, so the reference matches a list of either family by name.
+	mqlAcl, err := resolveAcl(a.MqlRuntime, eos.ParseNtpServeState(rc).AccessGroup, "")
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +433,7 @@ func (a *mqlAristaEos) controlPlanePolicer() (*mqlAristaEosControlPlanePolicer, 
 }
 
 func (a *mqlAristaEosControlPlanePolicer) ipAccessGroupAcl() (*mqlAristaEosAcl, error) {
-	mqlAcl, err := resolveAcl(a.MqlRuntime, a.cacheIpAccessGroup)
+	mqlAcl, err := resolveAcl(a.MqlRuntime, a.cacheIpAccessGroup, "ipv4")
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +445,7 @@ func (a *mqlAristaEosControlPlanePolicer) ipAccessGroupAcl() (*mqlAristaEosAcl, 
 }
 
 func (a *mqlAristaEosControlPlanePolicer) ip6AccessGroupAcl() (*mqlAristaEosAcl, error) {
-	mqlAcl, err := resolveAcl(a.MqlRuntime, a.cacheIp6AccessGroup)
+	mqlAcl, err := resolveAcl(a.MqlRuntime, a.cacheIp6AccessGroup, "ipv6")
 	if err != nil {
 		return nil, err
 	}

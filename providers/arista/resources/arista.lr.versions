@@ -44,6 +44,7 @@ arista.eos.aaa.tacacsServers 13.1.9
 arista.eos.acl 13.0.1
 arista.eos.acl.entries 13.0.1
 arista.eos.acl.entry 13.0.1
+arista.eos.acl.entry.aclFamily 13.3.15
 arista.eos.acl.entry.aclName 13.0.1
 arista.eos.acl.entry.action 13.0.1
 arista.eos.acl.entry.dstAddress 13.3.15

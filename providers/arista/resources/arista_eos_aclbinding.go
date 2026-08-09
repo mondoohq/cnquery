@@ -12,6 +12,11 @@ import (
 // resolveAcl builds the arista.eos.acl named by a reference elsewhere in the
 // configuration, returning (nil, nil) when no list by that name is defined.
 //
+// family selects the address family the reference belongs to, since IPv4 and
+// IPv6 access-lists are separate namespaces that can share a name. An empty
+// family matches the first list of either family with that name, which is
+// what a reference that does not itself carry a family means.
+//
 // A dangling reference is a real and common misconfiguration: an access-group
 // naming a list that does not exist permits all traffic. Callers report that
 // as a null rather than an error so the surrounding query still returns, and
@@ -19,7 +24,7 @@ import (
 //
 // The fields set here match the ones arista.eos.acls sets, so both paths
 // produce the same __id and therefore share one cached resource.
-func resolveAcl(runtime *plugin.Runtime, name string) (*mqlAristaEosAcl, error) {
+func resolveAcl(runtime *plugin.Runtime, name, family string) (*mqlAristaEosAcl, error) {
 	if name == "" {
 		return nil, nil
 	}
@@ -29,7 +34,7 @@ func resolveAcl(runtime *plugin.Runtime, name string) (*mqlAristaEosAcl, error) 
 		return nil, err
 	}
 	for _, acl := range eos.ParseAccessLists(rc) {
-		if acl.Name != name {
+		if acl.Name != name || (family != "" && acl.Family != family) {
 			continue
 		}
 		mqlAcl, err := CreateResource(runtime, "arista.eos.acl", map[string]*llx.RawData{
@@ -94,7 +99,12 @@ func (a *mqlAristaEosAclBinding) acl() (*mqlAristaEosAcl, error) {
 	if a.AclName.Error != nil {
 		return nil, a.AclName.Error
 	}
-	mqlAcl, err := resolveAcl(a.MqlRuntime, a.AclName.Data)
+	if a.Family.Error != nil {
+		return nil, a.Family.Error
+	}
+	// The binding knows its own address family, so an IPv6 access-group never
+	// resolves to a same-named IPv4 list.
+	mqlAcl, err := resolveAcl(a.MqlRuntime, a.AclName.Data, a.Family.Data)
 	if err != nil {
 		return nil, err
 	}

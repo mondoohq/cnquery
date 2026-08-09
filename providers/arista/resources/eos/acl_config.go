@@ -256,7 +256,14 @@ func readAclPorts(toks []string, i int) (string, []string, int) {
 		}
 		return "", nil, i
 
-	case "eq", "neq", "lt", "gt":
+	case "lt", "gt":
+		// A threshold comparison takes exactly one operand.
+		if i+1 < len(toks) && !aclEntryFlags[toks[i+1]] && !isAclAddressStart(toks[i+1]) {
+			return toks[i], []string{toks[i+1]}, i + 2
+		}
+		return "", nil, i
+
+	case "eq", "neq":
 		op := toks[i]
 		ports := []string{}
 		j := i + 1

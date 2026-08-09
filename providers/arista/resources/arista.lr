@@ -645,8 +645,10 @@ private arista.eos.mlag.interface @defaults("name mlagId") {
 
 // Arista EOS IP access control list
 //
-// A single access control list, selected by `name` (for example
-// `arista.eos.acl(name: "MGMT-ACCESS")`). Covers the standard, extended, and
+// A single access control list, selected by `name` and optionally `family`
+// (for example `arista.eos.acl(name: "MGMT-ACCESS")`, or
+// `arista.eos.acl(name: "MGMT", family: "ipv6")` when an IPv4 and an IPv6
+// list share a name). Covers the standard, extended, and
 // IPv6 forms: `family` reports whether the list matches IPv4 or IPv6 traffic
 // and `type` reports whether it matches on source address alone (standard)
 // or on the full five-tuple (extended).
@@ -679,6 +681,11 @@ arista.eos.acl @defaults("name family type") {
 private arista.eos.acl.entry @defaults("sequenceNumber action text") {
   // ACL name this entry belongs to
   aclName string
+  // Address family of the ACL this entry belongs to, `ipv4` or `ipv6`
+  //
+  // Present because a name alone does not identify a list: IPv4 and IPv6
+  // access-lists live in separate namespaces and can share a name.
+  aclFamily string
   // Sequence number (determines evaluation order)
   sequenceNumber int
   // Rule action

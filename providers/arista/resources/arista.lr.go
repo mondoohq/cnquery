@@ -827,6 +827,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.acl.entry.aclName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetAclName()).ToDataRes(types.String)
 	},
+	"arista.eos.acl.entry.aclFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetAclFamily()).ToDataRes(types.String)
+	},
 	"arista.eos.acl.entry.sequenceNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetSequenceNumber()).ToDataRes(types.Int)
 	},
@@ -2180,6 +2183,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.acl.entry.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAclEntry).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.aclFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).AclFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.acl.entry.sequenceNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5366,6 +5373,7 @@ type mqlAristaEosAclEntry struct {
 	__id       string
 	// optional: if you define mqlAristaEosAclEntryInternal it will be used here
 	AclName         plugin.TValue[string]
+	AclFamily       plugin.TValue[string]
 	SequenceNumber  plugin.TValue[int64]
 	Action          plugin.TValue[string]
 	Protocol        plugin.TValue[string]
@@ -5422,6 +5430,10 @@ func (c *mqlAristaEosAclEntry) MqlID() string {
 
 func (c *mqlAristaEosAclEntry) GetAclName() *plugin.TValue[string] {
 	return &c.AclName
+}
+
+func (c *mqlAristaEosAclEntry) GetAclFamily() *plugin.TValue[string] {
+	return &c.AclFamily
 }
 
 func (c *mqlAristaEosAclEntry) GetSequenceNumber() *plugin.TValue[int64] {
