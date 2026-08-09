@@ -58,6 +58,11 @@ mongo.instance @defaults("version") {
   auditLogDestination string
   // System log verbosity level
   logVerbosity int
+  // Whether new log entries are appended to an existing log file
+  //
+  // False when unset, which is the server default: the log is replaced on
+  // restart, losing the previous run's entries (systemLog.logAppend).
+  logAppend bool
   // Server parameters (getParameter '*')
   parameters() []mongo.parameter
   // Users defined on the server (across databases)

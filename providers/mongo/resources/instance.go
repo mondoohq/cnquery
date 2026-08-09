@@ -78,6 +78,9 @@ func initMongoInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["javascriptEnabled"] = llx.BoolData(jsEnabled)
 	args["auditLogDestination"] = llx.StringData(toStr(deepGet(parsed, "auditLog", "destination")))
 	args["logVerbosity"] = llx.IntData(toInt(deepGet(parsed, "systemLog", "verbosity")))
+	// logAppend is not a runtime parameter, so getCmdLineOpts is the only
+	// source; absent means the server default, which replaces the log file.
+	args["logAppend"] = llx.BoolData(toBool(deepGet(parsed, "systemLog", "logAppend")))
 	return args, nil, nil
 }
 

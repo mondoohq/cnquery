@@ -15,6 +15,7 @@ mongo.instance.clusterAuthMode 13.0.0
 mongo.instance.databases 13.0.0
 mongo.instance.gitVersion 13.0.0
 mongo.instance.javascriptEnabled 13.0.0
+mongo.instance.logAppend 13.0.1
 mongo.instance.logVerbosity 13.0.0
 mongo.instance.parameters 13.0.0
 mongo.instance.port 13.0.0
