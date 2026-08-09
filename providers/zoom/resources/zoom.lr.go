@@ -33,11 +33,11 @@ func init() {
 			Create: createZoom,
 		},
 		"zoom.account": {
-			// to override args, implement: initZoomAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initZoomAccount,
 			Create: createZoomAccount,
 		},
 		"zoom.account.sso": {
-			// to override args, implement: initZoomAccountSso(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initZoomAccountSso,
 			Create: createZoomAccountSso,
 		},
 		"zoom.user": {
@@ -123,9 +123,6 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
-	"zoom.account": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlZoom).GetAccount()).ToDataRes(types.Resource("zoom.account"))
-	},
 	"zoom.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoom).GetUsers()).ToDataRes(types.Array(types.Resource("zoom.user")))
 	},
@@ -173,9 +170,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"zoom.account.signInSessionTimeoutMinutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetSignInSessionTimeoutMinutes()).ToDataRes(types.Int)
-	},
-	"zoom.account.sso": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlZoomAccount).GetSso()).ToDataRes(types.Resource("zoom.account.sso"))
 	},
 	"zoom.account.sso.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccountSso).GetEnabled()).ToDataRes(types.Bool)
@@ -298,10 +292,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlZoom).__id, ok = v.Value.(string)
 		return
 	},
-	"zoom.account": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlZoom).Account, ok = plugin.RawToTValue[*mqlZoomAccount](v.Value, v.Error)
-		return
-	},
 	"zoom.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoom).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -368,10 +358,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zoom.account.signInSessionTimeoutMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomAccount).SignInSessionTimeoutMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"zoom.account.sso": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlZoomAccount).Sso, ok = plugin.RawToTValue[*mqlZoomAccountSso](v.Value, v.Error)
 		return
 	},
 	"zoom.account.sso.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -559,10 +545,9 @@ type mqlZoom struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlZoomInternal it will be used here
-	Account plugin.TValue[*mqlZoomAccount]
-	Users   plugin.TValue[[]any]
-	Roles   plugin.TValue[[]any]
-	Groups  plugin.TValue[[]any]
+	Users  plugin.TValue[[]any]
+	Roles  plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
 }
 
 // createZoom creates a new instance of this resource
@@ -600,22 +585,6 @@ func (c *mqlZoom) MqlName() string {
 
 func (c *mqlZoom) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlZoom) GetAccount() *plugin.TValue[*mqlZoomAccount] {
-	return plugin.GetOrCompute[*mqlZoomAccount](&c.Account, func() (*mqlZoomAccount, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("zoom", c.__id, "account")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlZoomAccount), nil
-			}
-		}
-
-		return c.account()
-	})
 }
 
 func (c *mqlZoom) GetUsers() *plugin.TValue[[]any] {
@@ -684,7 +653,6 @@ type mqlZoomAccount struct {
 	CloudRecordingEnabled           plugin.TValue[bool]
 	CloudRecordingEncryptionEnabled plugin.TValue[bool]
 	SignInSessionTimeoutMinutes     plugin.TValue[int64]
-	Sso                             plugin.TValue[*mqlZoomAccountSso]
 }
 
 // createZoomAccount creates a new instance of this resource
@@ -788,22 +756,6 @@ func (c *mqlZoomAccount) GetCloudRecordingEncryptionEnabled() *plugin.TValue[boo
 func (c *mqlZoomAccount) GetSignInSessionTimeoutMinutes() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.SignInSessionTimeoutMinutes, func() (int64, error) {
 		return c.signInSessionTimeoutMinutes()
-	})
-}
-
-func (c *mqlZoomAccount) GetSso() *plugin.TValue[*mqlZoomAccountSso] {
-	return plugin.GetOrCompute[*mqlZoomAccountSso](&c.Sso, func() (*mqlZoomAccountSso, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("zoom.account", c.__id, "sso")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlZoomAccountSso), nil
-			}
-		}
-
-		return c.sso()
 	})
 }
 

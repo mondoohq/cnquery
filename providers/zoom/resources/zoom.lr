@@ -7,14 +7,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/zoom/resources"
 // Zoom account root
 //
 // Entry point for a Zoom account reached through Server-to-Server OAuth.
-// Exposes the account's security-relevant configuration (`account`), its
-// users, the roles those users can hold, and the groups they belong to.
+// Exposes the account's users, the roles those users can hold, and the
+// groups they belong to. The account's security-relevant configuration is
+// available through the `zoom.account` resource.
 // Groups and roles both carry their own meeting-security overrides and
 // membership lists, so admin-equivalent access and account-wide meeting
 // defaults can be audited from a single query surface.
-zoom {
-  // Account-level settings, including meeting, recording, and sign-in security
-  account() zoom.account
+zoom @maturity("experimental") {
   // Active users provisioned on the account (excludes inactive and pending)
   users() []zoom.user
   // Roles that can be assigned to users
@@ -32,8 +31,9 @@ zoom {
 // passcode requirements, encryption type), cloud-recording encryption,
 // whether only authenticated or account-internal users may join
 // meetings, and the sign-in session timeout enforced for the workforce.
-// The `sso` field carries the account's single sign-on configuration.
-zoom.account @defaults("id accountName") {
+// The account's single sign-on configuration is available through the
+// `zoom.account.sso` resource.
+zoom.account @defaults("id accountName") @maturity("experimental") {
   // Zoom account ID
   id string
   // Account (company) name
@@ -64,8 +64,6 @@ zoom.account @defaults("id accountName") {
   cloudRecordingEncryptionEnabled() bool
   // Sign-in session timeout, in minutes, before a user is forced to re-authenticate (0 means no timeout is enforced)
   signInSessionTimeoutMinutes() int
-  // Single sign-on configuration for the account
-  sso() zoom.account.sso
 }
 
 // Zoom single sign-on (SSO) configuration
@@ -73,7 +71,7 @@ zoom.account @defaults("id accountName") {
 // Account-wide SSO settings: whether SSO is enabled, the email domains
 // provisioned through it, whether group membership is synced from the
 // identity provider, and the identity provider's issuer and login URL.
-private zoom.account.sso @defaults("enabled") {
+zoom.account.sso @defaults("enabled") @maturity("experimental") {
   // Whether SSO is enabled for the account
   enabled bool
   // Email domains provisioned through SSO
@@ -93,7 +91,7 @@ private zoom.account.sso @defaults("enabled") {
 // `type`, `status`, and sign-in method (`loginType` and `ssoLinked`),
 // along with the `role` that governs their admin privileges and the
 // `groups` whose meeting-security overrides apply to their meetings.
-zoom.user @defaults("id email type") {
+zoom.user @defaults("id email type") @maturity("experimental") {
   init(id? string)
   // Zoom user ID
   id string
@@ -149,7 +147,7 @@ zoom.user @defaults("id email type") {
 // full account privileges; custom roles carry whatever subset of
 // `privileges` was granted to them. Use `members` to audit how many
 // users hold admin-equivalent access.
-zoom.role @defaults("id name") {
+zoom.role @defaults("id name") @maturity("experimental") {
   // Role ID
   id string
   // Role name
@@ -173,7 +171,7 @@ zoom.role @defaults("id name") {
 // take precedence over the account defaults in `zoom.account` for
 // members of the group, so a group's members can end up on a weaker (or
 // stronger) meeting-security posture than the account as a whole.
-zoom.group @defaults("id name") {
+zoom.group @defaults("id name") @maturity("experimental") {
   // Group ID
   id string
   // Group name

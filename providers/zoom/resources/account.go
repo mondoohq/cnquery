@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/zoom/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -23,27 +24,29 @@ type mqlZoomAccountInternal struct {
 	lock     sync.Mutex
 }
 
-// account reads the account's identity eagerly and defers its
+// initZoomAccount populates the account singleton on construction. It is an
+// init rather than a zoom accessor because zoom.account is a
+// directly-addressable resource: a field of the same dotted name on the parent
+// would collide with the resource and leave its fields unset when queried as
+// `zoom.account`. It reads the account's identity eagerly and defers the
 // meeting-security, recording, and sign-in settings to lazy field accessors.
-func (r *mqlZoom) account() (*mqlZoomAccount, error) {
-	conn := r.conn()
-	client := conn.Client()
-
-	info, err := client.GetAccount(context.Background(), conn.AccountID())
-	if err != nil {
-		return nil, err
+func initZoomAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// fast path: the caller already provided a populated resource
+	if len(args) > 1 {
+		return args, nil, nil
 	}
 
-	res, err := CreateResource(r.MqlRuntime, "zoom.account", map[string]*llx.RawData{
-		"__id":        llx.StringData(conn.AccountID()),
-		"id":          llx.StringData(conn.AccountID()),
-		"accountName": llx.StringDataPtr(&info.AccountName),
-		"ownerEmail":  llx.StringDataPtr(&info.OwnerEmail),
-	})
+	conn := runtime.Connection.(*connection.ZoomConnection)
+	info, err := conn.Client().GetAccount(context.Background(), conn.AccountID())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return res.(*mqlZoomAccount), nil
+
+	args["__id"] = llx.StringData(conn.AccountID())
+	args["id"] = llx.StringData(conn.AccountID())
+	args["accountName"] = llx.StringDataPtr(&info.AccountName)
+	args["ownerEmail"] = llx.StringDataPtr(&info.OwnerEmail)
+	return args, nil, nil
 }
 
 // fetchSettings performs the single account-settings GET this resource's
@@ -149,25 +152,30 @@ func (a *mqlZoomAccount) signInSessionTimeoutMinutes() (int64, error) {
 	return s.Security.SignInSessionTimeout, nil
 }
 
-// sso reads the account's single sign-on configuration. Its cache key is
-// the account ID, since there is exactly one SSO configuration per account.
-func (a *mqlZoomAccount) sso() (*mqlZoomAccountSso, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ZoomConnection)
-	s, err := conn.Client().GetSsoSettings(context.Background(), conn.AccountID())
-	if err != nil {
-		return nil, err
+// initZoomAccountSso populates the account's single sign-on singleton on
+// construction. It is an init rather than a zoom.account accessor because
+// zoom.account.sso is a directly-addressable resource whose dotted name would
+// otherwise collide with an sso field on zoom.account and leave its fields
+// unset when queried as `zoom.account.sso`. There is exactly one SSO
+// configuration per connected account, so it resolves from the connection
+// alone.
+func initZoomAccountSso(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// fast path: the caller already provided a populated resource
+	if len(args) > 1 {
+		return args, nil, nil
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "zoom.account.sso", map[string]*llx.RawData{
-		"__id":                llx.StringData(conn.AccountID() + "/sso"),
-		"enabled":             llx.BoolData(s.Enabled),
-		"domains":             llx.ArrayData(strToAnyList(s.Domains), types.String),
-		"groupMappingEnabled": llx.BoolData(s.GroupMappingEnabled),
-		"idpIssuer":           llx.StringData(s.IdpIssuer),
-		"idpSsoUrl":           llx.StringData(s.IdpSsoUrl),
-	})
+	conn := runtime.Connection.(*connection.ZoomConnection)
+	s, err := conn.Client().GetSsoSettings(context.Background(), conn.AccountID())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return res.(*mqlZoomAccountSso), nil
+
+	args["__id"] = llx.StringData(conn.AccountID() + "/sso")
+	args["enabled"] = llx.BoolData(s.Enabled)
+	args["domains"] = llx.ArrayData(strToAnyList(s.Domains), types.String)
+	args["groupMappingEnabled"] = llx.BoolData(s.GroupMappingEnabled)
+	args["idpIssuer"] = llx.StringData(s.IdpIssuer)
+	args["idpSsoUrl"] = llx.StringData(s.IdpSsoUrl)
+	return args, nil, nil
 }
