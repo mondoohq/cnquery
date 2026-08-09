@@ -266,6 +266,128 @@ func (a *mqlAristaEosNtp) authenticationEnabled() (bool, error) {
 }
 
 // =====================================================================
+// arista.eos.ntp.server (list) + serve state
+// =====================================================================
+
+type mqlAristaEosNtpServerInternal struct {
+	cacheKeyID int
+}
+
+// id keys a server on VRF plus address, since the same time source can be
+// reached through more than one routing instance.
+func (a *mqlAristaEosNtpServer) id() (string, error) {
+	if a.Address.Error != nil {
+		return "", a.Address.Error
+	}
+	if a.Vrf.Error != nil {
+		return "", a.Vrf.Error
+	}
+	return "arista.eos.ntp.server/" + a.Vrf.Data + "/" + a.Address.Data, nil
+}
+
+func (a *mqlAristaEosNtp) servers() ([]any, error) {
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	servers := eos.ParseNtpServers(rc)
+
+	res := make([]any, 0, len(servers))
+	for _, s := range servers {
+		mqlServer, err := CreateResource(a.MqlRuntime, "arista.eos.ntp.server", map[string]*llx.RawData{
+			"address":        llx.StringData(s.Address),
+			"vrf":            llx.StringData(s.VRF),
+			"prefer":         llx.BoolData(s.Prefer),
+			"iburst":         llx.BoolData(s.IBurst),
+			"version":        llx.IntData(int64(s.Version)),
+			"minPoll":        llx.IntData(int64(s.MinPoll)),
+			"maxPoll":        llx.IntData(int64(s.MaxPoll)),
+			"localInterface": llx.StringData(s.LocalInterface),
+			"keyId":          llx.IntData(int64(s.KeyID)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlServer.(*mqlAristaEosNtpServer).cacheKeyID = s.KeyID
+		res = append(res, mqlServer)
+	}
+	return res, nil
+}
+
+// authKey resolves the server's key ID against the keys defined on the device.
+// A server referencing a key ID with no matching `ntp authentication-key` line
+// is a real misconfiguration, so that case is reported as a null key rather
+// than an error, leaving keyId to show which key was asked for.
+func (a *mqlAristaEosNtpServer) authKey() (*mqlAristaEosNtpAuthKey, error) {
+	if a.cacheKeyID == 0 {
+		a.AuthKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	state := eos.ParseNtpAuth(rc)
+
+	for _, k := range state.Keys {
+		if k.ID != a.cacheKeyID {
+			continue
+		}
+		// Same field set and therefore the same __id as the entries built by
+		// arista.eos.ntp.authKeys, so both paths share one cached resource.
+		mqlKey, err := CreateResource(a.MqlRuntime, "arista.eos.ntpAuthKey", map[string]*llx.RawData{
+			"id":       llx.IntData(int64(k.ID)),
+			"hashAlgo": llx.StringData(k.HashAlgo),
+			"trusted":  llx.BoolData(k.Trusted),
+		})
+		if err != nil {
+			return nil, err
+		}
+		return mqlKey.(*mqlAristaEosNtpAuthKey), nil
+	}
+
+	a.AuthKey.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (a *mqlAristaEosNtp) serveEnabled() (bool, error) {
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return false, err
+	}
+	return eos.ParseNtpServeState(rc).Enabled, nil
+}
+
+func (a *mqlAristaEosNtp) serveAccessGroup() (string, error) {
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return "", err
+	}
+	return eos.ParseNtpServeState(rc).AccessGroup, nil
+}
+
+func (a *mqlAristaEosNtp) serveAccessGroupAcl() (*mqlAristaEosAcl, error) {
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	name := eos.ParseNtpServeState(rc).AccessGroup
+	if name == "" {
+		a.ServeAccessGroupAcl.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	mqlAcl, err := NewResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAcl.(*mqlAristaEosAcl), nil
+}
+
+// =====================================================================
 // arista.eos.controlPlanePolicer
 // =====================================================================
 

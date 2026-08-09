@@ -11,7 +11,7 @@ option go_package = "go.mondoo.com/mql/v13/providers/arista/resources"
 // surfaces (interfaces, IP interfaces, switchports, VLANs, routes, BGP, MLAG,
 // ACLs), the management-plane services (SSH, telnet, SNMP, NTP), the AAA
 // stack, control-plane policing, and the local user / role / password-policy
-// hardening that auditors check against CIS / DISA STIG benchmarks.
+// hardening that auditors check against network-device benchmarks.
 arista.eos {
   // Global system settings parsed from the running-config
   //
@@ -77,6 +77,20 @@ arista.eos {
   eapi() arista.eos.eapi
   // VRRP (Virtual Router Redundancy Protocol) configuration
   vrrp() arista.eos.vrrp
+  // System logging (syslog) configuration and remote collectors
+  logging() arista.eos.logging
+  // Login banner shown before authentication
+  //
+  // Literal banner text from the `banner login` block, including its
+  // indentation. This is the notice-and-consent text a user sees before
+  // supplying credentials, so it is what banner-content requirements are
+  // checked against. Empty when no login banner is configured.
+  loginBanner() string
+  // Message-of-the-day banner shown after authentication
+  //
+  // Literal banner text from the `banner motd` block, including its
+  // indentation. Empty when no MOTD banner is configured.
+  motdBanner() string
 }
 
 // Arista EOS running-config (full device configuration)
@@ -192,6 +206,65 @@ arista.eos.ntp {
   authenticationEnabled() bool
   // NTP authentication keys and trusted-key state
   authKeys() []arista.eos.ntpAuthKey
+  // Upstream time sources the device synchronizes against
+  servers() []arista.eos.ntp.server
+  // Whether the device answers NTP queries from clients
+  //
+  // True when `ntp serve all` is configured, or when an access-group is
+  // bound to the serve function. A device that serves time to any client
+  // that asks is usable as a reflection and amplification source.
+  serveEnabled() bool
+  // Access-list bounding which clients may query the device for time
+  //
+  // Name of the access-list applied via `ntp serve ipv4 access-group` or
+  // its IPv6 form. Empty when the device either does not serve time or
+  // serves it without restriction.
+  serveAccessGroup() string
+  // Access-list that bounds NTP clients, resolved from serveAccessGroup (null when none is bound)
+  serveAccessGroupAcl() arista.eos.acl
+}
+
+// Arista EOS upstream NTP server
+//
+// A single upstream time source the device synchronizes against, selected by
+// its configured `address` (for example
+// `arista.eos.ntp.servers.where(address == "0.pool.ntp.org")`). Covers the
+// routing instance used to reach it, the poll-interval bounds, the source
+// interface, and whether the server is preferred. Time an attacker can move
+// undermines certificate validity windows, log correlation, and any
+// authentication scheme with a replay window, so both the server list and its
+// authentication state are worth auditing.
+private arista.eos.ntp.server @defaults("address vrf prefer") {
+  // Server hostname or IP address as configured
+  address string
+  // Routing instance used to reach the server (empty = default VRF)
+  vrf string
+  // Whether this server is marked as the preferred synchronization source
+  prefer bool
+  // Whether a burst of packets is sent on startup for faster initial sync
+  iburst bool
+  // NTP protocol version (0 = unset)
+  version int
+  // Minimum poll interval as a power of two seconds (0 = unset)
+  minPoll int
+  // Maximum poll interval as a power of two seconds (0 = unset)
+  maxPoll int
+  // Source interface for packets sent to this server
+  //
+  // From either the `local-interface` or `source` keyword on the server
+  // line. Empty when the device picks the source by route lookup.
+  localInterface string
+  // Authentication key ID referenced by this server
+  //
+  // 0 means the server line references no key, so its responses are
+  // accepted unauthenticated. A non-zero value paired with a null authKey
+  // means the server references a key that is not defined on the device.
+  keyId int
+  // Authentication key this server is authenticated with, resolved from keyId
+  //
+  // Null when the server references no key, or references a key ID with no
+  // matching `ntp authentication-key` line.
+  authKey() arista.eos.ntpAuthKey
 }
 
 // Arista EOS network interface
@@ -969,4 +1042,78 @@ private arista.eos.vrrp.group @defaults("interface groupId state priority") {
   skewTime float
   // Virtual IP addresses the group advertises (the gateways clients use)
   virtualIps []string
+}
+
+// Arista EOS system logging configuration
+//
+// Syslog configuration for the device: the remote collectors it ships
+// messages to, the severity threshold applied to each destination (remote
+// trap, console, terminal monitors, and the on-box buffer), the source
+// interface and facility stamped on outbound messages, and the message
+// format. The `hosts` field is what most audits read first: a device with no
+// collector keeps its log messages on-box, where a reboot loses them and no
+// central system can correlate them.
+//
+// Severity fields carry the token as configured, such as `informational`,
+// `errors`, `disabled`, or a numeric level. An empty severity means the
+// running-config did not set that destination and the release default
+// applies, which is reported as unset rather than filled in with a guess.
+arista.eos.logging {
+  // Whether system logging is enabled
+  //
+  // True unless `no logging on` is configured. EOS logs by default, so an
+  // absent `logging on` line still means logging is on.
+  enabled bool
+  // Severity threshold for messages sent to remote collectors (`logging trap`)
+  trapSeverity string
+  // Severity threshold for the console (`logging console`)
+  consoleSeverity string
+  // Severity threshold for terminal monitors (`logging monitor`)
+  monitorSeverity string
+  // Severity threshold for the on-box buffer (`logging buffered`)
+  bufferedSeverity string
+  // On-box log buffer size in bytes (0 = unset)
+  bufferedSize int
+  // Whether the log buffer is written to flash so it survives a reboot
+  persistentEnabled bool
+  // Persistent log size in bytes (0 = unset)
+  persistentSize int
+  // Interface whose address is used as the source of outbound syslog traffic
+  sourceInterface string
+  // Syslog facility stamped on outbound messages (for example `local6`)
+  facility string
+  // Timestamp format applied to messages
+  //
+  // Token from `logging format timestamp`, for example `traditional` or
+  // `high-resolution`. Empty when unset.
+  timestampFormat string
+  // Hostname format applied to messages
+  //
+  // Token from `logging format hostname`, for example `fqdn` or `ipv4`.
+  // Empty when unset.
+  hostnameFormat string
+  // Whether messages are emitted in RFC 5424 syslog format
+  rfc5424Format bool
+  // Whether console output is synchronized with command output
+  synchronous bool
+  // Remote syslog collectors the device ships messages to
+  hosts() []arista.eos.logging.host
+}
+
+// Arista EOS remote syslog collector
+//
+// A single remote destination the device ships log messages to, selected by
+// its `host` address. `port` and `protocol` report the transport actually
+// used, falling back to the UDP port 514 default that EOS applies when the
+// configuration line omits them, and `vrf` is the routing instance the
+// collector is reached through.
+private arista.eos.logging.host @defaults("host port protocol vrf") {
+  // Collector hostname or IP address as configured
+  host string
+  // Destination port (514 when the configuration omits it)
+  port int
+  // Transport protocol, `udp` or `tcp` (`udp` when the configuration omits it)
+  protocol string
+  // Routing instance used to reach the collector (empty = default VRF)
+  vrf string
 }
