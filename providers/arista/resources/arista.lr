@@ -69,6 +69,10 @@ arista.eos {
   schedules() []arista.eos.schedule
   // Installed EOS extensions
   extensions() []arista.eos.extension
+  // Port-mirroring sessions
+  monitorSessions() []arista.eos.monitorSession
+  // sFlow sampling configuration and collectors
+  sflow() arista.eos.sflow
   // Boot image and console configuration
   bootConfig() arista.eos.bootConfig
   // Saved configuration the device loads on boot
@@ -372,6 +376,25 @@ private arista.eos.interface @defaults("name") {
   duplex() string
   // Auto-negotiation enabled
   autoNegotiate() bool
+  // Whether the interface answers ARP for addresses that are not its own
+  //
+  // Proxy ARP blurs the segmentation a subnet boundary is meant to provide,
+  // letting hosts reach destinations they could not otherwise resolve. Off
+  // unless configured.
+  proxyArpEnabled() bool
+  // Whether the interface sends ICMP redirects
+  //
+  // Redirects disclose routing topology to hosts on the segment. The device
+  // sends them unless `no ip redirects` is configured, so an interface that
+  // says nothing about it reports true.
+  icmpRedirectsEnabled() bool
+  // Reverse-path-forwarding mode for anti-spoofing
+  //
+  // Either `rx`, which drops packets arriving from a direction the routing
+  // table would not use to reach their source, or `any`, which accepts any
+  // reachable direction. Empty when unicast RPF is not configured, which
+  // leaves the interface accepting spoofed source addresses.
+  unicastRpfMode() string
 }
 
 // Arista EOS IP interface
@@ -1550,6 +1573,82 @@ arista.eos.arpInspection {
   // Held as interface names, matching how the other interface-scoped
   // resources in this provider report the ports they cover.
   trustedInterfaces []string
+}
+
+// Arista EOS port-mirroring session
+//
+// A port-mirroring session, selected by `name`. A session copies production
+// traffic somewhere else, which is a normal troubleshooting tool and also the
+// cleanest way to take traffic off a switch without touching a host.
+//
+// `destinationInterfaces` keeps the copy on the device; `tunnelDestinations`
+// does not. An encapsulated session sends mirrored traffic to a remote
+// address, so any entry there is worth an explanation.
+private arista.eos.monitorSession @defaults("name") {
+  // Session name
+  name string
+  // Mirrored interfaces and the direction each is mirrored in
+  sources []arista.eos.monitorSession.source
+  // Local ports the mirrored copy is sent to
+  destinationInterfaces []string
+  // Remote addresses an encapsulated session sends mirrored traffic to
+  //
+  // Empty for a session that stays on the device. A non-empty list means
+  // production traffic leaves the switch.
+  tunnelDestinations []string
+  // Whether mirrored packets are truncated
+  truncateEnabled bool
+  // Truncation size in bytes (0 = unset)
+  truncateSize int
+}
+
+// Arista EOS mirrored interface
+//
+// One mirrored interface within a port-mirroring session.
+private arista.eos.monitorSession.source @defaults("interface direction") {
+  // Session this source belongs to
+  sessionName string
+  // Mirrored interface name
+  interface string
+  // Mirrored direction
+  //
+  // One of `rx`, `tx`, or `both`. A source configured without a direction
+  // mirrors both.
+  direction string
+}
+
+// Arista EOS sFlow configuration
+//
+// sFlow sampling state and the collectors it reports to. sFlow ships sampled
+// packet headers and interface counters off the device, and the headers carry
+// real traffic, so the collector list is a data-egress path in the same way a
+// mirroring destination is.
+//
+// Collectors can be configured while sampling is off, so `enabled` and
+// `destinations` answer different questions and both are worth reading.
+arista.eos.sflow {
+  // Whether sFlow sampling is running
+  enabled bool
+  // One-in-N packet sampling rate (0 = unset)
+  sampleRate int
+  // Counter polling interval in seconds (0 = unset)
+  pollingInterval int
+  // Interface sourcing packets sent to the collectors
+  sourceInterface string
+  // Collectors sampled data is sent to
+  destinations() []arista.eos.sflow.destination
+}
+
+// Arista EOS sFlow collector
+//
+// One collector sampled data is sent to, selected by `address`.
+private arista.eos.sflow.destination @defaults("address port vrf") {
+  // Collector hostname or IP address as configured
+  address string
+  // Collector port (6343 when the configuration omits it)
+  port int
+  // Routing instance used to reach the collector (empty = default VRF)
+  vrf string
 }
 
 // Arista EOS event handler
