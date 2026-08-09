@@ -113,9 +113,7 @@ func ParseRouteMaps(runningConfig string) []RouteMap {
 			case strings.HasPrefix(line, "match "):
 				stmt := strings.TrimPrefix(line, "match ")
 				entry.Match = append(entry.Match, stmt)
-				if name := prefixListFromMatch(stmt); name != "" {
-					entry.MatchPrefixLists = append(entry.MatchPrefixLists, name)
-				}
+				entry.MatchPrefixLists = append(entry.MatchPrefixLists, prefixListsFromMatch(stmt)...)
 			case strings.HasPrefix(line, "set "):
 				entry.Set = append(entry.Set, strings.TrimPrefix(line, "set "))
 			case strings.HasPrefix(line, "description "):
@@ -146,16 +144,18 @@ func ParseRouteMaps(runningConfig string) []RouteMap {
 	return res
 }
 
-// prefixListFromMatch reads the prefix-list name out of a match statement,
-// returning "" when the statement matches on something else.
-func prefixListFromMatch(stmt string) string {
+// prefixListsFromMatch reads the prefix-list names out of a match statement,
+// returning nil when the statement matches on something else. EOS accepts more
+// than one name per statement, as in `match ip address prefix-list A B C`, and
+// the names are OR'd together.
+func prefixListsFromMatch(stmt string) []string {
 	fields := strings.Fields(stmt)
 	for i := 0; i+1 < len(fields); i++ {
 		if fields[i] == "prefix-list" {
-			return fields[i+1]
+			return fields[i+1:]
 		}
 	}
-	return ""
+	return nil
 }
 
 // ParsePrefixLists extracts the IPv4 and IPv6 prefix-lists from

@@ -79,6 +79,33 @@ func TestParseRouteMaps_Ipv6PrefixListMatch(t *testing.T) {
 	assert.Equal(t, []string{"V6-ALLOWED"}, maps[0].Entries[0].MatchPrefixLists)
 }
 
+func TestParseRouteMaps_MultiplePrefixListsPerMatch(t *testing.T) {
+	cfg := `route-map MULTI permit 10
+   match ip address prefix-list LIST-A LIST-B LIST-C
+!
+route-map MULTI permit 20
+   match ip address prefix-list ONLY-D
+   match ipv6 address prefix-list V6-E V6-F
+`
+	maps := ParseRouteMaps(cfg)
+	require.Len(t, maps, 1)
+	require.Len(t, maps[0].Entries, 2)
+
+	assert.Equal(t, []string{"LIST-A", "LIST-B", "LIST-C"}, maps[0].Entries[0].MatchPrefixLists)
+	// names accumulate across every match clause in the same route-map entry
+	assert.Equal(t, []string{"ONLY-D", "V6-E", "V6-F"}, maps[0].Entries[1].MatchPrefixLists)
+}
+
+func TestParseRouteMaps_MatchWithoutPrefixList(t *testing.T) {
+	cfg := `route-map NOPL permit 10
+   match as-path AS-SET
+   match community COMM
+`
+	maps := ParseRouteMaps(cfg)
+	require.Len(t, maps, 1)
+	assert.Empty(t, maps[0].Entries[0].MatchPrefixLists)
+}
+
 func TestParseRouteMaps_None(t *testing.T) {
 	assert.Empty(t, ParseRouteMaps("router bgp 65001\n   router-id 10.0.0.1\n"))
 }
