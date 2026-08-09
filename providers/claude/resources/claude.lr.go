@@ -19,6 +19,10 @@ const (
 	ResourceClaude                            string = "claude"
 	ResourceClaudeModel                       string = "claude.model"
 	ResourceClaudeAgent                       string = "claude.agent"
+	ResourceClaudeAgentSkill                  string = "claude.agent.skill"
+	ResourceClaudeAgentToolset                string = "claude.agent.toolset"
+	ResourceClaudeAgentToolsetTool            string = "claude.agent.toolset.tool"
+	ResourceClaudeAgentCustomTool             string = "claude.agent.customTool"
 	ResourceClaudeEnvironment                 string = "claude.environment"
 	ResourceClaudeSession                     string = "claude.session"
 	ResourceClaudeFile                        string = "claude.file"
@@ -55,6 +59,22 @@ func init() {
 		"claude.agent": {
 			// to override args, implement: initClaudeAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createClaudeAgent,
+		},
+		"claude.agent.skill": {
+			// to override args, implement: initClaudeAgentSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeAgentSkill,
+		},
+		"claude.agent.toolset": {
+			// to override args, implement: initClaudeAgentToolset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeAgentToolset,
+		},
+		"claude.agent.toolset.tool": {
+			// to override args, implement: initClaudeAgentToolsetTool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeAgentToolsetTool,
+		},
+		"claude.agent.customTool": {
+			// to override args, implement: initClaudeAgentCustomTool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeAgentCustomTool,
 		},
 		"claude.environment": {
 			// to override args, implement: initClaudeEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -296,6 +316,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.agent.model": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeAgent).GetModel()).ToDataRes(types.String)
 	},
+	"claude.agent.modelEffort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetModelEffort()).ToDataRes(types.String)
+	},
+	"claude.agent.modelInferenceGeo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetModelInferenceGeo()).ToDataRes(types.String)
+	},
+	"claude.agent.modelSpeed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetModelSpeed()).ToDataRes(types.String)
+	},
+	"claude.agent.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"claude.agent.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetMcpServers()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"claude.agent.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetSkills()).ToDataRes(types.Array(types.Resource("claude.agent.skill")))
+	},
+	"claude.agent.toolsets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetToolsets()).ToDataRes(types.Array(types.Resource("claude.agent.toolset")))
+	},
+	"claude.agent.customTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetCustomTools()).ToDataRes(types.Array(types.Resource("claude.agent.customTool")))
+	},
+	"claude.agent.multiagentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetMultiagentType()).ToDataRes(types.String)
+	},
+	"claude.agent.subagents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetSubagents()).ToDataRes(types.Array(types.Resource("claude.agent")))
+	},
+	"claude.agent.advisorModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgent).GetAdvisorModels()).ToDataRes(types.Array(types.String))
+	},
 	"claude.agent.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeAgent).GetVersion()).ToDataRes(types.Int)
 	},
@@ -311,6 +364,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.agent.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeAgent).GetType()).ToDataRes(types.String)
 	},
+	"claude.agent.skill.skill": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentSkill).GetSkill()).ToDataRes(types.Resource("claude.skill"))
+	},
+	"claude.agent.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentSkill).GetSource()).ToDataRes(types.String)
+	},
+	"claude.agent.skill.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentSkill).GetVersion()).ToDataRes(types.String)
+	},
+	"claude.agent.toolset.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolset).GetType()).ToDataRes(types.String)
+	},
+	"claude.agent.toolset.mcpServerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolset).GetMcpServerName()).ToDataRes(types.String)
+	},
+	"claude.agent.toolset.defaultEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolset).GetDefaultEnabled()).ToDataRes(types.Bool)
+	},
+	"claude.agent.toolset.defaultPermissionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolset).GetDefaultPermissionPolicy()).ToDataRes(types.String)
+	},
+	"claude.agent.toolset.tools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolset).GetTools()).ToDataRes(types.Array(types.Resource("claude.agent.toolset.tool")))
+	},
+	"claude.agent.toolset.tool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolsetTool).GetName()).ToDataRes(types.String)
+	},
+	"claude.agent.toolset.tool.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolsetTool).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"claude.agent.toolset.tool.permissionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentToolsetTool).GetPermissionPolicy()).ToDataRes(types.String)
+	},
+	"claude.agent.customTool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentCustomTool).GetName()).ToDataRes(types.String)
+	},
+	"claude.agent.customTool.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentCustomTool).GetDescription()).ToDataRes(types.String)
+	},
+	"claude.agent.customTool.inputSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeAgentCustomTool).GetInputSchema()).ToDataRes(types.Dict)
+	},
 	"claude.environment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeEnvironment).GetId()).ToDataRes(types.String)
 	},
@@ -322,6 +417,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"claude.environment.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeEnvironment).GetScope()).ToDataRes(types.String)
+	},
+	"claude.environment.configType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetConfigType()).ToDataRes(types.String)
+	},
+	"claude.environment.networkingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetNetworkingType()).ToDataRes(types.String)
+	},
+	"claude.environment.allowedHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetAllowedHosts()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.allowMcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetAllowMcpServers()).ToDataRes(types.Bool)
+	},
+	"claude.environment.allowPackageManagers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetAllowPackageManagers()).ToDataRes(types.Bool)
+	},
+	"claude.environment.aptPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetAptPackages()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.cargoPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetCargoPackages()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.gemPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetGemPackages()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.goPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetGoPackages()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.npmPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetNpmPackages()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.pipPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetPipPackages()).ToDataRes(types.Array(types.String))
+	},
+	"claude.environment.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeEnvironment).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"claude.environment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeEnvironment).GetCreatedAt()).ToDataRes(types.Time)
@@ -876,6 +1007,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeAgent).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.agent.modelEffort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).ModelEffort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.modelInferenceGeo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).ModelInferenceGeo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.modelSpeed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).ModelSpeed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).McpServers, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).Toolsets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.customTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).CustomTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.multiagentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).MultiagentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.subagents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).Subagents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.advisorModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgent).AdvisorModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"claude.agent.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeAgent).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -896,6 +1071,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeAgent).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.agent.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.agent.skill.skill": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentSkill).Skill, ok = plugin.RawToTValue[*mqlClaudeSkill](v.Value, v.Error)
+		return
+	},
+	"claude.agent.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.skill.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentSkill).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolset).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.agent.toolset.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolset).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.mcpServerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolset).McpServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.defaultEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolset).DefaultEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.defaultPermissionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolset).DefaultPermissionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.tools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolset).Tools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.tool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolsetTool).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.agent.toolset.tool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolsetTool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.tool.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolsetTool).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.agent.toolset.tool.permissionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentToolsetTool).PermissionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.customTool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentCustomTool).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.agent.customTool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentCustomTool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.customTool.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentCustomTool).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.agent.customTool.inputSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeAgentCustomTool).InputSchema, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"claude.environment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeEnvironment).__id, ok = v.Value.(string)
 		return
@@ -914,6 +1161,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"claude.environment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeEnvironment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.environment.configType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).ConfigType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.environment.networkingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).NetworkingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.environment.allowedHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).AllowedHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.allowMcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).AllowMcpServers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.environment.allowPackageManagers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).AllowPackageManagers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.environment.aptPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).AptPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.cargoPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).CargoPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.gemPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).GemPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.goPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).GoPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.npmPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).NpmPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.pipPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).PipPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.environment.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeEnvironment).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"claude.environment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1891,17 +2186,28 @@ func (c *mqlClaudeModel) GetThinkingSupported() *plugin.TValue[bool] {
 type mqlClaudeAgent struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlClaudeAgentInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	System      plugin.TValue[string]
-	Model       plugin.TValue[string]
-	Version     plugin.TValue[int64]
-	CreatedAt   plugin.TValue[*time.Time]
-	UpdatedAt   plugin.TValue[*time.Time]
-	ArchivedAt  plugin.TValue[*time.Time]
-	Type        plugin.TValue[string]
+	mqlClaudeAgentInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	System            plugin.TValue[string]
+	Model             plugin.TValue[string]
+	ModelEffort       plugin.TValue[string]
+	ModelInferenceGeo plugin.TValue[string]
+	ModelSpeed        plugin.TValue[string]
+	Metadata          plugin.TValue[map[string]any]
+	McpServers        plugin.TValue[map[string]any]
+	Skills            plugin.TValue[[]any]
+	Toolsets          plugin.TValue[[]any]
+	CustomTools       plugin.TValue[[]any]
+	MultiagentType    plugin.TValue[string]
+	Subagents         plugin.TValue[[]any]
+	AdvisorModels     plugin.TValue[[]any]
+	Version           plugin.TValue[int64]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	ArchivedAt        plugin.TValue[*time.Time]
+	Type              plugin.TValue[string]
 }
 
 // createClaudeAgent creates a new instance of this resource
@@ -1956,6 +2262,62 @@ func (c *mqlClaudeAgent) GetModel() *plugin.TValue[string] {
 	return &c.Model
 }
 
+func (c *mqlClaudeAgent) GetModelEffort() *plugin.TValue[string] {
+	return &c.ModelEffort
+}
+
+func (c *mqlClaudeAgent) GetModelInferenceGeo() *plugin.TValue[string] {
+	return &c.ModelInferenceGeo
+}
+
+func (c *mqlClaudeAgent) GetModelSpeed() *plugin.TValue[string] {
+	return &c.ModelSpeed
+}
+
+func (c *mqlClaudeAgent) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlClaudeAgent) GetMcpServers() *plugin.TValue[map[string]any] {
+	return &c.McpServers
+}
+
+func (c *mqlClaudeAgent) GetSkills() *plugin.TValue[[]any] {
+	return &c.Skills
+}
+
+func (c *mqlClaudeAgent) GetToolsets() *plugin.TValue[[]any] {
+	return &c.Toolsets
+}
+
+func (c *mqlClaudeAgent) GetCustomTools() *plugin.TValue[[]any] {
+	return &c.CustomTools
+}
+
+func (c *mqlClaudeAgent) GetMultiagentType() *plugin.TValue[string] {
+	return &c.MultiagentType
+}
+
+func (c *mqlClaudeAgent) GetSubagents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subagents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.agent", c.__id, "subagents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subagents()
+	})
+}
+
+func (c *mqlClaudeAgent) GetAdvisorModels() *plugin.TValue[[]any] {
+	return &c.AdvisorModels
+}
+
 func (c *mqlClaudeAgent) GetVersion() *plugin.TValue[int64] {
 	return &c.Version
 }
@@ -1976,19 +2338,269 @@ func (c *mqlClaudeAgent) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
+// mqlClaudeAgentSkill for the claude.agent.skill resource
+type mqlClaudeAgentSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlClaudeAgentSkillInternal
+	Skill   plugin.TValue[*mqlClaudeSkill]
+	Source  plugin.TValue[string]
+	Version plugin.TValue[string]
+}
+
+// createClaudeAgentSkill creates a new instance of this resource
+func createClaudeAgentSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeAgentSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.agent.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeAgentSkill) MqlName() string {
+	return "claude.agent.skill"
+}
+
+func (c *mqlClaudeAgentSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeAgentSkill) GetSkill() *plugin.TValue[*mqlClaudeSkill] {
+	return plugin.GetOrCompute[*mqlClaudeSkill](&c.Skill, func() (*mqlClaudeSkill, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.agent.skill", c.__id, "skill")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlClaudeSkill), nil
+			}
+		}
+
+		return c.skill()
+	})
+}
+
+func (c *mqlClaudeAgentSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlClaudeAgentSkill) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+// mqlClaudeAgentToolset for the claude.agent.toolset resource
+type mqlClaudeAgentToolset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeAgentToolsetInternal it will be used here
+	Type                    plugin.TValue[string]
+	McpServerName           plugin.TValue[string]
+	DefaultEnabled          plugin.TValue[bool]
+	DefaultPermissionPolicy plugin.TValue[string]
+	Tools                   plugin.TValue[[]any]
+}
+
+// createClaudeAgentToolset creates a new instance of this resource
+func createClaudeAgentToolset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeAgentToolset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.agent.toolset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeAgentToolset) MqlName() string {
+	return "claude.agent.toolset"
+}
+
+func (c *mqlClaudeAgentToolset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeAgentToolset) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlClaudeAgentToolset) GetMcpServerName() *plugin.TValue[string] {
+	return &c.McpServerName
+}
+
+func (c *mqlClaudeAgentToolset) GetDefaultEnabled() *plugin.TValue[bool] {
+	return &c.DefaultEnabled
+}
+
+func (c *mqlClaudeAgentToolset) GetDefaultPermissionPolicy() *plugin.TValue[string] {
+	return &c.DefaultPermissionPolicy
+}
+
+func (c *mqlClaudeAgentToolset) GetTools() *plugin.TValue[[]any] {
+	return &c.Tools
+}
+
+// mqlClaudeAgentToolsetTool for the claude.agent.toolset.tool resource
+type mqlClaudeAgentToolsetTool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeAgentToolsetToolInternal it will be used here
+	Name             plugin.TValue[string]
+	Enabled          plugin.TValue[bool]
+	PermissionPolicy plugin.TValue[string]
+}
+
+// createClaudeAgentToolsetTool creates a new instance of this resource
+func createClaudeAgentToolsetTool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeAgentToolsetTool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.agent.toolset.tool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeAgentToolsetTool) MqlName() string {
+	return "claude.agent.toolset.tool"
+}
+
+func (c *mqlClaudeAgentToolsetTool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeAgentToolsetTool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeAgentToolsetTool) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlClaudeAgentToolsetTool) GetPermissionPolicy() *plugin.TValue[string] {
+	return &c.PermissionPolicy
+}
+
+// mqlClaudeAgentCustomTool for the claude.agent.customTool resource
+type mqlClaudeAgentCustomTool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeAgentCustomToolInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	InputSchema plugin.TValue[any]
+}
+
+// createClaudeAgentCustomTool creates a new instance of this resource
+func createClaudeAgentCustomTool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeAgentCustomTool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.agent.customTool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeAgentCustomTool) MqlName() string {
+	return "claude.agent.customTool"
+}
+
+func (c *mqlClaudeAgentCustomTool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeAgentCustomTool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeAgentCustomTool) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlClaudeAgentCustomTool) GetInputSchema() *plugin.TValue[any] {
+	return &c.InputSchema
+}
+
 // mqlClaudeEnvironment for the claude.environment resource
 type mqlClaudeEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlClaudeEnvironmentInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Scope       plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
-	UpdatedAt   plugin.TValue[*time.Time]
-	ArchivedAt  plugin.TValue[*time.Time]
-	Type        plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Scope                plugin.TValue[string]
+	ConfigType           plugin.TValue[string]
+	NetworkingType       plugin.TValue[string]
+	AllowedHosts         plugin.TValue[[]any]
+	AllowMcpServers      plugin.TValue[bool]
+	AllowPackageManagers plugin.TValue[bool]
+	AptPackages          plugin.TValue[[]any]
+	CargoPackages        plugin.TValue[[]any]
+	GemPackages          plugin.TValue[[]any]
+	GoPackages           plugin.TValue[[]any]
+	NpmPackages          plugin.TValue[[]any]
+	PipPackages          plugin.TValue[[]any]
+	Metadata             plugin.TValue[map[string]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	ArchivedAt           plugin.TValue[*time.Time]
+	Type                 plugin.TValue[string]
 }
 
 // createClaudeEnvironment creates a new instance of this resource
@@ -2037,6 +2649,54 @@ func (c *mqlClaudeEnvironment) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlClaudeEnvironment) GetScope() *plugin.TValue[string] {
 	return &c.Scope
+}
+
+func (c *mqlClaudeEnvironment) GetConfigType() *plugin.TValue[string] {
+	return &c.ConfigType
+}
+
+func (c *mqlClaudeEnvironment) GetNetworkingType() *plugin.TValue[string] {
+	return &c.NetworkingType
+}
+
+func (c *mqlClaudeEnvironment) GetAllowedHosts() *plugin.TValue[[]any] {
+	return &c.AllowedHosts
+}
+
+func (c *mqlClaudeEnvironment) GetAllowMcpServers() *plugin.TValue[bool] {
+	return &c.AllowMcpServers
+}
+
+func (c *mqlClaudeEnvironment) GetAllowPackageManagers() *plugin.TValue[bool] {
+	return &c.AllowPackageManagers
+}
+
+func (c *mqlClaudeEnvironment) GetAptPackages() *plugin.TValue[[]any] {
+	return &c.AptPackages
+}
+
+func (c *mqlClaudeEnvironment) GetCargoPackages() *plugin.TValue[[]any] {
+	return &c.CargoPackages
+}
+
+func (c *mqlClaudeEnvironment) GetGemPackages() *plugin.TValue[[]any] {
+	return &c.GemPackages
+}
+
+func (c *mqlClaudeEnvironment) GetGoPackages() *plugin.TValue[[]any] {
+	return &c.GoPackages
+}
+
+func (c *mqlClaudeEnvironment) GetNpmPackages() *plugin.TValue[[]any] {
+	return &c.NpmPackages
+}
+
+func (c *mqlClaudeEnvironment) GetPipPackages() *plugin.TValue[[]any] {
+	return &c.PipPackages
+}
+
+func (c *mqlClaudeEnvironment) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
 }
 
 func (c *mqlClaudeEnvironment) GetCreatedAt() *plugin.TValue[*time.Time] {

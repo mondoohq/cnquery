@@ -10,9 +10,14 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // claude.agent
+
+type mqlClaudeAgentInternal struct {
+	cacheSubagentIDs []string
+}
 
 func (r *mqlClaude) agents() ([]interface{}, error) {
 	c := conn(r.MqlRuntime)
@@ -24,22 +29,62 @@ func (r *mqlClaude) agents() ([]interface{}, error) {
 	for pager.Next() {
 		a := pager.Current()
 
+		skills, err := agentSkills(r.MqlRuntime, a.ID, a.Skills)
+		if err != nil {
+			return nil, err
+		}
+		toolsets, customTools, err := agentTools(r.MqlRuntime, a.ID, a.Tools)
+		if err != nil {
+			return nil, err
+		}
+
+		mcpServers := make(map[string]interface{}, len(a.MCPServers))
+		for _, server := range a.MCPServers {
+			mcpServers[server.Name] = server.URL
+		}
+
+		// The roster mixes agent references, which name another managed
+		// agent, with advisors, which only name a model.
+		var subagentIDs []string
+		advisorModels := []interface{}{}
+		for _, entry := range a.Multiagent.Agents {
+			switch entry.Type {
+			case "agent":
+				subagentIDs = append(subagentIDs, entry.ID)
+			case "advisor":
+				advisorModels = append(advisorModels, entry.Model)
+			}
+		}
+
 		mqlAgent, err := CreateResource(r.MqlRuntime, "claude.agent", map[string]*llx.RawData{
-			"__id":        llx.StringData(a.ID),
-			"id":          llx.StringData(a.ID),
-			"name":        llx.StringData(a.Name),
-			"description": llx.StringData(a.Description),
-			"system":      llx.StringData(a.System),
-			"model":       llx.StringData(string(a.Model.ID)),
-			"version":     llx.IntData(a.Version),
-			"createdAt":   llx.TimeData(a.CreatedAt),
-			"updatedAt":   llx.TimeData(a.UpdatedAt),
-			"archivedAt":  llx.TimeData(a.ArchivedAt),
-			"type":        llx.StringData(string(a.Type)),
+			"__id":              llx.StringData(a.ID),
+			"id":                llx.StringData(a.ID),
+			"name":              llx.StringData(a.Name),
+			"description":       llx.StringData(a.Description),
+			"system":            llx.StringData(a.System),
+			"model":             llx.StringData(string(a.Model.ID)),
+			"modelEffort":       llx.StringData(a.Model.Effort.Type),
+			"modelInferenceGeo": llx.StringData(a.Model.InferenceGeo),
+			"modelSpeed":        llx.StringData(string(a.Model.Speed)),
+			"metadata":          llx.MapData(toInterfaceMap(a.Metadata), types.String),
+			"mcpServers":        llx.MapData(mcpServers, types.String),
+			"skills":            llx.ArrayData(skills, types.Resource("claude.agent.skill")),
+			"toolsets":          llx.ArrayData(toolsets, types.Resource("claude.agent.toolset")),
+			"customTools":       llx.ArrayData(customTools, types.Resource("claude.agent.customTool")),
+			"multiagentType":    llx.StringData(string(a.Multiagent.Type)),
+			"advisorModels":     llx.ArrayData(advisorModels, types.String),
+			"version":           llx.IntData(a.Version),
+			"createdAt":         llx.TimeData(a.CreatedAt),
+			"updatedAt":         llx.TimeData(a.UpdatedAt),
+			"archivedAt":        llx.TimeData(a.ArchivedAt),
+			"type":              llx.StringData(string(a.Type)),
 		})
 		if err != nil {
 			return nil, err
 		}
+
+		mqlAgent.(*mqlClaudeAgent).cacheSubagentIDs = subagentIDs
+
 		res = append(res, mqlAgent)
 	}
 	if err := pager.Err(); err != nil {
@@ -47,6 +92,180 @@ func (r *mqlClaude) agents() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+// The agent list is read through the memoized GetAgents accessor, so
+// resolving a roster on every agent still costs a single list call.
+func (r *mqlClaudeAgent) subagents() ([]interface{}, error) {
+	res := []interface{}{}
+	if len(r.cacheSubagentIDs) == 0 {
+		return res, nil
+	}
+
+	claudeRes, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	agents := claudeRes.(*mqlClaude).GetAgents()
+	if agents.Error != nil {
+		return nil, agents.Error
+	}
+
+	byID := make(map[string]*mqlClaudeAgent, len(agents.Data))
+	for _, a := range agents.Data {
+		if agent, ok := a.(*mqlClaudeAgent); ok {
+			byID[agent.Id.Data] = agent
+		}
+	}
+
+	for _, id := range r.cacheSubagentIDs {
+		if agent, ok := byID[id]; ok {
+			res = append(res, agent)
+		}
+	}
+
+	return res, nil
+}
+
+type mqlClaudeAgentSkillInternal struct {
+	cacheSkillID string
+}
+
+func agentSkills(runtime *plugin.Runtime, agentID string, skills []anthropic.BetaManagedAgentsAgentSkillUnion) ([]interface{}, error) {
+	res := make([]interface{}, 0, len(skills))
+	for _, s := range skills {
+		mqlSkill, err := CreateResource(runtime, "claude.agent.skill", map[string]*llx.RawData{
+			"__id":    llx.StringData(fmt.Sprintf("%s/skill/%s/%s", agentID, s.SkillID, s.Version)),
+			"source":  llx.StringData(s.Type),
+			"version": llx.StringData(s.Version),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlSkill.(*mqlClaudeAgentSkill).cacheSkillID = s.SkillID
+
+		res = append(res, mqlSkill)
+	}
+	return res, nil
+}
+
+func (r *mqlClaudeAgentSkill) skill() (*mqlClaudeSkill, error) {
+	if r.cacheSkillID == "" {
+		r.Skill.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	skills := res.(*mqlClaude).GetSkills()
+	if skills.Error != nil {
+		return nil, skills.Error
+	}
+
+	for _, s := range skills.Data {
+		skill, ok := s.(*mqlClaudeSkill)
+		if ok && skill.Id.Data == r.cacheSkillID {
+			return skill, nil
+		}
+	}
+
+	r.Skill.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+// agentTools splits the agent's tool entries into toolsets, which carry a
+// permission policy and the tools configured under it, and custom tools, which
+// are declared inline on the agent and have no policy of their own.
+func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.BetaManagedAgentsAgentToolUnion) ([]interface{}, []interface{}, error) {
+	toolsets := []interface{}{}
+	customTools := []interface{}{}
+
+	for i, entry := range entries {
+		switch entry.Type {
+		case "agent_toolset_20260401":
+			toolset := entry.AsAgentToolset20260401()
+
+			tools := make([]interface{}, 0, len(toolset.Configs))
+			for _, cfg := range toolset.Configs {
+				tool, err := newToolsetTool(runtime, agentID, i, string(cfg.Name), cfg.Enabled, cfg.PermissionPolicy.Type)
+				if err != nil {
+					return nil, nil, err
+				}
+				tools = append(tools, tool)
+			}
+
+			mqlToolset, err := CreateResource(runtime, "claude.agent.toolset", map[string]*llx.RawData{
+				"__id":                    llx.StringData(fmt.Sprintf("%s/toolset/%d", agentID, i)),
+				"type":                    llx.StringData(string(toolset.Type)),
+				"mcpServerName":           llx.StringData(""),
+				"defaultEnabled":          llx.BoolData(toolset.DefaultConfig.Enabled),
+				"defaultPermissionPolicy": llx.StringData(toolset.DefaultConfig.PermissionPolicy.Type),
+				"tools":                   llx.ArrayData(tools, types.Resource("claude.agent.toolset.tool")),
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			toolsets = append(toolsets, mqlToolset)
+
+		case "mcp_toolset":
+			toolset := entry.AsMCPToolset()
+
+			tools := make([]interface{}, 0, len(toolset.Configs))
+			for _, cfg := range toolset.Configs {
+				tool, err := newToolsetTool(runtime, agentID, i, cfg.Name, cfg.Enabled, cfg.PermissionPolicy.Type)
+				if err != nil {
+					return nil, nil, err
+				}
+				tools = append(tools, tool)
+			}
+
+			mqlToolset, err := CreateResource(runtime, "claude.agent.toolset", map[string]*llx.RawData{
+				"__id":                    llx.StringData(fmt.Sprintf("%s/toolset/%d", agentID, i)),
+				"type":                    llx.StringData(string(toolset.Type)),
+				"mcpServerName":           llx.StringData(toolset.MCPServerName),
+				"defaultEnabled":          llx.BoolData(toolset.DefaultConfig.Enabled),
+				"defaultPermissionPolicy": llx.StringData(toolset.DefaultConfig.PermissionPolicy.Type),
+				"tools":                   llx.ArrayData(tools, types.Resource("claude.agent.toolset.tool")),
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			toolsets = append(toolsets, mqlToolset)
+
+		case "custom":
+			tool := entry.AsCustom()
+
+			inputSchema, err := rawJSONToDict(tool.InputSchema.RawJSON())
+			if err != nil {
+				return nil, nil, fmt.Errorf("parsing input schema of custom tool %q: %w", tool.Name, err)
+			}
+
+			mqlTool, err := CreateResource(runtime, "claude.agent.customTool", map[string]*llx.RawData{
+				"__id":        llx.StringData(fmt.Sprintf("%s/customTool/%s", agentID, tool.Name)),
+				"name":        llx.StringData(tool.Name),
+				"description": llx.StringData(tool.Description),
+				"inputSchema": llx.DictData(inputSchema),
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			customTools = append(customTools, mqlTool)
+		}
+	}
+
+	return toolsets, customTools, nil
+}
+
+func newToolsetTool(runtime *plugin.Runtime, agentID string, toolsetIndex int, name string, enabled bool, permissionPolicy string) (plugin.Resource, error) {
+	return CreateResource(runtime, "claude.agent.toolset.tool", map[string]*llx.RawData{
+		"__id":             llx.StringData(fmt.Sprintf("%s/toolset/%d/%s", agentID, toolsetIndex, name)),
+		"name":             llx.StringData(name),
+		"enabled":          llx.BoolData(enabled),
+		"permissionPolicy": llx.StringData(permissionPolicy),
+	})
 }
 
 // claude.environment
@@ -74,17 +293,39 @@ func (r *mqlClaude) environments() ([]interface{}, error) {
 			return nil, fmt.Errorf("parsing environment archivedAt: %w", err)
 		}
 
-		mqlEnv, err := CreateResource(r.MqlRuntime, "claude.environment", map[string]*llx.RawData{
-			"__id":        llx.StringData(e.ID),
-			"id":          llx.StringData(e.ID),
-			"name":        llx.StringData(e.Name),
-			"description": llx.StringData(e.Description),
-			"scope":       llx.StringData(string(e.Scope)),
-			"createdAt":   llx.TimeData(createdAt),
-			"updatedAt":   llx.TimeData(updatedAt),
-			"archivedAt":  llx.TimeData(archivedAt),
-			"type":        llx.StringData(string(e.Type)),
-		})
+		args := map[string]*llx.RawData{
+			"__id":                 llx.StringData(e.ID),
+			"id":                   llx.StringData(e.ID),
+			"name":                 llx.StringData(e.Name),
+			"description":          llx.StringData(e.Description),
+			"scope":                llx.StringData(string(e.Scope)),
+			"metadata":             llx.MapData(toInterfaceMap(e.Metadata), types.String),
+			"configType":           llx.StringData(e.Config.Type),
+			"networkingType":       llx.StringData(e.Config.Networking.Type),
+			"allowedHosts":         llx.ArrayData(toInterfaceSlice(e.Config.Networking.AllowedHosts), types.String),
+			"aptPackages":          llx.ArrayData(toInterfaceSlice(e.Config.Packages.Apt), types.String),
+			"cargoPackages":        llx.ArrayData(toInterfaceSlice(e.Config.Packages.Cargo), types.String),
+			"gemPackages":          llx.ArrayData(toInterfaceSlice(e.Config.Packages.Gem), types.String),
+			"goPackages":           llx.ArrayData(toInterfaceSlice(e.Config.Packages.Go), types.String),
+			"npmPackages":          llx.ArrayData(toInterfaceSlice(e.Config.Packages.Npm), types.String),
+			"pipPackages":          llx.ArrayData(toInterfaceSlice(e.Config.Packages.Pip), types.String),
+			"allowMcpServers":      {Type: types.Bool},
+			"allowPackageManagers": {Type: types.Bool},
+			"createdAt":            llx.TimeData(createdAt),
+			"updatedAt":            llx.TimeData(updatedAt),
+			"archivedAt":           llx.TimeData(archivedAt),
+			"type":                 llx.StringData(string(e.Type)),
+		}
+
+		// The two allow flags only exist on a limited network policy. An
+		// unrestricted environment reports neither, so they stay null rather
+		// than claiming the traffic is blocked.
+		if e.Config.Networking.Type == "limited" {
+			args["allowMcpServers"] = llx.BoolData(e.Config.Networking.AllowMCPServers)
+			args["allowPackageManagers"] = llx.BoolData(e.Config.Networking.AllowPackageManagers)
+		}
+
+		mqlEnv, err := CreateResource(r.MqlRuntime, "claude.environment", args)
 		if err != nil {
 			return nil, err
 		}

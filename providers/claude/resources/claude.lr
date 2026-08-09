@@ -88,8 +88,11 @@ claude.model @defaults("id displayName") {
 // Managed agent definition created through the Beta Agents API and
 // executed within sessions. Auditing an agent surfaces the model it
 // runs on, its system prompt, and its version and archival state,
-// which together govern the instructions and capabilities in effect
-// for every session that uses it.
+// which together govern the instructions in effect for every session
+// that uses it. It also surfaces what the agent is permitted to do:
+// the toolsets it can call and the permission policy on each tool, the
+// MCP servers it reaches out to, the skills it loads, and the roster of
+// other agents it may spawn.
 claude.agent @defaults("id name") {
   // Agent identifier
   id string
@@ -101,6 +104,46 @@ claude.agent @defaults("id name") {
   system string
   // Model identifier used by this agent
   model string
+  // Reasoning effort applied on each turn
+  //
+  // One of low, medium, high, xhigh, or max. Empty when the agent does
+  // not pin an effort level.
+  modelEffort string
+  // Geographic region for model inference
+  //
+  // Empty when the agent inherits the default inference region of the
+  // workspace it runs in.
+  modelInferenceGeo string
+  // Inference speed mode
+  //
+  // One of standard or fast.
+  modelSpeed string
+  // User-provided metadata key-value pairs
+  metadata map[string]string
+  // MCP servers the agent can reach
+  //
+  // Maps each configured server name to its URL. Every entry is a network
+  // destination the agent may call during a session, so an unrecognized
+  // host, or a plaintext one, widens what the agent can talk to.
+  mcpServers map[string]string
+  // Skills attached to the agent
+  skills []claude.agent.skill
+  // Toolsets available to the agent
+  toolsets []claude.agent.toolset
+  // Custom tools defined on the agent
+  customTools []claude.agent.customTool
+  // Multiagent topology
+  //
+  // Set to coordinator when the agent may spawn other agents as session
+  // threads, and empty when the agent runs alone.
+  multiagentType string
+  // Agents this agent may spawn as session threads
+  //
+  // The roster the coordinator draws from, which is how far a single
+  // session can reach beyond the agent that started it.
+  subagents() []claude.agent
+  // Models backing the advisors in the multiagent roster
+  advisorModels []string
   // Agent version number
   version int
   // Agent creation timestamp
@@ -113,6 +156,84 @@ claude.agent @defaults("id name") {
   type string
 }
 
+// Skill attached to a Claude agent
+//
+// Version-pinned skill an agent loads at runtime, extending it with
+// reusable instructions. The source separates Anthropic-provided skills
+// from custom ones authored inside the organization, which is the line
+// between vendor-reviewed instructions and instructions anyone with
+// skill-write access can change under a running agent.
+private claude.agent.skill @defaults("source version") {
+  // Skill attached to the agent
+  skill() claude.skill
+  // Skill source
+  //
+  // One of anthropic or custom.
+  source string
+  // Pinned skill version
+  version string
+}
+
+// Toolset available to a Claude agent
+//
+// Group of tools an agent can call, together with the permission policy
+// governing them. A built-in toolset covers the agent's own capabilities
+// such as shell, file, and web access, while an MCP toolset exposes the
+// tools published by one connected MCP server. The default policy applies
+// to every tool in the group that carries no entry of its own, so a
+// default of always_allow means those tools run without a confirmation
+// step.
+private claude.agent.toolset @defaults("type defaultPermissionPolicy") {
+  // Toolset type
+  //
+  // One of agent_toolset_20260401 or mcp_toolset.
+  type string
+  // MCP server supplying the tools
+  //
+  // Empty for built-in toolsets.
+  mcpServerName string
+  // Whether tools without an entry of their own are enabled
+  defaultEnabled bool
+  // Permission policy for tools without an entry of their own
+  //
+  // One of always_allow or always_ask.
+  defaultPermissionPolicy string
+  // Tools configured individually within the toolset
+  tools []claude.agent.toolset.tool
+}
+
+// Tool configured on a Claude agent toolset
+//
+// Single tool carrying its own enablement and permission policy, which
+// override the toolset default. For a built-in toolset the name is one of
+// bash, edit, read, write, glob, grep, web_fetch, or web_search. For an
+// MCP toolset it is a tool name published by the connected server.
+private claude.agent.toolset.tool @defaults("name enabled permissionPolicy") {
+  // Tool name
+  name string
+  // Whether the tool is enabled
+  enabled bool
+  // Permission policy for tool execution
+  //
+  // One of always_allow or always_ask.
+  permissionPolicy string
+}
+
+// Custom tool defined on a Claude agent
+//
+// Tool declared inline on an agent rather than supplied by a built-in
+// toolset or an MCP server. The description is the text the model reads
+// when deciding whether to call it, and the input schema states the
+// parameters it accepts.
+private claude.agent.customTool @defaults("name") {
+  // Tool name
+  name string
+  // Tool description
+  description string
+  // JSON Schema for the tool's input parameters
+  inputSchema dict
+}
+
 // Claude execution environment
 //
 // Execution environment that defines the compute context and
@@ -120,7 +241,9 @@ claude.agent @defaults("id name") {
 // to see where agents execute and how broadly they are exposed. The
 // `scope` field is one of organization or account, distinguishing an
 // environment shared across the whole organization from one confined
-// to a single account.
+// to a single account. The network policy states which hosts a session
+// can reach from inside the environment, and the package fields list
+// what is installed in the sandbox the agent runs in.
 claude.environment @defaults("id name") {
   // Environment identifier
   id string
@@ -132,6 +255,43 @@ claude.environment @defaults("id name") {
   //
   // One of organization or account.
   scope string
+  // Environment configuration type
+  //
+  // One of cloud or self_hosted.
+  configType string
+  // Network policy
+  //
+  // One of unrestricted or limited. An unrestricted environment can reach
+  // any host from an agent session, so nothing constrains where data goes
+  // once an agent is running in it.
+  networkingType string
+  // Hosts reachable from the environment
+  //
+  // The allowlist in force under a limited network policy. Empty when the
+  // policy is unrestricted, where no allowlist applies.
+  allowedHosts []string
+  // Whether MCP servers are reachable under a limited network policy
+  //
+  // Null when the network policy is unrestricted.
+  allowMcpServers bool
+  // Whether package registries are reachable under a limited network policy
+  //
+  // Null when the network policy is unrestricted.
+  allowPackageManagers bool
+  // Ubuntu and Debian packages installed in the environment
+  aptPackages []string
+  // Rust packages installed in the environment
+  cargoPackages []string
+  // Ruby packages installed in the environment
+  gemPackages []string
+  // Go packages installed in the environment
+  goPackages []string
+  // Node.js packages installed in the environment
+  npmPackages []string
+  // Python packages installed in the environment
+  pipPackages []string
+  // User-provided metadata key-value pairs
+  metadata map[string]string
   // Creation timestamp
   createdAt time
   // Last update timestamp
