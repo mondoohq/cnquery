@@ -44,7 +44,9 @@ type DropboxConnection struct {
 
 	// teamInfo caches the full team/get_info result captured during Verify so
 	// the dropbox.team accessor can reuse it instead of re-issuing the call.
-	teamInfo *team.TeamGetInfoResult
+	teamInfoOnce sync.Once
+	teamInfo     *team.TeamGetInfoResult
+	teamInfoErr  error
 
 	// devicesPages and linkedAppsPages cache the full, paginated result of
 	// team/devices/list_members_devices and
@@ -121,15 +123,18 @@ func (c *DropboxConnection) Verify() error {
 // TeamInfo returns the team/get_info result. It reuses the value captured
 // during Verify when available and otherwise issues the call once.
 func (c *DropboxConnection) TeamInfo() (*team.TeamGetInfoResult, error) {
-	if c.teamInfo != nil {
-		return c.teamInfo, nil
-	}
-	info, err := c.client.GetInfo()
-	if err != nil {
-		return nil, err
-	}
-	c.teamInfo = info
-	return info, nil
+	c.teamInfoOnce.Do(func() {
+		if c.teamInfo != nil {
+			return
+		}
+		info, err := c.client.GetInfo()
+		if err != nil {
+			c.teamInfoErr = err
+			return
+		}
+		c.teamInfo = info
+	})
+	return c.teamInfo, c.teamInfoErr
 }
 
 // TeamID returns the team ID captured during Verify.
