@@ -626,6 +626,62 @@ private okta.application @defaults("name") {
   // apps that authenticate to the Okta API on their own behalf. Empty for
   // apps that are not API service clients.
   adminRoles() []okta.role
+  // OAuth 2.0 refresh tokens outstanding for the application
+  //
+  // The refresh tokens Okta has issued for this application and not yet
+  // revoked. Empty for applications that do not use OAuth 2.0.
+  tokens() []okta.application.token
+}
+
+// OAuth 2.0 refresh token issued for an application
+//
+// A refresh token an Okta authorization server minted for an application on
+// behalf of a user. It is standing access: for as long as the token lives,
+// the application can obtain new access tokens carrying `scopes` with the
+// user no longer present, which is why a token can outlast the session,
+// the password, or the assignment that produced it. `expiresAt` bounds how
+// long the grant runs and `scopes` says what it reaches.
+private okta.application.token @defaults("id status expiresAt") {
+  // Unique identifier of the token
+  //
+  // The id the token is revoked by.
+  id string
+  // Status of the token
+  //
+  // Whether the grant is still live. A token that has been revoked stops
+  // producing access tokens.
+  status string
+  // Timestamp when the token was issued
+  created time
+  // Timestamp when the token expires
+  //
+  // When the standing grant lapses. A distant value on a broadly scoped
+  // token is access that persists long after it was granted.
+  expiresAt time
+  // Timestamp when the token was last updated
+  lastUpdated time
+  // Authorization server that issued the token
+  //
+  // The issuer URL of the Okta authorization server that minted the token.
+  // The org authorization server is the org URL itself, while a custom
+  // authorization server appends its own identifier.
+  issuer string
+  // OAuth 2.0 client identifier the token is bound to
+  //
+  // The `client_id` credential the token was issued against, which is the
+  // form the application takes in Okta system log events.
+  clientId string
+  // Scopes the token carries
+  //
+  // The OAuth 2.0 scopes the application can exercise with this token, such
+  // as `openid`, `offline_access`, or a scope defined by the org. These are
+  // what the grant actually reaches.
+  scopes []string
+  // User the token was issued for
+  //
+  // The account whose access the token carries. Null for a token issued to
+  // the application itself rather than on a user's behalf.
+  user() okta.user
 }
 
 // Okta application signing key

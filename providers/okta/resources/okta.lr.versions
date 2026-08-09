@@ -88,6 +88,17 @@ okta.application.settings 9.0.0
 okta.application.signOnMode 9.0.0
 okta.application.signingKeys 13.1.6
 okta.application.status 9.0.0
+okta.application.token 13.4.4
+okta.application.token.clientId 13.4.4
+okta.application.token.created 13.4.4
+okta.application.token.expiresAt 13.4.4
+okta.application.token.id 13.4.4
+okta.application.token.issuer 13.4.4
+okta.application.token.lastUpdated 13.4.4
+okta.application.token.scopes 13.4.4
+okta.application.token.status 13.4.4
+okta.application.token.user 13.4.4
+okta.application.tokens 13.4.4
 okta.application.user 13.3.2
 okta.application.user.created 13.3.2
 okta.application.user.credentials 13.3.2
