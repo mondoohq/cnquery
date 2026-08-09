@@ -8,12 +8,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/openai/resources"
 //
 // Online API inventory for an OpenAI account, spanning available
 // models, uploaded files, fine-tuning jobs, vector stores, projects,
-// organization users, pending invites, and audit logs. This inventory
-// supports AI Bill of Materials (AIBOM) generation and lets you audit
-// model lineage, organization membership, and security-relevant
-// activity across the organization. Several collections (users,
-// invites, audit logs, project keys, and service accounts) require an
-// admin API key.
+// organization users, groups, roles, admin API keys, pending invites,
+// and audit logs. This inventory supports AI Bill of Materials (AIBOM)
+// generation and lets you audit model lineage, organization membership,
+// privilege assignment, and security-relevant activity across the
+// organization. Several collections (users, groups, roles, admin API
+// keys, invites, audit logs, project keys, and service accounts)
+// require an admin API key.
 openai @defaults("organization") @maturity("preview") {
   // Organization ID associated with the API key
   organization() string
@@ -35,6 +36,127 @@ openai @defaults("organization") @maturity("preview") {
   invites() []openai.invite
   // Audit log entries from the last 30 days (requires admin API key)
   auditLogs() []openai.auditLog
+  // Organization admin API keys (requires admin API key)
+  adminApiKeys() []openai.adminApiKey
+  // Roles available in the organization (requires admin API key)
+  roles() []openai.role
+  // Groups in the organization (requires admin API key)
+  groups() []openai.group
+  // Data retention policy applied to API traffic (requires admin API key)
+  //
+  // One of zero_data_retention, modified_abuse_monitoring,
+  // enhanced_zero_data_retention, or enhanced_modified_abuse_monitoring.
+  // Under zero data retention OpenAI stores no request or response
+  // content; the modified abuse monitoring settings turn off retention
+  // of content for human review.
+  dataRetentionType() string
+  // Hard spend limit in cents, null when no limit is set (requires admin API key)
+  spendLimitAmount() int
+  // Currency of the hard spend limit, null when no limit is set
+  spendLimitCurrency() string
+  // Interval the hard spend limit is evaluated over, null when no limit is set
+  //
+  // Currently always month.
+  spendLimitInterval() string
+  // Enforcement state of the hard spend limit, null when no limit is set
+  spendLimitEnforcement() string
+  // Spend alerts configured for the organization (requires admin API key)
+  spendAlerts() []openai.spendAlert
+  // Certificates uploaded to the organization (requires admin API key)
+  certificates() []openai.certificate
+  // Code interpreter containers
+  containers() []openai.container
+}
+
+// OpenAI certificate
+//
+// Certificate uploaded to an organization for mutual TLS authentication,
+// activated either across the organization or for individual projects.
+// The `active` field reports whether the certificate is in force at the
+// scope it was read from, and `validAt` and `expiresAt` bound the window
+// it authenticates in, so certificates that have expired or are close to
+// expiring can be found before connections start failing.
+openai.certificate @defaults("name active expiresAt") @maturity("preview") {
+  // Certificate identifier
+  id string
+  // Certificate name
+  name string
+  // Whether the certificate is active at the scope it was read from
+  active bool
+  // Upload timestamp
+  createdAt time
+  // Timestamp the certificate becomes valid
+  validAt time
+  // Expiration timestamp
+  expiresAt time
+}
+
+// OpenAI container
+//
+// Sandbox that runs code on a model's behalf through the code
+// interpreter tool. The `networkPolicyType` field reports whether
+// outbound access is turned off or restricted to an allowlist, and
+// `networkPolicyAllowedDomains` names the destinations an allowlisted
+// container can reach, which bounds where code the model wrote is able
+// to send data. The `lastActiveAt` and `expiresAfterMinutes` fields show
+// how long an idle sandbox lingers before it is torn down.
+openai.container @defaults("name status networkPolicyType") @maturity("preview") {
+  // Container identifier
+  id string
+  // Container name
+  name string
+  // Container status
+  status string
+  // Creation timestamp
+  createdAt time
+  // Last activity timestamp (null when the container has not been used)
+  lastActiveAt time
+  // Reference point the expiration is measured from, null when no expiration is set
+  //
+  // Currently always last_active_at.
+  expiresAfterAnchor string
+  // Minutes after the anchor at which the container expires, null when no expiration is set
+  expiresAfterMinutes int
+  // Outbound network policy mode
+  //
+  // One of allowlist, where only the listed domains are reachable, or
+  // disabled, where the container has no outbound access at all. Null
+  // when the container reports no network policy.
+  networkPolicyType string
+  // Domains an allowlisted container may reach
+  //
+  // Empty under a disabled policy, and null when the container reports
+  // no network policy.
+  networkPolicyAllowedDomains []string
+}
+
+// OpenAI spend alert
+//
+// Notification that fires when spend crosses a threshold within an
+// interval, configured either for the whole organization or for a single
+// project. An account with a hard spend limit but no alerts below it
+// stops working without warning, so the presence and placement of alerts
+// is worth auditing alongside the limit itself. The
+// `notificationRecipients` field lists the addresses the alert reaches.
+openai.spendAlert @defaults("thresholdAmount interval") @maturity("preview") {
+  // Spend alert identifier
+  id string
+  // Threshold in cents at which the alert fires
+  thresholdAmount int
+  // Currency of the threshold
+  currency string
+  // Interval the spend is evaluated over
+  //
+  // Currently always month.
+  interval string
+  // Delivery channel for the notification
+  //
+  // Currently always email.
+  notificationType string
+  // Addresses the alert is delivered to
+  notificationRecipients []string
+  // Prefix added to the notification subject line, empty when none is set
+  notificationSubjectPrefix string
 }
 
 // OpenAI model
@@ -201,6 +323,118 @@ openai.project @defaults("id name status") @maturity("preview") {
   apiKeys() []openai.project.apiKey
   // Service accounts in this project (requires admin API key)
   serviceAccounts() []openai.project.serviceAccount
+  // Members of this project (requires admin API key)
+  users() []openai.project.user
+  // Groups granted access to this project (requires admin API key)
+  groups() []openai.group
+  // Roles available in this project (requires admin API key)
+  roles() []openai.role
+  // Data retention policy applied to this project (requires admin API key)
+  //
+  // One of organization_default, none, zero_data_retention,
+  // modified_abuse_monitoring, enhanced_zero_data_retention, or
+  // enhanced_modified_abuse_monitoring. A project set to
+  // organization_default inherits the organization policy, so a project
+  // can be less strict than the organization only by naming a weaker
+  // policy of its own.
+  dataRetentionType() string
+  // How the model policy treats the model list (requires admin API key)
+  //
+  // One of allow_list, where only the listed models may be called, or
+  // deny_list, where every model except the listed ones may be called.
+  // Null when no model policy is configured and every model is
+  // reachable.
+  modelPermissionMode() string
+  // Model identifiers named by the model policy
+  //
+  // Read together with modelPermissionMode: under allow_list these are
+  // the only models the project may call, under deny_list they are the
+  // models it may not. Null when no model policy is configured.
+  modelPermissionModelIds() []string
+  // Whether the project may run the hosted code interpreter
+  codeInterpreterEnabled() bool
+  // Whether the project may use hosted file search
+  fileSearchEnabled() bool
+  // Whether the project may use hosted image generation
+  imageGenerationEnabled() bool
+  // Whether the project may reach remote MCP servers
+  //
+  // Hosted MCP lets a model call tools on servers outside OpenAI, which
+  // widens both the data a prompt can reach and the actions a model can
+  // take on the project's behalf.
+  mcpEnabled() bool
+  // Whether the project may use hosted web search
+  webSearchEnabled() bool
+  // Per-model rate limits for this project (requires admin API key)
+  rateLimits() []openai.project.rateLimit
+  // Hard spend limit in cents, null when no limit is set (requires admin API key)
+  spendLimitAmount() int
+  // Currency of the hard spend limit, null when no limit is set
+  spendLimitCurrency() string
+  // Interval the hard spend limit is evaluated over, null when no limit is set
+  //
+  // Currently always month.
+  spendLimitInterval() string
+  // Enforcement state of the hard spend limit, null when no limit is set
+  spendLimitEnforcement() string
+  // Spend alerts configured for this project (requires admin API key)
+  spendAlerts() []openai.spendAlert
+  // Certificates activated for this project (requires admin API key)
+  certificates() []openai.certificate
+}
+
+// OpenAI project rate limit
+//
+// Per-model throughput ceiling applied to a project, covering requests
+// and tokens per minute and, for the models that support them, image,
+// audio, daily request, and batch input allowances. Rate limits bound
+// how much a compromised or runaway key inside the project can consume
+// before it is stopped. The `model` field names the model the limit
+// applies to. Allowances that do not apply to a model report null rather
+// than zero.
+openai.project.rateLimit @defaults("model maxRequestsPerMinute maxTokensPerMinute") @maturity("preview") {
+  // Rate limit identifier
+  id string
+  // Model the limit applies to
+  model string
+  // Maximum requests per minute
+  maxRequestsPerMinute int
+  // Maximum tokens per minute
+  maxTokensPerMinute int
+  // Maximum images per minute, null for models without an image allowance
+  maxImagesPerMinute int
+  // Maximum audio megabytes per minute, null for models without an audio allowance
+  maxAudioMegabytesPerMinute int
+  // Maximum requests per day, null for models without a daily request allowance
+  maxRequestsPerDay int
+  // Maximum batch input tokens per day, null for models without a batch allowance
+  batchMaxInputTokensPerDay int
+}
+
+// OpenAI project member
+//
+// Member of an organization project, holding a project role that governs
+// what the member may do inside that project. Project roles are separate
+// from organization roles: someone who is only a reader at the
+// organization level can still be an owner of an individual project, so
+// auditing owners requires walking projects as well as the organization.
+// The `user` field resolves the organization member record behind the
+// membership, and `addedAt` records when access was granted.
+openai.project.user @defaults("email role") @maturity("preview") {
+  // User identifier
+  id string
+  // User email address
+  email string
+  // User display name
+  name string
+  // Project role
+  //
+  // One of owner or member.
+  role string
+  // Timestamp when the user was added to the project
+  addedAt time
+  // Organization member record for this user
+  user() openai.organizationUser
 }
 
 // OpenAI project API key
@@ -281,6 +515,98 @@ openai.organizationUser @defaults("id email role") @maturity("preview") {
   createdAt time
   // Last API key usage timestamp
   apiKeyLastUsedAt time
+  // Roles held by the user
+  //
+  // The effective set, covering roles granted to the user directly and
+  // roles the user picks up through group membership.
+  roles() []openai.role
+}
+
+// OpenAI admin API key
+//
+// Organization admin API key, the most privileged credential class in an
+// OpenAI account: an admin key reads and modifies organization
+// configuration, membership, projects, and the API keys inside them. The
+// `owner` field resolves the member the key was issued to, while
+// `expiresAt` and `lastUsedAt` surface keys that never expire or that
+// have gone unused and can be revoked.
+openai.adminApiKey @defaults("name ownerName lastUsedAt") @maturity("preview") {
+  // Admin API key identifier
+  id string
+  // Display name
+  name string
+  // Redacted key value for identification
+  redactedValue string
+  // Creation timestamp
+  createdAt time
+  // Expiration timestamp (null when the key never expires)
+  expiresAt time
+  // Last usage timestamp (null when the key has never been used)
+  lastUsedAt time
+  // Owner type
+  //
+  // One of user or service_account.
+  ownerType string
+  // Owner name (user email or service account name)
+  ownerName string
+  // Organization role recorded for the owner
+  ownerRole string
+  // Member the key was issued to (null when a service account owns it)
+  owner() openai.organizationUser
+}
+
+// OpenAI role
+//
+// Named set of permissions that can be granted to organization members
+// and to groups. Roles marked `isPredefined` ship with OpenAI, while the
+// rest are defined by the organization. The `permissions` list
+// enumerates every capability the role carries, so you can find the
+// roles that grant administrative capability and then walk members and
+// groups to see who holds them. The `resourceType` field records the
+// scope the role applies to.
+openai.role @defaults("name resourceType") @maturity("preview") {
+  // Role identifier
+  id string
+  // Role name
+  name string
+  // Role description
+  description string
+  // Permissions granted by the role
+  permissions []string
+  // Whether the role ships with OpenAI rather than being defined by the organization
+  isPredefined bool
+  // Scope the role applies to
+  //
+  // For example organization or project.
+  resourceType string
+}
+
+// OpenAI group
+//
+// Collection of organization members used to grant roles to several
+// people at once. Groups synchronized from an external identity provider
+// report `isScimManaged`, which separates directory-controlled
+// membership from membership edited in the OpenAI dashboard: a group
+// that is not SCIM managed can be changed without a corresponding change
+// in the identity provider. The `members` and `roles` fields expand who
+// belongs to the group and what privileges the group confers.
+openai.group @defaults("name groupType") @maturity("preview") {
+  // Group identifier
+  id string
+  // Group name
+  name string
+  // Group type
+  //
+  // One of group or tenant_group.
+  groupType string
+  // Whether the group is managed through SCIM
+  isScimManaged bool
+  // Creation timestamp
+  createdAt time
+  // Members of the group
+  members() []openai.organizationUser
+  // Roles granted to the group
+  roles() []openai.role
 }
 
 // OpenAI organization invite

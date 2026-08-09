@@ -125,6 +125,104 @@ func TestAuditLogActor(t *testing.T) {
 	assert.Equal(t, "scim", id)
 }
 
+func TestIsNotFound(t *testing.T) {
+	// 404 means "not configured" on the spend limit and model policy endpoints,
+	// which has to read as null rather than as a failure.
+	assert.False(t, isNotFound(nil))
+	assert.True(t, isNotFound(&openai.Error{StatusCode: 404}))
+	assert.False(t, isNotFound(&openai.Error{StatusCode: 403}))
+	assert.False(t, isNotFound(&openai.Error{StatusCode: 500}))
+	assert.False(t, isNotFound(assert.AnError))
+}
+
+func TestNullableInt(t *testing.T) {
+	// An allowance the API did not send must stay nil. Emitting 0 would report a
+	// ceiling of zero for a model that simply has no such allowance.
+	assert.Nil(t, nullableInt(0, false))
+	assert.Nil(t, nullableInt(500, false))
+
+	got := nullableInt(0, true)
+	require.NotNil(t, got)
+	assert.Equal(t, int64(0), *got)
+
+	got = nullableInt(500, true)
+	require.NotNil(t, got)
+	assert.Equal(t, int64(500), *got)
+}
+
+func TestSpendAlertArgsScopesCacheKey(t *testing.T) {
+	orgAlert := spendAlertArgs("org", "alert_1", 5000, "USD", "month", "email", []string{"a@example.com"}, "")
+	projectAlert := spendAlertArgs("project/proj_1", "alert_1", 5000, "USD", "month", "email", []string{"a@example.com"}, "")
+
+	// The organization and a project can both carry an alert with the same id.
+	// An unscoped cache key would make the second one resolve to the first.
+	assert.NotEqual(t, orgAlert["__id"].Value, projectAlert["__id"].Value)
+	assert.Equal(t, "org/alert_1", orgAlert["__id"].Value)
+	assert.Equal(t, "project/proj_1/alert_1", projectAlert["__id"].Value)
+
+	// The user-facing id stays the plain alert id in both cases.
+	assert.Equal(t, "alert_1", orgAlert["id"].Value)
+	assert.Equal(t, "alert_1", projectAlert["id"].Value)
+	assert.Equal(t, []any{"a@example.com"}, orgAlert["notificationRecipients"].Value)
+}
+
+func TestCertificateArgsScopesCacheKey(t *testing.T) {
+	// The same certificate is listed at the organization and again at every
+	// project it is activated for, and `active` means something different at
+	// each scope. An unscoped cache key would make whichever scope was read
+	// first answer for both.
+	org := certificateArgs("org", "cert_1", "mtls", true, 100, 200, 300)
+	project := certificateArgs("project/proj_1", "cert_1", "mtls", false, 100, 200, 300)
+
+	assert.Equal(t, "org/cert_1", org["__id"].Value)
+	assert.Equal(t, "project/proj_1/cert_1", project["__id"].Value)
+	assert.Equal(t, true, org["active"].Value)
+	assert.Equal(t, false, project["active"].Value)
+
+	// The user-facing id stays the plain certificate id at both scopes.
+	assert.Equal(t, "cert_1", org["id"].Value)
+	assert.Equal(t, "cert_1", project["id"].Value)
+}
+
+func TestRoleArgs(t *testing.T) {
+	args := roleArgs("role_1", "Owner", "full access", "organization", []string{"api.keys.write", "users.write"}, true)
+
+	assert.Equal(t, "role_1", args["__id"].Value)
+	assert.Equal(t, "role_1", args["id"].Value)
+	assert.Equal(t, "Owner", args["name"].Value)
+	assert.Equal(t, "full access", args["description"].Value)
+	assert.Equal(t, "organization", args["resourceType"].Value)
+	assert.Equal(t, true, args["isPredefined"].Value)
+	// permissions crosses the plugin boundary as []any, so the conversion has to
+	// happen here rather than handing llx a []string
+	assert.Equal(t, []any{"api.keys.write", "users.write"}, args["permissions"].Value)
+
+	// A role with no permissions must emit an empty list, not null, so
+	// permissions.length == 0 is answerable.
+	empty := roleArgs("role_2", "None", "", "project", nil, false)
+	assert.Equal(t, []any{}, empty["permissions"].Value)
+}
+
+func TestOpenaiAdminApiKeyOwnerIsNullForServiceAccount(t *testing.T) {
+	// A key owned by a service account has no organization member behind it. The
+	// accessor must mark the field set-and-null; returning a bare nil leaves the
+	// runtime believing the field was never resolved.
+	key := &mqlOpenaiAdminApiKey{OwnerType: plugin.TValue[string]{Data: "service_account"}}
+	key.cacheOwnerId = "sa_123"
+
+	owner, err := key.owner()
+	assert.NoError(t, err)
+	assert.Nil(t, owner)
+	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, key.Owner.State)
+
+	// Same for a user-owned key whose owner id never came back from the API.
+	missing := &mqlOpenaiAdminApiKey{OwnerType: plugin.TValue[string]{Data: "user"}}
+	owner, err = missing.owner()
+	assert.NoError(t, err)
+	assert.Nil(t, owner)
+	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, missing.Owner.State)
+}
+
 func newTestModel(id string) *mqlOpenaiModel {
 	return &mqlOpenaiModel{Id: plugin.TValue[string]{Data: id}}
 }

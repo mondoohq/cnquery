@@ -172,3 +172,110 @@ func (r *mqlOpenaiProject) serviceAccounts() ([]any, error) {
 	}
 	return res, nil
 }
+
+func (r *mqlOpenaiProject) users() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := adminPlaneClient(conn, "openai.project.users")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	iter := client.Admin.Organization.Projects.Users.ListAutoPaging(ctx, r.Id.Data, openai.AdminOrganizationProjectUserListParams{})
+	var res []any
+	for iter.Next() {
+		u := iter.Current()
+
+		// the same user belongs to several projects, so the membership is keyed
+		// by project as well as by user
+		mqlUser, err := CreateResource(r.MqlRuntime, "openai.project.user", map[string]*llx.RawData{
+			"__id":    llx.StringData(r.Id.Data + "/" + u.ID),
+			"id":      llx.StringData(u.ID),
+			"email":   llx.StringData(u.Email),
+			"name":    llx.StringData(u.Name),
+			"role":    llx.StringData(u.Role),
+			"addedAt": llx.TimeDataPtr(unixToNullableTime(u.AddedAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlUser)
+	}
+	if err := iter.Err(); err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list project members: %w", err)
+	}
+	return res, nil
+}
+
+func (r *mqlOpenaiProjectUser) user() (*mqlOpenaiOrganizationUser, error) {
+	return resolveOrganizationUser(r.MqlRuntime, r.Id.Data)
+}
+
+func (r *mqlOpenaiProject) groups() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := adminPlaneClient(conn, "openai.project.groups")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	iter := client.Admin.Organization.Projects.Groups.ListAutoPaging(ctx, r.Id.Data, openai.AdminOrganizationProjectGroupListParams{})
+	var res []any
+	for iter.Next() {
+		pg := iter.Current()
+		mqlGroup, err := NewResource(r.MqlRuntime, "openai.group", map[string]*llx.RawData{
+			"id": llx.StringData(pg.GroupID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGroup)
+	}
+	if err := iter.Err(); err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list project groups: %w", err)
+	}
+	return res, nil
+}
+
+func (r *mqlOpenaiProject) roles() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := adminPlaneClient(conn, "openai.project.roles")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	iter := client.Admin.Organization.Projects.Roles.ListAutoPaging(ctx, r.Id.Data, openai.AdminOrganizationProjectRoleListParams{})
+	var res []any
+	for iter.Next() {
+		role := iter.Current()
+		mqlRole, err := CreateResource(r.MqlRuntime, "openai.role",
+			roleArgs(role.ID, role.Name, role.Description, role.ResourceType, role.Permissions, role.PredefinedRole))
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRole)
+	}
+	if err := iter.Err(); err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list project roles: %w", err)
+	}
+	return res, nil
+}
