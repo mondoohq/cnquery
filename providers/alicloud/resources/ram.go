@@ -590,6 +590,69 @@ func (r *mqlAlicloudRamUser) attachedPolicies() ([]any, error) {
 	return res, nil
 }
 
+// effectivePolicies unions the user's direct attachments with the attachments
+// of every group they belong to. A policy reachable both ways is listed once,
+// keyed on the type and name pair that identifies a policy.
+func (r *mqlAlicloudRamUser) effectivePolicies() ([]any, error) {
+	direct, err := r.policyAttachments()
+	if err != nil {
+		return nil, err
+	}
+
+	groups := r.GetGroups()
+	if groups.Error != nil {
+		return nil, groups.Error
+	}
+
+	// copy rather than append onto the memoized slice, which every other
+	// caller of policyAttachments shares
+	attachments := make([]*ramclient.ListPoliciesForUserResponseBodyPoliciesPolicy, len(direct))
+	copy(attachments, direct)
+
+	for _, g := range groups.Data {
+		group, ok := g.(*mqlAlicloudRamGroup)
+		if !ok {
+			continue
+		}
+		groupAttachments, err := group.policyAttachments()
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range groupAttachments {
+			if p == nil {
+				continue
+			}
+			attachments = append(attachments, &ramclient.ListPoliciesForUserResponseBodyPoliciesPolicy{
+				PolicyName: p.PolicyName,
+				PolicyType: p.PolicyType,
+			})
+		}
+	}
+
+	seen := map[string]struct{}{}
+	res := []any{}
+	for _, p := range attachments {
+		if p == nil {
+			continue
+		}
+		key := ramStrVal(p.PolicyType) + "/" + ramStrVal(p.PolicyName)
+		if _, dup := seen[key]; dup {
+			continue
+		}
+		seen[key] = struct{}{}
+
+		policy, err := resolveRamPolicy(r.MqlRuntime, p.PolicyName, p.PolicyType)
+		if err != nil {
+			return nil, err
+		}
+		if policy == nil {
+			continue
+		}
+		res = append(res, policy)
+	}
+	return res, nil
+}
+
 func (r *mqlAlicloudRamUser) mfaDevice() (any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	client, err := conn.RamClient()
@@ -1065,6 +1128,12 @@ func initAlicloudRamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// GetPolicy already returned the default version's document, so hand it to
+	// the resource rather than making statements re-fetch what we just read.
+	if v := resp.Body.DefaultPolicyVersion; v != nil {
+		res.(*mqlAlicloudRamPolicy).cacheDocument = ramStrVal(v.PolicyDocument)
+	}
 	return nil, res, nil
 }
 
@@ -1086,26 +1155,117 @@ func resolveRamPolicy(runtime *plugin.Runtime, policyName, policyType *string) (
 	return res.(*mqlAlicloudRamPolicy), nil
 }
 
+// mqlAlicloudRamPolicyInternal memoizes the default version's policy document.
+// initAlicloudRamPolicy seeds it from the GetPolicy response it already makes,
+// so a policy reached through an attachment answers policyDocument and
+// statements without a second call.
+type mqlAlicloudRamPolicyInternal struct {
+	documentOnce    sync.Once
+	cacheDocument   string
+	documentErr     error
+	statementsOnce  sync.Once
+	cacheStatements []policyStatement
+	statementsErr   error
+}
+
+// fetchDocument returns the policy document of the default version, calling
+// GetPolicy at most once per policy across every field that needs it.
+func (r *mqlAlicloudRamPolicy) fetchDocument() (string, error) {
+	r.documentOnce.Do(func() {
+		if r.cacheDocument != "" {
+			return
+		}
+
+		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+		client, err := conn.RamClient()
+		if err != nil {
+			r.documentErr = err
+			return
+		}
+
+		policyName := r.PolicyName.Data
+		policyType := r.PolicyType.Data
+		resp, err := client.GetPolicy(&ramclient.GetPolicyRequest{
+			PolicyName: &policyName,
+			PolicyType: &policyType,
+		})
+		if err != nil {
+			r.documentErr = err
+			return
+		}
+		if resp == nil || resp.Body == nil || resp.Body.DefaultPolicyVersion == nil {
+			return
+		}
+		r.cacheDocument = ramStrVal(resp.Body.DefaultPolicyVersion.PolicyDocument)
+	})
+	return r.cacheDocument, r.documentErr
+}
+
 func (r *mqlAlicloudRamPolicy) policyDocument() (string, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
+	return r.fetchDocument()
+}
+
+// parsedStatements parses the policy document once. The four fields derived
+// from it share this result rather than re-parsing per field.
+func (r *mqlAlicloudRamPolicy) parsedStatements() ([]policyStatement, error) {
+	r.statementsOnce.Do(func() {
+		doc, err := r.fetchDocument()
+		if err != nil {
+			r.statementsErr = err
+			return
+		}
+		r.cacheStatements, r.statementsErr = parsePolicyDocument(doc)
+	})
+	return r.cacheStatements, r.statementsErr
+}
+
+func (r *mqlAlicloudRamPolicy) statements() ([]any, error) {
+	parsed, err := r.parsedStatements()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	policyName := r.PolicyName.Data
-	policyType := r.PolicyType.Data
-	resp, err := client.GetPolicy(&ramclient.GetPolicyRequest{
-		PolicyName: &policyName,
-		PolicyType: &policyType,
-	})
+	res := make([]any, 0, len(parsed))
+	for i, s := range parsed {
+		stmt, err := CreateResource(r.MqlRuntime, "alicloud.ram.policy.statement", map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%s/%d", r.PolicyType.Data, r.PolicyName.Data, i)),
+			"effect":      llx.StringData(s.Effect),
+			"action":      llx.ArrayData(llx.TArr2Raw(s.Action), types.String),
+			"notAction":   llx.ArrayData(llx.TArr2Raw(s.NotAction), types.String),
+			"resource":    llx.ArrayData(llx.TArr2Raw(s.Resource), types.String),
+			"notResource": llx.ArrayData(llx.TArr2Raw(s.NotResource), types.String),
+			"condition":   llx.DictData(s.Condition),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, stmt)
+	}
+	return res, nil
+}
+
+func (r *mqlAlicloudRamPolicy) allowsAdminAccess() (bool, error) {
+	parsed, err := r.parsedStatements()
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	if resp == nil || resp.Body == nil || resp.Body.DefaultPolicyVersion == nil {
-		return "", nil
+	return policyAllowsAdminAccess(parsed), nil
+}
+
+func (r *mqlAlicloudRamPolicy) hasWildcardAction() (bool, error) {
+	parsed, err := r.parsedStatements()
+	if err != nil {
+		return false, err
 	}
-	return ramStrVal(resp.Body.DefaultPolicyVersion.PolicyDocument), nil
+	return policyHasWildcardAction(parsed), nil
+}
+
+func (r *mqlAlicloudRamPolicy) hasUnscopedResource() (bool, error) {
+	parsed, err := r.parsedStatements()
+	if err != nil {
+		return false, err
+	}
+	return policyHasUnscopedResource(parsed), nil
 }
 
 func (r *mqlAlicloudRamPasswordPolicy) id() (string, error) {

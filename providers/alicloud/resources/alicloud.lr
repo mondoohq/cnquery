@@ -90,6 +90,16 @@ alicloud.ram.user {
   // policyDocument to inspect the permission statements a user holds, for
   // example to find users granted the AdministratorAccess system policy.
   attachedPolicies() []alicloud.ram.policy
+  // Every policy the user holds, directly or through a group
+  //
+  // The union of attachedPolicies and the policies attached to each group the
+  // user belongs to, with a policy held by both routes listed once. This is
+  // the set that decides what a user can actually do, which attachedPolicies
+  // alone understates whenever permissions are granted through groups. For
+  // example
+  // `alicloud.ram.users.where(effectivePolicies.any(allowsAdminAccess))`
+  // finds every administrator in the account.
+  effectivePolicies() []alicloud.ram.policy
   // Multi-factor authentication device bound to the user
   //
   // The serialNumber and type of the bound MFA device, or null when the user
@@ -229,6 +239,79 @@ alicloud.ram.policy {
   //
   // The permission statements of the default version as a JSON string.
   policyDocument() string
+  // Permission statements of the default policy version
+  //
+  // The statements of policyDocument broken out one by one, each carrying the
+  // effect, the actions and resources it names, and any condition placed on
+  // the grant. Query into them to audit what a policy actually permits, for
+  // example
+  // `alicloud.ram.policies.where(policyType == "Custom") { policyName statements { effect action resource } }`.
+  statements() []alicloud.ram.policy.statement
+  // Whether the policy grants every action on every resource
+  //
+  // True when a statement allows action `*` on resource `*`, or on the fully
+  // wildcarded `acs:*:*:*:*`, with no NotAction or NotResource exception
+  // carved out of it. A condition on the statement does not clear the flag,
+  // because the grant is still unrestricted wherever that condition holds.
+  allowsAdminAccess() bool
+  // Whether a granting statement names an action by wildcard
+  //
+  // True when any Allow statement names an action containing `*`, covering
+  // both the full `*` and prefix forms such as `ecs:Describe*`. A prefix
+  // wildcard is worth surfacing because it also grants actions the service
+  // has not shipped yet. Deny statements are ignored.
+  hasWildcardAction() bool
+  // Whether a granting statement applies to a whole service
+  //
+  // True when any Allow statement names `*`, or an ACS resource name whose
+  // relative ID is `*`, such as `acs:oss:*:*:*`. Only the relative ID counts:
+  // the region and account fields are wildcarded in most real policies, so
+  // `acs:oss:*:*:mybucket/*` names one bucket and does not set the flag. Deny
+  // statements are ignored.
+  hasUnscopedResource() bool
+}
+
+// Statement of a Resource Access Management permission policy
+//
+// A single permission statement out of a policy's default version. Exposes the
+// effect, the actions and resources the statement names or excludes, and the
+// condition constraining the grant. For example
+// `alicloud.ram.policy(policyName: "AdministratorAccess", policyType: "System").statements`.
+alicloud.ram.policy.statement @defaults("effect action resource") {
+  // Effect of the statement
+  //
+  // Either Allow or Deny.
+  effect string
+  // Actions the statement applies to
+  //
+  // Each entry is either `service:Action`, a prefix wildcard such as
+  // `ecs:Describe*`, or the full wildcard `*`. Empty when the statement uses
+  // notAction instead.
+  action []string
+  // Actions excluded from the statement
+  //
+  // The statement applies to every action except these. Empty on the usual
+  // statement, which names its actions through action.
+  notAction []string
+  // Resources the statement applies to
+  //
+  // Each entry is either the full wildcard `*` or an ACS resource name of the
+  // form `acs:<service>:<region>:<account>:<relative-id>`. Empty when the
+  // statement uses notResource instead, and on statements that name no
+  // resource at all, such as a role trust statement.
+  resource []string
+  // Resources excluded from the statement
+  //
+  // The statement applies to every resource except these. Empty on the usual
+  // statement, which names its resources through resource.
+  notResource []string
+  // Condition constraining the grant
+  //
+  // The condition block keyed by operator, for example
+  // `{"StringEquals": {"acs:SourceVpc": ["vpc-1"]}}` or
+  // `{"IpAddress": {"acs:SourceIp": ["10.0.0.0/8"]}}`. Null when the statement
+  // grants unconditionally.
+  condition dict
 }
 
 // Resource Access Management password policy
@@ -1219,6 +1302,14 @@ alicloud.oss.bucket {
   dataRedundancyType() string
   // Whether block public access is enabled for the bucket
   blockPublicAccess() bool
+  // Whether the bucket is readable from the internet without credentials
+  //
+  // True when the bucket reaches anonymous callers, either through a
+  // public-read or public-read-write canned acl or through a bucket policy
+  // that allows a `*` principal. False whenever blockPublicAccess is on,
+  // which overrides both. Use it to find buckets exposed to the internet
+  // regardless of which of the two mechanisms opened them.
+  isPublic() bool
 }
 
 // Server Load Balancer
