@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -891,6 +893,17 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 		neighbors = nil
 	}
 
+	// The operational view says whether a session is up; the configured view
+	// says whether it is protected. Both are needed to describe a peer.
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	configuredPeers := map[string]eos.BgpNeighborConfig{}
+	for _, n := range eos.ParseBgpConfig(rc).Neighbors {
+		configuredPeers[n.VRF+"/"+n.PeerAddress] = n
+	}
+
 	// Pre-build neighbor lookup maps to avoid O(n²) linear searches
 	type neighborInfo struct {
 		Description      string
@@ -927,17 +940,37 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 				}
 			}
 
+			// A peer present operationally but absent from the config we
+			// parsed keeps the zero values, which read as "no protection
+			// configured" — the same conclusion an empty setting warrants.
+			conf := configuredPeers[vrfName+"/"+peerAddr]
+			// The config is the better source for the policy names: it holds
+			// them even for a session that never came up.
+			if inRouteMap == "" {
+				inRouteMap = conf.InboundRouteMap
+			}
+			if outRouteMap == "" {
+				outRouteMap = conf.OutboundRouteMap
+			}
+
 			mqlPeer, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.peer", map[string]*llx.RawData{
-				"vrfName":          llx.StringData(vrfName),
-				"peerAddress":      llx.StringData(peerAddr),
-				"remoteAs":         llx.StringData(peerData.ASN),
-				"state":            llx.StringData(peerData.PeerState),
-				"uptime":           llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
-				"prefixesReceived": llx.IntData(peerData.PrefixReceived),
-				"prefixesAccepted": llx.IntData(peerData.PrefixAccepted),
-				"inboundRouteMap":  llx.StringData(inRouteMap),
-				"outboundRouteMap": llx.StringData(outRouteMap),
-				"description":      llx.StringData(description),
+				"vrfName":                llx.StringData(vrfName),
+				"peerAddress":            llx.StringData(peerAddr),
+				"remoteAs":               llx.StringData(peerData.ASN),
+				"state":                  llx.StringData(peerData.PeerState),
+				"uptime":                 llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
+				"prefixesReceived":       llx.IntData(peerData.PrefixReceived),
+				"prefixesAccepted":       llx.IntData(peerData.PrefixAccepted),
+				"inboundRouteMap":        llx.StringData(inRouteMap),
+				"outboundRouteMap":       llx.StringData(outRouteMap),
+				"description":            llx.StringData(description),
+				"passwordConfigured":     llx.BoolData(conf.PasswordConfigured),
+				"passwordEncryptionType": llx.StringData(conf.PasswordEncryptionType),
+				"ttlMaximumHops":         llx.IntData(int64(conf.TtlMaximumHops)),
+				"maximumRoutes":          llx.IntData(int64(conf.MaximumRoutes)),
+				"shutdown":               llx.BoolData(conf.Shutdown),
+				"updateSource":           llx.StringData(conf.UpdateSource),
+				"ebgpMultihop":           llx.IntData(int64(conf.EbgpMultihop)),
 			})
 			if err != nil {
 				return nil, err
@@ -1086,31 +1119,81 @@ func (v *mqlAristaEosMlagInterface) id() (string, error) {
 
 // ACL resource implementations
 
+// id qualifies the list by address family. EOS keeps IPv4 and IPv6 access-lists
+// in separate namespaces, so `ip access-list FOO` and `ipv6 access-list FOO`
+// can both exist. Keying on the name alone would make the second one resolve
+// to the first from the resource cache.
 func (v *mqlAristaEosAcl) id() (string, error) {
-	return "arista.eos.acl/" + v.Name.Data, v.Name.Error
+	if v.Family.Error != nil {
+		return "", v.Family.Error
+	}
+	return "arista.eos.acl/" + v.Family.Data + "/" + v.Name.Data, v.Name.Error
 }
 
-type mqlAristaEosAclInternal struct {
-	cachedEntries module.AclEntryMap
+// initAristaEosAcl resolves a standalone `arista.eos.acl(name: "...")` lookup.
+// Without it the resource would be created from the name alone, leaving
+// `family` and `type` unset.
+func initAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// List-element creation already carries the full field set.
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		// No selector given: a bare resource is a valid empty state.
+		return args, nil, nil
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arista.eos.acl name must be a string")
+	}
+
+	// family is optional and only needed to disambiguate a name used by both
+	// an IPv4 and an IPv6 list.
+	family := ""
+	if familyRaw, ok := args["family"]; ok {
+		family, ok = familyRaw.Value.(string)
+		if !ok {
+			return nil, nil, errors.New("arista.eos.acl family must be a string")
+		}
+	}
+
+	rc, err := fetchRunningConfig(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, acl := range eos.ParseAccessLists(rc) {
+		if acl.Name != name || (family != "" && acl.Family != family) {
+			continue
+		}
+		args["family"] = llx.StringData(acl.Family)
+		args["type"] = llx.StringData(acl.Type)
+		return args, nil, nil
+	}
+
+	if family != "" {
+		return nil, nil, fmt.Errorf("arista.eos.acl with name %q and family %q not found", name, family)
+	}
+	return nil, nil, fmt.Errorf("arista.eos.acl with name %q not found", name)
 }
 
 func (a *mqlAristaEos) acls() ([]any, error) {
-	eosClient := aristaClient(a.MqlRuntime)
-	aclConfigs := eosClient.AclConfigs()
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	acls := eos.ParseAccessLists(rc)
 
-	res := []any{}
-	for name, aclConfig := range aclConfigs {
+	res := make([]any, 0, len(acls))
+	for _, acl := range acls {
 		mqlAcl, err := CreateResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
-			"name": llx.StringData(name),
-			"type": llx.StringData(aclConfig.Type()),
+			"name":   llx.StringData(acl.Name),
+			"family": llx.StringData(acl.Family),
+			"type":   llx.StringData(acl.Type),
 		})
 		if err != nil {
 			return nil, err
 		}
-
-		// Cache the entries to avoid re-fetching all ACLs in entries()
-		mqlAcl.(*mqlAristaEosAcl).cachedEntries = aclConfig.Entries()
-
 		res = append(res, mqlAcl)
 	}
 
@@ -1121,43 +1204,47 @@ func (a *mqlAristaEosAcl) entries() ([]any, error) {
 	if a.Name.Error != nil {
 		return nil, a.Name.Error
 	}
+	if a.Family.Error != nil {
+		return nil, a.Family.Error
+	}
 	aclName := a.Name.Data
+	aclFamily := a.Family.Data
 
-	// Use cached entries if available (pre-fetched in acls())
-	rawEntries := a.cachedEntries
-	if rawEntries == nil {
-		// Fallback for standalone ACL lookups
-		eosClient := aristaClient(a.MqlRuntime)
-		aclConfigs := eosClient.AclConfigs()
-
-		aclConfig, ok := aclConfigs[aclName]
-		if !ok {
-			return []any{}, nil
-		}
-		rawEntries = aclConfig.Entries()
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
 	}
 
-	// Parse and sort entries by sequence number
-	parsed := make([]eos.AclEntryParsed, 0, len(rawEntries))
-	for seqNum, entry := range rawEntries {
-		p, err := eos.ParseAclEntry(seqNum, entry.Action(), entry.SrcAddr(), entry.SrcLen(), entry.Log())
-		if err != nil {
-			log.Warn().Err(err).Str("acl", aclName).Msg("skipping invalid ACL entry")
-			continue
+	// Both name and family are needed to select the list: the two address
+	// families are separate namespaces and can share a name.
+	var entries []eos.AccessListEntry
+	for _, acl := range eos.ParseAccessLists(rc) {
+		if acl.Name == aclName && acl.Family == aclFamily {
+			entries = acl.Entries
+			break
 		}
-		parsed = append(parsed, p)
 	}
-	eos.SortAclEntries(parsed)
 
-	res := make([]any, 0, len(parsed))
-	for _, p := range parsed {
+	res := make([]any, 0, len(entries))
+	for _, e := range entries {
 		mqlEntry, err := CreateResource(a.MqlRuntime, "arista.eos.acl.entry", map[string]*llx.RawData{
-			"aclName":        llx.StringData(aclName),
-			"sequenceNumber": llx.IntData(int64(p.SequenceNumber)),
-			"action":         llx.StringData(p.Action),
-			"srcAddress":     llx.StringData(p.SrcAddress),
-			"srcPrefixLen":   llx.IntData(int64(p.SrcPrefixLen)),
-			"log":            llx.BoolData(p.Log),
+			"aclName":         llx.StringData(aclName),
+			"aclFamily":       llx.StringData(aclFamily),
+			"sequenceNumber":  llx.IntData(int64(e.SequenceNumber)),
+			"action":          llx.StringData(e.Action),
+			"protocol":        llx.StringData(e.Protocol),
+			"srcAddress":      llx.StringData(e.SrcAddress),
+			"srcPrefixLen":    llx.IntData(int64(e.SrcPrefixLen)),
+			"srcPortOperator": llx.StringData(e.SrcPortOperator),
+			"srcPorts":        llx.ArrayData(stringSliceToAny(e.SrcPorts), types.String),
+			"dstAddress":      llx.StringData(e.DstAddress),
+			"dstPrefixLen":    llx.IntData(int64(e.DstPrefixLen)),
+			"dstPortOperator": llx.StringData(e.DstPortOperator),
+			"dstPorts":        llx.ArrayData(stringSliceToAny(e.DstPorts), types.String),
+			"established":     llx.BoolData(e.Established),
+			"log":             llx.BoolData(e.Log),
+			"remark":          llx.StringData(e.Remark),
+			"text":            llx.StringData(e.Text),
 		})
 		if err != nil {
 			return nil, err
@@ -1168,11 +1255,18 @@ func (a *mqlAristaEosAcl) entries() ([]any, error) {
 	return res, nil
 }
 
+// id carries the family for the same reason the parent list's id does: two
+// lists can share a name across address families, and their entries would
+// otherwise collide sequence number for sequence number.
 func (v *mqlAristaEosAclEntry) id() (string, error) {
 	if v.AclName.Error != nil {
 		return "", v.AclName.Error
 	}
-	return "arista.eos.acl.entry/" + v.AclName.Data + "/" + strconv.FormatInt(v.SequenceNumber.Data, 10), v.SequenceNumber.Error
+	if v.AclFamily.Error != nil {
+		return "", v.AclFamily.Error
+	}
+	return "arista.eos.acl.entry/" + v.AclFamily.Data + "/" + v.AclName.Data + "/" +
+		strconv.FormatInt(v.SequenceNumber.Data, 10), v.SequenceNumber.Error
 }
 
 // Hardware resource implementations
