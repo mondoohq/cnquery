@@ -218,7 +218,6 @@ PROVIDERS := \
 	depsdev \
 	digitalocean \
 	elasticsearch \
-	equinix \
 	gcp \
 	github \
 	gitlab \
@@ -319,7 +318,6 @@ providers/test:
 	@$(call testGoModProvider, providers/cloudflare)
 	@$(call testGoModProvider, providers/cloudformation)
 	@$(call testGoModProvider, providers/depsdev)
-	@$(call testGoModProvider, providers/equinix)
 	@$(call testGoModProvider, providers/gcp)
 	@$(call testGoModProvider, providers/github)
 	@$(call testGoModProvider, providers/grafana)
