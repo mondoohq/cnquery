@@ -145,6 +145,8 @@ bitwarden.member @defaults("email role status") {
   collections() []bitwarden.collection
   // Groups the member belongs to
   groups() []bitwarden.group
+  // Per-collection permission grants held by this member
+  collectionAccess() []bitwarden.collectionMemberAccess
 }
 
 // Bitwarden collection
@@ -164,6 +166,10 @@ bitwarden.collection @defaults("name") {
   groups() []bitwarden.group
   // Members granted explicit access to this collection
   members() []bitwarden.member
+  // Per-member permission grants on this collection
+  memberAccess() []bitwarden.collectionMemberAccess
+  // Per-group permission grants on this collection
+  groupAccess() []bitwarden.collectionGroupAccess
 }
 
 // Bitwarden group
@@ -185,4 +191,46 @@ bitwarden.group @defaults("name") {
   members() []bitwarden.member
   // Collections this group has access to
   collections() []bitwarden.collection
+  // Per-collection permission grants held by this group
+  collectionAccess() []bitwarden.collectionGroupAccess
+}
+
+// Bitwarden collection permission grant for a member
+//
+// The permission a single member holds on a single collection: the
+// readOnly, hidePasswords, and manage flags the organization API records
+// for that member-to-collection grant, with typed references to both the
+// collection and the member. Use it to audit who can manage a collection,
+// or which members can read a sensitive collection's item passwords.
+private bitwarden.collectionMemberAccess @defaults("readOnly hidePasswords manage") {
+  // Collection the grant applies to
+  collection() bitwarden.collection
+  // Member the grant is for
+  member() bitwarden.member
+  // Whether the member has read-only access and cannot edit items
+  readOnly bool
+  // Whether item passwords are hidden from the member
+  hidePasswords bool
+  // Whether the member can manage access to the collection
+  manage bool
+}
+
+// Bitwarden collection permission grant for a group
+//
+// The permission a single group holds on a single collection: the
+// readOnly, hidePasswords, and manage flags the organization API records
+// for that group-to-collection grant, with typed references to both the
+// collection and the group. Every member of the group inherits this
+// permission on the collection.
+private bitwarden.collectionGroupAccess @defaults("readOnly hidePasswords manage") {
+  // Collection the grant applies to
+  collection() bitwarden.collection
+  // Group the grant is for
+  group() bitwarden.group
+  // Whether the group has read-only access and cannot edit items
+  readOnly bool
+  // Whether item passwords are hidden from the group's members
+  hidePasswords bool
+  // Whether the group can manage access to the collection
+  manage bool
 }

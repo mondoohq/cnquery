@@ -13,11 +13,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/bitwarden/connection"
 )
 
-// mqlBitwardenCollectionInternal caches the group IDs embedded in the
-// collection's Public API response, so groups() can resolve typed
-// references without an extra list call.
+// mqlBitwardenCollectionInternal caches the group access grants embedded in
+// the collection's Public API response, so groups() and groupAccess() can
+// resolve typed references and permission flags without an extra list call.
 type mqlBitwardenCollectionInternal struct {
-	cacheGroupIds []string
+	cacheGroups []connection.SelectionReadOnly
 }
 
 // newMqlBitwardenCollection maps a single Public API collection to its MQL
@@ -33,7 +33,7 @@ func newMqlBitwardenCollection(runtime *plugin.Runtime, c connection.Collection)
 		return nil, err
 	}
 	mqlCollection := res.(*mqlBitwardenCollection)
-	mqlCollection.cacheGroupIds = collectionIds(c.Groups)
+	mqlCollection.cacheGroups = c.Groups
 	return mqlCollection, nil
 }
 
@@ -72,16 +72,35 @@ func initBitwardenCollection(runtime *plugin.Runtime, args map[string]*llx.RawDa
 // bitwarden.group references. The collection's own Public API response
 // already embeds the group IDs, so this never issues an extra list call.
 func (c *mqlBitwardenCollection) groups() ([]any, error) {
-	if len(c.cacheGroupIds) == 0 {
+	if len(c.cacheGroups) == 0 {
 		return nil, nil
 	}
 
 	var all []any
-	for _, id := range c.cacheGroupIds {
-		r, err := NewResource(c.MqlRuntime, "bitwarden.group", map[string]*llx.RawData{"id": llx.StringData(id)})
+	for _, sel := range c.cacheGroups {
+		r, err := NewResource(c.MqlRuntime, "bitwarden.group", map[string]*llx.RawData{"id": llx.StringData(sel.Id)})
 		if err != nil {
-			log.Warn().Err(err).Str("id", id).Msg("bitwarden: failed to resolve group")
+			log.Warn().Err(err).Str("id", sel.Id).Msg("bitwarden: failed to resolve group")
 			continue
+		}
+		all = append(all, r)
+	}
+	return all, nil
+}
+
+// groupAccess resolves the per-group permission grants on this collection,
+// each carrying the readOnly, hidePasswords, and manage flags recorded for
+// the group-to-collection edge.
+func (c *mqlBitwardenCollection) groupAccess() ([]any, error) {
+	if len(c.cacheGroups) == 0 {
+		return nil, nil
+	}
+
+	var all []any
+	for _, sel := range c.cacheGroups {
+		r, err := newMqlBitwardenCollectionGroupAccess(c.MqlRuntime, c.Id.Data, sel.Id, sel)
+		if err != nil {
+			return nil, err
 		}
 		all = append(all, r)
 	}
@@ -103,7 +122,7 @@ func (c *mqlBitwardenCollection) members() ([]any, error) {
 
 	var all []any
 	for _, m := range members {
-		if !hasCollectionId(m.Collections, c.Id.Data) {
+		if _, ok := findCollectionSelection(m.Collections, c.Id.Data); !ok {
 			continue
 		}
 		r, err := newMqlBitwardenMember(c.MqlRuntime, m)
@@ -115,13 +134,30 @@ func (c *mqlBitwardenCollection) members() ([]any, error) {
 	return all, nil
 }
 
-// hasCollectionId reports whether sel contains an entry for the given
-// collection ID.
-func hasCollectionId(sel []connection.SelectionReadOnly, id string) bool {
-	for _, s := range sel {
-		if s.Id == id {
-			return true
-		}
+// memberAccess resolves the per-member permission grants on this collection,
+// each carrying the readOnly, hidePasswords, and manage flags recorded for
+// the member-to-collection edge. The Public API exposes these flags only on
+// the member record, so this lists every member once and keeps those whose
+// grant references this collection (Pattern C).
+func (c *mqlBitwardenCollection) memberAccess() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.BitwardenConnection)
+
+	members, err := conn.Client().ListMembers(context.Background())
+	if err != nil {
+		return nil, err
 	}
-	return false
+
+	var all []any
+	for _, m := range members {
+		sel, ok := findCollectionSelection(m.Collections, c.Id.Data)
+		if !ok {
+			continue
+		}
+		r, err := newMqlBitwardenCollectionMemberAccess(c.MqlRuntime, c.Id.Data, m.Id, sel)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, r)
+	}
+	return all, nil
 }

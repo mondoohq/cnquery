@@ -13,11 +13,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/bitwarden/connection"
 )
 
-// mqlBitwardenMemberInternal caches the collection IDs embedded in the
-// member's Public API response, so collections() can resolve typed
-// references without an extra list call.
+// mqlBitwardenMemberInternal caches the collection access grants embedded in
+// the member's Public API response, so collections() and collectionAccess()
+// can resolve typed references and permission flags without an extra list
+// call.
 type mqlBitwardenMemberInternal struct {
-	cacheCollectionIds []string
+	cacheCollections []connection.SelectionReadOnly
 }
 
 // newMqlBitwardenMember maps a single Public API member to its MQL resource.
@@ -39,7 +40,7 @@ func newMqlBitwardenMember(runtime *plugin.Runtime, m connection.Member) (plugin
 		return nil, err
 	}
 	mqlMember := res.(*mqlBitwardenMember)
-	mqlMember.cacheCollectionIds = collectionIds(m.Collections)
+	mqlMember.cacheCollections = m.Collections
 	return mqlMember, nil
 }
 
@@ -77,16 +78,35 @@ func initBitwardenMember(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 // collections resolves the collections a member has explicit access to, as
 // typed bitwarden.collection references.
 func (m *mqlBitwardenMember) collections() ([]any, error) {
-	if len(m.cacheCollectionIds) == 0 {
+	if len(m.cacheCollections) == 0 {
 		return nil, nil
 	}
 
 	var all []any
-	for _, id := range m.cacheCollectionIds {
-		r, err := NewResource(m.MqlRuntime, "bitwarden.collection", map[string]*llx.RawData{"id": llx.StringData(id)})
+	for _, sel := range m.cacheCollections {
+		r, err := NewResource(m.MqlRuntime, "bitwarden.collection", map[string]*llx.RawData{"id": llx.StringData(sel.Id)})
 		if err != nil {
-			log.Warn().Err(err).Str("id", id).Msg("bitwarden: failed to resolve collection")
+			log.Warn().Err(err).Str("id", sel.Id).Msg("bitwarden: failed to resolve collection")
 			continue
+		}
+		all = append(all, r)
+	}
+	return all, nil
+}
+
+// collectionAccess resolves the member's per-collection permission grants,
+// each carrying the readOnly, hidePasswords, and manage flags recorded for
+// the member-to-collection edge.
+func (m *mqlBitwardenMember) collectionAccess() ([]any, error) {
+	if len(m.cacheCollections) == 0 {
+		return nil, nil
+	}
+
+	var all []any
+	for _, sel := range m.cacheCollections {
+		r, err := newMqlBitwardenCollectionMemberAccess(m.MqlRuntime, sel.Id, m.Id.Data, sel)
+		if err != nil {
+			return nil, err
 		}
 		all = append(all, r)
 	}
@@ -114,17 +134,4 @@ func (m *mqlBitwardenMember) groups() ([]any, error) {
 		all = append(all, r)
 	}
 	return all, nil
-}
-
-// collectionIds extracts the collection IDs from a member's or group's
-// embedded selection-read-only list.
-func collectionIds(sel []connection.SelectionReadOnly) []string {
-	if len(sel) == 0 {
-		return nil
-	}
-	ids := make([]string, 0, len(sel))
-	for _, s := range sel {
-		ids = append(ids, s.Id)
-	}
-	return ids
 }

@@ -36,11 +36,14 @@ func NewClient(baseUrl string, httpClient *http.Client) *Client {
 
 // SelectionReadOnly is Bitwarden's embedded "who can access this" record,
 // returned inline on both member/group responses (their granted
-// collections) and collection responses (their granted groups).
+// collections) and collection responses (their granted groups). Alongside
+// the target ID it carries the permission flags of the access grant:
+// readOnly, hidePasswords, and manage.
 type SelectionReadOnly struct {
 	Id            string `json:"id"`
 	ReadOnly      bool   `json:"readOnly"`
 	HidePasswords bool   `json:"hidePasswords"`
+	Manage        bool   `json:"manage"`
 }
 
 // flexEnum decodes a JSON value the Bitwarden Public API may return either
