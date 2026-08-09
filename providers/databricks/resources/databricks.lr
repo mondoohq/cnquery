@@ -13,9 +13,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/databricks/resources"
 // workspace through the workspaces field. Connecting to a single workspace
 // exposes that workspace's security surface through the ipAccessLists,
 // workspaceSettings, tokens, secretScopes, clusters, clusterPolicies,
-// warehouses, catalogs, storageCredentials, externalLocations,
-// deltaSharingRecipients, deltaSharingShares, globalInitScripts,
-// instanceProfiles, servingEndpoints, and registeredModels fields.
+// warehouses, catalogs, storageCredentials, credentials, connections,
+// externalLocations, systemSchemas, deltaSharingRecipients,
+// deltaSharingShares, globalInitScripts, instanceProfiles, servingEndpoints,
+// and registeredModels fields.
 databricks {
   // Workspaces registered in the account
   workspaces() []databricks.workspace
@@ -49,8 +50,14 @@ databricks {
   catalogs() []databricks.catalog
   // Unity Catalog storage credentials in the workspace's metastore
   storageCredentials() []databricks.storageCredential
+  // Unity Catalog credentials in the workspace's metastore
+  credentials() []databricks.credential
   // Unity Catalog external locations in the workspace's metastore
   externalLocations() []databricks.externalLocation
+  // Unity Catalog connections to external data systems
+  connections() []databricks.connection
+  // Unity Catalog system schemas in the workspace's metastore
+  systemSchemas() []databricks.systemSchema
   // Delta Sharing recipients configured in the workspace
   deltaSharingRecipients() []databricks.deltaSharingRecipient
   // Delta Sharing shares configured in the workspace
@@ -532,6 +539,14 @@ databricks.catalog @defaults("name owner isolationMode") {
   schemas() []databricks.schema
   // Privilege grants assigned directly on the catalog
   grants() []databricks.grant
+  // Workspaces the catalog is bound to
+  //
+  // Keyed by numeric workspace id, valued by the access the binding grants:
+  // BINDING_TYPE_READ_WRITE or BINDING_TYPE_READ_ONLY. Only meaningful when
+  // isolationMode is ISOLATED, which restricts the catalog to the bound
+  // workspaces. An OPEN catalog is reachable from every workspace attached to
+  // the metastore no matter what this map contains.
+  workspaceBindings() map[string]string
 }
 
 // Unity Catalog schema
@@ -628,6 +643,13 @@ databricks.storageCredential @defaults("name owner isolationMode") {
   updatedBy string
   // Privilege grants assigned directly on the credential
   grants() []databricks.grant
+  // Workspaces the credential is bound to
+  //
+  // Keyed by numeric workspace id, valued by the access the binding grants.
+  // Storage credentials only support BINDING_TYPE_READ_WRITE. Only meaningful
+  // when isolationMode is ISOLATED, which restricts the credential to the
+  // bound workspaces.
+  workspaceBindings() map[string]string
 }
 
 // Unity Catalog external location
@@ -678,6 +700,13 @@ databricks.externalLocation @defaults("name url owner") {
   updatedBy string
   // Privilege grants assigned directly on the location
   grants() []databricks.grant
+  // Workspaces the location is bound to
+  //
+  // Keyed by numeric workspace id, valued by the access the binding grants.
+  // External locations only support BINDING_TYPE_READ_WRITE. Only meaningful
+  // when isolationMode is ISOLATED, which restricts the location to the bound
+  // workspaces.
+  workspaceBindings() map[string]string
 }
 
 // Unity Catalog volume
@@ -731,6 +760,170 @@ databricks.volume @defaults("fullName volumeType owner") {
   updatedBy string
   // Privilege grants assigned directly on the volume
   grants() []databricks.grant
+}
+
+// Unity Catalog credential
+//
+// A credential holds the cloud identity Unity Catalog assumes to reach a
+// resource outside Databricks, keyed by name. The purpose field separates the
+// two kinds: STORAGE credentials reach cloud object storage and are the same
+// objects surfaced by storageCredentials, while SERVICE credentials reach
+// other cloud services and are only available here. Auditing credentials
+// surfaces the vended principal (the AWS IAM role ARN and its external ID, the
+// Azure access connector and managed identity, the Azure application ID, or
+// the GCP service account email), the isolation mode and the workspaces bound
+// under it, whether the credential is read-only or backs the metastore's root
+// managed storage, and the privilege grants assigned on it. Select a
+// credential by name, for example
+// `databricks.credentials.where(name == "prod-lambda")`.
+databricks.credential @defaults("name purpose owner isolationMode") {
+  // Unique identifier of the credential
+  id string
+  // Credential name
+  name string
+  // Fully qualified name of the credential
+  fullName string
+  // Principal that owns the credential
+  owner string
+  // Credential comment
+  comment string
+  // Id of the metastore the credential belongs to
+  metastoreId string
+  // What the credential is used to reach
+  //
+  // One of STORAGE for cloud object storage or SERVICE for other cloud
+  // services such as AWS Lambda or Azure Functions.
+  purpose string
+  // Isolation mode (ISOLATED or OPEN)
+  isolationMode string
+  // Whether the credential is usable only for read operations
+  readOnly bool
+  // Whether the credential backs the metastore's root managed storage
+  usedForManagedStorage bool
+  // ARN of the AWS IAM role the credential assumes
+  awsIamRoleArn string
+  // External ID used when assuming the AWS IAM role, which guards against the confused-deputy problem
+  awsIamRoleExternalId string
+  // ARN of the Databricks-side role that assumes the customer AWS IAM role
+  awsIamRoleUnityCatalogIamArn string
+  // Azure resource ID of the Databricks access connector for the managed identity
+  azureAccessConnectorId string
+  // Azure resource ID of the user-assigned managed identity, empty when the access connector's system-assigned identity is used
+  azureManagedIdentityId string
+  // Application ID of the Azure service principal the credential uses
+  azureServicePrincipalApplicationId string
+  // Email of the GCP service account the credential uses
+  gcpServiceAccountEmail string
+  // When the credential was created
+  createdAt time
+  // User who created the credential
+  createdBy string
+  // When the credential was last modified
+  updatedAt time
+  // User who last modified the credential
+  updatedBy string
+  // Privilege grants assigned directly on the credential
+  grants() []databricks.grant
+  // Workspaces the credential is bound to
+  //
+  // Keyed by numeric workspace id, valued by the access the binding grants.
+  // Credentials only support BINDING_TYPE_READ_WRITE. Only meaningful when
+  // isolationMode is ISOLATED, which restricts the credential to the bound
+  // workspaces.
+  workspaceBindings() map[string]string
+}
+
+// Unity Catalog connection
+//
+// A connection registers an external data system that Unity Catalog queries
+// through, keyed by name. Connections are the outbound edge of the workspace:
+// a foreign catalog reading from Snowflake, Redshift, PostgreSQL, or BigQuery,
+// or an HTTP connection reaching an arbitrary endpoint. Auditing connections
+// surfaces the system type, the destination URL and connection options, the
+// kind of credential the connection authenticates with, the owner, whether the
+// connection is read-only, the privilege grants assigned on it, and the
+// workspaces it is bound to. Select a connection by name, for example
+// `databricks.connections.where(name == "snowflake-prod")`.
+databricks.connection @defaults("name connectionType credentialType owner") {
+  // Unique identifier of the connection
+  id string
+  // Connection name
+  name string
+  // Fully qualified name of the connection
+  fullName string
+  // External system the connection reaches
+  //
+  // One of BIGQUERY, CONFLUENCE, DATABRICKS, GITHUB, GLUE, HIVE_METASTORE,
+  // HTTP, HUBSPOT, JDBC, META_MARKETING, MYSQL, ORACLE, OUTLOOK, POSTGRESQL,
+  // POWER_BI, REDSHIFT, SALESFORCE, SALESFORCE_DATA_CLOUD, SERVICENOW,
+  // SMARTSHEET, SNOWFLAKE, SQLDW, SQLSERVER, TERADATA, WORKDAY_RAAS, ZENDESK,
+  // or UNKNOWN_CONNECTION_TYPE.
+  connectionType string
+  // Kind of credential the connection authenticates with
+  //
+  // One of ANY_STATIC_CREDENTIAL, BEARER_TOKEN, EDGEGRID_AKAMAI,
+  // OAUTH_ACCESS_TOKEN, OAUTH_MTLS, OAUTH_REFRESH_TOKEN,
+  // OAUTH_RESOURCE_OWNER_PASSWORD, OIDC_TOKEN, PEM_PRIVATE_KEY,
+  // SERVICE_CREDENTIAL, SSWS_TOKEN, USERNAME_PASSWORD, or
+  // UNKNOWN_CREDENTIAL_TYPE.
+  credentialType string
+  // URL of the external system, when the connection type carries one
+  url string
+  // Non-secret connection parameters
+  //
+  // The host, port, database, account, and similar parameters that locate the
+  // external system. Keys naming credential material (passwords, tokens,
+  // secrets, private keys) are removed, so this map describes where the
+  // connection goes but never how it authenticates.
+  options map[string]string
+  // Free-form properties recorded on the connection
+  properties map[string]string
+  // Principal that owns the connection
+  owner string
+  // Connection comment
+  comment string
+  // Id of the metastore the connection belongs to
+  metastoreId string
+  // Whether the connection is usable only for read operations
+  readOnly bool
+  // Provisioning state of the connection, such as STATE_UNSPECIFIED, PROVISIONING, ACTIVE, FAILED, or DELETING
+  provisioningState string
+  // When the connection was created
+  createdAt time
+  // User who created the connection
+  createdBy string
+  // When the connection was last modified
+  updatedAt time
+  // User who last modified the connection
+  updatedBy string
+  // Privilege grants assigned directly on the connection
+  grants() []databricks.grant
+  // Workspaces the connection is bound to
+  //
+  // Keyed by numeric workspace id, valued by the access the binding grants.
+  // Connections only support BINDING_TYPE_READ_WRITE. A connection with no
+  // bindings is reachable from every workspace attached to the metastore.
+  workspaceBindings() map[string]string
+}
+
+// Unity Catalog system schema
+//
+// A schema of the `system` catalog, which Databricks populates with operational
+// data about the metastore, keyed by schema name. Each schema is enabled
+// separately, so this reports which ones are turned on: `access` holds the
+// audit log of workspace and Unity Catalog activity, `billing` holds usage and
+// pricing, `compute` holds cluster and warehouse events, and `lakeflow` holds
+// job run history. Select a schema by name, for example
+// `databricks.systemSchemas.where(schema == "access")`.
+databricks.systemSchema @defaults("schema state") {
+  // Schema name within the system catalog, such as access, billing, compute, or lakeflow
+  schema string
+  // Whether the schema is enabled on the metastore
+  //
+  // One of ENABLE_INITIALIZED, ENABLE_COMPLETED, DISABLE_INITIALIZED,
+  // UNAVAILABLE, or AVAILABLE. Only ENABLE_COMPLETED means the schema is
+  // populated and queryable.
+  state string
 }
 
 // Mosaic AI model serving endpoint
