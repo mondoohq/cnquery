@@ -12,7 +12,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/ranger-rpc"
 )
@@ -138,15 +137,11 @@ func (o *mqlOktaOrganization) securityNotificationEmails() (any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	emails, err := apiSupplement.GetSecurityNotificationEmails(
 		ctx,
 		conn.OrganizationID(),
-		conn.Token(),
 		ranger.DefaultHttpClient(),
 	)
 	if err != nil {
@@ -213,10 +208,7 @@ func (o *mqlOktaOrganization) threatInsightSettings() (*mqlOktaThreatsConfigurat
 		return nil, err
 	}
 
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	excludesZones := []any{}
 	for i := range config.ExcludeZones {

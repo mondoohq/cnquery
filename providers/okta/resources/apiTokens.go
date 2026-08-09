@@ -9,7 +9,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 )
 
 // mqlOktaApiTokenInternal caches the owning user's id so the typed user()
@@ -24,10 +23,7 @@ func (o *mqlOkta) apiTokens() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	tokens, err := apiSupplement.ListApiTokens(ctx, queryLimit)
 	if err != nil {

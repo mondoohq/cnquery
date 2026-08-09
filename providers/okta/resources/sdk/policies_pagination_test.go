@@ -49,7 +49,11 @@ func (rt *pagedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error
 // fakeClient returns an ApiExtension whose transport is the given round-tripper,
 // so pagination is exercised without touching any global http.Client.
 func fakeClient(rt http.RoundTripper) *ApiExtension {
-	return &ApiExtension{Host: "x.okta.com", Token: "t", HTTPClient: &http.Client{Transport: rt}}
+	return &ApiExtension{
+		Host:       "x.okta.com",
+		Authorize:  func(req *http.Request) error { req.Header.Set("Authorization", "SSWS t"); return nil },
+		HTTPClient: &http.Client{Transport: rt},
+	}
 }
 
 // TestListPolicyRulesFollowsPagination guards the ACCESS_POLICY rule fetch

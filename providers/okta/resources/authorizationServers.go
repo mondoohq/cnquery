@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -274,10 +273,7 @@ func (o *mqlOktaAuthorizationServer) keys() ([]any, error) {
 	// v5's typed AuthorizationServerJsonWebKey drops created/lastUpdated/
 	// expiresAt/keyOps/x5c/x5t/x5tS256, so fetch the keys directly to retain the
 	// full JWK shape the v2 SDK exposed.
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 	keys, err := apiSupplement.ListAuthorizationServerKeys(ctx, o.Id.Data)
 	if err != nil {
 		return nil, err

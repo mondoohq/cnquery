@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 )
 
 // --- attack protection (org-level singleton) ---
@@ -30,10 +29,7 @@ func initOktaAttackProtection(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 	conn := runtime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	// Fetched through the extension: the SDK types both attack-protection
 	// endpoints as slices, but each returns a single JSON object, so the SDK's
@@ -54,10 +50,7 @@ func initOktaAttackProtection(runtime *plugin.Runtime, args map[string]*llx.RawD
 func (o *mqlOkta) behaviorRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
-	apiSupplement := &sdk.ApiExtension{
-		Host:  conn.OrganizationID(),
-		Token: conn.Token(),
-	}
+	apiSupplement := conn.ApiExtension()
 
 	// Fetched through the extension rather than the SDK: the /api/v1/behaviors
 	// endpoint returns non-RFC3339 timestamps ("2026-07-20 17:34:59.0") that
