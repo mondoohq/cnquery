@@ -31,7 +31,12 @@ mssql.server @defaults("name version edition") {
   // Instance name, or MSSQLSERVER for the default instance
   instanceName string
   // TCP port the instance listens on
-  port int
+  //
+  // Read from sys.dm_exec_connections for the scanning session, so it is the
+  // port the instance actually accepts connections on rather than the port the
+  // scan dialed (they differ whenever a proxy or container port mapping sits in
+  // between). Falls back to the connection's port when the DMV is unavailable.
+  port() int
   // Full version banner from @@VERSION
   version string
   // Product version number, for example 16.0.1000.6
