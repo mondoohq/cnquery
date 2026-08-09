@@ -17,11 +17,22 @@ import (
 // handles double-checked locking) so we don't issue redundant
 // `show running-config` calls when multiple security resources are queried.
 func fetchRunningConfig(runtime *plugin.Runtime) (string, error) {
-	rc, err := CreateResource(runtime, "arista.eos.runningConfig", map[string]*llx.RawData{})
+	rc, err := runningConfigResource(runtime)
 	if err != nil {
 		return "", err
 	}
-	return rc.(*mqlAristaEosRunningConfig).fetchContent(), nil
+	return rc.fetchContent(), nil
+}
+
+// runningConfigResource returns the device's running-config resource, which the
+// runtime caches under a single id. Reach for this over fetchRunningConfig when
+// you want one of its memoized parses rather than the raw text.
+func runningConfigResource(runtime *plugin.Runtime) (*mqlAristaEosRunningConfig, error) {
+	rc, err := CreateResource(runtime, "arista.eos.runningConfig", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return rc.(*mqlAristaEosRunningConfig), nil
 }
 
 // stringSliceToAny converts []string to []any for llx.ArrayData.

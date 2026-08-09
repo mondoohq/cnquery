@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/aristanetworks/goeapi/module"
 	"github.com/rs/zerolog/log"
@@ -51,6 +52,53 @@ type mqlAristaEosRunningConfigInternal struct {
 	contentFetched bool
 	contentCache   string
 	lock           sync.Mutex
+
+	// Parsers that several resources share memoize their result here. The
+	// running-config is a single cached resource for the whole device, so
+	// one parse serves every caller instead of one per field access.
+	sflowParsed    atomic.Bool
+	sflowCache     *eos.SflowConfig
+	sflowLock      sync.Mutex
+	hardeningDone  atomic.Bool
+	hardeningCache map[string]eos.InterfaceHardening
+	hardeningLock  sync.Mutex
+}
+
+// fetchSflowConfig parses the sFlow configuration once per device.
+func (a *mqlAristaEosRunningConfig) fetchSflowConfig() *eos.SflowConfig {
+	if a.sflowParsed.Load() {
+		return a.sflowCache
+	}
+	a.sflowLock.Lock()
+	defer a.sflowLock.Unlock()
+	if a.sflowParsed.Load() {
+		return a.sflowCache
+	}
+	a.sflowCache = eos.ParseSflowConfig(a.fetchContent())
+	a.sflowParsed.Store(true)
+	return a.sflowCache
+}
+
+// fetchInterfaceHardening parses the Layer 3 posture of every interface once
+// per device and keys it by interface name, so a query reading several
+// hardening fields across many interfaces still walks the config only once.
+func (a *mqlAristaEosRunningConfig) fetchInterfaceHardening() map[string]eos.InterfaceHardening {
+	if a.hardeningDone.Load() {
+		return a.hardeningCache
+	}
+	a.hardeningLock.Lock()
+	defer a.hardeningLock.Unlock()
+	if a.hardeningDone.Load() {
+		return a.hardeningCache
+	}
+	parsed := eos.ParseInterfaceHardening(a.fetchContent())
+	cache := make(map[string]eos.InterfaceHardening, len(parsed))
+	for _, h := range parsed {
+		cache[h.Interface] = h
+	}
+	a.hardeningCache = cache
+	a.hardeningDone.Store(true)
+	return a.hardeningCache
 }
 
 func (a *mqlAristaEosRunningConfig) fetchContent() string {
