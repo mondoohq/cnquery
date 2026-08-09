@@ -50,6 +50,12 @@ openstack {
   roleAssignments() []openstack.identity.roleAssignment
   // Keystone role inference rules mapping a prior role to an implied role (typically admin-only)
   roleInferences() []openstack.identity.roleInference
+  // Keystone federated identity providers
+  federationIdentityProviders() []openstack.identity.federation.identityProvider
+  // Keystone federation mappings
+  federationMappings() []openstack.identity.federation.mapping
+  // Keystone federation service providers
+  federationServiceProviders() []openstack.identity.federation.serviceProvider
 
   // Nova compute servers (instances) in the scoped project
   servers() []openstack.compute.server
@@ -101,6 +107,8 @@ openstack {
   volumeTypes() []openstack.blockstorage.volumeType
   // Cinder QoS specifications (IOPS/bandwidth throttling policies); admin-only
   blockStorageQosSpecs() []openstack.blockstorage.qosSpec
+  // Pending Cinder volume ownership transfers
+  volumeTransfers() []openstack.blockstorage.transfer
   // Glance images visible to the scoped project
   images() []openstack.image
   // Barbican secrets in the scoped project
@@ -119,12 +127,18 @@ openstack {
   healthMonitors() []openstack.octavia.healthMonitor
   // Octavia L7 policies in the scoped project
   l7Policies() []openstack.octavia.l7Policy
+  // Octavia amphorae backing the load balancers
+  amphorae() []openstack.octavia.amphora
   // Neutron subnet pools (admin-allocated CIDR ranges) visible to the scoped project
   subnetPools() []openstack.subnetPool
   // Neutron QoS policies in the scoped project
   qosPolicies() []openstack.qosPolicy
   // Neutron RBAC policies controlling which projects a network or QoS policy is shared with
   rbacPolicies() []openstack.network.rbacPolicy
+  // Neutron agents running the network control plane
+  networkAgents() []openstack.network.agent
+  // Neutron tap mirrors copying port traffic off-cloud
+  tapMirrors() []openstack.network.tapMirror
   // Neutron trunks (parent/subport multi-VLAN containers) in the scoped project
   trunks() []openstack.trunk
   // Neutron FWaaS v2 firewall groups in the scoped project
@@ -151,6 +165,12 @@ openstack {
 
   // Designate DNS zones visible to the scoped project
   dnsZones() []openstack.dns.zone
+  // Designate zone ownership transfer offers
+  dnsTransferRequests() []openstack.dns.transferRequest
+  // Designate zone ownership transfers that were accepted
+  dnsTransferAccepts() []openstack.dns.transferAccept
+  // Designate TSIG keys authenticating zone traffic
+  dnsTsigKeys() []openstack.dns.tsigKey
 
   // Manila shared file systems (NFS/CIFS shares) in the scoped project
   shares() []openstack.sharedfilesystem.share
@@ -158,6 +178,8 @@ openstack {
   securityServices() []openstack.sharedfilesystem.securityService
   // Manila share networks tying shares to Neutron networks and subnets
   shareNetworks() []openstack.sharedfilesystem.shareNetwork
+  // Pending Manila share ownership transfers
+  shareTransfers() []openstack.sharedfilesystem.transfer
 
   // Magnum container-orchestration clusters (Kubernetes, Docker Swarm) in the scoped project
   clusters() []openstack.containerinfra.cluster
@@ -166,6 +188,8 @@ openstack {
 
   // Trove managed database instances in the scoped project
   databaseInstances() []openstack.db.instance
+  // Trove configuration groups applied to database instances
+  databaseConfigurations() []openstack.db.configuration
 
   // Ironic bare-metal nodes in the scoped project
   baremetalNodes() []openstack.baremetal.node
@@ -457,6 +481,8 @@ private openstack.compute.server @defaults("id name status") {
   floatingIps() []openstack.floatingIp
   // Internet-exposure summary for this server (public reachability plus the security-group rules that open it up)
   exposure() openstack.compute.server.exposure
+  // Log of state-changing actions performed on this server
+  actions() []openstack.compute.server.action
 }
 
 // OpenStack Nova compute server internet exposure
@@ -2978,6 +3004,16 @@ private openstack.containerinfra.cluster @defaults("id name status nodeCount mas
   user() openstack.user
   // Heat stack backing the cluster; null when the API did not report a stack
   stack() openstack.orchestration.stack
+  // Node groups making up the cluster
+  nodeGroups() []openstack.containerinfra.cluster.nodeGroup
+  // Expiry of the cluster's certificate authority
+  //
+  // The authority signs the certificates the cluster's components authenticate
+  // to each other with, so once it lapses those components stop trusting one
+  // another. Null when the authority is not readable.
+  caCertificateExpiresAt() time
+  // Subject of the cluster's certificate authority; empty when it is not readable
+  caCertificateSubject() string
 }
 
 // OpenStack Magnum cluster template
@@ -3232,6 +3268,14 @@ private openstack.orchestration.stack @defaults("id name status") {
   timeoutMinutes() int
   // Input parameters the stack was deployed with
   parameters() map[string]string
+  // Resources the stack created and still manages
+  resources() []openstack.orchestration.stack.resource
+  // Template the stack was created from
+  //
+  // The full template body, including the parameter and resource definitions.
+  // Parameter defaults written into a template are stored with it, so a
+  // credential passed that way is readable here.
+  template() dict
 }
 
 // OpenStack Nova compute quota for the scoped project
@@ -3364,4 +3408,486 @@ private openstack.blockstorage.qosSpec @defaults("id name consumer") {
   consumer string
   // Rate-limit key/value pairs (e.g. total_iops_sec, read_bytes_sec)
   specs map[string]string
+}
+
+// OpenStack Keystone federated identity provider
+//
+// External identity provider Keystone accepts assertions from, letting users
+// authenticate against a corporate SAML or OpenID Connect system instead of a
+// local Keystone password. The `remoteIds` field holds the issuer identifiers
+// the provider is recognized by, and `enabled` reports whether it can currently
+// be used to log in. Every protocol attached to the provider names the mapping
+// that turns an incoming assertion into local groups and roles, so a provider
+// plus its protocols and mappings describe who from outside the cloud can get
+// in and what they arrive holding.
+private openstack.identity.federation.identityProvider @defaults("id enabled description") {
+  // Identity provider ID
+  id string
+  // Whether the provider may currently be used to authenticate
+  enabled bool
+  // Description
+  description string
+  // Issuer identifiers this provider is recognized by
+  //
+  // An assertion is attributed to this provider when its issuer matches one of
+  // these values, so each entry is a trusted issuer.
+  remoteIds []string
+  // Seconds a token issued through this provider stays valid; 0 when the deployment default applies
+  authorizationTtl int
+  // Domain that federated users from this provider are created in
+  domain() openstack.domain
+  // Authentication protocols enabled on this provider
+  protocols() []openstack.identity.federation.protocol
+}
+
+// OpenStack Keystone federation protocol
+//
+// Authentication protocol (for example `saml2` or `openid`) enabled on a
+// federated identity provider, together with the mapping applied to assertions
+// that arrive over it. The mapping is the point where an external assertion
+// becomes local authorization, so the protocol is the link that decides which
+// rules a given provider's users are run through.
+private openstack.identity.federation.protocol @defaults("id") {
+  // Protocol ID, for example saml2 or openid
+  id string
+  // Identity provider this protocol is enabled on
+  identityProvider() openstack.identity.federation.identityProvider
+  // Mapping applied to assertions arriving over this protocol
+  mapping() openstack.identity.federation.mapping
+}
+
+// OpenStack Keystone federation mapping
+//
+// Set of rules that translate an external identity assertion into a local
+// Keystone identity. Each rule pairs a `remote` condition matched against the
+// incoming assertion with a `local` grant naming the user, groups, projects, or
+// domain the caller receives. A rule whose condition matches broadly, or whose
+// grant names a privileged group, hands that privilege to everyone the external
+// provider is willing to assert for, which makes mappings worth auditing
+// alongside direct role assignments.
+private openstack.identity.federation.mapping @defaults("id") {
+  // Mapping ID
+  id string
+  // Rules translating assertions into local identities
+  //
+  // Each entry holds a `remote` list of conditions matched against the incoming
+  // assertion (`type` plus one of `any_one_of`, `not_any_of`, `blacklist`, or
+  // `whitelist`, with an optional `regex` flag) and a `local` list of grants
+  // naming the `user`, `group`, `groups`, `group_ids`, `projects`, or `domain`
+  // the caller receives.
+  rules []dict
+}
+
+// OpenStack Keystone federation service provider
+//
+// Remote service provider this cloud issues federated assertions to, the
+// outbound half of federation. The cloud vouches for its users to the system at
+// `spUrl`, so an enabled entry means local identities are accepted somewhere
+// else, and `authUrl` is where the remote system exchanges the assertion for a
+// token.
+private openstack.identity.federation.serviceProvider @defaults("id enabled spUrl") {
+  // Service provider ID
+  id string
+  // Whether assertions are currently issued to this service provider
+  enabled bool
+  // Description
+  description string
+  // URL of the remote service provider that consumes the assertion
+  spUrl string
+  // URL the remote service provider exchanges the assertion for a token at
+  authUrl string
+  // Prefix prepended to the relay state during the exchange
+  relayStatePrefix string
+}
+
+// OpenStack Designate zone transfer request
+//
+// Standing offer to hand ownership of a DNS zone to another project. Until the
+// offer is accepted or deleted it remains a live path for the zone to change
+// hands, and an offer whose targetProject is null may be accepted by any
+// project that learns its key, not just an intended recipient. The `status`
+// field distinguishes an outstanding offer (ACTIVE) from one already completed.
+private openstack.dns.transferRequest @defaults("id zoneName status") {
+  // Transfer request ID
+  id string
+  // Name of the zone being offered
+  zoneName string
+  // Description
+  description string
+  // Status
+  //
+  // One of ACTIVE (the offer is outstanding), COMPLETE, DELETED, PENDING, or
+  // ERROR.
+  status string
+  // Zone whose ownership is being offered
+  zone() openstack.dns.zone
+  // Project that currently owns the zone
+  project() openstack.project
+  // Project the offer is restricted to; null when any project may accept it
+  targetProject() openstack.project
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// OpenStack Designate zone transfer acceptance
+//
+// Record of a DNS zone that changed hands, naming the project that accepted the
+// offer and the request it was accepted against. These are the completed half
+// of zone transfers and form the audit trail for how a zone came to be owned by
+// its current project.
+private openstack.dns.transferAccept @defaults("id status") {
+  // Transfer acceptance ID
+  id string
+  // Status
+  //
+  // One of ACTIVE, COMPLETE, or ERROR.
+  status string
+  // Zone whose ownership was transferred
+  zone() openstack.dns.zone
+  // Project that accepted the transfer and now owns the zone
+  project() openstack.project
+  // Transfer request that was accepted
+  transferRequest() openstack.dns.transferRequest
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// OpenStack Designate TSIG key
+//
+// Shared key authenticating DNS traffic between Designate and the servers it
+// exchanges zone data with. The `scope` field records whether the key covers a
+// single zone or a whole pool, and `algorithm` records the HMAC it signs with,
+// which is where a deployment still running a weakened digest shows up. The
+// secret itself is not reported.
+private openstack.dns.tsigKey @defaults("id name algorithm scope") {
+  // TSIG key ID
+  id string
+  // Key name
+  name string
+  // Signing algorithm
+  //
+  // One of hmac-md5, hmac-sha1, hmac-sha224, hmac-sha256, hmac-sha384, or
+  // hmac-sha512.
+  algorithm string
+  // What the key covers
+  //
+  // Either ZONE (a single zone) or POOL (every zone served by a pool).
+  scope string
+  // ID of the zone or pool the key covers, per scope
+  resourceId string
+  // Zone the key covers; null when the scope is POOL
+  zone() openstack.dns.zone
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// OpenStack Cinder volume transfer
+//
+// Standing offer to hand ownership of a block-storage volume to another
+// project. The volume, and every byte on it, moves to whichever project
+// redeems the offer, so an outstanding transfer is data leaving the owning
+// project's control with no further approval step. The transfer's auth key is
+// not reported.
+private openstack.blockstorage.transfer @defaults("id name") {
+  // Transfer ID
+  id string
+  // Transfer name
+  name string
+  // Volume whose ownership is being offered
+  volume() openstack.blockstorage.volume
+  // Creation timestamp
+  createdAt time
+}
+
+// OpenStack Manila share transfer
+//
+// Standing offer to hand ownership of a shared file system to another project.
+// The `accepted` field separates offers already redeemed from those still open,
+// and `expiresAt` records when an unredeemed offer lapses. The transfer's auth
+// key is not reported.
+private openstack.sharedfilesystem.transfer @defaults("id name accepted") {
+  // Transfer ID
+  id string
+  // Transfer name
+  name string
+  // Whether the transfer has been redeemed
+  accepted bool
+  // Type of resource being transferred, currently always "share"
+  resourceType string
+  // Share whose ownership is being offered
+  share() openstack.sharedfilesystem.share
+  // Project that owns the share and made the offer
+  sourceProject() openstack.project
+  // Project that redeemed the offer; null while the offer is outstanding
+  destinationProject() openstack.project
+  // Creation timestamp
+  createdAt time
+  // Time the offer lapses if it is not redeemed
+  expiresAt time
+}
+
+// Action performed on an OpenStack compute server
+//
+// One entry of a server's action log, naming what was done, who did it, and
+// when. Nova keeps a record per state-changing request, so these answer who
+// rebuilt, rescued, evacuated, or reset the root password on an instance and
+// when it happened, which is the only per-instance audit trail the compute API
+// offers.
+private openstack.compute.server.action @defaults("action startTime message") {
+  // What was done
+  //
+  // Examples include create, delete, reboot, rebuild, rescue, resize,
+  // evacuate, changePassword, attach_volume, and detach_volume.
+  action string
+  // Message attached to the action, usually only set when it failed
+  message string
+  // Nova request ID the action was recorded under
+  requestId string
+  // Time the action started
+  startTime time
+  // Server the action was performed on
+  server() openstack.compute.server
+  // User that requested the action
+  user() openstack.user
+  // Project the action was requested in
+  project() openstack.project
+}
+
+// Node group of an OpenStack Magnum cluster
+//
+// Set of cluster nodes sharing one flavor, image, and label set. The `role`
+// field separates the control plane from workers, `isDefault` marks the group
+// the cluster was created with, and `labels` carries the per-group overrides
+// that change how those nodes are configured. Because a node group can run a
+// different image from the rest of the cluster, these are where an unpatched
+// subset of nodes becomes visible.
+private openstack.containerinfra.cluster.nodeGroup @defaults("id name role nodeCount status") {
+  // Node group UUID
+  id string
+  // Node group name
+  name string
+  // Role of the nodes in this group, for example master or worker
+  role string
+  // Status
+  status string
+  // Reason for the current status
+  statusReason string
+  // Number of nodes currently in the group
+  nodeCount int
+  // Smallest number of nodes the group may scale to
+  minNodeCount int
+  // Largest number of nodes the group may scale to; 0 when unbounded
+  maxNodeCount int
+  // Whether this is the group the cluster was created with
+  isDefault bool
+  // Size in GB of the volume backing the container runtime on each node; 0 when unset
+  dockerVolumeSize int
+  // Configuration labels applied to the nodes in this group
+  labels map[string]string
+  // Addresses of the nodes in the group
+  nodeAddresses []string
+  // Cluster the group belongs to
+  cluster() openstack.containerinfra.cluster
+  // Image the nodes boot from
+  image() openstack.image
+  // Flavor the nodes run on
+  flavor() openstack.compute.flavor
+  // Project that owns the node group
+  project() openstack.project
+}
+
+// OpenStack Trove configuration group
+//
+// Named set of database engine parameters that Trove applies to the instances
+// attached to it. The `values` field holds the parameter overrides themselves,
+// which is where engine-level security settings (logging, TLS enforcement,
+// local file loading, authentication plugins) are turned on or off for every
+// instance the group covers at once.
+private openstack.db.configuration @defaults("id name datastoreName datastoreVersionName") {
+  // Configuration group ID
+  id string
+  // Configuration group name
+  name string
+  // Description
+  description string
+  // Database engine the group applies to, for example mysql or postgresql
+  datastoreName string
+  // Engine version the group applies to
+  datastoreVersionName string
+  // Parameter overrides applied to attached instances
+  values dict
+  // Database instances the group is attached to
+  instances() []openstack.db.instance
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// OpenStack Octavia amphora
+//
+// Virtual machine running the load-balancing data plane for an Octavia load
+// balancer. Every request through the balancer passes through it, so its image
+// is the patch level of that path, and `certExpiration` is when the certificate
+// securing the control channel to it stops being valid. The `role` field
+// separates the active amphora from a standby in an active-standby pair.
+private openstack.octavia.amphora @defaults("id role status certExpiration") {
+  // Amphora ID
+  id string
+  // Role in the load balancer
+  //
+  // One of MASTER, BACKUP, or STANDALONE.
+  role string
+  // Status
+  //
+  // One of BOOTING, ALLOCATED, READY, PENDING_CREATE, PENDING_DELETE, DELETED,
+  // or ERROR.
+  status string
+  // Expiry of the certificate securing the control channel to this amphora
+  certExpiration time
+  // Whether a certificate rotation is currently in progress
+  certBusy bool
+  // Availability zone the amphora runs in
+  cachedZone string
+  // Address the control plane reaches this amphora on
+  lbNetworkIp string
+  // Address serving the load balancer's virtual IP
+  haIp string
+  // Address used for failover coordination between amphorae
+  vrrpIp string
+  // Interface failover coordination runs over
+  vrrpInterface string
+  // Identifier distinguishing this failover group
+  vrrpId int
+  // Priority deciding which amphora holds the virtual IP
+  vrrpPriority int
+  // Load balancer the amphora serves
+  loadBalancer() openstack.octavia.loadBalancer
+  // Compute server the amphora runs as
+  server() openstack.compute.server
+  // Image the amphora booted from
+  image() openstack.image
+  // Port carrying the load balancer's virtual IP
+  haPort() openstack.port
+  // Port carrying failover coordination
+  vrrpPort() openstack.port
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// Resource created by an OpenStack Heat stack
+//
+// One object a stack created and still manages, linking the name it has in the
+// template to the id of the live object it became. Enumerating these answers
+// which live resources are owned by orchestration, so a change made directly on
+// one of them is a change that the next stack update will overwrite, and it
+// gives every stack-created object a path back to the template that defines it.
+private openstack.orchestration.stack.resource @defaults("name type status") {
+  // Name of the resource in the stack
+  name string
+  // Name the resource has in the template
+  logicalId string
+  // ID of the live object the resource became
+  physicalId string
+  // Heat resource type, for example OS::Nova::Server
+  type string
+  // Status
+  //
+  // One of INIT_COMPLETE, CREATE_IN_PROGRESS, CREATE_COMPLETE, CREATE_FAILED,
+  // UPDATE_IN_PROGRESS, UPDATE_COMPLETE, UPDATE_FAILED, DELETE_IN_PROGRESS,
+  // DELETE_COMPLETE, DELETE_FAILED, CHECK_COMPLETE, or SNAPSHOT_COMPLETE.
+  status string
+  // Reason for the current status
+  statusReason string
+  // Description
+  description string
+  // Names of the resources in the stack that depend on this one
+  requiredBy []string
+  // Stack that manages the resource
+  stack() openstack.orchestration.stack
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// OpenStack Neutron agent
+//
+// Process running part of the networking control plane on a host, such as the
+// L3, DHCP, metadata, or Open vSwitch agent. The `alive` field reports whether
+// the agent has sent a heartbeat recently and `adminStateUp` whether it is
+// meant to be scheduled work at all, so an agent that is administratively up
+// but not alive is a piece of the control plane that has stopped enforcing what
+// it was given, including security group and routing changes.
+private openstack.network.agent @defaults("id agentType host alive adminStateUp") {
+  // Agent ID
+  id string
+  // Kind of agent
+  //
+  // Examples include "Open vSwitch agent", "L3 agent", "DHCP agent",
+  // "Metadata agent", and "Loadbalancerv2 agent".
+  agentType string
+  // Executable the agent runs as, for example neutron-l3-agent
+  binary string
+  // Host the agent runs on
+  host string
+  // Message queue topic the agent listens on
+  topic string
+  // Whether the agent has sent a heartbeat within the timeout
+  alive bool
+  // Whether the agent is administratively enabled and eligible for scheduling
+  adminStateUp bool
+  // Whether the agent has finished applying the state it was given
+  resourcesSynced bool
+  // Availability zone the agent serves
+  availabilityZone string
+  // Description
+  description string
+  // Agent configuration reported by the agent itself
+  configurations dict
+  // Time of the most recent heartbeat
+  heartbeatTimestamp time
+  // Time the agent first registered
+  createdAt time
+  // Time the agent process last started
+  startedAt time
+}
+
+// OpenStack Neutron tap mirror
+//
+// Rule that copies the traffic of a Neutron port to an address outside the
+// cloud over a GRE or ERSPAN tunnel. A mirror reads every packet the port sends
+// or receives without appearing in its security groups, so each one is an
+// active interception path worth confirming is intended. The `directions` in
+// and out fields carry the tunnel identifiers per direction, and a direction
+// with no tunnel identifier is not mirrored.
+private openstack.network.tapMirror @defaults("id name mirrorType remoteIp") {
+  // Tap mirror ID
+  id string
+  // Tap mirror name
+  name string
+  // Description
+  description string
+  // Tunnel type the copied traffic is carried over
+  //
+  // Either erspanv1 or gre.
+  mirrorType string
+  // Address the copied traffic is sent to
+  remoteIp string
+  // Tunnel identifier for traffic arriving at the port; 0 when inbound traffic is not mirrored
+  directionIn int
+  // Tunnel identifier for traffic leaving the port; 0 when outbound traffic is not mirrored
+  directionOut int
+  // Port whose traffic is copied
+  port() openstack.port
+  // Project that owns the tap mirror
+  project() openstack.project
 }
