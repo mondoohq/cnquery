@@ -100,6 +100,32 @@ Inspect Kubernetes clusters and their node pools:
 digitalocean.kubernetesClusters { name version nodePools { name size count } }
 ```
 
+Find Kubernetes API servers reachable from any address:
+
+```mql
+digitalocean.kubernetesClusters.where(exposure.internetReachable) { name endpoint controlPlaneFirewallEnabled }
+```
+
+Find Spaces buckets anyone can read, and separate out those opened by policy
+rather than by ACL:
+
+```mql
+digitalocean.spacesBuckets.where(isPublic) { name region publicReadAcl hasWildcardPolicy }
+```
+
+Find functions anyone on the internet can invoke, with the endpoint they answer on:
+
+```mql
+digitalocean.functionNamespaces.functions.where(isPublic) { name webUrl }
+```
+
+Find GradientAI agents and App Platform apps serving the internet:
+
+```mql
+digitalocean.gradientai.agents.where(isPublic) { name deploymentUrl }
+digitalocean.apps.where(isPublic) { name liveUrl }
+```
+
 You can also run a policy scan:
 
 ```bash

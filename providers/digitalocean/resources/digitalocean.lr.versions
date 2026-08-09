@@ -74,6 +74,7 @@ digitalocean.app.deployments 13.10.2
 digitalocean.app.domains 13.6.2
 digitalocean.app.id 13.0.1
 digitalocean.app.instances 13.10.2
+digitalocean.app.isPublic 13.14.5
 digitalocean.app.liveDomain 13.6.2
 digitalocean.app.liveUrl 13.0.1
 digitalocean.app.name 13.0.1
@@ -315,6 +316,7 @@ digitalocean.function.accessKey.namespaceUuid 13.10.2
 digitalocean.function.accessKey.updatedAt 13.10.2
 digitalocean.function.action 13.10.2
 digitalocean.function.action.concurrency 13.10.2
+digitalocean.function.action.isPublic 13.14.5
 digitalocean.function.action.logSizeMb 13.10.2
 digitalocean.function.action.memoryMb 13.10.2
 digitalocean.function.action.name 13.10.2
@@ -326,6 +328,7 @@ digitalocean.function.action.timeoutMs 13.10.2
 digitalocean.function.action.updatedAt 13.10.2
 digitalocean.function.action.version 13.10.2
 digitalocean.function.action.webExported 13.10.2
+digitalocean.function.action.webUrl 13.14.5
 digitalocean.function.namespace 13.1.7
 digitalocean.function.namespace.accessKeys 13.10.2
 digitalocean.function.namespace.apiHost 13.1.7
@@ -396,6 +399,7 @@ digitalocean.gradientai.agent.guardrail.uuid 13.4.2
 digitalocean.gradientai.agent.guardrails 13.4.2
 digitalocean.gradientai.agent.ifCase 13.4.2
 digitalocean.gradientai.agent.instruction 13.4.2
+digitalocean.gradientai.agent.isPublic 13.14.5
 digitalocean.gradientai.agent.k 13.4.2
 digitalocean.gradientai.agent.knowledgeBases 13.4.2
 digitalocean.gradientai.agent.maxTokens 13.4.2
@@ -623,6 +627,7 @@ digitalocean.kubernetes.cluster.controlPlaneFirewallEnabled 13.6.2
 digitalocean.kubernetes.cluster.corednsAutoscalerEnabled 13.6.2
 digitalocean.kubernetes.cluster.createdAt 13.0.1
 digitalocean.kubernetes.cluster.endpoint 13.6.2
+digitalocean.kubernetes.cluster.exposure 13.14.5
 digitalocean.kubernetes.cluster.ha 13.0.1
 digitalocean.kubernetes.cluster.id 13.0.1
 digitalocean.kubernetes.cluster.ipv4 13.6.2
@@ -894,6 +899,8 @@ digitalocean.spacesBucket.createdAt 13.2.1
 digitalocean.spacesBucket.encryptionAlgorithm 13.2.1
 digitalocean.spacesBucket.encryptionEnabled 13.2.1
 digitalocean.spacesBucket.encryptionKmsKeyId 13.2.1
+digitalocean.spacesBucket.hasWildcardPolicy 13.14.5
+digitalocean.spacesBucket.isPublic 13.14.5
 digitalocean.spacesBucket.lifecycleRules 13.2.1
 digitalocean.spacesBucket.mfaDeleteEnabled 13.2.1
 digitalocean.spacesBucket.name 13.2.1

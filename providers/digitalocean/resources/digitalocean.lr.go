@@ -1414,6 +1414,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.kubernetes.cluster.nodePools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetNodePools()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.nodePool")))
 	},
+	"digitalocean.kubernetes.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetExposure()).ToDataRes(types.Resource("digitalocean.network.exposure"))
+	},
 	"digitalocean.kubernetes.nodePool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesNodePool).GetId()).ToDataRes(types.String)
 	},
@@ -1741,6 +1744,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.app.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanApp).GetInstances()).ToDataRes(types.Array(types.Dict))
 	},
+	"digitalocean.app.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanApp).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"digitalocean.app.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAppDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -1987,6 +1993,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.spacesBucket.lifecycleRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanSpacesBucket).GetLifecycleRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"digitalocean.spacesBucket.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSpacesBucket).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"digitalocean.spacesBucket.hasWildcardPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSpacesBucket).GetHasWildcardPolicy()).ToDataRes(types.Bool)
+	},
 	"digitalocean.image.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanImage).GetId()).ToDataRes(types.Int)
 	},
@@ -2181,6 +2193,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.function.action.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFunctionAction).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.function.action.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAction).GetWebUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.function.action.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAction).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"digitalocean.function.trigger.namespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFunctionTrigger).GetNamespace()).ToDataRes(types.String)
@@ -2577,6 +2595,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.gradientai.agent.apiKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanGradientaiAgent).GetApiKeys()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent.apiKey")))
+	},
+	"digitalocean.gradientai.agent.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"digitalocean.gradientai.agent.guardrail.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetUuid()).ToDataRes(types.String)
@@ -4606,6 +4627,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanKubernetesCluster).NodePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.kubernetes.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).Exposure, ok = plugin.RawToTValue[*mqlDigitaloceanNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"digitalocean.kubernetes.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanKubernetesNodePool).__id, ok = v.Value.(string)
 		return
@@ -5090,6 +5115,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanApp).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.app.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanApp).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"digitalocean.app.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanAppDeployment).__id, ok = v.Value.(string)
 		return
@@ -5450,6 +5479,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanSpacesBucket).LifecycleRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.spacesBucket.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSpacesBucket).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.spacesBucket.hasWildcardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSpacesBucket).HasWildcardPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"digitalocean.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanImage).__id, ok = v.Value.(string)
 		return
@@ -5732,6 +5769,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.function.action.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanFunctionAction).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.action.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAction).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.action.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAction).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"digitalocean.function.trigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6296,6 +6341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.gradientai.agent.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanGradientaiAgent).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"digitalocean.gradientai.agent.guardrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10526,6 +10575,7 @@ type mqlDigitaloceanKubernetesCluster struct {
 	ClusterAutoscaler                        plugin.TValue[any]
 	AvailableUpgradeVersions                 plugin.TValue[[]any]
 	NodePools                                plugin.TValue[[]any]
+	Exposure                                 plugin.TValue[*mqlDigitaloceanNetworkExposure]
 }
 
 // createDigitaloceanKubernetesCluster creates a new instance of this resource
@@ -10736,6 +10786,22 @@ func (c *mqlDigitaloceanKubernetesCluster) GetNodePools() *plugin.TValue[[]any] 
 		}
 
 		return c.nodePools()
+	})
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetExposure() *plugin.TValue[*mqlDigitaloceanNetworkExposure] {
+	return plugin.GetOrCompute[*mqlDigitaloceanNetworkExposure](&c.Exposure, func() (*mqlDigitaloceanNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.kubernetes.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -11829,6 +11895,7 @@ type mqlDigitaloceanApp struct {
 	ActiveDeployment       plugin.TValue[*mqlDigitaloceanAppDeployment]
 	Alerts                 plugin.TValue[[]any]
 	Instances              plugin.TValue[[]any]
+	IsPublic               plugin.TValue[bool]
 }
 
 // createDigitaloceanApp creates a new instance of this resource
@@ -11991,6 +12058,12 @@ func (c *mqlDigitaloceanApp) GetAlerts() *plugin.TValue[[]any] {
 func (c *mqlDigitaloceanApp) GetInstances() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		return c.instances()
+	})
+}
+
+func (c *mqlDigitaloceanApp) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -12727,6 +12800,8 @@ type mqlDigitaloceanSpacesBucket struct {
 	Policy               plugin.TValue[any]
 	CorsRules            plugin.TValue[[]any]
 	LifecycleRules       plugin.TValue[[]any]
+	IsPublic             plugin.TValue[bool]
+	HasWildcardPolicy    plugin.TValue[bool]
 }
 
 // createDigitaloceanSpacesBucket creates a new instance of this resource
@@ -12828,6 +12903,18 @@ func (c *mqlDigitaloceanSpacesBucket) GetCorsRules() *plugin.TValue[[]any] {
 
 func (c *mqlDigitaloceanSpacesBucket) GetLifecycleRules() *plugin.TValue[[]any] {
 	return &c.LifecycleRules
+}
+
+func (c *mqlDigitaloceanSpacesBucket) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
+}
+
+func (c *mqlDigitaloceanSpacesBucket) GetHasWildcardPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardPolicy, func() (bool, error) {
+		return c.hasWildcardPolicy()
+	})
 }
 
 // mqlDigitaloceanImage for the digitalocean.image resource
@@ -13387,6 +13474,8 @@ type mqlDigitaloceanFunctionAction struct {
 	LogSizeMb      plugin.TValue[int64]
 	Concurrency    plugin.TValue[int64]
 	UpdatedAt      plugin.TValue[*time.Time]
+	WebUrl         plugin.TValue[string]
+	IsPublic       plugin.TValue[bool]
 }
 
 // createDigitaloceanFunctionAction creates a new instance of this resource
@@ -13467,6 +13556,16 @@ func (c *mqlDigitaloceanFunctionAction) GetConcurrency() *plugin.TValue[int64] {
 
 func (c *mqlDigitaloceanFunctionAction) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanFunctionAction) GetWebUrl() *plugin.TValue[string] {
+	return &c.WebUrl
+}
+
+func (c *mqlDigitaloceanFunctionAction) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
 }
 
 // mqlDigitaloceanFunctionTrigger for the digitalocean.function.trigger resource
@@ -14526,6 +14625,7 @@ type mqlDigitaloceanGradientaiAgent struct {
 	Functions               plugin.TValue[[]any]
 	Versions                plugin.TValue[[]any]
 	ApiKeys                 plugin.TValue[[]any]
+	IsPublic                plugin.TValue[bool]
 }
 
 // createDigitaloceanGradientaiAgent creates a new instance of this resource
@@ -14869,6 +14969,12 @@ func (c *mqlDigitaloceanGradientaiAgent) GetApiKeys() *plugin.TValue[[]any] {
 		}
 
 		return c.apiKeys()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
