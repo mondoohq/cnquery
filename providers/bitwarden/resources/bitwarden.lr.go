@@ -34,7 +34,7 @@ func init() {
 			Create: createBitwarden,
 		},
 		"bitwarden.organization": {
-			// to override args, implement: initBitwardenOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initBitwardenOrganization,
 			Create: createBitwardenOrganization,
 		},
 		"bitwarden.policy": {
@@ -132,9 +132,6 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
-	"bitwarden.organization": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwarden).GetOrganization()).ToDataRes(types.Resource("bitwarden.organization"))
-	},
 	"bitwarden.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwarden).GetPolicies()).ToDataRes(types.Array(types.Resource("bitwarden.policy")))
 	},
@@ -338,10 +335,6 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"bitwarden.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBitwarden).__id, ok = v.Value.(string)
-		return
-	},
-	"bitwarden.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwarden).Organization, ok = plugin.RawToTValue[*mqlBitwardenOrganization](v.Value, v.Error)
 		return
 	},
 	"bitwarden.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -653,11 +646,10 @@ type mqlBitwarden struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlBitwardenInternal it will be used here
-	Organization plugin.TValue[*mqlBitwardenOrganization]
-	Policies     plugin.TValue[[]any]
-	Members      plugin.TValue[[]any]
-	Collections  plugin.TValue[[]any]
-	Groups       plugin.TValue[[]any]
+	Policies    plugin.TValue[[]any]
+	Members     plugin.TValue[[]any]
+	Collections plugin.TValue[[]any]
+	Groups      plugin.TValue[[]any]
 }
 
 // createBitwarden creates a new instance of this resource
@@ -695,22 +687,6 @@ func (c *mqlBitwarden) MqlName() string {
 
 func (c *mqlBitwarden) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlBitwarden) GetOrganization() *plugin.TValue[*mqlBitwardenOrganization] {
-	return plugin.GetOrCompute[*mqlBitwardenOrganization](&c.Organization, func() (*mqlBitwardenOrganization, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("bitwarden", c.__id, "organization")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlBitwardenOrganization), nil
-			}
-		}
-
-		return c.organization()
-	})
 }
 
 func (c *mqlBitwarden) GetPolicies() *plugin.TValue[[]any] {

@@ -13,9 +13,7 @@ option go_package = "go.mondoo.com/mql/v13/providers/bitwarden/resources"
 // access. Vault item contents, folders, and Send payloads are never
 // read by this provider; the Bitwarden Public API this provider talks
 // to has no endpoint for them.
-bitwarden {
-  // Organization the connection authenticates as
-  organization() bitwarden.organization
+bitwarden @maturity("experimental") {
   // Security policies configured for the organization
   policies() []bitwarden.policy
   // Members of the organization
@@ -33,7 +31,7 @@ bitwarden {
 // sign-on or two-step login are available to it. The `id` field is
 // the organization's UUID, the same value embedded in the
 // `organization.<uuid>` client ID used to authenticate.
-bitwarden.organization @defaults("name seats useSso use2fa") {
+bitwarden.organization @defaults("name seats useSso use2fa") @maturity("experimental") {
   // Organization UUID
   id string
   // Organization name
@@ -86,7 +84,7 @@ bitwarden.organization @defaults("name seats useSso use2fa") {
 // `requireLower`, `requireNumbers`, and `requireSpecial`; `sendOptions`
 // carries `disableHideEmail`; `resetPassword` carries
 // `autoEnrollEnabled`; other types carry an empty object.
-bitwarden.policy @defaults("policyType enabled") {
+bitwarden.policy @defaults("policyType enabled") @maturity("experimental") {
   // Policy UUID
   id string
   // Policy type
@@ -113,7 +111,7 @@ bitwarden.policy @defaults("policyType enabled") {
 // status, and security posture. The `email` field is the member's
 // invited or confirmed email address and is the natural selection key,
 // for example `bitwarden.members.where(email == "user@example.com")`.
-bitwarden.member @defaults("email role status") {
+bitwarden.member @defaults("email role status") @maturity("experimental") {
   // Member UUID
   id string
   // Underlying Bitwarden user ID, null until the invitation is accepted
@@ -155,7 +153,7 @@ bitwarden.member @defaults("email role status") {
 // groups. Only the sharing structure is exposed here (which groups and
 // members can reach the collection, and with what permissions); the
 // items inside a collection are not.
-bitwarden.collection @defaults("name") {
+bitwarden.collection @defaults("name") @maturity("experimental") {
   // Collection UUID
   id string
   // Collection name
@@ -178,7 +176,7 @@ bitwarden.collection @defaults("name") {
 // an alternative to granting each member individually. The `name`
 // field is the natural selection key, for example
 // `bitwarden.groups.where(name == "Engineering")`.
-bitwarden.group @defaults("name") {
+bitwarden.group @defaults("name") @maturity("experimental") {
   // Group UUID
   id string
   // Group name
@@ -202,7 +200,7 @@ bitwarden.group @defaults("name") {
 // for that member-to-collection grant, with typed references to both the
 // collection and the member. Use it to audit who can manage a collection,
 // or which members can read a sensitive collection's item passwords.
-private bitwarden.collectionMemberAccess @defaults("readOnly hidePasswords manage") {
+private bitwarden.collectionMemberAccess @defaults("readOnly hidePasswords manage") @maturity("experimental") {
   // Collection the grant applies to
   collection() bitwarden.collection
   // Member the grant is for
@@ -222,7 +220,7 @@ private bitwarden.collectionMemberAccess @defaults("readOnly hidePasswords manag
 // for that group-to-collection grant, with typed references to both the
 // collection and the group. Every member of the group inherits this
 // permission on the collection.
-private bitwarden.collectionGroupAccess @defaults("readOnly hidePasswords manage") {
+private bitwarden.collectionGroupAccess @defaults("readOnly hidePasswords manage") @maturity("experimental") {
   // Collection the grant applies to
   collection() bitwarden.collection
   // Group the grant is for
