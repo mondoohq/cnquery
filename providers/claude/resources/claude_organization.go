@@ -14,67 +14,14 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// organizationResource returns the organization the current credentials belong
-// to, so resource references can be resolved against its member and workspace
-// lists.
-func organizationResource(runtime *plugin.Runtime) (*mqlClaudeOrganization, error) {
-	res, err := CreateResource(runtime, "claude.organization", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlClaudeOrganization), nil
+// lookupWorkspace returns the organization workspace carrying the given id.
+func lookupWorkspace(runtime *plugin.Runtime, id string) (*mqlClaudeOrganizationWorkspace, bool, error) {
+	return lookupOrganizationChild[*mqlClaudeOrganizationWorkspace](runtime, id, (*mqlClaudeOrganization).GetWorkspaces)
 }
 
-// lookupOrganizationWorkspace returns the workspace carrying the given id, or
-// nil when the id is empty or matches no workspace. It reads through the
-// memoized GetWorkspaces accessor, so resolving a reference on every row of a
-// usage or cost report still costs a single list call.
-func lookupOrganizationWorkspace(runtime *plugin.Runtime, id string) (*mqlClaudeOrganizationWorkspace, error) {
-	if id == "" {
-		return nil, nil
-	}
-
-	org, err := organizationResource(runtime)
-	if err != nil {
-		return nil, err
-	}
-	workspaces := org.GetWorkspaces()
-	if workspaces.Error != nil {
-		return nil, workspaces.Error
-	}
-
-	for _, w := range workspaces.Data {
-		ws, ok := w.(*mqlClaudeOrganizationWorkspace)
-		if ok && ws.Id.Data == id {
-			return ws, nil
-		}
-	}
-	return nil, nil
-}
-
-// lookupOrganizationMember returns the member carrying the given id, or nil
-// when the id is empty or matches no member.
-func lookupOrganizationMember(runtime *plugin.Runtime, id string) (*mqlClaudeOrganizationMember, error) {
-	if id == "" {
-		return nil, nil
-	}
-
-	org, err := organizationResource(runtime)
-	if err != nil {
-		return nil, err
-	}
-	members := org.GetMembers()
-	if members.Error != nil {
-		return nil, members.Error
-	}
-
-	for _, m := range members.Data {
-		member, ok := m.(*mqlClaudeOrganizationMember)
-		if ok && member.Id.Data == id {
-			return member, nil
-		}
-	}
-	return nil, nil
+// lookupMember returns the organization member carrying the given id.
+func lookupMember(runtime *plugin.Runtime, id string) (*mqlClaudeOrganizationMember, bool, error) {
+	return lookupOrganizationChild[*mqlClaudeOrganizationMember](runtime, id, (*mqlClaudeOrganization).GetMembers)
 }
 
 // claude.organization
@@ -267,11 +214,11 @@ func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
 }
 
 func (r *mqlClaudeOrganizationApiKey) createdBy() (*mqlClaudeOrganizationMember, error) {
-	member, err := lookupOrganizationMember(r.MqlRuntime, r.cacheCreatedByID)
+	member, ok, err := lookupMember(r.MqlRuntime, r.cacheCreatedByID)
 	if err != nil {
 		return nil, err
 	}
-	if member == nil {
+	if !ok {
 		r.CreatedBy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -284,11 +231,11 @@ func (r *mqlClaudeOrganizationApiKey) workspace() (*mqlClaudeOrganizationWorkspa
 		workspaceID = *r.cacheWorkspaceID
 	}
 
-	ws, err := lookupOrganizationWorkspace(r.MqlRuntime, workspaceID)
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, workspaceID)
 	if err != nil {
 		return nil, err
 	}
-	if ws == nil {
+	if !ok {
 		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -345,11 +292,11 @@ type mqlClaudeOrganizationWorkspaceMemberInternal struct {
 }
 
 func (r *mqlClaudeOrganizationWorkspaceMember) user() (*mqlClaudeOrganizationMember, error) {
-	member, err := lookupOrganizationMember(r.MqlRuntime, r.cacheUserID)
+	member, ok, err := lookupMember(r.MqlRuntime, r.cacheUserID)
 	if err != nil {
 		return nil, err
 	}
-	if member == nil {
+	if !ok {
 		r.User.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -357,11 +304,11 @@ func (r *mqlClaudeOrganizationWorkspaceMember) user() (*mqlClaudeOrganizationMem
 }
 
 func (r *mqlClaudeOrganizationWorkspaceMember) workspace() (*mqlClaudeOrganizationWorkspace, error) {
-	ws, err := lookupOrganizationWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
 	if err != nil {
 		return nil, err
 	}
-	if ws == nil {
+	if !ok {
 		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -424,11 +371,11 @@ type mqlClaudeOrganizationUsageEntryInternal struct {
 }
 
 func (r *mqlClaudeOrganizationUsageEntry) workspace() (*mqlClaudeOrganizationWorkspace, error) {
-	ws, err := lookupOrganizationWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
 	if err != nil {
 		return nil, err
 	}
-	if ws == nil {
+	if !ok {
 		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -489,11 +436,11 @@ type mqlClaudeOrganizationCostEntryInternal struct {
 }
 
 func (r *mqlClaudeOrganizationCostEntry) workspace() (*mqlClaudeOrganizationWorkspace, error) {
-	ws, err := lookupOrganizationWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
 	if err != nil {
 		return nil, err
 	}
-	if ws == nil {
+	if !ok {
 		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}

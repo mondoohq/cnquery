@@ -94,32 +94,19 @@ func (r *mqlClaude) agents() ([]interface{}, error) {
 	return res, nil
 }
 
-// The agent list is read through the memoized GetAgents accessor, so
-// resolving a roster on every agent still costs a single list call.
 func (r *mqlClaudeAgent) subagents() ([]interface{}, error) {
 	res := []interface{}{}
 	if len(r.cacheSubagentIDs) == 0 {
 		return res, nil
 	}
 
-	claudeRes, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	agents, err := claudeChildren(r.MqlRuntime, (*mqlClaude).GetAgents)
 	if err != nil {
 		return nil, err
 	}
-	agents := claudeRes.(*mqlClaude).GetAgents()
-	if agents.Error != nil {
-		return nil, agents.Error
-	}
-
-	byID := make(map[string]*mqlClaudeAgent, len(agents.Data))
-	for _, a := range agents.Data {
-		if agent, ok := a.(*mqlClaudeAgent); ok {
-			byID[agent.Id.Data] = agent
-		}
-	}
 
 	for _, id := range r.cacheSubagentIDs {
-		if agent, ok := byID[id]; ok {
+		if agent, ok := findByID[*mqlClaudeAgent](agents, id); ok {
 			res = append(res, agent)
 		}
 	}
@@ -151,29 +138,15 @@ func agentSkills(runtime *plugin.Runtime, agentID string, skills []anthropic.Bet
 }
 
 func (r *mqlClaudeAgentSkill) skill() (*mqlClaudeSkill, error) {
-	if r.cacheSkillID == "" {
-		r.Skill.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-
-	res, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	skill, ok, err := lookupClaudeChild[*mqlClaudeSkill](r.MqlRuntime, r.cacheSkillID, (*mqlClaude).GetSkills)
 	if err != nil {
 		return nil, err
 	}
-	skills := res.(*mqlClaude).GetSkills()
-	if skills.Error != nil {
-		return nil, skills.Error
+	if !ok {
+		r.Skill.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
-
-	for _, s := range skills.Data {
-		skill, ok := s.(*mqlClaudeSkill)
-		if ok && skill.Id.Data == r.cacheSkillID {
-			return skill, nil
-		}
-	}
-
-	r.Skill.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return skill, nil
 }
 
 // agentTools splits the agent's tool entries into toolsets, which carry a
@@ -188,23 +161,17 @@ func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.Bet
 		case "agent_toolset_20260401":
 			toolset := entry.AsAgentToolset20260401()
 
-			tools := make([]interface{}, 0, len(toolset.Configs))
+			spec := toolsetSpec{
+				toolsetType:    string(toolset.Type),
+				defaultEnabled: toolset.DefaultConfig.Enabled,
+				defaultPolicy:  toolset.DefaultConfig.PermissionPolicy.Type,
+				tools:          make([]toolSpec, 0, len(toolset.Configs)),
+			}
 			for _, cfg := range toolset.Configs {
-				tool, err := newToolsetTool(runtime, agentID, i, string(cfg.Name), cfg.Enabled, cfg.PermissionPolicy.Type)
-				if err != nil {
-					return nil, nil, err
-				}
-				tools = append(tools, tool)
+				spec.tools = append(spec.tools, toolSpec{name: string(cfg.Name), enabled: cfg.Enabled, permissionPolicy: cfg.PermissionPolicy.Type})
 			}
 
-			mqlToolset, err := CreateResource(runtime, "claude.agent.toolset", map[string]*llx.RawData{
-				"__id":                    llx.StringData(fmt.Sprintf("%s/toolset/%d", agentID, i)),
-				"type":                    llx.StringData(string(toolset.Type)),
-				"mcpServerName":           llx.StringData(""),
-				"defaultEnabled":          llx.BoolData(toolset.DefaultConfig.Enabled),
-				"defaultPermissionPolicy": llx.StringData(toolset.DefaultConfig.PermissionPolicy.Type),
-				"tools":                   llx.ArrayData(tools, types.Resource("claude.agent.toolset.tool")),
-			})
+			mqlToolset, err := newToolset(runtime, agentID, i, spec)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -213,23 +180,18 @@ func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.Bet
 		case "mcp_toolset":
 			toolset := entry.AsMCPToolset()
 
-			tools := make([]interface{}, 0, len(toolset.Configs))
+			spec := toolsetSpec{
+				toolsetType:    string(toolset.Type),
+				mcpServerName:  toolset.MCPServerName,
+				defaultEnabled: toolset.DefaultConfig.Enabled,
+				defaultPolicy:  toolset.DefaultConfig.PermissionPolicy.Type,
+				tools:          make([]toolSpec, 0, len(toolset.Configs)),
+			}
 			for _, cfg := range toolset.Configs {
-				tool, err := newToolsetTool(runtime, agentID, i, cfg.Name, cfg.Enabled, cfg.PermissionPolicy.Type)
-				if err != nil {
-					return nil, nil, err
-				}
-				tools = append(tools, tool)
+				spec.tools = append(spec.tools, toolSpec{name: cfg.Name, enabled: cfg.Enabled, permissionPolicy: cfg.PermissionPolicy.Type})
 			}
 
-			mqlToolset, err := CreateResource(runtime, "claude.agent.toolset", map[string]*llx.RawData{
-				"__id":                    llx.StringData(fmt.Sprintf("%s/toolset/%d", agentID, i)),
-				"type":                    llx.StringData(string(toolset.Type)),
-				"mcpServerName":           llx.StringData(toolset.MCPServerName),
-				"defaultEnabled":          llx.BoolData(toolset.DefaultConfig.Enabled),
-				"defaultPermissionPolicy": llx.StringData(toolset.DefaultConfig.PermissionPolicy.Type),
-				"tools":                   llx.ArrayData(tools, types.Resource("claude.agent.toolset.tool")),
-			})
+			mqlToolset, err := newToolset(runtime, agentID, i, spec)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -259,12 +221,46 @@ func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.Bet
 	return toolsets, customTools, nil
 }
 
-func newToolsetTool(runtime *plugin.Runtime, agentID string, toolsetIndex int, name string, enabled bool, permissionPolicy string) (plugin.Resource, error) {
-	return CreateResource(runtime, "claude.agent.toolset.tool", map[string]*llx.RawData{
-		"__id":             llx.StringData(fmt.Sprintf("%s/toolset/%d/%s", agentID, toolsetIndex, name)),
-		"name":             llx.StringData(name),
-		"enabled":          llx.BoolData(enabled),
-		"permissionPolicy": llx.StringData(permissionPolicy),
+// toolSpec is one tool's configuration, normalized across the built-in and MCP
+// toolset variants, which carry the same three values under different types.
+type toolSpec struct {
+	name             string
+	enabled          bool
+	permissionPolicy string
+}
+
+// toolsetSpec is a toolset's configuration, likewise normalized. mcpServerName
+// stays empty for a built-in toolset, which has no server behind it.
+type toolsetSpec struct {
+	toolsetType    string
+	mcpServerName  string
+	defaultEnabled bool
+	defaultPolicy  string
+	tools          []toolSpec
+}
+
+func newToolset(runtime *plugin.Runtime, agentID string, toolsetIndex int, spec toolsetSpec) (plugin.Resource, error) {
+	tools := make([]interface{}, 0, len(spec.tools))
+	for _, tool := range spec.tools {
+		mqlTool, err := CreateResource(runtime, "claude.agent.toolset.tool", map[string]*llx.RawData{
+			"__id":             llx.StringData(fmt.Sprintf("%s/toolset/%d/%s", agentID, toolsetIndex, tool.name)),
+			"name":             llx.StringData(tool.name),
+			"enabled":          llx.BoolData(tool.enabled),
+			"permissionPolicy": llx.StringData(tool.permissionPolicy),
+		})
+		if err != nil {
+			return nil, err
+		}
+		tools = append(tools, mqlTool)
+	}
+
+	return CreateResource(runtime, "claude.agent.toolset", map[string]*llx.RawData{
+		"__id":                    llx.StringData(fmt.Sprintf("%s/toolset/%d", agentID, toolsetIndex)),
+		"type":                    llx.StringData(spec.toolsetType),
+		"mcpServerName":           llx.StringData(spec.mcpServerName),
+		"defaultEnabled":          llx.BoolData(spec.defaultEnabled),
+		"defaultPermissionPolicy": llx.StringData(spec.defaultPolicy),
+		"tools":                   llx.ArrayData(tools, types.Resource("claude.agent.toolset.tool")),
 	})
 }
 
@@ -344,32 +340,16 @@ type mqlClaudeSessionInternal struct {
 	cacheEnvironmentID string
 }
 
-// The environment list is read through the memoized GetEnvironments accessor,
-// so resolving a reference on every session still costs a single list call.
 func (r *mqlClaudeSession) environment() (*mqlClaudeEnvironment, error) {
-	if r.cacheEnvironmentID == "" {
-		r.Environment.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-
-	res, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	env, ok, err := lookupClaudeChild[*mqlClaudeEnvironment](r.MqlRuntime, r.cacheEnvironmentID, (*mqlClaude).GetEnvironments)
 	if err != nil {
 		return nil, err
 	}
-	environments := res.(*mqlClaude).GetEnvironments()
-	if environments.Error != nil {
-		return nil, environments.Error
+	if !ok {
+		r.Environment.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
-
-	for _, e := range environments.Data {
-		env, ok := e.(*mqlClaudeEnvironment)
-		if ok && env.Id.Data == r.cacheEnvironmentID {
-			return env, nil
-		}
-	}
-
-	r.Environment.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return env, nil
 }
 
 func (r *mqlClaude) sessions() ([]interface{}, error) {
@@ -524,29 +504,15 @@ type mqlClaudeVaultCredentialInternal struct {
 }
 
 func (r *mqlClaudeVaultCredential) vault() (*mqlClaudeVault, error) {
-	if r.cacheVaultID == "" {
-		r.Vault.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-
-	res, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	vault, ok, err := lookupClaudeChild[*mqlClaudeVault](r.MqlRuntime, r.cacheVaultID, (*mqlClaude).GetVaults)
 	if err != nil {
 		return nil, err
 	}
-	vaults := res.(*mqlClaude).GetVaults()
-	if vaults.Error != nil {
-		return nil, vaults.Error
+	if !ok {
+		r.Vault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
-
-	for _, v := range vaults.Data {
-		vault, ok := v.(*mqlClaudeVault)
-		if ok && vault.Id.Data == r.cacheVaultID {
-			return vault, nil
-		}
-	}
-
-	r.Vault.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return vault, nil
 }
 
 func (r *mqlClaudeVault) credentials() ([]interface{}, error) {

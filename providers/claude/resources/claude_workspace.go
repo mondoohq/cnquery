@@ -35,6 +35,78 @@ func requireAdmin(runtime *plugin.Runtime) (*connection.AdminClient, error) {
 	return connection.NewAdminClient(c.AdminToken(), c.Host()), nil
 }
 
+// identifiedResource is any generated resource carrying a public id field,
+// which covers every resource a reference resolves to.
+type identifiedResource interface {
+	GetId() *plugin.TValue[string]
+}
+
+// findByID returns the entry of list carrying the given id. Callers get a typed
+// zero value and false when no entry matches.
+func findByID[T identifiedResource](list []interface{}, id string) (T, bool) {
+	var zero T
+	for _, item := range list {
+		entry, ok := item.(T)
+		if ok && entry.GetId().Data == id {
+			return entry, true
+		}
+	}
+	return zero, false
+}
+
+// claudeChildren reads one of the lists hanging off the shared claude resource
+// through its memoized accessor, so resolving references on every row of a
+// result set costs a single list call.
+func claudeChildren(runtime *plugin.Runtime, get func(*mqlClaude) *plugin.TValue[[]interface{}]) ([]interface{}, error) {
+	res, err := CreateResource(runtime, "claude", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := get(res.(*mqlClaude))
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	return list.Data, nil
+}
+
+// lookupClaudeChild resolves a reference against one of those lists. An empty
+// id resolves to nothing without listing at all.
+func lookupClaudeChild[T identifiedResource](runtime *plugin.Runtime, id string, get func(*mqlClaude) *plugin.TValue[[]interface{}]) (T, bool, error) {
+	var zero T
+	if id == "" {
+		return zero, false, nil
+	}
+
+	list, err := claudeChildren(runtime, get)
+	if err != nil {
+		return zero, false, err
+	}
+
+	entry, ok := findByID[T](list, id)
+	return entry, ok, nil
+}
+
+// lookupOrganizationChild resolves a reference against one of the lists hanging
+// off the shared claude.organization resource, with the same memoization.
+func lookupOrganizationChild[T identifiedResource](runtime *plugin.Runtime, id string, get func(*mqlClaudeOrganization) *plugin.TValue[[]interface{}]) (T, bool, error) {
+	var zero T
+	if id == "" {
+		return zero, false, nil
+	}
+
+	res, err := CreateResource(runtime, "claude.organization", map[string]*llx.RawData{})
+	if err != nil {
+		return zero, false, err
+	}
+	list := get(res.(*mqlClaudeOrganization))
+	if list.Error != nil {
+		return zero, false, list.Error
+	}
+
+	entry, ok := findByID[T](list.Data, id)
+	return entry, ok, nil
+}
+
 // toInterfaceMap converts an API string map into the interface map llx expects
 // for a map[string]string field.
 func toInterfaceMap(m map[string]string) map[string]interface{} {

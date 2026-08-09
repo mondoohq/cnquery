@@ -576,7 +576,7 @@ claude.organization.workspace @defaults("id name") {
 // one of workspace_user, workspace_developer,
 // workspace_restricted_developer, workspace_admin, or
 // workspace_billing.
-claude.organization.workspace.member @defaults("user.email workspaceRole") {
+claude.organization.workspace.member @defaults("userId workspaceRole") {
   // User identifier
   //
   // Deprecated in favor of user.
