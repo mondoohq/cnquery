@@ -14,13 +14,28 @@ import (
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
 
-// mqlSnowflakeAccountInternal caches the account-level SHOW PARAMETERS response
-// so the fields backed by it (parameters and networkPolicy) share a single API
-// call instead of each issuing their own.
+// mqlSnowflakeAccountInternal caches the account-wide responses that several
+// fields share, so touching more than one of them does not reissue the same
+// statement. The account resource is a singleton, which makes it the one place
+// every other resource can reach a per-scan cache from.
+//
+// SHOW PARAMETERS backs parameters and networkPolicy. The grant cache and the
+// role and user name indexes back the role hierarchy walks; see role_graph.go.
 type mqlSnowflakeAccountInternal struct {
 	parametersOnce      sync.Once
 	cachedParameters    []*sdk.Parameter
 	cachedParametersErr error
+
+	grantCacheOnce sync.Once
+	cachedGrants   *snowflakeGrantCache
+
+	roleIndexOnce      sync.Once
+	cachedRoleIndex    map[string]sdk.Role
+	cachedRoleIndexErr error
+
+	userIndexOnce      sync.Once
+	cachedUserIndex    map[string]sdk.User
+	cachedUserIndexErr error
 }
 
 // showAccountParameters fetches the account-level parameters from Snowflake,

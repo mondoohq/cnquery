@@ -235,7 +235,30 @@ snowflake.user @defaults("name") {
   // Number of days since the user last successfully logged in (-1 if never logged in)
   daysSinceLastLogin() int
   // Roles granted directly to this user (SHOW GRANTS TO USER)
+  //
+  // Each entry names a role in `name`, with `grantedOn` set to ROLE. Snowflake
+  // reports no privilege for this statement, so `privilege` is null;
+  // `grantOption` is false, because a role grant carries no grant option and a
+  // user can never re-grant a role they hold. Prefer roles, which resolves the
+  // same rows to role resources.
   grants() []snowflake.grant
+  // Roles granted to the user directly
+  //
+  // Snowflake grants privileges to roles rather than to users, so these are the
+  // entry points into everything the user can do. Use effectiveRoles for the
+  // roles reached through them.
+  roles() []snowflake.role
+  // All roles the user holds, directly or through role grants
+  //
+  // The direct roles plus every role those roles inherit, so a user who reaches
+  // ACCOUNTADMIN only through an intermediate custom role still reports it.
+  effectiveRoles() []snowflake.role
+  // All privileges the user holds through their roles
+  //
+  // The union of the grants held by every role in effectiveRoles,
+  // deduplicated. Privileges never attach to a user directly, so this is the
+  // user's real authorization surface.
+  effectiveGrants() []snowflake.grant
 }
 
 // Snowflake Role
@@ -276,6 +299,42 @@ snowflake.role @defaults("name") {
   grants() []snowflake.grant
   // Names of grantees (users and roles) this role is granted to (SHOW GRANTS OF ROLE)
   grantees() []snowflake.grant
+  // Roles granted to this role
+  //
+  // The roles whose privileges this role inherits, one level down the
+  // hierarchy. The counterpart of grantedRoles, which reports only how many
+  // there are.
+  childRoles() []snowflake.role
+  // Roles this role is granted to
+  //
+  // The roles that inherit this role's privileges, one level up the hierarchy.
+  // A privileged role reachable from a role that is handed out broadly is a
+  // privilege escalation path.
+  parentRoles() []snowflake.role
+  // Users granted this role directly
+  //
+  // Only the direct assignments. Use effectiveUsers for the users that reach
+  // the role through an intermediate role as well.
+  users() []snowflake.user
+  // All roles whose privileges this role inherits
+  //
+  // Every role reachable by following childRoles to the end, excluding this
+  // role. It answers what a session running with this role reaches through the
+  // hierarchy rather than only through its own grants.
+  effectiveRoles() []snowflake.role
+  // All users that hold this role, directly or through role grants
+  //
+  // Every user reachable by following parentRoles to the end. A user granted a
+  // custom role that was in turn granted this role is included, which is how a
+  // privileged role usually reaches people.
+  effectiveUsers() []snowflake.user
+  // All privileges this role holds, directly or through inherited roles
+  //
+  // The union of the grants held by this role and by every role in
+  // effectiveRoles, deduplicated. This is the authorization a session running
+  // with the role actually has, so it is the list to search for sensitive
+  // privileges such as MANAGE GRANTS, CREATE INTEGRATION, or APPLY MASKING POLICY.
+  effectiveGrants() []snowflake.grant
 }
 
 // Snowflake Security Integration
@@ -571,6 +630,14 @@ snowflake.database @defaults("name") {
   droppedAt time
   // Database-scoped roles (SHOW DATABASE ROLES IN DATABASE)
   roles() []snowflake.databaseRole
+  // Privileges granted on the database
+  grants() []snowflake.grant
+  // Privileges that will apply to objects created in the database later
+  //
+  // A future grant attaches automatically to objects created after it is
+  // written, so a broad one widens access to data that does not exist yet and
+  // shows up in the grants of no object standing today.
+  futureGrants() []snowflake.grant
   // Schemas in the database
   schemas() []snowflake.schema
   // Masking policies in the database (column-level masking for sensitive data)
@@ -705,11 +772,33 @@ snowflake.grant @defaults("privilege grantedOn name granteeName") {
   // Type of grantee (ROLE, USER, SHARE, DATABASE_ROLE)
   grantedTo string
   // Name of the grantee (role name, user name, share name, etc.)
+  //
+  // Kept as a name because a grantee is not always a modeled resource: it can
+  // be a share, database role, or application role. Use granteeRole and
+  // granteeUser for the two cases that resolve.
   granteeName string
+  // Role the privilege is granted to
+  //
+  // Null when grantedTo names something other than a role, and when the role
+  // is not one the session can list.
+  granteeRole() snowflake.role
+  // User the privilege is granted to
+  //
+  // Null when grantedTo names something other than a user. Only roles are
+  // granted to users; privileges always go to roles.
+  granteeUser() snowflake.user
   // Whether the grantee may further grant this privilege (WITH GRANT OPTION)
   grantOption bool
   // Role that issued the grant
-  grantedBy string
+  //
+  // Deprecated in favor of grantedByRole. The name of the role that ran the
+  // GRANT statement.
+  grantedBy @maturity("deprecated") string
+  // Role that issued the grant
+  //
+  // Null when no issuing role was recorded, such as for a privilege Snowflake
+  // grants implicitly, and when the role is not one the session can list.
+  grantedByRole() snowflake.role
   // When the grant was created
   createdAt time
 }
@@ -777,6 +866,12 @@ snowflake.share @defaults("name kind") {
   comment string
   // When the share was created
   createdAt time
+  // Privileges granted to the share
+  //
+  // The databases, schemas, and tables an outbound share exposes to the
+  // accounts listed in `to`, which is the data leaving the account boundary.
+  // Empty for an inbound share, whose grants are held by the provider account.
+  grants() []snowflake.grant
 }
 
 // Snowflake API Integration
@@ -941,6 +1036,14 @@ snowflake.databaseRole @defaults("databaseName name owner") {
   grantedDatabaseRoles int
   // When the role was created
   createdAt time
+  // Privileges granted to this database role
+  //
+  // Database roles hold privileges on objects inside their own database only,
+  // which is what makes them the least-privilege alternative to an account role
+  // for data access.
+  grants() []snowflake.grant
+  // Grantees (account roles and database roles) this database role is granted to
+  grantees() []snowflake.grant
 }
 
 // Snowflake View
@@ -1425,6 +1528,14 @@ snowflake.schema @defaults("name databaseName owner") {
   createdAt time
   // When the schema was dropped (empty when active)
   droppedAt time
+  // Privileges granted on the schema
+  grants() []snowflake.grant
+  // Privileges that will apply to objects created in the schema later
+  //
+  // A future grant attaches automatically to tables, views, and other objects
+  // created in the schema after it is written, so a broad one exposes data that
+  // does not exist yet.
+  futureGrants() []snowflake.grant
 }
 
 // Snowflake Managed Account

@@ -52,24 +52,31 @@ func initSnowflakeRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 // snowflakeRoleByName resolves an account role by name, returning nil (not an
 // error) when the name is not a listable account role. Object owners are not
 // always account roles: they can be an application, a database role, or a role
-// the caller cannot see. Callers treat a nil result as a null typed reference
-// rather than failing the query, so this looks the role up directly instead of
-// through NewResource (whose init returns a not-found error for direct queries).
+// the caller cannot see. Callers treat a nil result as a null reference rather
+// than failing the query, so this looks the role up directly instead of through
+// NewResource (whose init returns a not-found error for direct queries).
+//
+// The lookup reads the account's memoized role index rather than issuing SHOW
+// ROLES LIKE per name. Owner references resolve one per object and grantee
+// references one per grant, so a query over an account's grants would otherwise
+// issue hundreds of statements to read a list it already has.
 func snowflakeRoleByName(runtime *plugin.Runtime, name string) (*mqlSnowflakeRole, error) {
 	if name == "" {
 		return nil, nil
 	}
-	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	roles, err := conn.Client().Roles.Show(context.Background(), sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(name)))
+	account, err := snowflakeAccount(runtime)
 	if err != nil {
 		return nil, err
 	}
-	for i := range roles {
-		if roles[i].Name == name {
-			return newMqlSnowflakeRole(runtime, roles[i])
-		}
+	index, err := account.roleIndex()
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+	role, ok := index[sdk.NewAccountObjectIdentifier(name).Name()]
+	if !ok {
+		return nil, nil
+	}
+	return newMqlSnowflakeRole(runtime, role)
 }
 
 func (r *mqlSnowflakeAccount) roles() ([]any, error) {
