@@ -151,6 +151,9 @@ func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, a := range agents {
+			if a != nil && skipGradientaiAgent(conn.Filters.General, a) {
+				continue
+			}
 			res, err := newMqlGradientaiAgent(r.MqlRuntime, a)
 			if err != nil {
 				return nil, err

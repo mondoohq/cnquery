@@ -29,13 +29,13 @@ export DIGITALOCEAN_SPACES_REGION="nyc3"
 ### CLI flag
 
 ```bash
-mql shell digitalocean --token <api-token>
+cnspec shell digitalocean --token <api-token>
 ```
 
 If `DIGITALOCEAN_TOKEN` is set, you can omit the flag:
 
 ```bash
-mql shell digitalocean
+cnspec shell digitalocean
 ```
 
 ## Discovery
@@ -51,17 +51,43 @@ The provider connects to the account as a single asset and can expand it into ch
 | `loadbalancers` | Load balancers |
 | `firewalls` | Cloud firewalls |
 | `spaces-buckets` | Spaces buckets (requires Spaces credentials) |
+| `gradientai-agents` | GradientAI agents |
 
 ```bash
-mql shell digitalocean --discover all
+cnspec shell digitalocean --discover all
 ```
+
+### Filters
+
+`--filters` narrows which objects become assets. The same filters apply to the
+corresponding MQL listings, so a filtered scan and a plain query return the same
+resources.
+
+| Filter | Selects |
+|---|---|
+| `regions=nyc1,sfo3` | Only resources in the listed regions |
+| `exclude:regions=ams3` | Drops resources in the listed regions |
+| `tags=production,web` | Only resources carrying at least one of the listed tags |
+| `exclude:tags=temporary` | Drops resources carrying any of the listed tags |
+
+```bash
+cnspec scan digitalocean --discover all --filters tags=production --filters exclude:regions=ams3
+```
+
+DigitalOcean tags are flat labels rather than key/value pairs, so the tag filters
+take a list of tag names. Two consequences are worth knowing:
+
+- **Cloud firewalls are account-global** and have no region, so a region filter
+  never drops them — a global firewall applies in every selected region.
+- **Spaces buckets cannot be tagged**, so an include-tag filter (`tags=...`)
+  excludes every bucket.
 
 ## Examples
 
 Launch an interactive shell and run queries:
 
 ```bash
-mql shell digitalocean
+cnspec shell digitalocean
 ```
 
 List Droplets and flag any without a firewall:

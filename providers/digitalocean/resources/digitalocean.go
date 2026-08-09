@@ -271,6 +271,9 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, fw := range firewalls {
+			if skipFirewall(conn.Filters.General, &fw) {
+				continue
+			}
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall", firewallArgs(&fw))
 			if err != nil {
 				return nil, err
@@ -305,6 +308,9 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, db := range dbs {
+			if skipDatabase(conn.Filters.General, &db) {
+				continue
+			}
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.database", databaseArgs(&db))
 			if err != nil {
 				return nil, err
@@ -500,6 +506,9 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, lb := range lbs {
+			if skipLoadBalancer(conn.Filters.General, &lb) {
+				continue
+			}
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.loadBalancer", loadBalancerArgs(&lb))
 			if err != nil {
 				return nil, err
@@ -585,6 +594,9 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, c := range clusters {
+			if skipKubernetesCluster(conn.Filters.General, c) {
+				continue
+			}
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.cluster", kubernetesClusterArgs(c))
 			if err != nil {
 				return nil, err

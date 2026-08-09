@@ -22,8 +22,11 @@ import (
 
 type DigitaloceanConnection struct {
 	plugin.Connection
-	Conf            *inventory.Config
-	asset           *inventory.Asset
+	Conf  *inventory.Config
+	asset *inventory.Asset
+	// Filters narrows which objects the listers return, and therefore which
+	// objects discovery turns into assets.
+	Filters         DiscoveryFilters
 	client          *godo.Client
 	spacesKey       string
 	spacesSecret    string
@@ -72,6 +75,8 @@ func NewDigitaloceanConnection(id uint32, asset *inventory.Asset, conf *inventor
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 	conn.client = godo.NewClient(oauthClient)
+
+	conn.Filters = DiscoveryFiltersFromOpts(conf.Options)
 
 	conn.spacesKey = os.Getenv("DIGITALOCEAN_SPACES_KEY")
 	conn.spacesSecret = os.Getenv("DIGITALOCEAN_SPACES_SECRET")

@@ -23,8 +23,9 @@ var Config = plugin.Provider{
 			Long: `Use the digitalocean provider to query resources in a DigitalOcean account.
 
 Examples:
-  mql shell digitalocean --token <api-token>
-  mql shell digitalocean
+  cnspec shell digitalocean --token <api-token>
+  cnspec shell digitalocean
+  cnspec scan digitalocean --discover all --filters tags=production
 
 Notes:
   If you set the DIGITALOCEAN_TOKEN environment variable, you can omit the token flag.
@@ -47,6 +48,12 @@ Notes:
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "DigitalOcean personal access token (env: DIGITALOCEAN_TOKEN)",
+				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter discovered assets, e.g., --filters regions=nyc1,sfo3 --filters exclude:regions=ams3 --filters tags=production,web --filters exclude:tags=temporary",
 				},
 			},
 		},
