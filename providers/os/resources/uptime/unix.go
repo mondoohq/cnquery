@@ -15,7 +15,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
-var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day[s]*),)*(?:\s*(\d+)\s(min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
+// UnixUptimeRegex parses `uptime` output across the formats the tools
+// actually print: "up 1 day, 5:29", "up 16 min", and — when the minutes
+// component is exactly zero — "up 11 days, 16 hrs" (macOS prints "N hrs"
+// instead of "N:00" for one minute every hour, so missing that form made
+// the uptime resource error once an hour).
+var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day[s]*),)*(?:\s*(\d+)\s(hr[s]*),)*(?:\s*(\d+)\s(min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
 
 type UnixUptimeResult struct {
 	Duration           int64
@@ -37,6 +42,10 @@ func unixDuration(date, measure string) (int64, error) {
 		fallthrough
 	case "days":
 		duration = duration * 24 * int64(time.Hour)
+	case "hr":
+		fallthrough
+	case "hrs":
+		duration = duration * int64(time.Hour)
 	case "min":
 		fallthrough
 	case "mins":
@@ -49,7 +58,7 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 	log.Debug().Str("uptime", uptime).Msg("parse")
 	m := UnixUptimeRegex.FindStringSubmatch(uptime)
 
-	if len(m) != 10 {
+	if len(m) != 12 {
 		return nil, fmt.Errorf("could not parse uptime: %s", uptime)
 	}
 
@@ -65,7 +74,8 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 		duration = duration + unixDuration
 	}
 
-	// parse mins
+	// parse whole hours ("16 hrs" — printed instead of "16:00" when the
+	// minutes component is exactly zero)
 	if len(m[4]) > 0 {
 		unixDuration, err := unixDuration(m[3], m[4])
 		if err != nil {
@@ -74,9 +84,18 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 		duration = duration + unixDuration
 	}
 
+	// parse mins
+	if len(m[6]) > 0 {
+		unixDuration, err := unixDuration(m[5], m[6])
+		if err != nil {
+			return nil, err
+		}
+		duration = duration + unixDuration
+	}
+
 	// add optional hours
-	if len(m[5]) > 0 {
-		hours := strings.Split(m[5], ":")
+	if len(m[7]) > 0 {
+		hours := strings.Split(m[7], ":")
 		if len(hours) == 2 {
 			// log.Debug().Msg("parse hour")
 			hh, err := strconv.ParseInt(hours[0], 10, 64)
@@ -98,24 +117,24 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 
 	// users is optional and is not returned on alpine
 	users := 0
-	if len(m[6]) > 0 {
-		users, err = strconv.Atoi(m[6])
+	if len(m[8]) > 0 {
+		users, err = strconv.Atoi(m[8])
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	loadOneMinute, err := strconv.ParseFloat(strings.Replace(m[7], ",", ".", 1), 64)
+	loadOneMinute, err := strconv.ParseFloat(strings.Replace(m[9], ",", ".", 1), 64)
 	if err != nil {
 		return nil, err
 	}
 
-	loadFiveMinutes, err := strconv.ParseFloat(strings.Replace(m[8], ",", ".", 1), 64)
+	loadFiveMinutes, err := strconv.ParseFloat(strings.Replace(m[10], ",", ".", 1), 64)
 	if err != nil {
 		return nil, err
 	}
 
-	loadFifteenMinutes, err := strconv.ParseFloat(strings.Replace(m[9], ",", ".", 1), 64)
+	loadFifteenMinutes, err := strconv.ParseFloat(strings.Replace(m[11], ",", ".", 1), 64)
 	if err != nil {
 		return nil, err
 	}
