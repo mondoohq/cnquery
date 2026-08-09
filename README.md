@@ -105,6 +105,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Apache Cassandra cluster      | `cassandra`                | `mql shell cassandra localhost --user cassandra --ask-pass`                                                                                     |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
+| Auth0 tenants                 | `auth0`                    | `mql shell auth0 --domain YOUR_TENANT.auth0.com --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                            |
 | AWS accounts                  | `aws`                      | `mql shell aws`                                                                                                                                 |
 | AWS CloudFormation templates  | `cloudformation`           | `mql shell cloudformation cloudformation_file.json`                                                                                             |
 | AWS EC2 EBS snapshot          | `aws ec2 ebs snapshot`     | `mql shell aws ec2 ebs snapshot SNAPSHOTID`                                                                                                     |

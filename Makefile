@@ -204,6 +204,7 @@ PROVIDERS := \
 	ansible \
 	arista \
 	atlassian \
+	auth0 \
 	aws \
 	azure \
 	bicep \

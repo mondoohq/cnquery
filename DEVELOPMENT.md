@@ -202,6 +202,7 @@ use (
    ./mql/providers/ansible
    ./mql/providers/arista
    ./mql/providers/atlassian
+   ./mql/providers/auth0
    ./mql/providers/aws
    ./mql/providers/azure
    ./mql/providers/cassandra
