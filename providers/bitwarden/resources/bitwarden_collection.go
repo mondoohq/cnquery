@@ -48,7 +48,7 @@ func initBitwardenCollection(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	idArg, ok := args["id"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("bitwarden.collection requires an id argument")
 	}
 	id, ok := idArg.Value.(string)
 	if !ok || id == "" {

@@ -31,28 +31,27 @@ func (r *mqlBitwarden) organization() (*mqlBitwardenOrganization, error) {
 	}
 
 	res, err := CreateResource(r.MqlRuntime, "bitwarden.organization", map[string]*llx.RawData{
-		"__id":                 llx.StringData(conn.OrgID()),
-		"id":                   llx.StringData(conn.OrgID()),
-		"seats":                llx.IntDataPtr(sub.Seats),
-		"occupiedSeats":        llx.IntDataPtr(sub.OccupiedSeats),
-		"maxCollections":       llx.IntDataPtr(sub.MaxCollections),
-		"maxStorageGb":         llx.IntDataPtr(sub.MaxStorageGb),
-		"enabled":              llx.BoolData(sub.Enabled),
-		"useSso":               llx.BoolData(sub.UseSso),
-		"use2fa":               llx.BoolData(sub.UseTotp),
-		"useDirectory":         llx.BoolData(sub.UseDirectory),
-		"useEvents":            llx.BoolData(sub.UseEvents),
-		"useCustomPermissions": llx.BoolData(sub.UseGroups),
-		"usePolicies":          llx.BoolData(sub.UsePolicies),
-		"useSend":              llx.BoolData(sub.UseSend),
-		"useApi":               llx.BoolData(sub.UseApi),
-		"useResetPassword":     llx.BoolData(sub.UseResetPassword),
-		"planName":             llx.StringData(sub.PlanName),
-		"businessName":         llx.StringData(sub.BusinessName),
+		"__id":             llx.StringData(conn.OrgID()),
+		"id":               llx.StringData(conn.OrgID()),
+		"seats":            llx.IntDataPtr(sub.Seats),
+		"occupiedSeats":    llx.IntDataPtr(sub.OccupiedSeats),
+		"maxCollections":   llx.IntDataPtr(sub.MaxCollections),
+		"maxStorageGb":     llx.IntDataPtr(sub.MaxStorageGb),
+		"enabled":          llx.BoolData(sub.Enabled),
+		"useSso":           llx.BoolData(sub.UseSso),
+		"use2fa":           llx.BoolData(sub.UseTotp),
+		"useDirectory":     llx.BoolData(sub.UseDirectory),
+		"useEvents":        llx.BoolData(sub.UseEvents),
+		"useGroups":        llx.BoolData(sub.UseGroups),
+		"usePolicies":      llx.BoolData(sub.UsePolicies),
+		"useSend":          llx.BoolData(sub.UseSend),
+		"useApi":           llx.BoolData(sub.UseApi),
+		"useResetPassword": llx.BoolData(sub.UseResetPassword),
+		"planName":         llx.StringData(sub.PlanName),
+		"businessName":     llx.StringData(sub.BusinessName),
 		// The Public API's subscription endpoint has no dedicated "name"
-		// field distinct from planName/businessName; leave it null rather
-		// than fabricate a value the API never returned.
-		"name": llx.NilData,
+		// field; the organization's business name is its display name.
+		"name": llx.StringData(sub.BusinessName),
 	})
 	if err != nil {
 		return nil, err

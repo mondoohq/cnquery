@@ -170,8 +170,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bitwarden.organization.useEvents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenOrganization).GetUseEvents()).ToDataRes(types.Bool)
 	},
-	"bitwarden.organization.useCustomPermissions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseCustomPermissions()).ToDataRes(types.Bool)
+	"bitwarden.organization.useGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBitwardenOrganization).GetUseGroups()).ToDataRes(types.Bool)
 	},
 	"bitwarden.organization.usePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenOrganization).GetUsePolicies()).ToDataRes(types.Bool)
@@ -356,8 +356,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBitwardenOrganization).UseEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"bitwarden.organization.useCustomPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseCustomPermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"bitwarden.organization.useGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBitwardenOrganization).UseGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"bitwarden.organization.usePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -666,24 +666,24 @@ type mqlBitwardenOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlBitwardenOrganizationInternal it will be used here
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Seats                plugin.TValue[int64]
-	OccupiedSeats        plugin.TValue[int64]
-	MaxCollections       plugin.TValue[int64]
-	MaxStorageGb         plugin.TValue[int64]
-	Enabled              plugin.TValue[bool]
-	UseSso               plugin.TValue[bool]
-	Use2fa               plugin.TValue[bool]
-	UseDirectory         plugin.TValue[bool]
-	UseEvents            plugin.TValue[bool]
-	UseCustomPermissions plugin.TValue[bool]
-	UsePolicies          plugin.TValue[bool]
-	UseSend              plugin.TValue[bool]
-	UseApi               plugin.TValue[bool]
-	UseResetPassword     plugin.TValue[bool]
-	PlanName             plugin.TValue[string]
-	BusinessName         plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Seats            plugin.TValue[int64]
+	OccupiedSeats    plugin.TValue[int64]
+	MaxCollections   plugin.TValue[int64]
+	MaxStorageGb     plugin.TValue[int64]
+	Enabled          plugin.TValue[bool]
+	UseSso           plugin.TValue[bool]
+	Use2fa           plugin.TValue[bool]
+	UseDirectory     plugin.TValue[bool]
+	UseEvents        plugin.TValue[bool]
+	UseGroups        plugin.TValue[bool]
+	UsePolicies      plugin.TValue[bool]
+	UseSend          plugin.TValue[bool]
+	UseApi           plugin.TValue[bool]
+	UseResetPassword plugin.TValue[bool]
+	PlanName         plugin.TValue[string]
+	BusinessName     plugin.TValue[string]
 }
 
 // createBitwardenOrganization creates a new instance of this resource
@@ -762,8 +762,8 @@ func (c *mqlBitwardenOrganization) GetUseEvents() *plugin.TValue[bool] {
 	return &c.UseEvents
 }
 
-func (c *mqlBitwardenOrganization) GetUseCustomPermissions() *plugin.TValue[bool] {
-	return &c.UseCustomPermissions
+func (c *mqlBitwardenOrganization) GetUseGroups() *plugin.TValue[bool] {
+	return &c.UseGroups
 }
 
 func (c *mqlBitwardenOrganization) GetUsePolicies() *plugin.TValue[bool] {

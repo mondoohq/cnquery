@@ -72,6 +72,14 @@ func (f *flexEnum) UnmarshalJSON(b []byte) error {
 
 // listResponse is the envelope Bitwarden's Public API wraps list endpoints
 // in: {"object": "list", "data": [...], "continuationToken": null}.
+//
+// Known limitation: the list readers below (ListPolicies, ListMembers,
+// ListGroups, ListCollections) return only the first page (out.Data) and do
+// not follow ContinuationToken. The Bitwarden Public API returns the full set
+// in a single response for these organization-scoped endpoints (the token is
+// null in practice), so results are complete today. If a future API version
+// starts paginating any of these, add a loop that re-requests with the
+// continuation token until it is nil, or results will be silently truncated.
 type listResponse[T any] struct {
 	Object            string  `json:"object"`
 	Data              []T     `json:"data"`

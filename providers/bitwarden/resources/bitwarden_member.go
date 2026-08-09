@@ -54,7 +54,7 @@ func initBitwardenMember(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 
 	idArg, ok := args["id"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("bitwarden.member requires an id argument")
 	}
 	id, ok := idArg.Value.(string)
 	if !ok || id == "" {

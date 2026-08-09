@@ -56,8 +56,8 @@ bitwarden.organization @defaults("name seats useSso use2fa") {
   useDirectory bool
   // Whether the organization has event logging available
   useEvents bool
-  // Whether the organization has custom member roles available
-  useCustomPermissions bool
+  // Whether the organization has group-based access management available
+  useGroups bool
   // Whether the organization has policy enforcement available
   usePolicies bool
   // Whether the organization has Bitwarden Send available
@@ -124,7 +124,7 @@ bitwarden.member @defaults("email role status") {
   email string
   // Organization role
   //
-  // One of owner, admin, user, or custom.
+  // One of owner, admin, user, manager, or custom.
   role string
   // Invitation and confirmation status
   //

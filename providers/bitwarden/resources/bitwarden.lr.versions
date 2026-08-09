@@ -43,9 +43,9 @@ bitwarden.organization.planName 13.0.0
 bitwarden.organization.seats 13.0.0
 bitwarden.organization.use2fa 13.0.0
 bitwarden.organization.useApi 13.0.0
-bitwarden.organization.useCustomPermissions 13.0.0
 bitwarden.organization.useDirectory 13.0.0
 bitwarden.organization.useEvents 13.0.0
+bitwarden.organization.useGroups 13.0.0
 bitwarden.organization.usePolicies 13.0.0
 bitwarden.organization.useResetPassword 13.0.0
 bitwarden.organization.useSend 13.0.0
