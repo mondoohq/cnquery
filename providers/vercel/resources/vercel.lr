@@ -453,10 +453,13 @@ private vercel.project @defaults("name framework") {
   optionsAllowlistPaths []string
   // Additional deployment protection configuration
   //
-  // Protection settings the project carries beyond the Vercel Authentication,
-  // password, and trusted-IP controls. Null when the project has no additional
-  // protection configuration.
-  protectionConfig dict
+  // Always null. The projects API returns no protectionConfig object on either
+  // the list or the single-project response, so nothing ever populates this
+  // field. Deprecated in favor of ssoProtectionDeploymentType,
+  // passwordProtectionDeploymentType, trustedIpsProtectionMode,
+  // optionsAllowlistPaths, and protectionBypassCount, which carry the
+  // protection settings the API does return.
+  protectionConfig @maturity("deprecated") dict
   // Number of automation bypass secrets registered for the project
   //
   // Each entry is a secret that skips deployment protection for any request
