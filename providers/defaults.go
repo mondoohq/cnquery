@@ -207,6 +207,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"clickhousecloud": {
+		Provider: &plugin.Provider{
+			Name:            "clickhousecloud",
+			ID:              "go.mondoo.com/mql/v13/providers/clickhousecloud",
+			ConnectionTypes: []string{"clickhousecloud"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "clickhousecloud",
+					Use:   "clickhousecloud",
+					Short: "a ClickHouse Cloud organization",
+				},
+			},
+		},
+	},
+
 	"clickhousedb": {
 		Provider: &plugin.Provider{
 			Name:            "clickhousedb",
