@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/sch"
@@ -189,9 +190,36 @@ func (o *mqlOciServiceConnectorHubConnector) targetBucket() (*mqlOciObjectStorag
 		"region":    llx.ResourceData(regionRes, "oci.region"),
 	})
 	if err != nil {
+		// A connector outlives its target: deleting the bucket leaves the
+		// connector in place pointing at a name that no longer resolves, and
+		// the bucket's init reports that as a 404. That is a real state of the
+		// tenancy, not a fault, so the reference reads as null instead of
+		// failing every connector in the listing.
+		if ociReferentGone(err) {
+			log.Debug().Str("bucket", stringValue(target.BucketName)).
+				Msg("service connector target bucket no longer exists")
+			o.TargetBucket.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.(*mqlOciObjectStorageBucket), nil
+}
+
+// ociReferentGone reports whether an error means a referenced resource no
+// longer exists.
+//
+// The error arrives wrapped by the runtime that ran the referent's init, so
+// this unwraps rather than type-asserting the way ociCompartmentInaccessible
+// can. Both 404 spellings count: services return a specific code such as
+// BucketNotFound, and the shared NotAuthorizedOrNotFound covers the case where
+// the resource is gone or was never visible.
+func ociReferentGone(err error) bool {
+	var svcErr common.ServiceError
+	if !errors.As(err, &svcErr) {
+		return false
+	}
+	return svcErr.GetHTTPStatusCode() == 404
 }
 
 func (o *mqlOciServiceConnectorHubConnector) targetTopic() (*mqlOciOnsTopic, error) {
