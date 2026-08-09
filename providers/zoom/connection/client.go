@@ -199,7 +199,7 @@ type SsoSettings struct {
 // GetSsoSettings fetches the account's SSO configuration.
 func (c *Client) GetSsoSettings(ctx context.Context, accountID string) (*SsoSettings, error) {
 	var out SsoSettings
-	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", url.Values{"option": {"security"}}, &out); err != nil {
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", url.Values{"option": {"sso"}}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
