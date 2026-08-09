@@ -512,6 +512,18 @@ gitlab.group @defaults("name visibility webURL") {
   packages() []gitlab.project.package
   // Parent group, or null when this is a top-level group
   parentGroup() gitlab.group
+  // Personal access tokens held by enterprise users of the group
+  enterpriseAccessTokens() []gitlab.group.enterpriseAccessToken
+  // SSH keys held by enterprise users of the group
+  enterpriseSshKeys() []gitlab.group.enterpriseSshKey
+  // Service accounts created at group scope
+  serviceAccounts() []gitlab.group.serviceAccount
+  // Certificate authorities trusted for SSH access to the group
+  sshCertificates() []gitlab.group.sshCertificate
+  // Identity provider links for group members
+  scimIdentities() []gitlab.group.scimIdentity
+  // Requests to join the group
+  accessRequests() []gitlab.group.accessRequest
   // Webhooks registered at the group level
   webhooks() []gitlab.group.webhook
   // CI/CD variables defined at the group level (inherited by every project in the group)
@@ -866,6 +878,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   clusterAgents() []gitlab.project.clusterAgent
   // Push mirrors replicating the repository to external Git hosts
   remoteMirrors() []gitlab.project.remoteMirror
+  // Requests to join the project
+  accessRequests() []gitlab.project.accessRequest
 }
 
 // GitLab project integration
@@ -2589,4 +2603,186 @@ private gitlab.project.remoteMirror @defaults("url enabled updateStatus") {
   lastUpdateAt time
   // Time replication last completed successfully
   lastSuccessfulUpdateAt time
+}
+
+// GitLab enterprise user access token
+//
+// Personal access token belonging to an enterprise user of the group.
+// These tokens are created by individuals rather than by the group, so
+// they sit outside the group's own token inventory while carrying the
+// user's full permissions. `scopes` shows how much of the API the token
+// reaches, `expiresAt` whether it ever lapses, and `lastUsedAt` whether
+// it is still in service. The secret value itself is never exposed.
+private gitlab.group.enterpriseAccessToken @defaults("name active expiresAt lastUsedAt") {
+  // Token ID
+  id int
+  // Token name
+  name string
+  // Human-readable note recorded with the token
+  description string
+  // API access the token grants
+  //
+  // One or more of `api`, `read_api`, `read_user`, `read_repository`,
+  // `write_repository`, `read_registry`, `write_registry`,
+  // `create_runner`, `manage_runner`, `ai_features`, `k8s_proxy`,
+  // `self_rotate`, `read_service_ping`, and `sudo`.
+  scopes []string
+  // Whether the token can currently authenticate
+  active bool
+  // Whether the token has been revoked
+  revoked bool
+  // Time the token was created
+  createdAt time
+  // Time the token expires
+  //
+  // Null when the token never expires.
+  expiresAt time
+  // Time the token was last used to authenticate
+  //
+  // Null when the token has never been used.
+  lastUsedAt time
+  // User the token authenticates as
+  user() gitlab.user
+}
+
+// GitLab enterprise user SSH key
+//
+// SSH key belonging to an enterprise user of the group, usable for Git
+// access to every project the user can reach. `expiresAt` and
+// `lastUsedAt` separate keys still in service from long-forgotten ones,
+// and `usageType` records whether the key authenticates, signs, or both.
+private gitlab.group.enterpriseSshKey @defaults("title expiresAt lastUsedAt") {
+  // Key ID
+  id int
+  // Key title
+  title string
+  // Time the key was added
+  createdAt time
+  // Time the key expires
+  //
+  // Null when the key never expires.
+  expiresAt time
+  // Time the key was last used
+  //
+  // Null when the key has never been used.
+  lastUsedAt time
+  // What the key may be used for
+  //
+  // One of `auth`, `signing`, or `auth_and_signing`.
+  usageType string
+  // User the key belongs to
+  user() gitlab.user
+}
+
+// GitLab group service account
+//
+// Non-human identity created at group scope to run automation. Service
+// accounts hold group membership like any other user but have no owner
+// to notice a compromise, so `accessTokens` is the field that matters:
+// it lists the credentials the account authenticates with, their scopes,
+// and whether they expire.
+private gitlab.group.serviceAccount @defaults("username name") {
+  // Service account user ID
+  id int
+  // Display name
+  name string
+  // Account username
+  username string
+  // Email address recorded for the account
+  email string
+  // Access tokens issued to the service account
+  accessTokens() []gitlab.group.enterpriseAccessToken
+}
+
+// GitLab group SSH certificate authority
+//
+// Public key of a certificate authority the group trusts to authenticate
+// Git access. Anyone able to sign with the matching private key can
+// reach the group's repositories without registering an individual SSH
+// key, which makes the set of trusted authorities worth reviewing.
+private gitlab.group.sshCertificate @defaults("title createdAt") {
+  // Certificate authority ID
+  id int
+  // Certificate authority title
+  title string
+  // Public key of the certificate authority
+  key string
+  // Time the certificate authority was added
+  createdAt time
+}
+
+// GitLab group SCIM identity
+//
+// Link between a group member and the identity provider account that
+// provisioned them. A member with no SCIM identity was created outside
+// the identity provider and survives deprovisioning there, so comparing
+// this list against the group's members finds accounts that offboarding
+// will not reach. `active` reports whether the provider still considers
+// the identity live.
+private gitlab.group.scimIdentity @defaults("externalUid active") {
+  // Identifier the identity provider knows the user by
+  externalUid string
+  // Whether the identity provider still considers the identity active
+  active bool
+  // Group member the identity is linked to
+  user() gitlab.user
+}
+
+// GitLab group access request
+//
+// Pending or resolved request to join the group. Requests sit in the
+// queue until an owner acts on them, so `requestedAt` combined with a
+// `state` of `pending` finds access decisions nobody has made.
+// `accessLevel` is the level the requester asked for.
+private gitlab.group.accessRequest @defaults("username state requestedAt") {
+  // User ID of the requester
+  id int
+  // Username of the requester
+  username string
+  // Display name of the requester
+  name string
+  // Where the request stands
+  //
+  // One of `pending`, `approved`, or `denied`.
+  state string
+  // Time the requesting account was created
+  createdAt time
+  // Time access was requested
+  requestedAt time
+  // Access level requested
+  //
+  // 10 Guest, 15 Planner, 20 Reporter, 30 Developer, 40 Maintainer, or
+  // 50 Owner.
+  accessLevel int
+  // User making the request
+  user() gitlab.user
+}
+
+// GitLab project access request
+//
+// Pending or resolved request to join the project, with the same
+// meaning as its group counterpart: a `state` of `pending` alongside an
+// old `requestedAt` marks an access decision nobody has made.
+private gitlab.project.accessRequest @defaults("username state requestedAt") {
+  // User ID of the requester
+  id int
+  // Username of the requester
+  username string
+  // Display name of the requester
+  name string
+  // Where the request stands
+  //
+  // One of `pending`, `approved`, or `denied`.
+  state string
+  // Time the requesting account was created
+  createdAt time
+  // Time access was requested
+  requestedAt time
+  // Access level requested
+  //
+  // 10 Guest, 15 Planner, 20 Reporter, 30 Developer, 40 Maintainer, or
+  // 50 Owner.
+  accessLevel int
+  // User making the request
+  user() gitlab.user
 }
