@@ -25,6 +25,10 @@ func TestParseShodanTime(t *testing.T) {
 		// The format Shodan actually emits for host/banner/DNS times: no timezone.
 		{"microseconds no tz", "2024-05-01T12:00:00.283713", "2024-05-01T12:00:00.283713Z"},
 		{"seconds no tz", "2024-05-01T12:00:00", "2024-05-01T12:00:00Z"},
+		// The format certificate issued/expires arrive in, which differs from
+		// the host and DNS timestamps above.
+		{"asn1 generalized time", "20260720180833Z", "2026-07-20T18:08:33Z"},
+		{"asn1 generalized time end of year", "20261221192001Z", "2026-12-21T19:20:01Z"},
 		{"garbage", "not-a-time", ""},
 		{"date only unsupported", "2024-05-01", ""},
 	}

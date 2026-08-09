@@ -227,6 +227,10 @@ func parseShodanTime(raw string) *time.Time {
 		time.RFC3339Nano,
 		"2006-01-02T15:04:05.999999",
 		"2006-01-02T15:04:05",
+		// Certificate validity dates arrive as X.509 ASN.1 GeneralizedTime
+		// rather than the ISO-8601 form used for host, banner and DNS
+		// timestamps, so they need their own layout.
+		"20060102150405Z",
 	} {
 		if t, err := time.Parse(layout, raw); err == nil {
 			return &t
