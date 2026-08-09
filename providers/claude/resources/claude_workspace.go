@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -32,6 +33,39 @@ func requireAdmin(runtime *plugin.Runtime) (*connection.AdminClient, error) {
 		return nil, fmt.Errorf("admin API key required: set --admin-token or ANTHROPIC_ADMIN_API_KEY")
 	}
 	return connection.NewAdminClient(c.AdminToken(), c.Host()), nil
+}
+
+// toInterfaceMap converts an API string map into the interface map llx expects
+// for a map[string]string field.
+func toInterfaceMap(m map[string]string) map[string]interface{} {
+	res := make(map[string]interface{}, len(m))
+	for k, v := range m {
+		res[k] = v
+	}
+	return res
+}
+
+// toInterfaceSlice converts an API string slice into the interface slice llx
+// expects for a []string field.
+func toInterfaceSlice(s []string) []interface{} {
+	res := make([]interface{}, len(s))
+	for i, v := range s {
+		res[i] = v
+	}
+	return res
+}
+
+// rawJSONToDict decodes a raw API JSON fragment into the JSON-native values a
+// dict field accepts. An absent fragment decodes to nil, which renders as null.
+func rawJSONToDict(raw string) (interface{}, error) {
+	if raw == "" || raw == "null" {
+		return nil, nil
+	}
+	var res interface{}
+	if err := json.Unmarshal([]byte(raw), &res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func parseFamily(id string) string {
