@@ -114,6 +114,30 @@ func TestParseAccessLists_HostAndPortForms(t *testing.T) {
 	assert.Equal(t, []string{"1023"}, e40.SrcPorts)
 }
 
+func TestParseAccessLists_SameNameAcrossFamilies(t *testing.T) {
+	// IPv4 and IPv6 access-lists are separate namespaces and can share a
+	// name. Both must survive as distinct lists with their own rules.
+	cfg := `ip access-list extended MGMT
+   10 permit tcp 10.0.0.0/8 any eq 22
+!
+ipv6 access-list MGMT
+   10 permit ipv6 fc00::/7 any
+   20 deny ipv6 any any
+!
+`
+	acls := ParseAccessLists(cfg)
+	require.Len(t, acls, 2)
+
+	byFamily := map[string]AccessList{}
+	for _, a := range acls {
+		assert.Equal(t, "MGMT", a.Name)
+		byFamily[a.Family] = a
+	}
+	require.Len(t, byFamily, 2)
+	assert.Len(t, byFamily["ipv4"].Entries, 1)
+	assert.Len(t, byFamily["ipv6"].Entries, 2)
+}
+
 func TestParseAccessLists_WildcardMask(t *testing.T) {
 	// The inverse-mask form is equivalent to a prefix length and must convert.
 	cfg := `ip access-list extended WILDCARD

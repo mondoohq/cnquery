@@ -1088,8 +1088,15 @@ func (v *mqlAristaEosMlagInterface) id() (string, error) {
 
 // ACL resource implementations
 
+// id qualifies the list by address family. EOS keeps IPv4 and IPv6 access-lists
+// in separate namespaces, so `ip access-list FOO` and `ipv6 access-list FOO`
+// can both exist. Keying on the name alone would make the second one resolve
+// to the first from the resource cache.
 func (v *mqlAristaEosAcl) id() (string, error) {
-	return "arista.eos.acl/" + v.Name.Data, v.Name.Error
+	if v.Family.Error != nil {
+		return "", v.Family.Error
+	}
+	return "arista.eos.acl/" + v.Family.Data + "/" + v.Name.Data, v.Name.Error
 }
 
 // initAristaEosAcl resolves a standalone `arista.eos.acl(name: "...")` lookup.
@@ -1110,12 +1117,22 @@ func initAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return nil, nil, errors.New("arista.eos.acl name must be a string")
 	}
 
+	// family is optional and only needed to disambiguate a name used by both
+	// an IPv4 and an IPv6 list.
+	family := ""
+	if familyRaw, ok := args["family"]; ok {
+		family, ok = familyRaw.Value.(string)
+		if !ok {
+			return nil, nil, errors.New("arista.eos.acl family must be a string")
+		}
+	}
+
 	rc, err := fetchRunningConfig(runtime)
 	if err != nil {
 		return nil, nil, err
 	}
 	for _, acl := range eos.ParseAccessLists(rc) {
-		if acl.Name != name {
+		if acl.Name != name || (family != "" && acl.Family != family) {
 			continue
 		}
 		args["family"] = llx.StringData(acl.Family)
@@ -1123,6 +1140,9 @@ func initAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return args, nil, nil
 	}
 
+	if family != "" {
+		return nil, nil, fmt.Errorf("arista.eos.acl with name %q and family %q not found", name, family)
+	}
 	return nil, nil, fmt.Errorf("arista.eos.acl with name %q not found", name)
 }
 
@@ -1153,16 +1173,22 @@ func (a *mqlAristaEosAcl) entries() ([]any, error) {
 	if a.Name.Error != nil {
 		return nil, a.Name.Error
 	}
+	if a.Family.Error != nil {
+		return nil, a.Family.Error
+	}
 	aclName := a.Name.Data
+	aclFamily := a.Family.Data
 
 	rc, err := fetchRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
+	// Both name and family are needed to select the list: the two address
+	// families are separate namespaces and can share a name.
 	var entries []eos.AccessListEntry
 	for _, acl := range eos.ParseAccessLists(rc) {
-		if acl.Name == aclName {
+		if acl.Name == aclName && acl.Family == aclFamily {
 			entries = acl.Entries
 			break
 		}
@@ -1172,6 +1198,7 @@ func (a *mqlAristaEosAcl) entries() ([]any, error) {
 	for _, e := range entries {
 		mqlEntry, err := CreateResource(a.MqlRuntime, "arista.eos.acl.entry", map[string]*llx.RawData{
 			"aclName":         llx.StringData(aclName),
+			"aclFamily":       llx.StringData(aclFamily),
 			"sequenceNumber":  llx.IntData(int64(e.SequenceNumber)),
 			"action":          llx.StringData(e.Action),
 			"protocol":        llx.StringData(e.Protocol),
@@ -1197,11 +1224,18 @@ func (a *mqlAristaEosAcl) entries() ([]any, error) {
 	return res, nil
 }
 
+// id carries the family for the same reason the parent list's id does: two
+// lists can share a name across address families, and their entries would
+// otherwise collide sequence number for sequence number.
 func (v *mqlAristaEosAclEntry) id() (string, error) {
 	if v.AclName.Error != nil {
 		return "", v.AclName.Error
 	}
-	return "arista.eos.acl.entry/" + v.AclName.Data + "/" + strconv.FormatInt(v.SequenceNumber.Data, 10), v.SequenceNumber.Error
+	if v.AclFamily.Error != nil {
+		return "", v.AclFamily.Error
+	}
+	return "arista.eos.acl.entry/" + v.AclFamily.Data + "/" + v.AclName.Data + "/" +
+		strconv.FormatInt(v.SequenceNumber.Data, 10), v.SequenceNumber.Error
 }
 
 // Hardware resource implementations
