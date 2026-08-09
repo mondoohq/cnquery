@@ -166,6 +166,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongo.instance.logVerbosity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongoInstance).GetLogVerbosity()).ToDataRes(types.Int)
 	},
+	"mongo.instance.logAppend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongoInstance).GetLogAppend()).ToDataRes(types.Bool)
+	},
 	"mongo.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongoInstance).GetParameters()).ToDataRes(types.Array(types.Resource("mongo.parameter")))
 	},
@@ -308,6 +311,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongo.instance.logVerbosity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongoInstance).LogVerbosity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongo.instance.logAppend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongoInstance).LogAppend, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"mongo.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -512,6 +519,7 @@ type mqlMongoInstance struct {
 	JavascriptEnabled     plugin.TValue[bool]
 	AuditLogDestination   plugin.TValue[string]
 	LogVerbosity          plugin.TValue[int64]
+	LogAppend             plugin.TValue[bool]
 	Parameters            plugin.TValue[[]any]
 	Users                 plugin.TValue[[]any]
 	Roles                 plugin.TValue[[]any]
@@ -600,6 +608,10 @@ func (c *mqlMongoInstance) GetAuditLogDestination() *plugin.TValue[string] {
 
 func (c *mqlMongoInstance) GetLogVerbosity() *plugin.TValue[int64] {
 	return &c.LogVerbosity
+}
+
+func (c *mqlMongoInstance) GetLogAppend() *plugin.TValue[bool] {
+	return &c.LogAppend
 }
 
 func (c *mqlMongoInstance) GetParameters() *plugin.TValue[[]any] {
