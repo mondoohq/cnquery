@@ -20,9 +20,15 @@ var (
 	homeConfigDir = filepath.Join(home, ".config", "mondoo")
 	homeConfig    = filepath.Join(homeConfigDir, DefaultConfigFile)
 
-	systemConfigDir = filepath.Join("/etc", "opt", "mondoo")
-	systemConfig    = filepath.Join(systemConfigDir, DefaultConfigFile)
-	systemInventory = filepath.Join(systemConfigDir, "inventory.yml")
+	// Derived from SystemConfigPath rather than hardcoded: the system config
+	// directory is platform-specific (/etc/opt/mondoo on Linux,
+	// /Library/Mondoo/etc on macOS, C:\ProgramData\Mondoo on Windows). Writing
+	// fixtures to a hardcoded Linux path made every test that expects the
+	// system config to be found fail anywhere but Linux, because
+	// autodetectConfig probed a path the test never wrote to.
+	systemConfigDir = SystemConfigPath()
+	systemConfig    = SystemConfigPath(DefaultConfigFile)
+	systemInventory = SystemConfigPath("inventory.yml")
 
 	oldConfig = filepath.Join(home, "."+DefaultConfigFile)
 
