@@ -18,6 +18,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// csrBlockPEM is a PEM block that is not a certificate, used to check that the
+// parser skips past one. Its body is not a real signing request; the parser
+// never decodes a block it skips, and a well-formed one would only be a
+// credential-shaped string for a scanner to flag.
+const csrBlockPEM = "-----BEGIN CERTIFICATE REQUEST-----\nZm9v\n-----END CERTIFICATE REQUEST-----\n"
+
 // testCertificatePEM builds a self-signed certificate and returns it PEM
 // encoded, so the parser is exercised against a real certificate rather than a
 // checked-in fixture that would eventually expire.
@@ -47,10 +53,12 @@ func TestParseCertificatePEM(t *testing.T) {
 		assert.Equal(t, expiry.Unix(), cert.NotAfter.Unix())
 	})
 
-	// Magnum can hand back a bundle; the authority is the first certificate in
-	// it, and a leading key block must not stop the search.
+	// Magnum returns a signing request alongside the certificate, so a bundle
+	// can lead with one. Its block type starts with "CERTIFICATE" without being
+	// a certificate, which is what makes it the useful case to skip past: it
+	// proves the block type is matched exactly rather than by prefix.
 	t.Run("first certificate of a bundle", func(t *testing.T) {
-		bundle := "-----BEGIN EC PRIVATE KEY-----\nZm9v\n-----END EC PRIVATE KEY-----\n" +
+		bundle := csrBlockPEM +
 			testCertificatePEM(t, "kubernetes-ca", expiry) +
 			testCertificatePEM(t, "intermediate", expiry.Add(24*time.Hour))
 		cert, err := parseCertificatePEM(bundle)
@@ -62,7 +70,7 @@ func TestParseCertificatePEM(t *testing.T) {
 	// A cluster whose authority is withheld reports nothing rather than failing
 	// the whole query.
 	t.Run("no certificate block", func(t *testing.T) {
-		for _, raw := range []string{"", "not pem at all", "-----BEGIN EC PRIVATE KEY-----\nZm9v\n-----END EC PRIVATE KEY-----\n"} {
+		for _, raw := range []string{"", "not pem at all", csrBlockPEM} {
 			cert, err := parseCertificatePEM(raw)
 			require.NoError(t, err)
 			assert.Nil(t, cert)
