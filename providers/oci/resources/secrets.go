@@ -70,15 +70,6 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 					nextRotation = &s.NextRotationTime.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(s.FreeformTags))
-				for k, v := range s.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(s.DefinedTags))
-				for k, v := range s.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.vault.secret", map[string]*llx.RawData{
 					"id":                      llx.StringDataPtr(s.Id),
 					"name":                    llx.StringDataPtr(s.SecretName),
@@ -90,8 +81,8 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 					"nextRotationTime":        llx.TimeDataPtr(nextRotation),
 					"isAutoGenerationEnabled": llx.BoolDataPtr(s.IsAutoGenerationEnabled),
 					"created":                 llx.TimeDataPtr(created),
-					"freeformTags":            llx.MapData(freeformTags, types.String),
-					"definedTags":             llx.MapData(definedTags, types.Any),
+					"freeformTags":            llx.MapData(strMapToAny(s.FreeformTags), types.String),
+					"definedTags":             llx.MapData(definedTagsToAny(s.DefinedTags), types.Any),
 					"systemTags":              llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
 				})
 				if err != nil {

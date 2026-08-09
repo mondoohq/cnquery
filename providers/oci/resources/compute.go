@@ -75,16 +75,6 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					created = &instance.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(instance.FreeformTags))
-				for k, v := range instance.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{}, len(instance.DefinedTags))
-				for k, v := range instance.DefinedTags {
-					definedTags[k] = v
-				}
-
 				metadata := make(map[string]interface{}, len(instance.Metadata))
 				for k, v := range instance.Metadata {
 					metadata[k] = v
@@ -181,8 +171,8 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					"sourceDetails":               llx.DictData(sourceDetails),
 					"metadata":                    llx.MapData(metadata, types.String),
 					"timeMaintenanceRebootDue":    llx.TimeDataPtr(timeMaintenanceRebootDue),
-					"freeformTags":                llx.MapData(freeformTags, types.String),
-					"definedTags":                 llx.MapData(definedTags, types.Any),
+					"freeformTags":                llx.MapData(strMapToAny(instance.FreeformTags), types.String),
+					"definedTags":                 llx.MapData(definedTagsToAny(instance.DefinedTags), types.Any),
 					"systemTags":                  llx.MapData(definedTagsToAny(instance.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -373,16 +363,6 @@ func (o *mqlOciCompute) images() ([]any, error) {
 					created = &image.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(image.FreeformTags))
-				for k, v := range image.FreeformTags {
-					freeformTags[k] = v
-				}
-
-				definedTags := make(map[string]interface{}, len(image.DefinedTags))
-				for k, v := range image.DefinedTags {
-					definedTags[k] = v
-				}
-
 				// Create compartment resource reference
 				compartment, err := NewResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
 					"id": llx.StringDataPtr(image.CompartmentId),
@@ -401,8 +381,8 @@ func (o *mqlOciCompute) images() ([]any, error) {
 					"operatingSystem":        llx.StringDataPtr(image.OperatingSystem),
 					"operatingSystemVersion": llx.StringDataPtr(image.OperatingSystemVersion),
 					"sizeInMBs":              llx.IntDataPtr(image.SizeInMBs),
-					"freeformTags":           llx.MapData(freeformTags, types.String),
-					"definedTags":            llx.MapData(definedTags, types.Any),
+					"freeformTags":           llx.MapData(strMapToAny(image.FreeformTags), types.String),
+					"definedTags":            llx.MapData(definedTagsToAny(image.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err

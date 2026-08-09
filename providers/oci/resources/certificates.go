@@ -88,15 +88,6 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 
 				autoRenewal, renewalInterval := extractCertificateRenewal(c.CertificateRules)
 
-				freeformTags := make(map[string]interface{}, len(c.FreeformTags))
-				for k, v := range c.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(c.DefinedTags))
-				for k, v := range c.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.certificates.certificate", map[string]*llx.RawData{
 					"id":                 llx.StringDataPtr(c.Id),
 					"name":               llx.StringDataPtr(c.Name),
@@ -115,8 +106,8 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 					"renewalInterval":    llx.StringData(renewalInterval),
 					"state":              llx.StringData(string(c.LifecycleState)),
 					"created":            llx.TimeDataPtr(created),
-					"freeformTags":       llx.MapData(freeformTags, types.String),
-					"definedTags":        llx.MapData(definedTags, types.Any),
+					"freeformTags":       llx.MapData(strMapToAny(c.FreeformTags), types.String),
+					"definedTags":        llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -263,15 +254,6 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 
 				kind := caKindFromConfigType(string(ca.ConfigType))
 
-				freeformTags := make(map[string]interface{}, len(ca.FreeformTags))
-				for k, v := range ca.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(ca.DefinedTags))
-				for k, v := range ca.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.certificates.certificateAuthority", map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(ca.Id),
 					"name":              llx.StringDataPtr(ca.Name),
@@ -285,8 +267,8 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 					"signingAlgorithm":  llx.StringData(string(ca.SigningAlgorithm)),
 					"state":             llx.StringData(string(ca.LifecycleState)),
 					"created":           llx.TimeDataPtr(created),
-					"freeformTags":      llx.MapData(freeformTags, types.String),
-					"definedTags":       llx.MapData(definedTags, types.Any),
+					"freeformTags":      llx.MapData(strMapToAny(ca.FreeformTags), types.String),
+					"definedTags":       llx.MapData(definedTagsToAny(ca.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -408,15 +390,6 @@ func (o *mqlOciCertificates) caBundles() ([]any, error) {
 					created = &b.TimeCreated.Time
 				}
 
-				freeformTags := make(map[string]interface{}, len(b.FreeformTags))
-				for k, v := range b.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(b.DefinedTags))
-				for k, v := range b.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.certificates.caBundle", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(b.Id),
 					"name":          llx.StringDataPtr(b.Name),
@@ -424,8 +397,8 @@ func (o *mqlOciCertificates) caBundles() ([]any, error) {
 					"compartmentID": llx.StringDataPtr(b.CompartmentId),
 					"state":         llx.StringData(string(b.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(b.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(b.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err

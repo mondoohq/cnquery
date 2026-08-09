@@ -177,3 +177,50 @@ func TestStringsToAnyAndStrMapToAny(t *testing.T) {
 	assert.Empty(t, strMapToAny(nil))
 	assert.Equal(t, map[string]any{"k": "v"}, strMapToAny(map[string]string{"k": "v"}))
 }
+
+// The tag helpers replaced a copy loop that had been written out by hand at 64
+// listers. These pin the property that made that replacement safe: the helper
+// returns what the loop returned. Written as the loop, not as a literal, so the
+// comparison keeps meaning if either side is ever changed.
+
+func TestStrMapToAnyMatchesInlineCopy(t *testing.T) {
+	for _, in := range []map[string]string{
+		nil,
+		{},
+		{"env": "prod"},
+		{"env": "prod", "owner": "platform", "": "empty-key"},
+	} {
+		want := make(map[string]interface{}, len(in))
+		for k, v := range in {
+			want[k] = v
+		}
+		assert.Equal(t, want, strMapToAny(in))
+	}
+}
+
+func TestDefinedTagsToAnyMatchesInlineCopy(t *testing.T) {
+	for _, in := range []map[string]map[string]interface{}{
+		nil,
+		{},
+		{"Operations": {"CostCenter": "42"}},
+		{
+			"Operations": {"CostCenter": "42", "Reviewed": true, "Count": 7},
+			"Empty":      {},
+		},
+	} {
+		want := make(map[string]interface{}, len(in))
+		for k, v := range in {
+			want[k] = v
+		}
+
+		got := definedTagsToAny(in)
+
+		// Equal, not Same: the helper rebuilds each namespace map instead of
+		// aliasing the SDK's, so it does not hand MQL a map the SDK still owns.
+		// The contents are what has to match.
+		assert.Equal(t, len(want), len(got))
+		for ns, kv := range want {
+			assert.EqualValues(t, kv, got[ns])
+		}
+	}
+}

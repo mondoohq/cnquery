@@ -107,15 +107,6 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					return nil, err
 				}
 
-				freeformTags := make(map[string]interface{}, len(ci.FreeformTags))
-				for k, v := range ci.FreeformTags {
-					freeformTags[k] = v
-				}
-				definedTags := make(map[string]interface{}, len(ci.DefinedTags))
-				for k, v := range ci.DefinedTags {
-					definedTags[k] = v
-				}
-
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.containerInstances.instance", map[string]*llx.RawData{
 					"id":                               llx.StringDataPtr(ci.Id),
 					"name":                             llx.StringDataPtr(ci.DisplayName),
@@ -131,8 +122,8 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					"volumeCount":                      llx.IntData(intValue(ci.VolumeCount)),
 					"created":                          llx.TimeDataPtr(created),
 					"timeUpdated":                      llx.TimeDataPtr(timeUpdated),
-					"freeformTags":                     llx.MapData(freeformTags, types.String),
-					"definedTags":                      llx.MapData(definedTags, types.Any),
+					"freeformTags":                     llx.MapData(strMapToAny(ci.FreeformTags), types.String),
+					"definedTags":                      llx.MapData(definedTagsToAny(ci.DefinedTags), types.Any),
 					"systemTags":                       llx.MapData(definedTagsToAny(ci.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -196,15 +187,6 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			return nil, err
 		}
 
-		freeformTags := make(map[string]interface{}, len(c.FreeformTags))
-		for k, v := range c.FreeformTags {
-			freeformTags[k] = v
-		}
-		definedTags := make(map[string]interface{}, len(c.DefinedTags))
-		for k, v := range c.DefinedTags {
-			definedTags[k] = v
-		}
-
 		sec := ociContainerSecurityContext(c.SecurityContext)
 
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.containerInstances.container", map[string]*llx.RawData{
@@ -225,8 +207,8 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			"droppedCapabilities":         llx.ArrayData(sec.dropped, types.String),
 			"created":                     llx.TimeDataPtr(created),
 			"timeUpdated":                 llx.TimeDataPtr(timeUpdated),
-			"freeformTags":                llx.MapData(freeformTags, types.String),
-			"definedTags":                 llx.MapData(definedTags, types.Any),
+			"freeformTags":                llx.MapData(strMapToAny(c.FreeformTags), types.String),
+			"definedTags":                 llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
 			"systemTags":                  llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 		})
 		if err != nil {
