@@ -285,8 +285,8 @@ func newMqlDatabricksFederationPolicy(runtime *plugin.Runtime, p oauth2.Federati
 		"oidcSubject":        llx.StringData(subject),
 		"oidcSubjectClaim":   llx.StringData(subjectClaim),
 		"oidcJwksUri":        llx.StringData(jwksUri),
-		"createTime":         llx.StringData(p.CreateTime),
-		"updateTime":         llx.StringData(p.UpdateTime),
+		"createTime":         llx.TimeDataPtr(rfc3339Time(p.CreateTime)),
+		"updateTime":         llx.TimeDataPtr(rfc3339Time(p.UpdateTime)),
 	})
 	if err != nil {
 		return nil, err
@@ -330,14 +330,18 @@ func (r *mqlDatabricksServicePrincipal) federationPolicies() ([]any, error) {
 		return nil, fmt.Errorf("databricks.servicePrincipal has a non-numeric id %q, cannot list federation policies", r.Id.Data)
 	}
 
-	resp, err := acc.ServicePrincipalFederationPolicy.ListByServicePrincipalId(context.Background(), spId)
+	// ListByServicePrincipalId returns a single response page and discards its
+	// NextPageToken, so a service principal with more policies than fit one page
+	// would report only the first. ListAll drains the pages.
+	policies, err := acc.ServicePrincipalFederationPolicy.ListAll(context.Background(),
+		oauth2.ListServicePrincipalFederationPoliciesRequest{ServicePrincipalId: spId})
 	if err != nil {
 		return nil, err
 	}
 
 	out := []any{}
-	for i := range resp.Policies {
-		res, err := newMqlDatabricksFederationPolicy(r.MqlRuntime, resp.Policies[i])
+	for i := range policies {
+		res, err := newMqlDatabricksFederationPolicy(r.MqlRuntime, policies[i])
 		if err != nil {
 			return nil, err
 		}

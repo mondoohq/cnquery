@@ -2074,10 +2074,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlDatabricksFederationPolicy).GetOidcJwksUri()).ToDataRes(types.String)
 	},
 	"databricks.federationPolicy.createTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksFederationPolicy).GetCreateTime()).ToDataRes(types.String)
+		return (r.(*mqlDatabricksFederationPolicy).GetCreateTime()).ToDataRes(types.Time)
 	},
 	"databricks.federationPolicy.updateTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatabricksFederationPolicy).GetUpdateTime()).ToDataRes(types.String)
+		return (r.(*mqlDatabricksFederationPolicy).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"databricks.appIntegration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksAppIntegration).GetId()).ToDataRes(types.String)
@@ -4662,11 +4662,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"databricks.federationPolicy.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatabricksFederationPolicy).CreateTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlDatabricksFederationPolicy).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"databricks.federationPolicy.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatabricksFederationPolicy).UpdateTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlDatabricksFederationPolicy).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"databricks.appIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10617,8 +10617,8 @@ type mqlDatabricksFederationPolicy struct {
 	OidcSubject        plugin.TValue[string]
 	OidcSubjectClaim   plugin.TValue[string]
 	OidcJwksUri        plugin.TValue[string]
-	CreateTime         plugin.TValue[string]
-	UpdateTime         plugin.TValue[string]
+	CreateTime         plugin.TValue[*time.Time]
+	UpdateTime         plugin.TValue[*time.Time]
 }
 
 // createDatabricksFederationPolicy creates a new instance of this resource
@@ -10693,11 +10693,11 @@ func (c *mqlDatabricksFederationPolicy) GetOidcJwksUri() *plugin.TValue[string] 
 	return &c.OidcJwksUri
 }
 
-func (c *mqlDatabricksFederationPolicy) GetCreateTime() *plugin.TValue[string] {
+func (c *mqlDatabricksFederationPolicy) GetCreateTime() *plugin.TValue[*time.Time] {
 	return &c.CreateTime
 }
 
-func (c *mqlDatabricksFederationPolicy) GetUpdateTime() *plugin.TValue[string] {
+func (c *mqlDatabricksFederationPolicy) GetUpdateTime() *plugin.TValue[*time.Time] {
 	return &c.UpdateTime
 }
 

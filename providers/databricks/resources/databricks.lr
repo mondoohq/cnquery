@@ -1939,9 +1939,9 @@ databricks.federationPolicy @defaults("name oidcIssuer oidcSubject") {
   // URL the issuer's signing keys are fetched from
   oidcJwksUri string
   // When the policy was created
-  createTime string
+  createTime time
   // When the policy was last modified
-  updateTime string
+  updateTime time
 }
 
 // OAuth app integration
