@@ -7,6 +7,7 @@ import (
 	dropboxsdk "github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/dropbox/connection"
 )
 
@@ -25,15 +26,20 @@ func (r *mqlDropbox) conn() *connection.DropboxConnection {
 	return r.MqlRuntime.Connection.(*connection.DropboxConnection)
 }
 
-// team reads the team-wide identity and sharing configuration singleton. Its
-// cache key is the team ID, since there is exactly one team per connection.
-func (r *mqlDropbox) team() (*mqlDropboxTeam, error) {
-	conn := r.conn()
+// initDropboxTeam reads the team-wide identity and sharing configuration
+// singleton. There is exactly one team per connection, so it resolves entirely
+// from the connection and uses the team ID as its cache key.
+func initDropboxTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.DropboxConnection)
 	client := conn.Client()
 
 	info, err := conn.TeamInfo()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var externalSharingAllowed, publicSharingAllowed bool
@@ -65,19 +71,15 @@ func (r *mqlDropbox) team() (*mqlDropboxTeam, error) {
 		}
 	}
 
-	res, err := CreateResource(r.MqlRuntime, "dropbox.team", map[string]*llx.RawData{
-		"__id":                   llx.StringData(info.TeamId),
-		"id":                     llx.StringData(info.TeamId),
-		"name":                   llx.StringData(info.Name),
-		"numLicensedUsers":       llx.IntData(int64(info.NumLicensedUsers)),
-		"numProvisionedUsers":    llx.IntData(int64(info.NumProvisionedUsers)),
-		"numUsedLicenses":        llx.IntData(int64(info.NumUsedLicenses)),
-		"externalSharingAllowed": llx.BoolData(externalSharingAllowed),
-		"publicSharingAllowed":   llx.BoolData(publicSharingAllowed),
-		"uploadApiRateLimit":     llx.IntData(uploadRateLimit),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlDropboxTeam), nil
+	args["__id"] = llx.StringData(info.TeamId)
+	args["id"] = llx.StringData(info.TeamId)
+	args["name"] = llx.StringData(info.Name)
+	args["numLicensedUsers"] = llx.IntData(int64(info.NumLicensedUsers))
+	args["numProvisionedUsers"] = llx.IntData(int64(info.NumProvisionedUsers))
+	args["numUsedLicenses"] = llx.IntData(int64(info.NumUsedLicenses))
+	args["externalSharingAllowed"] = llx.BoolData(externalSharingAllowed)
+	args["publicSharingAllowed"] = llx.BoolData(publicSharingAllowed)
+	args["uploadApiRateLimit"] = llx.IntData(uploadRateLimit)
+
+	return args, nil, nil
 }

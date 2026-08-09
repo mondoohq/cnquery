@@ -13,9 +13,7 @@ option go_package = "go.mondoo.com/mql/v13/providers/dropbox/resources"
 // third-party apps members have authorized. Use this resource to audit
 // a team's overall security posture: external sharing exposure and the
 // devices and apps with standing access to team data.
-dropbox {
-  // Team information (name, member counts, sharing configuration)
-  team() dropbox.team
+dropbox @maturity("experimental") {
   // Team members
   members() []dropbox.member
   // Team-managed groups
@@ -34,7 +32,7 @@ dropbox {
 // whether shared folders may include members outside the team, and
 // `publicSharingAllowed` reports whether shared links may be created
 // with a public (non-team) audience by default.
-private dropbox.team @defaults("name") {
+private dropbox.team @defaults("name") @maturity("experimental") {
   // Team name
   name string
   // Team ID
@@ -60,7 +58,7 @@ private dropbox.team @defaults("name") {
 // email, role, and account status, the signals most relevant to
 // auditing account exposure across a team. The `secondaryEmails` field
 // lists additional verified addresses tied to the same account.
-dropbox.member @defaults("email status") {
+dropbox.member @defaults("email status") @maturity("experimental") {
   // Team member ID
   teamMemberId string
   // Primary login email address
@@ -103,7 +101,7 @@ dropbox.member @defaults("email status") {
 // console (`user_managed` or `company_managed`) are distinguished from
 // groups synced in from an external identity provider
 // (`system_managed`).
-dropbox.group @defaults("name memberCount") {
+dropbox.group @defaults("name memberCount") @maturity("experimental") {
   // Group ID
   groupId string
   // Group name
@@ -129,7 +127,7 @@ dropbox.group @defaults("name memberCount") {
 // mobile clients as well as active web sessions, distinguished by
 // `clientType`. Use `lastActivity` to find stale sessions that should
 // be revoked.
-dropbox.device @defaults("clientType hostName") {
+dropbox.device @defaults("clientType hostName") @maturity("experimental") {
   // Session or device ID
   id string
   // Team member ID of the account this device is linked to
@@ -166,7 +164,7 @@ dropbox.device @defaults("clientType hostName") {
 // `team/linked_apps/list_members_linked_apps`. Use this to audit the
 // blast radius of third-party integrations with standing access to
 // team content.
-dropbox.linkedApp @defaults("appName publisherName") {
+dropbox.linkedApp @defaults("appName publisherName") @maturity("experimental") {
   // App ID
   appId string
   // Team member ID of the account that linked this app

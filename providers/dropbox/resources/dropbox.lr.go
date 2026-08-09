@@ -33,7 +33,7 @@ func init() {
 			Create: createDropbox,
 		},
 		"dropbox.team": {
-			// to override args, implement: initDropboxTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDropboxTeam,
 			Create: createDropboxTeam,
 		},
 		"dropbox.member": {
@@ -123,9 +123,6 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
-	"dropbox.team": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDropbox).GetTeam()).ToDataRes(types.Resource("dropbox.team"))
-	},
 	"dropbox.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDropbox).GetMembers()).ToDataRes(types.Array(types.Resource("dropbox.member")))
 	},
@@ -278,10 +275,6 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"dropbox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDropbox).__id, ok = v.Value.(string)
-		return
-	},
-	"dropbox.team": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDropbox).Team, ok = plugin.RawToTValue[*mqlDropboxTeam](v.Value, v.Error)
 		return
 	},
 	"dropbox.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -517,7 +510,6 @@ type mqlDropbox struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDropboxInternal it will be used here
-	Team       plugin.TValue[*mqlDropboxTeam]
 	Members    plugin.TValue[[]any]
 	Groups     plugin.TValue[[]any]
 	Devices    plugin.TValue[[]any]
@@ -559,22 +551,6 @@ func (c *mqlDropbox) MqlName() string {
 
 func (c *mqlDropbox) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlDropbox) GetTeam() *plugin.TValue[*mqlDropboxTeam] {
-	return plugin.GetOrCompute[*mqlDropboxTeam](&c.Team, func() (*mqlDropboxTeam, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("dropbox", c.__id, "team")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlDropboxTeam), nil
-			}
-		}
-
-		return c.team()
-	})
 }
 
 func (c *mqlDropbox) GetMembers() *plugin.TValue[[]any] {
