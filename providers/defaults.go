@@ -606,6 +606,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"jumpcloud": {
+		Provider: &plugin.Provider{
+			Name:            "jumpcloud",
+			ID:              "go.mondoo.com/mql/providers/jumpcloud",
+			ConnectionTypes: []string{"jumpcloud"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "jumpcloud",
+					Use:   "jumpcloud",
+					Short: "a JumpCloud organization",
+				},
+			},
+		},
+	},
+
 	"junos": {
 		Provider: &plugin.Provider{
 			Name:            "junos",
