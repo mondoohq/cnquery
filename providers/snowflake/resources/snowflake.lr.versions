@@ -155,6 +155,8 @@ snowflake.database.dynamicTables 13.4.5
 snowflake.database.eventTables 13.4.5
 snowflake.database.externalTables 13.4.5
 snowflake.database.fileFormats 13.4.5
+snowflake.database.futureGrants 13.4.5
+snowflake.database.grants 13.4.5
 snowflake.database.isCurrent 11.0.0
 snowflake.database.isDefault 11.0.0
 snowflake.database.maskingPolicies 13.3.7
@@ -184,6 +186,8 @@ snowflake.databaseRole.databaseName 13.1.1
 snowflake.databaseRole.grantedDatabaseRoles 13.1.1
 snowflake.databaseRole.grantedToDatabaseRoles 13.1.1
 snowflake.databaseRole.grantedToRoles 13.1.1
+snowflake.databaseRole.grantees 13.4.5
+snowflake.databaseRole.grants 13.4.5
 snowflake.databaseRole.isCurrent 13.1.1
 snowflake.databaseRole.isInherited 13.1.1
 snowflake.databaseRole.name 13.1.1
@@ -308,9 +312,12 @@ snowflake.grant 13.0.7
 snowflake.grant.createdAt 13.0.7
 snowflake.grant.grantOption 13.0.7
 snowflake.grant.grantedBy 13.0.7
+snowflake.grant.grantedByRole 13.4.5
 snowflake.grant.grantedOn 13.0.7
 snowflake.grant.grantedTo 13.0.7
 snowflake.grant.granteeName 13.0.7
+snowflake.grant.granteeRole 13.4.5
+snowflake.grant.granteeUser 13.4.5
 snowflake.grant.name 13.0.7
 snowflake.grant.privilege 13.0.7
 snowflake.managedAccount 13.3.7
@@ -493,7 +500,11 @@ snowflake.resourceMonitor.suspendImmediateAt 13.2.7
 snowflake.resourceMonitor.usedCredits 13.2.7
 snowflake.role 11.0.0
 snowflake.role.assignedToUsers 11.0.0
+snowflake.role.childRoles 13.4.5
 snowflake.role.comment 11.0.0
+snowflake.role.effectiveGrants 13.4.5
+snowflake.role.effectiveRoles 13.4.5
+snowflake.role.effectiveUsers 13.4.5
 snowflake.role.grantedRoles 11.0.0
 snowflake.role.grantedToRoles 11.0.0
 snowflake.role.grantees 13.0.7
@@ -504,6 +515,8 @@ snowflake.role.isInherited 11.0.0
 snowflake.role.name 11.0.0
 snowflake.role.owner 11.0.0
 snowflake.role.ownerRole 13.3.7
+snowflake.role.parentRoles 13.4.5
+snowflake.role.users 13.4.5
 snowflake.rowAccessPolicy 13.3.7
 snowflake.rowAccessPolicy.body 13.3.7
 snowflake.rowAccessPolicy.comment 13.3.7
@@ -526,6 +539,8 @@ snowflake.schema.createdAt 13.3.7
 snowflake.schema.database 13.3.7
 snowflake.schema.databaseName 13.3.7
 snowflake.schema.droppedAt 13.3.7
+snowflake.schema.futureGrants 13.4.5
+snowflake.schema.grants 13.4.5
 snowflake.schema.isCurrent 13.3.7
 snowflake.schema.isDefault 13.3.7
 snowflake.schema.name 13.3.7
@@ -590,6 +605,7 @@ snowflake.share.comment 13.0.7
 snowflake.share.createdAt 13.0.7
 snowflake.share.database 13.3.7
 snowflake.share.databaseName 13.0.7
+snowflake.share.grants 13.4.5
 snowflake.share.kind 13.0.7
 snowflake.share.name 13.0.7
 snowflake.share.owner 13.0.7
@@ -721,6 +737,8 @@ snowflake.user.defaultWarehouse 11.0.0
 snowflake.user.defaultWarehouseRef 13.3.7
 snowflake.user.disabled 11.0.0
 snowflake.user.displayName 11.0.0
+snowflake.user.effectiveGrants 13.4.5
+snowflake.user.effectiveRoles 13.4.5
 snowflake.user.email 11.0.0
 snowflake.user.expiresAt 11.0.0
 snowflake.user.extAuthnDuo 11.0.0
@@ -739,6 +757,7 @@ snowflake.user.mustChangePassword 11.0.0
 snowflake.user.name 11.0.0
 snowflake.user.owner 13.3.7
 snowflake.user.parameters 11.0.0
+snowflake.user.roles 13.4.5
 snowflake.user.snowflakeLock 13.3.7
 snowflake.user.type 13.3.7
 snowflake.view 11.0.0

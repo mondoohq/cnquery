@@ -600,6 +600,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.user.grants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
 	},
+	"snowflake.user.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetRoles()).ToDataRes(types.Array(types.Resource("snowflake.role")))
+	},
+	"snowflake.user.effectiveRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetEffectiveRoles()).ToDataRes(types.Array(types.Resource("snowflake.role")))
+	},
+	"snowflake.user.effectiveGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetEffectiveGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
+	},
 	"snowflake.role.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRole).GetName()).ToDataRes(types.String)
 	},
@@ -635,6 +644,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.role.grantees": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeRole).GetGrantees()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
+	},
+	"snowflake.role.childRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetChildRoles()).ToDataRes(types.Array(types.Resource("snowflake.role")))
+	},
+	"snowflake.role.parentRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetParentRoles()).ToDataRes(types.Array(types.Resource("snowflake.role")))
+	},
+	"snowflake.role.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetUsers()).ToDataRes(types.Array(types.Resource("snowflake.user")))
+	},
+	"snowflake.role.effectiveRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetEffectiveRoles()).ToDataRes(types.Array(types.Resource("snowflake.role")))
+	},
+	"snowflake.role.effectiveUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetEffectiveUsers()).ToDataRes(types.Array(types.Resource("snowflake.user")))
+	},
+	"snowflake.role.effectiveGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeRole).GetEffectiveGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
 	},
 	"snowflake.securityIntegration.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeSecurityIntegration).GetName()).ToDataRes(types.String)
@@ -909,6 +936,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.database.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetRoles()).ToDataRes(types.Array(types.Resource("snowflake.databaseRole")))
 	},
+	"snowflake.database.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
+	},
+	"snowflake.database.futureGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabase).GetFutureGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
+	},
 	"snowflake.database.schemas": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabase).GetSchemas()).ToDataRes(types.Array(types.Resource("snowflake.schema")))
 	},
@@ -1056,11 +1089,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.grant.granteeName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeGrant).GetGranteeName()).ToDataRes(types.String)
 	},
+	"snowflake.grant.granteeRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeGrant).GetGranteeRole()).ToDataRes(types.Resource("snowflake.role"))
+	},
+	"snowflake.grant.granteeUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeGrant).GetGranteeUser()).ToDataRes(types.Resource("snowflake.user"))
+	},
 	"snowflake.grant.grantOption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeGrant).GetGrantOption()).ToDataRes(types.Bool)
 	},
 	"snowflake.grant.grantedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeGrant).GetGrantedBy()).ToDataRes(types.String)
+	},
+	"snowflake.grant.grantedByRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeGrant).GetGrantedByRole()).ToDataRes(types.Resource("snowflake.role"))
 	},
 	"snowflake.grant.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeGrant).GetCreatedAt()).ToDataRes(types.Time)
@@ -1121,6 +1163,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.share.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeShare).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.share.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeShare).GetGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
 	},
 	"snowflake.apiIntegration.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeApiIntegration).GetName()).ToDataRes(types.String)
@@ -1271,6 +1316,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.databaseRole.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabaseRole).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.databaseRole.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabaseRole).GetGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
+	},
+	"snowflake.databaseRole.grantees": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabaseRole).GetGrantees()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
 	},
 	"snowflake.view.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeView).GetName()).ToDataRes(types.String)
@@ -1736,6 +1787,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.schema.droppedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeSchema).GetDroppedAt()).ToDataRes(types.Time)
+	},
+	"snowflake.schema.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
+	},
+	"snowflake.schema.futureGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeSchema).GetFutureGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
 	},
 	"snowflake.managedAccount.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeManagedAccount).GetName()).ToDataRes(types.String)
@@ -2901,6 +2958,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeUser).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"snowflake.user.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.effectiveRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).EffectiveRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.effectiveGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).EffectiveGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"snowflake.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeRole).__id, ok = v.Value.(string)
 		return
@@ -2951,6 +3020,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.role.grantees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeRole).Grantees, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.childRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).ChildRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.parentRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).ParentRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.effectiveRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).EffectiveRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.effectiveUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).EffectiveUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.role.effectiveGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeRole).EffectiveGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.securityIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3345,6 +3438,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeDatabase).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"snowflake.database.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.database.futureGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabase).FutureGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"snowflake.database.schemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).Schemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3549,12 +3650,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeGrant).GranteeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.grant.granteeRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeGrant).GranteeRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
+		return
+	},
+	"snowflake.grant.granteeUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeGrant).GranteeUser, ok = plugin.RawToTValue[*mqlSnowflakeUser](v.Value, v.Error)
+		return
+	},
 	"snowflake.grant.grantOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeGrant).GrantOption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"snowflake.grant.grantedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeGrant).GrantedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.grant.grantedByRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeGrant).GrantedByRole, ok = plugin.RawToTValue[*mqlSnowflakeRole](v.Value, v.Error)
 		return
 	},
 	"snowflake.grant.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3643,6 +3756,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.share.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeShare).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.share.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeShare).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.apiIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3859,6 +3976,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.databaseRole.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabaseRole).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.databaseRole.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabaseRole).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.databaseRole.grantees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabaseRole).Grantees, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.view.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4523,6 +4648,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.schema.droppedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeSchema).DroppedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.schema.futureGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeSchema).FutureGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.managedAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6670,6 +6803,9 @@ type mqlSnowflakeUser struct {
 	Parameters            plugin.TValue[[]any]
 	DaysSinceLastLogin    plugin.TValue[int64]
 	Grants                plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
+	EffectiveRoles        plugin.TValue[[]any]
+	EffectiveGrants       plugin.TValue[[]any]
 }
 
 // createSnowflakeUser creates a new instance of this resource
@@ -6890,6 +7026,54 @@ func (c *mqlSnowflakeUser) GetGrants() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlSnowflakeUser) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
+func (c *mqlSnowflakeUser) GetEffectiveRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "effectiveRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveRoles()
+	})
+}
+
+func (c *mqlSnowflakeUser) GetEffectiveGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.user", c.__id, "effectiveGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveGrants()
+	})
+}
+
 // mqlSnowflakeRole for the snowflake.role resource
 type mqlSnowflakeRole struct {
 	MqlRuntime *plugin.Runtime
@@ -6907,6 +7091,12 @@ type mqlSnowflakeRole struct {
 	Comment         plugin.TValue[string]
 	Grants          plugin.TValue[[]any]
 	Grantees        plugin.TValue[[]any]
+	ChildRoles      plugin.TValue[[]any]
+	ParentRoles     plugin.TValue[[]any]
+	Users           plugin.TValue[[]any]
+	EffectiveRoles  plugin.TValue[[]any]
+	EffectiveUsers  plugin.TValue[[]any]
+	EffectiveGrants plugin.TValue[[]any]
 }
 
 // createSnowflakeRole creates a new instance of this resource
@@ -7022,6 +7212,102 @@ func (c *mqlSnowflakeRole) GetGrantees() *plugin.TValue[[]any] {
 		}
 
 		return c.grantees()
+	})
+}
+
+func (c *mqlSnowflakeRole) GetChildRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ChildRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "childRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.childRoles()
+	})
+}
+
+func (c *mqlSnowflakeRole) GetParentRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ParentRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "parentRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.parentRoles()
+	})
+}
+
+func (c *mqlSnowflakeRole) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlSnowflakeRole) GetEffectiveRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "effectiveRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveRoles()
+	})
+}
+
+func (c *mqlSnowflakeRole) GetEffectiveUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "effectiveUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveUsers()
+	})
+}
+
+func (c *mqlSnowflakeRole) GetEffectiveGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.role", c.__id, "effectiveGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.effectiveGrants()
 	})
 }
 
@@ -7731,6 +8017,8 @@ type mqlSnowflakeDatabase struct {
 	CreatedAt         plugin.TValue[*time.Time]
 	DroppedAt         plugin.TValue[*time.Time]
 	Roles             plugin.TValue[[]any]
+	Grants            plugin.TValue[[]any]
+	FutureGrants      plugin.TValue[[]any]
 	Schemas           plugin.TValue[[]any]
 	MaskingPolicies   plugin.TValue[[]any]
 	RowAccessPolicies plugin.TValue[[]any]
@@ -7858,6 +8146,38 @@ func (c *mqlSnowflakeDatabase) GetRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.roles()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+func (c *mqlSnowflakeDatabase) GetFutureGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FutureGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.database", c.__id, "futureGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.futureGrants()
 	})
 }
 
@@ -8313,14 +8633,17 @@ type mqlSnowflakeGrant struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlSnowflakeGrantInternal it will be used here
-	Privilege   plugin.TValue[string]
-	GrantedOn   plugin.TValue[string]
-	Name        plugin.TValue[string]
-	GrantedTo   plugin.TValue[string]
-	GranteeName plugin.TValue[string]
-	GrantOption plugin.TValue[bool]
-	GrantedBy   plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
+	Privilege     plugin.TValue[string]
+	GrantedOn     plugin.TValue[string]
+	Name          plugin.TValue[string]
+	GrantedTo     plugin.TValue[string]
+	GranteeName   plugin.TValue[string]
+	GranteeRole   plugin.TValue[*mqlSnowflakeRole]
+	GranteeUser   plugin.TValue[*mqlSnowflakeUser]
+	GrantOption   plugin.TValue[bool]
+	GrantedBy     plugin.TValue[string]
+	GrantedByRole plugin.TValue[*mqlSnowflakeRole]
+	CreatedAt     plugin.TValue[*time.Time]
 }
 
 // createSnowflakeGrant creates a new instance of this resource
@@ -8375,12 +8698,60 @@ func (c *mqlSnowflakeGrant) GetGranteeName() *plugin.TValue[string] {
 	return &c.GranteeName
 }
 
+func (c *mqlSnowflakeGrant) GetGranteeRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.GranteeRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.grant", c.__id, "granteeRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.granteeRole()
+	})
+}
+
+func (c *mqlSnowflakeGrant) GetGranteeUser() *plugin.TValue[*mqlSnowflakeUser] {
+	return plugin.GetOrCompute[*mqlSnowflakeUser](&c.GranteeUser, func() (*mqlSnowflakeUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.grant", c.__id, "granteeUser")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeUser), nil
+			}
+		}
+
+		return c.granteeUser()
+	})
+}
+
 func (c *mqlSnowflakeGrant) GetGrantOption() *plugin.TValue[bool] {
 	return &c.GrantOption
 }
 
 func (c *mqlSnowflakeGrant) GetGrantedBy() *plugin.TValue[string] {
 	return &c.GrantedBy
+}
+
+func (c *mqlSnowflakeGrant) GetGrantedByRole() *plugin.TValue[*mqlSnowflakeRole] {
+	return plugin.GetOrCompute[*mqlSnowflakeRole](&c.GrantedByRole, func() (*mqlSnowflakeRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.grant", c.__id, "grantedByRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSnowflakeRole), nil
+			}
+		}
+
+		return c.grantedByRole()
+	})
 }
 
 func (c *mqlSnowflakeGrant) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -8494,6 +8865,7 @@ type mqlSnowflakeShare struct {
 	OwnerRole    plugin.TValue[*mqlSnowflakeRole]
 	Comment      plugin.TValue[string]
 	CreatedAt    plugin.TValue[*time.Time]
+	Grants       plugin.TValue[[]any]
 }
 
 // createSnowflakeShare creates a new instance of this resource
@@ -8586,6 +8958,22 @@ func (c *mqlSnowflakeShare) GetComment() *plugin.TValue[string] {
 
 func (c *mqlSnowflakeShare) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeShare) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.share", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
 }
 
 // mqlSnowflakeApiIntegration for the snowflake.apiIntegration resource
@@ -8946,6 +9334,8 @@ type mqlSnowflakeDatabaseRole struct {
 	GrantedToDatabaseRoles plugin.TValue[int64]
 	GrantedDatabaseRoles   plugin.TValue[int64]
 	CreatedAt              plugin.TValue[*time.Time]
+	Grants                 plugin.TValue[[]any]
+	Grantees               plugin.TValue[[]any]
 }
 
 // createSnowflakeDatabaseRole creates a new instance of this resource
@@ -9022,6 +9412,38 @@ func (c *mqlSnowflakeDatabaseRole) GetGrantedDatabaseRoles() *plugin.TValue[int6
 
 func (c *mqlSnowflakeDatabaseRole) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlSnowflakeDatabaseRole) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.databaseRole", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+func (c *mqlSnowflakeDatabaseRole) GetGrantees() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grantees, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.databaseRole", c.__id, "grantees")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grantees()
+	})
 }
 
 // mqlSnowflakeView for the snowflake.view resource
@@ -10320,6 +10742,8 @@ type mqlSnowflakeSchema struct {
 	RetentionTime plugin.TValue[string]
 	CreatedAt     plugin.TValue[*time.Time]
 	DroppedAt     plugin.TValue[*time.Time]
+	Grants        plugin.TValue[[]any]
+	FutureGrants  plugin.TValue[[]any]
 }
 
 // createSnowflakeSchema creates a new instance of this resource
@@ -10412,6 +10836,38 @@ func (c *mqlSnowflakeSchema) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlSnowflakeSchema) GetDroppedAt() *plugin.TValue[*time.Time] {
 	return &c.DroppedAt
+}
+
+func (c *mqlSnowflakeSchema) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.schema", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+func (c *mqlSnowflakeSchema) GetFutureGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FutureGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.schema", c.__id, "futureGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.futureGrants()
+	})
 }
 
 // mqlSnowflakeManagedAccount for the snowflake.managedAccount resource
