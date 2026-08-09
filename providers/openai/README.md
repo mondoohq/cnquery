@@ -156,6 +156,32 @@ mql> openai.projects { name users.where(role == "owner") { email } }
 mql> openai.projects { name groups { name } roles { name permissions } }
 ```
 
+### Check data retention and hosted tool policy (requires admin key)
+
+```shell
+mql> openai.dataRetentionType
+mql> openai.projects { name dataRetentionType modelPermissionMode modelPermissionModelIds }
+mql> openai.projects { name codeInterpreterEnabled fileSearchEnabled imageGenerationEnabled mcpEnabled webSearchEnabled }
+```
+
+Projects that can reach remote MCP servers, or that opted out of the organization retention policy:
+
+```shell
+mql> openai.projects.where(mcpEnabled) { name }
+mql> openai.projects.where(dataRetentionType != "organization_default") { name dataRetentionType }
+```
+
+### Check spend controls and rate limits (requires admin key)
+
+`spendLimitAmount` is null when no hard limit is configured, so an unlimited organization is distinguishable from one limited to zero:
+
+```shell
+mql> openai { spendLimitAmount spendLimitCurrency spendLimitInterval spendLimitEnforcement }
+mql> openai.spendAlerts { thresholdAmount interval notificationRecipients }
+mql> openai.projects { name spendLimitAmount spendAlerts { thresholdAmount } }
+mql> openai.projects { name rateLimits { model maxRequestsPerMinute maxTokensPerMinute } }
+```
+
 ### AIBOM inventory query
 
 Combine model inventory with fine-tuning lineage for a complete AI supply chain view:
@@ -183,6 +209,8 @@ mql> openai.files.where(purpose == "fine-tune") { id filename bytes createdAt }
 | `openai.adminApiKey`           | Organization admin API key with owner and expiry  |
 | `openai.role`                  | Named permission set grantable to users and groups|
 | `openai.group`                 | Group of members, optionally SCIM managed         |
+| `openai.spendAlert`            | Spend notification threshold and recipients       |
+| `openai.project.rateLimit`     | Per-model throughput ceiling for a project        |
 | `openai.invite`                | Pending organization invite                       |
 | `openai.auditLog`              | Organization audit log entry                      |
 
