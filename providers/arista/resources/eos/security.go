@@ -35,6 +35,15 @@ type AaaConfig struct {
 	// AuthorizationCommands holds method lists for "aaa authorization commands"
 	// keyed by privilege level (or "all"+listName).
 	AuthorizationCommands map[string][]string
+	// AuthorizationConsoleCommands holds method lists for
+	// "aaa authorization console commands", keyed the same way. The console is
+	// authorized separately from remote sessions, so a device can require
+	// TACACS+ command authorization over SSH while leaving the console
+	// unauthorized.
+	AuthorizationConsoleCommands map[string][]string
+	// SerialConsoleAuthorization reflects `aaa authorization serial-console`,
+	// which extends exec authorization to the serial console.
+	SerialConsoleAuthorization bool
 	// AuthorizationExec holds method lists for "aaa authorization exec".
 	AuthorizationExec map[string][]string
 	// AccountingCommands holds method lists for "aaa accounting commands".
@@ -60,6 +69,8 @@ var (
 		`^aaa authentication enable\s+(\S+)\s+(.+)$`)
 	aaaAuthzCommandsRe = regexp.MustCompile(
 		`^aaa authorization commands\s+(\S+)\s+(\S+)\s+(.+)$`)
+	aaaAuthzConsoleCommandsRe = regexp.MustCompile(
+		`^aaa authorization console commands\s+(\S+)\s+(\S+)\s+(.+)$`)
 	aaaAuthzExecRe = regexp.MustCompile(
 		`^aaa authorization exec\s+(\S+)\s+(.+)$`)
 	// Accounting lines have an action token (start-stop, stop-only, wait-start,
@@ -79,12 +90,13 @@ var (
 // Comments (lines starting with "!") are ignored.
 func ParseAaaConfig(runningConfig string) *AaaConfig {
 	cfg := &AaaConfig{
-		AuthenticationLogin:   map[string][]string{},
-		AuthenticationEnable:  map[string][]string{},
-		AuthorizationCommands: map[string][]string{},
-		AuthorizationExec:     map[string][]string{},
-		AccountingCommands:    map[string][]string{},
-		AccountingExec:        map[string][]string{},
+		AuthenticationLogin:          map[string][]string{},
+		AuthenticationEnable:         map[string][]string{},
+		AuthorizationCommands:        map[string][]string{},
+		AuthorizationConsoleCommands: map[string][]string{},
+		AuthorizationExec:            map[string][]string{},
+		AccountingCommands:           map[string][]string{},
+		AccountingExec:               map[string][]string{},
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
@@ -102,8 +114,16 @@ func ParseAaaConfig(runningConfig string) *AaaConfig {
 			cfg.AuthenticationEnable[m[1]] = strings.Fields(m[2])
 			continue
 		}
+		if m := aaaAuthzConsoleCommandsRe.FindStringSubmatch(line); m != nil {
+			cfg.AuthorizationConsoleCommands[m[1]+"/"+m[2]] = strings.Fields(m[3])
+			continue
+		}
 		if m := aaaAuthzCommandsRe.FindStringSubmatch(line); m != nil {
 			cfg.AuthorizationCommands[m[1]+"/"+m[2]] = strings.Fields(m[3])
+			continue
+		}
+		if line == "aaa authorization serial-console" {
+			cfg.SerialConsoleAuthorization = true
 			continue
 		}
 		if m := aaaAuthzExecRe.FindStringSubmatch(line); m != nil {

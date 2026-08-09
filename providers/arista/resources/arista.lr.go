@@ -43,6 +43,9 @@ const (
 	ResourceAristaEosHardwareFan           string = "arista.eos.hardware.fan"
 	ResourceAristaEosHardwareInventoryItem string = "arista.eos.hardware.inventoryItem"
 	ResourceAristaEosAaa                   string = "arista.eos.aaa"
+	ResourceAristaEosAaaTacacsServer       string = "arista.eos.aaa.tacacsServer"
+	ResourceAristaEosAaaRadiusServer       string = "arista.eos.aaa.radiusServer"
+	ResourceAristaEosAaaServerGroup        string = "arista.eos.aaa.serverGroup"
 	ResourceAristaEosSshSettings           string = "arista.eos.sshSettings"
 	ResourceAristaEosSnmpCommunity         string = "arista.eos.snmpCommunity"
 	ResourceAristaEosTelnetService         string = "arista.eos.telnetService"
@@ -172,6 +175,18 @@ func init() {
 		"arista.eos.aaa": {
 			// to override args, implement: initAristaEosAaa(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosAaa,
+		},
+		"arista.eos.aaa.tacacsServer": {
+			// to override args, implement: initAristaEosAaaTacacsServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosAaaTacacsServer,
+		},
+		"arista.eos.aaa.radiusServer": {
+			// to override args, implement: initAristaEosAaaRadiusServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosAaaRadiusServer,
+		},
+		"arista.eos.aaa.serverGroup": {
+			// to override args, implement: initAristaEosAaaServerGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosAaaServerGroup,
 		},
 		"arista.eos.sshSettings": {
 			// to override args, implement: initAristaEosSshSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -871,6 +886,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.aaa.authorizationCommands": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetAuthorizationCommands()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
+	"arista.eos.aaa.authorizationConsoleCommands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetAuthorizationConsoleCommands()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"arista.eos.aaa.serialConsoleAuthorization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetSerialConsoleAuthorization()).ToDataRes(types.Bool)
+	},
 	"arista.eos.aaa.authorizationExec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetAuthorizationExec()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
@@ -886,8 +907,80 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.aaa.radiusServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetRadiusServers()).ToDataRes(types.Array(types.String))
 	},
+	"arista.eos.aaa.tacacsServerHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetTacacsServerHosts()).ToDataRes(types.Array(types.Resource("arista.eos.aaa.tacacsServer")))
+	},
+	"arista.eos.aaa.radiusServerHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetRadiusServerHosts()).ToDataRes(types.Array(types.Resource("arista.eos.aaa.radiusServer")))
+	},
+	"arista.eos.aaa.serverGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetServerGroups()).ToDataRes(types.Array(types.Resource("arista.eos.aaa.serverGroup")))
+	},
+	"arista.eos.aaa.rootAccountEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetRootAccountEnabled()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.rootAccountNoPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetRootAccountNoPassword()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.rootSecretFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetRootSecretFormat()).ToDataRes(types.String)
+	},
 	"arista.eos.aaa.defaultLoginPermitsLocalOnly": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetDefaultLoginPermitsLocalOnly()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.tacacsServer.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetHost()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.tacacsServer.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetVrf()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.tacacsServer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetPort()).ToDataRes(types.Int)
+	},
+	"arista.eos.aaa.tacacsServer.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetTimeout()).ToDataRes(types.Int)
+	},
+	"arista.eos.aaa.tacacsServer.singleConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetSingleConnection()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.tacacsServer.keyConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetKeyConfigured()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.tacacsServer.keyEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaTacacsServer).GetKeyEncryptionType()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.radiusServer.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetHost()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.radiusServer.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetVrf()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.radiusServer.authPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetAuthPort()).ToDataRes(types.Int)
+	},
+	"arista.eos.aaa.radiusServer.acctPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetAcctPort()).ToDataRes(types.Int)
+	},
+	"arista.eos.aaa.radiusServer.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetTimeout()).ToDataRes(types.Int)
+	},
+	"arista.eos.aaa.radiusServer.retransmit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetRetransmit()).ToDataRes(types.Int)
+	},
+	"arista.eos.aaa.radiusServer.keyConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetKeyConfigured()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.radiusServer.keyEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaRadiusServer).GetKeyEncryptionType()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.serverGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaServerGroup).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.serverGroup.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaServerGroup).GetProtocol()).ToDataRes(types.String)
+	},
+	"arista.eos.aaa.serverGroup.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaaServerGroup).GetServers()).ToDataRes(types.Array(types.String))
 	},
 	"arista.eos.sshSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSshSettings).GetEnabled()).ToDataRes(types.Bool)
@@ -2067,6 +2160,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAaa).AuthorizationCommands, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.aaa.authorizationConsoleCommands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).AuthorizationConsoleCommands, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.serialConsoleAuthorization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).SerialConsoleAuthorization, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"arista.eos.aaa.authorizationExec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAaa).AuthorizationExec, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -2087,8 +2188,116 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAaa).RadiusServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.aaa.tacacsServerHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).TacacsServerHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServerHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).RadiusServerHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.serverGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).ServerGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.rootAccountEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).RootAccountEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.rootAccountNoPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).RootAccountNoPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.rootSecretFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).RootSecretFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"arista.eos.aaa.defaultLoginPermitsLocalOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAaa).DefaultLoginPermitsLocalOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.singleConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).SingleConnection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.keyConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).KeyConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.tacacsServer.keyEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaTacacsServer).KeyEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.aaa.radiusServer.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.authPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).AuthPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.acctPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).AcctPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.retransmit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).Retransmit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.keyConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).KeyConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.radiusServer.keyEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaRadiusServer).KeyEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.serverGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaServerGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.aaa.serverGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaServerGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.serverGroup.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaServerGroup).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.serverGroup.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaaServerGroup).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.sshSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5151,11 +5360,19 @@ type mqlAristaEosAaa struct {
 	AuthenticationLogin          plugin.TValue[map[string]any]
 	AuthenticationEnable         plugin.TValue[map[string]any]
 	AuthorizationCommands        plugin.TValue[map[string]any]
+	AuthorizationConsoleCommands plugin.TValue[map[string]any]
+	SerialConsoleAuthorization   plugin.TValue[bool]
 	AuthorizationExec            plugin.TValue[map[string]any]
 	AccountingCommands           plugin.TValue[map[string]any]
 	AccountingExec               plugin.TValue[map[string]any]
 	TacacsServers                plugin.TValue[[]any]
 	RadiusServers                plugin.TValue[[]any]
+	TacacsServerHosts            plugin.TValue[[]any]
+	RadiusServerHosts            plugin.TValue[[]any]
+	ServerGroups                 plugin.TValue[[]any]
+	RootAccountEnabled           plugin.TValue[bool]
+	RootAccountNoPassword        plugin.TValue[bool]
+	RootSecretFormat             plugin.TValue[string]
 	DefaultLoginPermitsLocalOnly plugin.TValue[bool]
 }
 
@@ -5208,6 +5425,14 @@ func (c *mqlAristaEosAaa) GetAuthorizationCommands() *plugin.TValue[map[string]a
 	return &c.AuthorizationCommands
 }
 
+func (c *mqlAristaEosAaa) GetAuthorizationConsoleCommands() *plugin.TValue[map[string]any] {
+	return &c.AuthorizationConsoleCommands
+}
+
+func (c *mqlAristaEosAaa) GetSerialConsoleAuthorization() *plugin.TValue[bool] {
+	return &c.SerialConsoleAuthorization
+}
+
 func (c *mqlAristaEosAaa) GetAuthorizationExec() *plugin.TValue[map[string]any] {
 	return &c.AuthorizationExec
 }
@@ -5228,8 +5453,290 @@ func (c *mqlAristaEosAaa) GetRadiusServers() *plugin.TValue[[]any] {
 	return &c.RadiusServers
 }
 
+func (c *mqlAristaEosAaa) GetTacacsServerHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TacacsServerHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.aaa", c.__id, "tacacsServerHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tacacsServerHosts()
+	})
+}
+
+func (c *mqlAristaEosAaa) GetRadiusServerHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RadiusServerHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.aaa", c.__id, "radiusServerHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.radiusServerHosts()
+	})
+}
+
+func (c *mqlAristaEosAaa) GetServerGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.aaa", c.__id, "serverGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serverGroups()
+	})
+}
+
+func (c *mqlAristaEosAaa) GetRootAccountEnabled() *plugin.TValue[bool] {
+	return &c.RootAccountEnabled
+}
+
+func (c *mqlAristaEosAaa) GetRootAccountNoPassword() *plugin.TValue[bool] {
+	return &c.RootAccountNoPassword
+}
+
+func (c *mqlAristaEosAaa) GetRootSecretFormat() *plugin.TValue[string] {
+	return &c.RootSecretFormat
+}
+
 func (c *mqlAristaEosAaa) GetDefaultLoginPermitsLocalOnly() *plugin.TValue[bool] {
 	return &c.DefaultLoginPermitsLocalOnly
+}
+
+// mqlAristaEosAaaTacacsServer for the arista.eos.aaa.tacacsServer resource
+type mqlAristaEosAaaTacacsServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosAaaTacacsServerInternal it will be used here
+	Host              plugin.TValue[string]
+	Vrf               plugin.TValue[string]
+	Port              plugin.TValue[int64]
+	Timeout           plugin.TValue[int64]
+	SingleConnection  plugin.TValue[bool]
+	KeyConfigured     plugin.TValue[bool]
+	KeyEncryptionType plugin.TValue[string]
+}
+
+// createAristaEosAaaTacacsServer creates a new instance of this resource
+func createAristaEosAaaTacacsServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosAaaTacacsServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.aaa.tacacsServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosAaaTacacsServer) MqlName() string {
+	return "arista.eos.aaa.tacacsServer"
+}
+
+func (c *mqlAristaEosAaaTacacsServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetSingleConnection() *plugin.TValue[bool] {
+	return &c.SingleConnection
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetKeyConfigured() *plugin.TValue[bool] {
+	return &c.KeyConfigured
+}
+
+func (c *mqlAristaEosAaaTacacsServer) GetKeyEncryptionType() *plugin.TValue[string] {
+	return &c.KeyEncryptionType
+}
+
+// mqlAristaEosAaaRadiusServer for the arista.eos.aaa.radiusServer resource
+type mqlAristaEosAaaRadiusServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosAaaRadiusServerInternal it will be used here
+	Host              plugin.TValue[string]
+	Vrf               plugin.TValue[string]
+	AuthPort          plugin.TValue[int64]
+	AcctPort          plugin.TValue[int64]
+	Timeout           plugin.TValue[int64]
+	Retransmit        plugin.TValue[int64]
+	KeyConfigured     plugin.TValue[bool]
+	KeyEncryptionType plugin.TValue[string]
+}
+
+// createAristaEosAaaRadiusServer creates a new instance of this resource
+func createAristaEosAaaRadiusServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosAaaRadiusServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.aaa.radiusServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosAaaRadiusServer) MqlName() string {
+	return "arista.eos.aaa.radiusServer"
+}
+
+func (c *mqlAristaEosAaaRadiusServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetAuthPort() *plugin.TValue[int64] {
+	return &c.AuthPort
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetAcctPort() *plugin.TValue[int64] {
+	return &c.AcctPort
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetRetransmit() *plugin.TValue[int64] {
+	return &c.Retransmit
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetKeyConfigured() *plugin.TValue[bool] {
+	return &c.KeyConfigured
+}
+
+func (c *mqlAristaEosAaaRadiusServer) GetKeyEncryptionType() *plugin.TValue[string] {
+	return &c.KeyEncryptionType
+}
+
+// mqlAristaEosAaaServerGroup for the arista.eos.aaa.serverGroup resource
+type mqlAristaEosAaaServerGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosAaaServerGroupInternal it will be used here
+	Name     plugin.TValue[string]
+	Protocol plugin.TValue[string]
+	Servers  plugin.TValue[[]any]
+}
+
+// createAristaEosAaaServerGroup creates a new instance of this resource
+func createAristaEosAaaServerGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosAaaServerGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.aaa.serverGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosAaaServerGroup) MqlName() string {
+	return "arista.eos.aaa.serverGroup"
+}
+
+func (c *mqlAristaEosAaaServerGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosAaaServerGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosAaaServerGroup) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAristaEosAaaServerGroup) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
 }
 
 // mqlAristaEosSshSettings for the arista.eos.sshSettings resource

@@ -767,18 +767,142 @@ arista.eos.aaa {
   authenticationEnable map[string][]string
   // Authorization commands method lists (key = "<level>/<list>")
   authorizationCommands map[string][]string
+  // Console command authorization method lists (key = "<level>/<list>")
+  //
+  // The console is authorized separately from remote sessions, so a device
+  // can require remote command authorization over SSH while leaving the
+  // console unauthorized. Empty means no console authorization is
+  // configured.
+  authorizationConsoleCommands map[string][]string
+  // Whether exec authorization extends to the serial console (`aaa authorization serial-console`)
+  serialConsoleAuthorization bool
   // Authorization exec method lists
   authorizationExec map[string][]string
   // Accounting commands method lists (key = "<level>/<list>")
   accountingCommands map[string][]string
   // Accounting exec method lists
   accountingExec map[string][]string
-  // TACACS+ server hosts
-  tacacsServers []string
-  // RADIUS server hosts
-  radiusServers []string
+  // TACACS+ server hostnames
+  //
+  // Deprecated in favor of tacacsServerHosts, which reports the same hosts
+  // along with the routing instance, ports, timeout, and whether the shared
+  // secret is stored in the clear.
+  tacacsServers @maturity("deprecated") []string
+  // RADIUS server hostnames
+  //
+  // Deprecated in favor of radiusServerHosts, which reports the same hosts
+  // along with the routing instance, ports, timeout, retransmit count, and
+  // whether the shared secret is stored in the clear.
+  radiusServers @maturity("deprecated") []string
+  // TACACS+ servers with their transport and shared-secret state
+  tacacsServerHosts() []arista.eos.aaa.tacacsServer
+  // RADIUS servers with their transport and shared-secret state
+  radiusServerHosts() []arista.eos.aaa.radiusServer
+  // Named server groups referenced by the method lists
+  serverGroups() []arista.eos.aaa.serverGroup
+  // Whether the root account can be logged into
+  //
+  // The root account is the escape hatch to a shell on the underlying
+  // system. True when `aaa root secret` or `aaa root nopassword` is
+  // configured. An absent `aaa root` line leaves the account disabled,
+  // which is the shipped default.
+  rootAccountEnabled bool
+  // Whether the root account authenticates with no password
+  //
+  // True for `aaa root nopassword`, the worst of the three root states:
+  // anyone reaching the console or a remote session can become root.
+  rootAccountNoPassword bool
+  // Encoding of the root account secret
+  //
+  // Selector from the `aaa root secret` line, for example `5` or `sha512`.
+  // Empty when root has no secret configured.
+  rootSecretFormat string
   // Whether the default authentication list uses only the local user database (no remote AAA configured before local)
   defaultLoginPermitsLocalOnly bool
+}
+
+// Arista EOS TACACS+ server
+//
+// A single TACACS+ server the device authenticates against, selected by its
+// `host` address. Covers the routing instance used to reach it, the port and
+// timeout, and the state of the shared secret. `keyEncryptionType` is what
+// hardening reviews read: `0` means the secret sits in the running-config in
+// the clear, and `7` is a reversible obfuscation that any config reader can
+// undo.
+//
+// `timeout`, `keyConfigured`, and `keyEncryptionType` report the value in
+// effect for this server. An option omitted from the host line falls back to
+// the global `tacacs-server` setting, matching how the device resolves it.
+// The shared secret itself is never read off the device.
+private arista.eos.aaa.tacacsServer @defaults("host vrf keyEncryptionType") {
+  // Server hostname or IP address as configured
+  host string
+  // Routing instance used to reach the server (empty = default VRF)
+  vrf string
+  // TACACS+ port (49 when the configuration omits it)
+  port int
+  // Timeout in seconds (0 = unset with no global default configured)
+  timeout int
+  // Whether sessions are multiplexed over a single TCP connection
+  singleConnection bool
+  // Whether a shared secret is configured for this server
+  keyConfigured bool
+  // How the shared secret is stored
+  //
+  // One of `0` (cleartext in the running-config), `7` (reversible type-7
+  // obfuscation), or `8a` (a stronger hash). Empty when no secret is
+  // configured.
+  keyEncryptionType string
+}
+
+// Arista EOS RADIUS server
+//
+// A single RADIUS server the device authenticates against, selected by its
+// `host` address. Covers the routing instance used to reach it, the
+// authentication and accounting ports, the timeout and retry count, and the
+// state of the shared secret. The same effective-value and secret-handling
+// rules as `arista.eos.aaa.tacacsServer` apply.
+private arista.eos.aaa.radiusServer @defaults("host vrf keyEncryptionType") {
+  // Server hostname or IP address as configured
+  host string
+  // Routing instance used to reach the server (empty = default VRF)
+  vrf string
+  // Authentication port (1812 when the configuration omits it)
+  authPort int
+  // Accounting port (1813 when the configuration omits it)
+  acctPort int
+  // Timeout in seconds (0 = unset with no global default configured)
+  timeout int
+  // Retry count (0 = unset)
+  retransmit int
+  // Whether a shared secret is configured for this server
+  keyConfigured bool
+  // How the shared secret is stored
+  //
+  // One of `0` (cleartext in the running-config), `7` (reversible type-7
+  // obfuscation), or `8a` (a stronger hash). Empty when no secret is
+  // configured.
+  keyEncryptionType string
+}
+
+// Arista EOS AAA server group
+//
+// A named set of AAA servers, selected by `name`. Method lists reference
+// groups rather than hosts, as in
+// `aaa authentication login default group TACACS-GROUP local`, so the group
+// membership is what connects a method list to the servers it actually
+// reaches. A group with no members authenticates against nothing, which
+// makes every method list pointing at it fall through to whatever follows.
+private arista.eos.aaa.serverGroup @defaults("name protocol") {
+  // Group name as referenced by the method lists
+  name string
+  // Protocol the group speaks, `tacacs+` or `radius`
+  protocol string
+  // Member server hosts, in configured order
+  //
+  // Held as addresses rather than server resources because a group's
+  // members resolve to a different resource depending on protocol.
+  servers []string
 }
 
 // Arista EOS management SSH service configuration

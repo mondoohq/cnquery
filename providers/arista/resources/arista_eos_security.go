@@ -58,16 +58,22 @@ func (a *mqlAristaEos) aaa() (*mqlAristaEosAaa, error) {
 		return nil, err
 	}
 	cfg := eos.ParseAaaConfig(rc)
+	root := eos.ParseRootAccount(rc)
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.aaa", map[string]*llx.RawData{
 		"authenticationLogin":          llx.MapData(methodMapToDict(cfg.AuthenticationLogin), types.Array(types.String)),
 		"authenticationEnable":         llx.MapData(methodMapToDict(cfg.AuthenticationEnable), types.Array(types.String)),
 		"authorizationCommands":        llx.MapData(methodMapToDict(cfg.AuthorizationCommands), types.Array(types.String)),
+		"authorizationConsoleCommands": llx.MapData(methodMapToDict(cfg.AuthorizationConsoleCommands), types.Array(types.String)),
+		"serialConsoleAuthorization":   llx.BoolData(cfg.SerialConsoleAuthorization),
 		"authorizationExec":            llx.MapData(methodMapToDict(cfg.AuthorizationExec), types.Array(types.String)),
 		"accountingCommands":           llx.MapData(methodMapToDict(cfg.AccountingCommands), types.Array(types.String)),
 		"accountingExec":               llx.MapData(methodMapToDict(cfg.AccountingExec), types.Array(types.String)),
 		"tacacsServers":                llx.ArrayData(stringSliceToAny(cfg.TacacsServers), types.String),
 		"radiusServers":                llx.ArrayData(stringSliceToAny(cfg.RadiusServers), types.String),
+		"rootAccountEnabled":           llx.BoolData(root.Enabled),
+		"rootAccountNoPassword":        llx.BoolData(root.NoPassword),
+		"rootSecretFormat":             llx.StringData(root.SecretFormat),
 		"defaultLoginPermitsLocalOnly": llx.BoolData(cfg.DefaultLoginPermitsLocalOnly),
 	})
 	if err != nil {
