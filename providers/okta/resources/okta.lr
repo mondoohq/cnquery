@@ -397,6 +397,45 @@ private okta.role @defaults("label status") {
   // The group this assignment was read from, set when the role is listed
   // for a group. Null when the assignment was read from a user.
   group() okta.group
+  // Groups the assignment is limited to
+  //
+  // The groups a scoped administrator may act on. An empty list means the
+  // assignment is not narrowed at all, so a GROUP_ADMIN, USER_ADMIN, or
+  // HELP_DESK_ADMIN with no group targets administers every group in the
+  // org. Standard administrator roles express their scope this way; custom
+  // roles use resourceSet instead and carry no targets.
+  groupTargets() []okta.group
+  // Applications the assignment is limited to
+  //
+  // The applications an APP_ADMIN may act on. An empty list means the
+  // assignment is not narrowed and covers every application in the org.
+  // Each entry names either one application instance or an entire catalog
+  // app type.
+  appTargets() []okta.role.appTarget
+}
+
+// Application target of an administrator role
+//
+// A single application an APP_ADMIN assignment is narrowed to. A target
+// names either one application instance, where `application` resolves to
+// it, or an entire Okta Integration Network catalog app type, where
+// `application` is null and every instance of the type named by `name`
+// falls in scope. The app-type form is the broader grant, so a target with
+// a null `application` covers more than one naming a single instance.
+private okta.role.appTarget @defaults("displayName name") {
+  // Catalog name of the application
+  //
+  // The Okta Integration Network key for the application, such as
+  // `salesforce` or `office365`.
+  name string
+  // Human-readable name of the application
+  displayName string
+  // Application instance the target names
+  //
+  // The single application the assignment is narrowed to. Null when the
+  // target names a catalog app type rather than one instance, in which case
+  // every instance of that type is in scope.
+  application() okta.application
 }
 
 // Okta Group
@@ -438,6 +477,56 @@ private okta.group @defaults("name") {
   members() []okta.user
   // Group roles
   roles() []okta.role
+  // Group owners
+  //
+  // The users and groups that can manage this group's membership.
+  owners() []okta.group.owner
+}
+
+// Owner of an Okta group
+//
+// A user or group allowed to manage another group's membership. Ownership
+// is an indirect grant: an owner adds members, and those members inherit
+// every application assignment and administrator role the group carries, so
+// owners of a group that grants admin access hold that access in effect.
+// The `type` field says whether the owner is an individual account or
+// another group, and `originType` records whether the ownership is
+// maintained in Okta or sourced from an external application.
+private okta.group.owner @defaults("displayName type") {
+  // Entity type of the owner
+  //
+  // Either USER for an individual account, or GROUP for another group whose
+  // members all own this group.
+  type string
+  // Display name of the owner
+  displayName string
+  // Source that maintains the ownership
+  //
+  // Either OKTA_DIRECTORY for ownership assigned within Okta, or
+  // APPLICATION for ownership sourced from an external application.
+  originType string
+  // Whether an application-sourced owner has been matched to an Okta account
+  //
+  // False while an APPLICATION-sourced owner has not yet been reconciled
+  // with an Okta id, in which case user and group stay null.
+  resolved bool
+  // Timestamp when the ownership was last updated
+  lastUpdated time
+  // User that owns the group
+  //
+  // The owning account, set when `type` is USER. Null when the owner is a
+  // group.
+  user() okta.user
+  // Group that owns the group
+  //
+  // The owning group, whose members can all manage this group's membership.
+  // Set when `type` is GROUP. Null when the owner is an individual account.
+  group() okta.group
+  // Application the ownership is sourced from
+  //
+  // The application instance that maintains this ownership, set when
+  // `originType` is APPLICATION. Null for ownership assigned within Okta.
+  application() okta.application
 }
 
 // Okta Group Rule

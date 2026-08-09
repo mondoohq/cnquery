@@ -255,7 +255,7 @@ func (a *mqlOktaApplication) adminRoles() ([]any, error) {
 
 	list := []any{}
 	for i := range roles {
-		r, err := newMqlOktaRole(a.MqlRuntime, roles[i], "", "")
+		r, err := newMqlOktaRole(a.MqlRuntime, roles[i], "client", clientID)
 		if err != nil {
 			return nil, err
 		}

@@ -106,6 +106,24 @@ func oktaRoleIdFromPermissionsHref(href string) string {
 	return rest
 }
 
+// oktaCollectPages appends every remaining page of a paginated SDK call to the
+// first page already fetched. The v5 SDK exposes paging through the response
+// rather than the request, so callers pass both back in and receive the full
+// collection.
+func oktaCollectPages[T any](first []T, resp *okta.APIResponse) ([]T, error) {
+	all := first
+	for resp != nil && resp.HasNextPage() {
+		var page []T
+		var err error
+		resp, err = resp.Next(&page)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, page...)
+	}
+	return all, nil
+}
+
 func oktaBool(b *bool) bool {
 	if b == nil {
 		return false
