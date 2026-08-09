@@ -214,6 +214,7 @@ use (
    ./mql/providers/datadog
    ./mql/providers/depsdev
    ./mql/providers/digitalocean
+   ./mql/providers/dropbox
    ./mql/providers/elasticsearch
    ./mql/providers/equinix
    ./mql/providers/gcp
