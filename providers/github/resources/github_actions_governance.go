@@ -18,15 +18,24 @@ import (
 
 // ---------- Self-hosted runner groups ----------
 
+// cacheOrgLogin carries the organization to the group's own lookups. It is
+// assigned after CreateResource returns, which is soon enough for those, but
+// too late for the cache key: see runnerGroupID.
 type mqlGithubOrganizationRunnerGroupInternal struct {
 	cacheOrgLogin string
 }
 
+// runnerGroupID keys a runner group by the organization that defines it.
+// Groups are numbered per organization, so the numeric id alone collides
+// across organizations. The key is passed to CreateResource explicitly,
+// because the generated constructor computes a missing __id from inside
+// CreateResource, before cacheOrgLogin has been assigned.
+func runnerGroupID(orgLogin string, id int64) string {
+	return "github.organization.runnerGroup/" + orgLogin + "/" + strconv.FormatInt(id, 10)
+}
+
 func (g *mqlGithubOrganizationRunnerGroup) id() (string, error) {
-	if g.Id.Error != nil {
-		return "", g.Id.Error
-	}
-	return "github.organization.runnerGroup/" + g.cacheOrgLogin + "/" + strconv.FormatInt(g.Id.Data, 10), nil
+	return g.__id, nil
 }
 
 func (g *mqlGithubOrganization) runnerGroups() ([]any, error) {
@@ -60,6 +69,7 @@ func (g *mqlGithubOrganization) runnerGroups() ([]any, error) {
 	res := []any{}
 	for _, group := range allGroups {
 		r, err := CreateResource(g.MqlRuntime, "github.organization.runnerGroup", map[string]*llx.RawData{
+			"__id":                         llx.StringData(runnerGroupID(orgLogin, group.GetID())),
 			"id":                           llx.IntDataDefault(group.ID, 0),
 			"name":                         llx.StringDataPtr(group.Name),
 			"visibility":                   llx.StringDataPtr(group.Visibility),

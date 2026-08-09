@@ -82,6 +82,15 @@ func TestWorkflowTriggersUnderQuotedOnKey(t *testing.T) {
 	assert.Equal(t, []string{"push"}, workflowTriggers(config))
 }
 
+// A trigger block of an unexpected type reports no triggers rather than
+// panicking. `on: true` is not a workflow anyone writes, but the block is
+// reached through a folded key, so the value is worth pinning.
+func TestWorkflowTriggersOfAnUnexpectedType(t *testing.T) {
+	assert.Equal(t, []string{}, workflowTriggers(parseWorkflow(t, "on: true")))
+	assert.Equal(t, []string{}, workflowTriggers(parseWorkflow(t, "on: 42")))
+	assert.Equal(t, []string{}, workflowTriggers(parseWorkflow(t, "on:")))
+}
+
 func TestWorkflowTokenPermissions(t *testing.T) {
 	t.Run("scope map", func(t *testing.T) {
 		config := parseWorkflow(t, "permissions:\n  contents: read\n  id-token: write\n")
