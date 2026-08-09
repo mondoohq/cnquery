@@ -110,6 +110,42 @@ func TestScopedIDsDistinguishParents(t *testing.T) {
 			projectScopedID("gitlab.project.clusterAgent.token", 2, "10", "5"))
 	})
 
+	t.Run("same identity record under different groups", func(t *testing.T) {
+		// Enterprise credentials, service accounts, SSH authorities and access
+		// requests are all listed per group. A user who belongs to two groups
+		// yields the same token and key ids in both listings.
+		for _, resource := range []string{
+			"gitlab.group.enterpriseAccessToken",
+			"gitlab.group.enterpriseSshKey",
+			"gitlab.group.serviceAccount",
+			"gitlab.group.sshCertificate",
+			"gitlab.group.accessRequest",
+		} {
+			assert.NotEqual(t,
+				groupScopedID(resource, 1, "1"),
+				groupScopedID(resource, 2, "1"), resource)
+		}
+	})
+
+	t.Run("SCIM identity keys on the user, not just the extern uid", func(t *testing.T) {
+		// A provider reporting an empty external_uid would otherwise collapse
+		// every member's identity onto a single resource.
+		assert.NotEqual(t,
+			groupScopedID("gitlab.group.scimIdentity", 1, "10", ""),
+			groupScopedID("gitlab.group.scimIdentity", 1, "20", ""))
+		assert.NotEqual(t,
+			groupScopedID("gitlab.group.scimIdentity", 1, "10", "u1"),
+			groupScopedID("gitlab.group.scimIdentity", 2, "10", "u1"))
+	})
+
+	t.Run("a group request and a project request are different grants", func(t *testing.T) {
+		// AccessRequest.ID is the *user* id, so the same person asking to join
+		// group 10 and project 10 would otherwise share a key.
+		assert.NotEqual(t,
+			groupScopedID("gitlab.group.accessRequest", 10, "1234"),
+			projectScopedID("gitlab.project.accessRequest", 10, "1234"))
+	})
+
 	t.Run("singleton children still differ per parent", func(t *testing.T) {
 		// containerExpirationPolicy, approvalSetting and codeowners have no
 		// child key at all — the parent id is the only thing separating them.

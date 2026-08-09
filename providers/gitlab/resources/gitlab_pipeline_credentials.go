@@ -28,10 +28,10 @@ import (
 
 const gitlabPerPage = int64(50)
 
-// ownerRef resolves a GitLab user embedded in an API response to a typed
+// gitlabUserRef resolves a GitLab user embedded in an API response to a typed
 // gitlab.user. initGitlabUser degrades to a bare resource on 403/404, so this
 // stays safe for tokens that cannot read /users/:id.
-func ownerRef(runtime *plugin.Runtime, userID int64) (*mqlGitlabUser, error) {
+func gitlabUserRef(runtime *plugin.Runtime, userID int64) (*mqlGitlabUser, error) {
 	res, err := NewResource(runtime, "gitlab.user", map[string]*llx.RawData{
 		"id": llx.IntData(userID),
 	})
@@ -62,7 +62,7 @@ func (t *mqlGitlabProjectPipelineTrigger) owner() (*mqlGitlabUser, error) {
 		t.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return ownerRef(t.MqlRuntime, t.cacheOwnerID)
+	return gitlabUserRef(t.MqlRuntime, t.cacheOwnerID)
 }
 
 // pipelineTriggers lists the trigger tokens registered on the project.
@@ -139,7 +139,7 @@ func (s *mqlGitlabProjectPipelineSchedule) owner() (*mqlGitlabUser, error) {
 		s.Owner.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return ownerRef(s.MqlRuntime, s.cacheOwnerID)
+	return gitlabUserRef(s.MqlRuntime, s.cacheOwnerID)
 }
 
 // fetchDetail loads the single-schedule representation once per resource.
@@ -366,7 +366,7 @@ func (a *mqlGitlabProjectClusterAgent) createdBy() (*mqlGitlabUser, error) {
 		a.CreatedBy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return ownerRef(a.MqlRuntime, a.cacheCreatedByID)
+	return gitlabUserRef(a.MqlRuntime, a.cacheCreatedByID)
 }
 
 // configProject returns the project holding the agent configuration, which
@@ -448,7 +448,7 @@ func (t *mqlGitlabProjectClusterAgentToken) createdBy() (*mqlGitlabUser, error) 
 		t.CreatedBy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return ownerRef(t.MqlRuntime, t.cacheCreatedByID)
+	return gitlabUserRef(t.MqlRuntime, t.cacheCreatedByID)
 }
 
 // clusterAgents lists the Kubernetes clusters connected to the project.
