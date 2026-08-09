@@ -237,8 +237,10 @@ snowflake.user @defaults("name") {
   // Roles granted directly to this user (SHOW GRANTS TO USER)
   //
   // Each entry names a role in `name`, with `grantedOn` set to ROLE. Snowflake
-  // reports no privilege for this statement, so `privilege` and `grantOption`
-  // are null. Prefer roles, which resolves the same rows to role resources.
+  // reports no privilege for this statement, so `privilege` is null;
+  // `grantOption` is false, because a role grant carries no grant option and a
+  // user can never re-grant a role they hold. Prefer roles, which resolves the
+  // same rows to role resources.
   grants() []snowflake.grant
   // Roles granted to the user directly
   //

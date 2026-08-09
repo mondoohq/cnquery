@@ -45,9 +45,14 @@ func (r *mqlSnowflakeRole) grants() ([]any, error) {
 
 // SHOW GRANTS TO USER <user>: the roles granted to the user.
 //
-// This statement reports only the role, not a privilege, so privilege and
-// grantOption resolve to null rather than to a zero value that would read as a
-// privilege named "" that cannot be re-granted.
+// This statement reports only the role, so privilege resolves to null rather
+// than to an empty string that would read as a privilege actually named "".
+//
+// grantOption is false rather than null. GRANT ROLE takes no WITH GRANT OPTION
+// clause, so a user can never re-grant a role they hold, and false states that
+// correctly. Leaving it null would be the worse answer: MQL's three-valued
+// logic passes an assertion built from nulls, so a policy asserting that no
+// grant is re-grantable would silently succeed on every row here.
 func (r *mqlSnowflakeUser) grants() ([]any, error) {
 	account, err := snowflakeAccount(r.MqlRuntime)
 	if err != nil {
@@ -68,7 +73,7 @@ func (r *mqlSnowflakeUser) grants() ([]any, error) {
 			"name":        llx.StringData(g.role),
 			"grantedTo":   llx.StringData(string(sdk.ObjectTypeUser)),
 			"granteeName": llx.StringData(r.Name.Data),
-			"grantOption": llx.NilData,
+			"grantOption": llx.BoolData(false),
 			"grantedBy":   llx.StringData(g.grantedBy),
 			"createdAt":   g.createdOn,
 		})

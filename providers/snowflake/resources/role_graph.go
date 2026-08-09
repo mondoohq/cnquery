@@ -28,9 +28,36 @@ import (
 // round trips, which is the better deal against an API this chatty.
 type snowflakeGrantCache struct {
 	mu     sync.Mutex
-	toRole map[string][]sdk.Grant
-	ofRole map[string][]sdk.Grant
-	toUser map[string][]userRoleGrant
+	toRole map[string]grantResult[sdk.Grant]
+	ofRole map[string]grantResult[sdk.Grant]
+	toUser map[string]grantResult[userRoleGrant]
+}
+
+// grantResult is the outcome of one SHOW GRANTS statement, successful or not.
+//
+// Failures are memoized alongside successes. A scanning role that cannot read
+// one role in the hierarchy fails on it every time it is reached, and a query
+// that walks many roles reaches it repeatedly, so retrying would multiply the
+// statements against exactly the account where they are already being refused.
+type grantResult[T any] struct {
+	grants []T
+	err    error
+}
+
+// memoGrants returns the memoized outcome for name, running fetch once on the
+// first miss. The mutex is held across fetch, which is what makes concurrent
+// walks share one statement rather than race to issue their own.
+func memoGrants[T any](cache *snowflakeGrantCache, bucket map[string]grantResult[T], name string, fetch func() ([]T, error)) ([]T, error) {
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+
+	if result, ok := bucket[name]; ok {
+		return result.grants, result.err
+	}
+
+	grants, err := fetch()
+	bucket[name] = grantResult[T]{grants: grants, err: err}
+	return grants, err
 }
 
 // userRoleGrant is one row of SHOW GRANTS TO USER.
@@ -62,9 +89,9 @@ func snowflakeAccount(runtime *plugin.Runtime) (*mqlSnowflakeAccount, error) {
 func (r *mqlSnowflakeAccount) grantCache() *snowflakeGrantCache {
 	r.grantCacheOnce.Do(func() {
 		r.cachedGrants = &snowflakeGrantCache{
-			toRole: map[string][]sdk.Grant{},
-			ofRole: map[string][]sdk.Grant{},
-			toUser: map[string][]userRoleGrant{},
+			toRole: map[string]grantResult[sdk.Grant]{},
+			ofRole: map[string]grantResult[sdk.Grant]{},
+			toUser: map[string]grantResult[userRoleGrant]{},
 		}
 	})
 	return r.cachedGrants
@@ -73,22 +100,11 @@ func (r *mqlSnowflakeAccount) grantCache() *snowflakeGrantCache {
 // showGrants runs one memoized SHOW GRANTS statement. The caller picks the
 // bucket to memoize into, since the same name means different things in each
 // direction.
-func (r *mqlSnowflakeAccount) showGrants(bucket map[string][]sdk.Grant, name string, opts *sdk.ShowGrantOptions) ([]sdk.Grant, error) {
-	cache := r.grantCache()
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
-
-	if grants, ok := bucket[name]; ok {
-		return grants, nil
-	}
-
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	grants, err := conn.Client().Grants.Show(context.Background(), opts)
-	if err != nil {
-		return nil, err
-	}
-	bucket[name] = grants
-	return grants, nil
+func (r *mqlSnowflakeAccount) showGrants(bucket map[string]grantResult[sdk.Grant], name string, opts *sdk.ShowGrantOptions) ([]sdk.Grant, error) {
+	return memoGrants(r.grantCache(), bucket, name, func() ([]sdk.Grant, error) {
+		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
+		return conn.Client().Grants.Show(context.Background(), opts)
+	})
 }
 
 // grantsToRole returns SHOW GRANTS TO ROLE <name>: the privileges the role holds
@@ -112,26 +128,19 @@ func (r *mqlSnowflakeAccount) grantsOfRole(name string) ([]sdk.Grant, error) {
 // reason documented on userRoleGrant.
 func (r *mqlSnowflakeAccount) grantsToUser(name string) ([]userRoleGrant, error) {
 	cache := r.grantCache()
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
-
-	if grants, ok := cache.toUser[name]; ok {
-		return grants, nil
-	}
-
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	// The identifier is rendered by the SDK, so the name reaches the statement
-	// as a properly quoted identifier rather than as raw interpolation.
-	id := sdk.NewAccountObjectIdentifier(name)
-	rows, err := conn.Client().QueryUnsafe(context.Background(),
-		"SHOW GRANTS TO USER "+id.FullyQualifiedName())
-	if err != nil {
-		return nil, err
-	}
-
-	grants := parseUserRoleGrants(rows)
-	cache.toUser[name] = grants
-	return grants, nil
+	return memoGrants(cache, cache.toUser, name, func() ([]userRoleGrant, error) {
+		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
+		// The identifier is rendered by the SDK, so the name reaches the
+		// statement as a properly quoted identifier rather than as raw
+		// interpolation.
+		id := sdk.NewAccountObjectIdentifier(name)
+		rows, err := conn.Client().QueryUnsafe(context.Background(),
+			"SHOW GRANTS TO USER "+id.FullyQualifiedName())
+		if err != nil {
+			return nil, err
+		}
+		return parseUserRoleGrants(rows), nil
+	})
 }
 
 // parseUserRoleGrants reads the rows of SHOW GRANTS TO USER. A row with no role

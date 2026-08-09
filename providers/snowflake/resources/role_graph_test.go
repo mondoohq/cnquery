@@ -128,6 +128,62 @@ func TestCollectRoleHoldersWithNoHolders(t *testing.T) {
 	assert.Empty(t, users)
 }
 
+func TestMemoGrants(t *testing.T) {
+	newCache := func() *snowflakeGrantCache {
+		return &snowflakeGrantCache{toRole: map[string]grantResult[sdk.Grant]{}}
+	}
+
+	t.Run("a success is fetched once", func(t *testing.T) {
+		cache := newCache()
+		calls := 0
+		fetch := func() ([]sdk.Grant, error) {
+			calls++
+			return []sdk.Grant{{Privilege: "SELECT"}}, nil
+		}
+
+		for range 3 {
+			grants, err := memoGrants(cache, cache.toRole, "ANALYST", fetch)
+			require.NoError(t, err)
+			require.Len(t, grants, 1)
+		}
+		assert.Equal(t, 1, calls)
+	})
+
+	t.Run("a failure is fetched once and reported every time", func(t *testing.T) {
+		// A role the scanning session cannot read is reached once per role
+		// whose hierarchy passes through it; retrying would multiply the
+		// statements against an account already refusing them.
+		cache := newCache()
+		boom := errors.New("insufficient privileges")
+		calls := 0
+		fetch := func() ([]sdk.Grant, error) {
+			calls++
+			return nil, boom
+		}
+
+		for range 3 {
+			_, err := memoGrants(cache, cache.toRole, "LOCKED", fetch)
+			assert.ErrorIs(t, err, boom)
+		}
+		assert.Equal(t, 1, calls)
+	})
+
+	t.Run("names are memoized independently", func(t *testing.T) {
+		cache := newCache()
+		calls := 0
+		fetch := func() ([]sdk.Grant, error) {
+			calls++
+			return nil, nil
+		}
+
+		_, err := memoGrants(cache, cache.toRole, "ANALYST", fetch)
+		require.NoError(t, err)
+		_, err = memoGrants(cache, cache.toRole, "REPORTER", fetch)
+		require.NoError(t, err)
+		assert.Equal(t, 2, calls)
+	})
+}
+
 func TestNameSet(t *testing.T) {
 	s := newNameSet("a")
 
