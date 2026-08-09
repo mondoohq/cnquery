@@ -32,6 +32,15 @@ func unixPtr(sec int64) *time.Time {
 	return &t
 }
 
+// unixPtrFromPtr converts an optional Stripe unix-second timestamp into a
+// *time.Time, returning nil when the source pointer is nil or zero.
+func unixPtrFromPtr(sec *int64) *time.Time {
+	if sec == nil {
+		return nil
+	}
+	return unixPtr(*sec)
+}
+
 // strSliceToAny widens a string slice into an any slice for llx.ArrayData.
 func strSliceToAny(in []string) []any {
 	out := make([]any, len(in))
@@ -104,4 +113,16 @@ func (r *mqlStripe) prices() ([]any, error) {
 
 func (r *mqlStripe) subscriptions() ([]any, error) {
 	return listSubscriptions(r.MqlRuntime)
+}
+
+func (r *mqlStripe) disputes() ([]any, error) {
+	return listDisputes(r.MqlRuntime)
+}
+
+func (r *mqlStripe) reviews() ([]any, error) {
+	return listReviews(r.MqlRuntime)
+}
+
+func (r *mqlStripe) events() ([]any, error) {
+	return listEvents(r.MqlRuntime)
 }

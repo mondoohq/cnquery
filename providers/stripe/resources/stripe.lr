@@ -26,6 +26,12 @@ stripe {
   subscriptions() []stripe.subscription
   // Current available and pending account balance
   balance() stripe.balance
+  // Disputed charges (chargebacks) in the account
+  disputes() []stripe.dispute
+  // Payments flagged for manual fraud review by Stripe Radar
+  reviews() []stripe.review
+  // Recent account events (an activity feed for roughly the last 30 days)
+  events() []stripe.event
 }
 
 // Stripe account settings and capabilities
@@ -36,7 +42,10 @@ stripe {
 // the contact email, and the public business profile. The chargesEnabled,
 // payoutsEnabled, and detailsSubmitted fields together report the account's
 // activation posture, and capabilities lists which payment capabilities are
-// active.
+// active. The requirements fields report outstanding verification that can
+// restrict the account, the fraud controls (declineChargeOnAvsFailure,
+// declineChargeOnCvcFailure) and payout schedule describe risk posture, and
+// externalAccounts lists where funds leave the account.
 stripe.account @defaults("id type country chargesEnabled payoutsEnabled") {
   // Account identifier (e.g., "acct_1234567890")
   id string
@@ -69,8 +78,83 @@ stripe.account @defaults("id type country chargesEnabled payoutsEnabled") {
   // Map of capability name (e.g., "card_payments", "transfers") to its
   // status, one of active, inactive, or pending.
   capabilities map[string]string
+  // Reason the account is currently restricted
+  //
+  // Empty when the account is in good standing. A non-empty value (for
+  // example "requirements.past_due" or "rejected.fraud") means charges or
+  // payouts are disabled.
+  requirementsDisabledReason string
+  // Requirements currently due to keep the account enabled
+  requirementsCurrentlyDue []string
+  // Requirements past their due date
+  //
+  // A non-empty list means the account is restricted or about to be.
+  requirementsPastDue []string
+  // Requirements that will eventually be required as the account grows
+  requirementsEventuallyDue []string
+  // Whether charges failing address (AVS) verification are declined automatically
+  declineChargeOnAvsFailure bool
+  // Whether charges failing card security code (CVC) verification are declined automatically
+  declineChargeOnCvcFailure bool
+  // Default statement descriptor shown on customers' card statements
+  statementDescriptor string
+  // Payout schedule interval
+  //
+  // One of manual, daily, weekly, or monthly.
+  payoutInterval string
+  // Number of days funds are held before an automatic payout
+  payoutDelayDays int
+  // Whether negative balances are automatically debited from the bank account
+  debitNegativeBalances bool
+  // Dashboard time zone configured for the account
+  timezone string
+  // Time the Stripe terms of service were accepted
+  tosAcceptanceDate time
+  // IP address the terms of service were accepted from
+  tosAcceptanceIp string
   // Account creation time
   created time
+  // External accounts (bank accounts and debit cards) that receive payouts
+  externalAccounts() []stripe.account.externalAccount
+}
+
+// Stripe external account
+//
+// Bank account or debit card attached to a Stripe account as a payout
+// destination, so where funds leave the account can be audited. The type
+// field is either "bank_account" or "card". For bank accounts, bankName,
+// routingNumber, and status describe the destination; for cards, brand
+// describes it. The last4 and fingerprint fields identify the instrument
+// without exposing full details. Listing external accounts over the API is
+// supported for Custom and Express connected accounts; for a standalone
+// account managed in the Dashboard the list may be empty.
+private stripe.account.externalAccount @defaults("type bankName last4 status") {
+  // External account identifier (e.g., "ba_..." or "card_...")
+  id string
+  // Account type
+  //
+  // One of bank_account or card.
+  type string
+  // Last four digits of the bank account or card number
+  last4 string
+  // Two-letter country code of the account or card (ISO 3166-1 alpha-2)
+  country string
+  // Three-letter currency the account or card is denominated in (ISO 4217)
+  currency string
+  // Name of the bank (bank accounts only)
+  bankName string
+  // Bank routing number (bank accounts only)
+  routingNumber string
+  // Verification status of a bank account
+  //
+  // One of new, validated, verified, verification_failed, or errored. Empty for cards.
+  status string
+  // Card brand (cards only, e.g., "Visa" or "Mastercard")
+  brand string
+  // Whether this is the default payout destination for its currency
+  defaultForCurrency bool
+  // Fingerprint that uniquely identifies the underlying bank account or card
+  fingerprint string
 }
 
 // Stripe webhook endpoint
@@ -248,4 +332,103 @@ stripe.balance @defaults("available pending") {
   pending []dict
   // Whether the balance reflects live-mode funds
   livemode bool
+}
+
+// Stripe dispute
+//
+// Disputed charge (chargeback) in a Stripe account. Query stripe.disputes to
+// enumerate them. The status field reports where the dispute sits in its
+// lifecycle and reason gives the card network's stated cause, so these surface
+// fraud and chargeback exposure. The evidenceDueBy field is the deadline to
+// contest the dispute.
+stripe.dispute @defaults("id status reason amount") {
+  // Dispute identifier (e.g., "dp_...")
+  id string
+  // Disputed amount in the smallest currency unit
+  amount int
+  // Three-letter currency of the dispute (ISO 4217)
+  currency string
+  // Dispute status
+  //
+  // One of warning_needs_response, warning_under_review, warning_closed,
+  // needs_response, under_review, won, or lost.
+  status string
+  // Card network's stated reason for the dispute
+  //
+  // For example fraudulent, duplicate, product_not_received, credit_not_processed,
+  // or subscription_canceled.
+  reason string
+  // Whether the disputed charge is still refundable
+  isChargeRefundable bool
+  // Identifier of the disputed charge
+  charge string
+  // Identifier of the disputed payment intent
+  paymentIntent string
+  // Deadline to submit evidence contesting the dispute
+  evidenceDueBy time
+  // Whether the dispute exists in live mode
+  livemode bool
+  // Dispute creation time
+  created time
+}
+
+// Stripe Radar review
+//
+// Payment flagged by Stripe Radar for manual fraud review. Query
+// stripe.reviews to enumerate them. The open field reports whether the review
+// is still awaiting a decision, and the reason fields record why Radar opened
+// or closed it, so these surface which payments Radar considered risky.
+stripe.review @defaults("id open reason") {
+  // Review identifier (e.g., "prv_...")
+  id string
+  // Whether the review is still open (awaiting a decision)
+  open bool
+  // Current reason for the review's state
+  //
+  // One of rule, manual, approved, refunded, refunded_as_fraud, disputed, or redacted.
+  reason string
+  // Reason the review was opened
+  //
+  // One of rule or manual.
+  openedReason string
+  // Reason the review was closed, once resolved
+  //
+  // One of approved, refunded, refunded_as_fraud, disputed, or redacted. Empty while open.
+  closedReason string
+  // IP address the payment originated from
+  ipAddress string
+  // Identifier of the charge under review
+  charge string
+  // Identifier of the payment intent under review
+  paymentIntent string
+  // Whether the review exists in live mode
+  livemode bool
+  // Review creation time
+  created time
+}
+
+// Stripe event
+//
+// Event emitted by Stripe describing something that happened in the account,
+// for example a charge succeeding or a webhook endpoint being updated. Events
+// form an activity feed for roughly the last 30 days. Query stripe.events to
+// enumerate them. The type field names what happened, and requestId links the
+// event to the API request that caused it.
+stripe.event @defaults("id type created") {
+  // Event identifier (e.g., "evt_...")
+  id string
+  // Event type (e.g., "charge.succeeded" or "customer.created")
+  type string
+  // Stripe API version used to render the event payload
+  apiVersion string
+  // Number of webhook endpoints still pending delivery for this event
+  pendingWebhooks int
+  // Identifier of the API request that caused the event
+  requestId string
+  // Idempotency key of the API request that caused the event
+  requestIdempotencyKey string
+  // Whether the event exists in live mode
+  livemode bool
+  // Event creation time
+  created time
 }

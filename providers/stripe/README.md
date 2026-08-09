@@ -48,6 +48,48 @@ mql> stripe.account { id type country chargesEnabled payoutsEnabled detailsSubmi
 mql> stripe.account.capabilities
 ```
 
+**Find accounts restricted by outstanding verification requirements**
+
+```bash
+mql> stripe.account { requirementsDisabledReason requirementsPastDue requirementsCurrentlyDue }
+```
+
+**Check card fraud controls (decline on AVS/CVC failure)**
+
+```bash
+mql> stripe.account { declineChargeOnAvsFailure declineChargeOnCvcFailure }
+```
+
+**Review payout schedule and terms acceptance**
+
+```bash
+mql> stripe.account { payoutInterval payoutDelayDays debitNegativeBalances tosAcceptanceDate tosAcceptanceIp }
+```
+
+**Audit payout destinations (where funds leave the account)**
+
+```bash
+mql> stripe.account.externalAccounts { type bankName last4 country status defaultForCurrency }
+```
+
+**Recent chargebacks (disputes)**
+
+```bash
+mql> stripe.disputes { status reason amount currency evidenceDueBy }
+```
+
+**Payments flagged by Radar for fraud review**
+
+```bash
+mql> stripe.reviews.where(open) { reason ipAddress charge }
+```
+
+**Recent account activity (event feed)**
+
+```bash
+mql> stripe.events { type created requestId }
+```
+
 **Audit webhook endpoints for plaintext (non-HTTPS) destinations**
 
 ```bash
@@ -131,8 +173,14 @@ mql> stripe { customers.length products.length subscriptions.length webhookEndpo
 | `stripe.prices` | Prices attached to products |
 | `stripe.subscriptions` | Recurring subscriptions |
 | `stripe.balance` | Current available and pending balance |
+| `stripe.account.externalAccounts` | Bank accounts and debit cards that receive payouts |
+| `stripe.disputes` | Disputed charges (chargebacks) |
+| `stripe.reviews` | Payments flagged by Stripe Radar for fraud review |
+| `stripe.events` | Account event feed (roughly the last 30 days) |
 
 The `stripe.customer` and `stripe.product` resources are also selectable directly by id, for example `stripe.customer(id: "cus_...")` and `stripe.product(id: "prod_...")`.
+
+Listing external accounts over the API is supported for Custom and Express connected accounts; for a standalone Dashboard-managed account the list may be empty.
 
 ## Notes
 

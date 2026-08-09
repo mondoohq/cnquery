@@ -16,14 +16,18 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceStripe                string = "stripe"
-	ResourceStripeAccount         string = "stripe.account"
-	ResourceStripeWebhookEndpoint string = "stripe.webhookEndpoint"
-	ResourceStripeCustomer        string = "stripe.customer"
-	ResourceStripeProduct         string = "stripe.product"
-	ResourceStripePrice           string = "stripe.price"
-	ResourceStripeSubscription    string = "stripe.subscription"
-	ResourceStripeBalance         string = "stripe.balance"
+	ResourceStripe                       string = "stripe"
+	ResourceStripeAccount                string = "stripe.account"
+	ResourceStripeAccountExternalAccount string = "stripe.account.externalAccount"
+	ResourceStripeWebhookEndpoint        string = "stripe.webhookEndpoint"
+	ResourceStripeCustomer               string = "stripe.customer"
+	ResourceStripeProduct                string = "stripe.product"
+	ResourceStripePrice                  string = "stripe.price"
+	ResourceStripeSubscription           string = "stripe.subscription"
+	ResourceStripeBalance                string = "stripe.balance"
+	ResourceStripeDispute                string = "stripe.dispute"
+	ResourceStripeReview                 string = "stripe.review"
+	ResourceStripeEvent                  string = "stripe.event"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -37,6 +41,10 @@ func init() {
 		"stripe.account": {
 			// to override args, implement: initStripeAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStripeAccount,
+		},
+		"stripe.account.externalAccount": {
+			// to override args, implement: initStripeAccountExternalAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStripeAccountExternalAccount,
 		},
 		"stripe.webhookEndpoint": {
 			// to override args, implement: initStripeWebhookEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -61,6 +69,18 @@ func init() {
 		"stripe.balance": {
 			// to override args, implement: initStripeBalance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStripeBalance,
+		},
+		"stripe.dispute": {
+			// to override args, implement: initStripeDispute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStripeDispute,
+		},
+		"stripe.review": {
+			// to override args, implement: initStripeReview(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStripeReview,
+		},
+		"stripe.event": {
+			// to override args, implement: initStripeEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStripeEvent,
 		},
 	}
 }
@@ -154,6 +174,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stripe.balance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStripe).GetBalance()).ToDataRes(types.Resource("stripe.balance"))
 	},
+	"stripe.disputes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripe).GetDisputes()).ToDataRes(types.Array(types.Resource("stripe.dispute")))
+	},
+	"stripe.reviews": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripe).GetReviews()).ToDataRes(types.Array(types.Resource("stripe.review")))
+	},
+	"stripe.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripe).GetEvents()).ToDataRes(types.Array(types.Resource("stripe.event")))
+	},
 	"stripe.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStripeAccount).GetId()).ToDataRes(types.String)
 	},
@@ -190,8 +219,83 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stripe.account.capabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStripeAccount).GetCapabilities()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stripe.account.requirementsDisabledReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetRequirementsDisabledReason()).ToDataRes(types.String)
+	},
+	"stripe.account.requirementsCurrentlyDue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetRequirementsCurrentlyDue()).ToDataRes(types.Array(types.String))
+	},
+	"stripe.account.requirementsPastDue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetRequirementsPastDue()).ToDataRes(types.Array(types.String))
+	},
+	"stripe.account.requirementsEventuallyDue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetRequirementsEventuallyDue()).ToDataRes(types.Array(types.String))
+	},
+	"stripe.account.declineChargeOnAvsFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetDeclineChargeOnAvsFailure()).ToDataRes(types.Bool)
+	},
+	"stripe.account.declineChargeOnCvcFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetDeclineChargeOnCvcFailure()).ToDataRes(types.Bool)
+	},
+	"stripe.account.statementDescriptor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetStatementDescriptor()).ToDataRes(types.String)
+	},
+	"stripe.account.payoutInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetPayoutInterval()).ToDataRes(types.String)
+	},
+	"stripe.account.payoutDelayDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetPayoutDelayDays()).ToDataRes(types.Int)
+	},
+	"stripe.account.debitNegativeBalances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetDebitNegativeBalances()).ToDataRes(types.Bool)
+	},
+	"stripe.account.timezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetTimezone()).ToDataRes(types.String)
+	},
+	"stripe.account.tosAcceptanceDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetTosAcceptanceDate()).ToDataRes(types.Time)
+	},
+	"stripe.account.tosAcceptanceIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetTosAcceptanceIp()).ToDataRes(types.String)
+	},
 	"stripe.account.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStripeAccount).GetCreated()).ToDataRes(types.Time)
+	},
+	"stripe.account.externalAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccount).GetExternalAccounts()).ToDataRes(types.Array(types.Resource("stripe.account.externalAccount")))
+	},
+	"stripe.account.externalAccount.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetId()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetType()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.last4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetLast4()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.country": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetCountry()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.currency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetCurrency()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.bankName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetBankName()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.routingNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetRoutingNumber()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetStatus()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.brand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetBrand()).ToDataRes(types.String)
+	},
+	"stripe.account.externalAccount.defaultForCurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetDefaultForCurrency()).ToDataRes(types.Bool)
+	},
+	"stripe.account.externalAccount.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeAccountExternalAccount).GetFingerprint()).ToDataRes(types.String)
 	},
 	"stripe.webhookEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStripeWebhookEndpoint).GetId()).ToDataRes(types.String)
@@ -346,6 +450,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stripe.balance.livemode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStripeBalance).GetLivemode()).ToDataRes(types.Bool)
 	},
+	"stripe.dispute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetId()).ToDataRes(types.String)
+	},
+	"stripe.dispute.amount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetAmount()).ToDataRes(types.Int)
+	},
+	"stripe.dispute.currency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetCurrency()).ToDataRes(types.String)
+	},
+	"stripe.dispute.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetStatus()).ToDataRes(types.String)
+	},
+	"stripe.dispute.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetReason()).ToDataRes(types.String)
+	},
+	"stripe.dispute.isChargeRefundable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetIsChargeRefundable()).ToDataRes(types.Bool)
+	},
+	"stripe.dispute.charge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetCharge()).ToDataRes(types.String)
+	},
+	"stripe.dispute.paymentIntent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetPaymentIntent()).ToDataRes(types.String)
+	},
+	"stripe.dispute.evidenceDueBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetEvidenceDueBy()).ToDataRes(types.Time)
+	},
+	"stripe.dispute.livemode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetLivemode()).ToDataRes(types.Bool)
+	},
+	"stripe.dispute.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeDispute).GetCreated()).ToDataRes(types.Time)
+	},
+	"stripe.review.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetId()).ToDataRes(types.String)
+	},
+	"stripe.review.open": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetOpen()).ToDataRes(types.Bool)
+	},
+	"stripe.review.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetReason()).ToDataRes(types.String)
+	},
+	"stripe.review.openedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetOpenedReason()).ToDataRes(types.String)
+	},
+	"stripe.review.closedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetClosedReason()).ToDataRes(types.String)
+	},
+	"stripe.review.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetIpAddress()).ToDataRes(types.String)
+	},
+	"stripe.review.charge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetCharge()).ToDataRes(types.String)
+	},
+	"stripe.review.paymentIntent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetPaymentIntent()).ToDataRes(types.String)
+	},
+	"stripe.review.livemode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetLivemode()).ToDataRes(types.Bool)
+	},
+	"stripe.review.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeReview).GetCreated()).ToDataRes(types.Time)
+	},
+	"stripe.event.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetId()).ToDataRes(types.String)
+	},
+	"stripe.event.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetType()).ToDataRes(types.String)
+	},
+	"stripe.event.apiVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetApiVersion()).ToDataRes(types.String)
+	},
+	"stripe.event.pendingWebhooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetPendingWebhooks()).ToDataRes(types.Int)
+	},
+	"stripe.event.requestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetRequestId()).ToDataRes(types.String)
+	},
+	"stripe.event.requestIdempotencyKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetRequestIdempotencyKey()).ToDataRes(types.String)
+	},
+	"stripe.event.livemode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetLivemode()).ToDataRes(types.Bool)
+	},
+	"stripe.event.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStripeEvent).GetCreated()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -388,6 +579,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stripe.balance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStripe).Balance, ok = plugin.RawToTValue[*mqlStripeBalance](v.Value, v.Error)
+		return
+	},
+	"stripe.disputes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripe).Disputes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stripe.reviews": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripe).Reviews, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stripe.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripe).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stripe.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -442,8 +645,112 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStripeAccount).Capabilities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stripe.account.requirementsDisabledReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).RequirementsDisabledReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.requirementsCurrentlyDue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).RequirementsCurrentlyDue, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stripe.account.requirementsPastDue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).RequirementsPastDue, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stripe.account.requirementsEventuallyDue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).RequirementsEventuallyDue, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stripe.account.declineChargeOnAvsFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).DeclineChargeOnAvsFailure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.account.declineChargeOnCvcFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).DeclineChargeOnCvcFailure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.account.statementDescriptor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).StatementDescriptor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.payoutInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).PayoutInterval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.payoutDelayDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).PayoutDelayDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stripe.account.debitNegativeBalances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).DebitNegativeBalances, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.account.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).Timezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.tosAcceptanceDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).TosAcceptanceDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stripe.account.tosAcceptanceIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).TosAcceptanceIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stripe.account.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStripeAccount).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccount).ExternalAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"stripe.account.externalAccount.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.last4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Last4, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Country, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.currency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Currency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.bankName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).BankName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.routingNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).RoutingNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.brand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Brand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.defaultForCurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).DefaultForCurrency, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.account.externalAccount.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeAccountExternalAccount).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stripe.webhookEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -674,6 +981,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStripeBalance).Livemode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stripe.dispute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).__id, ok = v.Value.(string)
+		return
+	},
+	"stripe.dispute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.amount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Amount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.currency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Currency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.isChargeRefundable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).IsChargeRefundable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.charge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Charge, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.paymentIntent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).PaymentIntent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.evidenceDueBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).EvidenceDueBy, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.livemode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Livemode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.dispute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeDispute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stripe.review.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).__id, ok = v.Value.(string)
+		return
+	},
+	"stripe.review.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.open": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).Open, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.review.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.openedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).OpenedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.closedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).ClosedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.charge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).Charge, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.paymentIntent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).PaymentIntent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.review.livemode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).Livemode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.review.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeReview).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stripe.event.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).__id, ok = v.Value.(string)
+		return
+	},
+	"stripe.event.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.event.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.event.apiVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).ApiVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.event.pendingWebhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).PendingWebhooks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stripe.event.requestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).RequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.event.requestIdempotencyKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).RequestIdempotencyKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stripe.event.livemode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).Livemode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stripe.event.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStripeEvent).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -710,6 +1145,9 @@ type mqlStripe struct {
 	Prices           plugin.TValue[[]any]
 	Subscriptions    plugin.TValue[[]any]
 	Balance          plugin.TValue[*mqlStripeBalance]
+	Disputes         plugin.TValue[[]any]
+	Reviews          plugin.TValue[[]any]
+	Events           plugin.TValue[[]any]
 }
 
 // createStripe creates a new instance of this resource
@@ -861,24 +1299,86 @@ func (c *mqlStripe) GetBalance() *plugin.TValue[*mqlStripeBalance] {
 	})
 }
 
+func (c *mqlStripe) GetDisputes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Disputes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stripe", c.__id, "disputes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.disputes()
+	})
+}
+
+func (c *mqlStripe) GetReviews() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Reviews, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stripe", c.__id, "reviews")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.reviews()
+	})
+}
+
+func (c *mqlStripe) GetEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Events, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stripe", c.__id, "events")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.events()
+	})
+}
+
 // mqlStripeAccount for the stripe.account resource
 type mqlStripeAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStripeAccountInternal it will be used here
-	Id               plugin.TValue[string]
-	Type             plugin.TValue[string]
-	BusinessType     plugin.TValue[string]
-	Country          plugin.TValue[string]
-	DefaultCurrency  plugin.TValue[string]
-	Email            plugin.TValue[string]
-	ChargesEnabled   plugin.TValue[bool]
-	PayoutsEnabled   plugin.TValue[bool]
-	DetailsSubmitted plugin.TValue[bool]
-	BusinessName     plugin.TValue[string]
-	BusinessUrl      plugin.TValue[string]
-	Capabilities     plugin.TValue[map[string]any]
-	Created          plugin.TValue[*time.Time]
+	Id                         plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	BusinessType               plugin.TValue[string]
+	Country                    plugin.TValue[string]
+	DefaultCurrency            plugin.TValue[string]
+	Email                      plugin.TValue[string]
+	ChargesEnabled             plugin.TValue[bool]
+	PayoutsEnabled             plugin.TValue[bool]
+	DetailsSubmitted           plugin.TValue[bool]
+	BusinessName               plugin.TValue[string]
+	BusinessUrl                plugin.TValue[string]
+	Capabilities               plugin.TValue[map[string]any]
+	RequirementsDisabledReason plugin.TValue[string]
+	RequirementsCurrentlyDue   plugin.TValue[[]any]
+	RequirementsPastDue        plugin.TValue[[]any]
+	RequirementsEventuallyDue  plugin.TValue[[]any]
+	DeclineChargeOnAvsFailure  plugin.TValue[bool]
+	DeclineChargeOnCvcFailure  plugin.TValue[bool]
+	StatementDescriptor        plugin.TValue[string]
+	PayoutInterval             plugin.TValue[string]
+	PayoutDelayDays            plugin.TValue[int64]
+	DebitNegativeBalances      plugin.TValue[bool]
+	Timezone                   plugin.TValue[string]
+	TosAcceptanceDate          plugin.TValue[*time.Time]
+	TosAcceptanceIp            plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	ExternalAccounts           plugin.TValue[[]any]
 }
 
 // createStripeAccount creates a new instance of this resource
@@ -966,8 +1466,175 @@ func (c *mqlStripeAccount) GetCapabilities() *plugin.TValue[map[string]any] {
 	return &c.Capabilities
 }
 
+func (c *mqlStripeAccount) GetRequirementsDisabledReason() *plugin.TValue[string] {
+	return &c.RequirementsDisabledReason
+}
+
+func (c *mqlStripeAccount) GetRequirementsCurrentlyDue() *plugin.TValue[[]any] {
+	return &c.RequirementsCurrentlyDue
+}
+
+func (c *mqlStripeAccount) GetRequirementsPastDue() *plugin.TValue[[]any] {
+	return &c.RequirementsPastDue
+}
+
+func (c *mqlStripeAccount) GetRequirementsEventuallyDue() *plugin.TValue[[]any] {
+	return &c.RequirementsEventuallyDue
+}
+
+func (c *mqlStripeAccount) GetDeclineChargeOnAvsFailure() *plugin.TValue[bool] {
+	return &c.DeclineChargeOnAvsFailure
+}
+
+func (c *mqlStripeAccount) GetDeclineChargeOnCvcFailure() *plugin.TValue[bool] {
+	return &c.DeclineChargeOnCvcFailure
+}
+
+func (c *mqlStripeAccount) GetStatementDescriptor() *plugin.TValue[string] {
+	return &c.StatementDescriptor
+}
+
+func (c *mqlStripeAccount) GetPayoutInterval() *plugin.TValue[string] {
+	return &c.PayoutInterval
+}
+
+func (c *mqlStripeAccount) GetPayoutDelayDays() *plugin.TValue[int64] {
+	return &c.PayoutDelayDays
+}
+
+func (c *mqlStripeAccount) GetDebitNegativeBalances() *plugin.TValue[bool] {
+	return &c.DebitNegativeBalances
+}
+
+func (c *mqlStripeAccount) GetTimezone() *plugin.TValue[string] {
+	return &c.Timezone
+}
+
+func (c *mqlStripeAccount) GetTosAcceptanceDate() *plugin.TValue[*time.Time] {
+	return &c.TosAcceptanceDate
+}
+
+func (c *mqlStripeAccount) GetTosAcceptanceIp() *plugin.TValue[string] {
+	return &c.TosAcceptanceIp
+}
+
 func (c *mqlStripeAccount) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
+}
+
+func (c *mqlStripeAccount) GetExternalAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stripe.account", c.__id, "externalAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccounts()
+	})
+}
+
+// mqlStripeAccountExternalAccount for the stripe.account.externalAccount resource
+type mqlStripeAccountExternalAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStripeAccountExternalAccountInternal it will be used here
+	Id                 plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Last4              plugin.TValue[string]
+	Country            plugin.TValue[string]
+	Currency           plugin.TValue[string]
+	BankName           plugin.TValue[string]
+	RoutingNumber      plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Brand              plugin.TValue[string]
+	DefaultForCurrency plugin.TValue[bool]
+	Fingerprint        plugin.TValue[string]
+}
+
+// createStripeAccountExternalAccount creates a new instance of this resource
+func createStripeAccountExternalAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStripeAccountExternalAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stripe.account.externalAccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStripeAccountExternalAccount) MqlName() string {
+	return "stripe.account.externalAccount"
+}
+
+func (c *mqlStripeAccountExternalAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStripeAccountExternalAccount) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStripeAccountExternalAccount) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlStripeAccountExternalAccount) GetLast4() *plugin.TValue[string] {
+	return &c.Last4
+}
+
+func (c *mqlStripeAccountExternalAccount) GetCountry() *plugin.TValue[string] {
+	return &c.Country
+}
+
+func (c *mqlStripeAccountExternalAccount) GetCurrency() *plugin.TValue[string] {
+	return &c.Currency
+}
+
+func (c *mqlStripeAccountExternalAccount) GetBankName() *plugin.TValue[string] {
+	return &c.BankName
+}
+
+func (c *mqlStripeAccountExternalAccount) GetRoutingNumber() *plugin.TValue[string] {
+	return &c.RoutingNumber
+}
+
+func (c *mqlStripeAccountExternalAccount) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStripeAccountExternalAccount) GetBrand() *plugin.TValue[string] {
+	return &c.Brand
+}
+
+func (c *mqlStripeAccountExternalAccount) GetDefaultForCurrency() *plugin.TValue[bool] {
+	return &c.DefaultForCurrency
+}
+
+func (c *mqlStripeAccountExternalAccount) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
 }
 
 // mqlStripeWebhookEndpoint for the stripe.webhookEndpoint resource
@@ -1506,4 +2173,281 @@ func (c *mqlStripeBalance) GetPending() *plugin.TValue[[]any] {
 
 func (c *mqlStripeBalance) GetLivemode() *plugin.TValue[bool] {
 	return &c.Livemode
+}
+
+// mqlStripeDispute for the stripe.dispute resource
+type mqlStripeDispute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStripeDisputeInternal it will be used here
+	Id                 plugin.TValue[string]
+	Amount             plugin.TValue[int64]
+	Currency           plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Reason             plugin.TValue[string]
+	IsChargeRefundable plugin.TValue[bool]
+	Charge             plugin.TValue[string]
+	PaymentIntent      plugin.TValue[string]
+	EvidenceDueBy      plugin.TValue[*time.Time]
+	Livemode           plugin.TValue[bool]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createStripeDispute creates a new instance of this resource
+func createStripeDispute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStripeDispute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stripe.dispute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStripeDispute) MqlName() string {
+	return "stripe.dispute"
+}
+
+func (c *mqlStripeDispute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStripeDispute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStripeDispute) GetAmount() *plugin.TValue[int64] {
+	return &c.Amount
+}
+
+func (c *mqlStripeDispute) GetCurrency() *plugin.TValue[string] {
+	return &c.Currency
+}
+
+func (c *mqlStripeDispute) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStripeDispute) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlStripeDispute) GetIsChargeRefundable() *plugin.TValue[bool] {
+	return &c.IsChargeRefundable
+}
+
+func (c *mqlStripeDispute) GetCharge() *plugin.TValue[string] {
+	return &c.Charge
+}
+
+func (c *mqlStripeDispute) GetPaymentIntent() *plugin.TValue[string] {
+	return &c.PaymentIntent
+}
+
+func (c *mqlStripeDispute) GetEvidenceDueBy() *plugin.TValue[*time.Time] {
+	return &c.EvidenceDueBy
+}
+
+func (c *mqlStripeDispute) GetLivemode() *plugin.TValue[bool] {
+	return &c.Livemode
+}
+
+func (c *mqlStripeDispute) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlStripeReview for the stripe.review resource
+type mqlStripeReview struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStripeReviewInternal it will be used here
+	Id            plugin.TValue[string]
+	Open          plugin.TValue[bool]
+	Reason        plugin.TValue[string]
+	OpenedReason  plugin.TValue[string]
+	ClosedReason  plugin.TValue[string]
+	IpAddress     plugin.TValue[string]
+	Charge        plugin.TValue[string]
+	PaymentIntent plugin.TValue[string]
+	Livemode      plugin.TValue[bool]
+	Created       plugin.TValue[*time.Time]
+}
+
+// createStripeReview creates a new instance of this resource
+func createStripeReview(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStripeReview{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stripe.review", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStripeReview) MqlName() string {
+	return "stripe.review"
+}
+
+func (c *mqlStripeReview) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStripeReview) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStripeReview) GetOpen() *plugin.TValue[bool] {
+	return &c.Open
+}
+
+func (c *mqlStripeReview) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlStripeReview) GetOpenedReason() *plugin.TValue[string] {
+	return &c.OpenedReason
+}
+
+func (c *mqlStripeReview) GetClosedReason() *plugin.TValue[string] {
+	return &c.ClosedReason
+}
+
+func (c *mqlStripeReview) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlStripeReview) GetCharge() *plugin.TValue[string] {
+	return &c.Charge
+}
+
+func (c *mqlStripeReview) GetPaymentIntent() *plugin.TValue[string] {
+	return &c.PaymentIntent
+}
+
+func (c *mqlStripeReview) GetLivemode() *plugin.TValue[bool] {
+	return &c.Livemode
+}
+
+func (c *mqlStripeReview) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlStripeEvent for the stripe.event resource
+type mqlStripeEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStripeEventInternal it will be used here
+	Id                    plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	ApiVersion            plugin.TValue[string]
+	PendingWebhooks       plugin.TValue[int64]
+	RequestId             plugin.TValue[string]
+	RequestIdempotencyKey plugin.TValue[string]
+	Livemode              plugin.TValue[bool]
+	Created               plugin.TValue[*time.Time]
+}
+
+// createStripeEvent creates a new instance of this resource
+func createStripeEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStripeEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stripe.event", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStripeEvent) MqlName() string {
+	return "stripe.event"
+}
+
+func (c *mqlStripeEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStripeEvent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStripeEvent) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlStripeEvent) GetApiVersion() *plugin.TValue[string] {
+	return &c.ApiVersion
+}
+
+func (c *mqlStripeEvent) GetPendingWebhooks() *plugin.TValue[int64] {
+	return &c.PendingWebhooks
+}
+
+func (c *mqlStripeEvent) GetRequestId() *plugin.TValue[string] {
+	return &c.RequestId
+}
+
+func (c *mqlStripeEvent) GetRequestIdempotencyKey() *plugin.TValue[string] {
+	return &c.RequestIdempotencyKey
+}
+
+func (c *mqlStripeEvent) GetLivemode() *plugin.TValue[bool] {
+	return &c.Livemode
+}
+
+func (c *mqlStripeEvent) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }

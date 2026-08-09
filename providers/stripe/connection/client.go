@@ -50,6 +50,18 @@ func IsNotFound(err error) bool {
 	return false
 }
 
+// IsClientError reports whether err is any 4xx response. Callers use it to
+// degrade an endpoint that is simply unavailable for the current account
+// (for example external accounts on a standalone account) to an empty result
+// rather than failing the whole scan.
+func IsClientError(err error) bool {
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode >= 400 && apiErr.StatusCode < 500
+	}
+	return false
+}
+
 // Get performs a GET against the Stripe API and decodes the JSON body into out.
 func (c *StripeConnection) Get(ctx context.Context, path string, query url.Values, out any) error {
 	body, err := c.do(ctx, path, query)
