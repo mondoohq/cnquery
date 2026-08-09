@@ -856,6 +856,16 @@ gitlab.project @defaults("fullName visibility webURL") {
   protectedEnvironments() []gitlab.project.protectedEnvironment
   // Project this project was forked from, or null when it is not a fork
   forkedFromProject() gitlab.project
+  // Trigger tokens that let external callers start pipelines
+  pipelineTriggers() []gitlab.project.pipelineTrigger
+  // Recurring pipeline runs and the variables they inject
+  pipelineSchedules() []gitlab.project.pipelineSchedule
+  // Certificates and keystores mounted into CI jobs
+  secureFiles() []gitlab.project.secureFile
+  // Kubernetes clusters connected to the project
+  clusterAgents() []gitlab.project.clusterAgent
+  // Push mirrors replicating the repository to external Git hosts
+  remoteMirrors() []gitlab.project.remoteMirror
 }
 
 // GitLab project integration
@@ -2366,4 +2376,217 @@ private gitlab.project.packageProtectionRule @defaults("packageNamePattern packa
   // One of `developer`, `maintainer`, `owner`, or `admin`; empty when
   // delete is unprotected.
   minimumAccessLevelForDelete string
+}
+
+// GitLab pipeline trigger token
+//
+// Standing credential that lets an external caller start a pipeline on
+// the project over the API. Trigger tokens carry no expiration, so a
+// token created for a one-off integration keeps working indefinitely
+// unless it is deleted. `lastUsedAt` distinguishes tokens still in
+// service from dormant ones that should be removed, `owner` names the
+// user whose permissions the triggered pipeline inherits, and
+// `createdAt` shows how long the credential has been outstanding. The
+// secret value itself is never exposed.
+private gitlab.project.pipelineTrigger @defaults("id description lastUsedAt") {
+  // Trigger token ID
+  id int
+  // Human-readable label given to the trigger
+  description string
+  // Time the trigger token was created
+  createdAt time
+  // Time the trigger token was last modified
+  updatedAt time
+  // Time the trigger token last started a pipeline
+  //
+  // Null when the token has never been used, which marks it as a
+  // dormant credential.
+  lastUsedAt time
+  // User whose permissions pipelines started by this token run with
+  owner() gitlab.user
+}
+
+// GitLab pipeline schedule
+//
+// Recurring pipeline run configured on the project, executing `ref` on
+// the `cron` cadence with the permissions of `owner`. Schedules persist
+// independently of the repository contents, so one created by an
+// attacker keeps running after the offending commit is reverted.
+// `variables` lists the names and types of the CI/CD variables the
+// schedule injects into each run without revealing their values, and
+// the `lastPipeline` fields report the outcome of the most recent
+// execution.
+private gitlab.project.pipelineSchedule @defaults("id description cron active") {
+  // Pipeline schedule ID
+  id int
+  // Human-readable label given to the schedule
+  description string
+  // Branch or tag the scheduled pipeline runs against
+  ref string
+  // Cron expression controlling the run cadence
+  cron string
+  // Time zone the cron expression is evaluated in
+  cronTimezone string
+  // Next time the schedule is due to run
+  nextRunAt time
+  // Whether the schedule is currently active
+  active bool
+  // Time the schedule was created
+  createdAt time
+  // Time the schedule was last modified
+  updatedAt time
+  // User whose permissions the scheduled pipeline runs with
+  owner() gitlab.user
+  // CI/CD variables the schedule injects, keyed by variable name
+  //
+  // The value of each entry is the variable type, either `env_var` or
+  // `file`. Variable values are deliberately omitted because GitLab
+  // returns them in clear text. GitLab discloses this list only to the
+  // schedule owner and to users with the Maintainer or Owner role, so
+  // it is empty for tokens below that threshold.
+  variables() map[string]string
+  // ID of the most recent pipeline started by this schedule
+  //
+  // Zero when the schedule has never run.
+  lastPipelineId() int
+  // Commit SHA the most recent scheduled pipeline ran against
+  lastPipelineSha() string
+  // Branch or tag the most recent scheduled pipeline ran against
+  lastPipelineRef() string
+  // Status of the most recent scheduled pipeline
+  //
+  // One of `created`, `waiting_for_resource`, `preparing`, `pending`,
+  // `running`, `success`, `failed`, `canceled`, `skipped`, `manual`, or
+  // `scheduled`. Empty when the schedule has never run.
+  lastPipelineStatus() string
+}
+
+// GitLab project secure file
+//
+// Certificate, keystore, or provisioning profile stored in the project
+// and mounted into CI jobs at run time. Secure files hold signing
+// material that outlives any single pipeline, so `expiresAt` and the
+// certificate fields matter for spotting credentials that are about to
+// lapse or that were issued by an unexpected authority. `checksum` and
+// `checksumAlgorithm` pin the exact bytes GitLab is serving to jobs.
+private gitlab.project.secureFile @defaults("name expiresAt") {
+  // Secure file ID
+  id int
+  // File name as referenced by CI jobs
+  name string
+  // Checksum of the stored file
+  checksum string
+  // Algorithm used to compute the checksum
+  checksumAlgorithm string
+  // Time the file was uploaded
+  createdAt time
+  // Time the file expires
+  expiresAt time
+  // Serial number of the certificate, when the file is a certificate
+  certificateId string
+  // Expiration recorded inside the certificate itself
+  certificateExpiresAt time
+  // Authority that issued the certificate
+  //
+  // Keys are the distinguished-name components GitLab parses out: `CN`,
+  // `O`, `OU`, and `C`.
+  issuer dict
+  // Entity the certificate was issued to
+  //
+  // Keys are the distinguished-name components GitLab parses out: `CN`,
+  // `O`, `OU`, `C`, and `UID`.
+  subject dict
+}
+
+// GitLab agent for Kubernetes
+//
+// Registration that connects a Kubernetes cluster to the project,
+// letting CI jobs and GitOps workflows act against that cluster. An
+// agent is a path from source control into a running cluster, so
+// `configProject` (the project holding the agent configuration, which
+// decides which other projects may use the agent) and `tokens` (the
+// credentials the in-cluster agent authenticates with) are the fields
+// that establish who can reach the cluster.
+private gitlab.project.clusterAgent @defaults("id name") {
+  // Agent ID
+  id int
+  // Agent name
+  name string
+  // Time the agent was registered
+  createdAt time
+  // User who registered the agent
+  createdBy() gitlab.user
+  // Project holding the agent configuration
+  configProject() gitlab.project
+  // Credentials the in-cluster agent authenticates with
+  tokens() []gitlab.project.clusterAgent.token
+}
+
+// GitLab agent for Kubernetes token
+//
+// Credential an in-cluster agent presents to authenticate back to
+// GitLab. Tokens remain listed after revocation, so `status` separates
+// live credentials from retired ones, and `lastUsedAt` identifies
+// active tokens that were provisioned but never connected. The secret
+// value itself is never exposed.
+private gitlab.project.clusterAgent.token @defaults("id name status lastUsedAt") {
+  // Agent token ID
+  id int
+  // Token name
+  name string
+  // Human-readable note recorded with the token
+  description string
+  // Whether the token is live
+  //
+  // Either `active` or `revoked`.
+  status string
+  // Time the token was created
+  createdAt time
+  // User who created the token
+  createdBy() gitlab.user
+  // Time the token last authenticated to GitLab
+  //
+  // Null when the token has never been used.
+  lastUsedAt time
+}
+
+// GitLab project push mirror
+//
+// Continuous replication of the project's repository to an external Git
+// host. A push mirror moves source code out of GitLab on every update,
+// so `url` records the destination the code is being sent to and
+// `authMethod` how the mirror authenticates there.
+// `onlyProtectedBranches` narrows what is replicated, and
+// `keepDivergentRefs` decides whether the remote keeps refs that have
+// diverged locally. GitLab redacts any password embedded in `url`.
+private gitlab.project.remoteMirror @defaults("url enabled updateStatus") {
+  // Mirror ID
+  id int
+  // Whether the mirror is active
+  enabled bool
+  // Destination repository the code is pushed to
+  //
+  // Any password embedded in the URL is redacted by GitLab before the
+  // value is returned.
+  url string
+  // How the mirror authenticates to the destination
+  //
+  // Either `password` or `ssh_public_key`.
+  authMethod string
+  // Whether replication is limited to protected branches
+  onlyProtectedBranches bool
+  // Whether refs that have diverged on the destination are preserved
+  keepDivergentRefs bool
+  // Regular expression selecting which branches are replicated
+  mirrorBranchRegex string
+  // Outcome of the most recent replication attempt
+  //
+  // One of `none`, `scheduled`, `started`, `finished`, or `failed`.
+  updateStatus string
+  // Error reported by the most recent failed replication attempt
+  lastError string
+  // Time replication was last attempted
+  lastUpdateAt time
+  // Time replication last completed successfully
+  lastSuccessfulUpdateAt time
 }
