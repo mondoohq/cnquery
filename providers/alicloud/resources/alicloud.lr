@@ -8,12 +8,12 @@ option go_package = "go.mondoo.com/mql/v13/providers/alicloud/resources"
 //
 // Entry point for querying an Alibaba Cloud account. Exposes the account
 // identity and the region IDs enabled on the account, and is the root from
-// which the RAM, ECS, VPC, OSS, SLB, ALB, NLB, and managed-database resources
-// are reached, along with the Container Service for Kubernetes, Function
-// Compute, NAS file storage, Web Application Firewall, Cloud Firewall,
-// Anti-DDoS, Security Center, Key Management Service, ActionTrail, Log Service,
-// Cloud Config, CloudSSO, Cloud Enterprise Network, and Resource Directory
-// resources.
+// which the RAM, ECS, Auto Scaling, VPC, OSS, SLB, ALB, NLB, and
+// managed-database resources are reached, along with the Container Service for
+// Kubernetes, Function Compute, NAS file storage, Web Application Firewall,
+// Cloud Firewall, Anti-DDoS, Security Center, Key Management Service,
+// ActionTrail, Log Service, Cloud Config, CloudSSO, Cloud Enterprise Network,
+// and Resource Directory resources.
 alicloud {
   // Account (UID) that the active credential belongs to
   accountId() string
@@ -517,6 +517,14 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   // A limit of 1 keeps metadata responses on the instance itself, so a
   // containerized workload on a bridged network cannot reach them.
   metadataHopLimit int
+  // Startup script and cloud-init data supplied to the instance
+  //
+  // The user data as plain text, decoded from the base64 form the API returns.
+  // Anything readable here is also readable by any process on the instance
+  // that can reach the metadata service, so it is where hardcoded passwords,
+  // API keys, and private registry credentials end up. Empty when the instance
+  // was launched without user data.
+  userData() string
 }
 
 // Elastic Compute Service disk
@@ -745,6 +753,257 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   description string
   // Time when the rule was created
   createTime time
+}
+
+// Auto Scaling
+//
+// Scaling groups and the scaling configurations they launch instances from,
+// across every enabled region on the account. Instances created by a scaling
+// group are transient, so the scaling configuration is the durable record of
+// how they are built: the user data written into them, the RAM role and
+// security groups they receive, the image they boot, and the metadata service
+// hardening they inherit.
+alicloud.ess {
+  // Scaling groups across all enabled regions
+  scalingGroups() []alicloud.ess.scalingGroup
+  // Scaling configurations across all enabled regions
+  scalingConfigurations() []alicloud.ess.scalingConfiguration
+}
+
+// Auto Scaling scaling group
+//
+// A scaling group and the sizing, placement, and health-check settings that
+// govern it, along with the scaling configurations it can launch from and the
+// one currently active. The scalingGroupId and regionId fields together select
+// a single group, for example
+// `alicloud.ess.scalingGroup(scalingGroupId: "asg-bp1abc", regionId: "cn-hangzhou")`.
+alicloud.ess.scalingGroup @defaults("name scalingGroupId lifecycleState totalCapacity") {
+  // Scaling group ID
+  scalingGroupId string
+  // Scaling group name
+  name string
+  // Region ID the scaling group resides in, for example cn-hangzhou
+  regionId string
+  // Lifecycle state of the scaling group
+  //
+  // One of Active, Inactive, or Deleting. Only an Active group launches and
+  // releases instances.
+  lifecycleState string
+  // Kind of instance the group manages
+  //
+  // Either ECS for Elastic Compute Service instances or ECI for elastic
+  // container instances.
+  groupType string
+  // Minimum number of instances the group maintains
+  minSize int
+  // Maximum number of instances the group may create
+  maxSize int
+  // Expected number of instances the group tries to hold
+  desiredCapacity int
+  // Number of instances currently in the group
+  totalCapacity int
+  // Number of instances in the group that are serving traffic
+  activeCapacity int
+  // Seconds after a scaling activity before another may start
+  defaultCooldown int
+  // How the group decides an instance is unhealthy
+  //
+  // One of ECS, where the group replaces instances the ECS service reports as
+  // unhealthy, LOAD_BALANCER, or NONE, which disables replacement entirely.
+  healthCheckType string
+  // How instances are spread across zones
+  //
+  // One of PRIORITY, BALANCE, or COST_OPTIMIZED.
+  multiAZPolicy string
+  // Reclaim mode applied when the group removes an instance
+  //
+  // One of recycle, which stops the instance, release, which deletes it, or
+  // forcerelease.
+  scalingPolicy string
+  // Whether the group is protected from deletion
+  groupDeletionProtection bool
+  // Scaling processes the group has been told to stop running
+  //
+  // Any of ScaleIn, ScaleOut, HealthCheck, AlarmNotification, or
+  // ScheduledAction. A suspended HealthCheck stops unhealthy instances being
+  // replaced, so a group can sit degraded without any activity recorded.
+  suspendedProcesses []string
+  // Whether Auto Scaling itself has suspended the group
+  systemSuspended bool
+  // Maximum seconds an instance may stay in the group before replacement
+  //
+  // Zero when instances are never replaced on age alone, which lets a
+  // long-lived instance drift from the image the group launches today.
+  maxInstanceLifetime int
+  // ID of the resource group the scaling group belongs to
+  resourceGroupId string
+  // ID of the launch template the group creates instances from
+  //
+  // Empty on a group that launches from a scaling configuration instead. When
+  // set, the instance shape lives in the launch template rather than in
+  // scalingConfigurations, so those settings are not visible here.
+  launchTemplateId string
+  // Version of the launch template the group uses
+  //
+  // A version number, or Latest or Default. Empty when the group launches from
+  // a scaling configuration.
+  launchTemplateVersion string
+  // Time the scaling group was created
+  creationTime time
+  // Time the scaling group was last modified
+  modificationTime time
+  // VPC the scaling group launches instances into
+  //
+  // Null on a classic-network group.
+  vpc() alicloud.vpc.network
+  // vSwitches the scaling group may place instances in
+  //
+  // The subnets available to the group, which determine the zones it can
+  // spread across. Empty on a classic-network group.
+  vswitches() []alicloud.vpc.vswitch
+  // Scaling configuration the group currently launches from
+  //
+  // Null when the group has no active configuration, which is the case for a
+  // group that launches from a launch template.
+  activeScalingConfiguration() alicloud.ess.scalingConfiguration
+  // Scaling configurations defined on the group
+  //
+  // Every configuration attached to the group, active or not. An inactive
+  // configuration still ships whatever user data and permissions it holds the
+  // moment someone makes it active.
+  scalingConfigurations() []alicloud.ess.scalingConfiguration
+}
+
+// Auto Scaling scaling configuration
+//
+// The instance template a scaling group launches from: the image and instance
+// type, the user data written into every instance, the RAM role and security
+// groups each instance receives, the metadata service hardening, and the
+// system disk encryption. The scalingConfigurationId and regionId fields
+// together select a single configuration, for example
+// `alicloud.ess.scalingConfiguration(scalingConfigurationId: "asc-bp1abc", regionId: "cn-hangzhou")`.
+alicloud.ess.scalingConfiguration @defaults("name scalingConfigurationId instanceType lifecycleState") {
+  // Scaling configuration ID
+  scalingConfigurationId string
+  // Scaling configuration name
+  name string
+  // Region ID the scaling configuration resides in, for example cn-hangzhou
+  regionId string
+  // Lifecycle state of the scaling configuration
+  //
+  // Either Active, meaning the scaling group launches instances from this
+  // configuration, or Inactive.
+  lifecycleState string
+  // Instance type launched from this configuration, for example ecs.g6.large
+  instanceType string
+  // Startup script and cloud-init data written into every instance
+  //
+  // The user data as plain text, decoded from the base64 form the API returns.
+  // Every instance the group launches receives it, and any process on those
+  // instances that can reach the metadata service can read it back, so a
+  // credential embedded here is exposed on every instance the group has ever
+  // created. Empty when the configuration carries no user data.
+  userData string
+  // Where the image comes from
+  //
+  // One of system for an Alibaba Cloud public image, self for a private image
+  // in the account, others for an image shared from another account, or
+  // marketplace.
+  imageOwnerAlias string
+  // Whether a session token is required to read instance metadata
+  //
+  // Either optional, where a plain request to the metadata service returns
+  // credentials, or required, where the caller must obtain a token first.
+  // Requiring a token is what stops a server-side request forgery on a
+  // launched instance from reading the RAM role credentials.
+  metadataHttpTokens string
+  // Whether the instance metadata service endpoint is reachable
+  //
+  // False when the metadata endpoint is switched off entirely, which removes
+  // the RAM role credential path from every instance the group launches.
+  metadataEndpointEnabled bool
+  // Whether launched instances keep the password baked into the image
+  //
+  // True when the configuration inherits the image password rather than
+  // setting one, which leaves every instance sharing whatever credential the
+  // image was built with.
+  passwordInherit bool
+  // Whether a logon password is configured
+  //
+  // True when the configuration sets a password for the instance, enabling
+  // password logon alongside or instead of key-pair logon. The password itself
+  // is never returned.
+  passwordSet bool
+  // Hardening applied to the operating system at launch
+  //
+  // Either Active, which installs the Security Center agent on each instance,
+  // or Deactive.
+  securityEnhancementStrategy string
+  // Maximum inbound public bandwidth in Mbit/s
+  internetMaxBandwidthIn int
+  // Maximum outbound public bandwidth in Mbit/s
+  //
+  // A value above zero means every instance the group launches is assigned a
+  // public IP address, making it reachable from the internet subject to its
+  // security groups. Zero means instances get no public address.
+  internetMaxBandwidthOut int
+  // Whether the system disk is encrypted at rest
+  systemDiskEncrypted bool
+  // System disk category
+  //
+  // One of cloud, cloud_efficiency, cloud_ssd, cloud_essd, cloud_auto, or
+  // ephemeral_ssd.
+  systemDiskCategory string
+  // System disk size in GiB
+  systemDiskSize int
+  // Whether launched instances are protected from deletion
+  deletionProtection bool
+  // Purchasing option for launched instances
+  //
+  // One of NoSpot for pay-as-you-go, SpotWithPriceLimit, or SpotAsPriceGo.
+  spotStrategy string
+  // Tenancy of the underlying host
+  //
+  // Either default for shared hosts or host for a dedicated host.
+  tenancy string
+  // Confidential computing mode of launched instances
+  //
+  // Either Enclave or TDX when the instance builds a confidential computing
+  // environment. Empty when confidential computing is not configured.
+  confidentialComputingMode string
+  // Time the scaling configuration was created
+  creationTime time
+  // Scaling group the configuration belongs to
+  scalingGroup() alicloud.ess.scalingGroup
+  // RAM role granted to every instance the configuration launches
+  //
+  // The role whose temporary credentials the metadata service hands to any
+  // process on a launched instance. Traverse to attachedPolicies to see what a
+  // workload on those instances is authorized to do. Null when no instance RAM
+  // role is configured.
+  ramRole() alicloud.ram.role
+  // Security groups applied to every instance the configuration launches
+  //
+  // Traverse to permissions to see the inbound rules that will apply to each
+  // new instance, which is where a group launching into an open security group
+  // shows up.
+  securityGroups() []alicloud.ecs.securitygroup
+  // Image launched instances boot from
+  //
+  // Null when the image has been deleted or is not visible to the account,
+  // which leaves the configuration unable to launch.
+  image() alicloud.ecs.image
+  // Key pair installed on every instance the configuration launches
+  //
+  // Null when the configuration installs no key pair, in which case logon
+  // depends on a password, and also when the named key pair has since been
+  // deleted.
+  keyPair() alicloud.ecs.keypair
+  // KMS key encrypting the system disk
+  //
+  // Null when the system disk is unencrypted, or when it is encrypted with the
+  // service-managed key rather than a customer master key.
+  systemDiskKmsKey() alicloud.kms.key
 }
 
 // Virtual Private Cloud (VPC)

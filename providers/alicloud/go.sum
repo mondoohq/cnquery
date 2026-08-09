@@ -90,6 +90,8 @@ github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0 h1:vBtC3Ll9v1Rw5/AjFKMj24T1jt1
 github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0/go.mod h1:8nugXBtwcnNFD6fOOPF8QrAN7m0ByZQpPdqkNK2QIGU=
 github.com/alibabacloud-go/endpoint-util v1.1.0 h1:r/4D3VSw888XGaeNpP994zDUaxdgTSHBbVfZlzf6b5Q=
 github.com/alibabacloud-go/endpoint-util v1.1.0/go.mod h1:O5FuCALmCKs2Ff7JFJMudHs0I5EBgecXXxZRyswlEjE=
+github.com/alibabacloud-go/ess-20220222/v2 v2.13.3 h1:VafOjNLGZtRn62lzvu9NlXG7/hEBqKBENqXNv1z5VmU=
+github.com/alibabacloud-go/ess-20220222/v2 v2.13.3/go.mod h1:yPi7k7mC7NL6RO9zS1QTPjDBB/gZoqUBTePVoT8Yf04=
 github.com/alibabacloud-go/fc-20230330/v4 v4.7.9 h1:YQOm9qRkWDszkuBSJwVjIzwdh2nflnLaQDUqSekdS2Y=
 github.com/alibabacloud-go/fc-20230330/v4 v4.7.9/go.mod h1:b58LH0Xv8fl9PlaWpVx26cEpBLTcY4q536X0GCz/BGc=
 github.com/alibabacloud-go/kms-20160120/v4 v4.2.0 h1:ntXWBE1hAXfgimTbrehkDj1KejCGS1FE9qZosOBvM+0=

@@ -18,6 +18,7 @@ import (
 	ddoscooclient "github.com/alibabacloud-go/ddoscoo-20200101/v5/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
+	essclient "github.com/alibabacloud-go/ess-20220222/v2/client"
 	fcclient "github.com/alibabacloud-go/fc-20230330/v4/client"
 	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
 	nasclient "github.com/alibabacloud-go/nas-20170626/v4/client"
@@ -120,6 +121,17 @@ func (c *AlicloudConnection) CloudSsoClient(region string) (*cloudssoclient.Clie
 		return nil, err
 	}
 	return client.(*cloudssoclient.Client), nil
+}
+
+// EssClient returns an Auto Scaling client for a region.
+func (c *AlicloudConnection) EssClient(region string) (*essclient.Client, error) {
+	client, err := c.cachedClient("ess/"+region, func() (any, error) {
+		return essclient.NewClient(c.config("ess", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*essclient.Client), nil
 }
 
 func (c *AlicloudConnection) EcsClient(region string) (*ecsclient.Client, error) {

@@ -16,6 +16,7 @@ require (
 	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
 	github.com/alibabacloud-go/dds-20151201/v9 v9.2.0
 	github.com/alibabacloud-go/ecs-20140526/v6 v6.1.0
+	github.com/alibabacloud-go/ess-20220222/v2 v2.13.3
 	github.com/alibabacloud-go/fc-20230330/v4 v4.7.9
 	github.com/alibabacloud-go/kms-20160120/v4 v4.2.0
 	github.com/alibabacloud-go/nas-20170626/v4 v4.7.0

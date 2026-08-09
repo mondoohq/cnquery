@@ -32,6 +32,9 @@ const (
 	ResourceAlicloudEcsKeypair                   string = "alicloud.ecs.keypair"
 	ResourceAlicloudEcsSecuritygroup             string = "alicloud.ecs.securitygroup"
 	ResourceAlicloudEcsSecuritygroupPermission   string = "alicloud.ecs.securitygroup.permission"
+	ResourceAlicloudEss                          string = "alicloud.ess"
+	ResourceAlicloudEssScalingGroup              string = "alicloud.ess.scalingGroup"
+	ResourceAlicloudEssScalingConfiguration      string = "alicloud.ess.scalingConfiguration"
 	ResourceAlicloudVpc                          string = "alicloud.vpc"
 	ResourceAlicloudVpcNetwork                   string = "alicloud.vpc.network"
 	ResourceAlicloudVpcVswitch                   string = "alicloud.vpc.vswitch"
@@ -174,7 +177,7 @@ func init() {
 			Create: createAlicloudEcsImage,
 		},
 		"alicloud.ecs.keypair": {
-			// to override args, implement: initAlicloudEcsKeypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudEcsKeypair,
 			Create: createAlicloudEcsKeypair,
 		},
 		"alicloud.ecs.securitygroup": {
@@ -184,6 +187,18 @@ func init() {
 		"alicloud.ecs.securitygroup.permission": {
 			// to override args, implement: initAlicloudEcsSecuritygroupPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudEcsSecuritygroupPermission,
+		},
+		"alicloud.ess": {
+			// to override args, implement: initAlicloudEss(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudEss,
+		},
+		"alicloud.ess.scalingGroup": {
+			Init:   initAlicloudEssScalingGroup,
+			Create: createAlicloudEssScalingGroup,
+		},
+		"alicloud.ess.scalingConfiguration": {
+			Init:   initAlicloudEssScalingConfiguration,
+			Create: createAlicloudEssScalingConfiguration,
 		},
 		"alicloud.vpc": {
 			// to override args, implement: initAlicloudVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -987,6 +1002,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.instance.metadataHopLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsInstance).GetMetadataHopLimit()).ToDataRes(types.Int)
 	},
+	"alicloud.ecs.instance.userData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsInstance).GetUserData()).ToDataRes(types.String)
+	},
 	"alicloud.ecs.disk.diskId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsDisk).GetDiskId()).ToDataRes(types.String)
 	},
@@ -1214,6 +1232,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.ecs.securitygroup.permission.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsSecuritygroupPermission).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ess.scalingGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEss).GetScalingGroups()).ToDataRes(types.Array(types.Resource("alicloud.ess.scalingGroup")))
+	},
+	"alicloud.ess.scalingConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEss).GetScalingConfigurations()).ToDataRes(types.Array(types.Resource("alicloud.ess.scalingConfiguration")))
+	},
+	"alicloud.ess.scalingGroup.scalingGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetScalingGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.groupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetGroupType()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.minSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetMinSize()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.maxSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetMaxSize()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.desiredCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetDesiredCapacity()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.totalCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetTotalCapacity()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.activeCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetActiveCapacity()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.defaultCooldown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetDefaultCooldown()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.healthCheckType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetHealthCheckType()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.multiAZPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetMultiAZPolicy()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.scalingPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetScalingPolicy()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.groupDeletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetGroupDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingGroup.suspendedProcesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetSuspendedProcesses()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ess.scalingGroup.systemSuspended": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetSystemSuspended()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingGroup.maxInstanceLifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetMaxInstanceLifetime()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingGroup.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.launchTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetLaunchTemplateId()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.launchTemplateVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetLaunchTemplateVersion()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ess.scalingGroup.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetModificationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ess.scalingGroup.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
+	},
+	"alicloud.ess.scalingGroup.vswitches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetVswitches()).ToDataRes(types.Array(types.Resource("alicloud.vpc.vswitch")))
+	},
+	"alicloud.ess.scalingGroup.activeScalingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetActiveScalingConfiguration()).ToDataRes(types.Resource("alicloud.ess.scalingConfiguration"))
+	},
+	"alicloud.ess.scalingGroup.scalingConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetScalingConfigurations()).ToDataRes(types.Array(types.Resource("alicloud.ess.scalingConfiguration")))
+	},
+	"alicloud.ess.scalingConfiguration.scalingConfigurationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetScalingConfigurationId()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetInstanceType()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.userData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetUserData()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.imageOwnerAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetImageOwnerAlias()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.metadataHttpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetMetadataHttpTokens()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.metadataEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetMetadataEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingConfiguration.passwordInherit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetPasswordInherit()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingConfiguration.passwordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetPasswordSet()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingConfiguration.securityEnhancementStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSecurityEnhancementStrategy()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.internetMaxBandwidthIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetInternetMaxBandwidthIn()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingConfiguration.internetMaxBandwidthOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetInternetMaxBandwidthOut()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSystemDiskEncrypted()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSystemDiskCategory()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSystemDiskSize()).ToDataRes(types.Int)
+	},
+	"alicloud.ess.scalingConfiguration.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"alicloud.ess.scalingConfiguration.spotStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSpotStrategy()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.tenancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetTenancy()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.confidentialComputingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetConfidentialComputingMode()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingConfiguration.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ess.scalingConfiguration.scalingGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetScalingGroup()).ToDataRes(types.Resource("alicloud.ess.scalingGroup"))
+	},
+	"alicloud.ess.scalingConfiguration.ramRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetRamRole()).ToDataRes(types.Resource("alicloud.ram.role"))
+	},
+	"alicloud.ess.scalingConfiguration.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
+	},
+	"alicloud.ess.scalingConfiguration.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetImage()).ToDataRes(types.Resource("alicloud.ecs.image"))
+	},
+	"alicloud.ess.scalingConfiguration.keyPair": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetKeyPair()).ToDataRes(types.Resource("alicloud.ecs.keypair"))
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingConfiguration).GetSystemDiskKmsKey()).ToDataRes(types.Resource("alicloud.kms.key"))
 	},
 	"alicloud.vpc.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpc).GetNetworks()).ToDataRes(types.Array(types.Resource("alicloud.vpc.network")))
@@ -5355,6 +5544,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcsInstance).MetadataHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"alicloud.ecs.instance.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsInstance).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"alicloud.ecs.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsDisk).__id, ok = v.Value.(string)
 		return
@@ -5677,6 +5870,246 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.ecs.securitygroup.permission.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsSecuritygroupPermission).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEss).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ess.scalingGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEss).ScalingGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEss).ScalingConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ess.scalingGroup.scalingGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ScalingGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.groupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).GroupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.minSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).MinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.maxSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).MaxSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.desiredCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).DesiredCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.totalCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).TotalCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.activeCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ActiveCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.defaultCooldown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).DefaultCooldown, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.healthCheckType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).HealthCheckType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.multiAZPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).MultiAZPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.scalingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ScalingPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.groupDeletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).GroupDeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.suspendedProcesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).SuspendedProcesses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.systemSuspended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).SystemSuspended, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.maxInstanceLifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).MaxInstanceLifetime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.launchTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).LaunchTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.launchTemplateVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).LaunchTemplateVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ModificationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.vswitches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).Vswitches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.activeScalingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ActiveScalingConfiguration, ok = plugin.RawToTValue[*mqlAlicloudEssScalingConfiguration](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.scalingConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).ScalingConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.scalingConfigurationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).ScalingConfigurationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.imageOwnerAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).ImageOwnerAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.metadataHttpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).MetadataHttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.metadataEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).MetadataEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.passwordInherit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).PasswordInherit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.passwordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).PasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.securityEnhancementStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SecurityEnhancementStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.internetMaxBandwidthIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).InternetMaxBandwidthIn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.internetMaxBandwidthOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).InternetMaxBandwidthOut, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SystemDiskEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SystemDiskCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SystemDiskSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.spotStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SpotStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.tenancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).Tenancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.confidentialComputingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).ConfidentialComputingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.scalingGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).ScalingGroup, ok = plugin.RawToTValue[*mqlAlicloudEssScalingGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.ramRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).RamRole, ok = plugin.RawToTValue[*mqlAlicloudRamRole](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).Image, ok = plugin.RawToTValue[*mqlAlicloudEcsImage](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.keyPair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).KeyPair, ok = plugin.RawToTValue[*mqlAlicloudEcsKeypair](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingConfiguration.systemDiskKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingConfiguration).SystemDiskKmsKey, ok = plugin.RawToTValue[*mqlAlicloudKmsKey](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11908,6 +12341,7 @@ type mqlAlicloudEcsInstance struct {
 	MetadataEndpointEnabled plugin.TValue[bool]
 	MetadataHttpTokens      plugin.TValue[string]
 	MetadataHopLimit        plugin.TValue[int64]
+	UserData                plugin.TValue[string]
 }
 
 // createAlicloudEcsInstance creates a new instance of this resource
@@ -12219,6 +12653,12 @@ func (c *mqlAlicloudEcsInstance) GetMetadataHttpTokens() *plugin.TValue[string] 
 
 func (c *mqlAlicloudEcsInstance) GetMetadataHopLimit() *plugin.TValue[int64] {
 	return &c.MetadataHopLimit
+}
+
+func (c *mqlAlicloudEcsInstance) GetUserData() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UserData, func() (string, error) {
+		return c.userData()
+	})
 }
 
 // mqlAlicloudEcsDisk for the alicloud.ecs.disk resource
@@ -12891,6 +13331,567 @@ func (c *mqlAlicloudEcsSecuritygroupPermission) GetDescription() *plugin.TValue[
 
 func (c *mqlAlicloudEcsSecuritygroupPermission) GetCreateTime() *plugin.TValue[*time.Time] {
 	return &c.CreateTime
+}
+
+// mqlAlicloudEss for the alicloud.ess resource
+type mqlAlicloudEss struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudEssInternal it will be used here
+	ScalingGroups         plugin.TValue[[]any]
+	ScalingConfigurations plugin.TValue[[]any]
+}
+
+// createAlicloudEss creates a new instance of this resource
+func createAlicloudEss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudEss{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudEss) MqlName() string {
+	return "alicloud.ess"
+}
+
+func (c *mqlAlicloudEss) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudEss) GetScalingGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScalingGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess", c.__id, "scalingGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scalingGroups()
+	})
+}
+
+func (c *mqlAlicloudEss) GetScalingConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScalingConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess", c.__id, "scalingConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scalingConfigurations()
+	})
+}
+
+// mqlAlicloudEssScalingGroup for the alicloud.ess.scalingGroup resource
+type mqlAlicloudEssScalingGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudEssScalingGroupInternal
+	ScalingGroupId             plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	RegionId                   plugin.TValue[string]
+	LifecycleState             plugin.TValue[string]
+	GroupType                  plugin.TValue[string]
+	MinSize                    plugin.TValue[int64]
+	MaxSize                    plugin.TValue[int64]
+	DesiredCapacity            plugin.TValue[int64]
+	TotalCapacity              plugin.TValue[int64]
+	ActiveCapacity             plugin.TValue[int64]
+	DefaultCooldown            plugin.TValue[int64]
+	HealthCheckType            plugin.TValue[string]
+	MultiAZPolicy              plugin.TValue[string]
+	ScalingPolicy              plugin.TValue[string]
+	GroupDeletionProtection    plugin.TValue[bool]
+	SuspendedProcesses         plugin.TValue[[]any]
+	SystemSuspended            plugin.TValue[bool]
+	MaxInstanceLifetime        plugin.TValue[int64]
+	ResourceGroupId            plugin.TValue[string]
+	LaunchTemplateId           plugin.TValue[string]
+	LaunchTemplateVersion      plugin.TValue[string]
+	CreationTime               plugin.TValue[*time.Time]
+	ModificationTime           plugin.TValue[*time.Time]
+	Vpc                        plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitches                  plugin.TValue[[]any]
+	ActiveScalingConfiguration plugin.TValue[*mqlAlicloudEssScalingConfiguration]
+	ScalingConfigurations      plugin.TValue[[]any]
+}
+
+// createAlicloudEssScalingGroup creates a new instance of this resource
+func createAlicloudEssScalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudEssScalingGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ess.scalingGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudEssScalingGroup) MqlName() string {
+	return "alicloud.ess.scalingGroup"
+}
+
+func (c *mqlAlicloudEssScalingGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetScalingGroupId() *plugin.TValue[string] {
+	return &c.ScalingGroupId
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetGroupType() *plugin.TValue[string] {
+	return &c.GroupType
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetMinSize() *plugin.TValue[int64] {
+	return &c.MinSize
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetMaxSize() *plugin.TValue[int64] {
+	return &c.MaxSize
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetDesiredCapacity() *plugin.TValue[int64] {
+	return &c.DesiredCapacity
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetTotalCapacity() *plugin.TValue[int64] {
+	return &c.TotalCapacity
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetActiveCapacity() *plugin.TValue[int64] {
+	return &c.ActiveCapacity
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetDefaultCooldown() *plugin.TValue[int64] {
+	return &c.DefaultCooldown
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetHealthCheckType() *plugin.TValue[string] {
+	return &c.HealthCheckType
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetMultiAZPolicy() *plugin.TValue[string] {
+	return &c.MultiAZPolicy
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetScalingPolicy() *plugin.TValue[string] {
+	return &c.ScalingPolicy
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetGroupDeletionProtection() *plugin.TValue[bool] {
+	return &c.GroupDeletionProtection
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetSuspendedProcesses() *plugin.TValue[[]any] {
+	return &c.SuspendedProcesses
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetSystemSuspended() *plugin.TValue[bool] {
+	return &c.SystemSuspended
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetMaxInstanceLifetime() *plugin.TValue[int64] {
+	return &c.MaxInstanceLifetime
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetLaunchTemplateId() *plugin.TValue[string] {
+	return &c.LaunchTemplateId
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetLaunchTemplateVersion() *plugin.TValue[string] {
+	return &c.LaunchTemplateVersion
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetModificationTime() *plugin.TValue[*time.Time] {
+	return &c.ModificationTime
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingGroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetVswitches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vswitches, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingGroup", c.__id, "vswitches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vswitches()
+	})
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetActiveScalingConfiguration() *plugin.TValue[*mqlAlicloudEssScalingConfiguration] {
+	return plugin.GetOrCompute[*mqlAlicloudEssScalingConfiguration](&c.ActiveScalingConfiguration, func() (*mqlAlicloudEssScalingConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingGroup", c.__id, "activeScalingConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEssScalingConfiguration), nil
+			}
+		}
+
+		return c.activeScalingConfiguration()
+	})
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetScalingConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScalingConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingGroup", c.__id, "scalingConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scalingConfigurations()
+	})
+}
+
+// mqlAlicloudEssScalingConfiguration for the alicloud.ess.scalingConfiguration resource
+type mqlAlicloudEssScalingConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudEssScalingConfigurationInternal
+	ScalingConfigurationId      plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	RegionId                    plugin.TValue[string]
+	LifecycleState              plugin.TValue[string]
+	InstanceType                plugin.TValue[string]
+	UserData                    plugin.TValue[string]
+	ImageOwnerAlias             plugin.TValue[string]
+	MetadataHttpTokens          plugin.TValue[string]
+	MetadataEndpointEnabled     plugin.TValue[bool]
+	PasswordInherit             plugin.TValue[bool]
+	PasswordSet                 plugin.TValue[bool]
+	SecurityEnhancementStrategy plugin.TValue[string]
+	InternetMaxBandwidthIn      plugin.TValue[int64]
+	InternetMaxBandwidthOut     plugin.TValue[int64]
+	SystemDiskEncrypted         plugin.TValue[bool]
+	SystemDiskCategory          plugin.TValue[string]
+	SystemDiskSize              plugin.TValue[int64]
+	DeletionProtection          plugin.TValue[bool]
+	SpotStrategy                plugin.TValue[string]
+	Tenancy                     plugin.TValue[string]
+	ConfidentialComputingMode   plugin.TValue[string]
+	CreationTime                plugin.TValue[*time.Time]
+	ScalingGroup                plugin.TValue[*mqlAlicloudEssScalingGroup]
+	RamRole                     plugin.TValue[*mqlAlicloudRamRole]
+	SecurityGroups              plugin.TValue[[]any]
+	Image                       plugin.TValue[*mqlAlicloudEcsImage]
+	KeyPair                     plugin.TValue[*mqlAlicloudEcsKeypair]
+	SystemDiskKmsKey            plugin.TValue[*mqlAlicloudKmsKey]
+}
+
+// createAlicloudEssScalingConfiguration creates a new instance of this resource
+func createAlicloudEssScalingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudEssScalingConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ess.scalingConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) MqlName() string {
+	return "alicloud.ess.scalingConfiguration"
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetScalingConfigurationId() *plugin.TValue[string] {
+	return &c.ScalingConfigurationId
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetUserData() *plugin.TValue[string] {
+	return &c.UserData
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetImageOwnerAlias() *plugin.TValue[string] {
+	return &c.ImageOwnerAlias
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetMetadataHttpTokens() *plugin.TValue[string] {
+	return &c.MetadataHttpTokens
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetMetadataEndpointEnabled() *plugin.TValue[bool] {
+	return &c.MetadataEndpointEnabled
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetPasswordInherit() *plugin.TValue[bool] {
+	return &c.PasswordInherit
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetPasswordSet() *plugin.TValue[bool] {
+	return &c.PasswordSet
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSecurityEnhancementStrategy() *plugin.TValue[string] {
+	return &c.SecurityEnhancementStrategy
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetInternetMaxBandwidthIn() *plugin.TValue[int64] {
+	return &c.InternetMaxBandwidthIn
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetInternetMaxBandwidthOut() *plugin.TValue[int64] {
+	return &c.InternetMaxBandwidthOut
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSystemDiskEncrypted() *plugin.TValue[bool] {
+	return &c.SystemDiskEncrypted
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSystemDiskCategory() *plugin.TValue[string] {
+	return &c.SystemDiskCategory
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSystemDiskSize() *plugin.TValue[int64] {
+	return &c.SystemDiskSize
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSpotStrategy() *plugin.TValue[string] {
+	return &c.SpotStrategy
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetTenancy() *plugin.TValue[string] {
+	return &c.Tenancy
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetConfidentialComputingMode() *plugin.TValue[string] {
+	return &c.ConfidentialComputingMode
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetScalingGroup() *plugin.TValue[*mqlAlicloudEssScalingGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudEssScalingGroup](&c.ScalingGroup, func() (*mqlAlicloudEssScalingGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingConfiguration", c.__id, "scalingGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEssScalingGroup), nil
+			}
+		}
+
+		return c.scalingGroup()
+	})
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetRamRole() *plugin.TValue[*mqlAlicloudRamRole] {
+	return plugin.GetOrCompute[*mqlAlicloudRamRole](&c.RamRole, func() (*mqlAlicloudRamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingConfiguration", c.__id, "ramRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudRamRole), nil
+			}
+		}
+
+		return c.ramRole()
+	})
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingConfiguration", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetImage() *plugin.TValue[*mqlAlicloudEcsImage] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsImage](&c.Image, func() (*mqlAlicloudEcsImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingConfiguration", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetKeyPair() *plugin.TValue[*mqlAlicloudEcsKeypair] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsKeypair](&c.KeyPair, func() (*mqlAlicloudEcsKeypair, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingConfiguration", c.__id, "keyPair")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsKeypair), nil
+			}
+		}
+
+		return c.keyPair()
+	})
+}
+
+func (c *mqlAlicloudEssScalingConfiguration) GetSystemDiskKmsKey() *plugin.TValue[*mqlAlicloudKmsKey] {
+	return plugin.GetOrCompute[*mqlAlicloudKmsKey](&c.SystemDiskKmsKey, func() (*mqlAlicloudKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingConfiguration", c.__id, "systemDiskKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudKmsKey), nil
+			}
+		}
+
+		return c.systemDiskKmsKey()
+	})
 }
 
 // mqlAlicloudVpc for the alicloud.vpc resource
