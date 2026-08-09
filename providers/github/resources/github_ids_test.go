@@ -129,6 +129,17 @@ func TestRepositoryTeamID(t *testing.T) {
 		repositoryTeamID("mondoohq/cnspec", "platform"))
 }
 
+func TestRunnerGroupID(t *testing.T) {
+	assert.Equal(t, "github.organization.runnerGroup/mondoohq/1",
+		runnerGroupID("mondoohq", 1))
+
+	// Runner groups are numbered per organization, and every organization has
+	// a "Default" group with id 1.
+	assert.NotEqual(t,
+		runnerGroupID("mondoohq", 1),
+		runnerGroupID("other-org", 1))
+}
+
 func TestRunnerLabelID(t *testing.T) {
 	scope := "orgs/mondoohq"
 	name := func(v string) *string { return &v }

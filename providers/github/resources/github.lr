@@ -233,6 +233,61 @@ github.organization @defaults("login name") {
   pendingInvitations() []github.organization.invitation
   // Invitations that failed to be delivered or were cancelled
   failedInvitations() []github.organization.invitation
+  // Self-hosted runner groups defined for the organization
+  runnerGroups() []github.organization.runnerGroup
+  // Rulesets defined at the organization level
+  //
+  // Rulesets the organization applies across its repositories. These are
+  // enforced in addition to any ruleset defined on an individual repository,
+  // so a repository's effective protections are the union of both.
+  rulesets() []github.repositoryRuleset
+  // Claims added to the subject of OIDC tokens issued to workflows
+  //
+  // Claim names the organization adds to the `sub` claim of the OpenID Connect
+  // tokens its workflows present to cloud providers. The subject is what a
+  // cloud role's trust policy matches on, so this controls how narrowly an
+  // external role can be scoped. Null when the organization uses GitHub's
+  // default subject format.
+  oidcSubjectClaimKeys() []string
+}
+
+// Self-hosted runner group
+//
+// Group of self-hosted runners in an organization, together with the rules
+// governing which repositories and workflows may use them. A group whose
+// `allowsPublicRepositories` is true lets workflows in public repositories,
+// including those triggered from forks, run on the organization's own
+// infrastructure. `visibility` reports whether every repository can reach the
+// group (`all`), only selected ones (`selected`), or only private ones
+// (`private`), and `restrictedToWorkflows` narrows use to the workflows named
+// in `selectedWorkflows`.
+private github.organization.runnerGroup @defaults("name visibility allowsPublicRepositories") {
+  // Runner group ID
+  id int
+  // Runner group name
+  name string
+  // Which repositories may use the group
+  //
+  // One of all, selected, or private.
+  visibility string
+  // Whether this is the organization's default runner group
+  isDefault bool
+  // Whether the group is inherited from the enterprise that owns the organization
+  inherited bool
+  // Whether workflows in public repositories may run on the group's runners
+  allowsPublicRepositories bool
+  // Whether use of the group is restricted to specific workflows
+  restrictedToWorkflows bool
+  // Workflows allowed to use the group when restrictedToWorkflows is set
+  selectedWorkflows []string
+  // Whether the workflow restrictions are managed by the enterprise and cannot be changed
+  workflowRestrictionsReadOnly bool
+  // ID of the network configuration the group's runners use, empty when none is set
+  networkConfigurationId string
+  // Repositories allowed to use the group when visibility is selected
+  selectedRepositories() []github.repository
+  // Self-hosted runners belonging to the group
+  runners() []github.runner
 }
 
 // Organization membership
@@ -998,6 +1053,14 @@ github.repository @defaults("fullName") {
   pages() github.repository.pages
   // Copilot coding agent configuration (null when the repository has no coding agent configuration)
   copilotCloudAgent() github.repository.copilotCloudAgent
+  // Claims added to the subject of OIDC tokens issued to workflows
+  //
+  // Claim names the repository adds to the `sub` claim of the OpenID Connect
+  // tokens its workflows present to cloud providers. The subject is what a
+  // cloud role's trust policy matches on, so this controls how narrowly an
+  // external role can be scoped. Null when the repository uses the default
+  // subject format, whether GitHub's or the one its organization sets.
+  oidcSubjectClaimKeys() []string
 }
 
 // Copilot coding agent configuration for a repository
@@ -1507,9 +1570,49 @@ private github.workflow @defaults("id name") {
   // Parsed workflow YAML
   //
   // The workflow definition parsed from its YAML source. Top-level keys mirror
-  // the GitHub Actions workflow syntax: name, on (trigger events), jobs,
-  // permissions, env, defaults, concurrency, and run-name.
+  // the GitHub Actions workflow syntax: name, jobs, permissions, env,
+  // defaults, concurrency, and run-name. The trigger block appears under the
+  // key `true` rather than `on`, because the source is parsed as YAML 1.1
+  // where the bare word `on` is a boolean. Read triggers rather than this
+  // block to avoid that.
   configuration() dict
+  // Events that trigger the workflow
+  //
+  // Names of the events in the workflow's `on` block, for example push,
+  // pull_request, pull_request_target, workflow_call, or workflow_dispatch.
+  // A workflow triggered by pull_request_target runs with repository secrets
+  // and a writable token in the context of the base repository, so a fork can
+  // reach them if the workflow also checks out the pull request head.
+  triggers() []string
+  // Permissions granted to the token issued to the workflow
+  //
+  // The workflow's top-level `permissions` block, mapping each scope to the
+  // access it grants. A string value of read-all or write-all appears under
+  // the key `all`. Null when the workflow sets no top-level permissions, in
+  // which case the repository or organization default applies.
+  tokenPermissions() dict
+  // Runner labels the workflow's jobs request
+  //
+  // Every distinct value the workflow's jobs name in `runs-on`, including
+  // labels reached through a group. Labels other than the GitHub-hosted ones
+  // indicate the job runs on self-hosted infrastructure. Expressions that
+  // resolve at run time are reported verbatim.
+  runsOnLabels() []string
+  // Actions the workflow's steps use
+  //
+  // Every distinct `uses` value across the workflow's steps, in the form the
+  // workflow wrote it, for example actions/checkout@v4 or
+  // actions/checkout@8f4b7f8. Local actions and container actions are
+  // included.
+  actionRefs() []string
+  // Actions the workflow references by something other than a commit SHA
+  //
+  // The subset of actionRefs pinned to a tag or branch rather than a full
+  // 40-character commit SHA. A tag can be moved to point at different code
+  // after review, so these references do not pin the code that will run.
+  // Local actions, which are not fetched from another repository, are
+  // excluded.
+  unpinnedActionRefs() []string
 }
 
 // GitHub repository branch
