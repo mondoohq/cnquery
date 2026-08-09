@@ -131,20 +131,27 @@ func (r *mqlOpenstackContainerinfraCluster) caCertificateSubject() (string, erro
 
 // certificateAuthority fetches and parses the cluster's CA certificate. It
 // returns nil when the authority is not readable, which is the common case for
-// a caller without the cluster's own credentials.
+// a caller without the cluster's own credentials. Both certificate fields share
+// this one call, and the two can resolve concurrently, so the result is fetched
+// once behind a sync.Once.
 func (r *mqlOpenstackContainerinfraCluster) certificateAuthority() (*x509.Certificate, error) {
-	client, err := conn(r.MqlRuntime).ContainerInfraClient()
-	if err != nil {
-		return nil, err
-	}
-	cert, err := certificates.Get(ctx(), client, r.Id.Data).Extract()
-	if err != nil {
-		if translateOpenstackError(err) == nil {
-			return nil, nil
+	r.caOnce.Do(func() {
+		client, err := conn(r.MqlRuntime).ContainerInfraClient()
+		if err != nil {
+			r.caErr = err
+			return
 		}
-		return nil, err
-	}
-	return parseCertificatePEM(cert.PEM)
+		cert, err := certificates.Get(ctx(), client, r.Id.Data).Extract()
+		if err != nil {
+			if translateOpenstackError(err) == nil {
+				return
+			}
+			r.caErr = err
+			return
+		}
+		r.caCert, r.caErr = parseCertificatePEM(cert.PEM)
+	})
+	return r.caCert, r.caErr
 }
 
 // parseCertificatePEM reads the first certificate out of a PEM bundle. A bundle

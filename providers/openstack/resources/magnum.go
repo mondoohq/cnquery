@@ -4,6 +4,9 @@
 package resources
 
 import (
+	"crypto/x509"
+	"sync"
+
 	"github.com/gophercloud/gophercloud/v2/openstack/containerinfra/v1/clusters"
 	"github.com/gophercloud/gophercloud/v2/openstack/containerinfra/v1/clustertemplates"
 	"go.mondoo.com/mql/v13/llx"
@@ -21,6 +24,12 @@ type mqlOpenstackContainerinfraClusterInternal struct {
 	cacheFixedSubnet       string
 	cacheUserID            string
 	cacheStackID           string
+
+	// The certificate-authority fields share one fetch; see
+	// certificateAuthority in magnum_nodegroups.go.
+	caOnce sync.Once
+	caCert *x509.Certificate
+	caErr  error
 }
 
 func (r *mqlOpenstackContainerinfraCluster) id() (string, error) {
