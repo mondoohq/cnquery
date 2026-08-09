@@ -155,6 +155,30 @@ func TestParseInterfaceHardening_ExplicitNegationWins(t *testing.T) {
 	assert.Empty(t, hardening[0].UnicastRpfMode)
 }
 
+// EOS accepts options after the uRPF mode. Only the mode belongs in the field,
+// or a policy testing for "rx" silently misses an interface that also carries
+// allow-default or an ACL name.
+func TestParseInterfaceHardening_UnicastRpfModeIgnoresTrailingOptions(t *testing.T) {
+	cfg := `interface Ethernet1
+   ip verify unicast source reachable-via rx allow-default
+!
+interface Ethernet2
+   ip verify unicast source reachable-via any allow-default ACL-SPOOF
+!
+interface Ethernet3
+   ip verify unicast source reachable-via rx
+!
+`
+	byName := map[string]InterfaceHardening{}
+	for _, h := range ParseInterfaceHardening(cfg) {
+		byName[h.Interface] = h
+	}
+
+	assert.Equal(t, "rx", byName["Ethernet1"].UnicastRpfMode)
+	assert.Equal(t, "any", byName["Ethernet2"].UnicastRpfMode)
+	assert.Equal(t, "rx", byName["Ethernet3"].UnicastRpfMode)
+}
+
 func TestParseInterfaceHardening_None(t *testing.T) {
 	assert.Empty(t, ParseInterfaceHardening("hostname switch\n"))
 }

@@ -308,8 +308,15 @@ func ParseInterfaceHardening(runningConfig string) []InterfaceHardening {
 			case line == "no ip redirects":
 				h.IcmpRedirectsEnabled = false
 			case strings.HasPrefix(line, "ip verify unicast source reachable-via "):
-				h.UnicastRpfMode = strings.TrimSpace(
-					strings.TrimPrefix(line, "ip verify unicast source reachable-via "))
+				// EOS accepts trailing options after the mode, as in
+				// `... reachable-via rx allow-default` or a trailing ACL
+				// name. Only the first token is the mode itself, so keep
+				// that and let the rest go: a mode of "rx allow-default"
+				// would not match a policy testing for "rx".
+				if fields := strings.Fields(strings.TrimPrefix(
+					line, "ip verify unicast source reachable-via ")); len(fields) > 0 {
+					h.UnicastRpfMode = fields[0]
+				}
 			case strings.HasPrefix(line, "no ip verify unicast"):
 				h.UnicastRpfMode = ""
 			}
