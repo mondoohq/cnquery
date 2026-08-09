@@ -223,6 +223,72 @@ github.organization @defaults("login name") {
   variables() []github.actionsVariable
   // GitHub Copilot Business configuration for the organization (requires Copilot admin)
   copilot() github.organization.copilot
+  // Organization memberships with role and two-factor authentication status
+  //
+  // One entry per organization member, pairing the member with their
+  // organization role and whether their account has two-factor authentication
+  // enabled. Requires organization owner access to report the two-factor state.
+  memberships() []github.organization.membership
+  // Invitations that have been sent but not yet accepted
+  pendingInvitations() []github.organization.invitation
+  // Invitations that failed to be delivered or were cancelled
+  failedInvitations() []github.organization.invitation
+}
+
+// Organization membership
+//
+// Membership of a single user in an organization, pairing the account with the
+// role it holds (`admin` for organization owners, `member` for everyone else)
+// and whether that account has two-factor authentication enabled. Two-factor
+// state is only visible to organization owners; when the token cannot read it,
+// `twoFactorEnabled` is null rather than false, so audits should test for
+// `twoFactorEnabled == false` instead of negating the field.
+private github.organization.membership @defaults("user.login role twoFactorEnabled") {
+  // Member account
+  user github.user
+  // Login of the member account
+  login string
+  // Role held in the organization
+  //
+  // Either `admin` for organization owners or `member` for regular members.
+  role string
+  // Whether the member account has two-factor authentication enabled
+  //
+  // Null when the connected token lacks organization owner access, since the
+  // two-factor state of other accounts is not otherwise visible.
+  twoFactorEnabled bool
+  // Whether the member is a GitHub site administrator
+  siteAdmin bool
+}
+
+// Organization invitation
+//
+// Invitation to join an organization that has been sent but not yet accepted,
+// or that failed. A pending invitation is a standing grant of the `role` it
+// carries, so long-lived pending invitations widen the organization's access
+// surface the same way an unused member account does. Failed invitations
+// report `failedAt` and `failedReason`.
+private github.organization.invitation @defaults("login role createdAt") {
+  // Invitation ID
+  id int
+  // Login of the invited account, empty when the invite was sent to an email address
+  login string
+  // Email address the invitation was sent to, empty when it was sent to an account
+  email string
+  // Role the invitation grants
+  //
+  // One of admin, direct_member, billing_manager, hiring_manager, or reinstate.
+  role string
+  // Time the invitation was created
+  createdAt time
+  // Time the invitation failed, null while it is still pending
+  failedAt time
+  // Reason the invitation failed, empty while it is still pending
+  failedReason string
+  // Number of teams the invitation grants membership in
+  teamCount int
+  // Account that sent the invitation
+  inviter github.user
 }
 
 // SAML SSO configuration for a GitHub organization
@@ -306,6 +372,10 @@ private github.organization.customRole @defaults("id name baseRole") {
   createdAt time
   // Role update time
   updatedAt time
+  // Users the role is assigned to directly
+  users() []github.user
+  // Teams the role is assigned to
+  teams() []github.team
 }
 
 // OAuth application or SAML SSO-authorized credential
@@ -612,6 +682,36 @@ private github.team @defaults("id name") {
 // administer a repository and helps spot over-privileged access. The `user`
 // field carries the collaborator's GitHub identity and `permissions` lists
 // the granted access levels.
+// Team access grant on a repository
+//
+// Access a single team holds on a repository, pairing the team with the
+// permission level that grant confers. Team grants are the way most
+// organizations hand out repository access, and they are invisible in the
+// collaborator list, so reviewing who can write to or administer a repository
+// means reading both. The `permission` field reports the highest level the
+// grant confers and `accessSource` reports where the grant originates, which
+// distinguishes a team granted access on the repository itself from one that
+// inherits it through the organization or enterprise.
+private github.repository.team @defaults("slug permission accessSource") {
+  // Team holding the grant
+  team github.team
+  // Slug of the team holding the grant
+  slug string
+  // Permission level the grant confers
+  //
+  // One of pull, triage, push, maintain, or admin.
+  permission string
+  // Origin of the team's access to the repository
+  //
+  // One of direct, organization, or enterprise.
+  accessSource string
+  // Every permission level the grant satisfies
+  //
+  // Any of admin, maintain, push, triage, or pull. A grant satisfies every
+  // level at or below the one it confers.
+  permissions []string
+}
+
 private github.collaborator @defaults("user.login user.name") {
   // Collaborator ID
   id int
@@ -814,6 +914,8 @@ github.repository @defaults("fullName") {
   collaborators() []github.collaborator
   // List of admin collaborators for the repository
   adminCollaborators() []github.collaborator
+  // Teams granted access to the repository, with the permission each one holds
+  teams() []github.repository.team
   // List of files in the repository
   files() []github.file
   // List of releases for the repository

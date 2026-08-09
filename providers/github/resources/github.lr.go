@@ -21,6 +21,8 @@ const (
 	ResourceGitCommitAuthor                        string = "git.commitAuthor"
 	ResourceGitGpgSignature                        string = "git.gpgSignature"
 	ResourceGithubOrganization                     string = "github.organization"
+	ResourceGithubOrganizationMembership           string = "github.organization.membership"
+	ResourceGithubOrganizationInvitation           string = "github.organization.invitation"
 	ResourceGithubOrganizationSamlConfig           string = "github.organization.samlConfig"
 	ResourceGithubOrganizationIpAllowList          string = "github.organization.ipAllowList"
 	ResourceGithubOrganizationIpAllowListEntry     string = "github.organization.ipAllowList.entry"
@@ -34,6 +36,7 @@ const (
 	ResourceGithubOrganizationCopilotSeat          string = "github.organization.copilot.seat"
 	ResourceGithubUser                             string = "github.user"
 	ResourceGithubTeam                             string = "github.team"
+	ResourceGithubRepositoryTeam                   string = "github.repository.team"
 	ResourceGithubCollaborator                     string = "github.collaborator"
 	ResourceGithubPackage                          string = "github.package"
 	ResourceGithubPackageVersion                   string = "github.packageVersion"
@@ -105,6 +108,14 @@ func init() {
 			Init:   initGithubOrganization,
 			Create: createGithubOrganization,
 		},
+		"github.organization.membership": {
+			// to override args, implement: initGithubOrganizationMembership(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubOrganizationMembership,
+		},
+		"github.organization.invitation": {
+			// to override args, implement: initGithubOrganizationInvitation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubOrganizationInvitation,
+		},
 		"github.organization.samlConfig": {
 			Init:   initGithubOrganizationSamlConfig,
 			Create: createGithubOrganizationSamlConfig,
@@ -156,6 +167,10 @@ func init() {
 		"github.team": {
 			// to override args, implement: initGithubTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubTeam,
+		},
+		"github.repository.team": {
+			// to override args, implement: initGithubRepositoryTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubRepositoryTeam,
 		},
 		"github.collaborator": {
 			// to override args, implement: initGithubCollaborator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -672,6 +687,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.copilot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetCopilot()).ToDataRes(types.Resource("github.organization.copilot"))
 	},
+	"github.organization.memberships": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetMemberships()).ToDataRes(types.Array(types.Resource("github.organization.membership")))
+	},
+	"github.organization.pendingInvitations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetPendingInvitations()).ToDataRes(types.Array(types.Resource("github.organization.invitation")))
+	},
+	"github.organization.failedInvitations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetFailedInvitations()).ToDataRes(types.Array(types.Resource("github.organization.invitation")))
+	},
+	"github.organization.membership.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationMembership).GetUser()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.organization.membership.login": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationMembership).GetLogin()).ToDataRes(types.String)
+	},
+	"github.organization.membership.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationMembership).GetRole()).ToDataRes(types.String)
+	},
+	"github.organization.membership.twoFactorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationMembership).GetTwoFactorEnabled()).ToDataRes(types.Bool)
+	},
+	"github.organization.membership.siteAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationMembership).GetSiteAdmin()).ToDataRes(types.Bool)
+	},
+	"github.organization.invitation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetId()).ToDataRes(types.Int)
+	},
+	"github.organization.invitation.login": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetLogin()).ToDataRes(types.String)
+	},
+	"github.organization.invitation.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetEmail()).ToDataRes(types.String)
+	},
+	"github.organization.invitation.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetRole()).ToDataRes(types.String)
+	},
+	"github.organization.invitation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.organization.invitation.failedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetFailedAt()).ToDataRes(types.Time)
+	},
+	"github.organization.invitation.failedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetFailedReason()).ToDataRes(types.String)
+	},
+	"github.organization.invitation.teamCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetTeamCount()).ToDataRes(types.Int)
+	},
+	"github.organization.invitation.inviter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationInvitation).GetInviter()).ToDataRes(types.Resource("github.user"))
+	},
 	"github.organization.samlConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationSamlConfig).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -740,6 +806,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.organization.customRole.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationCustomRole).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.organization.customRole.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomRole).GetUsers()).ToDataRes(types.Array(types.Resource("github.user")))
+	},
+	"github.organization.customRole.teams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCustomRole).GetTeams()).ToDataRes(types.Array(types.Resource("github.team")))
 	},
 	"github.organization.oauthApp.login": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationOauthApp).GetLogin()).ToDataRes(types.String)
@@ -1014,6 +1086,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.team.organization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubTeam).GetOrganization()).ToDataRes(types.Resource("github.organization"))
 	},
+	"github.repository.team.team": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryTeam).GetTeam()).ToDataRes(types.Resource("github.team"))
+	},
+	"github.repository.team.slug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryTeam).GetSlug()).ToDataRes(types.String)
+	},
+	"github.repository.team.permission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryTeam).GetPermission()).ToDataRes(types.String)
+	},
+	"github.repository.team.accessSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryTeam).GetAccessSource()).ToDataRes(types.String)
+	},
+	"github.repository.team.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryTeam).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
 	"github.collaborator.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCollaborator).GetId()).ToDataRes(types.Int)
 	},
@@ -1226,6 +1313,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.adminCollaborators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetAdminCollaborators()).ToDataRes(types.Array(types.Resource("github.collaborator")))
+	},
+	"github.repository.teams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetTeams()).ToDataRes(types.Array(types.Resource("github.repository.team")))
 	},
 	"github.repository.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetFiles()).ToDataRes(types.Array(types.Resource("github.file")))
@@ -2928,6 +3018,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubOrganization).Copilot, ok = plugin.RawToTValue[*mqlGithubOrganizationCopilot](v.Value, v.Error)
 		return
 	},
+	"github.organization.memberships": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).Memberships, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.pendingInvitations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).PendingInvitations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.failedInvitations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).FailedInvitations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.membership.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationMembership).__id, ok = v.Value.(string)
+		return
+	},
+	"github.organization.membership.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationMembership).User, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.organization.membership.login": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationMembership).Login, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.membership.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationMembership).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.membership.twoFactorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationMembership).TwoFactorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.membership.siteAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationMembership).SiteAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).__id, ok = v.Value.(string)
+		return
+	},
+	"github.organization.invitation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.login": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).Login, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.failedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).FailedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.failedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).FailedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.teamCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).TeamCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.invitation.inviter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationInvitation).Inviter, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
 	"github.organization.samlConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationSamlConfig).__id, ok = v.Value.(string)
 		return
@@ -3034,6 +3200,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.organization.customRole.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationCustomRole).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.organization.customRole.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomRole).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.customRole.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCustomRole).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.oauthApp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3436,6 +3610,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubTeam).Organization, ok = plugin.RawToTValue[*mqlGithubOrganization](v.Value, v.Error)
 		return
 	},
+	"github.repository.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryTeam).__id, ok = v.Value.(string)
+		return
+	},
+	"github.repository.team.team": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryTeam).Team, ok = plugin.RawToTValue[*mqlGithubTeam](v.Value, v.Error)
+		return
+	},
+	"github.repository.team.slug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryTeam).Slug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.team.permission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryTeam).Permission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.team.accessSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryTeam).AccessSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.team.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryTeam).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"github.collaborator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCollaborator).__id, ok = v.Value.(string)
 		return
@@ -3738,6 +3936,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.adminCollaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).AdminCollaborators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6000,6 +6202,9 @@ type mqlGithubOrganization struct {
 	Secrets                                        plugin.TValue[[]any]
 	Variables                                      plugin.TValue[[]any]
 	Copilot                                        plugin.TValue[*mqlGithubOrganizationCopilot]
+	Memberships                                    plugin.TValue[[]any]
+	PendingInvitations                             plugin.TValue[[]any]
+	FailedInvitations                              plugin.TValue[[]any]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -6599,6 +6804,212 @@ func (c *mqlGithubOrganization) GetCopilot() *plugin.TValue[*mqlGithubOrganizati
 	})
 }
 
+func (c *mqlGithubOrganization) GetMemberships() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Memberships, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "memberships")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.memberships()
+	})
+}
+
+func (c *mqlGithubOrganization) GetPendingInvitations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingInvitations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "pendingInvitations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingInvitations()
+	})
+}
+
+func (c *mqlGithubOrganization) GetFailedInvitations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FailedInvitations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "failedInvitations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.failedInvitations()
+	})
+}
+
+// mqlGithubOrganizationMembership for the github.organization.membership resource
+type mqlGithubOrganizationMembership struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubOrganizationMembershipInternal
+	User             plugin.TValue[*mqlGithubUser]
+	Login            plugin.TValue[string]
+	Role             plugin.TValue[string]
+	TwoFactorEnabled plugin.TValue[bool]
+	SiteAdmin        plugin.TValue[bool]
+}
+
+// createGithubOrganizationMembership creates a new instance of this resource
+func createGithubOrganizationMembership(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubOrganizationMembership{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.organization.membership", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubOrganizationMembership) MqlName() string {
+	return "github.organization.membership"
+}
+
+func (c *mqlGithubOrganizationMembership) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubOrganizationMembership) GetUser() *plugin.TValue[*mqlGithubUser] {
+	return &c.User
+}
+
+func (c *mqlGithubOrganizationMembership) GetLogin() *plugin.TValue[string] {
+	return &c.Login
+}
+
+func (c *mqlGithubOrganizationMembership) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlGithubOrganizationMembership) GetTwoFactorEnabled() *plugin.TValue[bool] {
+	return &c.TwoFactorEnabled
+}
+
+func (c *mqlGithubOrganizationMembership) GetSiteAdmin() *plugin.TValue[bool] {
+	return &c.SiteAdmin
+}
+
+// mqlGithubOrganizationInvitation for the github.organization.invitation resource
+type mqlGithubOrganizationInvitation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubOrganizationInvitationInternal
+	Id           plugin.TValue[int64]
+	Login        plugin.TValue[string]
+	Email        plugin.TValue[string]
+	Role         plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	FailedAt     plugin.TValue[*time.Time]
+	FailedReason plugin.TValue[string]
+	TeamCount    plugin.TValue[int64]
+	Inviter      plugin.TValue[*mqlGithubUser]
+}
+
+// createGithubOrganizationInvitation creates a new instance of this resource
+func createGithubOrganizationInvitation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubOrganizationInvitation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.organization.invitation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubOrganizationInvitation) MqlName() string {
+	return "github.organization.invitation"
+}
+
+func (c *mqlGithubOrganizationInvitation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubOrganizationInvitation) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGithubOrganizationInvitation) GetLogin() *plugin.TValue[string] {
+	return &c.Login
+}
+
+func (c *mqlGithubOrganizationInvitation) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlGithubOrganizationInvitation) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlGithubOrganizationInvitation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubOrganizationInvitation) GetFailedAt() *plugin.TValue[*time.Time] {
+	return &c.FailedAt
+}
+
+func (c *mqlGithubOrganizationInvitation) GetFailedReason() *plugin.TValue[string] {
+	return &c.FailedReason
+}
+
+func (c *mqlGithubOrganizationInvitation) GetTeamCount() *plugin.TValue[int64] {
+	return &c.TeamCount
+}
+
+func (c *mqlGithubOrganizationInvitation) GetInviter() *plugin.TValue[*mqlGithubUser] {
+	return &c.Inviter
+}
+
 // mqlGithubOrganizationSamlConfig for the github.organization.samlConfig resource
 type mqlGithubOrganizationSamlConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -6810,7 +7221,7 @@ func (c *mqlGithubOrganizationIpAllowListEntry) GetUpdatedAt() *plugin.TValue[*t
 type mqlGithubOrganizationCustomRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGithubOrganizationCustomRoleInternal it will be used here
+	mqlGithubOrganizationCustomRoleInternal
 	Id          plugin.TValue[int64]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -6819,6 +7230,8 @@ type mqlGithubOrganizationCustomRole struct {
 	Source      plugin.TValue[string]
 	CreatedAt   plugin.TValue[*time.Time]
 	UpdatedAt   plugin.TValue[*time.Time]
+	Users       plugin.TValue[[]any]
+	Teams       plugin.TValue[[]any]
 }
 
 // createGithubOrganizationCustomRole creates a new instance of this resource
@@ -6888,6 +7301,38 @@ func (c *mqlGithubOrganizationCustomRole) GetCreatedAt() *plugin.TValue[*time.Ti
 
 func (c *mqlGithubOrganizationCustomRole) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlGithubOrganizationCustomRole) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization.customRole", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlGithubOrganizationCustomRole) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization.customRole", c.__id, "teams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teams()
+	})
 }
 
 // mqlGithubOrganizationOauthApp for the github.organization.oauthApp resource
@@ -7851,6 +8296,75 @@ func (c *mqlGithubTeam) GetOrganization() *plugin.TValue[*mqlGithubOrganization]
 	return &c.Organization
 }
 
+// mqlGithubRepositoryTeam for the github.repository.team resource
+type mqlGithubRepositoryTeam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubRepositoryTeamInternal
+	Team         plugin.TValue[*mqlGithubTeam]
+	Slug         plugin.TValue[string]
+	Permission   plugin.TValue[string]
+	AccessSource plugin.TValue[string]
+	Permissions  plugin.TValue[[]any]
+}
+
+// createGithubRepositoryTeam creates a new instance of this resource
+func createGithubRepositoryTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubRepositoryTeam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.repository.team", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubRepositoryTeam) MqlName() string {
+	return "github.repository.team"
+}
+
+func (c *mqlGithubRepositoryTeam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubRepositoryTeam) GetTeam() *plugin.TValue[*mqlGithubTeam] {
+	return &c.Team
+}
+
+func (c *mqlGithubRepositoryTeam) GetSlug() *plugin.TValue[string] {
+	return &c.Slug
+}
+
+func (c *mqlGithubRepositoryTeam) GetPermission() *plugin.TValue[string] {
+	return &c.Permission
+}
+
+func (c *mqlGithubRepositoryTeam) GetAccessSource() *plugin.TValue[string] {
+	return &c.AccessSource
+}
+
+func (c *mqlGithubRepositoryTeam) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
 // mqlGithubCollaborator for the github.collaborator resource
 type mqlGithubCollaborator struct {
 	MqlRuntime *plugin.Runtime
@@ -8275,6 +8789,7 @@ type mqlGithubRepository struct {
 	Contributors                         plugin.TValue[[]any]
 	Collaborators                        plugin.TValue[[]any]
 	AdminCollaborators                   plugin.TValue[[]any]
+	Teams                                plugin.TValue[[]any]
 	Files                                plugin.TValue[[]any]
 	Releases                             plugin.TValue[[]any]
 	Owner                                plugin.TValue[*mqlGithubUser]
@@ -8641,6 +9156,22 @@ func (c *mqlGithubRepository) GetAdminCollaborators() *plugin.TValue[[]any] {
 		}
 
 		return c.adminCollaborators()
+	})
+}
+
+func (c *mqlGithubRepository) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "teams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teams()
 	})
 }
 
