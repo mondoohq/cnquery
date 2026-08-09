@@ -188,8 +188,14 @@ func TestResourceIsUnscoped(t *testing.T) {
 		assert.False(t, resourceIsUnscoped("acs:oss:*:*:mybucket/*"))
 		assert.False(t, resourceIsUnscoped("acs:oss:*:*:mybucket"))
 	})
-	t.Run("a relative-id containing colons is kept whole", func(t *testing.T) {
+	t.Run("an empty region field does not shift the relative-id", func(t *testing.T) {
 		assert.False(t, resourceIsUnscoped("acs:ram::123:user/alice"))
+	})
+	t.Run("a relative-id containing colons is kept whole", func(t *testing.T) {
+		// the SplitN limit of 4 must not split inside the relative-id, which
+		// would leave a bare "*" tail looking like a whole-service grant
+		assert.False(t, resourceIsUnscoped("acs:ram::123:role/admin:extra"))
+		assert.False(t, resourceIsUnscoped("acs:oss:*:*:bucket/prefix:*"))
 	})
 	t.Run("a non-ACS string is not a wildcard", func(t *testing.T) {
 		assert.False(t, resourceIsUnscoped("mybucket"))

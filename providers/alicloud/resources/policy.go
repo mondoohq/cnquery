@@ -236,6 +236,9 @@ func resourceIsUnscoped(resource string) bool {
 	if !ok {
 		return false
 	}
+	// the limit of 4 is deliberate, not an off-by-one: it stops the split at
+	// the relative-id so a relative-id that itself contains colons, as in
+	// "acs:ram::123:role/admin:extra", stays whole in the final field
 	fields := strings.SplitN(rest, ":", 4)
 	if len(fields) < 4 {
 		// a truncated name such as "acs:*" carries no relative-id to narrow it

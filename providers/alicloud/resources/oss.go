@@ -12,6 +12,7 @@ import (
 
 	tea "github.com/alibabacloud-go/tea/tea"
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -485,7 +486,11 @@ func (a *mqlAlicloudOssBucket) isPublic() (bool, error) {
 	statements, err := parsePolicyDocument(policy.Data)
 	if err != nil {
 		// an unparseable policy is not evidence of exposure, and the raw
-		// document stays available through the policy field
+		// document stays available through the policy field. Warn rather than
+		// stay silent: the verdict below is skipped, so a bucket opened by its
+		// policy alone would read as not public.
+		log.Warn().Err(err).Str("bucket", a.Name.Data).
+			Msg("alicloud: could not parse bucket policy, isPublic reflects the acl only")
 		return false, nil
 	}
 	return policyGrantsAnonymousAccess(statements), nil
