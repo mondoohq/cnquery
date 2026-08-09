@@ -45,3 +45,46 @@ func TestParseTime(t *testing.T) {
 	_, err = parseTime("not-a-timestamp")
 	assert.Error(t, err)
 }
+
+func TestToInterfaceMap(t *testing.T) {
+	assert.Equal(t, map[string]interface{}{}, toInterfaceMap(nil))
+	assert.Equal(t,
+		map[string]interface{}{"team": "platform", "env": "prod"},
+		toInterfaceMap(map[string]string{"team": "platform", "env": "prod"}),
+	)
+}
+
+func TestToInterfaceSlice(t *testing.T) {
+	// A nil slice must convert to an empty slice, not nil, so an absent list
+	// renders as [] rather than null.
+	assert.Equal(t, []interface{}{}, toInterfaceSlice(nil))
+	assert.Equal(t, []interface{}{"a", "b"}, toInterfaceSlice([]string{"a", "b"}))
+}
+
+func TestRawJSONToDict(t *testing.T) {
+	// An absent schema decodes to nil so the dict field renders as null
+	// instead of an empty object that implies the tool takes no input.
+	got, err := rawJSONToDict("")
+	require.NoError(t, err)
+	assert.Nil(t, got)
+
+	got, err = rawJSONToDict("null")
+	require.NoError(t, err)
+	assert.Nil(t, got)
+
+	// Numbers must decode to float64 and nested values to plain maps and
+	// slices, since dict fields only accept JSON-native types.
+	got, err = rawJSONToDict(`{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"max":3}`)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"path": map[string]interface{}{"type": "string"},
+		},
+		"required": []interface{}{"path"},
+		"max":      float64(3),
+	}, got)
+
+	_, err = rawJSONToDict("{not json")
+	assert.Error(t, err)
+}

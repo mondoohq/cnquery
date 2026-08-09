@@ -14,6 +14,16 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// lookupWorkspace returns the organization workspace carrying the given id.
+func lookupWorkspace(runtime *plugin.Runtime, id string) (*mqlClaudeOrganizationWorkspace, bool, error) {
+	return lookupOrganizationChild[*mqlClaudeOrganizationWorkspace](runtime, id, (*mqlClaudeOrganization).GetWorkspaces)
+}
+
+// lookupMember returns the organization member carrying the given id.
+func lookupMember(runtime *plugin.Runtime, id string) (*mqlClaudeOrganizationMember, bool, error) {
+	return lookupOrganizationChild[*mqlClaudeOrganizationMember](runtime, id, (*mqlClaudeOrganization).GetMembers)
+}
+
 // claude.organization
 
 func (r *mqlClaudeOrganization) workspaces() ([]interface{}, error) {
@@ -203,57 +213,33 @@ func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-// MQL caches CreateResource by __id and caches computed fields like members(), so repeated calls don't cause extra API requests.
 func (r *mqlClaudeOrganizationApiKey) createdBy() (*mqlClaudeOrganizationMember, error) {
-	if r.cacheCreatedByID == "" {
+	member, ok, err := lookupMember(r.MqlRuntime, r.cacheCreatedByID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		r.CreatedBy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-
-	res, err := CreateResource(r.MqlRuntime, "claude.organization", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	org := res.(*mqlClaudeOrganization)
-	members, err := org.members()
-	if err != nil {
-		return nil, err
-	}
-	for _, m := range members {
-		member := m.(*mqlClaudeOrganizationMember)
-		if member.Id.Data == r.cacheCreatedByID {
-			return member, nil
-		}
-	}
-
-	r.CreatedBy.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return member, nil
 }
 
 func (r *mqlClaudeOrganizationApiKey) workspace() (*mqlClaudeOrganizationWorkspace, error) {
-	if r.cacheWorkspaceID == nil || *r.cacheWorkspaceID == "" {
+	var workspaceID string
+	if r.cacheWorkspaceID != nil {
+		workspaceID = *r.cacheWorkspaceID
+	}
+
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, workspaceID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-
-	res, err := CreateResource(r.MqlRuntime, "claude.organization", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	org := res.(*mqlClaudeOrganization)
-	workspaces, err := org.workspaces()
-	if err != nil {
-		return nil, err
-	}
-	for _, w := range workspaces {
-		ws := w.(*mqlClaudeOrganizationWorkspace)
-		if ws.Id.Data == *r.cacheWorkspaceID {
-			return ws, nil
-		}
-	}
-
-	r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	return ws, nil
 }
 
 // claude.organization.rateLimit
@@ -300,6 +286,35 @@ func convertRateLimits(runtime *plugin.Runtime, limits []connection.AdminRateLim
 
 type mqlClaudeOrganizationWorkspaceInternal struct{}
 
+type mqlClaudeOrganizationWorkspaceMemberInternal struct {
+	cacheUserID      string
+	cacheWorkspaceID string
+}
+
+func (r *mqlClaudeOrganizationWorkspaceMember) user() (*mqlClaudeOrganizationMember, error) {
+	member, ok, err := lookupMember(r.MqlRuntime, r.cacheUserID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		r.User.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return member, nil
+}
+
+func (r *mqlClaudeOrganizationWorkspaceMember) workspace() (*mqlClaudeOrganizationWorkspace, error) {
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return ws, nil
+}
+
 func (r *mqlClaudeOrganizationWorkspace) members() ([]interface{}, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
 	if err != nil {
@@ -323,6 +338,11 @@ func (r *mqlClaudeOrganizationWorkspace) members() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		wsMember := mqlMember.(*mqlClaudeOrganizationWorkspaceMember)
+		wsMember.cacheUserID = m.UserID
+		wsMember.cacheWorkspaceID = m.WorkspaceID
+
 		res = append(res, mqlMember)
 	}
 
@@ -345,6 +365,22 @@ func (r *mqlClaudeOrganizationWorkspace) rateLimits() ([]interface{}, error) {
 }
 
 // claude.organization.usageEntry
+
+type mqlClaudeOrganizationUsageEntryInternal struct {
+	cacheWorkspaceID string
+}
+
+func (r *mqlClaudeOrganizationUsageEntry) workspace() (*mqlClaudeOrganizationWorkspace, error) {
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return ws, nil
+}
 
 func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
@@ -383,6 +419,9 @@ func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			mqlEntry.(*mqlClaudeOrganizationUsageEntry).cacheWorkspaceID = result.WorkspaceID
+
 			res = append(res, mqlEntry)
 		}
 	}
@@ -391,6 +430,22 @@ func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 }
 
 // claude.organization.costEntry
+
+type mqlClaudeOrganizationCostEntryInternal struct {
+	cacheWorkspaceID string
+}
+
+func (r *mqlClaudeOrganizationCostEntry) workspace() (*mqlClaudeOrganizationWorkspace, error) {
+	ws, ok, err := lookupWorkspace(r.MqlRuntime, r.cacheWorkspaceID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		r.Workspace.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return ws, nil
+}
 
 func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 	admin, err := requireAdmin(r.MqlRuntime)
@@ -428,6 +483,9 @@ func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			mqlEntry.(*mqlClaudeOrganizationCostEntry).cacheWorkspaceID = result.WorkspaceID
+
 			res = append(res, mqlEntry)
 		}
 	}
