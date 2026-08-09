@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -815,6 +816,126 @@ func (r *mqlAlicloudEcs) keyPairs() ([]any, error) {
 
 func (r *mqlAlicloudEcsKeypair) id() (string, error) {
 	return r.RegionId.Data + "/" + r.KeyPairName.Data, nil
+}
+
+func initAlicloudEcsKeypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	name, err := requiredStringArg(args, "keyPairName", "alicloud.ecs.keypair")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.ecs.keypair")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.ecs.keypair\x00" + region + "/" + name); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.EcsClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeKeyPairs(&ecsclient.DescribeKeyPairsRequest{
+		RegionId:    &region,
+		KeyPairName: &name,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.Body == nil || resp.Body.KeyPairs == nil {
+		return nil, nil, fmt.Errorf("alicloud.ecs.keypair %q not found in region %q", name, region)
+	}
+
+	for _, kp := range resp.Body.KeyPairs.KeyPair {
+		if kp == nil || strDeref(kp.KeyPairName) != name {
+			continue
+		}
+		var tags []*ecsclient.DescribeKeyPairsResponseBodyKeyPairsKeyPairTagsTag
+		if kp.Tags != nil {
+			tags = kp.Tags.Tag
+		}
+		res, err := CreateResource(runtime, "alicloud.ecs.keypair", map[string]*llx.RawData{
+			"__id":               llx.StringData(region + "/" + name),
+			"keyPairName":        llx.StringDataPtr(kp.KeyPairName),
+			"keyPairFingerPrint": llx.StringDataPtr(kp.KeyPairFingerPrint),
+			"creationTime":       llx.TimeDataPtr(parseEcsTime(kp.CreationTime)),
+			"resourceGroupId":    llx.StringDataPtr(kp.ResourceGroupId),
+			"regionId":           llx.StringData(region),
+			"tags":               llx.MapData(ecsKeyPairTagsToMap(tags), types.String),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		return nil, res, nil
+	}
+	return nil, nil, fmt.Errorf("alicloud.ecs.keypair %q not found in region %q", name, region)
+}
+
+// resolveEcsKeypair returns the typed key pair for a name within a region, or
+// (nil, nil) when name is empty. It is the key pair equivalent of
+// resolveEcsImage.
+func resolveEcsKeypair(runtime *plugin.Runtime, region, name string) (*mqlAlicloudEcsKeypair, error) {
+	if name == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.ecs.keypair", map[string]*llx.RawData{
+		"keyPairName": llx.StringData(name),
+		"regionId":    llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudEcsKeypair), nil
+}
+
+// userData reads the instance's startup script. DescribeInstances does not
+// return it, so this costs one call per instance and stays lazy.
+func (r *mqlAlicloudEcsInstance) userData() (string, error) {
+	region := r.cacheRegion
+	if region == "" {
+		region = r.RegionId.Data
+	}
+	instanceID := r.InstanceId.Data
+	if region == "" || instanceID == "" {
+		return "", nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.EcsClient(region)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.DescribeUserData(&ecsclient.DescribeUserDataRequest{
+		RegionId:   &region,
+		InstanceId: &instanceID,
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp == nil || resp.Body == nil {
+		return "", nil
+	}
+	return decodeUserData(strDeref(resp.Body.UserData)), nil
+}
+
+// decodeUserData turns the base64 form the Alibaba Cloud APIs return into the
+// script text a reader expects. Input that is not valid base64 is passed
+// through unchanged, since a handful of API paths return the script verbatim.
+func decodeUserData(encoded string) string {
+	if encoded == "" {
+		return ""
+	}
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return encoded
+	}
+	return string(decoded)
 }
 
 // ---------------------------------------------------------------------------
