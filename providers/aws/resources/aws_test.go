@@ -114,6 +114,64 @@ func TestIsMacieNotEnabledError(t *testing.T) {
 		assert.True(t, IsMacieNotEnabledError(macieHTTPError(404,
 			"ResourceNotFoundException: Amazon Macie isn't enabled for your account")))
 	})
+
+	// The regression. Macie writes this message with U+2019, not the ASCII
+	// apostrophe, so a guard spelled with a plain quote never matched it and
+	// ListAllowLists reported a failure in every account without Macie. The
+	// literals below are deliberately the curly form - normalising them to
+	// ASCII here would test nothing.
+	t.Run("403 with a typographic apostrophe", func(t *testing.T) {
+		assert.True(t, IsMacieNotEnabledError(macieHTTPError(403,
+			"AccessDeniedException: The request failed because Macie isn’t enabled in the specified AWS Region.")))
+	})
+
+	t.Run("404 with a typographic apostrophe", func(t *testing.T) {
+		assert.True(t, IsMacieNotEnabledError(macieHTTPError(404,
+			"ResourceNotFoundException: Amazon Macie isn’t enabled")))
+	})
+
+	// GetAutomatedDiscoveryConfiguration never names Macie at all.
+	t.Run("403 not onboarded", func(t *testing.T) {
+		assert.True(t, IsMacieNotEnabledError(macieHTTPError(403,
+			"AccessDeniedException: Account Id: [123456789012] has not been onboarded")))
+	})
+
+	// The onboarding branch must not widen into the swallowing problem the
+	// Macie-named condition exists to prevent.
+	t.Run("permission gap is still an error under the onboarding branch", func(t *testing.T) {
+		assert.False(t, IsMacieNotEnabledError(macieHTTPError(403,
+			"AccessDeniedException: User is not authorized to perform macie2:GetAutomatedDiscoveryConfiguration")))
+	})
+}
+
+func TestAwsNormalizeApostrophes(t *testing.T) {
+	assert.Equal(t, "isn't", awsNormalizeApostrophes("isn’t"))
+	assert.Equal(t, "isn't", awsNormalizeApostrophes("isn't"), "ASCII input is left alone")
+	assert.Equal(t, "", awsNormalizeApostrophes(""))
+}
+
+// TestIsSecurityLakeNotEnabledError covers the shape neither the access-denied
+// nor the not-available-in-region guard caught, which failed the subscriber
+// listing for every account that has not adopted Security Lake.
+func TestIsSecurityLakeNotEnabledError(t *testing.T) {
+	t.Run("nil error", func(t *testing.T) {
+		assert.False(t, IsSecurityLakeNotEnabledError(nil))
+	})
+
+	t.Run("404 not enabled for the account", func(t *testing.T) {
+		assert.True(t, IsSecurityLakeNotEnabledError(macieHTTPError(404,
+			"ResourceNotFoundException: The request failed because Security Lake isn’t enabled for your account in any Regions.")))
+	})
+
+	t.Run("permission denial is not a not-enabled signal", func(t *testing.T) {
+		assert.False(t, IsSecurityLakeNotEnabledError(macieHTTPError(403,
+			"AccessDeniedException: User is not authorized to perform securitylake:ListSubscribers")))
+	})
+
+	t.Run("an unrelated 404 is not a not-enabled signal", func(t *testing.T) {
+		assert.False(t, IsSecurityLakeNotEnabledError(macieHTTPError(404,
+			"ResourceNotFoundException: Subscriber not found")))
+	})
 }
 
 func TestFetchTagsConcurrently(t *testing.T) {
