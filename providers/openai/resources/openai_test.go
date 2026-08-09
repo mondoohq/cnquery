@@ -166,6 +166,24 @@ func TestSpendAlertArgsScopesCacheKey(t *testing.T) {
 	assert.Equal(t, []any{"a@example.com"}, orgAlert["notificationRecipients"].Value)
 }
 
+func TestCertificateArgsScopesCacheKey(t *testing.T) {
+	// The same certificate is listed at the organization and again at every
+	// project it is activated for, and `active` means something different at
+	// each scope. An unscoped cache key would make whichever scope was read
+	// first answer for both.
+	org := certificateArgs("org", "cert_1", "mtls", true, 100, 200, 300)
+	project := certificateArgs("project/proj_1", "cert_1", "mtls", false, 100, 200, 300)
+
+	assert.Equal(t, "org/cert_1", org["__id"].Value)
+	assert.Equal(t, "project/proj_1/cert_1", project["__id"].Value)
+	assert.Equal(t, true, org["active"].Value)
+	assert.Equal(t, false, project["active"].Value)
+
+	// The user-facing id stays the plain certificate id at both scopes.
+	assert.Equal(t, "cert_1", org["id"].Value)
+	assert.Equal(t, "cert_1", project["id"].Value)
+}
+
 func TestRoleArgs(t *testing.T) {
 	args := roleArgs("role_1", "Owner", "full access", "organization", []string{"api.keys.write", "users.write"}, true)
 

@@ -182,6 +182,26 @@ mql> openai.projects { name spendLimitAmount spendAlerts { thresholdAmount } }
 mql> openai.projects { name rateLimits { model maxRequestsPerMinute maxTokensPerMinute } }
 ```
 
+### Audit mutual TLS certificates (requires admin key)
+
+`active` reflects the scope the certificate was read from, so an organization-wide activation and a per-project one are separate answers:
+
+```shell
+mql> openai.certificates { name active validAt expiresAt }
+mql> openai.certificates.where(active) { name expiresAt }
+mql> openai.projects { name certificates { name active expiresAt } }
+```
+
+### Check code interpreter container egress
+
+Containers run code the model wrote. `networkPolicyType` reports whether they can reach the network at all:
+
+```shell
+mql> openai.containers { name status networkPolicyType networkPolicyAllowedDomains }
+mql> openai.containers.where(networkPolicyType == "allowlist") { name networkPolicyAllowedDomains }
+mql> openai.containers { name lastActiveAt expiresAfterMinutes }
+```
+
 ### AIBOM inventory query
 
 Combine model inventory with fine-tuning lineage for a complete AI supply chain view:
@@ -211,6 +231,8 @@ mql> openai.files.where(purpose == "fine-tune") { id filename bytes createdAt }
 | `openai.group`                 | Group of members, optionally SCIM managed         |
 | `openai.spendAlert`            | Spend notification threshold and recipients       |
 | `openai.project.rateLimit`     | Per-model throughput ceiling for a project        |
+| `openai.certificate`           | Mutual TLS certificate with validity window       |
+| `openai.container`             | Code interpreter sandbox with egress policy       |
 | `openai.invite`                | Pending organization invite                       |
 | `openai.auditLog`              | Organization audit log entry                      |
 
