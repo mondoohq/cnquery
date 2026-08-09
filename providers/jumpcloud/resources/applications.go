@@ -36,7 +36,7 @@ func (a *mqlJumpcloudApplication) userGroups() ([]any, error) {
 	conn := resolveConn(a.MqlRuntime)
 	ctx := context.Background()
 
-	conns, err := conn.Client().GraphConnections(ctx, "/v2/applications/"+a.Id.Data+"/usergroups")
+	conns, err := conn.Client().GraphConnections(ctx, connection.GraphPath("/v2/applications", a.Id.Data, "usergroups"))
 	if err != nil {
 		return nil, err
 	}

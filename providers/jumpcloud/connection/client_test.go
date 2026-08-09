@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -161,4 +163,61 @@ func makeGroupPage(start, n int) []string {
 		out = append(out, fmt.Sprintf(`{"id":"group-%d","name":"g%d"}`, i, i))
 	}
 	return out
+}
+
+// TestGraphPathEscapesID verifies the id segment of a graph path is escaped, so
+// an id carrying a reserved character cannot reshape the request the way raw
+// concatenation would.
+func TestGraphPathEscapesID(t *testing.T) {
+	assert.Equal(t, "/v2/users/5f0a/memberof", GraphPath("/v2/users", "5f0a", "memberof"))
+	assert.Equal(t, "/v2/users/a%2F..%2Fsystems/memberof", GraphPath("/v2/users", "a/../systems", "memberof"))
+	assert.Equal(t, "/v2/systems/a%20b/users", GraphPath("/v2/systems", "a b", "users"))
+}
+
+// TestOrganizationIDResolvedOnce verifies concurrent callers share a single
+// resolution. Run under -race this also proves the lazy write is synchronized.
+func TestOrganizationIDResolvedOnce(t *testing.T) {
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		_, _ = w.Write([]byte(`{"results":[{"_id":"org_1"}],"totalCount":1}`))
+	}))
+	defer srv.Close()
+
+	conn := &JumpcloudConnection{client: NewClient("key", "", srv.URL)}
+
+	var wg sync.WaitGroup
+	ids := make([]string, 8)
+	errs := make([]error, 8)
+	for i := range ids {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			ids[i], errs[i] = conn.OrganizationID()
+		}(i)
+	}
+	wg.Wait()
+
+	for i := range ids {
+		require.NoError(t, errs[i])
+		assert.Equal(t, "org_1", ids[i])
+	}
+	assert.Equal(t, int32(1), atomic.LoadInt32(&calls), "expected a single resolution across concurrent callers")
+}
+
+// TestOrganizationIDPrefersConfiguredValue verifies a caller-supplied org id
+// short-circuits the lookup entirely.
+func TestOrganizationIDPrefersConfiguredValue(t *testing.T) {
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		_, _ = w.Write([]byte(`{"results":[{"_id":"resolved"}],"totalCount":1}`))
+	}))
+	defer srv.Close()
+
+	conn := &JumpcloudConnection{orgID: "configured", client: NewClient("key", "configured", srv.URL)}
+	id, err := conn.OrganizationID()
+	require.NoError(t, err)
+	assert.Equal(t, "configured", id)
+	assert.Equal(t, int32(0), atomic.LoadInt32(&calls), "a configured org id must not trigger a lookup")
 }

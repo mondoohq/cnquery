@@ -28,6 +28,11 @@ type JumpcloudConnection struct {
 	client *Client
 	orgID  string
 
+	// orgOnce guards the lazy resolution of orgID. The platform-id lookup and
+	// a resource accessor can both reach OrganizationID concurrently.
+	orgOnce sync.Once
+	orgErr  error
+
 	users        listCache[SystemUser]
 	systems      listCache[System]
 	userGroups   listCache[Group]
@@ -84,19 +89,27 @@ func (c *JumpcloudConnection) Client() *Client {
 // OrganizationID returns the organization id, resolving it from the API when it
 // was not supplied on the command line. It doubles as the connection's stable
 // platform identifier.
+//
+// The resolution runs at most once. Like listCache, a failure is memoized
+// rather than retried: a scan should fail consistently instead of re-querying
+// on every accessor that needs the id.
 func (c *JumpcloudConnection) OrganizationID() (string, error) {
-	if c.orgID != "" {
-		return c.orgID, nil
-	}
-	orgs, err := c.client.Organizations(context.Background())
-	if err != nil {
-		return "", errors.Join(errors.New("failed to resolve JumpCloud organization id"), err)
-	}
-	if len(orgs) == 0 || orgs[0].EffectiveID() == "" {
-		return "", errors.New("failed to resolve JumpCloud organization id: empty response")
-	}
-	c.orgID = orgs[0].EffectiveID()
-	return c.orgID, nil
+	c.orgOnce.Do(func() {
+		if c.orgID != "" {
+			return
+		}
+		orgs, err := c.client.Organizations(context.Background())
+		if err != nil {
+			c.orgErr = errors.Join(errors.New("failed to resolve JumpCloud organization id"), err)
+			return
+		}
+		if len(orgs) == 0 || orgs[0].EffectiveID() == "" {
+			c.orgErr = errors.New("failed to resolve JumpCloud organization id: empty response")
+			return
+		}
+		c.orgID = orgs[0].EffectiveID()
+	})
+	return c.orgID, c.orgErr
 }
 
 // Users returns the full user list and an id-indexed view, fetched once.

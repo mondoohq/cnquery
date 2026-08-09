@@ -36,7 +36,7 @@ func (g *mqlJumpcloudUserGroup) members() ([]any, error) {
 	conn := resolveConn(g.MqlRuntime)
 	ctx := context.Background()
 
-	conns, err := conn.Client().GraphConnections(ctx, "/v2/usergroups/"+g.Id.Data+"/members")
+	conns, err := conn.Client().GraphConnections(ctx, connection.GraphPath("/v2/usergroups", g.Id.Data, "members"))
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (g *mqlJumpcloudSystemGroup) members() ([]any, error) {
 	conn := resolveConn(g.MqlRuntime)
 	ctx := context.Background()
 
-	conns, err := conn.Client().GraphConnections(ctx, "/v2/systemgroups/"+g.Id.Data+"/members")
+	conns, err := conn.Client().GraphConnections(ctx, connection.GraphPath("/v2/systemgroups", g.Id.Data, "members"))
 	if err != nil {
 		return nil, err
 	}

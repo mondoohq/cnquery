@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -58,12 +59,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 }
 
 // flagOrEnv reads a CLI flag, falling back to an environment variable when the
-// flag was not given.
+// flag was not given. Values are trimmed so a key pasted with a trailing
+// newline, and a flag passed as whitespace, are both treated as absent rather
+// than sent to the API as a malformed credential.
 func flagOrEnv(flags map[string]*llx.Primitive, flag, env string) string {
-	if x, ok := flags[flag]; ok && len(x.Value) != 0 {
-		return string(x.Value)
+	if x, ok := flags[flag]; ok {
+		if v := strings.TrimSpace(string(x.Value)); v != "" {
+			return v
+		}
 	}
-	return os.Getenv(env)
+	return strings.TrimSpace(os.Getenv(env))
 }
 
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {

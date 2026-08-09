@@ -252,6 +252,14 @@ func (c *Client) GraphConnections(ctx context.Context, path string) ([]*GraphCon
 	return listV2[GraphConnection](ctx, c, path)
 }
 
+// GraphPath builds the path to a graph endpoint, escaping the object id the
+// same way the single-object getters do so an id carrying a reserved character
+// cannot reshape the request. JumpCloud ids are hex ObjectIds today, but the
+// escaping keeps every path in this package built the one way.
+func GraphPath(collection, id, relation string) string {
+	return collection + "/" + url.PathEscape(id) + "/" + relation
+}
+
 // truncate shortens s to at most n runes, appending an ellipsis when it had to
 // cut, so an oversized error body does not flood the logs.
 func truncate(s string, n int) string {
