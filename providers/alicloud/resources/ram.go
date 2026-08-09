@@ -1131,9 +1131,13 @@ func initAlicloudRamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	// GetPolicy already returned the default version's document, so hand it to
 	// the resource rather than making statements re-fetch what we just read.
+	// The seeded flag is set even when there is no default version, because a
+	// repeat call would return the same nothing.
+	policy := res.(*mqlAlicloudRamPolicy)
 	if v := resp.Body.DefaultPolicyVersion; v != nil {
-		res.(*mqlAlicloudRamPolicy).cacheDocument = ramStrVal(v.PolicyDocument)
+		policy.cacheDocument = ramStrVal(v.PolicyDocument)
 	}
+	policy.documentSeeded = true
 	return nil, res, nil
 }
 
@@ -1160,7 +1164,11 @@ func resolveRamPolicy(runtime *plugin.Runtime, policyName, policyType *string) (
 // so a policy reached through an attachment answers policyDocument and
 // statements without a second call.
 type mqlAlicloudRamPolicyInternal struct {
-	documentOnce    sync.Once
+	documentOnce sync.Once
+	// documentSeeded records that init already read the document, which an
+	// empty cacheDocument cannot: a policy whose default version carries no
+	// document is seeded with "" and must not trigger a repeat GetPolicy.
+	documentSeeded  bool
 	cacheDocument   string
 	documentErr     error
 	statementsOnce  sync.Once
@@ -1172,7 +1180,7 @@ type mqlAlicloudRamPolicyInternal struct {
 // GetPolicy at most once per policy across every field that needs it.
 func (r *mqlAlicloudRamPolicy) fetchDocument() (string, error) {
 	r.documentOnce.Do(func() {
-		if r.cacheDocument != "" {
+		if r.documentSeeded {
 			return
 		}
 
