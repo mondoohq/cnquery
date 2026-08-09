@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -124,8 +125,17 @@ func initOciOnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		}
 	}
 
-	return nil, nil, errors.New("oci.ons.topic not found: " + idVal)
+	return nil, nil, fmt.Errorf("%w: %s", errOciOnsTopicNotFound, idVal)
 }
+
+// errOciOnsTopicNotFound marks a topic OCID that is not in the listing, which
+// normally means the topic was deleted while something that points at it - a
+// Connector Hub target, a monitoring alarm destination - outlived it.
+//
+// It is a sentinel rather than a bare errors.New so callers holding a single
+// such reference can tell "the referent is gone" (answer null) apart from "the
+// lookup itself failed" (answer with the error). See ociReferentGone.
+var errOciOnsTopicNotFound = errors.New("oci.ons.topic not found")
 
 func (o *mqlOciOnsTopic) id() (string, error) {
 	return "oci.ons.topic/" + o.Id.Data, nil

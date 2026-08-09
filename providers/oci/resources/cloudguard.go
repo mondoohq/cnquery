@@ -46,6 +46,32 @@ var ociCloudGuardProblemStates = []cloudguard.ListProblemsLifecycleStateEnum{
 	cloudguard.ListProblemsLifecycleStateInactive,
 }
 
+// ociCloudGuardNotSubscribed reports whether the error means the tenancy never
+// onboarded Cloud Guard, which the service answers with a 404 carrying
+// "Cloudguard subscription is not available".
+//
+// A tenancy that has not enabled Cloud Guard is the single most likely state to
+// query, and it is exactly the state the resource exists to report. Surfacing
+// the 404 as a query error means status - the field whose whole job is to say
+// whether Cloud Guard is on - fails precisely when the answer is "it is not",
+// and takes the rest of the tenancy scan down with it.
+//
+// Only a 404 counts. A 401 is a credential problem and a 403 is the usual IAM
+// policy gap; reporting either as "Cloud Guard is off" would turn an
+// under-scoped token into a clean bill of health, which is worse than an error.
+//
+// The status alone is deliberately the whole test, without also matching the
+// message text or the error code. The code is NotAuthorizedOrNotFound, which
+// Cloud Guard returns for a missing resource and an IAM gap alike, so it does
+// not discriminate; the message is prose and free to change. That leaves one
+// caller where a 404 could mean something else - rules, which names a specific
+// recipe and so can 404 because that recipe was deleted between listing it and
+// reading its rules. Empty rules is the right answer to that too.
+func ociCloudGuardNotSubscribed(err error) bool {
+	svcErr, ok := common.IsServiceError(err)
+	return ok && svcErr.GetHTTPStatusCode() == 404
+}
+
 func (o *mqlOciCloudGuard) id() (string, error) {
 	return "oci.cloudGuard", nil
 }
@@ -68,6 +94,15 @@ func (o *mqlOciCloudGuard) getHomeRegion() (string, error) {
 	})
 }
 
+// getConfig returns the tenancy's Cloud Guard configuration, or (nil, nil) when
+// the tenancy never onboarded Cloud Guard.
+//
+// The nil-without-error case is what every caller has to handle, and it is
+// deliberately absorbed here rather than at each accessor. o.config remembers
+// only successes, so reporting not-subscribed as an error meant re-issuing
+// GetConfiguration for every field that read it - three identical 404s to
+// answer status, reportingRegion and selfManageResources. Answering nil makes
+// it a cached success, so the tenancy is asked once.
 func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 	// Resolve the home region before entering config's own critical section:
 	// getHomeRegion takes a lock of its own, and nesting it inside this one
@@ -93,6 +128,9 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 			CompartmentId: common.String(conn.TenantID()),
 		})
 		if err != nil {
+			if ociCloudGuardNotSubscribed(err) {
+				return nil, nil
+			}
 			return nil, err
 		}
 		return &response.Configuration, nil
@@ -116,9 +154,12 @@ func (o *mqlOciCloudGuard) getServiceRegion() (string, error) {
 	return o.getHomeRegion()
 }
 
+// A nil configuration below means the tenancy is not subscribed, which is a
+// real answer rather than a failure: Cloud Guard is off. See getConfig.
+
 func (o *mqlOciCloudGuard) status() (bool, error) {
 	cfg, err := o.getConfig()
-	if err != nil {
+	if err != nil || cfg == nil {
 		return false, err
 	}
 	return cfg.Status == cloudguard.CloudGuardStatusEnabled, nil
@@ -126,7 +167,7 @@ func (o *mqlOciCloudGuard) status() (bool, error) {
 
 func (o *mqlOciCloudGuard) reportingRegion() (string, error) {
 	cfg, err := o.getConfig()
-	if err != nil {
+	if err != nil || cfg == nil {
 		return "", err
 	}
 	return stringValue(cfg.ReportingRegion), nil
@@ -134,7 +175,7 @@ func (o *mqlOciCloudGuard) reportingRegion() (string, error) {
 
 func (o *mqlOciCloudGuard) selfManageResources() (bool, error) {
 	cfg, err := o.getConfig()
-	if err != nil {
+	if err != nil || cfg == nil {
 		return false, err
 	}
 	return boolValue(cfg.SelfManageResources), nil
@@ -160,7 +201,12 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			// Cloud Guard targets are attached to sub-compartments far more
 			// often than to the tenancy root.
 			CompartmentIdInSubtree: common.Bool(true),
-			Page:                   page,
+			// Cloud Guard rejects the subtree flag outright unless an access
+			// level comes with it, so this is required rather than an
+			// optimization. ACCESSIBLE degrades to the compartments the caller
+			// can read instead of failing on the first one it cannot.
+			AccessLevel: cloudguard.ListTargetsAccessLevelAccessible,
+			Page:        page,
 		})
 		if err != nil {
 			return nil, nil, err
@@ -168,6 +214,9 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 		return response.Items, response.OpcNextPage, nil
 	})
 	if err != nil {
+		if ociCloudGuardNotSubscribed(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 
@@ -251,6 +300,9 @@ func (o *mqlOciCloudGuard) problems() ([]any, error) {
 			return response.Items, response.OpcNextPage, nil
 		})
 		if err != nil {
+			if ociCloudGuardNotSubscribed(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
 		problems = append(problems, perState...)
@@ -370,6 +422,13 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 		return response.Items, response.OpcNextPage, nil
 	})
 	if err != nil {
+		// The recipe listing itself is answerable without a Cloud Guard
+		// subscription - Oracle-managed recipes come back either way - but the
+		// per-recipe rules endpoint is not. Without this the recipes resolve
+		// and then every one of them fails on its rules.
+		if ociCloudGuardNotSubscribed(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 
@@ -460,7 +519,10 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 		response, err := client.ListDetectorRecipes(ctx, cloudguard.ListDetectorRecipesRequest{
 			CompartmentId:          common.String(conn.TenantID()),
 			CompartmentIdInSubtree: common.Bool(true),
-			Page:                   page,
+			// Required whenever the subtree flag is set: Cloud Guard rejects
+			// the combination without it. See targets for the full reasoning.
+			AccessLevel: cloudguard.ListDetectorRecipesAccessLevelAccessible,
+			Page:        page,
 		})
 		if err != nil {
 			return nil, nil, err
@@ -468,6 +530,9 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 		return response.Items, response.OpcNextPage, nil
 	})
 	if err != nil {
+		if ociCloudGuardNotSubscribed(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 

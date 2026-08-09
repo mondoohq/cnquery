@@ -215,6 +215,14 @@ func (o *mqlOciServiceConnectorHubConnector) targetBucket() (*mqlOciObjectStorag
 // BucketNotFound, and the shared NotAuthorizedOrNotFound covers the case where
 // the resource is gone or was never visible.
 func ociReferentGone(err error) bool {
+	// Not every referent reports its absence as a service error. A resource
+	// resolved by scanning a listing rather than by a direct GET - an ONS topic
+	// is the one that reaches here - has no HTTP response to carry a 404, so it
+	// reports the miss with a sentinel instead.
+	if errors.Is(err, errOciOnsTopicNotFound) {
+		return true
+	}
+
 	var svcErr common.ServiceError
 	if !errors.As(err, &svcErr) {
 		return false
@@ -238,6 +246,16 @@ func (o *mqlOciServiceConnectorHubConnector) targetTopic() (*mqlOciOnsTopic, err
 		"id": llx.StringData(stringValue(target.TopicId)),
 	})
 	if err != nil {
+		// Same outliving problem as targetBucket: deleting the topic leaves the
+		// connector pointing at an OCID that is no longer in the listing. A
+		// connector in that state is a real tenancy state, so the reference
+		// reads as null rather than failing every connector in the listing.
+		if ociReferentGone(err) {
+			log.Debug().Str("topic", stringValue(target.TopicId)).
+				Msg("service connector target topic no longer exists")
+			o.TargetTopic.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.(*mqlOciOnsTopic), nil
