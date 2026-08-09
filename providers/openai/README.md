@@ -122,6 +122,40 @@ mql> openai.projects { name apiKeys { name ownerType ownerName createdAt lastUse
 mql> openai.projects { name serviceAccounts { name role createdAt } }
 ```
 
+### Audit admin API keys (requires admin key)
+
+Admin keys are the most privileged credential in the account. Find the ones that never expire, or that nobody has used:
+
+```shell
+mql> openai.adminApiKeys { name ownerName ownerType createdAt expiresAt lastUsedAt }
+mql> openai.adminApiKeys.where(expiresAt == null) { name ownerName createdAt }
+mql> openai.adminApiKeys.where(lastUsedAt == null) { name ownerName createdAt }
+```
+
+### Review who holds which permissions (requires admin key)
+
+```shell
+mql> openai.roles { name resourceType isPredefined permissions }
+mql> openai.users { email roles { name permissions } }
+mql> openai.groups { name isScimManaged members { email } roles { name } }
+```
+
+Groups that are not SCIM managed can be edited in the dashboard without a matching change in the identity provider:
+
+```shell
+mql> openai.groups.where(isScimManaged == false) { name members { email } roles { name } }
+```
+
+### List project members (requires admin key)
+
+Project roles are separate from organization roles, so project owners have to be audited per project:
+
+```shell
+mql> openai.projects { name users { email role addedAt } }
+mql> openai.projects { name users.where(role == "owner") { email } }
+mql> openai.projects { name groups { name } roles { name permissions } }
+```
+
 ### AIBOM inventory query
 
 Combine model inventory with fine-tuning lineage for a complete AI supply chain view:
@@ -144,7 +178,11 @@ mql> openai.files.where(purpose == "fine-tune") { id filename bytes createdAt }
 | `openai.project`               | Organization project (requires admin key)         |
 | `openai.project.apiKey`        | Project API key with ownership info               |
 | `openai.project.serviceAccount`| Project service account                           |
+| `openai.project.user`          | Project member with project role                  |
 | `openai.organizationUser`      | Organization member with role and usage info      |
+| `openai.adminApiKey`           | Organization admin API key with owner and expiry  |
+| `openai.role`                  | Named permission set grantable to users and groups|
+| `openai.group`                 | Group of members, optionally SCIM managed         |
 | `openai.invite`                | Pending organization invite                       |
 | `openai.auditLog`              | Organization audit log entry                      |
 

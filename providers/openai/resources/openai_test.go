@@ -125,6 +125,45 @@ func TestAuditLogActor(t *testing.T) {
 	assert.Equal(t, "scim", id)
 }
 
+func TestRoleArgs(t *testing.T) {
+	args := roleArgs("role_1", "Owner", "full access", "organization", []string{"api.keys.write", "users.write"}, true)
+
+	assert.Equal(t, "role_1", args["__id"].Value)
+	assert.Equal(t, "role_1", args["id"].Value)
+	assert.Equal(t, "Owner", args["name"].Value)
+	assert.Equal(t, "full access", args["description"].Value)
+	assert.Equal(t, "organization", args["resourceType"].Value)
+	assert.Equal(t, true, args["isPredefined"].Value)
+	// permissions crosses the plugin boundary as []any, so the conversion has to
+	// happen here rather than handing llx a []string
+	assert.Equal(t, []any{"api.keys.write", "users.write"}, args["permissions"].Value)
+
+	// A role with no permissions must emit an empty list, not null, so
+	// permissions.length == 0 is answerable.
+	empty := roleArgs("role_2", "None", "", "project", nil, false)
+	assert.Equal(t, []any{}, empty["permissions"].Value)
+}
+
+func TestOpenaiAdminApiKeyOwnerIsNullForServiceAccount(t *testing.T) {
+	// A key owned by a service account has no organization member behind it. The
+	// accessor must mark the field set-and-null; returning a bare nil leaves the
+	// runtime believing the field was never resolved.
+	key := &mqlOpenaiAdminApiKey{OwnerType: plugin.TValue[string]{Data: "service_account"}}
+	key.cacheOwnerId = "sa_123"
+
+	owner, err := key.owner()
+	assert.NoError(t, err)
+	assert.Nil(t, owner)
+	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, key.Owner.State)
+
+	// Same for a user-owned key whose owner id never came back from the API.
+	missing := &mqlOpenaiAdminApiKey{OwnerType: plugin.TValue[string]{Data: "user"}}
+	owner, err = missing.owner()
+	assert.NoError(t, err)
+	assert.Nil(t, owner)
+	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, missing.Owner.State)
+}
+
 func newTestModel(id string) *mqlOpenaiModel {
 	return &mqlOpenaiModel{Id: plugin.TValue[string]{Data: id}}
 }
