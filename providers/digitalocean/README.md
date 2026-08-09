@@ -126,6 +126,26 @@ digitalocean.gradientai.agents.where(isPublic) { name deploymentUrl }
 digitalocean.apps.where(isPublic) { name liveUrl }
 ```
 
+Find load balancer listeners accepting traffic in the clear, and inspect the
+certificate each TLS listener presents:
+
+```mql
+digitalocean.loadBalancers.listeners.where(entryProtocol == "http" || entryProtocol == "tcp")
+digitalocean.loadBalancers { name listeners { entryProtocol entryPort certificate { name notAfter state } } }
+```
+
+Find CORS policies that allow credentials from a permissive origin:
+
+```mql
+digitalocean.apps.where(corsPolicies.any(_["allowCredentials"] == true))
+```
+
+Find app environment variables held in plain text rather than encrypted:
+
+```mql
+digitalocean.apps { name envVars.where(_["type"] == "GENERAL") }
+```
+
 You can also run a policy scan:
 
 ```bash
