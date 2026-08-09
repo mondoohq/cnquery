@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -87,7 +88,11 @@ func fetchAccount(runtime *plugin.Runtime) (*mqlStripeAccount, error) {
 		pastDue        []string
 		eventuallyDue  []string
 	)
-	if rec.Requirements != nil {
+	// Stripe omits requirements entirely on accounts it does not track them
+	// for. Remember whether it reported them, so the lists below can read as
+	// null instead of claiming nothing is outstanding.
+	requirementsReported := rec.Requirements != nil
+	if requirementsReported {
 		disabledReason = rec.Requirements.DisabledReason
 		currentlyDue = rec.Requirements.CurrentlyDue
 		pastDue = rec.Requirements.PastDue
@@ -123,11 +128,10 @@ func fetchAccount(runtime *plugin.Runtime) (*mqlStripeAccount, error) {
 		}
 	}
 
-	var tosDate *int64
+	var tosDate *time.Time
 	tosIP := ""
 	if rec.TosAcceptance != nil {
-		d := rec.TosAcceptance.Date
-		tosDate = &d
+		tosDate = unixPtr(rec.TosAcceptance.Date)
 		tosIP = rec.TosAcceptance.IP
 	}
 
@@ -145,9 +149,9 @@ func fetchAccount(runtime *plugin.Runtime) (*mqlStripeAccount, error) {
 		"businessUrl":                llx.StringData(businessURL),
 		"capabilities":               llx.MapData(mapStrToAny(rec.Capabilities), types.String),
 		"requirementsDisabledReason": llx.StringData(disabledReason),
-		"requirementsCurrentlyDue":   llx.ArrayData(strSliceToAny(currentlyDue), types.String),
-		"requirementsPastDue":        llx.ArrayData(strSliceToAny(pastDue), types.String),
-		"requirementsEventuallyDue":  llx.ArrayData(strSliceToAny(eventuallyDue), types.String),
+		"requirementsCurrentlyDue":   strListData(currentlyDue, requirementsReported),
+		"requirementsPastDue":        strListData(pastDue, requirementsReported),
+		"requirementsEventuallyDue":  strListData(eventuallyDue, requirementsReported),
 		"declineChargeOnAvsFailure":  llx.BoolData(avsDecline),
 		"declineChargeOnCvcFailure":  llx.BoolData(cvcDecline),
 		"statementDescriptor":        llx.StringData(statementDescriptor),
@@ -155,7 +159,7 @@ func fetchAccount(runtime *plugin.Runtime) (*mqlStripeAccount, error) {
 		"payoutDelayDays":            llx.IntData(payoutDelayDays),
 		"debitNegativeBalances":      llx.BoolData(debitNegative),
 		"timezone":                   llx.StringData(timezone),
-		"tosAcceptanceDate":          llx.TimeDataPtr(unixPtrFromPtr(tosDate)),
+		"tosAcceptanceDate":          llx.TimeDataPtr(tosDate),
 		"tosAcceptanceIp":            llx.StringData(tosIP),
 		"created":                    llx.TimeDataPtr(unixPtr(rec.Created)),
 	})

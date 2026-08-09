@@ -7,8 +7,10 @@ import (
 	"context"
 	"time"
 
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/stripe/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (r *mqlStripe) id() (string, error) {
@@ -48,6 +50,18 @@ func strSliceToAny(in []string) []any {
 		out[i] = in[i]
 	}
 	return out
+}
+
+// strListData builds a string list field, distinguishing a list the API
+// reported as empty from one it did not report at all. reported is false when
+// the containing object was absent from the response, in which case the field
+// reads as null: an empty array would claim Stripe said "nothing outstanding"
+// when it said nothing.
+func strListData(in []string, reported bool) *llx.RawData {
+	if !reported {
+		return llx.NilData
+	}
+	return llx.ArrayData(strSliceToAny(in), types.String)
 }
 
 // mapStrToAny widens a string map into a map[string]any for a map field.

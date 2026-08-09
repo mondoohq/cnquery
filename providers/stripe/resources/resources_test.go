@@ -263,6 +263,49 @@ func TestExternalAccountsDegradesOnClientError(t *testing.T) {
 	assert.Empty(t, ext)
 }
 
+// TestAccountRequirementsNullWhenUnreported verifies an account Stripe reports
+// without a requirements object reads as null rather than as empty lists. An
+// empty list would tell a policy that nothing is outstanding, which is a
+// different claim from Stripe not having reported requirements at all.
+func TestAccountRequirementsNullWhenUnreported(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/account", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, `{"id":"acct_norequirements","object":"account"}`)
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	acct, err := fetchAccount(newTestRuntime(t, srv.URL))
+	require.NoError(t, err)
+
+	for name, field := range map[string]plugin.TValue[[]any]{
+		"currentlyDue":  acct.RequirementsCurrentlyDue,
+		"pastDue":       acct.RequirementsPastDue,
+		"eventuallyDue": acct.RequirementsEventuallyDue,
+	} {
+		assert.Nil(t, field.Data, name)
+		assert.Equal(t, plugin.StateIsNull|plugin.StateIsSet, field.State, name)
+	}
+}
+
+// TestAccountRequirementsEmptyWhenReportedEmpty verifies the other half of the
+// distinction: requirements reported as empty stay an empty list.
+func TestAccountRequirementsEmptyWhenReportedEmpty(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/account", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, `{"id":"acct_clean","object":"account","requirements":{"disabled_reason":"","currently_due":[],"past_due":[],"eventually_due":["tos_acceptance.date"]}}`)
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	acct, err := fetchAccount(newTestRuntime(t, srv.URL))
+	require.NoError(t, err)
+
+	require.NotNil(t, acct.RequirementsCurrentlyDue.Data)
+	assert.Empty(t, acct.RequirementsCurrentlyDue.Data)
+	assert.Equal(t, []any{"tos_acceptance.date"}, acct.RequirementsEventuallyDue.Data)
+}
+
 func TestCustomersPagination(t *testing.T) {
 	rt, done := newStripeServer(t)
 	defer done()

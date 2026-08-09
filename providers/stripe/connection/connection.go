@@ -22,6 +22,12 @@ const (
 	// apiVersion pins the Stripe API version so response shapes stay stable
 	// regardless of the account's default version. It is sent on every request
 	// as the Stripe-Version header.
+	//
+	// Every field this provider reads is mapped against this version. Moving
+	// the pin is therefore a behavioral change, not a version bump: re-check
+	// the resource mappings against a live account before raising it, because
+	// Stripe reshapes objects between versions and a renamed or relocated
+	// field goes quiet rather than failing.
 	apiVersion = "2024-06-20"
 
 	// OptionToken is the CLI flag/option name carrying the Stripe secret key.
