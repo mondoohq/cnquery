@@ -22,6 +22,12 @@ func TestParseFamily(t *testing.T) {
 		{"claude-3-5-sonnet-20241022", "sonnet"},
 		{"some-unknown-model", ""},
 		{"", ""},
+		// A family the provider has no prior knowledge of still resolves, so a
+		// newly released one is never reported as an empty family.
+		{"claude-fable-5", "fable"},
+		{"claude-3-5-newfamily-20260101", "newfamily"},
+		// An id carrying only a version has no family to report.
+		{"claude-2.1", ""},
 	}
 
 	for _, tt := range tests {

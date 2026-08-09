@@ -140,11 +140,22 @@ func rawJSONToDict(raw string) (interface{}, error) {
 	return res, nil
 }
 
+// parseFamily derives the model family from the model id, because the Models
+// API does not return one. The family follows the `claude-` prefix, either
+// directly (`claude-sonnet-5`) or after a version in the older scheme
+// (`claude-3-5-sonnet-20241022`), so it is the first segment that does not
+// start with a digit. Deriving the value instead of matching a fixed list of
+// families keeps a newly released one from silently reporting as empty.
 func parseFamily(id string) string {
-	for _, f := range []string{"opus", "sonnet", "haiku"} {
-		if strings.Contains(id, f) {
-			return f
+	rest, ok := strings.CutPrefix(id, "claude-")
+	if !ok {
+		return ""
+	}
+	for _, seg := range strings.Split(rest, "-") {
+		if seg == "" || (seg[0] >= '0' && seg[0] <= '9') {
+			continue
 		}
+		return seg
 	}
 	return ""
 }
