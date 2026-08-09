@@ -268,6 +268,7 @@ PROVIDERS := \
 	slack \
 	snowflake \
 	stackit \
+	stripe \
 	tailscale \
 	terraform \
 	together \

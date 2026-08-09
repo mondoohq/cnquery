@@ -1,0 +1,251 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/stripe"
+option go_package = "go.mondoo.com/mql/v13/providers/stripe/resources"
+
+// Stripe account
+//
+// Stripe account reached through a secret key, the entry point for auditing
+// an account's payments configuration and security posture. Reachable through
+// it are the account settings and capabilities, the webhook endpoints
+// registered to receive events, the customer list, the product catalog and
+// its prices, the recurring subscriptions, and the current account balance.
+stripe {
+  // Account settings and capabilities for the connection's secret key
+  account() stripe.account
+  // Webhook endpoints registered on the account
+  webhookEndpoints() []stripe.webhookEndpoint
+  // Customers in the account
+  customers() []stripe.customer
+  // Products in the account's catalog
+  products() []stripe.product
+  // Prices attached to products
+  prices() []stripe.price
+  // Recurring subscriptions in the account
+  subscriptions() []stripe.subscription
+  // Current available and pending account balance
+  balance() stripe.balance
+}
+
+// Stripe account settings and capabilities
+//
+// Account-level configuration for a Stripe account: whether it can create
+// charges and receive payouts, whether onboarding details have been
+// submitted, the account and business type, the country and default currency,
+// the contact email, and the public business profile. The chargesEnabled,
+// payoutsEnabled, and detailsSubmitted fields together report the account's
+// activation posture, and capabilities lists which payment capabilities are
+// active.
+stripe.account @defaults("id type country chargesEnabled payoutsEnabled") {
+  // Account identifier (e.g., "acct_1234567890")
+  id string
+  // Account type
+  //
+  // One of standard, express, custom, or none.
+  type string
+  // Business type
+  //
+  // One of individual, company, non_profit, or government_entity.
+  businessType string
+  // Two-letter country code the account is registered in (ISO 3166-1 alpha-2)
+  country string
+  // Three-letter default currency for the account (ISO 4217)
+  defaultCurrency string
+  // Primary contact email for the account
+  email string
+  // Whether the account can create charges
+  chargesEnabled bool
+  // Whether the account can receive payouts
+  payoutsEnabled bool
+  // Whether the account has submitted all required onboarding details
+  detailsSubmitted bool
+  // Display name shown on statements and in the dashboard
+  businessName string
+  // Public-facing business website URL
+  businessUrl string
+  // Requested capabilities and their status
+  //
+  // Map of capability name (e.g., "card_payments", "transfers") to its
+  // status, one of active, inactive, or pending.
+  capabilities map[string]string
+  // Account creation time
+  created time
+}
+
+// Stripe webhook endpoint
+//
+// Webhook endpoint registered to receive event notifications from Stripe. The
+// url is the destination Stripe posts events to, status reports whether
+// delivery is enabled, and enabledEvents lists the event types subscribed to
+// (a single "*" means every event). Auditing these surfaces plaintext HTTP
+// destinations, overly broad event subscriptions, and disabled endpoints.
+stripe.webhookEndpoint @defaults("url status apiVersion") {
+  // Endpoint identifier (e.g., "we_1234567890")
+  id string
+  // Destination URL events are delivered to
+  url string
+  // Delivery status
+  //
+  // One of enabled or disabled.
+  status string
+  // Event types this endpoint is subscribed to
+  //
+  // A single "*" element means the endpoint receives every event type.
+  enabledEvents []string
+  // Stripe API version used to render events for this endpoint
+  apiVersion string
+  // Endpoint description
+  description string
+  // Whether the endpoint receives live-mode events
+  livemode bool
+  // Endpoint metadata key/value pairs
+  metadata map[string]string
+  // Endpoint creation time
+  created time
+}
+
+// Stripe customer
+//
+// Customer record in a Stripe account, selectable by its identifier, for
+// example stripe.customer(id: "cus_1234567890"). Covers the customer's contact
+// details, the currency they are billed in, their account credit balance, and
+// whether their latest invoice is past due (delinquent).
+stripe.customer @defaults("id email name") {
+  // Customer identifier (e.g., "cus_1234567890")
+  id string
+  // Customer email address
+  email string
+  // Customer full name
+  name string
+  // Arbitrary description attached to the customer
+  description string
+  // Three-letter currency the customer is billed in (ISO 4217)
+  currency string
+  // Account credit balance in the smallest currency unit
+  //
+  // A negative value is credit applied to the next invoice; a positive value
+  // is owed by the customer.
+  balance int
+  // Whether the customer's latest invoice is past due
+  delinquent bool
+  // Whether the customer exists in live mode
+  livemode bool
+  // Customer creation time
+  created time
+}
+
+// Stripe product
+//
+// Product in a Stripe account's catalog, selectable by its identifier, for
+// example stripe.product(id: "prod_1234567890"). Products describe the goods or
+// services sold; whether a product is still purchasable is reported by the
+// active field, and its prices are available through stripe.prices.
+stripe.product @defaults("id name active") {
+  // Product identifier (e.g., "prod_1234567890")
+  id string
+  // Product name
+  name string
+  // Whether the product is currently available for purchase
+  active bool
+  // Product description
+  description string
+  // Product type
+  //
+  // One of good or service.
+  type string
+  // Public URL of a web page describing the product
+  url string
+  // Whether the product exists in live mode
+  livemode bool
+  // Product creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Stripe price
+//
+// Price attached to a product, defining how much and in what currency
+// customers are charged and whether the charge is one-time or recurring. The
+// product this price belongs to is available through the product field.
+stripe.price @defaults("id currency unitAmount type") {
+  // Price identifier (e.g., "price_1234567890")
+  id string
+  // Whether the price is currently usable for new purchases
+  active bool
+  // Three-letter currency the price is charged in (ISO 4217)
+  currency string
+  // Amount charged in the smallest currency unit (e.g., cents)
+  unitAmount int
+  // Billing scheme type
+  //
+  // One of one_time or recurring.
+  type string
+  // Billing interval for recurring prices
+  //
+  // One of day, week, month, or year. Empty for one-time prices.
+  recurringInterval string
+  // Number of intervals between billings for recurring prices
+  recurringIntervalCount int
+  // Brief description of the price shown in the dashboard
+  nickname string
+  // Whether the price exists in live mode
+  livemode bool
+  // Price creation time
+  created time
+  // Product this price is attached to
+  product() stripe.product
+}
+
+// Stripe subscription
+//
+// Recurring billing subscription in a Stripe account, selectable by its
+// identifier, for example stripe.subscription(id: "sub_1234567890"). The status
+// field reports where the subscription sits in its lifecycle, and the customer
+// being billed is available through the customer field.
+stripe.subscription @defaults("id status") {
+  // Subscription identifier (e.g., "sub_1234567890")
+  id string
+  // Subscription status
+  //
+  // One of active, past_due, unpaid, canceled, incomplete, incomplete_expired,
+  // trialing, or paused.
+  status string
+  // Three-letter currency the subscription is billed in (ISO 4217)
+  currency string
+  // Whether the subscription will cancel at the end of the current period
+  cancelAtPeriodEnd bool
+  // Whether the subscription exists in live mode
+  livemode bool
+  // Subscription creation time
+  created time
+  // Start of the current billing period
+  currentPeriodStart time
+  // End of the current billing period
+  currentPeriodEnd time
+  // Time the subscription was canceled, if it has been
+  canceledAt time
+  // Customer billed by this subscription
+  customer() stripe.customer
+}
+
+// Stripe account balance
+//
+// Current balance for a Stripe account, split into funds available for payout
+// and funds still pending clearance. Both are reported per currency as
+// amount/currency entries in the smallest currency unit.
+stripe.balance @defaults("available pending") {
+  // Funds available for payout, per currency
+  //
+  // List of {amount, currency} entries where amount is in the smallest
+  // currency unit.
+  available []dict
+  // Funds not yet available for payout, per currency
+  //
+  // List of {amount, currency} entries where amount is in the smallest
+  // currency unit.
+  pending []dict
+  // Whether the balance reflects live-mode funds
+  livemode bool
+}

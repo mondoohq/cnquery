@@ -259,6 +259,7 @@ use (
    ./mql/providers/slack
    ./mql/providers/snowflake
    ./mql/providers/stackit
+   ./mql/providers/stripe
    ./mql/providers/tailscale
    ./mql/providers/terraform
    ./mql/providers/vcd

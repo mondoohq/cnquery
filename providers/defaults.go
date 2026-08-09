@@ -1173,6 +1173,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"stripe": {
+		Provider: &plugin.Provider{
+			Name:            "stripe",
+			ID:              "go.mondoo.com/mql/providers/stripe",
+			ConnectionTypes: []string{"stripe"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "stripe",
+					Use:   "stripe",
+					Short: "a Stripe account",
+				},
+			},
+		},
+	},
+
 	"tailscale": {
 		Provider: &plugin.Provider{
 			Name:            "tailscale",
