@@ -139,7 +139,9 @@ func stripeMux(t *testing.T) http.Handler {
 
 	mux.HandleFunc("/v1/disputes", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, `{"object":"list","has_more":false,"data":[
-			{"id":"dp_1","amount":2500,"currency":"usd","status":"needs_response","reason":"fraudulent","is_charge_refundable":false,"charge":"ch_1","payment_intent":"pi_1","livemode":true,"created":1700001200,"evidence_details":{"due_by":1700601200}}
+			{"id":"dp_1","amount":2500,"currency":"usd","status":"needs_response","reason":"fraudulent","is_charge_refundable":false,"charge":"ch_1","payment_intent":"pi_1","livemode":true,"created":1700001200,"evidence_details":{"due_by":1700601200}},
+			{"id":"dp_2","amount":1000,"currency":"usd","status":"won","reason":"duplicate","is_charge_refundable":true,"charge":"ch_2","payment_intent":"pi_2","livemode":true,"created":1700001300},
+			{"id":"dp_3","amount":750,"currency":"usd","status":"lost","reason":"general","is_charge_refundable":false,"charge":"ch_3","payment_intent":"pi_3","livemode":true,"created":1700001400,"evidence_details":{}}
 		]}`)
 	})
 
@@ -393,7 +395,7 @@ func TestDisputesMapping(t *testing.T) {
 
 	disputes, err := listDisputes(rt)
 	require.NoError(t, err)
-	require.Len(t, disputes, 1)
+	require.Len(t, disputes, 3)
 
 	d := disputes[0].(*mqlStripeDispute)
 	assert.Equal(t, "dp_1", d.Id.Data)
@@ -404,6 +406,32 @@ func TestDisputesMapping(t *testing.T) {
 	assert.Equal(t, "ch_1", d.Charge.Data)
 	require.NotNil(t, d.EvidenceDueBy.Data)
 	assert.Equal(t, int64(1700601200), d.EvidenceDueBy.Data.Unix())
+}
+
+// A dispute the API reports without an evidence deadline must read as null,
+// not as the Unix epoch. Stripe omits evidence_details entirely on some
+// disputes and returns it without a due_by on others, so cover both.
+func TestDisputeEvidenceDueByNullWhenAbsent(t *testing.T) {
+	rt, done := newStripeServer(t)
+	defer done()
+
+	disputes, err := listDisputes(rt)
+	require.NoError(t, err)
+	require.Len(t, disputes, 3)
+
+	for _, tc := range []struct {
+		idx  int
+		id   string
+		desc string
+	}{
+		{1, "dp_2", "evidence_details omitted"},
+		{2, "dp_3", "evidence_details present without due_by"},
+	} {
+		d := disputes[tc.idx].(*mqlStripeDispute)
+		require.Equal(t, tc.id, d.Id.Data, tc.desc)
+		assert.Nil(t, d.EvidenceDueBy.Data, tc.desc)
+		assert.Equal(t, plugin.StateIsNull|plugin.StateIsSet, d.EvidenceDueBy.State, tc.desc)
+	}
 }
 
 func TestReviewsMapping(t *testing.T) {
