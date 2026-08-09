@@ -724,17 +724,7 @@ var ifaceHeaderRe = regexp.MustCompile(`(?m)^interface (\S+)\s*$`)
 func ParsePortSecurity(runningConfig string) []PortSecurityConfig {
 	res := []PortSecurityConfig{}
 
-	matches := ifaceHeaderRe.FindAllStringSubmatchIndex(runningConfig, -1)
-
-	for i, match := range matches {
-		ifaceName := runningConfig[match[2]:match[3]]
-		blockStart := match[1]
-		blockEnd := len(runningConfig)
-		if i+1 < len(matches) {
-			blockEnd = matches[i+1][0]
-		}
-		block := runningConfig[blockStart:blockEnd]
-
+	eachInterfaceBlock(runningConfig, func(ifaceName, block string) {
 		ps := PortSecurityConfig{Interface: ifaceName}
 		hasAny := false
 		scanner := bufio.NewScanner(strings.NewReader(block))
@@ -774,6 +764,6 @@ func ParsePortSecurity(runningConfig string) []PortSecurityConfig {
 		if hasAny {
 			res = append(res, ps)
 		}
-	}
+	})
 	return res
 }

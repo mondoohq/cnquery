@@ -79,6 +79,12 @@ arista.eos {
   vrrp() arista.eos.vrrp
   // System logging (syslog) configuration and remote collectors
   logging() arista.eos.logging
+  // 802.1X port-based network access control
+  dot1x() arista.eos.dot1x
+  // DHCP snooping configuration and trusted ports
+  dhcpSnooping() arista.eos.dhcpSnooping
+  // Dynamic ARP Inspection configuration and trusted ports
+  arpInspection() arista.eos.arpInspection
   // Login banner shown before authentication
   //
   // Literal banner text from the `banner login` block, including its
@@ -1166,6 +1172,127 @@ private arista.eos.vrrp.group @defaults("interface groupId state priority") {
   skewTime float
   // Virtual IP addresses the group advertises (the gateways clients use)
   virtualIps []string
+}
+
+// Arista EOS 802.1X port-based network access control
+//
+// Device-wide 802.1X state and the per-port configuration under
+// `interfaces`. 802.1X is the control that decides whether an unknown device
+// plugged into a switch port reaches the network at all, so it is the layer
+// beneath every other segmentation control.
+//
+// `systemAuthControl` is the master switch and is worth reading first: with
+// it off, per-interface `dot1x port-control auto` lines are configured but
+// inert, so a device can carry a complete-looking 802.1X configuration and
+// enforce nothing.
+arista.eos.dot1x {
+  // Whether 802.1X authentication is globally active (`dot1x system-auth-control`)
+  systemAuthControl bool
+  // Whether a RADIUS server may change or revoke an authorized session
+  //
+  // Reflects `dot1x dynamic-authorization`, which allows change-of-
+  // authorization requests to move or disconnect a session after the
+  // initial exchange.
+  dynamicAuthorization bool
+  // Hold period in seconds after a failed MAC authentication (0 = unset)
+  macBasedAuthHoldPeriod int
+  // Per-interface 802.1X configuration
+  //
+  // One row per interface carrying at least one `dot1x` line. Interfaces
+  // with no 802.1X configuration are absent, leaving the meaning of an
+  // unconfigured port to the policy that reads this.
+  interfaces() []arista.eos.dot1x.interface
+}
+
+// Arista EOS per-interface 802.1X configuration
+//
+// 802.1X settings on one switched interface, selected by `interface` (for
+// example `arista.eos.dot1x.interfaces.where(interface == "Ethernet1")`).
+// `portControl` decides whether the port enforces anything: `auto` runs the
+// authentication exchange, while `force-authorized` admits whatever plugs in
+// and is the device default. `macBasedAuth` weakens the control to a MAC
+// allowlist for endpoints that cannot speak 802.1X, and `reauthentication`
+// stops a station holding access indefinitely on a single success.
+private arista.eos.dot1x.interface @defaults("interface portControl hostMode") {
+  // Parent interface name (for example `Ethernet1`)
+  interface string
+  // Port access entity role, typically `authenticator`
+  paeMode string
+  // Enforcement mode
+  //
+  // One of `auto` (run the authentication exchange), `force-authorized`
+  // (admit everything, the device default), or `force-unauthorized`
+  // (admit nothing). Empty when the interface does not set it.
+  portControl string
+  // How many stations may authenticate on the port
+  //
+  // One of `single-host` or `multi-host`. Empty when the interface does
+  // not set it.
+  hostMode string
+  // Whether MAC authentication bypass is enabled on the port
+  macBasedAuth bool
+  // Whether an authorized port periodically re-runs the authentication exchange
+  reauthentication bool
+  // Reauthentication interval in seconds (0 = unset)
+  reauthPeriod int
+  // EAP request retransmit interval in seconds (0 = unset)
+  txPeriod int
+  // Hold-down after a failed exchange, in seconds (0 = unset)
+  quietPeriod int
+  // Whether EAPOL frames are suppressed on the port
+  eapolDisabled bool
+}
+
+// Arista EOS DHCP snooping configuration
+//
+// DHCP snooping state and the ports exempted from it. Snooping drops
+// server-role DHCP traffic arriving on untrusted ports, which is what stops a
+// rogue DHCP server from handing out its own address as the default gateway
+// and putting itself in the path of every conversation on the segment.
+//
+// `trustedInterfaces` is the field to audit: an uplink toward the real DHCP
+// server has to be trusted, and an access port facing users must not be.
+arista.eos.dhcpSnooping {
+  // Whether DHCP snooping is globally enabled
+  enabled bool
+  // VLANs snooping is enabled on
+  //
+  // Entries appear as configured, so a range stays a single token such as
+  // `300-310` rather than being expanded into its members.
+  vlans []string
+  // Whether relay-agent information (option 82) is stamped onto forwarded requests
+  insertOption82 bool
+  // Whether snooping applies to bridged traffic (`ip dhcp snooping bridging`)
+  bridging bool
+  // Interfaces exempted from snooping (`ip dhcp snooping trust`)
+  //
+  // Held as interface names, matching how the other interface-scoped
+  // resources in this provider report the ports they cover.
+  trustedInterfaces []string
+}
+
+// Arista EOS Dynamic ARP Inspection configuration
+//
+// Dynamic ARP Inspection validates ARP replies against the DHCP snooping
+// bindings, which is what stops one host on a VLAN from claiming another
+// host's address and intercepting its traffic. It pairs with DHCP snooping:
+// without snooping bindings there is nothing to validate against.
+//
+// DAI has no device-wide on switch. It is enabled per VLAN, so `enabled` is
+// derived from whether any VLAN is covered.
+arista.eos.arpInspection {
+  // Whether Dynamic ARP Inspection covers at least one VLAN
+  enabled bool
+  // VLANs inspection is enabled on
+  //
+  // Entries appear as configured, so a range stays a single token such as
+  // `300-310` rather than being expanded into its members.
+  vlans []string
+  // Interfaces exempted from inspection (`ip arp inspection trust`)
+  //
+  // Held as interface names, matching how the other interface-scoped
+  // resources in this provider report the ports they cover.
+  trustedInterfaces []string
 }
 
 // Arista EOS system logging configuration
