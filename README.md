@@ -113,6 +113,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | AWS EC2 instances             | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |
 | Cisco network devices         | `nd-ssh`                   | `mql shell nd-ssh admin@DEVICE_IP --password PASSWORD`                                                                                          |
 | Cisco Catalyst Center         | `ciscocatalyst`            | `mql shell ciscocatalyst --host HOST --user USER --password PASSWORD`                                                                           |
+| ClickHouse server             | `clickhousedb`             | `mql shell clickhousedb db.contoso.com --user default --ask-pass`                                                                               |
 | Cloudflare accounts           | `cloudflare`               | `mql shell cloudflare --token ACCESS_TOKEN`                                                                                                     |
 | Confluence users              | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | Container images              | `container`, `docker`      | `mql shell container ubuntu:latest`                                                                                                             |

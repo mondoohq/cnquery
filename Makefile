@@ -209,6 +209,7 @@ PROVIDERS := \
 	bicep \
 	cassandra \
 	claude \
+	clickhousedb \
 	cloudflare \
 	cloudformation \
 	databricks \
