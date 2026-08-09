@@ -161,6 +161,34 @@ func TestMacOSUptime(t *testing.T) {
 		LoadFifteenMinutes: float64(2.91),
 	}, duration)
 	assert.Equal(t, "192h13m0s", time.Duration(duration.Duration).String())
+
+	// When the minutes component is exactly zero, macOS prints "N hrs"
+	// instead of "N:00" — for one minute every hour the old regex failed
+	// and the uptime resource errored. Captured verbatim from a real scan.
+	data = "12:18  up 11 days, 16 hrs, 1 user, load averages: 7.12 6.59 4.92"
+	duration, err = uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, &uptime.UnixUptimeResult{
+		Duration:           (11*24 + 16) * int64(time.Hour),
+		Users:              1,
+		LoadOneMinute:      float64(7.12),
+		LoadFiveMinutes:    float64(6.59),
+		LoadFifteenMinutes: float64(4.92),
+	}, duration)
+	assert.Equal(t, "280h0m0s", time.Duration(duration.Duration).String())
+
+	// Singular form, one hour exactly.
+	data = "9:05  up 1 hr, 2 users, load averages: 1.10 0.90 0.80"
+	duration, err = uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, &uptime.UnixUptimeResult{
+		Duration:           int64(time.Hour),
+		Users:              2,
+		LoadOneMinute:      float64(1.10),
+		LoadFiveMinutes:    float64(0.90),
+		LoadFifteenMinutes: float64(0.80),
+	}, duration)
+	assert.Equal(t, "1h0m0s", time.Duration(duration.Duration).String())
 }
 
 func TestFreebsdUptime(t *testing.T) {
