@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/addressgroups"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -91,8 +93,10 @@ func initOpenstackNetworkAddressGroup(runtime *plugin.Runtime, args map[string]*
 			return args, g, nil
 		}
 	}
-	initSyntheticID("openstack.network.addressGroup", "id", args)
-	return args, nil, nil
+	// Reporting the miss matters more here than elsewhere: a blank group would
+	// answer containsPublicAddress with false, which is the false negative this
+	// resource exists to remove.
+	return nil, nil, fmt.Errorf("openstack.network.addressGroup with id %q not found", id)
 }
 
 // containsPublicAddress reports whether any member address opens a broad slice
