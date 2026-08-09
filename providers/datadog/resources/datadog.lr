@@ -20,6 +20,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/datadog/resources"
 // identityProviders lists the login methods available to members,
 // oauthClients the third-party applications holding standing access, and
 // orgConnections the other Datadog organizations this one shares data with.
+// The integration fields cover the standing credentials Datadog holds
+// against outside providers, spanning AWS, Google Cloud, Azure, Okta,
+// Cloudflare, Fastly and Confluent Cloud.
 datadog {
   // Organization the credentials authenticate against
   org() datadog.organization
@@ -57,6 +60,18 @@ datadog {
   ipAllowlistEnabled() bool
   // Configured AWS integrations (Datadog AWS account links)
   integrationAwsAccounts() []datadog.integration.aws
+  // Configured Google Cloud integrations
+  integrationGcpAccounts() []datadog.integration.gcp
+  // Configured Azure integrations
+  integrationAzureAccounts() []datadog.integration.azure
+  // Configured Okta integrations
+  integrationOktaAccounts() []datadog.integration.okta
+  // Configured Cloudflare integrations
+  integrationCloudflareAccounts() []datadog.integration.cloudflare
+  // Configured Fastly integrations
+  integrationFastlyAccounts() []datadog.integration.fastly
+  // Configured Confluent Cloud integrations
+  integrationConfluentAccounts() []datadog.integration.confluent
   // Datadog teams (groups of users)
   teams() []datadog.team
   // Sensitive Data Scanner groups (PII redaction rule containers)
@@ -1287,4 +1302,165 @@ datadog.orgConnection @defaults("id connectionTypes") {
   sinkOrgName string
   // Member who created the connection
   createdBy() datadog.user
+}
+
+// Google Cloud integration
+//
+// A Google Cloud service account Datadog impersonates to collect from a set
+// of projects, established through workload identity federation rather than
+// an exported key. `clientEmail` names the service account, and
+// `accessibleProjects` reports the projects it can currently reach, which is
+// the blast radius of the grant. `isCspmEnabled`,
+// `isSecurityCommandCenterEnabled`, `resourceCollectionEnabled` and
+// `isResourceChangeCollectionEnabled` record how much of the environment is
+// pulled in beyond metrics. `hostFilters`, `cloudRunRevisionFilters` and
+// `regionFilterConfigs` narrow what is collected.
+datadog.integration.gcp @defaults("clientEmail isCspmEnabled") {
+  // Identifier of the service account entry
+  id string
+  // Service account Datadog authenticates as
+  clientEmail string
+  // Projects the service account can currently reach
+  accessibleProjects []string
+  // Whether cloud security posture management is enabled
+  isCspmEnabled bool
+  // Whether Security Command Center findings are collected
+  isSecurityCommandCenterEnabled bool
+  // Whether resource collection is enabled
+  resourceCollectionEnabled bool
+  // Whether resource change collection is enabled
+  isResourceChangeCollectionEnabled bool
+  // Whether per-project quota is used for API calls
+  isPerProjectQuotaEnabled bool
+  // Whether the global location is included in collection
+  isGlobalLocationEnabled bool
+  // Whether hosts are muted while they are shutting down
+  automute bool
+  // Tags limiting which hosts are collected
+  hostFilters []string
+  // Tags limiting which Cloud Run revisions are collected
+  cloudRunRevisionFilters []string
+  // Regions collection is restricted to
+  regionFilterConfigs []string
+  // Tags applied to every metric from this account
+  accountTags []string
+}
+
+// Azure integration
+//
+// An Azure app registration Datadog authenticates with to collect from a
+// tenant. `tenantName` and `clientId` identify the tenant and the
+// application, and `secretlessAuthEnabled` records whether the link uses
+// workload identity federation instead of a client secret. `cspmEnabled`
+// and `resourceCollectionEnabled` show how far beyond metrics the collection
+// reaches. `errors` carries problems Datadog reported for the integration,
+// which is where a revoked or expired credential shows up. The client secret
+// itself is never exposed.
+datadog.integration.azure @defaults("tenantName clientId cspmEnabled") {
+  // Azure tenant the integration collects from
+  tenantName string
+  // Application (client) ID Datadog authenticates as
+  clientId string
+  // Whether the integration authenticates without a client secret
+  secretlessAuthEnabled bool
+  // Whether cloud security posture management is enabled
+  cspmEnabled bool
+  // Whether resource collection is enabled
+  resourceCollectionEnabled bool
+  // Whether metric collection is enabled
+  metricsEnabled bool
+  // Whether custom metrics are collected
+  customMetricsEnabled bool
+  // Whether usage metrics are collected
+  usageMetricsEnabled bool
+  // Whether hosts are muted while they are shutting down
+  automute bool
+  // Tags limiting which hosts are collected
+  hostFilters string
+  // Tags limiting which App Service Plans are collected
+  appServicePlanFilters string
+  // Tags limiting which Container Apps are collected
+  containerAppFilters string
+  // Problems Datadog reported for this integration
+  errors []string
+}
+
+// Okta integration
+//
+// An Okta organization Datadog collects logs and events from. `domain`
+// names the Okta org and `authMethod` records whether the link uses an API
+// token or OAuth client credentials, which determines what can be rotated
+// and how the access is scoped. The API token and client secret backing the
+// integration are never exposed.
+datadog.integration.okta @defaults("name domain authMethod") {
+  // Identifier of the Okta account entry
+  id string
+  // Name given to the integration
+  name string
+  // Okta organization the integration collects from
+  domain string
+  // Credential type the integration authenticates with
+  //
+  // Either an API token or OAuth client credentials.
+  authMethod string
+  // Client ID used when authenticating with OAuth client credentials
+  clientId string
+}
+
+// Cloudflare integration
+//
+// A Cloudflare account Datadog holds an API token for. `zones` lists the
+// zones the token is scoped to and `resources` the Cloudflare products
+// collected, so an integration with no zone restriction reaches everything
+// the token can see. The token itself is never exposed.
+datadog.integration.cloudflare @defaults("name") {
+  // Identifier of the Cloudflare account entry
+  id string
+  // Name given to the integration
+  name string
+  // Address associated with the Cloudflare account
+  email string
+  // Cloudflare products collected
+  resources []string
+  // Zones the integration is scoped to
+  zones []string
+}
+
+// Fastly integration
+//
+// A Fastly account Datadog holds an API key for, along with the services
+// collected under it. Each entry in `services` is a dict with `id` (the
+// Fastly service identifier) and `tags` (the tags applied to it). The API
+// key itself is never exposed.
+datadog.integration.fastly @defaults("name") {
+  // Identifier of the Fastly account entry
+  id string
+  // Name given to the integration
+  name string
+  // Fastly services collected under this account
+  //
+  // Each entry is a dict with `id`, the Fastly service identifier, and
+  // `tags`, the list of tags applied to that service.
+  services []dict
+}
+
+// Confluent Cloud integration
+//
+// A Confluent Cloud account Datadog holds an API key for, along with the
+// clusters and connectors collected under it. Each entry in `resources` is
+// a dict with `id` (the Confluent resource identifier), `resourceType` (the
+// kind of resource, such as kafka or connector), `enableCustomMetrics` and
+// `tags`. The API key and secret are never exposed.
+datadog.integration.confluent @defaults("id") {
+  // Identifier of the Confluent account entry
+  id string
+  // Tags applied to every metric from this account
+  tags []string
+  // Confluent resources collected under this account
+  //
+  // Each entry is a dict with `id` (the Confluent resource identifier),
+  // `resourceType` (the kind of resource, such as kafka or connector),
+  // `enableCustomMetrics` (whether custom metrics are collected for it),
+  // and `tags`.
+  resources []dict
 }

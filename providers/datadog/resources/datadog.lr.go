@@ -50,6 +50,12 @@ const (
 	ResourceDatadogOauthClientAuthorization  string = "datadog.oauthClient.authorization"
 	ResourceDatadogIdentityProvider          string = "datadog.identityProvider"
 	ResourceDatadogOrgConnection             string = "datadog.orgConnection"
+	ResourceDatadogIntegrationGcp            string = "datadog.integration.gcp"
+	ResourceDatadogIntegrationAzure          string = "datadog.integration.azure"
+	ResourceDatadogIntegrationOkta           string = "datadog.integration.okta"
+	ResourceDatadogIntegrationCloudflare     string = "datadog.integration.cloudflare"
+	ResourceDatadogIntegrationFastly         string = "datadog.integration.fastly"
+	ResourceDatadogIntegrationConfluent      string = "datadog.integration.confluent"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -192,6 +198,30 @@ func init() {
 			// to override args, implement: initDatadogOrgConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatadogOrgConnection,
 		},
+		"datadog.integration.gcp": {
+			// to override args, implement: initDatadogIntegrationGcp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIntegrationGcp,
+		},
+		"datadog.integration.azure": {
+			// to override args, implement: initDatadogIntegrationAzure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIntegrationAzure,
+		},
+		"datadog.integration.okta": {
+			// to override args, implement: initDatadogIntegrationOkta(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIntegrationOkta,
+		},
+		"datadog.integration.cloudflare": {
+			// to override args, implement: initDatadogIntegrationCloudflare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIntegrationCloudflare,
+		},
+		"datadog.integration.fastly": {
+			// to override args, implement: initDatadogIntegrationFastly(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIntegrationFastly,
+		},
+		"datadog.integration.confluent": {
+			// to override args, implement: initDatadogIntegrationConfluent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatadogIntegrationConfluent,
+		},
 	}
 }
 
@@ -310,6 +340,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"datadog.integrationAwsAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadog).GetIntegrationAwsAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.aws")))
+	},
+	"datadog.integrationGcpAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIntegrationGcpAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.gcp")))
+	},
+	"datadog.integrationAzureAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIntegrationAzureAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.azure")))
+	},
+	"datadog.integrationOktaAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIntegrationOktaAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.okta")))
+	},
+	"datadog.integrationCloudflareAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIntegrationCloudflareAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.cloudflare")))
+	},
+	"datadog.integrationFastlyAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIntegrationFastlyAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.fastly")))
+	},
+	"datadog.integrationConfluentAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadog).GetIntegrationConfluentAccounts()).ToDataRes(types.Array(types.Resource("datadog.integration.confluent")))
 	},
 	"datadog.teams": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadog).GetTeams()).ToDataRes(types.Array(types.Resource("datadog.team")))
@@ -1262,6 +1310,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.orgConnection.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogOrgConnection).GetCreatedBy()).ToDataRes(types.Resource("datadog.user"))
 	},
+	"datadog.integration.gcp.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetId()).ToDataRes(types.String)
+	},
+	"datadog.integration.gcp.clientEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetClientEmail()).ToDataRes(types.String)
+	},
+	"datadog.integration.gcp.accessibleProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetAccessibleProjects()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.gcp.isCspmEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetIsCspmEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.isSecurityCommandCenterEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetIsSecurityCommandCenterEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.resourceCollectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetResourceCollectionEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.isResourceChangeCollectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetIsResourceChangeCollectionEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.isPerProjectQuotaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetIsPerProjectQuotaEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.isGlobalLocationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetIsGlobalLocationEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.automute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetAutomute()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.gcp.hostFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetHostFilters()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.gcp.cloudRunRevisionFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetCloudRunRevisionFilters()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.gcp.regionFilterConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetRegionFilterConfigs()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.gcp.accountTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationGcp).GetAccountTags()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.azure.tenantName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetTenantName()).ToDataRes(types.String)
+	},
+	"datadog.integration.azure.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetClientId()).ToDataRes(types.String)
+	},
+	"datadog.integration.azure.secretlessAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetSecretlessAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.cspmEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetCspmEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.resourceCollectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetResourceCollectionEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.metricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.customMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetCustomMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.usageMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetUsageMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.automute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetAutomute()).ToDataRes(types.Bool)
+	},
+	"datadog.integration.azure.hostFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetHostFilters()).ToDataRes(types.String)
+	},
+	"datadog.integration.azure.appServicePlanFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetAppServicePlanFilters()).ToDataRes(types.String)
+	},
+	"datadog.integration.azure.containerAppFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetContainerAppFilters()).ToDataRes(types.String)
+	},
+	"datadog.integration.azure.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationAzure).GetErrors()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.okta.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationOkta).GetId()).ToDataRes(types.String)
+	},
+	"datadog.integration.okta.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationOkta).GetName()).ToDataRes(types.String)
+	},
+	"datadog.integration.okta.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationOkta).GetDomain()).ToDataRes(types.String)
+	},
+	"datadog.integration.okta.authMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationOkta).GetAuthMethod()).ToDataRes(types.String)
+	},
+	"datadog.integration.okta.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationOkta).GetClientId()).ToDataRes(types.String)
+	},
+	"datadog.integration.cloudflare.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationCloudflare).GetId()).ToDataRes(types.String)
+	},
+	"datadog.integration.cloudflare.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationCloudflare).GetName()).ToDataRes(types.String)
+	},
+	"datadog.integration.cloudflare.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationCloudflare).GetEmail()).ToDataRes(types.String)
+	},
+	"datadog.integration.cloudflare.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationCloudflare).GetResources()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.cloudflare.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationCloudflare).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.fastly.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationFastly).GetId()).ToDataRes(types.String)
+	},
+	"datadog.integration.fastly.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationFastly).GetName()).ToDataRes(types.String)
+	},
+	"datadog.integration.fastly.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationFastly).GetServices()).ToDataRes(types.Array(types.Dict))
+	},
+	"datadog.integration.confluent.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationConfluent).GetId()).ToDataRes(types.String)
+	},
+	"datadog.integration.confluent.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationConfluent).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"datadog.integration.confluent.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatadogIntegrationConfluent).GetResources()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1340,6 +1517,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.integrationAwsAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadog).IntegrationAwsAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integrationGcpAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IntegrationGcpAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integrationAzureAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IntegrationAzureAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integrationOktaAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IntegrationOktaAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integrationCloudflareAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IntegrationCloudflareAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integrationFastlyAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IntegrationFastlyAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integrationConfluentAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadog).IntegrationConfluentAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"datadog.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2742,6 +2943,202 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatadogOrgConnection).CreatedBy, ok = plugin.RawToTValue[*mqlDatadogUser](v.Value, v.Error)
 		return
 	},
+	"datadog.integration.gcp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.integration.gcp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.clientEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).ClientEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.accessibleProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).AccessibleProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.isCspmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).IsCspmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.isSecurityCommandCenterEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).IsSecurityCommandCenterEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.resourceCollectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).ResourceCollectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.isResourceChangeCollectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).IsResourceChangeCollectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.isPerProjectQuotaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).IsPerProjectQuotaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.isGlobalLocationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).IsGlobalLocationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.automute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).Automute, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.hostFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).HostFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.cloudRunRevisionFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).CloudRunRevisionFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.regionFilterConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).RegionFilterConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.gcp.accountTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationGcp).AccountTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.integration.azure.tenantName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).TenantName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.secretlessAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).SecretlessAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.cspmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).CspmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.resourceCollectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).ResourceCollectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.metricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).MetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.customMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).CustomMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.usageMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).UsageMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.automute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).Automute, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.hostFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).HostFilters, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.appServicePlanFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).AppServicePlanFilters, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.containerAppFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).ContainerAppFilters, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.azure.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationAzure).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.okta.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationOkta).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.integration.okta.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationOkta).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.okta.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationOkta).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.okta.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationOkta).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.okta.authMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationOkta).AuthMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.okta.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationOkta).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.cloudflare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationCloudflare).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.integration.cloudflare.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationCloudflare).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.cloudflare.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationCloudflare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.cloudflare.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationCloudflare).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.cloudflare.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationCloudflare).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.cloudflare.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationCloudflare).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.fastly.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationFastly).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.integration.fastly.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationFastly).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.fastly.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationFastly).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.fastly.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationFastly).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.confluent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationConfluent).__id, ok = v.Value.(string)
+		return
+	},
+	"datadog.integration.confluent.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationConfluent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.confluent.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationConfluent).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"datadog.integration.confluent.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatadogIntegrationConfluent).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2771,38 +3168,44 @@ type mqlDatadog struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDatadogInternal
-	Org                        plugin.TValue[*mqlDatadogOrganization]
-	Users                      plugin.TValue[[]any]
-	Roles                      plugin.TValue[[]any]
-	Permissions                plugin.TValue[[]any]
-	Monitors                   plugin.TValue[[]any]
-	Dashboards                 plugin.TValue[[]any]
-	SyntheticsTests            plugin.TValue[[]any]
-	Slos                       plugin.TValue[[]any]
-	LogIndexes                 plugin.TValue[[]any]
-	SecurityRules              plugin.TValue[[]any]
-	Downtimes                  plugin.TValue[[]any]
-	ApiKeys                    plugin.TValue[[]any]
-	ApplicationKeys            plugin.TValue[[]any]
-	IpAllowlistEntries         plugin.TValue[[]any]
-	IpAllowlistEnabled         plugin.TValue[bool]
-	IntegrationAwsAccounts     plugin.TValue[[]any]
-	Teams                      plugin.TValue[[]any]
-	SensitiveDataScannerGroups plugin.TValue[[]any]
-	SecurityFilters            plugin.TValue[[]any]
-	SecuritySuppressions       plugin.TValue[[]any]
-	ServiceAccounts            plugin.TValue[[]any]
-	LogsArchives               plugin.TValue[[]any]
-	RumApplications            plugin.TValue[[]any]
-	SyntheticsGlobalVariables  plugin.TValue[[]any]
-	SyntheticsPrivateLocations plugin.TValue[[]any]
-	AuthnMappings              plugin.TValue[[]any]
-	LogsPipelines              plugin.TValue[[]any]
-	LogsCustomDestinations     plugin.TValue[[]any]
-	LogsRestrictionQueries     plugin.TValue[[]any]
-	OauthClients               plugin.TValue[[]any]
-	IdentityProviders          plugin.TValue[[]any]
-	OrgConnections             plugin.TValue[[]any]
+	Org                           plugin.TValue[*mqlDatadogOrganization]
+	Users                         plugin.TValue[[]any]
+	Roles                         plugin.TValue[[]any]
+	Permissions                   plugin.TValue[[]any]
+	Monitors                      plugin.TValue[[]any]
+	Dashboards                    plugin.TValue[[]any]
+	SyntheticsTests               plugin.TValue[[]any]
+	Slos                          plugin.TValue[[]any]
+	LogIndexes                    plugin.TValue[[]any]
+	SecurityRules                 plugin.TValue[[]any]
+	Downtimes                     plugin.TValue[[]any]
+	ApiKeys                       plugin.TValue[[]any]
+	ApplicationKeys               plugin.TValue[[]any]
+	IpAllowlistEntries            plugin.TValue[[]any]
+	IpAllowlistEnabled            plugin.TValue[bool]
+	IntegrationAwsAccounts        plugin.TValue[[]any]
+	IntegrationGcpAccounts        plugin.TValue[[]any]
+	IntegrationAzureAccounts      plugin.TValue[[]any]
+	IntegrationOktaAccounts       plugin.TValue[[]any]
+	IntegrationCloudflareAccounts plugin.TValue[[]any]
+	IntegrationFastlyAccounts     plugin.TValue[[]any]
+	IntegrationConfluentAccounts  plugin.TValue[[]any]
+	Teams                         plugin.TValue[[]any]
+	SensitiveDataScannerGroups    plugin.TValue[[]any]
+	SecurityFilters               plugin.TValue[[]any]
+	SecuritySuppressions          plugin.TValue[[]any]
+	ServiceAccounts               plugin.TValue[[]any]
+	LogsArchives                  plugin.TValue[[]any]
+	RumApplications               plugin.TValue[[]any]
+	SyntheticsGlobalVariables     plugin.TValue[[]any]
+	SyntheticsPrivateLocations    plugin.TValue[[]any]
+	AuthnMappings                 plugin.TValue[[]any]
+	LogsPipelines                 plugin.TValue[[]any]
+	LogsCustomDestinations        plugin.TValue[[]any]
+	LogsRestrictionQueries        plugin.TValue[[]any]
+	OauthClients                  plugin.TValue[[]any]
+	IdentityProviders             plugin.TValue[[]any]
+	OrgConnections                plugin.TValue[[]any]
 }
 
 // createDatadog creates a new instance of this resource
@@ -3075,6 +3478,102 @@ func (c *mqlDatadog) GetIntegrationAwsAccounts() *plugin.TValue[[]any] {
 		}
 
 		return c.integrationAwsAccounts()
+	})
+}
+
+func (c *mqlDatadog) GetIntegrationGcpAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationGcpAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "integrationGcpAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationGcpAccounts()
+	})
+}
+
+func (c *mqlDatadog) GetIntegrationAzureAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationAzureAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "integrationAzureAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationAzureAccounts()
+	})
+}
+
+func (c *mqlDatadog) GetIntegrationOktaAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationOktaAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "integrationOktaAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationOktaAccounts()
+	})
+}
+
+func (c *mqlDatadog) GetIntegrationCloudflareAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationCloudflareAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "integrationCloudflareAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationCloudflareAccounts()
+	})
+}
+
+func (c *mqlDatadog) GetIntegrationFastlyAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationFastlyAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "integrationFastlyAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationFastlyAccounts()
+	})
+}
+
+func (c *mqlDatadog) GetIntegrationConfluentAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationConfluentAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("datadog", c.__id, "integrationConfluentAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationConfluentAccounts()
 	})
 }
 
@@ -6599,4 +7098,453 @@ func (c *mqlDatadogOrgConnection) GetCreatedBy() *plugin.TValue[*mqlDatadogUser]
 
 		return c.createdBy()
 	})
+}
+
+// mqlDatadogIntegrationGcp for the datadog.integration.gcp resource
+type mqlDatadogIntegrationGcp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIntegrationGcpInternal it will be used here
+	Id                                plugin.TValue[string]
+	ClientEmail                       plugin.TValue[string]
+	AccessibleProjects                plugin.TValue[[]any]
+	IsCspmEnabled                     plugin.TValue[bool]
+	IsSecurityCommandCenterEnabled    plugin.TValue[bool]
+	ResourceCollectionEnabled         plugin.TValue[bool]
+	IsResourceChangeCollectionEnabled plugin.TValue[bool]
+	IsPerProjectQuotaEnabled          plugin.TValue[bool]
+	IsGlobalLocationEnabled           plugin.TValue[bool]
+	Automute                          plugin.TValue[bool]
+	HostFilters                       plugin.TValue[[]any]
+	CloudRunRevisionFilters           plugin.TValue[[]any]
+	RegionFilterConfigs               plugin.TValue[[]any]
+	AccountTags                       plugin.TValue[[]any]
+}
+
+// createDatadogIntegrationGcp creates a new instance of this resource
+func createDatadogIntegrationGcp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIntegrationGcp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.integration.gcp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIntegrationGcp) MqlName() string {
+	return "datadog.integration.gcp"
+}
+
+func (c *mqlDatadogIntegrationGcp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIntegrationGcp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogIntegrationGcp) GetClientEmail() *plugin.TValue[string] {
+	return &c.ClientEmail
+}
+
+func (c *mqlDatadogIntegrationGcp) GetAccessibleProjects() *plugin.TValue[[]any] {
+	return &c.AccessibleProjects
+}
+
+func (c *mqlDatadogIntegrationGcp) GetIsCspmEnabled() *plugin.TValue[bool] {
+	return &c.IsCspmEnabled
+}
+
+func (c *mqlDatadogIntegrationGcp) GetIsSecurityCommandCenterEnabled() *plugin.TValue[bool] {
+	return &c.IsSecurityCommandCenterEnabled
+}
+
+func (c *mqlDatadogIntegrationGcp) GetResourceCollectionEnabled() *plugin.TValue[bool] {
+	return &c.ResourceCollectionEnabled
+}
+
+func (c *mqlDatadogIntegrationGcp) GetIsResourceChangeCollectionEnabled() *plugin.TValue[bool] {
+	return &c.IsResourceChangeCollectionEnabled
+}
+
+func (c *mqlDatadogIntegrationGcp) GetIsPerProjectQuotaEnabled() *plugin.TValue[bool] {
+	return &c.IsPerProjectQuotaEnabled
+}
+
+func (c *mqlDatadogIntegrationGcp) GetIsGlobalLocationEnabled() *plugin.TValue[bool] {
+	return &c.IsGlobalLocationEnabled
+}
+
+func (c *mqlDatadogIntegrationGcp) GetAutomute() *plugin.TValue[bool] {
+	return &c.Automute
+}
+
+func (c *mqlDatadogIntegrationGcp) GetHostFilters() *plugin.TValue[[]any] {
+	return &c.HostFilters
+}
+
+func (c *mqlDatadogIntegrationGcp) GetCloudRunRevisionFilters() *plugin.TValue[[]any] {
+	return &c.CloudRunRevisionFilters
+}
+
+func (c *mqlDatadogIntegrationGcp) GetRegionFilterConfigs() *plugin.TValue[[]any] {
+	return &c.RegionFilterConfigs
+}
+
+func (c *mqlDatadogIntegrationGcp) GetAccountTags() *plugin.TValue[[]any] {
+	return &c.AccountTags
+}
+
+// mqlDatadogIntegrationAzure for the datadog.integration.azure resource
+type mqlDatadogIntegrationAzure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIntegrationAzureInternal it will be used here
+	TenantName                plugin.TValue[string]
+	ClientId                  plugin.TValue[string]
+	SecretlessAuthEnabled     plugin.TValue[bool]
+	CspmEnabled               plugin.TValue[bool]
+	ResourceCollectionEnabled plugin.TValue[bool]
+	MetricsEnabled            plugin.TValue[bool]
+	CustomMetricsEnabled      plugin.TValue[bool]
+	UsageMetricsEnabled       plugin.TValue[bool]
+	Automute                  plugin.TValue[bool]
+	HostFilters               plugin.TValue[string]
+	AppServicePlanFilters     plugin.TValue[string]
+	ContainerAppFilters       plugin.TValue[string]
+	Errors                    plugin.TValue[[]any]
+}
+
+// createDatadogIntegrationAzure creates a new instance of this resource
+func createDatadogIntegrationAzure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIntegrationAzure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.integration.azure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIntegrationAzure) MqlName() string {
+	return "datadog.integration.azure"
+}
+
+func (c *mqlDatadogIntegrationAzure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIntegrationAzure) GetTenantName() *plugin.TValue[string] {
+	return &c.TenantName
+}
+
+func (c *mqlDatadogIntegrationAzure) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlDatadogIntegrationAzure) GetSecretlessAuthEnabled() *plugin.TValue[bool] {
+	return &c.SecretlessAuthEnabled
+}
+
+func (c *mqlDatadogIntegrationAzure) GetCspmEnabled() *plugin.TValue[bool] {
+	return &c.CspmEnabled
+}
+
+func (c *mqlDatadogIntegrationAzure) GetResourceCollectionEnabled() *plugin.TValue[bool] {
+	return &c.ResourceCollectionEnabled
+}
+
+func (c *mqlDatadogIntegrationAzure) GetMetricsEnabled() *plugin.TValue[bool] {
+	return &c.MetricsEnabled
+}
+
+func (c *mqlDatadogIntegrationAzure) GetCustomMetricsEnabled() *plugin.TValue[bool] {
+	return &c.CustomMetricsEnabled
+}
+
+func (c *mqlDatadogIntegrationAzure) GetUsageMetricsEnabled() *plugin.TValue[bool] {
+	return &c.UsageMetricsEnabled
+}
+
+func (c *mqlDatadogIntegrationAzure) GetAutomute() *plugin.TValue[bool] {
+	return &c.Automute
+}
+
+func (c *mqlDatadogIntegrationAzure) GetHostFilters() *plugin.TValue[string] {
+	return &c.HostFilters
+}
+
+func (c *mqlDatadogIntegrationAzure) GetAppServicePlanFilters() *plugin.TValue[string] {
+	return &c.AppServicePlanFilters
+}
+
+func (c *mqlDatadogIntegrationAzure) GetContainerAppFilters() *plugin.TValue[string] {
+	return &c.ContainerAppFilters
+}
+
+func (c *mqlDatadogIntegrationAzure) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+// mqlDatadogIntegrationOkta for the datadog.integration.okta resource
+type mqlDatadogIntegrationOkta struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIntegrationOktaInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Domain     plugin.TValue[string]
+	AuthMethod plugin.TValue[string]
+	ClientId   plugin.TValue[string]
+}
+
+// createDatadogIntegrationOkta creates a new instance of this resource
+func createDatadogIntegrationOkta(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIntegrationOkta{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.integration.okta", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIntegrationOkta) MqlName() string {
+	return "datadog.integration.okta"
+}
+
+func (c *mqlDatadogIntegrationOkta) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIntegrationOkta) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogIntegrationOkta) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatadogIntegrationOkta) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlDatadogIntegrationOkta) GetAuthMethod() *plugin.TValue[string] {
+	return &c.AuthMethod
+}
+
+func (c *mqlDatadogIntegrationOkta) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+// mqlDatadogIntegrationCloudflare for the datadog.integration.cloudflare resource
+type mqlDatadogIntegrationCloudflare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIntegrationCloudflareInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Email     plugin.TValue[string]
+	Resources plugin.TValue[[]any]
+	Zones     plugin.TValue[[]any]
+}
+
+// createDatadogIntegrationCloudflare creates a new instance of this resource
+func createDatadogIntegrationCloudflare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIntegrationCloudflare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.integration.cloudflare", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIntegrationCloudflare) MqlName() string {
+	return "datadog.integration.cloudflare"
+}
+
+func (c *mqlDatadogIntegrationCloudflare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIntegrationCloudflare) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogIntegrationCloudflare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatadogIntegrationCloudflare) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlDatadogIntegrationCloudflare) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
+func (c *mqlDatadogIntegrationCloudflare) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+// mqlDatadogIntegrationFastly for the datadog.integration.fastly resource
+type mqlDatadogIntegrationFastly struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIntegrationFastlyInternal it will be used here
+	Id       plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Services plugin.TValue[[]any]
+}
+
+// createDatadogIntegrationFastly creates a new instance of this resource
+func createDatadogIntegrationFastly(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIntegrationFastly{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.integration.fastly", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIntegrationFastly) MqlName() string {
+	return "datadog.integration.fastly"
+}
+
+func (c *mqlDatadogIntegrationFastly) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIntegrationFastly) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogIntegrationFastly) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatadogIntegrationFastly) GetServices() *plugin.TValue[[]any] {
+	return &c.Services
+}
+
+// mqlDatadogIntegrationConfluent for the datadog.integration.confluent resource
+type mqlDatadogIntegrationConfluent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatadogIntegrationConfluentInternal it will be used here
+	Id        plugin.TValue[string]
+	Tags      plugin.TValue[[]any]
+	Resources plugin.TValue[[]any]
+}
+
+// createDatadogIntegrationConfluent creates a new instance of this resource
+func createDatadogIntegrationConfluent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatadogIntegrationConfluent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("datadog.integration.confluent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatadogIntegrationConfluent) MqlName() string {
+	return "datadog.integration.confluent"
+}
+
+func (c *mqlDatadogIntegrationConfluent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatadogIntegrationConfluent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatadogIntegrationConfluent) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDatadogIntegrationConfluent) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
 }
