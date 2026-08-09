@@ -512,6 +512,18 @@ gitlab.group @defaults("name visibility webURL") {
   packages() []gitlab.project.package
   // Parent group, or null when this is a top-level group
   parentGroup() gitlab.group
+  // Personal access tokens held by enterprise users of the group
+  enterpriseAccessTokens() []gitlab.group.enterpriseAccessToken
+  // SSH keys held by enterprise users of the group
+  enterpriseSshKeys() []gitlab.group.enterpriseSshKey
+  // Service accounts created at group scope
+  serviceAccounts() []gitlab.group.serviceAccount
+  // Certificate authorities trusted for SSH access to the group
+  sshCertificates() []gitlab.group.sshCertificate
+  // Identity provider links for group members
+  scimIdentities() []gitlab.group.scimIdentity
+  // Requests to join the group
+  accessRequests() []gitlab.group.accessRequest
   // Webhooks registered at the group level
   webhooks() []gitlab.group.webhook
   // CI/CD variables defined at the group level (inherited by every project in the group)
@@ -856,6 +868,18 @@ gitlab.project @defaults("fullName visibility webURL") {
   protectedEnvironments() []gitlab.project.protectedEnvironment
   // Project this project was forked from, or null when it is not a fork
   forkedFromProject() gitlab.project
+  // Trigger tokens that let external callers start pipelines
+  pipelineTriggers() []gitlab.project.pipelineTrigger
+  // Recurring pipeline runs and the variables they inject
+  pipelineSchedules() []gitlab.project.pipelineSchedule
+  // Certificates and keystores mounted into CI jobs
+  secureFiles() []gitlab.project.secureFile
+  // Kubernetes clusters connected to the project
+  clusterAgents() []gitlab.project.clusterAgent
+  // Push mirrors replicating the repository to external Git hosts
+  remoteMirrors() []gitlab.project.remoteMirror
+  // Requests to join the project
+  accessRequests() []gitlab.project.accessRequest
 }
 
 // GitLab project integration
@@ -2366,4 +2390,399 @@ private gitlab.project.packageProtectionRule @defaults("packageNamePattern packa
   // One of `developer`, `maintainer`, `owner`, or `admin`; empty when
   // delete is unprotected.
   minimumAccessLevelForDelete string
+}
+
+// GitLab pipeline trigger token
+//
+// Standing credential that lets an external caller start a pipeline on
+// the project over the API. Trigger tokens carry no expiration, so a
+// token created for a one-off integration keeps working indefinitely
+// unless it is deleted. `lastUsedAt` distinguishes tokens still in
+// service from dormant ones that should be removed, `owner` names the
+// user whose permissions the triggered pipeline inherits, and
+// `createdAt` shows how long the credential has been outstanding. The
+// secret value itself is never exposed.
+private gitlab.project.pipelineTrigger @defaults("id description lastUsedAt") {
+  // Trigger token ID
+  id int
+  // Human-readable label given to the trigger
+  description string
+  // Time the trigger token was created
+  createdAt time
+  // Time the trigger token was last modified
+  updatedAt time
+  // Time the trigger token last started a pipeline
+  //
+  // Null when the token has never been used, which marks it as a
+  // dormant credential.
+  lastUsedAt time
+  // User whose permissions pipelines started by this token run with
+  owner() gitlab.user
+}
+
+// GitLab pipeline schedule
+//
+// Recurring pipeline run configured on the project, executing `ref` on
+// the `cron` cadence with the permissions of `owner`. Schedules persist
+// independently of the repository contents, so one created by an
+// attacker keeps running after the offending commit is reverted.
+// `variables` lists the names and types of the CI/CD variables the
+// schedule injects into each run without revealing their values, and
+// the `lastPipeline` fields report the outcome of the most recent
+// execution.
+private gitlab.project.pipelineSchedule @defaults("id description cron active") {
+  // Pipeline schedule ID
+  id int
+  // Human-readable label given to the schedule
+  description string
+  // Branch or tag the scheduled pipeline runs against
+  ref string
+  // Cron expression controlling the run cadence
+  cron string
+  // Time zone the cron expression is evaluated in
+  cronTimezone string
+  // Next time the schedule is due to run
+  nextRunAt time
+  // Whether the schedule is currently active
+  active bool
+  // Time the schedule was created
+  createdAt time
+  // Time the schedule was last modified
+  updatedAt time
+  // User whose permissions the scheduled pipeline runs with
+  owner() gitlab.user
+  // CI/CD variables the schedule injects, keyed by variable name
+  //
+  // The value of each entry is the variable type, either `env_var` or
+  // `file`. Variable values are deliberately omitted because GitLab
+  // returns them in clear text. GitLab discloses this list only to the
+  // schedule owner and to users with the Maintainer or Owner role, so
+  // it is empty for tokens below that threshold.
+  variables() map[string]string
+  // ID of the most recent pipeline started by this schedule
+  //
+  // Zero when the schedule has never run.
+  lastPipelineId() int
+  // Commit SHA the most recent scheduled pipeline ran against
+  lastPipelineSha() string
+  // Branch or tag the most recent scheduled pipeline ran against
+  lastPipelineRef() string
+  // Status of the most recent scheduled pipeline
+  //
+  // One of `created`, `waiting_for_resource`, `preparing`, `pending`,
+  // `running`, `success`, `failed`, `canceled`, `skipped`, `manual`, or
+  // `scheduled`. Empty when the schedule has never run.
+  lastPipelineStatus() string
+}
+
+// GitLab project secure file
+//
+// Certificate, keystore, or provisioning profile stored in the project
+// and mounted into CI jobs at run time. Secure files hold signing
+// material that outlives any single pipeline, so `expiresAt` and the
+// certificate fields matter for spotting credentials that are about to
+// lapse or that were issued by an unexpected authority. `checksum` and
+// `checksumAlgorithm` pin the exact bytes GitLab is serving to jobs.
+private gitlab.project.secureFile @defaults("name expiresAt") {
+  // Secure file ID
+  id int
+  // File name as referenced by CI jobs
+  name string
+  // Checksum of the stored file
+  checksum string
+  // Algorithm used to compute the checksum
+  checksumAlgorithm string
+  // Time the file was uploaded
+  createdAt time
+  // Time the file expires
+  expiresAt time
+  // Serial number of the certificate, when the file is a certificate
+  certificateId string
+  // Expiration recorded inside the certificate itself
+  certificateExpiresAt time
+  // Authority that issued the certificate
+  //
+  // Keys are the distinguished-name components GitLab parses out: `CN`,
+  // `O`, `OU`, and `C`.
+  issuer dict
+  // Entity the certificate was issued to
+  //
+  // Keys are the distinguished-name components GitLab parses out: `CN`,
+  // `O`, `OU`, `C`, and `UID`.
+  subject dict
+}
+
+// GitLab agent for Kubernetes
+//
+// Registration that connects a Kubernetes cluster to the project,
+// letting CI jobs and GitOps workflows act against that cluster. An
+// agent is a path from source control into a running cluster, so
+// `configProject` (the project holding the agent configuration, which
+// decides which other projects may use the agent) and `tokens` (the
+// credentials the in-cluster agent authenticates with) are the fields
+// that establish who can reach the cluster.
+private gitlab.project.clusterAgent @defaults("id name") {
+  // Agent ID
+  id int
+  // Agent name
+  name string
+  // Time the agent was registered
+  createdAt time
+  // User who registered the agent
+  createdBy() gitlab.user
+  // Project holding the agent configuration
+  configProject() gitlab.project
+  // Credentials the in-cluster agent authenticates with
+  tokens() []gitlab.project.clusterAgent.token
+}
+
+// GitLab agent for Kubernetes token
+//
+// Credential an in-cluster agent presents to authenticate back to
+// GitLab. Tokens remain listed after revocation, so `status` separates
+// live credentials from retired ones, and `lastUsedAt` identifies
+// active tokens that were provisioned but never connected. The secret
+// value itself is never exposed.
+private gitlab.project.clusterAgent.token @defaults("id name status lastUsedAt") {
+  // Agent token ID
+  id int
+  // Token name
+  name string
+  // Human-readable note recorded with the token
+  description string
+  // Whether the token is live
+  //
+  // Either `active` or `revoked`.
+  status string
+  // Time the token was created
+  createdAt time
+  // User who created the token
+  createdBy() gitlab.user
+  // Time the token last authenticated to GitLab
+  //
+  // Null when the token has never been used.
+  lastUsedAt time
+}
+
+// GitLab project push mirror
+//
+// Continuous replication of the project's repository to an external Git
+// host. A push mirror moves source code out of GitLab on every update,
+// so `url` records the destination the code is being sent to and
+// `authMethod` how the mirror authenticates there.
+// `onlyProtectedBranches` narrows what is replicated, and
+// `keepDivergentRefs` decides whether the remote keeps refs that have
+// diverged locally. GitLab redacts any password embedded in `url`.
+private gitlab.project.remoteMirror @defaults("url enabled updateStatus") {
+  // Mirror ID
+  id int
+  // Whether the mirror is active
+  enabled bool
+  // Destination repository the code is pushed to
+  //
+  // Any password embedded in the URL is redacted by GitLab before the
+  // value is returned.
+  url string
+  // How the mirror authenticates to the destination
+  //
+  // Either `password` or `ssh_public_key`.
+  authMethod string
+  // Whether replication is limited to protected branches
+  onlyProtectedBranches bool
+  // Whether refs that have diverged on the destination are preserved
+  keepDivergentRefs bool
+  // Regular expression selecting which branches are replicated
+  mirrorBranchRegex string
+  // Outcome of the most recent replication attempt
+  //
+  // One of `none`, `scheduled`, `started`, `finished`, or `failed`.
+  updateStatus string
+  // Error reported by the most recent failed replication attempt
+  lastError string
+  // Time replication was last attempted
+  lastUpdateAt time
+  // Time replication last completed successfully
+  lastSuccessfulUpdateAt time
+}
+
+// GitLab enterprise user access token
+//
+// Personal access token belonging to an enterprise user of the group.
+// These tokens are created by individuals rather than by the group, so
+// they sit outside the group's own token inventory while carrying the
+// user's full permissions. `scopes` shows how much of the API the token
+// reaches, `expiresAt` whether it ever lapses, and `lastUsedAt` whether
+// it is still in service. The secret value itself is never exposed.
+private gitlab.group.enterpriseAccessToken @defaults("name active expiresAt lastUsedAt") {
+  // Token ID
+  id int
+  // Token name
+  name string
+  // Human-readable note recorded with the token
+  description string
+  // API access the token grants
+  //
+  // One or more of `api`, `read_api`, `read_user`, `read_repository`,
+  // `write_repository`, `read_registry`, `write_registry`,
+  // `create_runner`, `manage_runner`, `ai_features`, `k8s_proxy`,
+  // `self_rotate`, `read_service_ping`, and `sudo`.
+  scopes []string
+  // Whether the token can currently authenticate
+  active bool
+  // Whether the token has been revoked
+  revoked bool
+  // Time the token was created
+  createdAt time
+  // Time the token expires
+  //
+  // Null when the token never expires.
+  expiresAt time
+  // Time the token was last used to authenticate
+  //
+  // Null when the token has never been used.
+  lastUsedAt time
+  // User the token authenticates as
+  user() gitlab.user
+}
+
+// GitLab enterprise user SSH key
+//
+// SSH key belonging to an enterprise user of the group, usable for Git
+// access to every project the user can reach. `expiresAt` and
+// `lastUsedAt` separate keys still in service from long-forgotten ones,
+// and `usageType` records whether the key authenticates, signs, or both.
+private gitlab.group.enterpriseSshKey @defaults("title expiresAt lastUsedAt") {
+  // Key ID
+  id int
+  // Key title
+  title string
+  // Time the key was added
+  createdAt time
+  // Time the key expires
+  //
+  // Null when the key never expires.
+  expiresAt time
+  // Time the key was last used
+  //
+  // Null when the key has never been used.
+  lastUsedAt time
+  // What the key may be used for
+  //
+  // One of `auth`, `signing`, or `auth_and_signing`.
+  usageType string
+  // User the key belongs to
+  user() gitlab.user
+}
+
+// GitLab group service account
+//
+// Non-human identity created at group scope to run automation. Service
+// accounts hold group membership like any other user but have no owner
+// to notice a compromise, so `accessTokens` is the field that matters:
+// it lists the credentials the account authenticates with, their scopes,
+// and whether they expire.
+private gitlab.group.serviceAccount @defaults("username name") {
+  // Service account user ID
+  id int
+  // Display name
+  name string
+  // Account username
+  username string
+  // Email address recorded for the account
+  email string
+  // Access tokens issued to the service account
+  accessTokens() []gitlab.group.enterpriseAccessToken
+}
+
+// GitLab group SSH certificate authority
+//
+// Public key of a certificate authority the group trusts to authenticate
+// Git access. Anyone able to sign with the matching private key can
+// reach the group's repositories without registering an individual SSH
+// key, which makes the set of trusted authorities worth reviewing.
+private gitlab.group.sshCertificate @defaults("title createdAt") {
+  // Certificate authority ID
+  id int
+  // Certificate authority title
+  title string
+  // Public key of the certificate authority
+  key string
+  // Time the certificate authority was added
+  createdAt time
+}
+
+// GitLab group SCIM identity
+//
+// Link between a group member and the identity provider account that
+// provisioned them. A member with no SCIM identity was created outside
+// the identity provider and survives deprovisioning there, so comparing
+// this list against the group's members finds accounts that offboarding
+// will not reach. `active` reports whether the provider still considers
+// the identity live.
+private gitlab.group.scimIdentity @defaults("externalUid active") {
+  // Identifier the identity provider knows the user by
+  externalUid string
+  // Whether the identity provider still considers the identity active
+  active bool
+  // Group member the identity is linked to
+  user() gitlab.user
+}
+
+// GitLab group access request
+//
+// Pending or resolved request to join the group. Requests sit in the
+// queue until an owner acts on them, so `requestedAt` combined with a
+// `state` of `pending` finds access decisions nobody has made.
+// `accessLevel` is the level the requester asked for.
+private gitlab.group.accessRequest @defaults("username state requestedAt") {
+  // User ID of the requester
+  id int
+  // Username of the requester
+  username string
+  // Display name of the requester
+  name string
+  // Where the request stands
+  //
+  // One of `pending`, `approved`, or `denied`.
+  state string
+  // Time the requesting account was created
+  createdAt time
+  // Time access was requested
+  requestedAt time
+  // Access level requested
+  //
+  // 10 Guest, 15 Planner, 20 Reporter, 30 Developer, 40 Maintainer, or
+  // 50 Owner.
+  accessLevel int
+  // User making the request
+  user() gitlab.user
+}
+
+// GitLab project access request
+//
+// Pending or resolved request to join the project, with the same
+// meaning as its group counterpart: a `state` of `pending` alongside an
+// old `requestedAt` marks an access decision nobody has made.
+private gitlab.project.accessRequest @defaults("username state requestedAt") {
+  // User ID of the requester
+  id int
+  // Username of the requester
+  username string
+  // Display name of the requester
+  name string
+  // Where the request stands
+  //
+  // One of `pending`, `approved`, or `denied`.
+  state string
+  // Time the requesting account was created
+  createdAt time
+  // Time access was requested
+  requestedAt time
+  // Access level requested
+  //
+  // 10 Guest, 15 Planner, 20 Reporter, 30 Developer, 40 Maintainer, or
+  // 50 Owner.
+  accessLevel int
+  // User making the request
+  user() gitlab.user
 }
