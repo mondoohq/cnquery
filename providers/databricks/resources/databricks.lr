@@ -76,6 +76,26 @@ databricks {
   jobs() []databricks.job
   // Delta Live Tables pipelines defined in the workspace
   pipelines() []databricks.pipeline
+  // Git folders checked out into the workspace
+  repos() []databricks.repo
+  // Git provider credentials stored in the workspace
+  gitCredentials() []databricks.gitCredential
+  // Artifact allowlists governing what shared-access clusters may load
+  artifactAllowlists() []databricks.artifactAllowlist
+  // Instance pools backing the workspace's compute
+  instancePools() []databricks.instancePool
+  // Log delivery configurations shipping audit and billable-usage logs out of the account
+  logDeliveryConfigurations() []databricks.logDelivery
+  // Storage configurations log delivery and workspaces write to
+  storageConfigurations() []databricks.storageConfiguration
+  // Cross-account credential configurations the account assumes
+  credentialConfigurations() []databricks.credentialConfiguration
+  // Account-level OIDC federation policies
+  federationPolicies() []databricks.federationPolicy
+  // OAuth app integrations registered in the account
+  appIntegrations() []databricks.appIntegration
+  // Serverless egress network policies in the account
+  networkPolicies() []databricks.networkPolicy
 }
 
 // Databricks workspace
@@ -123,6 +143,8 @@ databricks.workspace @defaults("name workspaceId cloud") {
   managedServicesCustomerManagedKey() databricks.customerManagedKey
   // Customer-managed key protecting workspace storage, null when using Databricks-managed keys
   storageCustomerManagedKey() databricks.customerManagedKey
+  // Principals granted access to the workspace, and at what level
+  permissionAssignments() []databricks.workspaceAssignment
 }
 
 // Databricks account user
@@ -199,6 +221,31 @@ databricks.servicePrincipal @defaults("displayName applicationId active") {
   roles []string
   // Groups the service principal belongs to
   groups() []databricks.group
+  // OAuth secrets issued to the service principal
+  secrets() []databricks.servicePrincipal.secret
+  // OIDC federation policies letting external workloads authenticate as this service principal
+  federationPolicies() []databricks.federationPolicy
+}
+
+// OAuth secret of a service principal
+//
+// A client secret issued to an account service principal, keyed by its secret
+// id. The secret value is returned only at creation and is never readable
+// afterwards, so what is auditable is its age and lifecycle: when it was
+// created, whether it carries an expiry, and whether it is still active. A
+// service principal holding an old secret with no expiry is a standing
+// credential for whatever that principal can reach.
+private databricks.servicePrincipal.secret @defaults("id status expireTime") {
+  // Secret id
+  id string
+  // Lifecycle status of the secret, such as ACTIVE
+  status string
+  // When the secret was created
+  createTime time
+  // When the secret expires, null when the secret does not expire
+  expireTime time
+  // When the secret was last updated
+  updateTime time
 }
 
 // Unity Catalog metastore
@@ -478,6 +525,22 @@ databricks.cluster @defaults("clusterName dataSecurityMode state") {
   policy() databricks.clusterPolicy
   // AWS instance profile the cluster nodes assume
   instanceProfile() databricks.instanceProfile
+  // Instance pool the cluster draws its nodes from
+  instancePool() databricks.instancePool
+  // Whether the cluster's current settings satisfy the policy it was created against
+  //
+  // Null when no policy is attached, since there is nothing to comply with.
+  // A cluster can drift out of compliance after the policy is tightened, so
+  // this reports the live comparison rather than the state at creation. Pair
+  // it with a policy check, as `policy != null && policyCompliant`, because a
+  // null on an unpoliced cluster would otherwise read as a pass.
+  policyCompliant() bool
+  // Settings that violate the attached policy, keyed by setting path
+  //
+  // Each key names a cluster setting the policy rejects, such as
+  // `spark_version` or `num_workers`, and its value describes the violation.
+  // Empty on a compliant cluster and null when no policy is attached.
+  policyViolations() map[string]string
   // Workspace access control list of the cluster
   permissions() []databricks.permission
 }
@@ -1437,6 +1500,17 @@ databricks.job @defaults("name runAs format") {
   tasks() []databricks.job.task
   // Reusable compute definitions shared by the job's tasks
   jobClusters() []databricks.clusterSpec
+  // Whether the job's compute satisfies the policies its job clusters are created against
+  //
+  // A job drifts out of compliance when a policy is tightened after the job
+  // was defined, so this reports the live comparison. True for a job whose
+  // clusters reference no policy, since there is nothing to violate.
+  policyCompliant() bool
+  // Settings that violate the policies the job's clusters are created against
+  //
+  // Each key names a cluster setting the policy rejects and its value
+  // describes the violation. Empty on a compliant job.
+  policyViolations() map[string]string
   // Workspace access control list of the job
   permissions() []databricks.permission
 }
@@ -1578,4 +1652,409 @@ databricks.pipeline @defaults("name state runAs") {
   clusters() []databricks.clusterSpec
   // Workspace access control list of the pipeline
   permissions() []databricks.permission
+}
+
+// Git folder in the workspace
+//
+// A Git repository checked out into the workspace, keyed by its numeric id.
+// Git folders are how external source enters the workspace, so auditing them
+// surfaces the remote URL and hosting provider, the branch and commit the
+// checkout currently sits on, the workspace path the code is mounted at, the
+// sparse-checkout patterns limiting what is pulled, and the access control
+// list governing who can change any of it. Select a folder by path, for
+// example `databricks.repos.where(path == "/Repos/prod/etl")`.
+databricks.repo @defaults("path url branch") {
+  // Numeric identifier of the Git folder
+  id int
+  // Workspace path the repository is checked out at
+  path string
+  // Remote URL the repository is cloned from
+  url string
+  // Git hosting provider, such as gitHub, gitLab, bitbucketCloud, or azureDevOpsServices
+  provider string
+  // Branch the checkout tracks, empty when pinned to a tag or commit
+  branch string
+  // Commit the checkout currently sits on
+  headCommitId string
+  // Directory patterns limiting what the checkout pulls
+  //
+  // Empty when the whole repository is checked out. A sparse checkout narrows
+  // what reaches the workspace but does not restrict what a user with write
+  // access can add later.
+  sparseCheckoutPatterns []string
+  // Workspace access control list of the Git folder
+  permissions() []databricks.permission
+}
+
+// Git provider credential
+//
+// A credential the workspace stores to authenticate against a Git hosting
+// provider, keyed by its numeric id. These credentials let jobs and Git
+// folders reach private repositories, so auditing them surfaces which
+// providers the workspace can authenticate to and under which account. The
+// token itself is write-only in the API and is never returned. Select a
+// credential by provider, for example
+// `databricks.gitCredentials.where(gitProvider == "gitHub")`.
+databricks.gitCredential @defaults("gitProvider gitUsername") {
+  // Numeric identifier of the credential
+  id int
+  // Credential name, empty when none is set
+  name string
+  // Git hosting provider the credential authenticates to, such as gitHub, gitLab, or bitbucketCloud
+  gitProvider string
+  // Account name the credential authenticates as
+  gitUsername string
+  // Email address recorded on commits made with the credential
+  gitEmail string
+  // Whether the credential is used by default for its provider
+  isDefaultForProvider bool
+}
+
+// Unity Catalog artifact allowlist
+//
+// The set of artifacts a metastore permits on compute running in a shared
+// access mode, keyed by artifact type. Shared-access clusters refuse init
+// scripts and libraries that are not allowlisted, which is what keeps one
+// user's code from running in another user's session, so an empty allowlist
+// for a type means nothing of that type may load. Select an allowlist by type,
+// for example
+// `databricks.artifactAllowlists.where(artifactType == "INIT_SCRIPT")`.
+databricks.artifactAllowlist @defaults("artifactType") {
+  // Kind of artifact the allowlist governs
+  //
+  // One of INIT_SCRIPT, LIBRARY_JAR, or LIBRARY_MAVEN.
+  artifactType string
+  // Permitted artifacts, keyed by the artifact path or coordinate
+  //
+  // Each key is a storage path, volume path, or Maven coordinate, and its
+  // value is how the key is compared: PREFIX_MATCH allows everything beneath
+  // the path. An empty map means no artifact of this type may load on
+  // shared-access compute.
+  matchers map[string]string
+  // Id of the metastore the allowlist belongs to
+  metastoreId string
+  // When the allowlist was last set
+  createdAt time
+  // User who last set the allowlist
+  createdBy string
+}
+
+// Databricks instance pool
+//
+// A pool of idle cloud instances that clusters draw nodes from, keyed by its
+// pool id. A pool fixes node-level settings for every cluster that attaches to
+// it, so the AWS instance profile, the preloaded container images, and the
+// custom tags recorded here apply to workloads the pool's own definition never
+// names. Select a pool by name, for example
+// `databricks.instancePools.where(name == "shared-pool")`.
+databricks.instancePool @defaults("name nodeTypeId state") {
+  // Pool id
+  id string
+  // Pool name
+  name string
+  // Current state (ACTIVE, STOPPED, or DELETED)
+  state string
+  // Cloud node type the pool provisions
+  nodeTypeId string
+  // Instances kept warm and ready for attachment
+  minIdleInstances int
+  // Upper bound on instances the pool may hold, 0 when uncapped
+  maxCapacity int
+  // Minutes an idle instance is kept before being released, 0 when kept indefinitely
+  idleInstanceAutoterminationMinutes int
+  // Whether managed disks are added automatically as local storage fills
+  enableElasticDisk bool
+  // Custom tags applied to every instance in the pool
+  customTags map[string]string
+  // Tags Databricks applies to every instance in the pool
+  defaultTags map[string]string
+  // Databricks Runtime versions kept preloaded on idle instances
+  preloadedSparkVersions []string
+  // URLs of container images kept preloaded on idle instances
+  //
+  // Every cluster attaching to the pool can boot from these images without a
+  // pull. Registry credentials that may accompany an image are not exposed.
+  preloadedDockerImageUrls []string
+  // AWS instance profile the pool's nodes assume
+  //
+  // Every cluster attaching to the pool inherits this identity, so it grants
+  // cloud access that no individual cluster definition records.
+  instanceProfile() databricks.instanceProfile
+  // Purchasing model for AWS instances, ON_DEMAND or SPOT
+  awsAvailability string
+  // AWS availability zone the pool provisions into
+  awsZoneId string
+  // Bid price for AWS spot instances, as a percentage of the on-demand price
+  awsSpotBidPricePercent int
+  // Purchasing model for Azure instances, ON_DEMAND_AZURE or SPOT_AZURE
+  azureAvailability string
+  // Maximum bid price for Azure spot instances, -1 when bidding at the on-demand price
+  azureSpotBidMaxPrice float
+  // Purchasing model for GCP instances, ON_DEMAND_GCP, PREEMPTIBLE_GCP, or PREEMPTIBLE_WITH_FALLBACK_GCP
+  gcpAvailability string
+  // GCP availability zone the pool provisions into
+  gcpZoneId string
+  // Local SSDs attached to each GCP instance
+  gcpLocalSsdCount int
+  // Number of managed disks attached to each instance
+  diskCount int
+  // Size of each attached disk in GB
+  diskSize int
+  // Type of the attached disks
+  //
+  // GENERAL_PURPOSE_SSD or THROUGHPUT_OPTIMIZED_HDD on AWS, or the Azure disk
+  // volume type. Empty when the pool attaches no managed disks.
+  diskType string
+  // Workspace access control list of the pool
+  permissions() []databricks.permission
+}
+
+// Log delivery configuration
+//
+// A configuration that ships account logs to customer-owned cloud storage,
+// keyed by its configuration id. The logType field separates the two kinds:
+// AUDIT_LOGS carries the record of workspace and account activity, and
+// BILLABLE_USAGE carries consumption. Auditing these answers whether audit
+// logging is turned on at all, where the logs land, which workspaces are
+// covered, and whether delivery is actually succeeding. Select a
+// configuration by log type, for example
+// `databricks.logDeliveryConfigurations.where(logType == "AUDIT_LOGS")`.
+databricks.logDelivery @defaults("configName logType status") {
+  // Configuration id
+  id string
+  // Configuration name
+  configName string
+  // Kind of log delivered, AUDIT_LOGS or BILLABLE_USAGE
+  logType string
+  // Whether the configuration is delivering, ENABLED or DISABLED
+  //
+  // A disabled configuration is retained but ships nothing, so its presence
+  // is not evidence that logs are being collected.
+  status string
+  // File format of the delivered logs, JSON or CSV
+  outputFormat string
+  // Path prefix within the storage bucket the logs are written under
+  deliveryPathPrefix string
+  // Date delivery starts from, in YYYY-MM format
+  deliveryStartTime string
+  // Workspaces the configuration covers
+  //
+  // Empty for an account-level configuration, which covers every workspace
+  // including ones created later. A non-empty list covers only the workspaces
+  // named in it.
+  workspaceIdsFilter []int
+  // Storage configuration the logs are written to
+  storageConfiguration() databricks.storageConfiguration
+  // Credential configuration used to write the logs
+  credentialConfiguration() databricks.credentialConfiguration
+  // Outcome of the most recent delivery attempt, such as CREATED, SUCCEEDED, USER_FAILURE, SYSTEM_FAILURE, or NOT_FOUND
+  deliveryStatus string
+  // Detail accompanying the most recent delivery attempt
+  deliveryStatusMessage string
+  // When delivery was last attempted
+  lastAttemptTime string
+  // When delivery last succeeded
+  //
+  // A configuration whose last success trails its last attempt is failing to
+  // deliver, which leaves a gap in the log record even though the
+  // configuration reports as enabled.
+  lastSuccessfulAttemptTime string
+  // When the configuration was created
+  createdAt time
+  // When the configuration was last modified
+  updatedAt time
+}
+
+// Account storage configuration
+//
+// A cloud storage bucket the account writes to, keyed by its configuration id.
+// Workspace root storage and log delivery both target one of these, so the
+// bucket named here is where workspace data or the account's audit record
+// lands. Select a configuration by name, for example
+// `databricks.storageConfigurations.where(name == "audit-logs")`.
+databricks.storageConfiguration @defaults("name bucketName") {
+  // Configuration id
+  id string
+  // Configuration name
+  name string
+  // Name of the cloud storage bucket
+  bucketName string
+  // ARN of the role granting write access to the bucket
+  roleArn string
+  // When the configuration was created
+  createdAt time
+}
+
+// Account credential configuration
+//
+// A cross-account role the Databricks control plane assumes to manage
+// resources in the customer's cloud account, keyed by its configuration id.
+// This is the standing grant that lets Databricks create compute and reach
+// storage on the account's behalf. Select a configuration by name, for
+// example `databricks.credentialConfigurations.where(name == "prod-role")`.
+databricks.credentialConfiguration @defaults("name roleArn") {
+  // Configuration id
+  id string
+  // Configuration name
+  name string
+  // ARN of the cross-account IAM role Databricks assumes
+  roleArn string
+  // When the configuration was created
+  createdAt time
+}
+
+// OIDC federation policy
+//
+// A policy that lets a workload outside Databricks exchange an OIDC token for
+// Databricks access without a stored secret, keyed by its policy id. The
+// policy names the issuer it trusts, the audiences it accepts, and the subject
+// it binds to, so it defines exactly which external identity can authenticate.
+// An account policy applies to the whole account; a policy attached to a
+// service principal authenticates as that principal. A policy with a broad
+// subject claim admits more external workloads than intended. Select a policy
+// by name, for example
+// `databricks.federationPolicies.where(name == "github-actions")`.
+databricks.federationPolicy @defaults("name oidcIssuer oidcSubject") {
+  // Policy id
+  id string
+  // Policy name
+  name string
+  // Policy description
+  description string
+  // Unique identifier assigned to the policy
+  uid string
+  // Service principal the policy authenticates as, 0 for an account-level policy
+  servicePrincipalId int
+  // Issuer URL of the identity provider the policy trusts
+  oidcIssuer string
+  // Token audiences the policy accepts
+  //
+  // A token is only accepted when its audience matches one of these. An empty
+  // list means the default audience applies.
+  oidcAudiences []string
+  // Subject the policy binds to, identifying the external workload
+  oidcSubject string
+  // Token claim the subject is read from, defaulting to sub
+  oidcSubjectClaim string
+  // URL the issuer's signing keys are fetched from
+  oidcJwksUri string
+  // When the policy was created
+  createTime time
+  // When the policy was last modified
+  updateTime time
+}
+
+// OAuth app integration
+//
+// An OAuth application registered in the account, keyed by its integration id.
+// These are the applications permitted to obtain tokens against the account on
+// a user's behalf. Auditing them surfaces the redirect URLs a token can be
+// returned to, the scopes an app may request, whether the app holds a client
+// secret, and the token lifetimes it is issued. Select an integration by name,
+// for example `databricks.appIntegrations.where(name == "internal-portal")`.
+databricks.appIntegration @defaults("name integrationType clientId") {
+  // Integration id
+  id string
+  // Integration name
+  name string
+  // Whether the app is registered by the account or published by Databricks
+  //
+  // CUSTOM for an application the account registered, PUBLISHED for a
+  // Databricks-published application enabled in the account. Published
+  // integrations carry no redirect URLs or scopes of their own, so those
+  // fields are empty for them.
+  integrationType string
+  // OAuth client id of the application
+  clientId string
+  // Whether the app authenticates with a client secret
+  //
+  // A confidential app holds a secret and can use the authorization code flow
+  // with client authentication. A public app holds none and relies on PKCE.
+  confidential bool
+  // URLs an authorization response may be returned to
+  //
+  // Every URL here is a place an issued code or token can be delivered, so a
+  // loosely scoped entry widens where account credentials can land.
+  redirectUrls []string
+  // Scopes the application may request
+  scopes []string
+  // Scopes a user may additionally authorize at consent time
+  userAuthorizedScopes []string
+  // Minutes an issued access token remains valid, 0 when the account default applies
+  accessTokenTtlMinutes int
+  // Minutes an issued refresh token remains valid, 0 when the account default applies
+  refreshTokenTtlMinutes int
+  // Whether a refresh token is invalidated after a single use
+  singleUseRefreshTokens bool
+  // Login name of the user that registered the integration
+  creatorUsername string
+  // When the integration was created
+  createTime string
+}
+
+// Account network policy
+//
+// The egress firewall applied to serverless compute in the account, keyed by
+// its policy id. Serverless workloads run outside the customer's network, so
+// this policy is what bounds where they may reach; without it a notebook on
+// serverless compute can call any internet destination. Auditing it surfaces
+// the restriction mode, the destinations explicitly allowed or blocked, and
+// whether the policy is enforced or only logging. Select a policy by id, for
+// example `databricks.networkPolicies.where(id == "np-1")`.
+databricks.networkPolicy @defaults("id egressRestrictionMode egressEnforcementMode") {
+  // Policy id
+  id string
+  // How far serverless egress may reach
+  //
+  // FULL_ACCESS permits any destination. RESTRICTED_ACCESS permits only the
+  // Databricks control plane and the destinations listed on the policy.
+  egressRestrictionMode string
+  // Whether the policy is applied or only observed
+  //
+  // ENFORCED blocks traffic outside the policy. DRY_RUN records what would
+  // have been blocked and permits it, so a policy in dry-run mode restricts
+  // nothing.
+  egressEnforcementMode string
+  // Products the policy is only dry-run for, such as DBSQL or ML_SERVING
+  egressDryRunProductFilter []string
+  // Internet destinations serverless compute may reach, keyed by destination
+  //
+  // Each key is a hostname and its value is the destination type, such as
+  // FQDN. Empty under RESTRICTED_ACCESS means no internet destination is
+  // reachable beyond the Databricks control plane.
+  allowedInternetDestinations map[string]string
+  // Internet destinations serverless compute may not reach, keyed by destination
+  blockedInternetDestinations map[string]string
+  // Storage destinations serverless compute may reach
+  //
+  // One entry per destination, each with a `type` of AWS_S3 or
+  // AZURE_STORAGE, and the `bucketName` and `region`, or the
+  // `azureStorageAccount` and `azureStorageService`, that identify it.
+  allowedStorageDestinations []dict
+}
+
+// Workspace access assignment
+//
+// A principal's access to a single workspace, assigned at the account level
+// rather than inside the workspace. Covers who the principal is and whether
+// they hold workspace admin. Account-level assignment is how a principal
+// reaches a workspace at all, so a principal absent here has no access to it
+// regardless of any in-workspace grant.
+databricks.workspaceAssignment @defaults("principal principalType permissions") {
+  // Numeric id of the workspace the assignment applies to
+  workspaceId int
+  // Name of the principal the access is assigned to
+  principal string
+  // Kind of principal, USER, GROUP, or SERVICE_PRINCIPAL
+  principalType string
+  // Numeric id of the principal
+  principalId int
+  // Display name of the principal
+  displayName string
+  // Access levels granted on the workspace
+  //
+  // USER grants access to the workspace, ADMIN additionally grants workspace
+  // administration. UNKNOWN appears when the API reports a level this SDK
+  // version does not model.
+  permissions []string
 }

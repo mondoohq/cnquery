@@ -86,3 +86,19 @@ func epochMsTime(ms int64) *time.Time {
 	t := time.UnixMilli(ms)
 	return &t
 }
+
+// rfc3339Time parses the RFC 3339 timestamps the OAuth account APIs return as
+// strings, rather than the epoch milliseconds the rest of the API uses.
+// Returns nil for an empty value, which is how those APIs report "never" (a
+// secret with no expiry, for instance), and for a value this parser does not
+// recognize, so an unexpected format reads as unset rather than as a date.
+func rfc3339Time(value string) *time.Time {
+	if value == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return nil
+	}
+	return &t
+}

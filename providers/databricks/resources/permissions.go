@@ -23,6 +23,8 @@ const (
 	permissionObjectJob             = "jobs"
 	permissionObjectPipeline        = "pipelines"
 	permissionObjectServingEndpoint = "serving-endpoints"
+	permissionObjectRepo            = "repos"
+	permissionObjectInstancePool    = "instance-pools"
 )
 
 // principalKinds classifies an access control entry. Exactly one of the three
