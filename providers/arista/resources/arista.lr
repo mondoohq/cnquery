@@ -59,6 +59,10 @@ arista.eos {
   acls() []arista.eos.acl
   // Every place an access-list is applied
   aclBindings() []arista.eos.aclBinding
+  // Route-maps, the named routing policies applied to routing adjacencies
+  routeMaps() []arista.eos.routeMap
+  // Prefix-lists referenced by routing policy
+  prefixLists() []arista.eos.prefixList
   // Hardware environment and inventory
   hardware() arista.eos.hardware
   // AAA (Authentication, Authorization, Accounting) configuration
@@ -570,6 +574,11 @@ arista.eos.bgp {
   asNumber() string
   // BGP Router ID
   routerId() string
+  // Whether session state transitions are logged
+  //
+  // Reflects `bgp log-neighbor-changes`. Without it a session that flaps or
+  // is taken over leaves no record to correlate after the fact.
+  logNeighborChanges() bool
   // BGP VRFs
   vrfs() []arista.eos.bgp.vrf
 }
@@ -602,12 +611,148 @@ private arista.eos.bgp.peer @defaults("peerAddress") {
   prefixesReceived int
   // Number of prefixes accepted from peer (after inbound filtering)
   prefixesAccepted int
-  // Inbound route map
-  inboundRouteMap string
-  // Outbound route map
-  outboundRouteMap string
+  // Inbound route map name
+  //
+  // Deprecated in favor of inboundPolicy, which resolves to the route-map
+  // itself so its clauses can be inspected.
+  inboundRouteMap @maturity("deprecated") string
+  // Outbound route map name
+  //
+  // Deprecated in favor of outboundPolicy, which resolves to the route-map
+  // itself so its clauses can be inspected.
+  outboundRouteMap @maturity("deprecated") string
+  // Route-map applied to routes received from the peer
+  //
+  // Null when no inbound policy is applied, which accepts whatever the peer
+  // announces, or when the configured name matches no route-map on the
+  // device, which has the same effect.
+  inboundPolicy() arista.eos.routeMap
+  // Route-map applied to routes advertised to the peer
+  outboundPolicy() arista.eos.routeMap
+  // Whether the session is authenticated with a password
+  //
+  // An unauthenticated session can be taken over by anything that can reach
+  // the port and spoof the peer address. The password itself is never read
+  // off the device.
+  passwordConfigured bool
+  // How the session password is stored
+  //
+  // Either `0` for cleartext in the running-config or `7` for the
+  // reversible obfuscation. Empty when no password is configured.
+  passwordEncryptionType string
+  // Maximum hops the peer may be away (0 = unset)
+  //
+  // From `neighbor <peer> ttl maximum-hops`. Setting it to the real
+  // distance makes the session unreachable from anywhere further away,
+  // which defeats spoofing attempts from off-path.
+  ttlMaximumHops int
+  // Maximum prefixes accepted from the peer (0 = no limit configured)
+  //
+  // Without a limit, a peer that announces the full routing table, by
+  // mistake or otherwise, can exhaust the device's forwarding resources.
+  maximumRoutes int
+  // Whether the neighbor is configured but administratively down
+  shutdown bool
+  // Interface sourcing the session (empty = chosen by route lookup)
+  updateSource string
+  // Configured multihop limit for an external peer (0 = unset)
+  ebgpMultihop int
   // Peer description
   description string
+}
+
+// Arista EOS route-map
+//
+// A named routing policy, selected by `name` (for example
+// `arista.eos.routeMaps.where(name == "IMPORT-FILTER")`), made of ordered
+// clauses in `entries`. Route-maps decide which routes a device accepts from
+// and announces to its neighbors, so they are where a routing leak is either
+// prevented or created.
+//
+// The last clause usually decides the posture: a map whose final clause is a
+// bare `deny` rejects everything the earlier clauses did not explicitly
+// accept, while a map with no deny clause accepts the remainder.
+private arista.eos.routeMap @defaults("name") {
+  // Route-map name as referenced by routing configuration
+  name string
+  // Ordered clauses, by sequence number
+  entries() []arista.eos.routeMap.entry
+}
+
+// Arista EOS route-map clause
+//
+// One clause of a route-map, selected by its `sequenceNumber`. `match` and
+// `set` carry the statements as written, without their leading keyword: the
+// statement grammar is wide and still growing, so structuring every variant
+// would be both a losing game and a lossy one.
+//
+// `matchPrefixLists` resolves the prefix-lists a clause matches against, so a
+// policy can be followed from the adjacency through the clause to the actual
+// prefixes it admits.
+private arista.eos.routeMap.entry @defaults("routeMapName sequenceNumber action") {
+  // Route-map this clause belongs to
+  routeMapName string
+  // Sequence number (determines evaluation order)
+  sequenceNumber int
+  // Clause action, `permit` or `deny`
+  action string
+  // Clause description
+  description string
+  // Match statements, without the leading `match` keyword
+  match []string
+  // Set statements, without the leading `set` keyword
+  set []string
+  // Clause number that processing continues at (0 = unset)
+  continueAt int
+  // Prefix-lists this clause matches against
+  //
+  // Empty when the clause matches on something other than a prefix-list, or
+  // when it names prefix-lists that are not defined on the device.
+  matchPrefixLists() []arista.eos.prefixList
+}
+
+// Arista EOS prefix-list
+//
+// A named list of prefixes referenced by routing policy, selected by `name`
+// and `family`. The two address families are separate namespaces and can
+// share a name.
+//
+// The prefix-length qualifiers on each entry matter as much as the prefixes:
+// a rule with a wide `le` accepts far more than its prefix suggests, and
+// `permit 0.0.0.0/0 le 32` accepts every route there is.
+private arista.eos.prefixList @defaults("name family") {
+  // Prefix-list name as referenced by routing policy
+  name string
+  // Address family the list matches, `ipv4` or `ipv6`
+  family string
+  // Ordered rules, by sequence number
+  entries() []arista.eos.prefixList.entry
+}
+
+// Arista EOS prefix-list rule
+//
+// One rule of a prefix-list. `ge` and `le` bound the prefix lengths the rule
+// accepts, widening it beyond the prefix alone.
+private arista.eos.prefixList.entry @defaults("sequenceNumber action prefix") {
+  // Prefix-list this rule belongs to
+  prefixListName string
+  // Address family of the prefix-list this rule belongs to, `ipv4` or `ipv6`
+  //
+  // Present because a name alone does not identify a list: the two address
+  // families are separate namespaces and can share a name.
+  prefixListFamily string
+  // Sequence number (determines evaluation order)
+  sequenceNumber int
+  // Rule action, `permit` or `deny`
+  action string
+  // Network in CIDR form
+  prefix string
+  // Exact prefix length the rule accepts (0 = unset)
+  eq int
+  // Minimum prefix length the rule accepts (0 = unset)
+  ge int
+  // Maximum prefix length the rule accepts (0 = unset)
+  le int
 }
 
 // Arista EOS MLAG (Multi-Chassis Link Aggregation) configuration

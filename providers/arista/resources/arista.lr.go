@@ -34,6 +34,10 @@ const (
 	ResourceAristaEosBgp                   string = "arista.eos.bgp"
 	ResourceAristaEosBgpVrf                string = "arista.eos.bgp.vrf"
 	ResourceAristaEosBgpPeer               string = "arista.eos.bgp.peer"
+	ResourceAristaEosRouteMap              string = "arista.eos.routeMap"
+	ResourceAristaEosRouteMapEntry         string = "arista.eos.routeMap.entry"
+	ResourceAristaEosPrefixList            string = "arista.eos.prefixList"
+	ResourceAristaEosPrefixListEntry       string = "arista.eos.prefixList.entry"
 	ResourceAristaEosMlag                  string = "arista.eos.mlag"
 	ResourceAristaEosMlagInterface         string = "arista.eos.mlag.interface"
 	ResourceAristaEosAcl                   string = "arista.eos.acl"
@@ -144,6 +148,22 @@ func init() {
 		"arista.eos.bgp.peer": {
 			// to override args, implement: initAristaEosBgpPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosBgpPeer,
+		},
+		"arista.eos.routeMap": {
+			// to override args, implement: initAristaEosRouteMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosRouteMap,
+		},
+		"arista.eos.routeMap.entry": {
+			// to override args, implement: initAristaEosRouteMapEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosRouteMapEntry,
+		},
+		"arista.eos.prefixList": {
+			// to override args, implement: initAristaEosPrefixList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosPrefixList,
+		},
+		"arista.eos.prefixList.entry": {
+			// to override args, implement: initAristaEosPrefixListEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosPrefixListEntry,
 		},
 		"arista.eos.mlag": {
 			// to override args, implement: initAristaEosMlag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -382,6 +402,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.aclBindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetAclBindings()).ToDataRes(types.Array(types.Resource("arista.eos.aclBinding")))
+	},
+	"arista.eos.routeMaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetRouteMaps()).ToDataRes(types.Array(types.Resource("arista.eos.routeMap")))
+	},
+	"arista.eos.prefixLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetPrefixLists()).ToDataRes(types.Array(types.Resource("arista.eos.prefixList")))
 	},
 	"arista.eos.hardware": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetHardware()).ToDataRes(types.Resource("arista.eos.hardware"))
@@ -743,6 +769,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.bgp.routerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgp).GetRouterId()).ToDataRes(types.String)
 	},
+	"arista.eos.bgp.logNeighborChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgp).GetLogNeighborChanges()).ToDataRes(types.Bool)
+	},
 	"arista.eos.bgp.vrfs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgp).GetVrfs()).ToDataRes(types.Array(types.Resource("arista.eos.bgp.vrf")))
 	},
@@ -785,8 +814,98 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.bgp.peer.outboundRouteMap": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgpPeer).GetOutboundRouteMap()).ToDataRes(types.String)
 	},
+	"arista.eos.bgp.peer.inboundPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetInboundPolicy()).ToDataRes(types.Resource("arista.eos.routeMap"))
+	},
+	"arista.eos.bgp.peer.outboundPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetOutboundPolicy()).ToDataRes(types.Resource("arista.eos.routeMap"))
+	},
+	"arista.eos.bgp.peer.passwordConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPasswordConfigured()).ToDataRes(types.Bool)
+	},
+	"arista.eos.bgp.peer.passwordEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPasswordEncryptionType()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.ttlMaximumHops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetTtlMaximumHops()).ToDataRes(types.Int)
+	},
+	"arista.eos.bgp.peer.maximumRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetMaximumRoutes()).ToDataRes(types.Int)
+	},
+	"arista.eos.bgp.peer.shutdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetShutdown()).ToDataRes(types.Bool)
+	},
+	"arista.eos.bgp.peer.updateSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetUpdateSource()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.ebgpMultihop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetEbgpMultihop()).ToDataRes(types.Int)
+	},
 	"arista.eos.bgp.peer.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgpPeer).GetDescription()).ToDataRes(types.String)
+	},
+	"arista.eos.routeMap.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMap).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.routeMap.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMap).GetEntries()).ToDataRes(types.Array(types.Resource("arista.eos.routeMap.entry")))
+	},
+	"arista.eos.routeMap.entry.routeMapName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetRouteMapName()).ToDataRes(types.String)
+	},
+	"arista.eos.routeMap.entry.sequenceNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetSequenceNumber()).ToDataRes(types.Int)
+	},
+	"arista.eos.routeMap.entry.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetAction()).ToDataRes(types.String)
+	},
+	"arista.eos.routeMap.entry.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetDescription()).ToDataRes(types.String)
+	},
+	"arista.eos.routeMap.entry.match": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetMatch()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.routeMap.entry.set": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetSet()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.routeMap.entry.continueAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetContinueAt()).ToDataRes(types.Int)
+	},
+	"arista.eos.routeMap.entry.matchPrefixLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRouteMapEntry).GetMatchPrefixLists()).ToDataRes(types.Array(types.Resource("arista.eos.prefixList")))
+	},
+	"arista.eos.prefixList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixList).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.prefixList.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixList).GetFamily()).ToDataRes(types.String)
+	},
+	"arista.eos.prefixList.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixList).GetEntries()).ToDataRes(types.Array(types.Resource("arista.eos.prefixList.entry")))
+	},
+	"arista.eos.prefixList.entry.prefixListName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetPrefixListName()).ToDataRes(types.String)
+	},
+	"arista.eos.prefixList.entry.prefixListFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetPrefixListFamily()).ToDataRes(types.String)
+	},
+	"arista.eos.prefixList.entry.sequenceNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetSequenceNumber()).ToDataRes(types.Int)
+	},
+	"arista.eos.prefixList.entry.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetAction()).ToDataRes(types.String)
+	},
+	"arista.eos.prefixList.entry.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetPrefix()).ToDataRes(types.String)
+	},
+	"arista.eos.prefixList.entry.eq": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetEq()).ToDataRes(types.Int)
+	},
+	"arista.eos.prefixList.entry.ge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetGe()).ToDataRes(types.Int)
+	},
+	"arista.eos.prefixList.entry.le": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosPrefixListEntry).GetLe()).ToDataRes(types.Int)
 	},
 	"arista.eos.mlag.domainId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosMlag).GetDomainId()).ToDataRes(types.String)
@@ -1505,6 +1624,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEos).AclBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.routeMaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).RouteMaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).PrefixLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"arista.eos.hardware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).Hardware, ok = plugin.RawToTValue[*mqlAristaEosHardware](v.Value, v.Error)
 		return
@@ -2049,6 +2176,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosBgp).RouterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"arista.eos.bgp.logNeighborChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgp).LogNeighborChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"arista.eos.bgp.vrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosBgp).Vrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2113,8 +2244,144 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosBgpPeer).OutboundRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"arista.eos.bgp.peer.inboundPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).InboundPolicy, ok = plugin.RawToTValue[*mqlAristaEosRouteMap](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.outboundPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).OutboundPolicy, ok = plugin.RawToTValue[*mqlAristaEosRouteMap](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.passwordConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PasswordConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.passwordEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PasswordEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.ttlMaximumHops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).TtlMaximumHops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.maximumRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).MaximumRoutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.shutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).Shutdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.updateSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).UpdateSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.ebgpMultihop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).EbgpMultihop, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"arista.eos.bgp.peer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosBgpPeer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMap).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.routeMap.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMap).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMap).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.routeMap.entry.routeMapName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).RouteMapName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.sequenceNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).SequenceNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.match": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).Match, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.set": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).Set, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.continueAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).ContinueAt, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routeMap.entry.matchPrefixLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRouteMapEntry).MatchPrefixLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixList).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.prefixList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixList).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixList).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.prefixList.entry.prefixListName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).PrefixListName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.prefixListFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).PrefixListFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.sequenceNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).SequenceNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.eq": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).Eq, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.ge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).Ge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.prefixList.entry.le": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosPrefixListEntry).Le, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"arista.eos.mlag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3123,6 +3390,8 @@ type mqlAristaEos struct {
 	Mlag                plugin.TValue[*mqlAristaEosMlag]
 	Acls                plugin.TValue[[]any]
 	AclBindings         plugin.TValue[[]any]
+	RouteMaps           plugin.TValue[[]any]
+	PrefixLists         plugin.TValue[[]any]
 	Hardware            plugin.TValue[*mqlAristaEosHardware]
 	Aaa                 plugin.TValue[*mqlAristaEosAaa]
 	SshSettings         plugin.TValue[*mqlAristaEosSshSettings]
@@ -3407,6 +3676,38 @@ func (c *mqlAristaEos) GetAclBindings() *plugin.TValue[[]any] {
 		}
 
 		return c.aclBindings()
+	})
+}
+
+func (c *mqlAristaEos) GetRouteMaps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RouteMaps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "routeMaps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routeMaps()
+	})
+}
+
+func (c *mqlAristaEos) GetPrefixLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrefixLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "prefixLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.prefixLists()
 	})
 }
 
@@ -4906,10 +5207,11 @@ type mqlAristaEosBgp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAristaEosBgpInternal
-	Enabled  plugin.TValue[bool]
-	AsNumber plugin.TValue[string]
-	RouterId plugin.TValue[string]
-	Vrfs     plugin.TValue[[]any]
+	Enabled            plugin.TValue[bool]
+	AsNumber           plugin.TValue[string]
+	RouterId           plugin.TValue[string]
+	LogNeighborChanges plugin.TValue[bool]
+	Vrfs               plugin.TValue[[]any]
 }
 
 // createAristaEosBgp creates a new instance of this resource
@@ -4964,6 +5266,12 @@ func (c *mqlAristaEosBgp) GetAsNumber() *plugin.TValue[string] {
 func (c *mqlAristaEosBgp) GetRouterId() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.RouterId, func() (string, error) {
 		return c.routerId()
+	})
+}
+
+func (c *mqlAristaEosBgp) GetLogNeighborChanges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogNeighborChanges, func() (bool, error) {
+		return c.logNeighborChanges()
 	})
 }
 
@@ -5052,16 +5360,25 @@ type mqlAristaEosBgpPeer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAristaEosBgpPeerInternal it will be used here
-	VrfName          plugin.TValue[string]
-	PeerAddress      plugin.TValue[string]
-	RemoteAs         plugin.TValue[string]
-	State            plugin.TValue[string]
-	Uptime           plugin.TValue[int64]
-	PrefixesReceived plugin.TValue[int64]
-	PrefixesAccepted plugin.TValue[int64]
-	InboundRouteMap  plugin.TValue[string]
-	OutboundRouteMap plugin.TValue[string]
-	Description      plugin.TValue[string]
+	VrfName                plugin.TValue[string]
+	PeerAddress            plugin.TValue[string]
+	RemoteAs               plugin.TValue[string]
+	State                  plugin.TValue[string]
+	Uptime                 plugin.TValue[int64]
+	PrefixesReceived       plugin.TValue[int64]
+	PrefixesAccepted       plugin.TValue[int64]
+	InboundRouteMap        plugin.TValue[string]
+	OutboundRouteMap       plugin.TValue[string]
+	InboundPolicy          plugin.TValue[*mqlAristaEosRouteMap]
+	OutboundPolicy         plugin.TValue[*mqlAristaEosRouteMap]
+	PasswordConfigured     plugin.TValue[bool]
+	PasswordEncryptionType plugin.TValue[string]
+	TtlMaximumHops         plugin.TValue[int64]
+	MaximumRoutes          plugin.TValue[int64]
+	Shutdown               plugin.TValue[bool]
+	UpdateSource           plugin.TValue[string]
+	EbgpMultihop           plugin.TValue[int64]
+	Description            plugin.TValue[string]
 }
 
 // createAristaEosBgpPeer creates a new instance of this resource
@@ -5137,8 +5454,385 @@ func (c *mqlAristaEosBgpPeer) GetOutboundRouteMap() *plugin.TValue[string] {
 	return &c.OutboundRouteMap
 }
 
+func (c *mqlAristaEosBgpPeer) GetInboundPolicy() *plugin.TValue[*mqlAristaEosRouteMap] {
+	return plugin.GetOrCompute[*mqlAristaEosRouteMap](&c.InboundPolicy, func() (*mqlAristaEosRouteMap, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.bgp.peer", c.__id, "inboundPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosRouteMap), nil
+			}
+		}
+
+		return c.inboundPolicy()
+	})
+}
+
+func (c *mqlAristaEosBgpPeer) GetOutboundPolicy() *plugin.TValue[*mqlAristaEosRouteMap] {
+	return plugin.GetOrCompute[*mqlAristaEosRouteMap](&c.OutboundPolicy, func() (*mqlAristaEosRouteMap, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.bgp.peer", c.__id, "outboundPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosRouteMap), nil
+			}
+		}
+
+		return c.outboundPolicy()
+	})
+}
+
+func (c *mqlAristaEosBgpPeer) GetPasswordConfigured() *plugin.TValue[bool] {
+	return &c.PasswordConfigured
+}
+
+func (c *mqlAristaEosBgpPeer) GetPasswordEncryptionType() *plugin.TValue[string] {
+	return &c.PasswordEncryptionType
+}
+
+func (c *mqlAristaEosBgpPeer) GetTtlMaximumHops() *plugin.TValue[int64] {
+	return &c.TtlMaximumHops
+}
+
+func (c *mqlAristaEosBgpPeer) GetMaximumRoutes() *plugin.TValue[int64] {
+	return &c.MaximumRoutes
+}
+
+func (c *mqlAristaEosBgpPeer) GetShutdown() *plugin.TValue[bool] {
+	return &c.Shutdown
+}
+
+func (c *mqlAristaEosBgpPeer) GetUpdateSource() *plugin.TValue[string] {
+	return &c.UpdateSource
+}
+
+func (c *mqlAristaEosBgpPeer) GetEbgpMultihop() *plugin.TValue[int64] {
+	return &c.EbgpMultihop
+}
+
 func (c *mqlAristaEosBgpPeer) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+// mqlAristaEosRouteMap for the arista.eos.routeMap resource
+type mqlAristaEosRouteMap struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosRouteMapInternal it will be used here
+	Name    plugin.TValue[string]
+	Entries plugin.TValue[[]any]
+}
+
+// createAristaEosRouteMap creates a new instance of this resource
+func createAristaEosRouteMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosRouteMap{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.routeMap", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosRouteMap) MqlName() string {
+	return "arista.eos.routeMap"
+}
+
+func (c *mqlAristaEosRouteMap) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosRouteMap) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosRouteMap) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.routeMap", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+// mqlAristaEosRouteMapEntry for the arista.eos.routeMap.entry resource
+type mqlAristaEosRouteMapEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAristaEosRouteMapEntryInternal
+	RouteMapName     plugin.TValue[string]
+	SequenceNumber   plugin.TValue[int64]
+	Action           plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Match            plugin.TValue[[]any]
+	Set              plugin.TValue[[]any]
+	ContinueAt       plugin.TValue[int64]
+	MatchPrefixLists plugin.TValue[[]any]
+}
+
+// createAristaEosRouteMapEntry creates a new instance of this resource
+func createAristaEosRouteMapEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosRouteMapEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.routeMap.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosRouteMapEntry) MqlName() string {
+	return "arista.eos.routeMap.entry"
+}
+
+func (c *mqlAristaEosRouteMapEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetRouteMapName() *plugin.TValue[string] {
+	return &c.RouteMapName
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetSequenceNumber() *plugin.TValue[int64] {
+	return &c.SequenceNumber
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetMatch() *plugin.TValue[[]any] {
+	return &c.Match
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetSet() *plugin.TValue[[]any] {
+	return &c.Set
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetContinueAt() *plugin.TValue[int64] {
+	return &c.ContinueAt
+}
+
+func (c *mqlAristaEosRouteMapEntry) GetMatchPrefixLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MatchPrefixLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.routeMap.entry", c.__id, "matchPrefixLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.matchPrefixLists()
+	})
+}
+
+// mqlAristaEosPrefixList for the arista.eos.prefixList resource
+type mqlAristaEosPrefixList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosPrefixListInternal it will be used here
+	Name    plugin.TValue[string]
+	Family  plugin.TValue[string]
+	Entries plugin.TValue[[]any]
+}
+
+// createAristaEosPrefixList creates a new instance of this resource
+func createAristaEosPrefixList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosPrefixList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.prefixList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosPrefixList) MqlName() string {
+	return "arista.eos.prefixList"
+}
+
+func (c *mqlAristaEosPrefixList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosPrefixList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosPrefixList) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlAristaEosPrefixList) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.prefixList", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+// mqlAristaEosPrefixListEntry for the arista.eos.prefixList.entry resource
+type mqlAristaEosPrefixListEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosPrefixListEntryInternal it will be used here
+	PrefixListName   plugin.TValue[string]
+	PrefixListFamily plugin.TValue[string]
+	SequenceNumber   plugin.TValue[int64]
+	Action           plugin.TValue[string]
+	Prefix           plugin.TValue[string]
+	Eq               plugin.TValue[int64]
+	Ge               plugin.TValue[int64]
+	Le               plugin.TValue[int64]
+}
+
+// createAristaEosPrefixListEntry creates a new instance of this resource
+func createAristaEosPrefixListEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosPrefixListEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.prefixList.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosPrefixListEntry) MqlName() string {
+	return "arista.eos.prefixList.entry"
+}
+
+func (c *mqlAristaEosPrefixListEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetPrefixListName() *plugin.TValue[string] {
+	return &c.PrefixListName
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetPrefixListFamily() *plugin.TValue[string] {
+	return &c.PrefixListFamily
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetSequenceNumber() *plugin.TValue[int64] {
+	return &c.SequenceNumber
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetEq() *plugin.TValue[int64] {
+	return &c.Eq
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetGe() *plugin.TValue[int64] {
+	return &c.Ge
+}
+
+func (c *mqlAristaEosPrefixListEntry) GetLe() *plugin.TValue[int64] {
+	return &c.Le
 }
 
 // mqlAristaEosMlag for the arista.eos.mlag resource
