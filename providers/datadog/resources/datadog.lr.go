@@ -7132,7 +7132,12 @@ func createDatadogIntegrationGcp(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("datadog.integration.gcp", res.__id)
@@ -7336,7 +7341,12 @@ func createDatadogIntegrationOkta(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("datadog.integration.okta", res.__id)
@@ -7400,7 +7410,12 @@ func createDatadogIntegrationCloudflare(runtime *plugin.Runtime, args map[string
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("datadog.integration.cloudflare", res.__id)
@@ -7462,7 +7477,12 @@ func createDatadogIntegrationFastly(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("datadog.integration.fastly", res.__id)
@@ -7516,7 +7536,12 @@ func createDatadogIntegrationConfluent(runtime *plugin.Runtime, args map[string]
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("datadog.integration.confluent", res.__id)
