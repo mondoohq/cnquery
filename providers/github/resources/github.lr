@@ -251,6 +251,8 @@ private github.organization.membership @defaults("user.login role twoFactorEnabl
   // Role held in the organization
   //
   // Either `admin` for organization owners or `member` for regular members.
+  // Null when the connected token cannot list the organization's owners, so
+  // that an owner is never reported as a regular member.
   role string
   // Whether the member account has two-factor authentication enabled
   //
@@ -675,13 +677,6 @@ private github.team @defaults("id name") {
   organization github.organization
 }
 
-// GitHub repository collaborator
-//
-// User granted access to a GitHub repository, along with the permission
-// levels they hold. Auditing collaborators reveals who can read, write, or
-// administer a repository and helps spot over-privileged access. The `user`
-// field carries the collaborator's GitHub identity and `permissions` lists
-// the granted access levels.
 // Team access grant on a repository
 //
 // Access a single team holds on a repository, pairing the team with the
@@ -712,6 +707,13 @@ private github.repository.team @defaults("slug permission accessSource") {
   permissions []string
 }
 
+// GitHub repository collaborator
+//
+// User granted access to a GitHub repository, along with the permission
+// levels they hold. Auditing collaborators reveals who can read, write, or
+// administer a repository and helps spot over-privileged access. The `user`
+// field carries the collaborator's GitHub identity and `permissions` lists
+// the granted access levels.
 private github.collaborator @defaults("user.login user.name") {
   // Collaborator ID
   id int

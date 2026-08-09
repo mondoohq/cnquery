@@ -6856,7 +6856,7 @@ func (c *mqlGithubOrganization) GetFailedInvitations() *plugin.TValue[[]any] {
 type mqlGithubOrganizationMembership struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlGithubOrganizationMembershipInternal
+	// optional: if you define mqlGithubOrganizationMembershipInternal it will be used here
 	User             plugin.TValue[*mqlGithubUser]
 	Login            plugin.TValue[string]
 	Role             plugin.TValue[string]
@@ -6925,7 +6925,7 @@ func (c *mqlGithubOrganizationMembership) GetSiteAdmin() *plugin.TValue[bool] {
 type mqlGithubOrganizationInvitation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlGithubOrganizationInvitationInternal
+	// optional: if you define mqlGithubOrganizationInvitationInternal it will be used here
 	Id           plugin.TValue[int64]
 	Login        plugin.TValue[string]
 	Email        plugin.TValue[string]
@@ -8300,7 +8300,7 @@ func (c *mqlGithubTeam) GetOrganization() *plugin.TValue[*mqlGithubOrganization]
 type mqlGithubRepositoryTeam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlGithubRepositoryTeamInternal
+	// optional: if you define mqlGithubRepositoryTeamInternal it will be used here
 	Team         plugin.TValue[*mqlGithubTeam]
 	Slug         plugin.TValue[string]
 	Permission   plugin.TValue[string]

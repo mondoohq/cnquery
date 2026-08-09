@@ -29,9 +29,30 @@ func TestLoginSet(t *testing.T) {
 func TestMembershipRole(t *testing.T) {
 	admins := loginSet([]*github.User{{Login: github.Ptr("alice")}})
 
-	assert.Equal(t, "admin", membershipRole("alice", admins))
-	assert.Equal(t, "member", membershipRole("bob", admins))
-	assert.Equal(t, "member", membershipRole("bob", nil))
+	t.Run("listed as an owner", func(t *testing.T) {
+		got := membershipRole("alice", admins, true)
+		require.NotNil(t, got)
+		assert.Equal(t, "admin", *got)
+	})
+
+	t.Run("absent from the owner list", func(t *testing.T) {
+		got := membershipRole("bob", admins, true)
+		require.NotNil(t, got)
+		assert.Equal(t, "member", *got)
+	})
+
+	t.Run("an organization with no owners we can see", func(t *testing.T) {
+		got := membershipRole("bob", nil, true)
+		require.NotNil(t, got)
+		assert.Equal(t, "member", *got)
+	})
+
+	t.Run("unreadable owner list stays unknown", func(t *testing.T) {
+		// Reporting "member" here would understate the access of an owner we
+		// were simply not allowed to see.
+		assert.Nil(t, membershipRole("alice", admins, false))
+		assert.Nil(t, membershipRole("bob", nil, false))
+	})
 }
 
 func TestMembershipTwoFactorEnabled(t *testing.T) {

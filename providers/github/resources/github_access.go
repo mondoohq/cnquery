@@ -10,22 +10,57 @@ import (
 	"github.com/google/go-github/v89/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/github/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
-// ---------- Organization memberships ----------
+// ---------- Cache keys ----------
+//
+// Each of these keys a resource that is only unique within an organization or
+// a repository. They are passed to CreateResource as an explicit "__id":
+// the generated constructor computes a missing __id by calling id() from
+// inside CreateResource, before the caller can assign anything to the
+// resource, so a key built from a field assigned afterwards would resolve
+// against an empty string for every instance.
 
-type mqlGithubOrganizationMembershipInternal struct {
-	cacheOrgLogin string
+func organizationMembershipID(orgLogin, login string) string {
+	return "github.organization.membership/" + orgLogin + "/" + login
 }
 
+func organizationInvitationID(orgLogin string, id int64) string {
+	return "github.organization.invitation/" + orgLogin + "/" + strconv.FormatInt(id, 10)
+}
+
+func repositoryTeamID(repoFullName, slug string) string {
+	return "github.repository.team/" + repoFullName + "/" + slug
+}
+
+// ---------- Organization memberships ----------
+
 func (g *mqlGithubOrganizationMembership) id() (string, error) {
-	if g.Login.Error != nil {
-		return "", g.Login.Error
+	return g.__id, nil
+}
+
+// organizationResource resolves the organization with the given login so that
+// team resources carry the organization their member and repository lookups
+// need. It reports null when the organization cannot be resolved, which leaves
+// those lookups reporting that no organization was specified rather than
+// failing the listing that produced the team.
+func organizationResource(runtime *plugin.Runtime, login string) *llx.RawData {
+	if login == "" {
+		return llx.NilData
 	}
-	return "github.organization.membership/" + g.cacheOrgLogin + "/" + g.Login.Data, nil
+	org, err := NewResource(runtime, "github.organization", map[string]*llx.RawData{
+		"name": llx.StringData(login),
+	})
+	if err != nil {
+		log.Debug().Err(err).Str("org", login).
+			Msg("could not resolve the organization owning a team")
+		return llx.NilData
+	}
+	return llx.ResourceData(org, org.MqlName())
 }
 
 // loginSet indexes a list of accounts by login for membership tests.
@@ -38,12 +73,18 @@ func loginSet(users []*github.User) map[string]struct{} {
 }
 
 // membershipRole reports the role a member holds in the organization, which is
-// admin for organization owners and member for everyone else.
-func membershipRole(login string, adminLogins map[string]struct{}) string {
-	if _, ok := adminLogins[login]; ok {
-		return "admin"
+// admin for organization owners and member for everyone else. It returns nil
+// when the owner list could not be read, since reporting every member as
+// "member" would understate the access of an owner we simply could not see.
+func membershipRole(login string, adminLogins map[string]struct{}, known bool) *string {
+	if !known {
+		return nil
 	}
-	return "member"
+	role := "member"
+	if _, ok := adminLogins[login]; ok {
+		role = "admin"
+	}
+	return &role
 }
 
 // membershipTwoFactorEnabled reports whether the member's account has
@@ -103,9 +144,19 @@ func (g *mqlGithubOrganization) memberships() ([]any, error) {
 		return nil, err
 	}
 
+	// The owner and two-factor listings are each narrower than the plain member
+	// listing, so either can be refused on a token that can still see the
+	// membership itself. Losing one of them degrades that fact to unknown
+	// rather than failing the whole listing.
+	rolesKnown := true
 	admins, err := listOrgMembers(conn, orgLogin, &github.ListMembersOptions{Role: "admin"})
 	if err != nil {
-		return nil, err
+		if !isAccessDeniedOrNotFound(err) {
+			return nil, err
+		}
+		log.Debug().Err(err).Str("org", orgLogin).
+			Msg("organization owners are not accessible, member roles stay unknown")
+		rolesKnown = false
 	}
 	adminLogins := loginSet(admins)
 
@@ -137,16 +188,16 @@ func (g *mqlGithubOrganization) memberships() ([]any, error) {
 		}
 
 		r, err := CreateResource(g.MqlRuntime, "github.organization.membership", map[string]*llx.RawData{
+			"__id":             llx.StringData(organizationMembershipID(orgLogin, login)),
 			"user":             llx.ResourceData(user, user.MqlName()),
 			"login":            llx.StringData(login),
-			"role":             llx.StringData(membershipRole(login, adminLogins)),
+			"role":             llx.StringDataPtr(membershipRole(login, adminLogins, rolesKnown)),
 			"twoFactorEnabled": llx.BoolDataPtr(membershipTwoFactorEnabled(login, noTwoFactorLogins, twoFactorKnown)),
 			"siteAdmin":        llx.BoolData(member.GetSiteAdmin()),
 		})
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlGithubOrganizationMembership).cacheOrgLogin = orgLogin
 		res = append(res, r)
 	}
 
@@ -155,15 +206,8 @@ func (g *mqlGithubOrganization) memberships() ([]any, error) {
 
 // ---------- Organization invitations ----------
 
-type mqlGithubOrganizationInvitationInternal struct {
-	cacheOrgLogin string
-}
-
 func (g *mqlGithubOrganizationInvitation) id() (string, error) {
-	if g.Id.Error != nil {
-		return "", g.Id.Error
-	}
-	return "github.organization.invitation/" + g.cacheOrgLogin + "/" + strconv.FormatInt(g.Id.Data, 10), nil
+	return g.__id, nil
 }
 
 func (g *mqlGithubOrganization) pendingInvitations() ([]any, error) {
@@ -209,6 +253,7 @@ func (g *mqlGithubOrganization) listInvitations(
 	res := []any{}
 	for _, invitation := range allInvitations {
 		args := map[string]*llx.RawData{
+			"__id":         llx.StringData(organizationInvitationID(orgLogin, invitation.GetID())),
 			"id":           llx.IntDataDefault(invitation.ID, 0),
 			"login":        llx.StringData(invitation.GetLogin()),
 			"email":        llx.StringData(invitation.GetEmail()),
@@ -236,7 +281,6 @@ func (g *mqlGithubOrganization) listInvitations(
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlGithubOrganizationInvitation).cacheOrgLogin = orgLogin
 		res = append(res, r)
 	}
 
@@ -245,15 +289,8 @@ func (g *mqlGithubOrganization) listInvitations(
 
 // ---------- Repository team access grants ----------
 
-type mqlGithubRepositoryTeamInternal struct {
-	cacheRepoFullName string
-}
-
 func (g *mqlGithubRepositoryTeam) id() (string, error) {
-	if g.Slug.Error != nil {
-		return "", g.Slug.Error
-	}
-	return "github.repository.team/" + g.cacheRepoFullName + "/" + g.Slug.Data, nil
+	return g.__id, nil
 }
 
 // teamPermissionLevels returns the permission names a grant satisfies, ordered
@@ -300,6 +337,11 @@ func (g *mqlGithubRepository) teams() ([]any, error) {
 		listOpts.Page = resp.NextPage
 	}
 
+	// The teams all belong to the repository's owning organization, so it is
+	// resolved once and shared. Without it their member and repository
+	// lookups have no organization to query against.
+	organization := organizationResource(g.MqlRuntime, ownerLogin)
+
 	res := []any{}
 	for _, team := range allTeams {
 		mqlTeam, err := CreateResource(g.MqlRuntime, "github.team", map[string]*llx.RawData{
@@ -310,13 +352,14 @@ func (g *mqlGithubRepository) teams() ([]any, error) {
 			"privacy":           llx.StringDataPtr(team.Privacy),
 			"defaultPermission": llx.StringDataPtr(team.Permission),
 			"type":              llx.StringDataPtr(team.Type),
-			"organization":      llx.NilData,
+			"organization":      organization,
 		})
 		if err != nil {
 			return nil, err
 		}
 
 		r, err := CreateResource(g.MqlRuntime, "github.repository.team", map[string]*llx.RawData{
+			"__id":         llx.StringData(repositoryTeamID(repoFullName, team.GetSlug())),
 			"team":         llx.ResourceData(mqlTeam, mqlTeam.MqlName()),
 			"slug":         llx.StringData(team.GetSlug()),
 			"permission":   llx.StringData(team.GetPermission()),
@@ -326,7 +369,6 @@ func (g *mqlGithubRepository) teams() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlGithubRepositoryTeam).cacheRepoFullName = repoFullName
 		res = append(res, r)
 	}
 
@@ -386,6 +428,8 @@ func (g *mqlGithubOrganizationCustomRole) teams() ([]any, error) {
 		return nil, err
 	}
 
+	organization := organizationResource(g.MqlRuntime, orgLogin)
+
 	listOpts := &github.ListOptions{PerPage: paginationPerPage}
 	res := []any{}
 	for {
@@ -407,7 +451,7 @@ func (g *mqlGithubOrganizationCustomRole) teams() ([]any, error) {
 				"privacy":           llx.StringDataPtr(team.Privacy),
 				"defaultPermission": llx.StringDataPtr(team.Permission),
 				"type":              llx.StringDataPtr(team.Type),
-				"organization":      llx.NilData,
+				"organization":      organization,
 			})
 			if err != nil {
 				return nil, err
