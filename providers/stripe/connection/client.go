@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // APIError captures a non-2xx response from the Stripe API.
@@ -77,15 +78,51 @@ func (c *StripeConnection) Get(ctx context.Context, path string, query url.Value
 	return nil
 }
 
+const (
+	// maxRateLimitRetries bounds how often a throttled request is retried
+	// before the 429 surfaces as an error. Stripe throttles reads at 100
+	// requests a second in live mode.
+	maxRateLimitRetries = 3
+	// baseRetryDelay is the first backoff step used when a 429 arrives
+	// without a usable Retry-After header. It doubles per attempt.
+	baseRetryDelay = 500 * time.Millisecond
+	// maxRetryDelay caps a single wait so an oversized Retry-After cannot
+	// park a scan.
+	maxRetryDelay = 30 * time.Second
+)
+
 func (c *StripeConnection) do(ctx context.Context, path string, query url.Values) ([]byte, error) {
 	u := c.baseURL + path
 	if len(query) > 0 {
 		u += "?" + query.Encode()
 	}
 
+	for attempt := 0; ; attempt++ {
+		body, status, header, err := c.roundTrip(ctx, u)
+		if err != nil {
+			return nil, fmt.Errorf("stripe API %s: %w", path, err)
+		}
+
+		if status >= 200 && status < 300 {
+			return body, nil
+		}
+
+		apiErr := newAPIError(status, path, body)
+		if status != http.StatusTooManyRequests || attempt >= maxRateLimitRetries {
+			return nil, apiErr
+		}
+		if err := sleepCtx(ctx, retryAfterDelay(header, attempt)); err != nil {
+			return nil, err
+		}
+	}
+}
+
+// roundTrip issues one authenticated GET and returns the body alongside the
+// status and headers, so the caller can decide whether to retry.
+func (c *StripeConnection) roundTrip(ctx context.Context, u string) ([]byte, int, http.Header, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Accept", "application/json")
@@ -96,33 +133,74 @@ func (c *StripeConnection) do(ctx context.Context, path string, query url.Values
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("stripe API %s: %w", path, err)
+		return nil, 0, nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("stripe API %s: read response: %w", path, err)
+		return nil, 0, nil, fmt.Errorf("read response: %w", err)
 	}
+	return body, resp.StatusCode, resp.Header, nil
+}
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		apiErr := &APIError{StatusCode: resp.StatusCode, Path: path}
-		var envelope struct {
-			Error struct {
-				Type    string `json:"type"`
-				Code    string `json:"code"`
-				Message string `json:"message"`
-			} `json:"error"`
-		}
-		if json.Unmarshal(body, &envelope) == nil {
-			apiErr.Type = envelope.Error.Type
-			apiErr.Code = envelope.Error.Code
-			apiErr.Message = envelope.Error.Message
-		}
-		return nil, apiErr
+// newAPIError builds an APIError from a non-2xx response, pulling the Stripe
+// error envelope out of the body when it is present.
+func newAPIError(status int, path string, body []byte) *APIError {
+	apiErr := &APIError{StatusCode: status, Path: path}
+	var envelope struct {
+		Error struct {
+			Type    string `json:"type"`
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
 	}
+	if json.Unmarshal(body, &envelope) == nil {
+		apiErr.Type = envelope.Error.Type
+		apiErr.Code = envelope.Error.Code
+		apiErr.Message = envelope.Error.Message
+	}
+	return apiErr
+}
 
-	return body, nil
+// retryAfterDelay reads the cooldown Stripe reports on a 429, accepting both
+// the delay-seconds and HTTP-date forms of Retry-After, and falls back to an
+// exponential backoff when the header is missing or unparseable.
+func retryAfterDelay(header http.Header, attempt int) time.Duration {
+	if v := header.Get("Retry-After"); v != "" {
+		if secs, err := strconv.Atoi(v); err == nil {
+			return clampDelay(time.Duration(secs) * time.Second)
+		}
+		if when, err := http.ParseTime(v); err == nil {
+			return clampDelay(time.Until(when))
+		}
+	}
+	return clampDelay(baseRetryDelay << attempt)
+}
+
+func clampDelay(d time.Duration) time.Duration {
+	if d < 0 {
+		return 0
+	}
+	if d > maxRetryDelay {
+		return maxRetryDelay
+	}
+	return d
+}
+
+// sleepCtx waits for d, giving up early if the context is cancelled.
+func sleepCtx(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return ctx.Err()
+	}
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 // identifiable is satisfied by every Stripe list element, which always carries

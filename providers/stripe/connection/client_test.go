@@ -172,3 +172,85 @@ func TestGetDecodesBody(t *testing.T) {
 		t.Fatal("expected id key")
 	}
 }
+
+// TestRetriesRateLimit verifies a 429 is waited out and retried rather than
+// failing the scan, and that the Retry-After header drives the wait.
+func TestRetriesRateLimit(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls <= 2 {
+			w.Header().Set("Retry-After", "0")
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte(`{"error":{"type":"rate_limit_error","code":"rate_limit"}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"object":"list","has_more":false,"data":[{"id":"c_1","name":"ok"}]}`))
+	}))
+	defer srv.Close()
+
+	got, err := List[testRecord](context.Background(), newTestConn(t, srv.URL), "/v1/things", nil)
+	if err != nil {
+		t.Fatalf("expected the 429s to be retried, got %v", err)
+	}
+	if calls != 3 {
+		t.Fatalf("expected 2 retries then success, got %d calls", calls)
+	}
+	if len(got) != 1 || got[0].ID != "c_1" {
+		t.Fatalf("unexpected result after retry: %+v", got)
+	}
+}
+
+// TestRateLimitSurfacesAfterMaxRetries verifies a persistently throttled
+// endpoint reports the 429 instead of retrying forever or returning an empty
+// list that would read as "no resources".
+func TestRateLimitSurfacesAfterMaxRetries(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		w.Header().Set("Retry-After", "0")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer srv.Close()
+
+	_, err := List[testRecord](context.Background(), newTestConn(t, srv.URL), "/v1/things", nil)
+	if err == nil {
+		t.Fatal("expected the 429 to surface once retries are exhausted")
+	}
+	if !IsClientError(err) {
+		t.Fatalf("expected a 4xx APIError, got %v", err)
+	}
+	if calls != maxRateLimitRetries+1 {
+		t.Fatalf("expected %d attempts, got %d", maxRateLimitRetries+1, calls)
+	}
+}
+
+// TestRetryAfterDelay covers both Retry-After forms and the backoff fallback.
+func TestRetryAfterDelay(t *testing.T) {
+	secs := http.Header{}
+	secs.Set("Retry-After", "2")
+	if got := retryAfterDelay(secs, 0); got != 2*time.Second {
+		t.Fatalf("delay-seconds form: expected 2s, got %v", got)
+	}
+
+	date := http.Header{}
+	date.Set("Retry-After", time.Now().Add(3*time.Second).UTC().Format(http.TimeFormat))
+	if got := retryAfterDelay(date, 0); got <= 0 || got > 4*time.Second {
+		t.Fatalf("HTTP-date form: expected roughly 3s, got %v", got)
+	}
+
+	// An absent header falls back to a doubling backoff.
+	if got := retryAfterDelay(http.Header{}, 0); got != baseRetryDelay {
+		t.Fatalf("fallback: expected %v, got %v", baseRetryDelay, got)
+	}
+	if got := retryAfterDelay(http.Header{}, 2); got != 4*baseRetryDelay {
+		t.Fatalf("fallback: expected %v, got %v", 4*baseRetryDelay, got)
+	}
+
+	// An oversized header cannot park the scan.
+	huge := http.Header{}
+	huge.Set("Retry-After", "86400")
+	if got := retryAfterDelay(huge, 0); got != maxRetryDelay {
+		t.Fatalf("expected the wait to be capped at %v, got %v", maxRetryDelay, got)
+	}
+}
