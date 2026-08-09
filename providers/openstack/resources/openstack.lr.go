@@ -97,6 +97,7 @@ const (
 	ResourceOpenstackOrchestrationStack              string = "openstack.orchestration.stack"
 	ResourceOpenstackComputeQuotaSet                 string = "openstack.compute.quotaSet"
 	ResourceOpenstackNetworkRbacPolicy               string = "openstack.network.rbacPolicy"
+	ResourceOpenstackNetworkAddressGroup             string = "openstack.network.addressGroup"
 	ResourceOpenstackBlockstorageQosSpec             string = "openstack.blockstorage.qosSpec"
 )
 
@@ -428,6 +429,10 @@ func init() {
 			Init:   initOpenstackNetworkRbacPolicy,
 			Create: createOpenstackNetworkRbacPolicy,
 		},
+		"openstack.network.addressGroup": {
+			Init:   initOpenstackNetworkAddressGroup,
+			Create: createOpenstackNetworkAddressGroup,
+		},
 		"openstack.blockstorage.qosSpec": {
 			Init:   initOpenstackBlockstorageQosSpec,
 			Create: createOpenstackBlockstorageQosSpec,
@@ -601,6 +606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("openstack.securityGroup")))
+	},
+	"openstack.addressGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetAddressGroups()).ToDataRes(types.Array(types.Resource("openstack.network.addressGroup")))
 	},
 	"openstack.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetVolumes()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.volume")))
@@ -829,6 +837,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.identity.roleAssignment.scopeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityRoleAssignment).GetScopeType()).ToDataRes(types.String)
+	},
+	"openstack.identity.roleAssignment.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityRoleAssignment).GetInherited()).ToDataRes(types.Bool)
 	},
 	"openstack.identity.roleAssignment.roleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityRoleAssignment).GetRoleName()).ToDataRes(types.String)
@@ -1232,6 +1243,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.port.portSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackPort).GetPortSecurityEnabled()).ToDataRes(types.Bool)
 	},
+	"openstack.port.trustedVif": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPort).GetTrustedVif()).ToDataRes(types.Bool)
+	},
+	"openstack.port.bindingVnicType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPort).GetBindingVnicType()).ToDataRes(types.String)
+	},
+	"openstack.port.bindingVifType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPort).GetBindingVifType()).ToDataRes(types.String)
+	},
 	"openstack.port.propagateUplinkStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackPort).GetPropagateUplinkStatus()).ToDataRes(types.Bool)
 	},
@@ -1402,6 +1422,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.securityGroup.rule.remoteGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteGroup()).ToDataRes(types.Resource("openstack.securityGroup"))
+	},
+	"openstack.securityGroup.rule.remoteAddressGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteAddressGroup()).ToDataRes(types.Resource("openstack.network.addressGroup"))
 	},
 	"openstack.securityGroup.rule.includesPublicSource": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetIncludesPublicSource()).ToDataRes(types.Bool)
@@ -3836,6 +3859,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.network.rbacPolicy.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackNetworkRbacPolicy).GetProject()).ToDataRes(types.Resource("openstack.project"))
 	},
+	"openstack.network.addressGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkAddressGroup).GetId()).ToDataRes(types.String)
+	},
+	"openstack.network.addressGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkAddressGroup).GetName()).ToDataRes(types.String)
+	},
+	"openstack.network.addressGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkAddressGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.network.addressGroup.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkAddressGroup).GetAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.network.addressGroup.containsPublicAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkAddressGroup).GetContainsPublicAddress()).ToDataRes(types.Bool)
+	},
+	"openstack.network.addressGroup.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkAddressGroup).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
 	"openstack.blockstorage.qosSpec.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageQosSpec).GetId()).ToDataRes(types.String)
 	},
@@ -3994,6 +4035,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.addressGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).AddressGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4322,6 +4367,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.identity.roleAssignment.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackIdentityRoleAssignment).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.roleAssignment.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityRoleAssignment).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"openstack.identity.roleAssignment.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4900,6 +4949,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackPort).PortSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"openstack.port.trustedVif": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPort).TrustedVif, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.port.bindingVnicType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPort).BindingVnicType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.port.bindingVifType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPort).BindingVifType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"openstack.port.propagateUplinkStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackPort).PropagateUplinkStatus, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5142,6 +5203,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.securityGroup.rule.remoteGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackSecurityGroupRule).RemoteGroup, ok = plugin.RawToTValue[*mqlOpenstackSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"openstack.securityGroup.rule.remoteAddressGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSecurityGroupRule).RemoteAddressGroup, ok = plugin.RawToTValue[*mqlOpenstackNetworkAddressGroup](v.Value, v.Error)
 		return
 	},
 	"openstack.securityGroup.rule.includesPublicSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8628,6 +8693,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackNetworkRbacPolicy).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
 		return
 	},
+	"openstack.network.addressGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.network.addressGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.addressGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.addressGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.addressGroup.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.network.addressGroup.containsPublicAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).ContainsPublicAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.network.addressGroup.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkAddressGroup).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
 	"openstack.blockstorage.qosSpec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackBlockstorageQosSpec).__id, ok = v.Value.(string)
 		return
@@ -8710,6 +8803,7 @@ type mqlOpenstack struct {
 	Ports                   plugin.TValue[[]any]
 	FloatingIps             plugin.TValue[[]any]
 	SecurityGroups          plugin.TValue[[]any]
+	AddressGroups           plugin.TValue[[]any]
 	Volumes                 plugin.TValue[[]any]
 	Snapshots               plugin.TValue[[]any]
 	Backups                 plugin.TValue[[]any]
@@ -9287,6 +9381,22 @@ func (c *mqlOpenstack) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlOpenstack) GetAddressGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddressGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "addressGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.addressGroups()
 	})
 }
 
@@ -10450,6 +10560,7 @@ type mqlOpenstackIdentityRoleAssignment struct {
 	mqlOpenstackIdentityRoleAssignmentInternal
 	ActorType    plugin.TValue[string]
 	ScopeType    plugin.TValue[string]
+	Inherited    plugin.TValue[bool]
 	RoleName     plugin.TValue[string]
 	Role         plugin.TValue[*mqlOpenstackRole]
 	User         plugin.TValue[*mqlOpenstackUser]
@@ -10496,6 +10607,10 @@ func (c *mqlOpenstackIdentityRoleAssignment) GetActorType() *plugin.TValue[strin
 
 func (c *mqlOpenstackIdentityRoleAssignment) GetScopeType() *plugin.TValue[string] {
 	return &c.ScopeType
+}
+
+func (c *mqlOpenstackIdentityRoleAssignment) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
 }
 
 func (c *mqlOpenstackIdentityRoleAssignment) GetRoleName() *plugin.TValue[string] {
@@ -11867,6 +11982,9 @@ type mqlOpenstackPort struct {
 	FixedIps              plugin.TValue[[]any]
 	AllowedAddressPairs   plugin.TValue[[]any]
 	PortSecurityEnabled   plugin.TValue[bool]
+	TrustedVif            plugin.TValue[bool]
+	BindingVnicType       plugin.TValue[string]
+	BindingVifType        plugin.TValue[string]
 	PropagateUplinkStatus plugin.TValue[bool]
 	Description           plugin.TValue[string]
 	Tags                  plugin.TValue[[]any]
@@ -11952,6 +12070,18 @@ func (c *mqlOpenstackPort) GetAllowedAddressPairs() *plugin.TValue[[]any] {
 
 func (c *mqlOpenstackPort) GetPortSecurityEnabled() *plugin.TValue[bool] {
 	return &c.PortSecurityEnabled
+}
+
+func (c *mqlOpenstackPort) GetTrustedVif() *plugin.TValue[bool] {
+	return &c.TrustedVif
+}
+
+func (c *mqlOpenstackPort) GetBindingVnicType() *plugin.TValue[string] {
+	return &c.BindingVnicType
+}
+
+func (c *mqlOpenstackPort) GetBindingVifType() *plugin.TValue[string] {
+	return &c.BindingVifType
 }
 
 func (c *mqlOpenstackPort) GetPropagateUplinkStatus() *plugin.TValue[bool] {
@@ -12482,6 +12612,7 @@ type mqlOpenstackSecurityGroupRule struct {
 	UpdatedAt            plugin.TValue[*time.Time]
 	SecurityGroup        plugin.TValue[*mqlOpenstackSecurityGroup]
 	RemoteGroup          plugin.TValue[*mqlOpenstackSecurityGroup]
+	RemoteAddressGroup   plugin.TValue[*mqlOpenstackNetworkAddressGroup]
 	IncludesPublicSource plugin.TValue[bool]
 	Project              plugin.TValue[*mqlOpenstackProject]
 }
@@ -12596,6 +12727,22 @@ func (c *mqlOpenstackSecurityGroupRule) GetRemoteGroup() *plugin.TValue[*mqlOpen
 		}
 
 		return c.remoteGroup()
+	})
+}
+
+func (c *mqlOpenstackSecurityGroupRule) GetRemoteAddressGroup() *plugin.TValue[*mqlOpenstackNetworkAddressGroup] {
+	return plugin.GetOrCompute[*mqlOpenstackNetworkAddressGroup](&c.RemoteAddressGroup, func() (*mqlOpenstackNetworkAddressGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.securityGroup.rule", c.__id, "remoteAddressGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackNetworkAddressGroup), nil
+			}
+		}
+
+		return c.remoteAddressGroup()
 	})
 }
 
@@ -21156,6 +21303,94 @@ func (c *mqlOpenstackNetworkRbacPolicy) GetProject() *plugin.TValue[*mqlOpenstac
 	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.network.rbacPolicy", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackNetworkAddressGroup for the openstack.network.addressGroup resource
+type mqlOpenstackNetworkAddressGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackNetworkAddressGroupInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Addresses             plugin.TValue[[]any]
+	ContainsPublicAddress plugin.TValue[bool]
+	Project               plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackNetworkAddressGroup creates a new instance of this resource
+func createOpenstackNetworkAddressGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackNetworkAddressGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.network.addressGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) MqlName() string {
+	return "openstack.network.addressGroup"
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) GetContainsPublicAddress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ContainsPublicAddress, func() (bool, error) {
+		return c.containsPublicAddress()
+	})
+}
+
+func (c *mqlOpenstackNetworkAddressGroup) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.network.addressGroup", c.__id, "project")
 			if err != nil {
 				return nil, err
 			}

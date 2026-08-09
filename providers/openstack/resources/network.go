@@ -11,7 +11,9 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/portforwarding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/mtu"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portstrustedvif"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/provider"
 	qospolicies "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	neutronquotas "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/quotas"
@@ -45,12 +47,15 @@ type networkExt struct {
 	qospolicies.QoSPolicyExt
 }
 
-// portExt is the base port plus the port-security extension; it lets one list
-// call surface portSecurityEnabled. Clouds without the extension simply leave
-// the field at false.
+// portExt is the base port plus the port-security, port-binding, and trusted-VIF
+// extensions; it lets one list call surface portSecurityEnabled, the binding
+// attributes, and trustedVif. Clouds without a given extension simply leave its
+// fields at their zero value.
 type portExt struct {
 	ports.Port
 	portsecurity.PortSecurityExt
+	portsbinding.PortsBindingExt
+	portstrustedvif.PortTrustedVIFExt
 }
 
 func (r *mqlOpenstackNetwork) id() (string, error) {
@@ -528,6 +533,9 @@ func (o *mqlOpenstack) ports() ([]any, error) {
 			"fixedIps":              dictSliceData(fixedIPsToDict(p.FixedIPs)),
 			"allowedAddressPairs":   dictSliceData(allowedAddressPairsToDict(p.AllowedAddressPairs)),
 			"portSecurityEnabled":   llx.BoolData(p.PortSecurityEnabled),
+			"trustedVif":            llx.BoolDataPtr(p.PortTrustedVIF),
+			"bindingVnicType":       llx.StringData(p.VNICType),
+			"bindingVifType":        llx.StringData(p.VIFType),
 			"propagateUplinkStatus": llx.BoolData(p.PropagateUplinkStatus),
 			"description":           llx.StringData(p.Description),
 			"tags":                  stringSliceData(p.Tags),
@@ -1114,6 +1122,20 @@ func (r *mqlOpenstackSecurityGroupRule) remoteGroup() (*mqlOpenstackSecurityGrou
 		return nil, err
 	}
 	return res.(*mqlOpenstackSecurityGroup), nil
+}
+
+func (r *mqlOpenstackSecurityGroupRule) remoteAddressGroup() (*mqlOpenstackNetworkAddressGroup, error) {
+	if r.cacheRemoteAddressGroupID == "" {
+		r.RemoteAddressGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.network.addressGroup", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheRemoteAddressGroupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackNetworkAddressGroup), nil
 }
 
 func (r *mqlOpenstackSecurityGroupRule) project() (*mqlOpenstackProject, error) {
