@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 openstack 13.0.1
+openstack.addressGroups 13.7.6
 openstack.aggregates 13.0.1
 openstack.applicationCredential 13.0.1
 openstack.applicationCredential.accessRules 13.0.1
@@ -514,6 +515,7 @@ openstack.identity.region.parentRegionId 13.1.4
 openstack.identity.roleAssignment 13.4.2
 openstack.identity.roleAssignment.actorType 13.4.2
 openstack.identity.roleAssignment.group 13.4.2
+openstack.identity.roleAssignment.inherited 13.7.6
 openstack.identity.roleAssignment.role 13.4.2
 openstack.identity.roleAssignment.roleName 13.4.2
 openstack.identity.roleAssignment.scopeDomain 13.4.2
@@ -621,6 +623,13 @@ openstack.l7Policies 13.0.1
 openstack.listeners 13.0.1
 openstack.loadBalancers 13.0.1
 openstack.network 13.0.1
+openstack.network.addressGroup 13.7.6
+openstack.network.addressGroup.addresses 13.7.6
+openstack.network.addressGroup.containsPublicAddress 13.7.6
+openstack.network.addressGroup.description 13.7.6
+openstack.network.addressGroup.id 13.7.6
+openstack.network.addressGroup.name 13.7.6
+openstack.network.addressGroup.project 13.7.6
 openstack.network.adminStateUp 13.0.1
 openstack.network.createdAt 13.0.1
 openstack.network.description 13.0.1
@@ -869,6 +878,8 @@ openstack.pools 13.0.1
 openstack.port 13.0.1
 openstack.port.adminStateUp 13.0.1
 openstack.port.allowedAddressPairs 13.4.2
+openstack.port.bindingVifType 13.7.6
+openstack.port.bindingVnicType 13.7.6
 openstack.port.createdAt 13.0.1
 openstack.port.description 13.0.1
 openstack.port.deviceOwner 13.0.1
@@ -887,6 +898,7 @@ openstack.port.server 13.2.1
 openstack.port.status 13.0.1
 openstack.port.subnets 13.2.1
 openstack.port.tags 13.0.1
+openstack.port.trustedVif 13.7.6
 openstack.port.updatedAt 13.0.1
 openstack.ports 13.0.1
 openstack.project 13.0.1
@@ -961,6 +973,7 @@ openstack.securityGroup.rule.portRangeMax 13.0.1
 openstack.securityGroup.rule.portRangeMin 13.0.1
 openstack.securityGroup.rule.project 13.2.1
 openstack.securityGroup.rule.protocol 13.0.1
+openstack.securityGroup.rule.remoteAddressGroup 13.7.6
 openstack.securityGroup.rule.remoteAddressGroupId 13.5.2
 openstack.securityGroup.rule.remoteGroup 13.0.1
 openstack.securityGroup.rule.remoteIpPrefix 13.0.1

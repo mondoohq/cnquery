@@ -88,6 +88,8 @@ openstack {
   floatingIps() []openstack.floatingIp
   // Neutron security groups (with embedded rules)
   securityGroups() []openstack.securityGroup
+  // Neutron address groups referenced by security group rules
+  addressGroups() []openstack.network.addressGroup
 
   // Cinder block-storage volumes in the scoped project
   volumes() []openstack.blockstorage.volume
@@ -317,16 +319,27 @@ private openstack.group @defaults("id name") {
 // OpenStack Keystone role assignment
 //
 // Flattened record of a single role granted to a single principal (a user or a
-// group) at a single scope (a project or a domain). Enumerating these is how a
-// policy audits who holds privileged roles such as `admin` across the whole
-// cloud, instead of walking each user or group. System-scoped grants and the
-// inherited flag are not reported, because the underlying client does not
-// return them.
+// group) at a single scope (a project, a domain, or the whole deployment).
+// Enumerating these is how a policy audits who holds privileged roles such as
+// `admin` across the whole cloud, instead of walking each user or group. A
+// system-scoped grant carries a role across every project and domain at once,
+// and an inherited domain grant applies to every project underneath, so both
+// reach far past the object named by scopeProject or scopeDomain.
 private openstack.identity.roleAssignment @defaults("roleName actorType scopeType") {
   // Whether the role is granted to a user or a group ("user" or "group")
   actorType string
-  // Whether the grant applies to a project or a domain ("project" or "domain")
+  // What the grant applies to
+  //
+  // One of "project", "domain", or "system". A system grant covers the entire
+  // deployment rather than one object, so neither scopeProject nor scopeDomain
+  // is set for it.
   scopeType string
+  // Whether a domain or project grant also applies to the projects underneath it
+  //
+  // An inherited grant is not held on the named object itself. It is applied to
+  // every project below it, so a single inherited domain grant of `admin`
+  // confers that role on every project in the domain, present and future.
+  inherited bool
   // Name of the granted role; empty when the role catalog is not readable
   roleName string
   // Role granted by this assignment
@@ -335,9 +348,9 @@ private openstack.identity.roleAssignment @defaults("roleName actorType scopeTyp
   user() openstack.user
   // Group the role is granted to; null when the grant is to a user
   group() openstack.group
-  // Project the grant applies to; null when the grant is domain-scoped
+  // Project the grant applies to; null when the grant is domain- or system-scoped
   scopeProject() openstack.project
-  // Domain the grant applies to; null when the grant is project-scoped
+  // Domain the grant applies to; null when the grant is project- or system-scoped
   scopeDomain() openstack.domain
 }
 
@@ -738,6 +751,29 @@ private openstack.port @defaults("id name status macAddress") {
   allowedAddressPairs []dict
   // Whether port security is enabled
   portSecurityEnabled bool
+  // Whether the port is a trusted SR-IOV virtual function
+  //
+  // A trusted virtual function may change its MAC address and enter promiscuous
+  // mode, which lets the guest spoof addresses and observe traffic addressed to
+  // others regardless of security groups or port security. Null when the cloud
+  // does not run the port trusted VIF extension or the attribute is unset, both
+  // of which mean untrusted.
+  trustedVif bool
+  // Virtual interface card type bound to the port
+  //
+  // One of normal, direct, direct-physical, macvtap, baremetal,
+  // virtio-forwarder, vdpa, remote-managed, or smart-nic. Everything other than
+  // normal and macvtap hands the guest a hardware function, so the software
+  // datapath that enforces security groups is bypassed. Empty when the cloud
+  // does not expose port binding attributes to this user.
+  bindingVnicType string
+  // Virtual interface type the mechanism driver bound the port with
+  //
+  // Examples include ovs, bridge, vhostuser, hw_veb, hostdev_physical,
+  // distributed, and other. The values binding_failed and unbound mean no
+  // datapath was established. Empty when the cloud does not expose port binding
+  // attributes to this user.
+  bindingVifType string
   // Whether port uplink status propagation is enabled
   propagateUplinkStatus bool
   // Description
@@ -895,8 +931,12 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   portRangeMax int
   // Remote IP prefix (CIDR; empty when matched by remote group instead)
   remoteIpPrefix string
-  // Remote address group ID the rule matches; empty when matched by IP prefix or remote security group instead
-  remoteAddressGroupId string
+  // Remote address group ID the rule matches
+  //
+  // Deprecated in favor of remoteAddressGroup, which resolves the same
+  // value to the address group and its addresses. Empty when the rule
+  // is matched by IP prefix or remote security group instead.
+  remoteAddressGroupId @maturity("deprecated") string
   // Description
   description string
   // Creation timestamp
@@ -907,9 +947,11 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   securityGroup() openstack.securityGroup
   // Remote security group the rule matches; null when matched by IP prefix instead
   remoteGroup() openstack.securityGroup
+  // Remote address group the rule matches; null when matched by IP prefix or remote security group instead
+  remoteAddressGroup() openstack.network.addressGroup
   // Whether the rule's source reaches the public internet
   //
-  // True when remoteIpPrefix is a public CIDR (a broad block such as 0.0.0.0/0 or ::/0, excluding private and reserved ranges) or when the rule is unscoped (no remote IP prefix, no remote group, and no remote address group), which Neutron treats as any source. A rule scoped to a remote security group or remote address group is not public. Direction-agnostic, so it also classifies egress destinations.
+  // True when remoteIpPrefix is a public CIDR (a broad block such as 0.0.0.0/0 or ::/0, excluding private and reserved ranges), when the rule matches a remote address group that holds such a range, or when the rule is unscoped (no remote IP prefix, no remote group, and no remote address group), which Neutron treats as any source. A rule scoped to a remote security group is not public. Direction-agnostic, so it also classifies egress destinations.
   includesPublicSource() bool
   // Project that owns this security group rule
   project() openstack.project
@@ -3264,6 +3306,41 @@ private openstack.network.rbacPolicy @defaults("id action objectType targetProje
   // Shared QoS policy; null unless objectType is "qos-policy"
   qosPolicy() openstack.qosPolicy
   // Project that owns the RBAC policy
+  project() openstack.project
+}
+
+// OpenStack Neutron address group
+//
+// Named collection of addresses that security group rules match against
+// instead of a single remote IP prefix. The `addresses` field holds the
+// members, each either a CIDR (`203.0.113.0/24`) or an inclusive IP range
+// (`203.0.113.10-203.0.113.20`), and `containsPublicAddress` reports
+// whether any member opens a broad slice of the public internet. Because
+// one address group can be reused by many rules, widening it silently
+// widens every rule that references it, which makes the group itself the
+// unit worth auditing. Select a group by id with
+// `openstack.network.addressGroup(id: "...")`.
+private openstack.network.addressGroup @defaults("id name addresses") {
+  init(id? string)
+  // Address group ID (UUID)
+  id string
+  // Address group name
+  name string
+  // Description
+  description string
+  // Member addresses
+  //
+  // Each entry is either a CIDR ("203.0.113.0/24", "2001:db8::/64") or an
+  // inclusive IP range ("203.0.113.10-203.0.113.20").
+  addresses []string
+  // Whether any member address reaches the public internet
+  //
+  // True when a member is a broad public block such as 0.0.0.0/0 or ::/0, or an
+  // IP range spanning an equivalent number of addresses, excluding private and
+  // reserved ranges. A single public host or a narrow allow-listed range is not
+  // treated as public.
+  containsPublicAddress() bool
+  // Project that owns the address group
   project() openstack.project
 }
 

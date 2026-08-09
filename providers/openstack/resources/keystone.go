@@ -4,12 +4,16 @@
 package resources
 
 import (
+	"context"
+
+	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/applicationcredentials"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/domains"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/roles"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/users"
+	"github.com/gophercloud/gophercloud/v2/pagination"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -765,6 +769,74 @@ func roleNamesByID(runtime *plugin.Runtime) map[string]string {
 	return byID
 }
 
+// roleAssignmentEntry mirrors one entry of the Keystone role_assignments
+// response. The client's own RoleAssignment struct models only the project and
+// domain scopes, so a system-scoped grant (the deployment-wide `admin` that
+// outranks every project) and the OS-INHERIT flag (which pushes a domain grant
+// down onto every project inside it) are both absent from it. Decoding the
+// response ourselves keeps those two out of the blind spot.
+type roleAssignmentEntry struct {
+	Role struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"role"`
+	User struct {
+		ID string `json:"id"`
+	} `json:"user"`
+	Group struct {
+		ID string `json:"id"`
+	} `json:"group"`
+	Scope struct {
+		Domain struct {
+			ID string `json:"id"`
+		} `json:"domain"`
+		Project struct {
+			ID string `json:"id"`
+		} `json:"project"`
+		System struct {
+			All bool `json:"all"`
+		} `json:"system"`
+		// "projects" when the grant applies to the projects below the scoped
+		// object rather than to the object itself.
+		InheritedTo string `json:"OS-INHERIT:inherited_to"`
+	} `json:"scope"`
+}
+
+// scope reports what the grant applies to and the id of that object. A
+// system-scoped grant names no object, so it reports the fixed id "all", the
+// only system scope Keystone defines.
+func (a *roleAssignmentEntry) scope() (scopeType, scopeID string) {
+	switch {
+	case a.Scope.Project.ID != "":
+		return "project", a.Scope.Project.ID
+	case a.Scope.Domain.ID != "":
+		return "domain", a.Scope.Domain.ID
+	case a.Scope.System.All:
+		return "system", "all"
+	}
+	return "", ""
+}
+
+// listRoleAssignments pages through /role_assignments, decoding each page into
+// roleAssignmentEntry rather than the client's lossy struct.
+func listRoleAssignments(client *gophercloud.ServiceClient, opts roles.ListAssignmentsOpts) ([]roleAssignmentEntry, error) {
+	out := []roleAssignmentEntry{}
+	err := roles.ListAssignments(client, opts).EachPage(ctx(), func(_ context.Context, page pagination.Page) (bool, error) {
+		var body struct {
+			RoleAssignments []roleAssignmentEntry `json:"role_assignments"`
+		}
+		if err := (page.(roles.RoleAssignmentPage)).ExtractInto(&body); err != nil {
+			return false, err
+		}
+		out = append(out, body.RoleAssignments...)
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (o *mqlOpenstack) roleAssignments() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.IdentityClient()
@@ -772,17 +844,13 @@ func (o *mqlOpenstack) roleAssignments() ([]any, error) {
 		return nil, err
 	}
 	includeNames := true
-	pages, err := roles.ListAssignments(client, roles.ListAssignmentsOpts{
+	items, err := listRoleAssignments(client, roles.ListAssignmentsOpts{
 		IncludeNames: &includeNames,
-	}).AllPages(ctx())
+	})
 	if err != nil {
 		if translateOpenstackError(err) == nil {
 			return []any{}, nil
 		}
-		return nil, err
-	}
-	items, err := roles.ExtractRoleAssignments(pages)
-	if err != nil {
 		return nil, err
 	}
 
@@ -796,23 +864,23 @@ func (o *mqlOpenstack) roleAssignments() ([]any, error) {
 			actorType = "group"
 			actorID = a.Group.ID
 		}
-		scopeType := ""
-		scopeID := ""
-		if a.Scope.Project.ID != "" {
-			scopeType = "project"
-			scopeID = a.Scope.Project.ID
-		} else if a.Scope.Domain.ID != "" {
-			scopeType = "domain"
-			scopeID = a.Scope.Domain.ID
-		}
+		scopeType, scopeID := a.scope()
+		inherited := a.Scope.InheritedTo != ""
 		roleName := a.Role.Name
 		if roleName == "" {
 			roleName = byID[a.Role.ID]
 		}
+		// The same role, principal, and scope can be granted both directly and
+		// by inheritance, so the flag belongs in the identity.
+		id := "openstack.identity.roleAssignment/" + a.Role.ID + "/" + actorType + "/" + actorID + "/" + scopeType + "/" + scopeID
+		if inherited {
+			id += "/inherited"
+		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.identity.roleAssignment", map[string]*llx.RawData{
-			"__id":      llx.StringData("openstack.identity.roleAssignment/" + a.Role.ID + "/" + actorType + "/" + actorID + "/" + scopeType + "/" + scopeID),
+			"__id":      llx.StringData(id),
 			"actorType": llx.StringData(actorType),
 			"scopeType": llx.StringData(scopeType),
+			"inherited": llx.BoolData(inherited),
 			"roleName":  llx.StringData(roleName),
 		})
 		if err != nil {
