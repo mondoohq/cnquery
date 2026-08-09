@@ -63,6 +63,24 @@ arista.eos {
   routeMaps() []arista.eos.routeMap
   // Prefix-lists referenced by routing policy
   prefixLists() []arista.eos.prefixList
+  // Event handlers, the configured reactions to device events
+  eventHandlers() []arista.eos.eventHandler
+  // Recurring commands the device runs on its own
+  schedules() []arista.eos.schedule
+  // Installed EOS extensions
+  extensions() []arista.eos.extension
+  // Boot image and console configuration
+  bootConfig() arista.eos.bootConfig
+  // Saved configuration the device loads on boot
+  startupConfig() arista.eos.startupConfig
+  // Whether the running configuration has been saved to startup
+  //
+  // False when the running and saved configurations differ, meaning the
+  // device would come back from a reboot in a different state than it is in
+  // now. Comparison ignores comment lines, blank lines, and trailing
+  // whitespace, since those differ between two renderings of identical
+  // content.
+  configSavedToStartup() bool
   // Hardware environment and inventory
   hardware() arista.eos.hardware
   // AAA (Authentication, Authorization, Accounting) configuration
@@ -1532,6 +1550,119 @@ arista.eos.arpInspection {
   // Held as interface names, matching how the other interface-scoped
   // resources in this provider report the ports they cover.
   trustedInterfaces []string
+}
+
+// Arista EOS event handler
+//
+// A configured reaction to a device event, selected by `name`. An
+// event-handler whose `actionType` is `bash` runs an arbitrary shell command
+// on the switch whenever its trigger fires, which makes it the closest thing
+// the platform has to a cron backdoor: an `on-boot` trigger paired with a
+// bash action re-executes on every reboot and survives most remediation.
+//
+// `action` carries the command text in full, because what the command does is
+// the whole question. Enumerating handlers and reading their actions is the
+// point of this resource.
+private arista.eos.eventHandler @defaults("name trigger actionType action") {
+  // Handler name
+  name string
+  // Event class the handler fires on
+  //
+  // For example `on-boot`, `on-startup-config`, `on-intf`, `on-counters`,
+  // or `on-logging`.
+  trigger string
+  // Remainder of the trigger line
+  //
+  // For example the interface and condition on an `on-intf` trigger. Empty
+  // when the trigger takes no further arguments.
+  triggerDetail string
+  // Kind of action the handler runs
+  //
+  // Typically `bash` for a shell command or `log` for a log message. Empty
+  // when the handler has no action configured, in which case it does
+  // nothing.
+  actionType string
+  // Action text as configured
+  //
+  // For a bash action this is the command line that runs on the switch.
+  action string
+  // Wait before the action runs, in seconds (0 = unset)
+  delay int
+  // Bound on how long the action may run, in seconds (0 = unset)
+  timeout int
+  // Whether the action runs without blocking the event
+  asynchronous bool
+}
+
+// Arista EOS scheduled task
+//
+// A recurring command the device runs on its own, selected by `name`. Like an
+// event handler, a schedule whose `command` starts with `bash` executes a
+// shell command on the switch, on a timer, with no operator present.
+private arista.eos.schedule @defaults("name interval command") {
+  // Schedule name
+  name string
+  // Run interval in minutes (0 = unset)
+  interval int
+  // Cap on retained output files (0 = unset)
+  maxLogFiles int
+  // Bound on how long the command may run, in minutes (0 = unset)
+  timeout int
+  // Command line the schedule runs
+  command string
+}
+
+// Arista EOS installed extension
+//
+// An RPM package installed onto the switch, selected by `name`. Extensions
+// are how third-party and in-house software gets onto EOS, so each one is
+// code running on a network device from outside the vendor image and the
+// installed set is worth inventorying.
+//
+// `presence` and `status` answer different questions: an extension file can
+// be on the device without being activated, and one activated now but not
+// configured to install at boot disappears on the next reload.
+private arista.eos.extension @defaults("name version status") {
+  // Extension file name
+  name string
+  // Extension version
+  version string
+  // Extension release
+  release string
+  // Whether the extension file is on the device, for example `present`
+  presence string
+  // Whether the extension is activated, for example `installed` or `notInstalled`
+  status string
+  // How many RPM packages the extension contains
+  numPackages int
+  // Whether the device reports a problem with the extension
+  error bool
+}
+
+// Arista EOS boot configuration
+//
+// Boot settings for the device: the software image loaded on the next boot
+// and the console speed it comes up with. The image path is what a device
+// actually runs after a reload, so it is worth confirming it points at the
+// image that was reviewed rather than one staged beside it.
+arista.eos.bootConfig {
+  // Path to the software image loaded on next boot
+  softwareImage string
+  // Console baud rate
+  consoleSpeed int
+  // Memory test setting (empty when unset)
+  memoryTest string
+}
+
+// Arista EOS startup configuration
+//
+// Saved configuration the device loads on boot, as one string. Compare it
+// against the running configuration to find changes that were made live and
+// never saved, which would be lost on the next reload. The
+// `arista.eos.configSavedToStartup` predicate does that comparison.
+arista.eos.startupConfig {
+  // EOS startup-config
+  content() string
 }
 
 // Arista EOS system logging configuration
