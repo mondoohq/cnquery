@@ -465,6 +465,7 @@ func (g *mqlGithubOrganization) customRoles() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		r.(*mqlGithubOrganizationCustomRole).cacheOrgLogin = orgLogin
 		res = append(res, r)
 	}
 	return res, nil

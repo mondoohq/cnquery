@@ -97,6 +97,49 @@ func TestRunnerKey(t *testing.T) {
 		runnerKey(&ghRunnerExt{ID: id(7)}, 1))
 }
 
+func TestOrganizationMembershipID(t *testing.T) {
+	assert.Equal(t, "github.organization.membership/mondoohq/alice",
+		organizationMembershipID("mondoohq", "alice"))
+
+	// One account can be a member of more than one organization in a scan.
+	assert.NotEqual(t,
+		organizationMembershipID("mondoohq", "alice"),
+		organizationMembershipID("other-org", "alice"))
+}
+
+func TestOrganizationInvitationID(t *testing.T) {
+	assert.Equal(t, "github.organization.invitation/mondoohq/42",
+		organizationInvitationID("mondoohq", 42))
+
+	assert.NotEqual(t,
+		organizationInvitationID("mondoohq", 42),
+		organizationInvitationID("other-org", 42))
+}
+
+func TestRepositoryTeamID(t *testing.T) {
+	assert.Equal(t, "github.repository.team/mondoohq/cnquery/platform",
+		repositoryTeamID("mondoohq/cnquery", "platform"))
+
+	// The same team almost always holds a grant on many repositories, and the
+	// permission it confers differs per repository. Keying on the slug alone
+	// would collapse them onto one resource and report the first permission
+	// found for every repository.
+	assert.NotEqual(t,
+		repositoryTeamID("mondoohq/cnquery", "platform"),
+		repositoryTeamID("mondoohq/cnspec", "platform"))
+}
+
+func TestRunnerGroupID(t *testing.T) {
+	assert.Equal(t, "github.organization.runnerGroup/mondoohq/1",
+		runnerGroupID("mondoohq", 1))
+
+	// Runner groups are numbered per organization, and every organization has
+	// a "Default" group with id 1.
+	assert.NotEqual(t,
+		runnerGroupID("mondoohq", 1),
+		runnerGroupID("other-org", 1))
+}
+
 func TestRunnerLabelID(t *testing.T) {
 	scope := "orgs/mondoohq"
 	name := func(v string) *string { return &v }
