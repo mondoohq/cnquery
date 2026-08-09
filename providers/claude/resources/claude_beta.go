@@ -9,6 +9,7 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 // claude.agent
@@ -98,6 +99,38 @@ func (r *mqlClaude) environments() ([]interface{}, error) {
 
 // claude.session
 
+type mqlClaudeSessionInternal struct {
+	cacheEnvironmentID string
+}
+
+// The environment list is read through the memoized GetEnvironments accessor,
+// so resolving a reference on every session still costs a single list call.
+func (r *mqlClaudeSession) environment() (*mqlClaudeEnvironment, error) {
+	if r.cacheEnvironmentID == "" {
+		r.Environment.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	environments := res.(*mqlClaude).GetEnvironments()
+	if environments.Error != nil {
+		return nil, environments.Error
+	}
+
+	for _, e := range environments.Data {
+		env, ok := e.(*mqlClaudeEnvironment)
+		if ok && env.Id.Data == r.cacheEnvironmentID {
+			return env, nil
+		}
+	}
+
+	r.Environment.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
 func (r *mqlClaude) sessions() ([]interface{}, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
@@ -122,6 +155,9 @@ func (r *mqlClaude) sessions() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		mqlSession.(*mqlClaudeSession).cacheEnvironmentID = s.EnvironmentID
+
 		res = append(res, mqlSession)
 	}
 	if err := pager.Err(); err != nil {
@@ -242,6 +278,36 @@ func (r *mqlClaude) vaults() ([]interface{}, error) {
 	return res, nil
 }
 
+type mqlClaudeVaultCredentialInternal struct {
+	cacheVaultID string
+}
+
+func (r *mqlClaudeVaultCredential) vault() (*mqlClaudeVault, error) {
+	if r.cacheVaultID == "" {
+		r.Vault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := CreateResource(r.MqlRuntime, "claude", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	vaults := res.(*mqlClaude).GetVaults()
+	if vaults.Error != nil {
+		return nil, vaults.Error
+	}
+
+	for _, v := range vaults.Data {
+		vault, ok := v.(*mqlClaudeVault)
+		if ok && vault.Id.Data == r.cacheVaultID {
+			return vault, nil
+		}
+	}
+
+	r.Vault.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
 func (r *mqlClaudeVault) credentials() ([]interface{}, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
@@ -265,6 +331,9 @@ func (r *mqlClaudeVault) credentials() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		mqlCred.(*mqlClaudeVaultCredential).cacheVaultID = cred.VaultID
+
 		res = append(res, mqlCred)
 	}
 	if err := pager.Err(); err != nil {

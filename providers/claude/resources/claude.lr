@@ -159,7 +159,15 @@ claude.session @defaults("id title status") {
   // One of rescheduling, running, idle, or terminated.
   status string
   // Environment identifier for this session
-  environmentId string
+  //
+  // Deprecated in favor of environment.
+  environmentId @maturity("deprecated") string
+  // Execution environment this session runs in
+  //
+  // The environment supplies the compute context and visibility scope
+  // for the session, so reading it alongside the session shows where
+  // the agent work actually executes.
+  environment() claude.environment
   // Session creation timestamp
   createdAt time
   // Last update timestamp
@@ -253,7 +261,11 @@ claude.vault.credential @defaults("id displayName") {
   // Credential display name
   displayName string
   // Vault identifier this credential belongs to
-  vaultId string
+  //
+  // Deprecated in favor of vault.
+  vaultId @maturity("deprecated") string
+  // Vault that holds this credential
+  vault() claude.vault
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -404,11 +416,23 @@ claude.organization.workspace @defaults("id name") {
 // one of workspace_user, workspace_developer,
 // workspace_restricted_developer, workspace_admin, or
 // workspace_billing.
-claude.organization.workspace.member @defaults("userId workspaceRole") {
+claude.organization.workspace.member @defaults("user.email workspaceRole") {
   // User identifier
-  userId string
+  //
+  // Deprecated in favor of user.
+  userId @maturity("deprecated") string
+  // Organization member holding this workspace access
+  //
+  // Carries the member's name, email, and organization-level role, so
+  // workspace access can be reviewed against who the person is and what
+  // they can already do across the organization.
+  user() claude.organization.member
   // Workspace identifier
-  workspaceId string
+  //
+  // Deprecated in favor of workspace.
+  workspaceId @maturity("deprecated") string
+  // Workspace this access grant applies to
+  workspace() claude.organization.workspace
   // Workspace-level role
   //
   // One of workspace_user, workspace_developer,
@@ -520,7 +544,13 @@ claude.organization.usageEntry @defaults("startingAt") {
   // Model identifier
   model string
   // Workspace identifier
-  workspaceId string
+  //
+  // Deprecated in favor of workspace.
+  workspaceId @maturity("deprecated") string
+  // Workspace the consumption is attributed to
+  //
+  // Null for buckets that are not scoped to a single workspace.
+  workspace() claude.organization.workspace
   // API service tier
   //
   // One of standard, batch, priority, flex, or priority_on_demand.
@@ -556,7 +586,13 @@ claude.organization.costEntry @defaults("startingAt costType") {
   // Model identifier
   model string
   // Workspace identifier
-  workspaceId string
+  //
+  // Deprecated in favor of workspace.
+  workspaceId @maturity("deprecated") string
+  // Workspace the cost is attributed to
+  //
+  // Null for buckets that are not scoped to a single workspace.
+  workspace() claude.organization.workspace
 }
 
 // Claude organization compliance activity
