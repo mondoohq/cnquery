@@ -2518,49 +2518,7 @@ func (g *mqlGithubRepository) rulesets() ([]any, error) {
 
 	res := make([]any, 0, len(allRulesets))
 	for _, rs := range allRulesets {
-		bypassActors := make([]any, 0, len(rs.BypassActors))
-		for _, ba := range rs.BypassActors {
-			d, err := convert.JsonToDict(ba)
-			if err != nil {
-				return nil, err
-			}
-			bypassActors = append(bypassActors, d)
-		}
-
-		conditions, err := convert.JsonToDict(rs.Conditions)
-		if err != nil {
-			return nil, err
-		}
-
-		rules, err := convert.JsonToDictSlice(rs.Rules)
-		if err != nil {
-			return nil, err
-		}
-
-		var target, sourceType, enforcement string
-		if rs.Target != nil {
-			target = string(*rs.Target)
-		}
-		if rs.SourceType != nil {
-			sourceType = string(*rs.SourceType)
-		}
-		enforcement = string(rs.Enforcement)
-
-		rulesetID := strconv.FormatInt(rs.GetID(), 10)
-		r, err := CreateResource(g.MqlRuntime, "github.repositoryRuleset", map[string]*llx.RawData{
-			"__id":         llx.StringData("github.repositoryRuleset/" + ownerLogin + "/" + repoName + "/" + rulesetID),
-			"id":           llx.IntDataPtr(rs.ID),
-			"name":         llx.StringData(rs.Name),
-			"target":       llx.StringData(target),
-			"sourceType":   llx.StringData(sourceType),
-			"source":       llx.StringData(rs.Source),
-			"enforcement":  llx.StringData(enforcement),
-			"bypassActors": llx.ArrayData(bypassActors, types.Dict),
-			"conditions":   llx.MapData(conditions, types.Any),
-			"rules":        llx.ArrayData(rules, types.Dict),
-			"createdAt":    llx.TimeDataPtr(githubTimestamp(rs.CreatedAt)),
-			"updatedAt":    llx.TimeDataPtr(githubTimestamp(rs.UpdatedAt)),
-		})
+		r, err := newMqlRepositoryRuleset(g.MqlRuntime, ownerLogin+"/"+repoName, rs)
 		if err != nil {
 			return nil, err
 		}
