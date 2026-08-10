@@ -272,8 +272,9 @@ func IsMacieNotEnabledError(err error) bool {
 
 	var respErr *http.ResponseError
 	if errors.As(err, &respErr) {
+		msg := awsNormalizeApostrophes(respErr.Error())
 		// Macie returns 401 status code with AccessDeniedException when not enabled
-		if respErr.HTTPStatusCode() == 401 && strings.Contains(respErr.Error(), "AccessDeniedException: Macie is not enabled") {
+		if respErr.HTTPStatusCode() == 401 && strings.Contains(msg, "AccessDeniedException: Macie is not enabled") {
 			return true
 		}
 		// Also catch general access denied cases for Macie, but only when the
@@ -282,20 +283,67 @@ func IsMacieNotEnabledError(err error) bool {
 		// enabled", so every Macie resource degraded to empty and any
 		// data-classification policy passed vacuously.
 		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 401 || respErr.HTTPStatusCode() == 403) &&
-			(strings.Contains(respErr.Error(), "AccessDeniedException") || strings.Contains(respErr.Error(), "AccessDenied")) &&
-			(strings.Contains(respErr.Error(), "Macie is not enabled") ||
-				strings.Contains(respErr.Error(), "Macie isn't enabled") ||
-				strings.Contains(respErr.Error(), "not enabled for your account")) {
+			(strings.Contains(msg, "AccessDeniedException") || strings.Contains(msg, "AccessDenied")) &&
+			(strings.Contains(msg, "Macie is not enabled") ||
+				strings.Contains(msg, "Macie isn't enabled") ||
+				strings.Contains(msg, "not enabled for your account")) {
 			return true
 		}
 		// GetClassificationExportConfiguration / GetAutomatedDiscoveryConfiguration
 		// return 404 ResourceNotFoundException when Macie isn't enabled in the region.
 		if respErr.HTTPStatusCode() == 404 &&
-			(strings.Contains(respErr.Error(), "Macie isn't enabled") || strings.Contains(respErr.Error(), "Macie is not enabled")) {
+			(strings.Contains(msg, "Macie isn't enabled") || strings.Contains(msg, "Macie is not enabled")) {
+			return true
+		}
+		// The automated-discovery endpoints have a shape of their own that never
+		// names Macie: 403 AccessDeniedException "Account Id: [...] has not been
+		// onboarded". Onboarding state is not a permission gap, so matching it
+		// does not reintroduce the swallowing problem the Macie-named condition
+		// above exists to prevent - no IAM denial is phrased this way.
+		if respErr.HTTPStatusCode() == 403 &&
+			strings.Contains(msg, "AccessDeniedException") &&
+			strings.Contains(msg, "has not been onboarded") {
 			return true
 		}
 	}
 	return false
+}
+
+// awsNormalizeApostrophes rewrites the typographic apostrophe to the ASCII one.
+//
+// Several services write prose error messages with U+2019 RIGHT SINGLE
+// QUOTATION MARK rather than U+0027: Macie answers a region where it is not
+// enabled with "Macie isn't enabled in the specified AWS Region", spelled with
+// the curly one. A guard written with a plain apostrophe - which is what
+// anyone typing the message back out produces - never matches it, and the
+// service-not-enabled case it exists to absorb is reported as a failure
+// instead. Normalising once is cheaper than getting the byte right at every
+// call site, and survives AWS changing its mind about quote style.
+func awsNormalizeApostrophes(s string) string {
+	return strings.ReplaceAll(s, "’", "'")
+}
+
+// IsSecurityLakeNotEnabledError reports whether the error means Security Lake
+// has not been enabled for the account.
+//
+// Security Lake answers a listing with 404 ResourceNotFoundException and "isn't
+// enabled for your account in any Regions" until someone turns it on, which
+// neither the access-denied nor the not-available-in-region guard covers. An
+// account that has not adopted the service has no subscribers, which is the
+// answer to report - not a failed query.
+func IsSecurityLakeNotEnabledError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var respErr *http.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	msg := awsNormalizeApostrophes(respErr.Error())
+	return respErr.HTTPStatusCode() == 404 &&
+		strings.Contains(msg, "ResourceNotFoundException") &&
+		(strings.Contains(msg, "Security Lake isn't enabled") ||
+			strings.Contains(msg, "Security Lake is not enabled"))
 }
 
 func Is400InstanceNotFoundError(err error) bool {

@@ -199,6 +199,10 @@ func (a *mqlAwsSecuritylake) getSubscribers(conn *connection.AwsConnection) []*j
 						log.Debug().Str("region", region).Msg("security lake is not available in region")
 						return res, nil
 					}
+					if IsSecurityLakeNotEnabledError(err) {
+						log.Debug().Str("region", region).Msg("security lake is not enabled for this account")
+						return res, nil
+					}
 					return nil, err
 				}
 
