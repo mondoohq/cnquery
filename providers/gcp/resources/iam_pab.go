@@ -111,7 +111,7 @@ func (g *mqlGcpOrganization) principalAccessBoundaryPolicies() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				// break rather than discard: an error partway through pagination
 				// should not throw away the policies the API already returned.
 				log.Warn().Err(err).Msg("could not list all principal access boundary policies")
@@ -185,7 +185,7 @@ func (g *mqlGcpOrganization) policyBindings() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				// break rather than discard: keep the bindings already returned.
 				log.Warn().Err(err).Msg("could not list all policy bindings")
 				break

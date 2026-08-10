@@ -132,7 +132,7 @@ func (g *mqlGcpProjectFirestoreService) databases() ([]any, error) {
 		Parent: fmt.Sprintf("projects/%s", projectId),
 	})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Firestore databases")
 			return nil, nil
 		}
@@ -272,7 +272,7 @@ func (g *mqlGcpProjectFirestoreServiceDatabase) indexes() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Firestore indexes")
 				break
 			}
@@ -327,7 +327,7 @@ func (g *mqlGcpProjectFirestoreServiceDatabase) backupSchedules() ([]any, error)
 		Parent: databaseName,
 	})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Firestore backup schedules")
 			return nil, nil
 		}

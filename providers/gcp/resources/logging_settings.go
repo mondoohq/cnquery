@@ -99,7 +99,7 @@ func (g *mqlGcpProjectLoggingservice) settings() (*mqlGcpLoggingSettings, error)
 
 	settings, err := svc.Projects.GetSettings(parent).Context(ctx).Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("project", g.ProjectId.Data).Msg("could not read Cloud Logging settings")
 			g.Settings.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
@@ -128,7 +128,7 @@ func (g *mqlGcpOrganizationLoggingService) settings() (*mqlGcpLoggingSettings, e
 
 	settings, err := svc.Organizations.GetSettings(parent).Context(ctx).Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("organization", parent).Msg("could not read Cloud Logging settings")
 			g.Settings.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
@@ -157,7 +157,7 @@ func (g *mqlGcpFolderLoggingService) settings() (*mqlGcpLoggingSettings, error) 
 
 	settings, err := svc.Folders.GetSettings(parent).Context(ctx).Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("folder", parent).Msg("could not read Cloud Logging settings")
 			g.Settings.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil

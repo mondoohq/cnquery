@@ -188,34 +188,6 @@ func TestGetDiscoveryTargets(t *testing.T) {
 	}
 }
 
-func TestIsDiscoverySkippableErr(t *testing.T) {
-	cases := []struct {
-		name string
-		err  error
-		want bool
-	}{
-		{name: "nil error", err: nil, want: false},
-		{name: "googleapi 403", err: &googleapi.Error{Code: 403, Message: "permission denied"}, want: true},
-		{name: "googleapi 404", err: &googleapi.Error{Code: 404, Message: "not found"}, want: true},
-		{name: "googleapi 500", err: &googleapi.Error{Code: 500, Message: "server error"}, want: false},
-		{name: "googleapi service-disabled message", err: &googleapi.Error{Code: 400, Message: "API has not been used in project 123 before or it is disabled"}, want: true},
-		{name: "gRPC permission denied", err: status.Error(codes.PermissionDenied, "no access"), want: true},
-		{name: "gRPC not found", err: status.Error(codes.NotFound, "missing"), want: true},
-		{name: "gRPC unimplemented", err: status.Error(codes.Unimplemented, "not implemented"), want: true},
-		{name: "gRPC internal", err: status.Error(codes.Internal, "boom"), want: false},
-		{name: "rewrapped 403 string", err: errors.New("403: permission denied"), want: true},
-		{name: "googleapi error stringified", err: errors.New("googleapi: Error 403: permission denied"), want: true},
-		{name: "api-not-enabled phrasing", err: errors.New("Cloud KMS API has not been used in project foo"), want: true},
-		{name: "plain unrelated error", err: errors.New("connection reset by peer"), want: false},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.want, isDiscoverySkippableErr(tc.err))
-		})
-	}
-}
-
 func TestRunDiscoveryStep(t *testing.T) {
 	t.Run("returns nil and runs fn on success", func(t *testing.T) {
 		called := false

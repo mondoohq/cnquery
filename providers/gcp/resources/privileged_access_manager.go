@@ -168,7 +168,7 @@ func (g *mqlGcpProjectPrivilegedAccessManagerService) entitlements() ([]any, err
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				// break rather than discard: keep the entitlements already returned.
 				log.Warn().Err(err).Str("project", projectId).Msg("could not list all Privileged Access Manager entitlements")
 				break
@@ -301,7 +301,7 @@ func (g *mqlGcpProjectPrivilegedAccessManagerService) grants() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				// break rather than discard: keep the grants already returned.
 				log.Warn().Err(err).Str("project", projectId).Msg("could not list all Privileged Access Manager grants")
 				break

@@ -155,7 +155,7 @@ func (g *mqlGcpProjectAssetServiceWhoCan) fetchAnalysis() (*accessAnalysis, erro
 		},
 	})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("permission", permission).Str("resource", resource).
 				Msg("could not analyze IAM policy")
 			// A skippable error means the question was not answered, so report

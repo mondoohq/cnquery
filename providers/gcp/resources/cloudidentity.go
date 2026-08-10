@@ -59,7 +59,7 @@ func (g *mqlGcpCloudIdentityGroup) securitySettings() (*mqlGcpCloudIdentityGroup
 	settings, err := cloudIdentitySvc.Groups.GetSecuritySettings(groupName + "/securitySettings").
 		ReadMask("memberRestriction").Context(ctx).Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("group", groupName).Msg("could not get Cloud Identity group security settings")
 			g.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
@@ -91,7 +91,7 @@ func (g *mqlGcpCloudIdentityGroup) securitySettings() (*mqlGcpCloudIdentityGroup
 // organization. Unlike the project-level accessors there is no serviceusage
 // service-enabled pre-check: service enablement is a per-project concept and
 // this resource is organization-scoped, so a disabled API instead surfaces as
-// a 403/404 that isHTTPSkippable handles below.
+// a 403/404 that isSkippable handles below.
 func (g *mqlGcpOrganization) cloudIdentityGroups() ([]any, error) {
 	if g.CustomerId.Error != nil {
 		return nil, g.CustomerId.Error
@@ -141,7 +141,7 @@ func (g *mqlGcpOrganization) cloudIdentityGroups() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Cloud Identity groups")
 			return nil, nil
 		}
@@ -202,7 +202,7 @@ func (g *mqlGcpCloudIdentityGroup) memberships() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("group", groupName).Msg("could not list Cloud Identity group memberships")
 			return nil, nil
 		}

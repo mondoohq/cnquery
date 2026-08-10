@@ -18,8 +18,6 @@ import (
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // discoveryEngineLocations lists the Discovery Engine multi-region locations.
@@ -50,18 +48,6 @@ func discoveryEngineLocationFromName(name string) string {
 		}
 	}
 	return ""
-}
-
-// isDiscoveryEngineSkippable returns true for errors indicating the Discovery
-// Engine API is not enabled or the location is not available for this project.
-func isDiscoveryEngineSkippable(err error) bool {
-	if s, ok := status.FromError(err); ok {
-		switch s.Code() {
-		case codes.PermissionDenied, codes.Unimplemented, codes.InvalidArgument, codes.NotFound:
-			return true
-		}
-	}
-	return false
 }
 
 func (g *mqlGcpProject) discoveryEngine() (*mqlGcpProjectDiscoveryEngineService, error) {
@@ -143,7 +129,7 @@ func (g *mqlGcpProjectDiscoveryEngineService) listDataStoresInLocation(ctx conte
 			break
 		}
 		if err != nil {
-			if isDiscoveryEngineSkippable(err) {
+			if isInapplicable(err) {
 				break
 			}
 			return nil, err
@@ -213,7 +199,7 @@ func (g *mqlGcpProjectDiscoveryEngineService) listEnginesInLocation(ctx context.
 			break
 		}
 		if err != nil {
-			if isDiscoveryEngineSkippable(err) {
+			if isInapplicable(err) {
 				break
 			}
 			return nil, err
@@ -310,7 +296,7 @@ func (g *mqlGcpProjectDiscoveryEngineServiceEngine) dataStores() ([]any, error) 
 			Name: fmt.Sprintf("%s/dataStores/%s", collectionParent, id),
 		})
 		if err != nil {
-			if isDiscoveryEngineSkippable(err) {
+			if isInapplicable(err) {
 				continue
 			}
 			return nil, err

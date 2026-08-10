@@ -19,8 +19,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProject) memorystore() (*mqlGcpProjectMemorystoreService, error) {
@@ -381,23 +379,6 @@ func buildMemorystorePscAttachmentDetails(runtime *plugin.Runtime, projectId, in
 // TokenAuthUser
 // =====================
 
-// isMemorystoreAuthSkippable reports gRPC errors that mean the instance simply
-// does not carry token-based authentication, rather than a real failure. An
-// instance using AUTH_DISABLED or IAM_AUTH has no token auth users to list, and
-// a caller without the auth-config permissions must not fail the whole query.
-func isMemorystoreAuthSkippable(err error) bool {
-	if isGRPCSkippable(err) {
-		return true
-	}
-	if s, ok := status.FromError(err); ok {
-		switch s.Code() {
-		case codes.FailedPrecondition, codes.InvalidArgument:
-			return true
-		}
-	}
-	return false
-}
-
 func (g *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) id() (string, error) {
 	if g.Name.Error != nil {
 		return "", g.Name.Error
@@ -439,7 +420,7 @@ func (g *mqlGcpProjectMemorystoreServiceInstance) tokenAuthUsers() ([]any, error
 			break
 		}
 		if err != nil {
-			if isMemorystoreAuthSkippable(err) {
+			if isInapplicable(err) {
 				log.Debug().Err(err).Str("instance", instanceName).Msg("gcp> skipping memorystore token auth users")
 				return res, nil
 			}
@@ -504,7 +485,7 @@ func (g *mqlGcpProjectMemorystoreServiceInstanceTokenAuthUser) authTokens() ([]a
 			break
 		}
 		if err != nil {
-			if isMemorystoreAuthSkippable(err) {
+			if isInapplicable(err) {
 				log.Debug().Err(err).Str("tokenAuthUser", userName).Msg("gcp> skipping memorystore auth tokens")
 				return res, nil
 			}

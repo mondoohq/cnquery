@@ -58,7 +58,7 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 		Name: name,
 	})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			g.BinaryAuthorization.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}

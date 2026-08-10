@@ -172,7 +172,7 @@ func (g *mqlGcpProjectOsConfigService) patchDeployments() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list OS patch deployments")
 			return nil, nil
 		}
@@ -216,7 +216,7 @@ func (g *mqlGcpProjectOsConfigService) osPolicyAssignments() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list zones for OS policy assignments")
 			return nil, nil
 		}
@@ -254,7 +254,7 @@ func (g *mqlGcpProjectOsConfigService) osPolicyAssignments() ([]any, error) {
 				return nil
 			})
 			if err != nil {
-				if isHTTPSkippable(err) {
+				if isSkippable(err) {
 					log.Warn().Err(err).Str("zone", zone).Msg("could not list OS policy assignments")
 					return nil
 				}
@@ -347,7 +347,7 @@ func (g *mqlGcpProjectComputeServiceInstance) inventory() (*mqlGcpProjectCompute
 
 	inv, err := osConfigSvc.Projects.Locations.Instances.Inventories.Get(parent + "/inventory").View("FULL").Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			g.Inventory.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
@@ -484,7 +484,7 @@ func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProj
 
 	report, err := osConfigSvc.Projects.Locations.Instances.VulnerabilityReports.Get(parent + "/vulnerabilityReport").Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			g.VulnerabilityReport.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}

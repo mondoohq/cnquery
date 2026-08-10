@@ -102,7 +102,7 @@ func (g *mqlGcpProjectComputeService) fetchSharedVpc() (*sharedVpcTopology, erro
 	// A project with no host returns an empty project rather than an error, so an
 	// empty name means "not a service project" and is not a failure.
 	if host, err := computeSvc.Projects.GetXpnHost(projectId).Context(ctx).Do(); err != nil {
-		if !isHTTPSkippable(err) {
+		if !isSkippable(err) {
 			return nil, err
 		}
 		log.Debug().Err(err).Str("project", projectId).Msg("could not read Shared VPC host project")
@@ -121,7 +121,7 @@ func (g *mqlGcpProjectComputeService) fetchSharedVpc() (*sharedVpcTopology, erro
 		}
 		return nil
 	}); err != nil {
-		if !isHTTPSkippable(err) && !isNotSharedVpcHost(err) {
+		if !isSkippable(err) && !isNotSharedVpcHost(err) {
 			return nil, err
 		}
 		log.Debug().Err(err).Str("project", projectId).Msg("could not read Shared VPC service projects")

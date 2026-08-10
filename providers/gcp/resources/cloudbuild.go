@@ -409,7 +409,7 @@ func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
 			if s, ok := status.FromError(err); ok && s.Code() == codes.InvalidArgument {
 				break
 			}
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				break
 			}
 			return nil, err
@@ -586,7 +586,7 @@ func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				break
 			}
 			return nil, err

@@ -88,7 +88,7 @@ func (g *mqlGcpProjectSourceRepositoriesService) repos() ([]any, error) {
 		// 403 SERVICE_DISABLED is the COMMON case here, not an exceptional one.
 		// service_sourcerepo is declared in services.go but was never wired to
 		// a gate, so this accessor hard-failed on most projects.
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("project", projectId).Msg("could not list Cloud Source Repositories")
 			return nil, nil
 		}

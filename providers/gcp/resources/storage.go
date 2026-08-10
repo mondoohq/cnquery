@@ -628,7 +628,7 @@ func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
 		// Degrade a permission gap to an empty policy rather than a hard error,
 		// matching sibling IAM-policy accessors, and so public() can still fall
 		// back to its ACL check instead of failing outright.
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			return nil, nil
 		}
 		return nil, err

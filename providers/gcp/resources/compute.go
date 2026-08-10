@@ -3529,7 +3529,7 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 		policy, err = computeSvc.SecurityPolicies.Get(projectId, policyName).Context(ctx).Do()
 	}
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Str("policy", policyName).Err(err).Msg("could not fetch security policy rules")
 			return nil, nil
 		}
