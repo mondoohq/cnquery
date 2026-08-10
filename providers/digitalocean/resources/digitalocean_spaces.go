@@ -410,26 +410,6 @@ var noSuchConfigurationCodes = []string{
 // the bucket has never been configured for that property. Both the
 // typed APIError code and the raw error string are checked because
 // Spaces sometimes surfaces the code only in the body text.
-// isUnsupportedOperation reports whether err is the S3 API answering that it
-// does not implement the operation at all. Spaces implements a subset of the
-// S3 API, so calls that exist only on AWS (GetPublicAccessBlock, for one)
-// come back 501 NotImplemented on every account. That is a statement about
-// the service, not about the bucket, so the caller keeps its default and
-// carries on rather than failing the whole listing.
-func isUnsupportedOperation(err error) bool {
-	if err == nil {
-		return false
-	}
-	var ae smithy.APIError
-	if errors.As(err, &ae) {
-		switch ae.ErrorCode() {
-		case "NotImplemented", "MethodNotAllowed":
-			return true
-		}
-	}
-	return strings.Contains(err.Error(), "NotImplemented")
-}
-
 func isNoSuchConfiguration(err error) bool {
 	if err == nil {
 		return false
@@ -449,6 +429,26 @@ func isNoSuchConfiguration(err error) bool {
 		}
 	}
 	return false
+}
+
+// isUnsupportedOperation returns true when the S3 API answers that it does
+// not implement the operation at all. Spaces implements a subset of the S3
+// API, so calls that exist only on AWS (GetPublicAccessBlock, for one) come
+// back 501 NotImplemented on every account. That describes the service
+// rather than the bucket, so the caller keeps its default and carries on
+// instead of failing the whole listing.
+func isUnsupportedOperation(err error) bool {
+	if err == nil {
+		return false
+	}
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		switch ae.ErrorCode() {
+		case "NotImplemented", "MethodNotAllowed":
+			return true
+		}
+	}
+	return strings.Contains(err.Error(), "NotImplemented")
 }
 
 func isAccessDenied(err error) bool {
