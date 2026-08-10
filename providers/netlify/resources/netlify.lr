@@ -52,6 +52,11 @@ private netlify.user @defaults("email fullName") {
   // A managed account's lifecycle is controlled by the identity provider, so
   // deprovisioning there removes the access. An unmanaged account outlives it.
   managedBySsoOrDirectorySync bool
+  // External identities the account can sign in with
+  //
+  // Keyed by provider, such as github, with the account name held at that
+  // provider. Each entry is another way to authenticate as this person.
+  connectedAccounts map[string]string
   // Number of sites the account can reach
   siteCount int
   // Time the account was created
@@ -190,6 +195,11 @@ private netlify.account.member @defaults("email role") {
   managedByDirectorySync bool
   // Sites the member may reach, for example all
   siteAccess string
+  // External identities linked to the member
+  //
+  // Keyed by provider, such as github, with the account name held at that
+  // provider. A linked identity is another way to authenticate as this member.
+  connectedAccounts map[string]string
   // Date the member was last active on the account
   lastActivityDate time
   // URL of the member avatar image
@@ -222,8 +232,12 @@ private netlify.envVar @defaults("key isSecret") {
   // withholds the value of a secret variable, so those entries carry an empty
   // value.
   values []dict
-  // Email address of the account that last updated the variable
-  updatedByEmail string
+  // Member that last updated the variable
+  //
+  // Resolved against the roster of the account the variable belongs to, so a
+  // member who has since left does not appear. Null when the roster is not
+  // readable with this token.
+  updatedBy() netlify.account.member
   // Time the variable was last updated
   updatedAt time
 }
@@ -241,6 +255,11 @@ private netlify.envVar @defaults("key isSecret") {
 // `notificationHooks`, and `snippets` fields cover what a deploy injects and
 // what can trigger one. Select a site with
 // `netlify.sites.where(name == "www")`.
+//
+// The `privateLogs`, `skipPrs`, and `skipAutomaticBuilds` controls are
+// tri-state: true, false, or null when the site has never set the control and
+// follows the team default. A comparison against false does not match null, so
+// a query for sites lacking one of these controls should test for null as well.
 private netlify.site @defaults("name url") {
   // Unique site identifier
   id string

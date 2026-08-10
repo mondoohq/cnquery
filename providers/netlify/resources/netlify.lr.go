@@ -189,6 +189,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.user.managedBySsoOrDirectorySync": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyUser).GetManagedBySsoOrDirectorySync()).ToDataRes(types.Bool)
 	},
+	"netlify.user.connectedAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyUser).GetConnectedAccounts()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"netlify.user.siteCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyUser).GetSiteCount()).ToDataRes(types.Int)
 	},
@@ -303,6 +306,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.account.member.siteAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetSiteAccess()).ToDataRes(types.String)
 	},
+	"netlify.account.member.connectedAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetConnectedAccounts()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"netlify.account.member.lastActivityDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetLastActivityDate()).ToDataRes(types.Time)
 	},
@@ -321,8 +327,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.envVar.values": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyEnvVar).GetValues()).ToDataRes(types.Array(types.Dict))
 	},
-	"netlify.envVar.updatedByEmail": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetlifyEnvVar).GetUpdatedByEmail()).ToDataRes(types.String)
+	"netlify.envVar.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyEnvVar).GetUpdatedBy()).ToDataRes(types.Resource("netlify.account.member"))
 	},
 	"netlify.envVar.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyEnvVar).GetUpdatedAt()).ToDataRes(types.Time)
@@ -638,6 +644,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifyUser).ManagedBySsoOrDirectorySync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"netlify.user.connectedAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyUser).ConnectedAccounts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"netlify.user.siteCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyUser).SiteCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -798,6 +808,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifyAccountMember).SiteAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"netlify.account.member.connectedAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).ConnectedAccounts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"netlify.account.member.lastActivityDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyAccountMember).LastActivityDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -826,8 +840,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifyEnvVar).Values, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"netlify.envVar.updatedByEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNetlifyEnvVar).UpdatedByEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"netlify.envVar.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyEnvVar).UpdatedBy, ok = plugin.RawToTValue[*mqlNetlifyAccountMember](v.Value, v.Error)
 		return
 	},
 	"netlify.envVar.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1351,6 +1365,7 @@ type mqlNetlifyUser struct {
 	LoginProviders              plugin.TValue[[]any]
 	MfaEnabled                  plugin.TValue[bool]
 	ManagedBySsoOrDirectorySync plugin.TValue[bool]
+	ConnectedAccounts           plugin.TValue[map[string]any]
 	SiteCount                   plugin.TValue[int64]
 	CreatedAt                   plugin.TValue[*time.Time]
 	LastLogin                   plugin.TValue[*time.Time]
@@ -1419,6 +1434,10 @@ func (c *mqlNetlifyUser) GetMfaEnabled() *plugin.TValue[bool] {
 
 func (c *mqlNetlifyUser) GetManagedBySsoOrDirectorySync() *plugin.TValue[bool] {
 	return &c.ManagedBySsoOrDirectorySync
+}
+
+func (c *mqlNetlifyUser) GetConnectedAccounts() *plugin.TValue[map[string]any] {
+	return &c.ConnectedAccounts
 }
 
 func (c *mqlNetlifyUser) GetSiteCount() *plugin.TValue[int64] {
@@ -1669,6 +1688,7 @@ type mqlNetlifyAccountMember struct {
 	Pending                plugin.TValue[bool]
 	ManagedByDirectorySync plugin.TValue[bool]
 	SiteAccess             plugin.TValue[string]
+	ConnectedAccounts      plugin.TValue[map[string]any]
 	LastActivityDate       plugin.TValue[*time.Time]
 	AvatarUrl              plugin.TValue[string]
 }
@@ -1746,6 +1766,10 @@ func (c *mqlNetlifyAccountMember) GetSiteAccess() *plugin.TValue[string] {
 	return &c.SiteAccess
 }
 
+func (c *mqlNetlifyAccountMember) GetConnectedAccounts() *plugin.TValue[map[string]any] {
+	return &c.ConnectedAccounts
+}
+
 func (c *mqlNetlifyAccountMember) GetLastActivityDate() *plugin.TValue[*time.Time] {
 	return &c.LastActivityDate
 }
@@ -1758,13 +1782,13 @@ func (c *mqlNetlifyAccountMember) GetAvatarUrl() *plugin.TValue[string] {
 type mqlNetlifyEnvVar struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNetlifyEnvVarInternal it will be used here
-	Key            plugin.TValue[string]
-	Scopes         plugin.TValue[[]any]
-	IsSecret       plugin.TValue[bool]
-	Values         plugin.TValue[[]any]
-	UpdatedByEmail plugin.TValue[string]
-	UpdatedAt      plugin.TValue[*time.Time]
+	mqlNetlifyEnvVarInternal
+	Key       plugin.TValue[string]
+	Scopes    plugin.TValue[[]any]
+	IsSecret  plugin.TValue[bool]
+	Values    plugin.TValue[[]any]
+	UpdatedBy plugin.TValue[*mqlNetlifyAccountMember]
+	UpdatedAt plugin.TValue[*time.Time]
 }
 
 // createNetlifyEnvVar creates a new instance of this resource
@@ -1815,8 +1839,20 @@ func (c *mqlNetlifyEnvVar) GetValues() *plugin.TValue[[]any] {
 	return &c.Values
 }
 
-func (c *mqlNetlifyEnvVar) GetUpdatedByEmail() *plugin.TValue[string] {
-	return &c.UpdatedByEmail
+func (c *mqlNetlifyEnvVar) GetUpdatedBy() *plugin.TValue[*mqlNetlifyAccountMember] {
+	return plugin.GetOrCompute[*mqlNetlifyAccountMember](&c.UpdatedBy, func() (*mqlNetlifyAccountMember, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.envVar", c.__id, "updatedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetlifyAccountMember), nil
+			}
+		}
+
+		return c.updatedBy()
+	})
 }
 
 func (c *mqlNetlifyEnvVar) GetUpdatedAt() *plugin.TValue[*time.Time] {

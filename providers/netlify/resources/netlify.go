@@ -74,6 +74,15 @@ func optionalBool(v *bool) *llx.RawData {
 	return llx.BoolData(*v)
 }
 
+// mapStrToAny widens a string map into the any-valued map llx.MapData expects.
+func mapStrToAny(in map[string]string) map[string]any {
+	out := make(map[string]any, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
 // strSliceToAny widens a string slice into an any slice for llx.ArrayData.
 func strSliceToAny(in []string) []any {
 	out := make([]any, len(in))
@@ -102,17 +111,18 @@ func getNetlify(runtime *plugin.Runtime) (*mqlNetlify, error) {
 // --- root resource --------------------------------------------------------
 
 type userRecord struct {
-	ID             string      `json:"id"`
-	UID            string      `json:"uid"`
-	Email          string      `json:"email"`
-	FullName       string      `json:"full_name"`
-	AvatarURL      string      `json:"avatar_url"`
-	LoginProviders []string    `json:"login_providers"`
-	MfaEnabled     bool        `json:"mfa_enabled"`
-	ManagedBySso   bool        `json:"managed_by_sso_or_directory_sync"`
-	SiteCount      int64       `json:"site_count"`
-	CreatedAt      netlifyTime `json:"created_at"`
-	LastLogin      netlifyTime `json:"last_login"`
+	ID                string            `json:"id"`
+	UID               string            `json:"uid"`
+	Email             string            `json:"email"`
+	FullName          string            `json:"full_name"`
+	AvatarURL         string            `json:"avatar_url"`
+	LoginProviders    []string          `json:"login_providers"`
+	MfaEnabled        bool              `json:"mfa_enabled"`
+	ConnectedAccounts map[string]string `json:"connected_accounts"`
+	ManagedBySso      bool              `json:"managed_by_sso_or_directory_sync"`
+	SiteCount         int64             `json:"site_count"`
+	CreatedAt         netlifyTime       `json:"created_at"`
+	LastLogin         netlifyTime       `json:"last_login"`
 }
 
 func (n *mqlNetlify) currentUser() (*mqlNetlifyUser, error) {
@@ -135,6 +145,7 @@ func (n *mqlNetlify) currentUser() (*mqlNetlifyUser, error) {
 		"avatarUrl":                   llx.StringData(rec.AvatarURL),
 		"loginProviders":              llx.ArrayData(strSliceToAny(rec.LoginProviders), types.String),
 		"mfaEnabled":                  llx.BoolData(rec.MfaEnabled),
+		"connectedAccounts":           llx.MapData(mapStrToAny(rec.ConnectedAccounts), types.String),
 		"managedBySsoOrDirectorySync": llx.BoolData(rec.ManagedBySso),
 		"siteCount":                   llx.IntData(rec.SiteCount),
 		"createdAt":                   llx.TimeDataPtr(rec.CreatedAt.Time()),

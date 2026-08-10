@@ -177,17 +177,18 @@ func (a *mqlNetlifyAccount) id() (string, error) {
 // --- account members ------------------------------------------------------
 
 type memberRecord struct {
-	ID                     string      `json:"id"`
-	UserID                 string      `json:"user_id"`
-	FullName               string      `json:"full_name"`
-	Email                  string      `json:"email"`
-	Role                   string      `json:"role"`
-	MfaEnabled             bool        `json:"mfa_enabled"`
-	Pending                bool        `json:"pending"`
-	ManagedByDirectorySync bool        `json:"managed_by_directory_sync"`
-	SiteAccess             string      `json:"site_access"`
-	LastActivityDate       netlifyTime `json:"last_activity_date"`
-	AvatarURL              string      `json:"avatar"`
+	ID                     string            `json:"id"`
+	UserID                 string            `json:"user_id"`
+	FullName               string            `json:"full_name"`
+	Email                  string            `json:"email"`
+	Role                   string            `json:"role"`
+	MfaEnabled             bool              `json:"mfa_enabled"`
+	Pending                bool              `json:"pending"`
+	ManagedByDirectorySync bool              `json:"managed_by_directory_sync"`
+	SiteAccess             string            `json:"site_access"`
+	LastActivityDate       netlifyTime       `json:"last_activity_date"`
+	ConnectedAccounts      map[string]string `json:"connected_accounts"`
+	AvatarURL              string            `json:"avatar"`
 }
 
 func (a *mqlNetlifyAccount) members() ([]any, error) {
@@ -222,6 +223,7 @@ func (a *mqlNetlifyAccount) members() ([]any, error) {
 			"pending":                llx.BoolData(rec.Pending),
 			"managedByDirectorySync": llx.BoolData(rec.ManagedByDirectorySync),
 			"siteAccess":             llx.StringData(rec.SiteAccess),
+			"connectedAccounts":      llx.MapData(mapStrToAny(rec.ConnectedAccounts), types.String),
 			"lastActivityDate":       llx.TimeDataPtr(rec.LastActivityDate.Time()),
 			"avatarUrl":              llx.StringData(rec.AvatarURL),
 		})

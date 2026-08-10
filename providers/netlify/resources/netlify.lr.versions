@@ -14,6 +14,7 @@ netlify.account.id 13.0.0
 netlify.account.lifecycleState 13.0.0
 netlify.account.member 13.0.0
 netlify.account.member.avatarUrl 13.0.0
+netlify.account.member.connectedAccounts 13.0.0
 netlify.account.member.email 13.0.0
 netlify.account.member.fullName 13.0.0
 netlify.account.member.id 13.0.0
@@ -75,7 +76,7 @@ netlify.envVar.isSecret 13.0.0
 netlify.envVar.key 13.0.0
 netlify.envVar.scopes 13.0.0
 netlify.envVar.updatedAt 13.0.0
-netlify.envVar.updatedByEmail 13.0.0
+netlify.envVar.updatedBy 13.0.0
 netlify.envVar.values 13.0.0
 netlify.site 13.0.0
 netlify.site.account 13.0.0
@@ -143,6 +144,7 @@ netlify.site.url 13.0.0
 netlify.sites 13.0.0
 netlify.user 13.0.0
 netlify.user.avatarUrl 13.0.0
+netlify.user.connectedAccounts 13.0.0
 netlify.user.createdAt 13.0.0
 netlify.user.email 13.0.0
 netlify.user.fullName 13.0.0
