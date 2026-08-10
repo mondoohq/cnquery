@@ -48,6 +48,35 @@ type mqlKustomizePatchInternal struct {
 	ops    []jsonPatchOp
 }
 
+// strategicMergePatchEntry turns one legacy `patchesStrategicMerge` entry into
+// a Patch, deciding whether it names a file or carries an inline patch body.
+//
+// The field is genuinely polymorphic, and kustomize disambiguates the same way
+// — `types.Kustomization.FixKustomizationPreMarshalling` tries to read the
+// entry as a file and falls back to treating it as an inline patch:
+//
+//	if _, err := fSys.ReadFile(string(patchStrategicMerge)); err == nil {
+//	    k.Patches = append(k.Patches, Patch{Path: string(patchStrategicMerge)})
+//	} else {
+//	    k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
+//	}
+//
+// A nonexistent path stays a path so a genuine typo still reports as a missing
+// patch file (with a warning from newMqlKustomizePatch) rather than dumping the
+// filename into `content` as though it were a patch body.
+func strategicMergePatchEntry(kustPath, entry string) kustomizeTypes.Patch {
+	if fi, err := os.Stat(filepath.Join(kustPath, entry)); err == nil && !fi.IsDir() {
+		return kustomizeTypes.Patch{Path: entry}
+	}
+	// An inline body always contains a `:` (it is YAML), and a path never
+	// spans lines. Anything that can't be a filename is treated as inline;
+	// everything else keeps the path reading.
+	if strings.ContainsAny(entry, "\n:") {
+		return kustomizeTypes.Patch{Patch: entry}
+	}
+	return kustomizeTypes.Patch{Path: entry}
+}
+
 func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p *kustomizeTypes.Patch, hint formatHint) (*mqlKustomizePatch, error) {
 	targetGroup := ""
 	targetVersion := ""
