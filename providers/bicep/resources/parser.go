@@ -214,6 +214,9 @@ var (
 // `.bicep` constructs; multi-line object/array values are reassembled into a
 // single collapsed-whitespace value.
 func parseBicepParam(content string) (string, map[string]string) {
+	// `.bicepparam` files take the same comment syntax as `.bicep`.
+	content = stripBlockComments(content)
+
 	var using string
 	if m := usingRe.FindStringSubmatch(content); len(m) > 1 {
 		using = m[1]
@@ -240,6 +243,11 @@ func parseBicepParam(content string) (string, map[string]string) {
 
 func parseBicep(content string) *parsedBicepFile {
 	result := &parsedBicepFile{}
+
+	// Blank out `/*…*/` comments before anything reads the source. Offsets and
+	// line numbers are preserved, so this is invisible to every consumer other
+	// than removing content that isn't part of the deployment.
+	content = stripBlockComments(content)
 
 	// Target scope
 	if m := targetScopeRe.FindStringSubmatch(content); len(m) > 1 {
@@ -1300,6 +1308,7 @@ type scanState struct {
 	brace   int
 	inStr   byte // 0, '\'', or '"' — single-line string
 	inMulti bool // true while inside a `'''…'''` multi-line string
+	inCmt   bool // true while inside a `/*…*/` block comment
 }
 
 func (s *scanState) totalDepth() int { return s.paren + s.bracket + s.brace }
@@ -1311,6 +1320,16 @@ func (s *scanState) totalDepth() int { return s.paren + s.bracket + s.brace }
 // every walker in this file can share the same lexer rules without
 // duplicating them.
 func (s *scanState) stepAt(body string, i int) int {
+	// A `/*…*/` block comment runs across lines and suppresses everything
+	// inside it, including delimiters. Checked before the multi-line string
+	// case because a comment opened first wins until it closes.
+	if s.inCmt {
+		if i+1 < len(body) && body[i] == '*' && body[i+1] == '/' {
+			s.inCmt = false
+			return i + 2
+		}
+		return i + 1
+	}
 	if s.inMulti {
 		if i+2 < len(body) && body[i] == '\'' && body[i+1] == '\'' && body[i+2] == '\'' {
 			s.inMulti = false
@@ -1337,6 +1356,12 @@ func (s *scanState) stepAt(body string, i int) int {
 			j++
 		}
 		return j
+	}
+	// `/*` block comment opener. Checked after the `//` case so a block
+	// opener that appears inside a line comment is left alone.
+	if ch == '/' && i+1 < len(body) && body[i+1] == '*' {
+		s.inCmt = true
+		return i + 2
 	}
 	// Triple-quoted multi-line string opener: enter `inMulti` and
 	// hand back the index just past the `'''`.
@@ -1370,6 +1395,49 @@ func (s *scanState) feed(line string) {
 	for i := 0; i < len(line); {
 		i = s.stepAt(line, i)
 	}
+}
+
+// stripBlockComments replaces the contents of every `/*…*/` comment with
+// spaces, leaving newlines and every other byte in place.
+//
+// Blanking rather than deleting keeps byte offsets and line numbers identical
+// to the original source, so statement start lines, source excerpts, and the
+// regex helpers that index into a resource body all stay accurate. Because the
+// walk shares scanState, a `/*` inside a string literal (`'/*.json'`) is not
+// treated as a comment opener, and a `//` line comment hides a `/*` that
+// follows it on the same line.
+//
+// Doing this once up front is what keeps the ~15 bracket-balancing and
+// field-extraction helpers in this file correct without each one having to
+// know about comments: by the time they run, a commented-out resource is
+// whitespace, and an unbalanced delimiter inside a comment can no longer fool
+// the depth counter into consuming the rest of the file.
+func stripBlockComments(content string) string {
+	if !strings.Contains(content, "/*") {
+		return content
+	}
+
+	out := []byte(content)
+	st := scanState{}
+	for i := 0; i < len(content); {
+		openBefore := st.inCmt
+		next := st.stepAt(content, i)
+		if next <= i {
+			// Defensive: stepAt always advances, but a non-advancing step
+			// here would hang the scan on user-supplied input.
+			next = i + 1
+		}
+		// Blank the span when it opened, continued, or closed a comment.
+		if openBefore || st.inCmt {
+			for j := i; j < next && j < len(out); j++ {
+				if out[j] != '\n' {
+					out[j] = ' '
+				}
+			}
+		}
+		i = next
+	}
+	return string(out)
 }
 
 // scanForBodyBrace advances the state through one line and returns the
