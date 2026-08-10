@@ -726,6 +726,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"neon": {
+		Provider: &plugin.Provider{
+			Name:            "neon",
+			ID:              "go.mondoo.com/mql/providers/neon",
+			ConnectionTypes: []string{"neon"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "neon",
+					Use:   "neon",
+					Short: "a Neon organization or account",
+				},
+			},
+		},
+	},
+
 	"network": {
 		Provider: &plugin.Provider{
 			Name:            "network",

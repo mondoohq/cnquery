@@ -157,6 +157,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | MySQL or MariaDB server       | `mysqldb`                  | `mql shell mysqldb db.contoso.com --user root --ask-pass`                                                                                       |
 | MongoDB Atlas organization    | `mongodbatlas`             | `mql shell mongodbatlas --org-id ORG_ID --public-key PUBLIC_KEY --private-key PRIVATE_KEY`                                                       |
 | MongoDB server (self-hosted)  | `mongo`                    | `mql shell mongo db.contoso.com --user admin --ask-pass`                                                                                        |
+| Neon organization             | `neon`                     | `mql shell neon --token TOKEN`                                                                                                                  |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
 | NextDNS accounts              | `nextdns`                  | `mql shell nextdns --api-key API_KEY`                                                                                                           |
 | Nutanix cluster               | `nutanix`                  | `mql shell nutanix --endpoint ENDPOINT --user USER --password PASSWORD`                                                                         |
