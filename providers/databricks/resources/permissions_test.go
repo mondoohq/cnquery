@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -167,5 +168,16 @@ func TestPermissionObjectTypesAreDistinct(t *testing.T) {
 			t.Fatalf("%s and %s share the object type %q", name, other, segment)
 		}
 		seen[segment] = name
+	}
+}
+
+// An object with no id must be reported as unreadable rather than sent to the
+// API, where the empty id makes the request path end in a bare slash and the
+// 404 that comes back names no object. Foundation model serving endpoints are
+// the real case: they carry no id at all.
+func TestPermissionsRejectsEmptyObjectId(t *testing.T) {
+	_, err := mqlDatabricksPermissions(nil, permissionObjectServingEndpoint, "")
+	if !errors.Is(err, errNoObjectId) {
+		t.Fatalf("expected errNoObjectId, got %v", err)
 	}
 }

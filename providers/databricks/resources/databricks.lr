@@ -1034,6 +1034,10 @@ databricks.servingEndpoint @defaults("name state task") {
   // AI Gateway governance configured on the endpoint
   aiGateway() databricks.servingEndpoint.gatewayConfig
   // Workspace access control list of the endpoint
+  //
+  // Null on a foundation model endpoint, which carries no identifier the
+  // permissions API can be keyed on. A null here means the access control list
+  // could not be read, not that no principal holds access to the endpoint.
   permissions() []databricks.permission
 }
 
