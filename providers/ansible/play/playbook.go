@@ -281,11 +281,50 @@ func DecodeTasks(data []byte) (Tasks, error) {
 	return tasks, nil
 }
 
+// compact returns xs without its nil elements, reusing the backing array when
+// there is nothing to drop.
+//
+// A YAML sequence entry that is null — a bare `-`, `- ~`, or `- null` — decodes
+// to a nil pointer. That happens for real whenever a play or task is commented
+// out and its leading dash is left behind. Nothing downstream nil-checks these
+// elements, so a single stray dash would otherwise panic the resource layer and
+// take the whole scan with it (blocks run in executor goroutines, so the panic
+// is not recoverable per-query).
+func compact[T any](xs []*T) []*T {
+	keep := xs[:0]
+	for _, x := range xs {
+		if x != nil {
+			keep = append(keep, x)
+		}
+	}
+	return keep
+}
+
+// compactTasks drops nil entries from a task list and from every nested
+// block/rescue/always list, which are reached through the same accessors.
+func compactTasks(tasks []*Task) []*Task {
+	tasks = compact(tasks)
+	for _, t := range tasks {
+		t.Block = compactTasks(t.Block)
+		t.Rescue = compactTasks(t.Rescue)
+		t.Always = compactTasks(t.Always)
+	}
+	return tasks
+}
+
 func DecodePlaybook(data []byte) (Playbook, error) {
 	var playbook Playbook
 	err := yaml.Unmarshal(data, &playbook)
 	if err != nil {
 		return nil, err
+	}
+
+	playbook = compact(playbook)
+	for _, p := range playbook {
+		p.PreTasks = compactTasks(p.PreTasks)
+		p.Tasks = compactTasks(p.Tasks)
+		p.PostTasks = compactTasks(p.PostTasks)
+		p.Handlers = compact(p.Handlers)
 	}
 	return playbook, nil
 }
@@ -297,7 +336,7 @@ func DecodeTaskList(data []byte) ([]*Task, error) {
 	if err := yaml.Unmarshal(data, &tasks); err != nil {
 		return nil, err
 	}
-	return tasks, nil
+	return compactTasks(tasks), nil
 }
 
 // DecodeHandlerList decodes a bare YAML list of handlers, the shape used by a
@@ -307,7 +346,7 @@ func DecodeHandlerList(data []byte) ([]*Handler, error) {
 	if err := yaml.Unmarshal(data, &handlers); err != nil {
 		return nil, err
 	}
-	return handlers, nil
+	return compact(handlers), nil
 }
 
 // RoleApplication is a single role applied by a play, including the directives
