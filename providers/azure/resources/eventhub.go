@@ -175,213 +175,222 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) id()
 }
 
 func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
+	conn, err := azureConn(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 
-	client, err := armeventhub.NewNamespacesClient(subId, token, &arm.ClientOptions{
+	client, err := armeventhub.NewNamespacesClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	pager := client.NewListPager(nil)
-	var res []any
+	return listPaged(a.MqlRuntime, &a.Namespaces, "event hub namespaces",
+		client.NewListPager(nil),
+		func(page armeventhub.NamespacesClientListResponse) []*armeventhub.EHNamespace {
+			return page.Value
+		},
+		createEventHubNamespace,
+	)
+}
 
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
+// createEventHubNamespace builds the MQL resource for one Event Hub namespace.
+func createEventHubNamespace(runtime *plugin.Runtime, ns *armeventhub.EHNamespace) (plugin.Resource, error) {
+	rawData, err := createEventHubNamespaceRawData(ns)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlNs, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace", rawData)
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(ns.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlNsRes := mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace)
+	mqlNsRes.cacheSystemData = sysData
+	if ns.Properties != nil {
+		mqlNsRes.cachePrivateEndpointConnections = ns.Properties.PrivateEndpointConnections
+	}
+	return mqlNs, nil
+}
+
+// createEventHubNamespaceRawData maps one namespace onto its MQL fields.
+//
+// Pure by construction -- no client, no context, no runtime -- so it can be
+// exercised against the shapes ARM actually returns, including a row with no
+// Properties block and a KeyVaultProperties list with a nil entry in it. Both of
+// those panic if dereferenced, and a panic in an accessor ends the scan rather
+// than the query.
+func createEventHubNamespaceRawData(ns *armeventhub.EHNamespace) (map[string]*llx.RawData, error) {
+	sku, err := convert.JsonToDict(ns.SKU)
+	if err != nil {
+		return nil, err
+	}
+
+	var status, cmkKeySource string
+	var isAutoInflateEnabled, kafkaEnabled, disableLocalAuth, zoneRedundant bool
+	var requireInfraEnc *bool
+	var maximumThroughputUnits int64
+	var minimumTlsVersion, publicNetworkAccess string
+	var cmkKeys []any
+	var creationTime, updatedAt *time.Time
+	var alternateName, metricId, clusterArmId, serviceBusEndpoint *string
+	if ns.Properties != nil {
+		creationTime = ns.Properties.CreatedAt
+		updatedAt = ns.Properties.UpdatedAt
+		alternateName = ns.Properties.AlternateName
+		metricId = ns.Properties.MetricID
+		clusterArmId = ns.Properties.ClusterArmID
+		serviceBusEndpoint = ns.Properties.ServiceBusEndpoint
+		if ns.Properties.Status != nil {
+			status = *ns.Properties.Status
 		}
-		for _, ns := range page.Value {
-			if ns == nil {
-				continue
+		if ns.Properties.IsAutoInflateEnabled != nil {
+			isAutoInflateEnabled = *ns.Properties.IsAutoInflateEnabled
+		}
+		if ns.Properties.MaximumThroughputUnits != nil {
+			maximumThroughputUnits = int64(*ns.Properties.MaximumThroughputUnits)
+		}
+		if ns.Properties.KafkaEnabled != nil {
+			kafkaEnabled = *ns.Properties.KafkaEnabled
+		}
+		if ns.Properties.DisableLocalAuth != nil {
+			disableLocalAuth = *ns.Properties.DisableLocalAuth
+		}
+		if ns.Properties.MinimumTLSVersion != nil {
+			minimumTlsVersion = string(*ns.Properties.MinimumTLSVersion)
+		}
+		if ns.Properties.PublicNetworkAccess != nil {
+			publicNetworkAccess = string(*ns.Properties.PublicNetworkAccess)
+		}
+		if ns.Properties.ZoneRedundant != nil {
+			zoneRedundant = *ns.Properties.ZoneRedundant
+		}
+		if enc := ns.Properties.Encryption; enc != nil {
+			if enc.KeySource != nil {
+				cmkKeySource = string(*enc.KeySource)
 			}
-
-			sku, err := convert.JsonToDict(ns.SKU)
-			if err != nil {
-				return nil, err
-			}
-
-			var status, cmkKeySource string
-			var isAutoInflateEnabled, kafkaEnabled, disableLocalAuth, zoneRedundant bool
-			var requireInfraEnc *bool
-			var maximumThroughputUnits int64
-			var minimumTlsVersion, publicNetworkAccess string
-			var cmkKeys []any
-			var creationTime, updatedAt *time.Time
-			var alternateName, metricId, clusterArmId, serviceBusEndpoint *string
-			if ns.Properties != nil {
-				creationTime = ns.Properties.CreatedAt
-				updatedAt = ns.Properties.UpdatedAt
-				alternateName = ns.Properties.AlternateName
-				metricId = ns.Properties.MetricID
-				clusterArmId = ns.Properties.ClusterArmID
-				serviceBusEndpoint = ns.Properties.ServiceBusEndpoint
-				if ns.Properties.Status != nil {
-					status = *ns.Properties.Status
+			requireInfraEnc = enc.RequireInfrastructureEncryption
+			for _, kvp := range enc.KeyVaultProperties {
+				if kvp == nil {
+					continue
 				}
-				if ns.Properties.IsAutoInflateEnabled != nil {
-					isAutoInflateEnabled = *ns.Properties.IsAutoInflateEnabled
-				}
-				if ns.Properties.MaximumThroughputUnits != nil {
-					maximumThroughputUnits = int64(*ns.Properties.MaximumThroughputUnits)
-				}
-				if ns.Properties.KafkaEnabled != nil {
-					kafkaEnabled = *ns.Properties.KafkaEnabled
-				}
-				if ns.Properties.DisableLocalAuth != nil {
-					disableLocalAuth = *ns.Properties.DisableLocalAuth
-				}
-				if ns.Properties.MinimumTLSVersion != nil {
-					minimumTlsVersion = string(*ns.Properties.MinimumTLSVersion)
-				}
-				if ns.Properties.PublicNetworkAccess != nil {
-					publicNetworkAccess = string(*ns.Properties.PublicNetworkAccess)
-				}
-				if ns.Properties.ZoneRedundant != nil {
-					zoneRedundant = *ns.Properties.ZoneRedundant
-				}
-				if enc := ns.Properties.Encryption; enc != nil {
-					if enc.KeySource != nil {
-						cmkKeySource = string(*enc.KeySource)
-					}
-					requireInfraEnc = enc.RequireInfrastructureEncryption
-					for _, kvp := range enc.KeyVaultProperties {
-						if kvp == nil {
-							continue
-						}
-						if d, err := convert.JsonToDict(kvp); err == nil {
-							cmkKeys = append(cmkKeys, d)
-						}
-					}
+				if d, err := convert.JsonToDict(kvp); err == nil {
+					cmkKeys = append(cmkKeys, d)
 				}
 			}
-
-			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace", map[string]*llx.RawData{
-				"id":                              llx.StringDataPtr(ns.ID),
-				"name":                            llx.StringDataPtr(ns.Name),
-				"location":                        llx.StringDataPtr(ns.Location),
-				"tags":                            llx.MapData(convert.PtrMapStrToInterface(ns.Tags), types.String),
-				"sku":                             llx.DictData(sku),
-				"status":                          llx.StringData(status),
-				"isAutoInflateEnabled":            llx.BoolData(isAutoInflateEnabled),
-				"maximumThroughputUnits":          llx.IntData(maximumThroughputUnits),
-				"kafkaEnabled":                    llx.BoolData(kafkaEnabled),
-				"disableLocalAuth":                llx.BoolData(disableLocalAuth),
-				"minimumTlsVersion":               llx.StringData(minimumTlsVersion),
-				"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
-				"zoneRedundant":                   llx.BoolData(zoneRedundant),
-				"cmkKeySource":                    llx.StringData(cmkKeySource),
-				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
-				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
-				"creationTime":                    llx.TimeDataPtr(creationTime),
-				"alternateName":                   llx.StringDataPtr(alternateName),
-				"metricId":                        llx.StringDataPtr(metricId),
-				"clusterArmId":                    llx.StringDataPtr(clusterArmId),
-				"serviceBusEndpoint":              llx.StringDataPtr(serviceBusEndpoint),
-				"updatedAt":                       llx.TimeDataPtr(updatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(ns.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlNsRes := mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace)
-			mqlNsRes.cacheSystemData = sysData
-			if ns.Properties != nil {
-				mqlNsRes.cachePrivateEndpointConnections = ns.Properties.PrivateEndpointConnections
-			}
-			res = append(res, mqlNs)
 		}
 	}
 
-	return res, nil
+	return map[string]*llx.RawData{
+		"id":                              llx.StringDataPtr(ns.ID),
+		"name":                            llx.StringDataPtr(ns.Name),
+		"location":                        llx.StringDataPtr(ns.Location),
+		"tags":                            llx.MapData(convert.PtrMapStrToInterface(ns.Tags), types.String),
+		"sku":                             llx.DictData(sku),
+		"status":                          llx.StringData(status),
+		"isAutoInflateEnabled":            llx.BoolData(isAutoInflateEnabled),
+		"maximumThroughputUnits":          llx.IntData(maximumThroughputUnits),
+		"kafkaEnabled":                    llx.BoolData(kafkaEnabled),
+		"disableLocalAuth":                llx.BoolData(disableLocalAuth),
+		"minimumTlsVersion":               llx.StringData(minimumTlsVersion),
+		"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
+		"zoneRedundant":                   llx.BoolData(zoneRedundant),
+		"cmkKeySource":                    llx.StringData(cmkKeySource),
+		"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
+		"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
+		"creationTime":                    llx.TimeDataPtr(creationTime),
+		"alternateName":                   llx.StringDataPtr(alternateName),
+		"metricId":                        llx.StringDataPtr(metricId),
+		"clusterArmId":                    llx.StringDataPtr(clusterArmId),
+		"serviceBusEndpoint":              llx.StringDataPtr(serviceBusEndpoint),
+		"updatedAt":                       llx.TimeDataPtr(updatedAt),
+	}, nil
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-
-	resourceID, err := ParseResourceID(id)
+	conn, err := azureConn(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	nsName := a.Name.Data
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
 
-	client, err := armeventhub.NewEventHubsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+	client, err := armeventhub.NewEventHubsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	pager := client.NewListByNamespacePager(resourceID.ResourceGroup, nsName, nil)
-	var res []any
+	return listPaged(a.MqlRuntime, &a.EventHubs, "event hubs",
+		client.NewListByNamespacePager(resourceID.ResourceGroup, a.Name.Data, nil),
+		func(page armeventhub.EventHubsClientListByNamespaceResponse) []*armeventhub.Eventhub {
+			return page.Value
+		},
+		createEventHub,
+	)
+}
 
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
+// createEventHub builds the MQL resource for one event hub within a namespace.
+func createEventHub(runtime *plugin.Runtime, eh *armeventhub.Eventhub) (plugin.Resource, error) {
+	mqlEh, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace.eventHub",
+		createEventHubRawData(eh))
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(eh.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlEh.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).cacheSystemData = sysData
+	return mqlEh, nil
+}
+
+// createEventHubRawData maps one event hub onto its MQL fields. Pure, so the
+// nil-Properties and nil-partition-id cases are testable without a namespace.
+func createEventHubRawData(eh *armeventhub.Eventhub) map[string]*llx.RawData {
+	var partitionCount, messageRetentionInDays int64
+	var status string
+	var partitionIds []any
+	var creationTime *time.Time
+	if eh.Properties != nil {
+		creationTime = eh.Properties.CreatedAt
+		if eh.Properties.PartitionCount != nil {
+			partitionCount = *eh.Properties.PartitionCount
 		}
-		for _, eh := range page.Value {
-			if eh == nil {
-				continue
-			}
-
-			var partitionCount, messageRetentionInDays int64
-			var status string
-			var partitionIds []any
-			var creationTime *time.Time
-			if eh.Properties != nil {
-				creationTime = eh.Properties.CreatedAt
-				if eh.Properties.PartitionCount != nil {
-					partitionCount = *eh.Properties.PartitionCount
-				}
-				if eh.Properties.MessageRetentionInDays != nil {
-					messageRetentionInDays = *eh.Properties.MessageRetentionInDays
-				}
-				if eh.Properties.Status != nil {
-					status = string(*eh.Properties.Status)
-				}
-				if eh.Properties.PartitionIDs != nil {
-					for _, pid := range eh.Properties.PartitionIDs {
-						if pid != nil {
-							partitionIds = append(partitionIds, *pid)
-						}
-					}
+		if eh.Properties.MessageRetentionInDays != nil {
+			messageRetentionInDays = *eh.Properties.MessageRetentionInDays
+		}
+		if eh.Properties.Status != nil {
+			status = string(*eh.Properties.Status)
+		}
+		if eh.Properties.PartitionIDs != nil {
+			for _, pid := range eh.Properties.PartitionIDs {
+				if pid != nil {
+					partitionIds = append(partitionIds, *pid)
 				}
 			}
-
-			mqlEh, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.eventHub", map[string]*llx.RawData{
-				"id":                     llx.StringDataPtr(eh.ID),
-				"name":                   llx.StringDataPtr(eh.Name),
-				"partitionCount":         llx.IntData(partitionCount),
-				"messageRetentionInDays": llx.IntData(messageRetentionInDays),
-				"status":                 llx.StringData(status),
-				"partitionIds":           llx.ArrayData(partitionIds, types.String),
-				"creationTime":           llx.TimeDataPtr(creationTime),
-			})
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(eh.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlEh.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).cacheSystemData = sysData
-			res = append(res, mqlEh)
 		}
 	}
 
-	return res, nil
+	return map[string]*llx.RawData{
+		"id":                     llx.StringDataPtr(eh.ID),
+		"name":                   llx.StringDataPtr(eh.Name),
+		"partitionCount":         llx.IntData(partitionCount),
+		"messageRetentionInDays": llx.IntData(messageRetentionInDays),
+		"status":                 llx.StringData(status),
+		"partitionIds":           llx.ArrayData(partitionIds, types.String),
+		"creationTime":           llx.TimeDataPtr(creationTime),
+	}
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() ([]any, error) {
@@ -450,6 +459,18 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 	}
 
 	return res, nil
+}
+
+// networkRuleSet fetches the namespace-level network rule set.
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRuleSet() (any, error) {
+	props, err := a.fetchNetworkRuleSetProperties()
+	if err != nil {
+		return nil, err
+	}
+	if props == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(props)
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules, error) {
