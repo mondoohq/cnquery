@@ -11,17 +11,21 @@ import (
 	"time"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/hetzner/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
-// translateHcloudError handles common hcloud error codes. It returns nil for
-// permission/not-found errors so callers can treat them as "no data" instead
-// of failing the whole query, mirroring the AWS provider's Is400AccessDenied
-// pattern.
+// translateHcloudError decides which hcloud failures are a real answer and
+// which are an error.
+//
+// Only a missing collection is an answer. A denial is not: a token that was
+// refused the read has established nothing about what exists, so reporting an
+// empty list would assert the project has no firewalls, no volumes, no
+// servers, which is a different and unverified claim. Every list in this
+// provider runs through paginate and therefore through here, so the choice
+// applies to all of them at once.
 func translateHcloudError(err error) error {
 	if err == nil {
 		return nil
@@ -29,10 +33,10 @@ func translateHcloudError(err error) error {
 	var hErr hcloud.Error
 	if errors.As(err, &hErr) {
 		switch hErr.Code {
-		case hcloud.ErrorCodeUnauthorized, hcloud.ErrorCodeForbidden:
-			log.Warn().Err(err).Msg("hetzner> permission denied; returning empty result")
-			return nil
 		case hcloud.ErrorCodeNotFound:
+			// A collection endpoint answering 404 means the product is not
+			// provisioned for this project at all, which genuinely is none.
+			// Storage Boxes answer this way on a plain cloud project.
 			return nil
 		}
 	}
