@@ -243,6 +243,7 @@ PROVIDERS := \
 	mssql \
 	mysqldb \
 	neon \
+	netlify \
 	network \
 	nextdns \
 	nmap \

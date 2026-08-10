@@ -741,6 +741,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"netlify": {
+		Provider: &plugin.Provider{
+			Name:            "netlify",
+			ID:              "go.mondoo.com/mql/providers/netlify",
+			ConnectionTypes: []string{"netlify"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "netlify",
+					Use:   "netlify",
+					Short: "a Netlify account",
+				},
+			},
+		},
+	},
+
 	"network": {
 		Provider: &plugin.Provider{
 			Name:            "network",
