@@ -17,6 +17,9 @@ import (
 // during discovery.
 type DiscoveryFilters struct {
 	Subscriptions SubscriptionsFilter
+	// General holds the filters that apply to every discovered resource,
+	// regardless of service.
+	General GeneralDiscoveryFilters
 	// PropagateSubscriptionTags merges each subscription's tags into every asset
 	// discovered under that subscription (an asset's own labels win on collision).
 	// Off by default. Mirrors the GCP provider's PropagateProjectLabels and the
@@ -50,6 +53,75 @@ func (f SubscriptionsFilter) IsFilteredOut(subscriptionID string) bool {
 	return slices.Contains(f.Exclude, subscriptionID)
 }
 
+// GeneralDiscoveryFilters narrows discovery by ARM resource tag. It mirrors the
+// AWS provider's filter of the same name, including its matching semantics, so
+// that `--filters tag:env=prod` selects the same way on both clouds.
+//
+// Azure applies these client-side. The generic ARM list call already returns
+// each resource's tags, so filtering here costs nothing extra -- unlike AWS,
+// there is no per-resource tag lookup to avoid.
+type GeneralDiscoveryFilters struct {
+	// Tags restricts discovery to resources carrying at least one of these
+	// key/value pairs. Values may be a CSV list, e.g. "env": "prod,staging".
+	Tags map[string]string
+	// ExcludeTags drops resources carrying any of these key/value pairs. It is
+	// applied after Tags, so an excluded resource stays excluded even when it
+	// also matches an include.
+	ExcludeTags map[string]string
+}
+
+// HasTags reports whether any tag filter was requested. Callers use it to skip
+// a tag lookup they would otherwise have to pay for.
+func (f GeneralDiscoveryFilters) HasTags() bool {
+	return len(f.Tags) > 0 || len(f.ExcludeTags) > 0
+}
+
+// IsFilteredOutByTags reports whether a resource carrying resourceTags should be
+// skipped during discovery.
+//
+// note: if this function returns `true`, it means that the resource should be
+// skipped.
+func (f GeneralDiscoveryFilters) IsFilteredOutByTags(resourceTags map[string]string) bool {
+	return !f.MatchesIncludeTags(resourceTags) || f.MatchesExcludeTags(resourceTags)
+}
+
+// MatchesIncludeTags reports whether resourceTags satisfies the include filter.
+// An empty filter matches everything.
+//
+// Matching is ANY, not ALL: a resource is kept when it matches at least one of
+// the requested key/value pairs. This is deliberately the same rule the AWS
+// provider uses -- `--filters tag:env=prod --filters tag:team=infra` reads as
+// "prod or infra" on both providers rather than meaning one thing here and
+// another there.
+func (f GeneralDiscoveryFilters) MatchesIncludeTags(resourceTags map[string]string) bool {
+	if len(f.Tags) == 0 {
+		return true
+	}
+	for k, csv := range f.Tags {
+		for v := range strings.SplitSeq(csv, ",") {
+			if tagValue, ok := resourceTags[k]; ok && tagValue == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// MatchesExcludeTags reports whether resourceTags matches the exclude filter.
+//
+// note: if this function returns `true`, it means that the resource should be
+// skipped.
+func (f GeneralDiscoveryFilters) MatchesExcludeTags(resourceTags map[string]string) bool {
+	for k, csv := range f.ExcludeTags {
+		for v := range strings.SplitSeq(csv, ",") {
+			if tagValue, ok := resourceTags[k]; ok && tagValue == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // DiscoveryFiltersFromOpts parses the raw --filters key/value options into the
 // typed DiscoveryFilters. It is nil-safe: a nil opts map yields empty filters.
 func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
@@ -57,6 +129,10 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 		Subscriptions: SubscriptionsFilter{
 			Include: filteropts.ParseCsvSliceOpt(opts, "subscriptions"),
 			Exclude: filteropts.ParseCsvSliceOpt(opts, "subscriptions-exclude"),
+		},
+		General: GeneralDiscoveryFilters{
+			Tags:        parseMapOpt(opts, "tag:"),
+			ExcludeTags: parseMapOpt(opts, "exclude:tag:"),
 		},
 		PropagateSubscriptionTags: filteropts.ParseBoolOpt(opts, "propagate-subscription-tags", false),
 		SubscriptionTags:          parseMapOpt(opts, "subscription-tag:"),

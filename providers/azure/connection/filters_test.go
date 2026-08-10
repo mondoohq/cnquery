@@ -135,3 +135,131 @@ func TestSubscriptionsFilter_IsFilteredOut(t *testing.T) {
 		})
 	}
 }
+
+func TestGeneralDiscoveryFiltersFromOpts(t *testing.T) {
+	t.Run("nil opts yields no tag filters", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(nil)
+		assert.False(t, f.General.HasTags())
+	})
+
+	t.Run("tag and exclude:tag are parsed into separate maps", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(map[string]string{
+			"tag:env":          "prod,staging",
+			"tag:team":         "infra",
+			"exclude:tag:temp": "true",
+		})
+		assert.Equal(t, map[string]string{"env": "prod,staging", "team": "infra"}, f.General.Tags)
+		assert.Equal(t, map[string]string{"temp": "true"}, f.General.ExcludeTags)
+		assert.True(t, f.General.HasTags())
+	})
+
+	// "subscription-tag:" selects which tags to propagate onto discovered assets
+	// and has nothing to do with which resources are discovered. Parsing it into
+	// General.Tags would silently turn a propagation request into a filter and
+	// drop every asset that did not carry the tag.
+	t.Run("subscription-tag is not a discovery tag filter", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(map[string]string{
+			"subscription-tag:owner": "platform",
+		})
+		assert.Empty(t, f.General.Tags)
+		assert.False(t, f.General.HasTags())
+		assert.Equal(t, map[string]string{"owner": "platform"}, f.SubscriptionTags)
+	})
+}
+
+func TestGeneralDiscoveryFiltersIsFilteredOutByTags(t *testing.T) {
+	tests := []struct {
+		name    string
+		filter  GeneralDiscoveryFilters
+		tags    map[string]string
+		skipped bool
+	}{
+		{
+			name:    "no filter keeps everything",
+			filter:  GeneralDiscoveryFilters{},
+			tags:    map[string]string{"env": "prod"},
+			skipped: false,
+		},
+		{
+			name:    "no filter keeps an untagged resource",
+			filter:  GeneralDiscoveryFilters{},
+			tags:    nil,
+			skipped: false,
+		},
+		{
+			name:    "include matches",
+			filter:  GeneralDiscoveryFilters{Tags: map[string]string{"env": "prod"}},
+			tags:    map[string]string{"env": "prod", "team": "infra"},
+			skipped: false,
+		},
+		{
+			name:    "include does not match on value",
+			filter:  GeneralDiscoveryFilters{Tags: map[string]string{"env": "prod"}},
+			tags:    map[string]string{"env": "dev"},
+			skipped: true,
+		},
+		{
+			name:    "include does not match on missing key",
+			filter:  GeneralDiscoveryFilters{Tags: map[string]string{"env": "prod"}},
+			tags:    map[string]string{"team": "infra"},
+			skipped: true,
+		},
+		{
+			name:    "an untagged resource is dropped by an include filter",
+			filter:  GeneralDiscoveryFilters{Tags: map[string]string{"env": "prod"}},
+			tags:    nil,
+			skipped: true,
+		},
+		{
+			name:    "csv value matches any listed value",
+			filter:  GeneralDiscoveryFilters{Tags: map[string]string{"env": "prod,staging"}},
+			tags:    map[string]string{"env": "staging"},
+			skipped: false,
+		},
+		// Matching is ANY across keys, the same rule the AWS provider uses.
+		// A resource matching one of several requested pairs is kept.
+		{
+			name: "multiple include keys are ORed, not ANDed",
+			filter: GeneralDiscoveryFilters{Tags: map[string]string{
+				"env":  "prod",
+				"team": "infra",
+			}},
+			tags:    map[string]string{"team": "infra"},
+			skipped: false,
+		},
+		{
+			name:    "exclude drops a match",
+			filter:  GeneralDiscoveryFilters{ExcludeTags: map[string]string{"temp": "true"}},
+			tags:    map[string]string{"temp": "true"},
+			skipped: true,
+		},
+		{
+			name:    "exclude ignores a non-match",
+			filter:  GeneralDiscoveryFilters{ExcludeTags: map[string]string{"temp": "true"}},
+			tags:    map[string]string{"temp": "false"},
+			skipped: false,
+		},
+		{
+			name: "exclude wins over include",
+			filter: GeneralDiscoveryFilters{
+				Tags:        map[string]string{"env": "prod"},
+				ExcludeTags: map[string]string{"decommissioned": "true"},
+			},
+			tags:    map[string]string{"env": "prod", "decommissioned": "true"},
+			skipped: true,
+		},
+		{
+			name: "exclude csv value matches any listed value",
+			filter: GeneralDiscoveryFilters{
+				ExcludeTags: map[string]string{"env": "dev,test"},
+			},
+			tags:    map[string]string{"env": "test"},
+			skipped: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.skipped, tt.filter.IsFilteredOutByTags(tt.tags))
+		})
+	}
+}

@@ -249,3 +249,51 @@ func TestParseCLICredentials(t *testing.T) {
 		assert.Empty(t, res.Asset.Connections[0].Credentials)
 	})
 }
+
+// TestParseCLITagFilters guards the allowlist in parseFlagsToFiltersOpts. Tag
+// filters are parsed in the connection layer and applied during discovery, but
+// they only ever get there if ParseCLI copies them out of the --filters flag
+// first. A key missing from the allowlist is dropped silently: the flag is
+// accepted, no error is raised, and discovery behaves as if it were never set.
+func TestParseCLITagFilters(t *testing.T) {
+	s := Init()
+
+	t.Run("tag and exclude:tag survive the allowlist", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"filters": {Map: map[string]*llx.Primitive{
+					"tag:env":          llx.StringPrimitive("prod,staging"),
+					"exclude:tag:temp": llx.StringPrimitive("true"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		f := connFilter(t, res)
+		assert.Equal(t, "prod,staging", f["tag:env"])
+		assert.Equal(t, "true", f["exclude:tag:temp"])
+
+		// and they reach the typed filter the discovery code actually reads
+		parsed := connection.DiscoveryFiltersFromOpts(f)
+		assert.Equal(t, map[string]string{"env": "prod,staging"}, parsed.General.Tags)
+		assert.Equal(t, map[string]string{"temp": "true"}, parsed.General.ExcludeTags)
+	})
+
+	t.Run("tag filters coexist with subscription filters", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"filters": {Map: map[string]*llx.Primitive{
+					"subscriptions":          llx.StringPrimitive("sub-a"),
+					"tag:env":                llx.StringPrimitive("prod"),
+					"subscription-tag:owner": llx.StringPrimitive("platform"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		parsed := connection.DiscoveryFiltersFromOpts(connFilter(t, res))
+		assert.Equal(t, []string{"sub-a"}, parsed.Subscriptions.Include)
+		assert.Equal(t, map[string]string{"env": "prod"}, parsed.General.Tags)
+		// subscription-tag is propagation, not a discovery filter
+		assert.Equal(t, map[string]string{"owner": "platform"}, parsed.SubscriptionTags)
+		assert.Empty(t, parsed.General.ExcludeTags)
+	})
+}

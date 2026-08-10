@@ -127,7 +127,7 @@ Examples run in the Azure CLI:
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options, e.g., --filters subscriptions=<id1>,<id2> --filters subscriptions-exclude=<id3> --filters propagate-subscription-tags=true --filters subscription-tag:<key>=<value>",
+					Desc:    "Filter options, e.g., --filters subscriptions=<id1>,<id2> --filters subscriptions-exclude=<id3> --filters tag:<key>=<value1>,<value2> --filters exclude:tag:<key>=<value> --filters propagate-subscription-tags=true --filters subscription-tag:<key>=<value>",
 				},
 			},
 		},
