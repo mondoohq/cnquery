@@ -151,7 +151,7 @@ func (r *mqlDigitaloceanFunctionNamespace) accessKeys() ([]interface{}, error) {
 	all := make([]interface{}, 0, len(keys))
 	for _, k := range keys {
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.function.accessKey", map[string]*llx.RawData{
-			"__id":          llx.StringData("digitalocean.function.accessKey/" + r.Uuid.Data + "/" + k.ID),
+			"__id":          llx.StringData("digitalocean.function.accessKey/" + r.Namespace.Data + "/" + k.ID),
 			"namespaceUuid": llx.StringData(r.Uuid.Data),
 			"id":            llx.StringData(k.ID),
 			"name":          llx.StringData(k.Name),
@@ -175,13 +175,19 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 	ctx := context.Background()
 
 	// The namespace list does not include the API key needed to call the
-	// OpenWhisk host, so fetch the namespace directly to obtain it.
-	ns, _, err := client.Functions.GetNamespace(ctx, r.Uuid.Data)
+	// OpenWhisk host, so fetch the namespace directly to obtain it. The
+	// namespace name is the identifier here: the list endpoint returns an
+	// empty uuid, and requesting an empty id resolves to the collection
+	// endpoint, which decodes to no namespace at all.
+	ns, _, err := client.Functions.GetNamespace(ctx, r.Namespace.Data)
 	if err != nil {
 		if isDoNotFound(err) {
 			return []interface{}{}, nil
 		}
 		return nil, err
+	}
+	if ns == nil {
+		return []interface{}{}, nil
 	}
 	if ns.ApiHost == "" || ns.Key == "" {
 		// Without an API host and key we can't reach the OpenWhisk host.
@@ -230,8 +236,10 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 		}
 
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.function.action", map[string]*llx.RawData{
-			"__id":           llx.StringData("digitalocean.function.action/" + r.Uuid.Data + "/" + pkg + "/" + a.Name),
-			"namespaceUuid":  llx.StringData(r.Uuid.Data),
+			"__id": llx.StringData("digitalocean.function.action/" + r.Namespace.Data + "/" + pkg + "/" + a.Name),
+			// The namespace listing leaves uuid empty; the single-namespace
+			// read above is where the real one comes from.
+			"namespaceUuid":  llx.StringData(ns.UUID),
 			"name":           llx.StringData(a.Name),
 			"package":        llx.StringData(pkg),
 			"version":        llx.StringData(a.Version),

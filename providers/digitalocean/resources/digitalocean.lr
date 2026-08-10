@@ -1873,7 +1873,7 @@ digitalocean.size @defaults("slug vcpus memory priceMonthly") {
 // invoke them, and the access keys issued for the namespace API are all
 // queryable, making this the entry point for inventorying serverless
 // workloads and auditing the credentials that reach them.
-digitalocean.function.namespace @defaults("uuid label region") {
+digitalocean.function.namespace @defaults("namespace label region") {
   // Namespace UUID
   uuid string
   // Internal namespace identifier used in API paths
