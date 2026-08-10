@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -119,10 +120,12 @@ func TestComputeZonesStopsWithoutACursor(t *testing.T) {
 func TestComputeZonesSurfacesAMidPaginationFailure(t *testing.T) {
 	env := setupTestEnv(t, []string{cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope})
 
-	var requests int
+	// atomic, not a plain int: the handler runs on the test server's goroutine
+	// and the counter is read from the request goroutine, so a bare int is an
+	// unsynchronized pair even though -race does not happen to flag it.
+	var requests atomic.Int32
 	env.Mux.HandleFunc("/compute/v1/projects/"+testProjectId+"/zones", func(w http.ResponseWriter, r *http.Request) {
-		requests++
-		if requests == 1 {
+		if requests.Add(1) == 1 {
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, `{"items":[{"id":"1","name":"us-central1-a","status":"UP"}],"nextPageToken":"cursor-2"}`)
 			return
@@ -189,9 +192,9 @@ func TestDnsManagedZonesFollowsEveryPage(t *testing.T) {
 func TestDnsManagedZonesSkipsADisabledService(t *testing.T) {
 	env := setupTestEnv(t, []string{dns.CloudPlatformReadOnlyScope})
 
-	var called bool
+	var called atomic.Bool
 	env.Mux.HandleFunc("/dns/v1/projects/"+testProjectId+"/managedZones", func(w http.ResponseWriter, r *http.Request) {
-		called = true
+		called.Store(true)
 	})
 
 	res, err := CreateResource(env.Runtime, "gcp.project.dnsService", map[string]*llx.RawData{
@@ -204,5 +207,5 @@ func TestDnsManagedZonesSkipsADisabledService(t *testing.T) {
 	zones, err := svc.managedZones()
 	require.NoError(t, err)
 	assert.Nil(t, zones)
-	assert.False(t, called, "a disabled service must not be called at all")
+	assert.False(t, called.Load(), "a disabled service must not be called at all")
 }
