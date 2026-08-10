@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 )
@@ -15,65 +14,55 @@ func (r *mqlDigitalocean) vectorDatabases() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		vdbs, resp, err := client.VectorDBs.List(context.Background(), opt)
+	vdbs, err := paginate(context.Background(), client.VectorDBs.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(vdbs))
+	for i := range vdbs {
+		v := vdbs[i]
+
+		tags := make([]interface{}, len(v.Tags))
+		for j, t := range v.Tags {
+			tags[j] = t
+		}
+
+		weaviateVersion, autoSchema, quantization := "", false, ""
+		if v.Config != nil {
+			weaviateVersion = v.Config.WeaviateVersion
+			autoSchema = v.Config.EnableAutoSchema
+			quantization = v.Config.DefaultQuantization
+		}
+
+		httpEndpoint, grpcEndpoint := "", ""
+		if v.Endpoints != nil {
+			httpEndpoint = v.Endpoints.HTTP
+			grpcEndpoint = v.Endpoints.GRPC
+		}
+
+		// The GetCredentials endpoint returns a live API token, so we
+		// deliberately do not surface credentials on the resource.
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.vectorDatabase", map[string]*llx.RawData{
+			"id":                  llx.StringData(v.ID),
+			"name":                llx.StringData(v.Name),
+			"region":              llx.StringData(v.Region),
+			"ownerUuid":           llx.StringData(v.OwnerUUID),
+			"status":              llx.StringData(v.Status),
+			"size":                llx.StringData(v.Size),
+			"tags":                llx.ArrayData(tags, "\x02"),
+			"createdAt":           llx.TimeData(v.CreatedAt),
+			"updatedAt":           llx.TimeData(v.UpdatedAt),
+			"weaviateVersion":     llx.StringData(weaviateVersion),
+			"enableAutoSchema":    llx.BoolData(autoSchema),
+			"defaultQuantization": llx.StringData(quantization),
+			"httpEndpoint":        llx.StringData(httpEndpoint),
+			"grpcEndpoint":        llx.StringData(grpcEndpoint),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for i := range vdbs {
-			v := vdbs[i]
-
-			tags := make([]interface{}, len(v.Tags))
-			for j, t := range v.Tags {
-				tags[j] = t
-			}
-
-			weaviateVersion, autoSchema, quantization := "", false, ""
-			if v.Config != nil {
-				weaviateVersion = v.Config.WeaviateVersion
-				autoSchema = v.Config.EnableAutoSchema
-				quantization = v.Config.DefaultQuantization
-			}
-
-			httpEndpoint, grpcEndpoint := "", ""
-			if v.Endpoints != nil {
-				httpEndpoint = v.Endpoints.HTTP
-				grpcEndpoint = v.Endpoints.GRPC
-			}
-
-			// The GetCredentials endpoint returns a live API token, so we
-			// deliberately do not surface credentials on the resource.
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.vectorDatabase", map[string]*llx.RawData{
-				"id":                  llx.StringData(v.ID),
-				"name":                llx.StringData(v.Name),
-				"region":              llx.StringData(v.Region),
-				"ownerUuid":           llx.StringData(v.OwnerUUID),
-				"status":              llx.StringData(v.Status),
-				"size":                llx.StringData(v.Size),
-				"tags":                llx.ArrayData(tags, "\x02"),
-				"createdAt":           llx.TimeData(v.CreatedAt),
-				"updatedAt":           llx.TimeData(v.UpdatedAt),
-				"weaviateVersion":     llx.StringData(weaviateVersion),
-				"enableAutoSchema":    llx.BoolData(autoSchema),
-				"defaultQuantization": llx.StringData(quantization),
-				"httpEndpoint":        llx.StringData(httpEndpoint),
-				"grpcEndpoint":        llx.StringData(grpcEndpoint),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

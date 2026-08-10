@@ -46,30 +46,20 @@ func (r *mqlDigitaloceanGradientai) knowledgeBases() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		kbs, resp, err := client.GradientAI.ListKnowledgeBases(context.Background(), opt)
+	kbs, err := paginate(context.Background(), client.GradientAI.ListKnowledgeBases)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(kbs))
+	for i := range kbs {
+		res, err := newMqlGradientaiKnowledgeBase(r.MqlRuntime, &kbs[i])
 		if err != nil {
 			return nil, err
 		}
-		for i := range kbs {
-			res, err := newMqlGradientaiKnowledgeBase(r.MqlRuntime, &kbs[i])
-			if err != nil {
-				return nil, err
-			}
-			if res != nil {
-				all = append(all, res)
-			}
+		if res != nil {
+			all = append(all, res)
 		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
 	}
 	return all, nil
 }

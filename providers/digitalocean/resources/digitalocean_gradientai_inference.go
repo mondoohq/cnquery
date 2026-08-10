@@ -20,30 +20,20 @@ func (r *mqlDigitaloceanGradientai) anthropicApiKeys() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		keys, resp, err := client.GradientAI.ListAnthropicAPIKeys(context.Background(), opt)
+	keys, err := paginate(context.Background(), client.GradientAI.ListAnthropicAPIKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(keys))
+	for _, k := range keys {
+		res, err := newMqlGradientaiAnthropicApiKey(r.MqlRuntime, k)
 		if err != nil {
 			return nil, err
 		}
-		for _, k := range keys {
-			res, err := newMqlGradientaiAnthropicApiKey(r.MqlRuntime, k)
-			if err != nil {
-				return nil, err
-			}
-			if res != nil {
-				all = append(all, res)
-			}
+		if res != nil {
+			all = append(all, res)
 		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
 	}
 	return all, nil
 }
@@ -105,30 +95,20 @@ func (r *mqlDigitaloceanGradientai) openaiApiKeys() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		keys, resp, err := client.GradientAI.ListOpenAIAPIKeys(context.Background(), opt)
+	keys, err := paginate(context.Background(), client.GradientAI.ListOpenAIAPIKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(keys))
+	for _, k := range keys {
+		res, err := newMqlGradientaiOpenaiApiKey(r.MqlRuntime, k)
 		if err != nil {
 			return nil, err
 		}
-		for _, k := range keys {
-			res, err := newMqlGradientaiOpenaiApiKey(r.MqlRuntime, k)
-			if err != nil {
-				return nil, err
-			}
-			if res != nil {
-				all = append(all, res)
-			}
+		if res != nil {
+			all = append(all, res)
 		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
 	}
 	return all, nil
 }

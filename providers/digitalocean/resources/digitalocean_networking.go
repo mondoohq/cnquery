@@ -122,38 +122,28 @@ func (r *mqlDigitalocean) reservedIPv6s() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		ips, resp, err := client.ReservedIPV6s.List(context.Background(), opt)
+	ips, err := paginate(context.Background(), client.ReservedIPV6s.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(ips))
+	for i := range ips {
+		ip := ips[i]
+		dropletID := int64(0)
+		if ip.Droplet != nil {
+			dropletID = int64(ip.Droplet.ID)
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.reservedIpV6", map[string]*llx.RawData{
+			"ip":         llx.StringData(ip.IP),
+			"region":     llx.StringData(ip.RegionSlug),
+			"reservedAt": llx.TimeData(ip.ReservedAt),
+			"dropletId":  llx.IntData(dropletID),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for i := range ips {
-			ip := ips[i]
-			dropletID := int64(0)
-			if ip.Droplet != nil {
-				dropletID = int64(ip.Droplet.ID)
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.reservedIpV6", map[string]*llx.RawData{
-				"ip":         llx.StringData(ip.IP),
-				"region":     llx.StringData(ip.RegionSlug),
-				"reservedAt": llx.TimeData(ip.ReservedAt),
-				"dropletId":  llx.IntData(dropletID),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

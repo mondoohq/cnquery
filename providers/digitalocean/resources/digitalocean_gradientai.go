@@ -143,33 +143,23 @@ func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		agents, resp, err := client.GradientAI.ListAgents(context.Background(), opt)
+	agents, err := paginate(context.Background(), client.GradientAI.ListAgents)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(agents))
+	for _, a := range agents {
+		if a != nil && skipGradientaiAgent(conn.Filters.General, a) {
+			continue
+		}
+		res, err := newMqlGradientaiAgent(r.MqlRuntime, a)
 		if err != nil {
 			return nil, err
 		}
-		for _, a := range agents {
-			if a != nil && skipGradientaiAgent(conn.Filters.General, a) {
-				continue
-			}
-			res, err := newMqlGradientaiAgent(r.MqlRuntime, a)
-			if err != nil {
-				return nil, err
-			}
-			if res != nil {
-				all = append(all, res)
-			}
+		if res != nil {
+			all = append(all, res)
 		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
 	}
 	return all, nil
 }
@@ -534,30 +524,20 @@ func (r *mqlDigitaloceanGradientai) models() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		models, resp, err := client.GradientAI.ListAvailableModels(context.Background(), opt)
+	models, err := paginate(context.Background(), client.GradientAI.ListAvailableModels)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(models))
+	for _, m := range models {
+		res, err := newMqlGradientaiModel(r.MqlRuntime, m)
 		if err != nil {
 			return nil, err
 		}
-		for _, m := range models {
-			res, err := newMqlGradientaiModel(r.MqlRuntime, m)
-			if err != nil {
-				return nil, err
-			}
-			if res != nil {
-				all = append(all, res)
-			}
+		if res != nil {
+			all = append(all, res)
 		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
 	}
 	return all, nil
 }

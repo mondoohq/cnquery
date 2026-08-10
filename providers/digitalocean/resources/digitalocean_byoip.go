@@ -36,31 +36,21 @@ func (r *mqlDigitalocean) byoipPrefixes() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		prefixes, resp, err := client.BYOIPPrefixes.List(context.Background(), opt)
+	prefixes, err := paginate(context.Background(), client.BYOIPPrefixes.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(prefixes))
+	for _, p := range prefixes {
+		if p == nil {
+			continue
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.byoipPrefix", byoipPrefixArgs(p))
 		if err != nil {
 			return nil, err
 		}
-		for _, p := range prefixes {
-			if p == nil {
-				continue
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.byoipPrefix", byoipPrefixArgs(p))
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -170,31 +160,21 @@ func (r *mqlDigitalocean) partnerAttachments() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		attachments, resp, err := client.PartnerAttachment.List(context.Background(), opt)
+	attachments, err := paginate(context.Background(), client.PartnerAttachment.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(attachments))
+	for _, p := range attachments {
+		if p == nil {
+			continue
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.partnerAttachment", partnerAttachmentArgs(p))
 		if err != nil {
 			return nil, err
 		}
-		for _, p := range attachments {
-			if p == nil {
-				continue
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.partnerAttachment", partnerAttachmentArgs(p))
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
