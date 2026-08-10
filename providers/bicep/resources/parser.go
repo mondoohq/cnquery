@@ -158,11 +158,19 @@ const decNS = `@(?:sys\.)?`
 
 var (
 	targetScopeRe = regexp.MustCompile(`(?m)^targetScope\s*=\s*'([^']+)'`)
-	paramRe       = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\w+)(.*)$`)
-	varRe         = regexp.MustCompile(`(?m)^var\s+(\w+)\s*=\s*(.+)$`)
-	resourceRe    = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
-	moduleRe      = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
-	outputRe      = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\w+)\s*=\s*(.+)$`)
+	// paramRe captures only the parameter NAME and the remainder of the
+	// header. The type cannot be a bare `(\w+)` — Bicep types include literal
+	// unions (`'a' | 'b'`), arrays (`string[]`), nullables (`myType?`) and
+	// parenthesized forms — so the type and default are separated afterwards
+	// with the delimiter-aware splitDeclAtEquals.
+	paramRe    = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\S.*)$`)
+	varRe      = regexp.MustCompile(`(?m)^var\s+(\w+)\s*=\s*(.+)$`)
+	resourceRe = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
+	moduleRe   = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
+	// outputRe captures the output NAME and the remainder of the header, for
+	// the same reason as paramRe — `output ids string[] = names` has no bare
+	// word before the `=`.
+	outputRe = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\S.*)$`)
 	// Every built-in decorator may also be written through the `sys`
 	// namespace (`@sys.secure()`), which is what Bicep requires when a
 	// user-defined symbol shadows the bare name. `decNS` makes that prefix
@@ -290,9 +298,10 @@ func parseBicep(content string) *parsedBicepFile {
 			// whole default instead of just the opening `{`/`[`. Inline
 			// comments are stripped string-aware so a trailing `// ...` doesn't
 			// leak into the default value.
-			p := parseParameter(reassembleParamStatement(stmtLines), stmt.decorators)
-			p.startLine, p.endLine = startLine, endLine
-			result.parameters = append(result.parameters, p)
+			if p, ok := parseParameter(reassembleParamStatement(stmtLines), stmt.decorators); ok {
+				p.startLine, p.endLine = startLine, endLine
+				result.parameters = append(result.parameters, p)
+			}
 		case "var":
 			v, _ := parseVariableDecl(stmtLines, 0, stmt.decorators)
 			v.startLine, v.endLine = startLine, endLine
@@ -315,9 +324,10 @@ func parseBicep(content string) *parsedBicepFile {
 			if len(stmtLines) > 1 {
 				outLine = strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
 			}
-			o := parseOutput(outLine, stmt.decorators)
-			o.startLine, o.endLine = startLine, endLine
-			result.outputs = append(result.outputs, o)
+			if o, ok := parseOutput(outLine, stmt.decorators); ok {
+				o.startLine, o.endLine = startLine, endLine
+				result.outputs = append(result.outputs, o)
+			}
 		case "type":
 			if t, ok := parseTypeDecl(stmt.text, stmt.decorators); ok {
 				result.types = append(result.types, t)
@@ -378,24 +388,33 @@ func stripInlineComment(s string, st *scanState) string {
 	return s
 }
 
-func parseParameter(line string, decorators []string) parsedParameter {
+// parseParameter parses a `param` declaration. ok is false when the line is not
+// a well-formed parameter declaration, in which case the caller must skip it:
+// appending a zero-value entry both loses the real declaration and gives every
+// husk the same `bicep.parameter:<file>:` cache key, so they alias onto one
+// instance.
+func parseParameter(line string, decorators []string) (parsedParameter, bool) {
 	p := parsedParameter{decorators: decorators}
 
 	m := paramRe.FindStringSubmatch(line)
-	if len(m) >= 3 {
-		p.name = m[1]
-		p.typ = m[2]
-		if len(m) > 3 {
-			rest := strings.TrimSpace(m[3])
-			if strings.HasPrefix(rest, "=") {
-				val := strings.TrimSpace(rest[1:])
-				// Strip Bicep single-quote string delimiters
-				if len(val) >= 2 && val[0] == '\'' && val[len(val)-1] == '\'' {
-					val = val[1 : len(val)-1]
-				}
-				p.defaultValue = val
-			}
+	if len(m) < 3 {
+		return parsedParameter{}, false
+	}
+
+	p.name = m[1]
+	rest := strings.TrimSpace(m[2])
+	if typ, def, hasDefault := splitDeclAtEquals(rest); hasDefault {
+		p.typ = typ
+		// Strip Bicep single-quote string delimiters
+		if len(def) >= 2 && def[0] == '\'' && def[len(def)-1] == '\'' {
+			def = def[1 : len(def)-1]
 		}
+		p.defaultValue = def
+	} else {
+		p.typ = rest
+	}
+	if p.typ == "" {
+		return parsedParameter{}, false
 	}
 
 	decText := strings.Join(decorators, "\n")
@@ -411,7 +430,7 @@ func parseParameter(line string, decorators []string) parsedParameter {
 	p.minValue = parseIntDecorator(decText, minValueDecRe)
 	p.maxValue = parseIntDecorator(decText, maxValueDecRe)
 
-	return p
+	return p, true
 }
 
 // parseIntDecorator matches a decorator like `@minLength(8)` and returns the
@@ -512,23 +531,36 @@ func parseVariableDecl(lines []string, startIdx int, decorators []string) (parse
 // `=` inside the resource type string or a condition expression is ignored).
 // Returns "" when no top-level `=` is found.
 func declValueAfterEquals(lines []string, startIdx int) string {
-	full := strings.Join(lines[startIdx:], "\n")
+	_, after, _ := splitDeclAtEquals(strings.Join(lines[startIdx:], "\n"))
+	return after
+}
+
+// splitDeclAtEquals splits a declaration at its assignment `=` — the first one
+// that sits outside any string, comment, and bracket, and is not part of a
+// `==`/`=>` operator. Returns ok=false when there is no assignment.
+//
+// The left side is what precedes the assignment, which for a `param` or
+// `output` header is the declared type. That type cannot be captured with a
+// bare `\w+`: Bicep types include literal unions (`'a' | 'b'`), arrays
+// (`string[]`), nullables (`myType?`) and parenthesized forms, so the split has
+// to be delimiter-aware rather than lexical.
+func splitDeclAtEquals(s string) (before, after string, ok bool) {
 	st := scanState{}
-	for i := 0; i < len(full); {
-		if st.inStr == 0 && !st.inMulti && full[i] == '=' &&
+	for i := 0; i < len(s); {
+		if st.inStr == 0 && !st.inMulti && s[i] == '=' &&
 			st.paren == 0 && st.bracket == 0 && st.brace == 0 {
-			// Guard against `==`/`=>` which can appear in conditions; a real
-			// assignment `=` is followed by whitespace or a value char, not
-			// another `=` or `>`.
-			if i+1 < len(full) && (full[i+1] == '=' || full[i+1] == '>') {
-				i = st.stepAt(full, i)
+			// Guard against `==`/`=>` which can appear in conditions and
+			// lambdas; a real assignment `=` is followed by whitespace or a
+			// value char, not another `=` or `>`.
+			if i+1 < len(s) && (s[i+1] == '=' || s[i+1] == '>') {
+				i = st.stepAt(s, i)
 				continue
 			}
-			return strings.TrimSpace(full[i+1:])
+			return strings.TrimSpace(s[:i]), strings.TrimSpace(s[i+1:]), true
 		}
-		i = st.stepAt(full, i)
+		i = st.stepAt(s, i)
 	}
-	return ""
+	return "", "", false
 }
 
 func parseResourceDecl(lines []string, startIdx int, decorators []string) (*parsedResource, int) {
@@ -739,30 +771,40 @@ func parseModuleDecl(lines []string, startIdx int, decorators []string) (*parsed
 	return mod, endIdx
 }
 
-func parseOutput(line string, decorators []string) parsedOutput {
+// parseOutput parses an `output` declaration. ok is false when the line is not
+// a well-formed output declaration — including one with no assignment, which
+// Bicep requires — so the caller can skip it rather than append a husk.
+func parseOutput(line string, decorators []string) (parsedOutput, bool) {
 	o := parsedOutput{}
 	m := outputRe.FindStringSubmatch(line)
-	if len(m) >= 4 {
-		o.name = m[1]
-		o.typ = m[2]
-		expr := strings.TrimSpace(m[3])
-		// A looped output (`output ids array = [for sa in sas: sa.id]`)
-		// produces an array. Intentionally store the per-iteration value
-		// expression in `expression` (here `sa.id`), not the raw `[for ...]`
-		// text, and record the loop header separately. This keeps `expression`
-		// describing the value each iteration produces.
-		if loop := detectLoop(expr); loop.isLoop {
-			o.loop = loop
-			o.expression = loop.body
-		} else {
-			o.expression = expr
-		}
+	if len(m) < 3 {
+		return parsedOutput{}, false
 	}
+
+	typ, expr, hasValue := splitDeclAtEquals(strings.TrimSpace(m[2]))
+	if !hasValue || typ == "" {
+		return parsedOutput{}, false
+	}
+
+	o.name = m[1]
+	o.typ = typ
+	// A looped output (`output ids array = [for sa in sas: sa.id]`)
+	// produces an array. Intentionally store the per-iteration value
+	// expression in `expression` (here `sa.id`), not the raw `[for ...]`
+	// text, and record the loop header separately. This keeps `expression`
+	// describing the value each iteration produces.
+	if loop := detectLoop(expr); loop.isLoop {
+		o.loop = loop
+		o.expression = loop.body
+	} else {
+		o.expression = expr
+	}
+
 	decText := strings.Join(decorators, "\n")
 	if m := descDecRe.FindStringSubmatch(decText); len(m) > 1 {
 		o.description = m[1]
 	}
-	return o
+	return o, true
 }
 
 // parseTypeDecl handles a `type Name = <definition>` statement. The whole

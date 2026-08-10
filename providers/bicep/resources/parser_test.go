@@ -107,7 +107,8 @@ func TestParseParameterDefaultValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := parseParameter(tt.input, nil)
+			p, ok := parseParameter(tt.input, nil)
+			require.True(t, ok, "well-formed declaration must parse")
 			assert.Equal(t, tt.wantName, p.name)
 			assert.Equal(t, tt.wantType, p.typ)
 			assert.Equal(t, tt.wantDef, p.defaultValue)
@@ -557,7 +558,8 @@ func TestParseModuleDecl(t *testing.T) {
 
 func TestParseOutput(t *testing.T) {
 	t.Run("simple output", func(t *testing.T) {
-		o := parseOutput("output rgId string = rg.id", nil)
+		o, ok := parseOutput("output rgId string = rg.id", nil)
+		require.True(t, ok)
 		assert.Equal(t, "rgId", o.name)
 		assert.Equal(t, "string", o.typ)
 		assert.Equal(t, "rg.id", o.expression)
@@ -572,7 +574,8 @@ output rgId string = rg.id`
 	})
 
 	t.Run("int output", func(t *testing.T) {
-		o := parseOutput("output count int = length(items)", nil)
+		o, ok := parseOutput("output count int = length(items)", nil)
+		require.True(t, ok)
 		assert.Equal(t, "count", o.name)
 		assert.Equal(t, "int", o.typ)
 		assert.Equal(t, "length(items)", o.expression)
