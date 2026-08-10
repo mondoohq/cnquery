@@ -497,22 +497,14 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 			noEcho = parseCfnBool(n.Value)
 		}
 
-		minLength, err := nodeToInt(valueNode, "MinLength")
-		if err != nil {
-			return nil, err
-		}
-		maxLength, err := nodeToInt(valueNode, "MaxLength")
-		if err != nil {
-			return nil, err
-		}
-		minValue, err := nodeToInt(valueNode, "MinValue")
-		if err != nil {
-			return nil, err
-		}
-		maxValue, err := nodeToInt(valueNode, "MaxValue")
-		if err != nil {
-			return nil, err
-		}
+		// A constraint we can't represent degrades that single field to null.
+		// Propagating the error would erase EVERY parameter in the template —
+		// including the unrelated NoEcho credential parameters a policy is
+		// looking for — over one bound on one parameter.
+		minLength := optionalIntConstraint(valueNode, "MinLength", keyNode.Value)
+		maxLength := optionalIntConstraint(valueNode, "MaxLength", keyNode.Value)
+		minValue := optionalIntConstraint(valueNode, "MinValue", keyNode.Value)
+		maxValue := optionalIntConstraint(valueNode, "MaxValue", keyNode.Value)
 
 		defaultDict, err := nodeToDict(valueNode, "Default")
 		if err != nil {

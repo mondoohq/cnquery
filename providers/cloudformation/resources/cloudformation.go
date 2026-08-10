@@ -6,7 +6,10 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -87,11 +90,41 @@ func nodeToInt(parent *yaml.Node, key string) (*int64, error) {
 	if val.Kind != yaml.ScalarNode {
 		return nil, fmt.Errorf("expected scalar for %s, got kind %v", key, val.Kind)
 	}
-	n, err := strconv.ParseInt(val.Value, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid integer for %s: %w", key, err)
+	if n, err := strconv.ParseInt(val.Value, 10, 64); err == nil {
+		return &n, nil
 	}
+	// CloudFormation `Number` parameters may be integers or floats, so
+	// `MinValue: 1.0` and `MinValue: 1e3` are legal. An integral float is
+	// exactly representable by the int-typed field, so accept it; a genuinely
+	// fractional bound is not, and reporting a truncated value would be worse
+	// than reporting none, so it stays an error for the caller to degrade on.
+	f, err := strconv.ParseFloat(val.Value, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid number for %s: %w", key, err)
+	}
+	if f != math.Trunc(f) || f > math.MaxInt64 || f < math.MinInt64 {
+		return nil, fmt.Errorf("%s is not representable as an integer: %s", key, val.Value)
+	}
+	n := int64(f)
 	return &n, nil
+}
+
+// optionalIntConstraint reads an integer parameter constraint, degrading to nil
+// (an absent constraint) when the value can't be represented rather than
+// failing. `param` names the owning parameter so the warning is actionable.
+//
+// The alternative — propagating the error — takes down the whole parameter
+// list: one `MinValue: 0.5` on one parameter would erase every other
+// parameter in the template, so a policy looking for an unrelated NoEcho
+// credential parameter would find nothing at all.
+func optionalIntConstraint(parent *yaml.Node, key, param string) *int64 {
+	n, err := nodeToInt(parent, key)
+	if err != nil {
+		log.Warn().Err(err).Str("parameter", param).Str("constraint", key).
+			Msg("cloudformation: unrepresentable parameter constraint; reporting it as absent")
+		return nil
+	}
+	return n
 }
 
 // nodeToDictList walks the sequence at `key` and returns each entry as a
