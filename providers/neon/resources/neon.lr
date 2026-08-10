@@ -1,0 +1,448 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/neon"
+option go_package = "go.mondoo.com/mql/v13/providers/neon/resources"
+
+// Neon
+//
+// Neon account posture across every organization and project the API key can
+// reach. The `organizations` field enumerates those organizations with their
+// members and API keys, `projects` flattens every project across them,
+// `apiKeys` lists the keys owned by the authenticated account, and
+// `currentUser` identifies the principal the key belongs to.
+neon {
+  // Organizations the API key can access
+  organizations() []neon.organization
+  // Projects across every accessible organization
+  projects() []neon.project
+  // API keys owned by the authenticated account
+  apiKeys() []neon.apiKey
+  // Authenticated Neon account behind the API key
+  currentUser() neon.user
+}
+
+// Neon User
+//
+// The authenticated Neon account behind the API key, including its email,
+// display name, plan, and the identity providers it can sign in with. Use it to
+// attribute a scan to a principal and to confirm which account the key belongs
+// to.
+private neon.user @defaults("email name") {
+  // Unique user identifier
+  id string
+  // Primary email address
+  email string
+  // Display name of the account
+  name string
+  // Family name of the account holder
+  lastName string
+  // Plan the account is subscribed to
+  plan string
+  // Identity providers the account can sign in with
+  //
+  // Each entry names a linked provider, such as github, google, or hasura. An
+  // account reachable through a social provider inherits that provider's
+  // authentication controls, including whether it enforces multi-factor
+  // authentication.
+  authProviders []string
+  // Maximum number of projects the account may create
+  projectsLimit int
+  // Maximum number of branches the account may create per project
+  branchesLimit int
+}
+
+// Neon Organization
+//
+// A Neon organization and the posture that applies to every project under it.
+// The `members` field lists the roster with each member's role, `apiKeys`
+// covers the organization-scoped keys with when each was last used and from
+// where, and `allowHipaaProjects` reports whether projects may be marked as
+// handling regulated health data. Select an organization with
+// `neon.organizations.where(name == "acme")`.
+private neon.organization @defaults("name plan") {
+  // Unique organization identifier
+  id string
+  // Display name
+  name string
+  // URL-safe organization handle
+  handle string
+  // Plan the organization is subscribed to, for example free, launch, or scale
+  plan string
+  // Whether projects in the organization may be marked as HIPAA regulated
+  allowHipaaProjects bool
+  // Whether members must have multi-factor authentication enabled
+  //
+  // When false, a member can hold administrative rights over every project in
+  // the organization behind a single factor. The `hasMfa` field on each member
+  // reports who has enrolled regardless of whether it is required.
+  requireMfa bool
+  // Mechanism that manages the organization
+  //
+  // An organization created through the console or the API reports console.
+  // An organization created another way, such as through a cloud marketplace
+  // subscription, reports that source and cannot be deleted through the API.
+  managedBy string
+  // Time the organization was created
+  createdAt time
+  // Time the organization was last updated
+  updatedAt time
+  // Members of the organization and the role each holds
+  members() []neon.organization.member
+  // API keys scoped to the organization
+  apiKeys() []neon.apiKey
+  // Projects belonging to the organization
+  projects() []neon.project
+}
+
+// Member of a Neon organization
+//
+// A single member of an organization with the role that member holds. Use
+// `role` to find members holding administrative rights, which in Neon carry
+// project creation, member management, and API key issuance.
+private neon.organization.member @defaults("email role") {
+  // Unique membership identifier
+  id string
+  // Email address of the member
+  email string
+  // Role the member holds, either admin or member
+  role string
+  // Whether the member has multi-factor authentication enabled
+  //
+  // Reported per member whether or not the organization requires it, so an
+  // admin without a second factor is visible even where enrollment is
+  // voluntary.
+  hasMfa bool
+  // Time the member joined the organization
+  joinedAt time
+}
+
+// Neon API Key
+//
+// A key that authenticates against the Neon API with the rights of the account
+// or organization that issued it. The `lastUsedAt` and `lastUsedFromAddr`
+// fields show when and from where the key last authenticated, which is what
+// distinguishes a key still in service from one left behind. Neon does not
+// expire keys, so an unused key keeps working until it is revoked.
+private neon.apiKey @defaults("name lastUsedAt") {
+  // Unique key identifier
+  id string
+  // Human-readable key name
+  name string
+  // Display name of the account that created the key
+  createdByName string
+  // Time the key was created
+  createdAt time
+  // Time the key last authenticated, or null when it never has
+  lastUsedAt time
+  // Address the key last authenticated from, or null when it never has
+  lastUsedFromAddr string
+}
+
+// Neon Project
+//
+// A Neon project and the controls that govern who can reach its data. Query
+// `blockPublicConnections` and `allowedIps` for network exposure of the
+// project's compute endpoints, `blockVpcConnections` for private connectivity,
+// `storePasswords` for whether Neon retains role passwords, `hipaa` for
+// regulated-data handling, `historyRetentionSeconds` for how far back a branch
+// can be restored, and `enableLogicalReplication` for whether data can be
+// streamed out to another system. The `branches`, `endpoints`, `permissions`,
+// and `jwksEndpoints` fields cover what runs in the project and who can reach
+// it. Select a project with `neon.projects.where(name == "production")`.
+private neon.project @defaults("name regionId") {
+  // Unique project identifier
+  id string
+  // Project name
+  name string
+  // Cloud platform the project runs on, for example aws or azure
+  platformId string
+  // Region the project runs in, for example aws-us-east-1
+  regionId string
+  // Major PostgreSQL version the project runs
+  pgVersion int
+  // Compute provisioner backing the project's endpoints
+  provisioner string
+  // Host that proxies connections to the project
+  proxyHost string
+  // Whether connections from the public internet are blocked
+  //
+  // When true, the project answers only over private connectivity, and this
+  // supersedes the allowedIps list. When false, the endpoints are reachable
+  // from any address the allowedIps list permits.
+  blockPublicConnections bool
+  // Whether connections arriving over VPC endpoints are blocked
+  blockVpcConnections bool
+  // Addresses permitted to connect to the project's endpoints
+  //
+  // Empty when every address is permitted, which is the default. An entry is
+  // a single address or a CIDR range.
+  allowedIps []string
+  // Whether the allowed-address list applies only to protected branches
+  //
+  // When true, the list constrains protected branches and every other branch
+  // stays reachable from any address.
+  allowedIpsProtectedBranchesOnly bool
+  // Whether write-ahead logging is set up for logical replication
+  //
+  // Enabling logical replication lets an outside system subscribe to the
+  // project's changes. Neon cannot turn it back off once enabled.
+  enableLogicalReplication bool
+  // Whether Neon retains the passwords of the project's roles
+  //
+  // Storing passwords lets features that connect on the account's behalf work,
+  // and it means the passwords are recoverable through the API by anyone the
+  // key authorizes.
+  storePasswords bool
+  // Whether the project is marked as handling HIPAA regulated data
+  hipaa bool
+  // Time HIPAA handling was enabled for the project, or null when it is not
+  hipaaEnabledAt time
+  // Level of audit logging configured for the project
+  auditLogLevel string
+  // Seconds of history retained for restoring the project's branches
+  //
+  // A longer window allows recovery from a change discovered late. A window of
+  // zero means a branch cannot be restored to an earlier point.
+  historyRetentionSeconds int
+  // Time the project was created
+  createdAt time
+  // Time the project was last updated
+  updatedAt time
+  // Time any endpoint of the project was last active, or null when never
+  computeLastActiveAt time
+  // Email address of the account that owns the project
+  ownerEmail() string
+  // Organization the project belongs to, or null for a personal project
+  organization() neon.organization
+  // Branches of the project
+  branches() []neon.branch
+  // Default branch of the project
+  defaultBranch() neon.branch
+  // Compute endpoints across every branch of the project
+  endpoints() []neon.endpoint
+  // Accounts outside the project's owner that have been granted access
+  permissions() []neon.project.permission
+  // JWKS endpoints trusted to authenticate database access
+  jwksEndpoints() []neon.project.jwksEndpoint
+  // Private connectivity endpoints attached to the project
+  vpcEndpoints() []neon.vpcEndpoint
+}
+
+// Access granted on a Neon project
+//
+// A grant of project access to an account outside the project's owner. The
+// `revokedAt` field is null while the grant is live, so a query for live grants
+// is what shows who can reach the project's data today. Sharing survives the
+// departure of the person who set it up, so an unreviewed grant is how access
+// outlives its reason.
+private neon.project.permission @defaults("grantedToEmail grantedAt") {
+  // Unique grant identifier
+  id string
+  // Email address the project was shared with
+  grantedToEmail string
+  // Time the grant was made
+  grantedAt time
+  // Time the grant was revoked, or null while it is live
+  revokedAt time
+}
+
+// JWKS endpoint trusted by a Neon project
+//
+// A JSON Web Key Set that the project trusts to authenticate database access,
+// which is how an outside identity provider is wired up to Postgres row-level
+// security. The `jwksUrl` field is the endpoint whose keys are trusted, and
+// `roleNames` reports which database roles a presented token may act as, so a
+// token minted by that provider reaches the data those roles can read.
+private neon.project.jwksEndpoint @defaults("providerName jwksUrl") {
+  // Unique JWKS identifier
+  id string
+  // URL the key set is published at
+  jwksUrl string
+  // Name of the authentication provider, for example Clerk, Stytch, or Auth0
+  providerName string
+  // Audience a presented token must carry, or null when any audience is accepted
+  jwtAudience string
+  // Database roles a token authenticated by this key set may act as
+  roleNames []string
+  // Time the key set was registered
+  createdAt time
+  // Time the key set was last updated
+  updatedAt time
+  // Branch the key set applies to, or null when it applies to every branch
+  branch() neon.branch
+}
+
+// Private connectivity endpoint of a Neon project
+//
+// A VPC endpoint attached to a project so connections can arrive over private
+// connectivity rather than the public internet. It is what
+// `blockPublicConnections` on the project is set alongside.
+private neon.vpcEndpoint @defaults("vpcEndpointId label") {
+  // Identifier of the VPC endpoint in the cloud platform
+  vpcEndpointId string
+  // Descriptive label given to the endpoint
+  label string
+}
+
+// Neon Branch
+//
+// A branch of a Neon project, holding its own copy of the data and its own
+// roles and databases. Query `protected` for whether the branch is guarded
+// against deletion and reset and covered by the project's allowed-address list,
+// `default` for whether it is the branch applications connect to by default,
+// and `restrictedActions` for what the branch currently refuses. A branch
+// created from production data carries that data at full fidelity, so a
+// long-lived unprotected branch is a second copy of production with weaker
+// controls. Select a branch with
+// `neon.projects.branches.where(name == "main")`.
+private neon.branch @defaults("name protected") {
+  // Unique branch identifier
+  id string
+  // Branch name
+  name string
+  // Whether the branch is the project's default branch
+  default bool
+  // Whether the branch is protected
+  //
+  // A protected branch cannot be deleted or reset, and the project's
+  // allowed-address list applies to it even when the list is configured to
+  // constrain protected branches only.
+  protected bool
+  // Lifecycle state of the branch, for example init, ready, or archived
+  //
+  // An archived branch has been moved to cold storage after a period of
+  // inactivity and is restored on the next connection.
+  currentState string
+  // Logical size of the branch in bytes, or null when not yet measured
+  logicalSize int
+  // Source the branch was initialized from, either parent-data or schema-only
+  //
+  // A branch initialized from parent-data carries the parent's rows. A branch
+  // initialized from schema-only carries the structure without the data.
+  initSource string
+  // Actions the branch currently refuses and why
+  //
+  // Each entry carries the `name` of a restricted action, such as restore or
+  // delete-rw-endpoint, and the `reason` it is restricted.
+  restrictedActions []dict
+  // Time the branch is scheduled to expire and be deleted, or null when it has no expiry
+  expiresAt time
+  // Time the branch was created
+  createdAt time
+  // Time the branch was last updated
+  updatedAt time
+  // Time the branch was last reset from its parent, or null when it never was
+  lastResetAt time
+  // Project the branch belongs to
+  project() neon.project
+  // Branch this branch was created from, or null for a root branch
+  parent() neon.branch
+  // Compute endpoints attached to the branch
+  endpoints() []neon.endpoint
+  // Postgres roles defined on the branch
+  roles() []neon.role
+  // Databases defined on the branch
+  databases() []neon.database
+}
+
+// Compute endpoint of a Neon branch
+//
+// The compute that serves connections to a branch, and the network surface
+// clients reach it on. Query `disabled` for whether the endpoint refuses
+// connections outright, `passwordlessAccess` for whether a client may connect
+// without presenting a password, `poolerEnabled` and `poolerMode` for
+// connection pooling, and the autoscaling and suspend-timeout fields for how
+// the compute behaves under load and at rest. Select an endpoint with
+// `neon.projects.endpoints.where(type == "read_write")`.
+private neon.endpoint @defaults("id host") {
+  // Unique endpoint identifier
+  id string
+  // Hostname clients connect to
+  host string
+  // Endpoint type, either read_write or read_only
+  type string
+  // Lifecycle state of the compute, for example init, active, or idle
+  currentState string
+  // Whether connections to the endpoint are refused
+  //
+  // A disabled endpoint cannot be woken by a connection or a console action,
+  // which takes the branch's data out of reach without deleting it.
+  disabled bool
+  // Whether a client may connect without presenting a password
+  passwordlessAccess bool
+  // Whether connection pooling is enabled
+  poolerEnabled bool
+  // Pooling mode, for example transaction
+  poolerMode string
+  // Minimum compute units the endpoint scales down to
+  autoscalingLimitMinCu float
+  // Maximum compute units the endpoint scales up to
+  autoscalingLimitMaxCu float
+  // Seconds of inactivity before the compute suspends
+  //
+  // A value of zero applies the default. A suspended compute wakes on the next
+  // connection.
+  suspendTimeoutSeconds int
+  // Region the endpoint runs in
+  regionId string
+  // Compute provisioner backing the endpoint
+  provisioner string
+  // Time the endpoint was created
+  createdAt time
+  // Time the endpoint was last active, or null when it never was
+  lastActive time
+  // Time the endpoint was last started, or null when it never was
+  startedAt time
+  // Time the endpoint was last suspended, or null when it never was
+  suspendedAt time
+  // Branch the endpoint serves
+  branch() neon.branch
+  // Project the endpoint belongs to
+  project() neon.project
+}
+
+// Postgres role on a Neon branch
+//
+// A database role defined on a branch. The `protected` field reports whether
+// Neon maintains the role for its own features rather than an operator having
+// created it. Role passwords are not exposed, though a project with
+// `storePasswords` enabled holds them in a form the API can return.
+private neon.role @defaults("name protected") {
+  // Role name
+  name string
+  // Whether the role is maintained by Neon rather than by an operator
+  protected bool
+  // How a client authenticates as the role
+  //
+  // Either password for a role holding its own credential, or another
+  // mechanism where the role is reached through a trusted key set rather than
+  // by presenting a password.
+  authenticationMethod string
+  // Time the role was created
+  createdAt time
+  // Time the role was last updated
+  updatedAt time
+  // Branch the role is defined on
+  branch() neon.branch
+}
+
+// Database on a Neon branch
+//
+// A Postgres database on a branch, together with the role that owns it. The
+// owning role holds full rights over the database, so `owner` is where a review
+// of who can read a database starts.
+private neon.database @defaults("name") {
+  // Unique database identifier
+  id string
+  // Database name
+  name string
+  // Time the database was created
+  createdAt time
+  // Time the database was last updated
+  updatedAt time
+  // Role that owns the database
+  owner() neon.role
+  // Branch the database is defined on
+  branch() neon.branch
+}

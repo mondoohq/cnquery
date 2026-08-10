@@ -242,6 +242,7 @@ PROVIDERS := \
 	ms365 \
 	mssql \
 	mysqldb \
+	neon \
 	network \
 	nextdns \
 	nmap \
