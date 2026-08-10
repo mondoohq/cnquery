@@ -220,6 +220,13 @@ func (s *mqlNetlifySite) account() (*mqlNetlifyAccount, error) {
 		"id": llx.StringData(s.cacheAccountID),
 	})
 	if err != nil {
+		// The account lookup runs against the accounts the token is a member
+		// of, so a site reached through a shared resource can name an account
+		// this token cannot read. That is not a reason to fail the site.
+		if connection.IsForbidden(err) || connection.IsNotFound(err) || errors.Is(err, errAccountNotFound) {
+			s.Account.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.(*mqlNetlifyAccount), nil

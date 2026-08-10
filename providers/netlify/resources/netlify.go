@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/netlify/connection"
@@ -39,9 +40,16 @@ func (n *netlifyTime) UnmarshalJSON(b []byte) error {
 	if str == "" {
 		return nil
 	}
-	if tt, err := time.Parse(time.RFC3339, str); err == nil {
-		n.t = &tt
+	tt, err := time.Parse(time.RFC3339, str)
+	if err != nil {
+		// A timestamp the API changed the shape of is reported as null rather
+		// than failing the whole resource, but it is logged so the change is
+		// visible instead of looking like a record that never reached the
+		// state the field describes.
+		log.Warn().Str("value", str).Msg("netlify> could not parse timestamp; reporting it as null")
+		return nil
 	}
+	n.t = &tt
 	return nil
 }
 

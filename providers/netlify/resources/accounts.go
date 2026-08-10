@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -133,8 +134,13 @@ func initNetlifyAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		}
 	}
 
-	return nil, nil, errors.New("netlify.account " + want + " not found")
+	return nil, nil, fmt.Errorf("%w: %s", errAccountNotFound, want)
 }
+
+// errAccountNotFound reports that the wanted account is not one this token is a
+// member of. Callers resolving an account by reference degrade to null on it
+// rather than failing the resource that pointed at it.
+var errAccountNotFound = errors.New("netlify.account not found")
 
 func (a *mqlNetlifyAccount) id() (string, error) {
 	return a.Id.Data, a.Id.Error
