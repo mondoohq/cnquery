@@ -116,6 +116,20 @@ If yes, it MUST be a typed accessor, not a raw string:
 
 Keep the value as a **raw string only when** it is the resource's own `id`, or a genuinely opaque/scalar value that doesn't name a modeled resource (an MD5 hash, an `hostId` opaque digest, a discriminator like `deviceOwner`, a free-form `name`). When in doubt, prefer the typed accessor — store the raw ID/ARN/URL in a `cache*` field on the `Internal` struct and resolve it with `NewResource` (or a shared `resolve*` helper). The detailed naming rules and the `cache*`/`Internal` pattern live in [§6 Resource Field Naming & Constraints](#resource-field-naming--constraints).
 
+**Typed fields are the point of the schema, not a nicety.** They are what makes cross-resource querying possible — `neon.projects { endpoints { branch { protected } } }` or `netlify.dnsZones { site { forceSsl } }` are only expressible because the reference is a resource rather than an ID string. A schema of raw IDs forces the user to do the join by hand, which they cannot do inside a single policy. **Every new provider and every new resource gets this scan, without exception.**
+
+**Model both directions when both are useful.** The gate is usually described as "child points at parent", but the reverse edge is often the one that carries the audit: `deployKey.sites` is what finds a key no site clones with; `project.defaultBranch` is what finds the branch applications actually connect to. If a reverse edge answers a question a policy would ask, add it.
+
+**Resolve references through a cached list, not a per-item lookup.** A `NewResource` call runs the target's `init` **before** the runtime cache is consulted, so resolving a parent per child turns one list into N API calls. When the parent's collection is already fetched (or cheap to fetch once), resolve by scanning that list instead:
+
+```go
+// N+1: init runs per endpoint, before the cache is checked
+NewResource(runtime, "neon.branch", map[string]*llx.RawData{"id": llx.StringData(branchID)})
+
+// one call: the project's branch list is fetched once and reused
+branchByID(runtime, projectID, branchID)   // walks project.GetBranches()
+```
+
 This is a manual gate, not a build-time one — there is no linter that catches it for you, so it is on you to run this scan on every new field before `mqlr generate`.
 
 ### Step 2: Code Generation
@@ -311,8 +325,25 @@ grep -rL "conn\.Filters" providers/<provider>/resources/*.go | grep -v _test
 grep -n "case Discovery" providers/<provider>/resources/discovery.go
 ```
 
+### Step 3.6: Pure-Go unit-test gate (do this before you open the PR)
+
+**Every PR ships unit tests for the pure Go logic it adds.** Not the thin wrappers around an API call — those are covered by interactive verification — but everything in the change that computes, parses, or decodes. That is the code where a bug is silent: it compiles, it lints, and it produces a confident wrong answer instead of an error.
+
+Test these:
+
+- **Struct-tag decoding of every API record.** A mistyped `json:"..."` tag yields a zero value, so `blockPublicConnections` reads `false` on a project that blocks them and `passwordProtected` reads `false` on a protected site. Pin each security-relevant tag against a payload shaped like the documented response.
+- **Optional-value handling.** An absent pointer must decode to the safe reading (`boolPtr(nil) == false`), and an absent timestamp must stay **null** rather than becoming the zero time, which would report 1 January year 1 as a real date.
+- **Derived predicates.** Anything computed rather than reported — `passwordProtected` from whether a password came back, an `isPublic` built from several fields — gets its own table test including the empty and absent cases.
+- **Pagination walks and their termination guards.** Use `httptest` and assert both the happy path and the stuck-cursor / repeated-page case. An endpoint that ignores its cursor otherwise multiplies every record up to the page cap.
+- **Error classifiers.** `IsForbidden`/`IsNotFound` must match the API's shapes and must **not** match a transport error, or a network blip degrades to a null field and an audit passes on data that was never read.
+- **Parsers and helpers.** Config parsers, ID builders, filter predicates, anything with a branch in it.
+
+Skip: functions whose whole body is one SDK call plus a `CreateResource`. There is nothing to assert that the API contract does not already assert.
+
+Put decode tests in `resources/decode_test.go` and client tests in `connection/client_test.go`, following `providers/vercel`. Run `go test ./...` inside `providers/<name>/` before opening the PR.
+
 ### Step 4: Verification (Interactive)
-Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
+Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard**, and it complements rather than replaces the unit tests in Step 3.6.
 
 1.  **Install**: `make mql/install` (one-time, or when changing mql core).
 2.  **Provider**: `make providers/build/<provider> && make providers/install/<provider>` (after each provider change).
@@ -681,6 +712,8 @@ make test/integration
 - [ ] Linting passes (`make test/lint`)
 - [ ] Changes work interactively (`mql shell <provider>`)
 - [ ] `go.mod` is clean — run `go mod tidy` **inside `providers/<name>/`**, not the repo root, or new SDK deps stay `// indirect`
+- [ ] Every new field that names another resource is a typed accessor ([Step 1.5](#step-15-typed-reference-gate-do-this-before-you-generate-code))
+- [ ] Pure Go logic added by the change has unit tests ([Step 3.6](#step-36-pure-go-unit-test-gate-do-this-before-you-open-the-pr))
 - [ ] No spelling errors in new comments/docs
 
 **Note:** CI runs comprehensive checks. Run them locally only if you want to verify before pushing or if changing core/performance-critical code.
