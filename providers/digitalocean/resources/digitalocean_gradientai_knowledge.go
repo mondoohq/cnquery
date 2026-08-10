@@ -46,30 +46,20 @@ func (r *mqlDigitaloceanGradientai) knowledgeBases() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		kbs, resp, err := client.GradientAI.ListKnowledgeBases(context.Background(), opt)
+	kbs, err := paginate(context.Background(), client.GradientAI.ListKnowledgeBases)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(kbs))
+	for i := range kbs {
+		res, err := newMqlGradientaiKnowledgeBase(r.MqlRuntime, &kbs[i])
 		if err != nil {
 			return nil, err
 		}
-		for i := range kbs {
-			res, err := newMqlGradientaiKnowledgeBase(r.MqlRuntime, &kbs[i])
-			if err != nil {
-				return nil, err
-			}
-			if res != nil {
-				all = append(all, res)
-			}
+		if res != nil {
+			all = append(all, res)
 		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
 	}
 	return all, nil
 }
@@ -152,67 +142,59 @@ func (r *mqlDigitaloceanGradientaiKnowledgeBase) dataSources() ([]interface{}, e
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		sources, resp, err := client.GradientAI.ListKnowledgeBaseDataSources(context.Background(), r.Uuid.Data, opt)
+	sources, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]godo.KnowledgeBaseDataSource, *godo.Response, error) {
+		return client.GradientAI.ListKnowledgeBaseDataSources(c, r.Uuid.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(sources))
+	for i := range sources {
+		s := sources[i]
+		sourceType := ""
+		webCrawler := map[string]interface{}{}
+		spaces := map[string]interface{}{}
+		fileUpload := map[string]interface{}{}
+		if s.WebCrawlerDataSource != nil {
+			sourceType = "web_crawler"
+			webCrawler = map[string]interface{}{
+				"baseUrl":        s.WebCrawlerDataSource.BaseUrl,
+				"crawlingOption": s.WebCrawlerDataSource.CrawlingOption,
+				"embedMedia":     s.WebCrawlerDataSource.EmbedMedia,
+			}
+		}
+		if s.SpacesDataSource != nil {
+			sourceType = "spaces"
+			spaces = map[string]interface{}{
+				"bucketName": s.SpacesDataSource.BucketName,
+				"itemPath":   s.SpacesDataSource.ItemPath,
+				"region":     s.SpacesDataSource.Region,
+			}
+		}
+		if s.FileUploadDataSource != nil {
+			sourceType = "file_upload"
+			fileUpload = map[string]interface{}{
+				"originalFileName": s.FileUploadDataSource.OriginalFileName,
+				"size":             s.FileUploadDataSource.Size,
+				"storedObjectKey":  s.FileUploadDataSource.StoredObjectKey,
+			}
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.knowledgeBase.dataSource", map[string]*llx.RawData{
+			"__id":            llx.StringData(r.Uuid.Data + "/" + s.Uuid),
+			"uuid":            llx.StringData(s.Uuid),
+			"type":            llx.StringData(sourceType),
+			"webCrawler":      llx.DictData(webCrawler),
+			"spaces":          llx.DictData(spaces),
+			"fileUpload":      llx.DictData(fileUpload),
+			"lastIndexingJob": llx.DictData(lastIndexingJobDict(s.LastIndexingJob)),
+			"createdAt":       llx.TimeDataPtr(gradientaiTime(s.CreatedAt)),
+			"updatedAt":       llx.TimeDataPtr(gradientaiTime(s.UpdatedAt)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for i := range sources {
-			s := sources[i]
-			sourceType := ""
-			webCrawler := map[string]interface{}{}
-			spaces := map[string]interface{}{}
-			fileUpload := map[string]interface{}{}
-			if s.WebCrawlerDataSource != nil {
-				sourceType = "web_crawler"
-				webCrawler = map[string]interface{}{
-					"baseUrl":        s.WebCrawlerDataSource.BaseUrl,
-					"crawlingOption": s.WebCrawlerDataSource.CrawlingOption,
-					"embedMedia":     s.WebCrawlerDataSource.EmbedMedia,
-				}
-			}
-			if s.SpacesDataSource != nil {
-				sourceType = "spaces"
-				spaces = map[string]interface{}{
-					"bucketName": s.SpacesDataSource.BucketName,
-					"itemPath":   s.SpacesDataSource.ItemPath,
-					"region":     s.SpacesDataSource.Region,
-				}
-			}
-			if s.FileUploadDataSource != nil {
-				sourceType = "file_upload"
-				fileUpload = map[string]interface{}{
-					"originalFileName": s.FileUploadDataSource.OriginalFileName,
-					"size":             s.FileUploadDataSource.Size,
-					"storedObjectKey":  s.FileUploadDataSource.StoredObjectKey,
-				}
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.knowledgeBase.dataSource", map[string]*llx.RawData{
-				"__id":            llx.StringData(r.Uuid.Data + "/" + s.Uuid),
-				"uuid":            llx.StringData(s.Uuid),
-				"type":            llx.StringData(sourceType),
-				"webCrawler":      llx.DictData(webCrawler),
-				"spaces":          llx.DictData(spaces),
-				"fileUpload":      llx.DictData(fileUpload),
-				"lastIndexingJob": llx.DictData(lastIndexingJobDict(s.LastIndexingJob)),
-				"createdAt":       llx.TimeDataPtr(gradientaiTime(s.CreatedAt)),
-				"updatedAt":       llx.TimeDataPtr(gradientaiTime(s.UpdatedAt)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
