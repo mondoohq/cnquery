@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"go.mondoo.com/mql/v13/llx"
 )
 
 // The API records in this package are decoded by struct tag alone. A mistyped
@@ -253,11 +255,14 @@ func TestEndpointRecordDecodesExposureFields(t *testing.T) {
 
 func TestRoleRecordDecodesProtected(t *testing.T) {
 	var rec roleRecord
-	if err := json.Unmarshal([]byte(`{"name":"neon_superuser","protected":true,"created_at":"2026-01-02T03:04:05Z"}`), &rec); err != nil {
+	if err := json.Unmarshal([]byte(`{"name":"neon_superuser","protected":true,"authentication_method":"password","created_at":"2026-01-02T03:04:05Z"}`), &rec); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if rec.Name != "neon_superuser" || !boolPtr(rec.Protected) {
 		t.Errorf("role fields decoded wrong: %+v", rec)
+	}
+	if rec.AuthenticationMethod != "password" {
+		t.Errorf("authentication_method decoded wrong: %q", rec.AuthenticationMethod)
 	}
 
 	var plain roleRecord
@@ -370,6 +375,34 @@ func TestOrganizationRecordDecodesHipaaAllowance(t *testing.T) {
 	}
 }
 
+// require_mfa is absent on plans that do not offer it. Absent must read as "not
+// required" rather than defaulting the other way.
+func TestOrganizationRecordDecodesRequireMfa(t *testing.T) {
+	var on organizationRecord
+	if err := json.Unmarshal([]byte(`{"id":"org-1","require_mfa":true}`), &on); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if !boolPtr(on.RequireMfa) {
+		t.Error("require_mfa true decoded wrong")
+	}
+
+	var off organizationRecord
+	if err := json.Unmarshal([]byte(`{"id":"org-1","require_mfa":false}`), &off); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if boolPtr(off.RequireMfa) {
+		t.Error("require_mfa false decoded wrong")
+	}
+
+	var absent organizationRecord
+	if err := json.Unmarshal([]byte(`{"id":"org-1"}`), &absent); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if boolPtr(absent.RequireMfa) {
+		t.Error("an absent require_mfa must read as not required")
+	}
+}
+
 // The member roster nests the role and the email under different objects, so a
 // flattened struct tag would silently produce a roster with no email addresses.
 func TestMemberWithUserRecordDecodesNesting(t *testing.T) {
@@ -390,6 +423,20 @@ func TestMemberWithUserRecordDecodesNesting(t *testing.T) {
 	}
 	if rec.Member.JoinedAt.Time() == nil {
 		t.Error("joined_at decoded to nil")
+	}
+	if rec.User.HasMfa {
+		t.Error("has_mfa decoded wrong")
+	}
+
+	// has_mfa rides on the nested user object, so a flattened tag would report
+	// every member as having no second factor.
+	const enrolled = `{"member":{"id":"mem-1","role":"admin"},"user":{"email":"ada@example.com","has_mfa":true}}`
+	var mfa memberWithUserRecord
+	if err := json.Unmarshal([]byte(enrolled), &mfa); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if !mfa.User.HasMfa {
+		t.Error("has_mfa true decoded wrong")
 	}
 }
 
@@ -501,6 +548,24 @@ func TestItoa(t *testing.T) {
 	}
 	if got := itoa(0); got != "0" {
 		t.Fatalf("expected %q, got %q", "0", got)
+	}
+}
+
+// A plan-gated setting the API omits must report null, not an empty string: a
+// policy asking "is audit logging set to full" should see "not answered"
+// rather than a value that looks deliberately blank.
+func TestOptionalStringReportsAbsentAsNull(t *testing.T) {
+	if got := optionalString(nil); got != llx.NilData {
+		t.Errorf("nil must map to null, got %v", got)
+	}
+	empty := ""
+	if got := optionalString(&empty); got != llx.NilData {
+		t.Errorf("an empty value must map to null, got %v", got)
+	}
+	value := "full"
+	got := optionalString(&value)
+	if got == llx.NilData || got.Value != "full" {
+		t.Errorf("a set value must be carried through, got %v", got)
 	}
 }
 

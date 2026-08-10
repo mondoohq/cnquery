@@ -209,6 +209,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"neon.organization.allowHipaaProjects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganization).GetAllowHipaaProjects()).ToDataRes(types.Bool)
 	},
+	"neon.organization.requireMfa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganization).GetRequireMfa()).ToDataRes(types.Bool)
+	},
 	"neon.organization.managedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganization).GetManagedBy()).ToDataRes(types.String)
 	},
@@ -235,6 +238,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"neon.organization.member.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganizationMember).GetRole()).ToDataRes(types.String)
+	},
+	"neon.organization.member.hasMfa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationMember).GetHasMfa()).ToDataRes(types.Bool)
 	},
 	"neon.organization.member.joinedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganizationMember).GetJoinedAt()).ToDataRes(types.Time)
@@ -497,6 +503,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"neon.role.protected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonRole).GetProtected()).ToDataRes(types.Bool)
 	},
+	"neon.role.authenticationMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonRole).GetAuthenticationMethod()).ToDataRes(types.String)
+	},
 	"neon.role.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonRole).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -616,6 +625,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNeonOrganization).AllowHipaaProjects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"neon.organization.requireMfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganization).RequireMfa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"neon.organization.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonOrganization).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -654,6 +667,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"neon.organization.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonOrganizationMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.organization.member.hasMfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationMember).HasMfa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"neon.organization.member.joinedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1036,6 +1053,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNeonRole).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"neon.role.authenticationMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonRole).AuthenticationMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"neon.role.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonRole).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -1306,6 +1327,7 @@ type mqlNeonOrganization struct {
 	Handle             plugin.TValue[string]
 	Plan               plugin.TValue[string]
 	AllowHipaaProjects plugin.TValue[bool]
+	RequireMfa         plugin.TValue[bool]
 	ManagedBy          plugin.TValue[string]
 	CreatedAt          plugin.TValue[*time.Time]
 	UpdatedAt          plugin.TValue[*time.Time]
@@ -1369,6 +1391,10 @@ func (c *mqlNeonOrganization) GetPlan() *plugin.TValue[string] {
 
 func (c *mqlNeonOrganization) GetAllowHipaaProjects() *plugin.TValue[bool] {
 	return &c.AllowHipaaProjects
+}
+
+func (c *mqlNeonOrganization) GetRequireMfa() *plugin.TValue[bool] {
+	return &c.RequireMfa
 }
 
 func (c *mqlNeonOrganization) GetManagedBy() *plugin.TValue[string] {
@@ -1439,6 +1465,7 @@ type mqlNeonOrganizationMember struct {
 	Id       plugin.TValue[string]
 	Email    plugin.TValue[string]
 	Role     plugin.TValue[string]
+	HasMfa   plugin.TValue[bool]
 	JoinedAt plugin.TValue[*time.Time]
 }
 
@@ -1489,6 +1516,10 @@ func (c *mqlNeonOrganizationMember) GetEmail() *plugin.TValue[string] {
 
 func (c *mqlNeonOrganizationMember) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+func (c *mqlNeonOrganizationMember) GetHasMfa() *plugin.TValue[bool] {
+	return &c.HasMfa
 }
 
 func (c *mqlNeonOrganizationMember) GetJoinedAt() *plugin.TValue[*time.Time] {
@@ -1717,7 +1748,9 @@ func (c *mqlNeonProject) GetComputeLastActiveAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlNeonProject) GetOwnerEmail() *plugin.TValue[string] {
-	return &c.OwnerEmail
+	return plugin.GetOrCompute[string](&c.OwnerEmail, func() (string, error) {
+		return c.ownerEmail()
+	})
 }
 
 func (c *mqlNeonProject) GetOrganization() *plugin.TValue[*mqlNeonOrganization] {
@@ -2398,11 +2431,12 @@ type mqlNeonRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlNeonRoleInternal
-	Name      plugin.TValue[string]
-	Protected plugin.TValue[bool]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Branch    plugin.TValue[*mqlNeonBranch]
+	Name                 plugin.TValue[string]
+	Protected            plugin.TValue[bool]
+	AuthenticationMethod plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	Branch               plugin.TValue[*mqlNeonBranch]
 }
 
 // createNeonRole creates a new instance of this resource
@@ -2443,6 +2477,10 @@ func (c *mqlNeonRole) GetName() *plugin.TValue[string] {
 
 func (c *mqlNeonRole) GetProtected() *plugin.TValue[bool] {
 	return &c.Protected
+}
+
+func (c *mqlNeonRole) GetAuthenticationMethod() *plugin.TValue[string] {
+	return &c.AuthenticationMethod
 }
 
 func (c *mqlNeonRole) GetCreatedAt() *plugin.TValue[*time.Time] {

@@ -21,6 +21,7 @@ type organizationRecord struct {
 	Plan               string   `json:"plan"`
 	ManagedBy          string   `json:"managed_by"`
 	AllowHipaaProjects *bool    `json:"allow_hipaa_projects"`
+	RequireMfa         *bool    `json:"require_mfa"`
 	CreatedAt          neonTime `json:"created_at"`
 	UpdatedAt          neonTime `json:"updated_at"`
 }
@@ -96,6 +97,7 @@ func newNeonOrganization(runtime *plugin.Runtime, rec *organizationRecord) (*mql
 		"plan":               llx.StringData(rec.Plan),
 		"managedBy":          llx.StringData(rec.ManagedBy),
 		"allowHipaaProjects": llx.BoolData(boolPtr(rec.AllowHipaaProjects)),
+		"requireMfa":         llx.BoolData(boolPtr(rec.RequireMfa)),
 		"createdAt":          llx.TimeDataPtr(rec.CreatedAt.Time()),
 		"updatedAt":          llx.TimeDataPtr(rec.UpdatedAt.Time()),
 	})
@@ -171,7 +173,8 @@ type memberRecord struct {
 }
 
 type memberUserRecord struct {
-	Email string `json:"email"`
+	Email  string `json:"email"`
+	HasMfa bool   `json:"has_mfa"`
 }
 
 func (o *mqlNeonOrganization) members() ([]any, error) {
@@ -195,6 +198,7 @@ func (o *mqlNeonOrganization) members() ([]any, error) {
 			"id":       llx.StringData(rec.Member.ID),
 			"email":    llx.StringData(rec.User.Email),
 			"role":     llx.StringData(rec.Member.Role),
+			"hasMfa":   llx.BoolData(rec.User.HasMfa),
 			"joinedAt": llx.TimeDataPtr(rec.Member.JoinedAt.Time()),
 		})
 		if err != nil {

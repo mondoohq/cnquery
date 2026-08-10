@@ -94,7 +94,7 @@ func newNeonBranch(runtime *plugin.Runtime, projectID string, rec *branchRecord)
 		"protected":         llx.BoolData(rec.Protected),
 		"currentState":      llx.StringData(rec.CurrentState),
 		"logicalSize":       logicalSize,
-		"initSource":        llx.StringData(strPtr(rec.InitSource)),
+		"initSource":        optionalString(rec.InitSource),
 		"restrictedActions": llx.ArrayData(restricted, types.Dict),
 		"expiresAt":         llx.TimeDataPtr(rec.ExpiresAt.Time()),
 		"createdAt":         llx.TimeDataPtr(rec.CreatedAt.Time()),
@@ -174,10 +174,11 @@ type mqlNeonRoleInternal struct {
 }
 
 type roleRecord struct {
-	Name      string   `json:"name"`
-	Protected *bool    `json:"protected"`
-	CreatedAt neonTime `json:"created_at"`
-	UpdatedAt neonTime `json:"updated_at"`
+	Name                 string   `json:"name"`
+	Protected            *bool    `json:"protected"`
+	AuthenticationMethod string   `json:"authentication_method"`
+	CreatedAt            neonTime `json:"created_at"`
+	UpdatedAt            neonTime `json:"updated_at"`
 }
 
 func (b *mqlNeonBranch) roles() ([]any, error) {
@@ -200,11 +201,12 @@ func (b *mqlNeonBranch) roles() ([]any, error) {
 		// A role is keyed by name within its branch, so the cache key carries
 		// the branch it belongs to.
 		resource, err := CreateResource(b.MqlRuntime, "neon.role", map[string]*llx.RawData{
-			"__id":      llx.StringData(b.cacheProjectID + "/" + b.Id.Data + "/" + rec.Name),
-			"name":      llx.StringData(rec.Name),
-			"protected": llx.BoolData(boolPtr(rec.Protected)),
-			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
-			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt.Time()),
+			"__id":                 llx.StringData(b.cacheProjectID + "/" + b.Id.Data + "/" + rec.Name),
+			"name":                 llx.StringData(rec.Name),
+			"protected":            llx.BoolData(boolPtr(rec.Protected)),
+			"authenticationMethod": llx.StringData(rec.AuthenticationMethod),
+			"createdAt":            llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"updatedAt":            llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err

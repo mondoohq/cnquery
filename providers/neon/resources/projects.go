@@ -8,6 +8,8 @@ import (
 	"errors"
 	"net/url"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -16,9 +18,14 @@ import (
 )
 
 // mqlNeonProjectInternal caches the organization the project belongs to, which
-// is only present on the project payload.
+// is only present on the project payload, and memoizes the owner read that the
+// list endpoint does not answer.
 type mqlNeonProjectInternal struct {
 	cacheOrgID string
+
+	ownerFetched atomic.Bool
+	ownerEmail_  string
+	ownerLock    sync.Mutex
 }
 
 type projectRecord struct {
@@ -62,35 +69,65 @@ type allowedIpsData struct {
 
 // projects lists every project the API key can reach, narrowed to the
 // organization and project the connection is scoped to.
+//
+// Every project belongs to an organization, and the list endpoint rejects a
+// request that does not name one, so the projects of each accessible
+// organization are collected in turn rather than asked for in one call.
 func (n *mqlNeon) projects() ([]any, error) {
 	c := neonConn(n.MqlRuntime)
 
-	query := url.Values{}
+	orgIDs := []string{}
 	if orgID := c.OrganizationFilter(); orgID != "" {
-		query.Set("org_id", orgID)
-	}
-
-	records, err := connection.GetPagedCursor[projectRecord](context.Background(), c,
-		"/projects", query, "projects")
-	if err != nil {
-		return nil, err
+		orgIDs = append(orgIDs, orgID)
+	} else {
+		organizations := n.GetOrganizations()
+		if organizations.Error != nil {
+			return nil, organizations.Error
+		}
+		for _, it := range organizations.Data {
+			if org, ok := it.(*mqlNeonOrganization); ok {
+				orgIDs = append(orgIDs, org.Id.Data)
+			}
+		}
 	}
 
 	projectFilter := c.ProjectFilter()
 
 	var res []any
-	for i := range records {
-		rec := records[i]
-		if projectFilter != "" && rec.ID != projectFilter {
-			continue
-		}
-		project, err := newNeonProject(n.MqlRuntime, &rec)
+	for _, orgID := range orgIDs {
+		records, err := listProjects(c, orgID)
 		if err != nil {
+			// One organization the key cannot read must not hide the projects
+			// of the ones it can. A named organization that does not answer
+			// leaves the organization list empty, which is the signal that the
+			// --organization value was wrong.
+			if connection.IsForbidden(err) || connection.IsNotFound(err) {
+				continue
+			}
 			return nil, err
 		}
-		res = append(res, project)
+		for i := range records {
+			rec := records[i]
+			if projectFilter != "" && rec.ID != projectFilter {
+				continue
+			}
+			project, err := newNeonProject(n.MqlRuntime, &rec)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, project)
+		}
 	}
 	return res, nil
+}
+
+// listProjects reads the projects of one organization.
+func listProjects(c *connection.NeonConnection, orgID string) ([]projectRecord, error) {
+	query := url.Values{}
+	query.Set("org_id", orgID)
+
+	return connection.GetPagedCursor[projectRecord](context.Background(), c,
+		"/projects", query, "projects")
 }
 
 // projects lists the organization's projects.
@@ -142,11 +179,6 @@ func newNeonProject(runtime *plugin.Runtime, rec *projectRecord) (*mqlNeonProjec
 		protectedOnly = boolPtr(settings.AllowedIps.ProtectedBranchesOnly)
 	}
 
-	ownerEmail := ""
-	if rec.Owner != nil {
-		ownerEmail = rec.Owner.Email
-	}
-
 	historyRetention := int64(0)
 	if rec.HistoryRetentionSeconds != nil {
 		historyRetention = *rec.HistoryRetentionSeconds
@@ -168,12 +200,11 @@ func newNeonProject(runtime *plugin.Runtime, rec *projectRecord) (*mqlNeonProjec
 		"storePasswords":                  llx.BoolData(rec.StorePasswords),
 		"hipaa":                           llx.BoolData(boolPtr(settings.Hipaa)),
 		"hipaaEnabledAt":                  llx.TimeDataPtr(rec.HipaaEnabledAt.Time()),
-		"auditLogLevel":                   llx.StringData(strPtr(settings.AuditLogLevel)),
+		"auditLogLevel":                   optionalString(settings.AuditLogLevel),
 		"historyRetentionSeconds":         llx.IntData(historyRetention),
 		"createdAt":                       llx.TimeDataPtr(rec.CreatedAt.Time()),
 		"updatedAt":                       llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		"computeLastActiveAt":             llx.TimeDataPtr(rec.ComputeLastActiveAt.Time()),
-		"ownerEmail":                      llx.StringData(ownerEmail),
 	})
 	if err != nil {
 		return nil, err
@@ -181,7 +212,45 @@ func newNeonProject(runtime *plugin.Runtime, rec *projectRecord) (*mqlNeonProjec
 
 	project := res.(*mqlNeonProject)
 	project.cacheOrgID = strPtr(rec.OrgID)
+	if rec.Owner != nil {
+		project.ownerEmail_ = rec.Owner.Email
+		project.ownerFetched.Store(true)
+	}
 	return project, nil
+}
+
+// ownerEmail reports the account that owns the project. The list endpoint omits
+// the owner, so a project reached through a list resolves it from the project
+// endpoint on first read and holds the answer.
+func (p *mqlNeonProject) ownerEmail() (string, error) {
+	if p.ownerFetched.Load() {
+		return p.ownerEmail_, nil
+	}
+
+	p.ownerLock.Lock()
+	defer p.ownerLock.Unlock()
+	if p.ownerFetched.Load() {
+		return p.ownerEmail_, nil
+	}
+
+	c := neonConn(p.MqlRuntime)
+
+	var resp struct {
+		Project projectRecord `json:"project"`
+	}
+	if err := c.Get(context.Background(), "/projects/"+url.PathEscape(p.Id.Data), nil, &resp); err != nil {
+		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			p.OwnerEmail = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+			return "", nil
+		}
+		return "", err
+	}
+
+	if resp.Project.Owner != nil {
+		p.ownerEmail_ = resp.Project.Owner.Email
+	}
+	p.ownerFetched.Store(true)
+	return p.ownerEmail_, nil
 }
 
 // initNeonProject resolves the project a query targets: an explicit id argument
@@ -347,7 +416,7 @@ func (p *mqlNeonProject) jwksEndpoints() ([]any, error) {
 			"id":           llx.StringData(rec.ID),
 			"jwksUrl":      llx.StringData(rec.JwksURL),
 			"providerName": llx.StringData(rec.ProviderName),
-			"jwtAudience":  llx.StringData(strPtr(rec.JwtAudience)),
+			"jwtAudience":  optionalString(rec.JwtAudience),
 			"roleNames":    llx.ArrayData(strSliceToAny(roleNames), types.String),
 			"createdAt":    llx.TimeDataPtr(rec.CreatedAt.Time()),
 			"updatedAt":    llx.TimeDataPtr(rec.UpdatedAt.Time()),

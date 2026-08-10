@@ -65,6 +65,7 @@ neon.organization.id 13.0.0
 neon.organization.managedBy 13.0.0
 neon.organization.member 13.0.0
 neon.organization.member.email 13.0.0
+neon.organization.member.hasMfa 13.0.0
 neon.organization.member.id 13.0.0
 neon.organization.member.joinedAt 13.0.0
 neon.organization.member.role 13.0.0
@@ -72,6 +73,7 @@ neon.organization.members 13.0.0
 neon.organization.name 13.0.0
 neon.organization.plan 13.0.0
 neon.organization.projects 13.0.0
+neon.organization.requireMfa 13.0.0
 neon.organization.updatedAt 13.0.0
 neon.organizations 13.0.0
 neon.project 13.0.0
@@ -119,6 +121,7 @@ neon.project.updatedAt 13.0.0
 neon.project.vpcEndpoints 13.0.0
 neon.projects 13.0.0
 neon.role 13.0.0
+neon.role.authenticationMethod 13.0.0
 neon.role.branch 13.0.0
 neon.role.createdAt 13.0.0
 neon.role.name 13.0.0

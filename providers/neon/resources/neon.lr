@@ -71,6 +71,12 @@ private neon.organization @defaults("name plan") {
   plan string
   // Whether projects in the organization may be marked as HIPAA regulated
   allowHipaaProjects bool
+  // Whether members must have multi-factor authentication enabled
+  //
+  // When false, a member can hold administrative rights over every project in
+  // the organization behind a single factor. The `hasMfa` field on each member
+  // reports who has enrolled regardless of whether it is required.
+  requireMfa bool
   // Mechanism that manages the organization
   //
   // An organization created through the console or the API reports console.
@@ -101,6 +107,12 @@ private neon.organization.member @defaults("email role") {
   email string
   // Role the member holds, either admin or member
   role string
+  // Whether the member has multi-factor authentication enabled
+  //
+  // Reported per member whether or not the organization requires it, so an
+  // admin without a second factor is visible even where enrollment is
+  // voluntary.
+  hasMfa bool
   // Time the member joined the organization
   joinedAt time
 }
@@ -200,7 +212,7 @@ private neon.project @defaults("name regionId") {
   // Time any endpoint of the project was last active, or null when never
   computeLastActiveAt time
   // Email address of the account that owns the project
-  ownerEmail string
+  ownerEmail() string
   // Organization the project belongs to, or null for a personal project
   organization() neon.organization
   // Branches of the project
@@ -297,7 +309,10 @@ private neon.branch @defaults("name protected") {
   // allowed-address list applies to it even when the list is configured to
   // constrain protected branches only.
   protected bool
-  // Lifecycle state of the branch, for example init or ready
+  // Lifecycle state of the branch, for example init, ready, or archived
+  //
+  // An archived branch has been moved to cold storage after a period of
+  // inactivity and is restored on the next connection.
   currentState string
   // Logical size of the branch in bytes, or null when not yet measured
   logicalSize int
@@ -398,6 +413,12 @@ private neon.role @defaults("name protected") {
   name string
   // Whether the role is maintained by Neon rather than by an operator
   protected bool
+  // How a client authenticates as the role
+  //
+  // Either password for a role holding its own credential, or another
+  // mechanism where the role is reached through a trusted key set rather than
+  // by presenting a password.
+  authenticationMethod string
   // Time the role was created
   createdAt time
   // Time the role was last updated

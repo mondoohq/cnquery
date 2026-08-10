@@ -14,8 +14,9 @@ console.
 A key is either personal or organization-scoped, and the two reach different
 things:
 
-- A **personal key** reaches the projects your account owns and your personal
-  API keys. It cannot read an organization's member roster.
+- A **personal key** reaches the organizations your account belongs to, their
+  projects, and your personal API keys. It can read an organization's member
+  roster only where your account is an admin.
 - An **organization key** reaches that organization's projects, member roster,
   and organization-scoped keys. It has no user behind it, so `currentUser` is
   null.
@@ -51,8 +52,7 @@ mql shell neon --token API_KEY
 Connecting to `neon` discovers two kinds of assets:
 
 - **`neon-organization`** - every organization the key can access.
-- **`neon-project`** - every project the key can access, including personal
-  projects that belong to no organization.
+- **`neon-project`** - every project of those organizations.
 
 Scope discovery with `--discover`:
 
@@ -126,6 +126,24 @@ mql> neon.organizations { name apiKeys.where(lastUsedAt == null) { name createdB
 mql> neon.organizations { name members.where(role == "admin") { email joinedAt } }
 ```
 
+**Members without multi-factor authentication**
+
+```shell
+mql> neon.organizations { name members.where(hasMfa == false) { email role } }
+```
+
+**Organizations that do not require multi-factor authentication**
+
+```shell
+mql> neon.organizations.where(requireMfa == false) { name plan }
+```
+
+**Roles reachable with a password**
+
+```shell
+mql> neon.projects { branches { roles.where(authenticationMethod == "password") { name protected } } }
+```
+
 **Projects with no restore window**
 
 ```shell
@@ -159,8 +177,9 @@ mql> neon.projects { id name regionId }
 ```
 
 A null `currentUser` with a populated project list means the key is
-organization-scoped, which is expected. An empty project list means the key was
-accepted but reaches no projects.
+organization-scoped, which is expected. An empty organization list means the
+key was accepted but belongs to no organization, and since every project
+belongs to one, the project list is empty too.
 
 ## Troubleshooting
 
@@ -174,6 +193,13 @@ organization admin rights, and the key does not have them.
 
 **`vpcEndpoints` is null** - private connectivity is a plan-gated feature and
 the project's plan does not include it.
+
+**`auditLogLevel` is null** - audit logging is plan-gated, and the project's
+plan does not carry the setting.
+
+**`--organization` returns nothing** - the value must be the organization ID
+(`org-...`), not its display name. A value the key is not a member of leaves
+both the organization and project lists empty rather than failing the scan.
 
 ## Notes
 

@@ -82,6 +82,16 @@ func strPtr(v *string) string {
 	return *v
 }
 
+// optionalString reports an absent value as null rather than as an empty
+// string, so a setting the plan does not carry is distinguishable from one that
+// is set to nothing.
+func optionalString(v *string) *llx.RawData {
+	if v == nil || *v == "" {
+		return llx.NilData
+	}
+	return llx.StringData(*v)
+}
+
 // itoa renders a numeric identifier as the string form the schema exposes.
 func itoa(v int64) string {
 	return strconv.FormatInt(v, 10)
