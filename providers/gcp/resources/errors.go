@@ -58,8 +58,18 @@ func googleAPIError(err error) (*googleapi.Error, bool) {
 	return nil, false
 }
 
-// grpcStatusOf extracts a gRPC status from err. status.FromError already
-// unwraps, but it reports (nil, true) for a nil error, so guard that first.
+// grpcStatusOf extracts a gRPC status from err.
+//
+// Unlike the googleapi path this does not unwrap by hand, because
+// status.FromError does it internally (errors.As on the GRPCStatus interface)
+// in the grpc-go we pin. That is a property of the dependency rather than of
+// this file, so it is pinned by test rather than trusted: the gRPC cases in
+// TestClassifiersSurviveWrapping go through fmt.Errorf("...: %w", err), and a
+// downgrade to a grpc-go whose FromError used a bare type assertion would fail
+// them here rather than silently stop classifying wrapped errors in production.
+//
+// The one thing FromError does not handle is nil: it reports (nil, true), so
+// guard that first.
 func grpcStatusOf(err error) (*status.Status, bool) {
 	if err == nil {
 		return nil, false
