@@ -57,28 +57,18 @@ func (r *mqlDigitalocean) images() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		images, resp, err := client.Images.ListUser(context.Background(), opt)
+	images, err := paginate(context.Background(), client.Images.ListUser)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(images))
+	for _, img := range images {
+		res, err := newMqlDigitaloceanImage(r.MqlRuntime, img)
 		if err != nil {
 			return nil, err
 		}
-		for _, img := range images {
-			res, err := newMqlDigitaloceanImage(r.MqlRuntime, img)
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -93,46 +83,36 @@ func (r *mqlDigitalocean) snapshots() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		snapshots, resp, err := client.Snapshots.List(context.Background(), opt)
+	snapshots, err := paginate(context.Background(), client.Snapshots.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(snapshots))
+	for _, s := range snapshots {
+		regions := make([]interface{}, len(s.Regions))
+		for i, rg := range s.Regions {
+			regions[i] = rg
+		}
+		tags := make([]interface{}, len(s.Tags))
+		for i, t := range s.Tags {
+			tags[i] = t
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.snapshot", map[string]*llx.RawData{
+			"id":            llx.StringData(s.ID),
+			"name":          llx.StringData(s.Name),
+			"resourceId":    llx.StringData(s.ResourceID),
+			"resourceType":  llx.StringData(s.ResourceType),
+			"regions":       llx.ArrayData(regions, "\x02"),
+			"minDiskSize":   llx.IntData(int64(s.MinDiskSize)),
+			"sizeGigabytes": llx.FloatData(s.SizeGigaBytes),
+			"tags":          llx.ArrayData(tags, "\x02"),
+			"createdAt":     llx.TimeDataPtr(parseDoTime(s.Created)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, s := range snapshots {
-			regions := make([]interface{}, len(s.Regions))
-			for i, rg := range s.Regions {
-				regions[i] = rg
-			}
-			tags := make([]interface{}, len(s.Tags))
-			for i, t := range s.Tags {
-				tags[i] = t
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.snapshot", map[string]*llx.RawData{
-				"id":            llx.StringData(s.ID),
-				"name":          llx.StringData(s.Name),
-				"resourceId":    llx.StringData(s.ResourceID),
-				"resourceType":  llx.StringData(s.ResourceType),
-				"regions":       llx.ArrayData(regions, "\x02"),
-				"minDiskSize":   llx.IntData(int64(s.MinDiskSize)),
-				"sizeGigabytes": llx.FloatData(s.SizeGigaBytes),
-				"tags":          llx.ArrayData(tags, "\x02"),
-				"createdAt":     llx.TimeDataPtr(parseDoTime(s.Created)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

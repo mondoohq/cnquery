@@ -42,8 +42,12 @@ func newAppDeployment(runtime *plugin.Runtime, appID string, d *godo.Deployment)
 		totalSteps = int64(d.Progress.TotalSteps)
 	}
 
+	id, err := resourceID("digitalocean.app.deployment", appID, d.ID)
+	if err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "digitalocean.app.deployment", map[string]*llx.RawData{
-		"__id":                 llx.StringData("digitalocean.app.deployment/" + appID + "/" + d.ID),
+		"__id":                 llx.StringData(id),
 		"id":                   llx.StringData(d.ID),
 		"appId":                llx.StringData(appID),
 		"cause":                llx.StringData(d.Cause),
@@ -112,31 +116,23 @@ func (r *mqlDigitaloceanApp) deployments() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		deployments, resp, err := client.Apps.ListDeployments(context.Background(), r.Id.Data, opt)
+	deployments, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.Deployment, *godo.Response, error) {
+		return client.Apps.ListDeployments(c, r.Id.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(deployments))
+	for _, d := range deployments {
+		if d == nil {
+			continue
+		}
+		res, err := newAppDeployment(r.MqlRuntime, r.Id.Data, d)
 		if err != nil {
 			return nil, err
 		}
-		for _, d := range deployments {
-			if d == nil {
-				continue
-			}
-			res, err := newAppDeployment(r.MqlRuntime, r.Id.Data, d)
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -190,8 +186,12 @@ func (r *mqlDigitaloceanApp) alerts() ([]interface{}, error) {
 		for i, e := range a.Emails {
 			emails[i] = e
 		}
+		id, err := resourceID("digitalocean.app.alert", r.Id.Data, a.ID)
+		if err != nil {
+			return nil, err
+		}
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.app.alert", map[string]*llx.RawData{
-			"__id":              llx.StringData("digitalocean.app.alert/" + r.Id.Data + "/" + a.ID),
+			"__id":              llx.StringData(id),
 			"id":                llx.StringData(a.ID),
 			"appId":             llx.StringData(r.Id.Data),
 			"componentName":     llx.StringData(a.ComponentName),
