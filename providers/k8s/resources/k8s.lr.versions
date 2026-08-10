@@ -320,6 +320,7 @@ k8s.daemonset.created 9.0.0
 k8s.daemonset.currentNumberScheduled 13.0.16
 k8s.daemonset.desiredNumberScheduled 13.0.16
 k8s.daemonset.dropsAllCapabilities 13.2.2
+k8s.daemonset.exposures 13.8.6
 k8s.daemonset.hasCpuLimit 13.3.1
 k8s.daemonset.hasMemoryLimit 13.3.1
 k8s.daemonset.hasResourceLimits 13.3.1
@@ -388,6 +389,7 @@ k8s.deployment.context 13.6.1
 k8s.deployment.created 9.0.0
 k8s.deployment.desiredReplicas 13.0.16
 k8s.deployment.dropsAllCapabilities 13.2.2
+k8s.deployment.exposures 13.8.6
 k8s.deployment.hasCpuLimit 13.3.1
 k8s.deployment.hasMemoryLimit 13.3.1
 k8s.deployment.hasResourceLimits 13.3.1
@@ -1362,6 +1364,7 @@ k8s.replicaset.context 13.6.1
 k8s.replicaset.created 9.0.0
 k8s.replicaset.desiredReplicas 13.0.16
 k8s.replicaset.dropsAllCapabilities 13.2.2
+k8s.replicaset.exposures 13.8.6
 k8s.replicaset.fullyLabeledReplicas 13.0.16
 k8s.replicaset.hasCpuLimit 13.3.1
 k8s.replicaset.hasMemoryLimit 13.3.1
@@ -1540,6 +1543,7 @@ k8s.statefulset.currentReplicas 13.0.16
 k8s.statefulset.currentRevision 13.0.16
 k8s.statefulset.desiredReplicas 13.0.16
 k8s.statefulset.dropsAllCapabilities 13.2.2
+k8s.statefulset.exposures 13.8.6
 k8s.statefulset.hasCpuLimit 13.3.1
 k8s.statefulset.hasMemoryLimit 13.3.1
 k8s.statefulset.hasResourceLimits 13.3.1
