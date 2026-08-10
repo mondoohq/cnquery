@@ -272,7 +272,12 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		}
 	} else if isAccessDenied(err) {
 		log.Warn().Err(err).Str("bucket", name).Msg("digitalocean> ACL access denied; bucket reported with no grants — audit results may be incomplete")
-	} else if !isUnsupportedOperation(err) {
+	} else if isUnsupportedOperation(err) {
+		// The grants feed publicReadAcl, authenticatedReadAcl and isPublic, so a
+		// bucket reported with none reads as "not public". Say so when the read
+		// did not happen, rather than letting the absence pass for a finding.
+		log.Warn().Err(err).Str("bucket", name).Msg("digitalocean> ACL API not implemented; bucket reported with no grants — audit results may be incomplete")
+	} else {
 		return nil, err
 	}
 
