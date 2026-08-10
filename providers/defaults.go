@@ -736,6 +736,11 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "neon",
 					Use:   "neon",
 					Short: "a Neon organization or account",
+				},
+			},
+		},
+	},
+
 	"netlify": {
 		Provider: &plugin.Provider{
 			Name:            "netlify",
