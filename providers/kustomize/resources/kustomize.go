@@ -191,9 +191,10 @@ func (k *mqlKustomizeKustomization) patches() ([]any, error) {
 		mqlPatches = append(mqlPatches, mqlP)
 		idx++
 	}
-	// Legacy patchesStrategicMerge: each entry is a file path, force strategicMerge.
+	// Legacy patchesStrategicMerge: each entry is EITHER a file path or an
+	// inline patch body, so it has to be disambiguated. Format is unambiguous.
 	for i := range kust.PatchesStrategicMerge {
-		p := kustomizeTypes.Patch{Path: string(kust.PatchesStrategicMerge[i])}
+		p := strategicMergePatchEntry(kustPath, string(kust.PatchesStrategicMerge[i]))
 		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, kustPath, idx, &p, hintStrategicMerge)
 		if err != nil {
 			return nil, err
