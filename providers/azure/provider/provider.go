@@ -8,8 +8,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -344,29 +342,15 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.AzureConnection) er
 		asset.Id = platformID
 	}
 	// Match subToAsset's shape so the same subscription reads the same whether
-	// it arrived as the root asset or as a discovered one. The display name
-	// costs one call, so fall back to the id rather than fail the connection.
+	// it arrived as the root asset or as a discovered one. The lookup is cached
+	// on the connection and shared with initAzureSubscription, so it is not an
+	// extra round trip - it is the one that resource would have made anyway.
+	// Fall back to the id rather than fail the connection over a display name.
 	asset.Name = "Azure subscription " + subID
-	if name := subscriptionDisplayName(azureConn, subID); name != "" {
-		asset.Name = "Azure subscription " + name
+	if sub, err := azureConn.Subscription(); err == nil && sub.DisplayName != nil {
+		asset.Name = "Azure subscription " + *sub.DisplayName
 	}
 	return nil
-}
-
-// subscriptionDisplayName returns the subscription's display name, or "" when
-// it cannot be read. Naming the asset is not worth failing a scan over.
-func subscriptionDisplayName(conn *connection.AzureConnection, subID string) string {
-	client, err := subscriptions.NewClient(conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return ""
-	}
-	resp, err := client.Get(context.Background(), subID, nil)
-	if err != nil || resp.DisplayName == nil {
-		return ""
-	}
-	return *resp.DisplayName
 }
 
 func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, error) {

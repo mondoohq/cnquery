@@ -1887,19 +1887,13 @@
       "permission": "Microsoft.Resources/subscriptions/read",
       "service": "Microsoft.Resources",
       "action": "Get",
-      "source_file": "provider.go"
+      "source_file": "connection.go"
     },
     {
       "permission": "Microsoft.Resources/subscriptions/read",
       "service": "Microsoft.Resources",
       "action": "NewListLocationsPager",
       "source_file": "recoveryservices.go"
-    },
-    {
-      "permission": "Microsoft.Resources/subscriptions/read",
-      "service": "Microsoft.Resources",
-      "action": "Get",
-      "source_file": "subscription.go"
     },
     {
       "permission": "Microsoft.Resources/subscriptions/resourceGroups/read",

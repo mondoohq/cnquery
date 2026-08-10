@@ -4,11 +4,8 @@
 package resources
 
 import (
-	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -34,14 +31,9 @@ func initAzureSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, az.sub, nil
 	}
 
-	subscriptionsC, err := subscriptions.NewClient(conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	ctx := context.Background()
-	resp, err := subscriptionsC.Get(ctx, conn.SubId(), &subscriptions.ClientGetOptions{})
+	// Shared with the provider's connect-time asset naming, which needs the same
+	// record; whichever runs first pays for the call.
+	resp, err := conn.Subscription()
 	if err != nil {
 		return nil, nil, err
 	}

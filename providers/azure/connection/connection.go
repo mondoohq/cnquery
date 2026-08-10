@@ -4,13 +4,16 @@
 package connection
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -43,6 +46,48 @@ type AzureConnection struct {
 	clientOptions  policy.ClientOptions
 	// Filters holds the parsed discovery filters (from inventory.Discovery.Filter).
 	Filters DiscoveryFilters
+
+	// The subscription this connection is scoped to, fetched at most once.
+	// See Subscription.
+	subMu   sync.Mutex
+	subInfo *subscriptions.Subscription
+}
+
+// Subscription returns the subscription this connection is scoped to.
+//
+// Two layers want it and neither can see the other's cache: the provider needs
+// the display name to name the root asset at connect time, and
+// initAzureSubscription needs the whole record to build azure.subscription.
+// The resource layer caches on the mqlAzure resource, which does not exist yet
+// when the connection is made, so without a home on the connection the same
+// ARM Get runs twice in every scan that touches azure.subscription - which is
+// every scan, since the rest of the schema hangs off it.
+//
+// Only success is remembered, so a transient failure is retried by the next
+// caller rather than being reported for the rest of the scan.
+func (p *AzureConnection) Subscription() (*subscriptions.Subscription, error) {
+	if p.subscriptionId == "" {
+		return nil, errors.New("no subscription id set on this connection")
+	}
+
+	p.subMu.Lock()
+	defer p.subMu.Unlock()
+	if p.subInfo != nil {
+		return p.subInfo, nil
+	}
+
+	client, err := subscriptions.NewClient(p.token, &arm.ClientOptions{
+		ClientOptions: p.clientOptions,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Get(context.Background(), p.subscriptionId, nil)
+	if err != nil {
+		return nil, err
+	}
+	p.subInfo = &resp.Subscription
+	return p.subInfo, nil
 }
 
 // The credentials this process has built, by the identity each signs in as.
