@@ -240,6 +240,10 @@ func (p *mqlNeonProject) ownerEmail() (string, error) {
 	}
 	if err := c.Get(context.Background(), "/projects/"+url.PathEscape(p.Id.Data), nil, &resp); err != nil {
 		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			// A denied read is an answer, so it is memoized like a successful
+			// one. Without this the negative result is re-fetched by every
+			// in-provider caller, while a successful one is not.
+			p.ownerFetched.Store(true)
 			p.OwnerEmail = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 			return "", nil
 		}
