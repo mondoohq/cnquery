@@ -234,7 +234,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 				aws.ToBool(cfg.IgnorePublicAcls) &&
 				aws.ToBool(cfg.RestrictPublicBuckets)
 		}
-	} else if !isNoSuchConfiguration(err) {
+	} else if !isNoSuchConfiguration(err) && !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -272,7 +272,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		}
 	} else if isAccessDenied(err) {
 		log.Warn().Err(err).Str("bucket", name).Msg("digitalocean> ACL access denied; bucket reported with no grants — audit results may be incomplete")
-	} else {
+	} else if !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -288,7 +288,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 				encryptionKmsKeyId = aws.ToString(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
 			}
 		}
-	} else if !isNoSuchConfiguration(err) {
+	} else if !isNoSuchConfiguration(err) && !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -297,7 +297,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 	if v, err := client.GetBucketVersioning(ctx, &s3.GetBucketVersioningInput{Bucket: aws.String(name)}); err == nil {
 		versioningStatus = string(v.Status)
 		mfaDeleteEnabled = v.MFADelete == s3types.MFADeleteStatusEnabled
-	} else if !isAccessDenied(err) {
+	} else if !isAccessDenied(err) && !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -312,7 +312,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 				policyDict = raw
 			}
 		}
-	} else if !isNoSuchConfiguration(err) {
+	} else if !isNoSuchConfiguration(err) && !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -321,7 +321,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		for _, rule := range c.CORSRules {
 			corsRules = append(corsRules, spacesCorsRuleDict(rule))
 		}
-	} else if !isNoSuchConfiguration(err) {
+	} else if !isNoSuchConfiguration(err) && !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -330,7 +330,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		for _, rule := range l.Rules {
 			lifecycleRules = append(lifecycleRules, spacesLifecycleRuleDict(rule))
 		}
-	} else if !isNoSuchConfiguration(err) {
+	} else if !isNoSuchConfiguration(err) && !isUnsupportedOperation(err) {
 		return nil, err
 	}
 
@@ -410,6 +410,26 @@ var noSuchConfigurationCodes = []string{
 // the bucket has never been configured for that property. Both the
 // typed APIError code and the raw error string are checked because
 // Spaces sometimes surfaces the code only in the body text.
+// isUnsupportedOperation reports whether err is the S3 API answering that it
+// does not implement the operation at all. Spaces implements a subset of the
+// S3 API, so calls that exist only on AWS (GetPublicAccessBlock, for one)
+// come back 501 NotImplemented on every account. That is a statement about
+// the service, not about the bucket, so the caller keeps its default and
+// carries on rather than failing the whole listing.
+func isUnsupportedOperation(err error) bool {
+	if err == nil {
+		return false
+	}
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		switch ae.ErrorCode() {
+		case "NotImplemented", "MethodNotAllowed":
+			return true
+		}
+	}
+	return strings.Contains(err.Error(), "NotImplemented")
+}
+
 func isNoSuchConfiguration(err error) bool {
 	if err == nil {
 		return false
