@@ -137,8 +137,19 @@ func TestPaginate(t *testing.T) {
 		assert.Nil(t, out)
 	})
 
-	t.Run("a missing collection mid-stream ends the walk", func(t *testing.T) {
-		// 404 means the product is not provisioned, so what was read stands.
+	t.Run("a collection absent from the start is empty", func(t *testing.T) {
+		// The product is not provisioned for this project, which is a real
+		// answer. Storage Boxes behave this way on a plain cloud project.
+		out, err := paginate(func(opts hcloud.ListOpts) ([]int, *hcloud.Response, error) {
+			return nil, nil, hcloud.Error{Code: hcloud.ErrorCodeNotFound}
+		})
+		require.NoError(t, err)
+		assert.Empty(t, out)
+	})
+
+	t.Run("a collection that vanishes mid-walk is not a short list", func(t *testing.T) {
+		// Pages were read, so the collection existed. Returning only those
+		// would present a truncated list as the complete one.
 		calls := 0
 		out, err := paginate(func(opts hcloud.ListOpts) ([]int, *hcloud.Response, error) {
 			calls++
@@ -149,8 +160,8 @@ func TestPaginate(t *testing.T) {
 			}
 			return nil, nil, hcloud.Error{Code: hcloud.ErrorCodeNotFound}
 		})
-		require.NoError(t, err)
-		assert.Equal(t, []int{1, 2}, out)
+		assert.Error(t, err)
+		assert.Nil(t, out)
 	})
 
 	t.Run("nil response terminates loop", func(t *testing.T) {

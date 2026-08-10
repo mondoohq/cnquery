@@ -60,14 +60,21 @@ func paginate[T any](
 ) ([]T, error) {
 	var out []T
 	opts := hcloud.ListOpts{Page: 1, PerPage: 50}
+	read := false
 	for {
 		page, resp, err := list(opts)
 		if err != nil {
-			if translateHcloudError(err) == nil {
+			// A collection that is absent from the start is genuinely empty:
+			// the product is not provisioned for this project. One that
+			// disappears part way through is not. Returning the pages read so
+			// far would present a truncated list as the whole of it, which is
+			// the same silent-undercount this helper exists to prevent.
+			if translateHcloudError(err) == nil && !read {
 				return out, nil
 			}
 			return nil, err
 		}
+		read = true
 		out = append(out, page...)
 		if resp == nil || resp.Meta.Pagination == nil || resp.Meta.Pagination.NextPage == 0 {
 			break
