@@ -72,28 +72,18 @@ func (r *mqlDigitalocean) sizes() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		sizes, resp, err := client.Sizes.List(context.Background(), opt)
+	sizes, err := paginate(context.Background(), client.Sizes.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(sizes))
+	for _, s := range sizes {
+		res, err := newMqlDigitaloceanSize(r.MqlRuntime, s)
 		if err != nil {
 			return nil, err
 		}
-		for _, s := range sizes {
-			res, err := newMqlDigitaloceanSize(r.MqlRuntime, s)
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

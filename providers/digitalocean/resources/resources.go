@@ -20,37 +20,29 @@ func (r *mqlDigitaloceanDatabase) users() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		users, resp, err := client.Databases.ListUsers(context.Background(), r.Id.Data, opt)
+	users, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]godo.DatabaseUser, *godo.Response, error) {
+		return client.Databases.ListUsers(c, r.Id.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(users))
+	for _, u := range users {
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.database.user", map[string]*llx.RawData{
+			"databaseId":     llx.StringData(r.Id.Data),
+			"name":           llx.StringData(u.Name),
+			"role":           llx.StringData(u.Role),
+			"authPlugin":     llx.StringData(databaseUserAuthPlugin(&u)),
+			"kafkaAcls":      llx.ArrayData(databaseUserKafkaAcls(&u), types.Dict),
+			"opensearchAcls": llx.ArrayData(databaseUserOpenSearchAcls(&u), types.Dict),
+			"mongoDatabases": llx.ArrayData(databaseUserMongoDatabases(&u), types.String),
+			"mongoRole":      llx.StringData(databaseUserMongoRole(&u)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, u := range users {
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.database.user", map[string]*llx.RawData{
-				"databaseId":     llx.StringData(r.Id.Data),
-				"name":           llx.StringData(u.Name),
-				"role":           llx.StringData(u.Role),
-				"authPlugin":     llx.StringData(databaseUserAuthPlugin(&u)),
-				"kafkaAcls":      llx.ArrayData(databaseUserKafkaAcls(&u), types.Dict),
-				"opensearchAcls": llx.ArrayData(databaseUserOpenSearchAcls(&u), types.Dict),
-				"mongoDatabases": llx.ArrayData(databaseUserMongoDatabases(&u), types.String),
-				"mongoRole":      llx.StringData(databaseUserMongoRole(&u)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -63,40 +55,32 @@ func (r *mqlDigitaloceanDatabase) replicas() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		replicas, resp, err := client.Databases.ListReplicas(context.Background(), r.Id.Data, opt)
+	replicas, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]godo.DatabaseReplica, *godo.Response, error) {
+		return client.Databases.ListReplicas(c, r.Id.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(replicas))
+	for _, rep := range replicas {
+		tags := make([]interface{}, len(rep.Tags))
+		for i, t := range rep.Tags {
+			tags[i] = t
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.database.replica", map[string]*llx.RawData{
+			"databaseId": llx.StringData(r.Id.Data),
+			"name":       llx.StringData(rep.Name),
+			"region":     llx.StringData(rep.Region),
+			"status":     llx.StringData(rep.Status),
+			"createdAt":  llx.TimeData(rep.CreatedAt),
+			"size":       llx.StringData(rep.Size),
+			"tags":       llx.ArrayData(tags, "\x02"),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, rep := range replicas {
-			tags := make([]interface{}, len(rep.Tags))
-			for i, t := range rep.Tags {
-				tags[i] = t
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.database.replica", map[string]*llx.RawData{
-				"databaseId": llx.StringData(r.Id.Data),
-				"name":       llx.StringData(rep.Name),
-				"region":     llx.StringData(rep.Region),
-				"status":     llx.StringData(rep.Status),
-				"createdAt":  llx.TimeData(rep.CreatedAt),
-				"size":       llx.StringData(rep.Size),
-				"tags":       llx.ArrayData(tags, "\x02"),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -109,35 +93,27 @@ func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		pools, resp, err := client.Databases.ListPools(context.Background(), r.Id.Data, opt)
+	pools, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]godo.DatabasePool, *godo.Response, error) {
+		return client.Databases.ListPools(c, r.Id.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(pools))
+	for _, p := range pools {
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.database.pool", map[string]*llx.RawData{
+			"databaseId": llx.StringData(r.Id.Data),
+			"name":       llx.StringData(p.Name),
+			"database":   llx.StringData(p.Database),
+			"user":       llx.StringData(p.User),
+			"size":       llx.IntData(int64(p.Size)),
+			"mode":       llx.StringData(p.Mode),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, p := range pools {
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.database.pool", map[string]*llx.RawData{
-				"databaseId": llx.StringData(r.Id.Data),
-				"name":       llx.StringData(p.Name),
-				"database":   llx.StringData(p.Database),
-				"user":       llx.StringData(p.User),
-				"size":       llx.IntData(int64(p.Size)),
-				"mode":       llx.StringData(p.Mode),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -152,38 +128,28 @@ func (r *mqlDigitalocean) vpcPeerings() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		peerings, resp, err := client.VPCs.ListVPCPeerings(context.Background(), opt)
+	peerings, err := paginate(context.Background(), client.VPCs.ListVPCPeerings)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(peerings))
+	for _, p := range peerings {
+		vpcIds := make([]interface{}, len(p.VPCIDs))
+		for i, id := range p.VPCIDs {
+			vpcIds[i] = id
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.vpcPeering", map[string]*llx.RawData{
+			"id":        llx.StringData(p.ID),
+			"name":      llx.StringData(p.Name),
+			"vpcIds":    llx.ArrayData(vpcIds, "\x02"),
+			"status":    llx.StringData(string(p.Status)),
+			"createdAt": llx.TimeData(p.CreatedAt),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, p := range peerings {
-			vpcIds := make([]interface{}, len(p.VPCIDs))
-			for i, id := range p.VPCIDs {
-				vpcIds[i] = id
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.vpcPeering", map[string]*llx.RawData{
-				"id":        llx.StringData(p.ID),
-				"name":      llx.StringData(p.Name),
-				"vpcIds":    llx.ArrayData(vpcIds, "\x02"),
-				"status":    llx.StringData(string(p.Status)),
-				"createdAt": llx.TimeData(p.CreatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -198,62 +164,54 @@ func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		pools, resp, err := client.Kubernetes.ListNodePools(context.Background(), r.Id.Data, opt)
+	pools, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.KubernetesNodePool, *godo.Response, error) {
+		return client.Kubernetes.ListNodePools(c, r.Id.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(pools))
+	for _, np := range pools {
+		npTags := make([]interface{}, len(np.Tags))
+		for i, t := range np.Tags {
+			npTags[i] = t
+		}
+
+		labels := map[string]interface{}{}
+		for k, v := range np.Labels {
+			labels[k] = v
+		}
+
+		taints := make([]interface{}, len(np.Taints))
+		for i, t := range np.Taints {
+			taints[i] = map[string]interface{}{
+				"key":    t.Key,
+				"value":  t.Value,
+				"effect": t.Effect,
+			}
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.nodePool", map[string]*llx.RawData{
+			"id":        llx.StringData(np.ID),
+			"clusterId": llx.StringData(r.Id.Data),
+			"name":      llx.StringData(np.Name),
+			"size":      llx.StringData(np.Size),
+			"count":     llx.IntData(int64(np.Count)),
+			"autoScale": llx.BoolData(np.AutoScale),
+			"minNodes":  llx.IntData(int64(np.MinNodes)),
+			"maxNodes":  llx.IntData(int64(np.MaxNodes)),
+			"tags":      llx.ArrayData(npTags, "\x02"),
+			"labels":    llx.DictData(labels),
+			"taints":    llx.ArrayData(taints, "\x13"),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, np := range pools {
-			npTags := make([]interface{}, len(np.Tags))
-			for i, t := range np.Tags {
-				npTags[i] = t
-			}
-
-			labels := map[string]interface{}{}
-			for k, v := range np.Labels {
-				labels[k] = v
-			}
-
-			taints := make([]interface{}, len(np.Taints))
-			for i, t := range np.Taints {
-				taints[i] = map[string]interface{}{
-					"key":    t.Key,
-					"value":  t.Value,
-					"effect": t.Effect,
-				}
-			}
-
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.nodePool", map[string]*llx.RawData{
-				"id":        llx.StringData(np.ID),
-				"clusterId": llx.StringData(r.Id.Data),
-				"name":      llx.StringData(np.Name),
-				"size":      llx.StringData(np.Size),
-				"count":     llx.IntData(int64(np.Count)),
-				"autoScale": llx.BoolData(np.AutoScale),
-				"minNodes":  llx.IntData(int64(np.MinNodes)),
-				"maxNodes":  llx.IntData(int64(np.MaxNodes)),
-				"tags":      llx.ArrayData(npTags, "\x02"),
-				"labels":    llx.DictData(labels),
-				"taints":    llx.ArrayData(taints, "\x13"),
-			})
-			if err != nil {
-				return nil, err
-			}
-			// Cache the godo nodes so the typed nodes() accessor can build
-			// digitalocean.kubernetes.node resources without a refetch.
-			res.(*mqlDigitaloceanKubernetesNodePool).cacheNodes = np.Nodes
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		// Cache the godo nodes so the typed nodes() accessor can build
+		// digitalocean.kubernetes.node resources without a refetch.
+		res.(*mqlDigitaloceanKubernetesNodePool).cacheNodes = np.Nodes
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -377,37 +335,29 @@ func (r *mqlDigitaloceanRegistry) garbageCollections() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		gcs, resp, err := client.Registry.ListGarbageCollections(context.Background(), r.Name.Data, opt)
+	gcs, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.GarbageCollection, *godo.Response, error) {
+		return client.Registry.ListGarbageCollections(c, r.Name.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(gcs))
+	for _, gc := range gcs {
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.garbageCollection", map[string]*llx.RawData{
+			"uuid":         llx.StringData(gc.UUID),
+			"registryName": llx.StringData(gc.RegistryName),
+			"status":       llx.StringData(gc.Status),
+			"type":         llx.StringData(string(gc.Type)),
+			"createdAt":    llx.TimeData(gc.CreatedAt),
+			"updatedAt":    llx.TimeData(gc.UpdatedAt),
+			"blobsDeleted": llx.IntData(int64(gc.BlobsDeleted)),
+			"freedBytes":   llx.IntData(int64(gc.FreedBytes)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, gc := range gcs {
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.garbageCollection", map[string]*llx.RawData{
-				"uuid":         llx.StringData(gc.UUID),
-				"registryName": llx.StringData(gc.RegistryName),
-				"status":       llx.StringData(gc.Status),
-				"type":         llx.StringData(string(gc.Type)),
-				"createdAt":    llx.TimeData(gc.CreatedAt),
-				"updatedAt":    llx.TimeData(gc.UpdatedAt),
-				"blobsDeleted": llx.IntData(int64(gc.BlobsDeleted)),
-				"freedBytes":   llx.IntData(int64(gc.FreedBytes)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -480,36 +430,28 @@ func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		tags, resp, err := client.Registry.ListRepositoryTags(context.Background(), r.RegistryName.Data, r.Name.Data, opt)
+	tags, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.RepositoryTag, *godo.Response, error) {
+		return client.Registry.ListRepositoryTags(c, r.RegistryName.Data, r.Name.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(tags))
+	for _, t := range tags {
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.repository.tag", map[string]*llx.RawData{
+			"registryName":        llx.StringData(t.RegistryName),
+			"repository":          llx.StringData(t.Repository),
+			"tag":                 llx.StringData(t.Tag),
+			"manifestDigest":      llx.StringData(t.ManifestDigest),
+			"compressedSizeBytes": llx.IntData(int64(t.CompressedSizeBytes)),
+			"sizeBytes":           llx.IntData(int64(t.SizeBytes)),
+			"updatedAt":           llx.TimeData(t.UpdatedAt),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, t := range tags {
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.repository.tag", map[string]*llx.RawData{
-				"registryName":        llx.StringData(t.RegistryName),
-				"repository":          llx.StringData(t.Repository),
-				"tag":                 llx.StringData(t.Tag),
-				"manifestDigest":      llx.StringData(t.ManifestDigest),
-				"compressedSizeBytes": llx.IntData(int64(t.CompressedSizeBytes)),
-				"sizeBytes":           llx.IntData(int64(t.SizeBytes)),
-				"updatedAt":           llx.TimeData(t.UpdatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -518,28 +460,20 @@ func (r *mqlDigitaloceanRegistryRepository) manifests() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		manifests, resp, err := client.Registry.ListRepositoryManifests(context.Background(), r.RegistryName.Data, r.Name.Data, opt)
+	manifests, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.RepositoryManifest, *godo.Response, error) {
+		return client.Registry.ListRepositoryManifests(c, r.RegistryName.Data, r.Name.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(manifests))
+	for _, m := range manifests {
+		res, err := newManifestResource(r.MqlRuntime, m)
 		if err != nil {
 			return nil, err
 		}
-		for _, m := range manifests {
-			res, err := newManifestResource(r.MqlRuntime, m)
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -597,42 +531,32 @@ func (r *mqlDigitalocean) reservedIPs() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		ips, resp, err := client.ReservedIPs.List(context.Background(), opt)
+	ips, err := paginate(context.Background(), client.ReservedIPs.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(ips))
+	for _, ip := range ips {
+		regionSlug := ""
+		if ip.Region != nil {
+			regionSlug = ip.Region.Slug
+		}
+		dropletId := int64(0)
+		if ip.Droplet != nil {
+			dropletId = int64(ip.Droplet.ID)
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.reservedIp", map[string]*llx.RawData{
+			"ip":        llx.StringData(ip.IP),
+			"region":    llx.StringData(regionSlug),
+			"projectId": llx.StringData(ip.ProjectID),
+			"locked":    llx.BoolData(ip.Locked),
+			"dropletId": llx.IntData(dropletId),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, ip := range ips {
-			regionSlug := ""
-			if ip.Region != nil {
-				regionSlug = ip.Region.Slug
-			}
-			dropletId := int64(0)
-			if ip.Droplet != nil {
-				dropletId = int64(ip.Droplet.ID)
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.reservedIp", map[string]*llx.RawData{
-				"ip":        llx.StringData(ip.IP),
-				"region":    llx.StringData(regionSlug),
-				"projectId": llx.StringData(ip.ProjectID),
-				"locked":    llx.BoolData(ip.Locked),
-				"dropletId": llx.IntData(dropletId),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -647,119 +571,109 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		apps, resp, err := client.Apps.List(context.Background(), opt)
+	apps, err := paginate(context.Background(), client.Apps.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(apps))
+	for _, app := range apps {
+		status := ""
+		if !app.LastDeploymentActiveAt.IsZero() {
+			status = "active"
+		}
+		if app.InProgressDeployment != nil {
+			status = "deploying"
+		}
+
+		spec := map[string]interface{}{}
+		if app.Spec != nil {
+			spec["name"] = app.Spec.Name
+			svcNames := make([]interface{}, len(app.Spec.Services))
+			for i, s := range app.Spec.Services {
+				svcNames[i] = s.Name
+			}
+			spec["services"] = svcNames
+			workerNames := make([]interface{}, len(app.Spec.Workers))
+			for i, w := range app.Spec.Workers {
+				workerNames[i] = w.Name
+			}
+			spec["workers"] = workerNames
+			jobNames := make([]interface{}, len(app.Spec.Jobs))
+			for i, j := range app.Spec.Jobs {
+				jobNames[i] = j.Name
+			}
+			spec["jobs"] = jobNames
+			staticNames := make([]interface{}, len(app.Spec.StaticSites))
+			for i, s := range app.Spec.StaticSites {
+				staticNames[i] = s.Name
+			}
+			spec["staticSites"] = staticNames
+			fnNames := make([]interface{}, len(app.Spec.Functions))
+			for i, f := range app.Spec.Functions {
+				fnNames[i] = f.Name
+			}
+			spec["functions"] = fnNames
+		}
+
+		name := ""
+		if app.Spec != nil {
+			name = app.Spec.Name
+		}
+
+		region := ""
+		if app.Region != nil {
+			region = app.Region.Slug
+		}
+
+		activeDeploymentId := ""
+		if app.ActiveDeployment != nil {
+			activeDeploymentId = app.ActiveDeployment.ID
+		}
+
+		secureHeaderKey, secureHeaderValue, secureHeaderRemoved := appSecureHeader(app.Spec)
+
+		domains := make([]interface{}, len(app.Domains))
+		for i, d := range app.Domains {
+			domainName := ""
+			if d.Spec != nil {
+				domainName = d.Spec.Domain
+			}
+			domains[i] = map[string]interface{}{
+				"id":                   d.ID,
+				"name":                 domainName,
+				"phase":                string(d.Phase),
+				"certificateExpiresAt": formatDoTime(d.CertificateExpiresAt),
+			}
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.app", map[string]*llx.RawData{
+			"id":                     llx.StringData(app.ID),
+			"name":                   llx.StringData(name),
+			"liveUrl":                llx.StringData(app.LiveURL),
+			"createdAt":              llx.TimeData(app.CreatedAt),
+			"updatedAt":              llx.TimeData(app.UpdatedAt),
+			"activeDeploymentStatus": llx.StringData(status),
+			"spec":                   llx.DictData(spec),
+			"region":                 llx.StringData(region),
+			"tierSlug":               llx.StringData(app.TierSlug),
+			"defaultIngress":         llx.StringData(app.DefaultIngress),
+			"liveDomain":             llx.StringData(app.LiveDomain),
+			"projectId":              llx.StringData(app.ProjectID),
+			"activeDeploymentId":     llx.StringData(activeDeploymentId),
+			"domains":                llx.ArrayData(domains, "\x13"),
+
+			"enhancedThreatControlEnabled": llx.BoolData(app.Spec != nil && app.Spec.EnhancedThreatControlEnabled),
+			"secureHeaderKey":              llx.StringData(secureHeaderKey),
+			"secureHeaderValue":            llx.StringData(secureHeaderValue),
+			"secureHeaderRemoved":          llx.BoolData(secureHeaderRemoved),
+			"corsPolicies":                 llx.ArrayData(appCorsPolicies(app.Spec), types.Dict),
+			"envVars":                      llx.ArrayData(appEnvVars(app.Spec), types.Dict),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, app := range apps {
-			status := ""
-			if !app.LastDeploymentActiveAt.IsZero() {
-				status = "active"
-			}
-			if app.InProgressDeployment != nil {
-				status = "deploying"
-			}
-
-			spec := map[string]interface{}{}
-			if app.Spec != nil {
-				spec["name"] = app.Spec.Name
-				svcNames := make([]interface{}, len(app.Spec.Services))
-				for i, s := range app.Spec.Services {
-					svcNames[i] = s.Name
-				}
-				spec["services"] = svcNames
-				workerNames := make([]interface{}, len(app.Spec.Workers))
-				for i, w := range app.Spec.Workers {
-					workerNames[i] = w.Name
-				}
-				spec["workers"] = workerNames
-				jobNames := make([]interface{}, len(app.Spec.Jobs))
-				for i, j := range app.Spec.Jobs {
-					jobNames[i] = j.Name
-				}
-				spec["jobs"] = jobNames
-				staticNames := make([]interface{}, len(app.Spec.StaticSites))
-				for i, s := range app.Spec.StaticSites {
-					staticNames[i] = s.Name
-				}
-				spec["staticSites"] = staticNames
-				fnNames := make([]interface{}, len(app.Spec.Functions))
-				for i, f := range app.Spec.Functions {
-					fnNames[i] = f.Name
-				}
-				spec["functions"] = fnNames
-			}
-
-			name := ""
-			if app.Spec != nil {
-				name = app.Spec.Name
-			}
-
-			region := ""
-			if app.Region != nil {
-				region = app.Region.Slug
-			}
-
-			activeDeploymentId := ""
-			if app.ActiveDeployment != nil {
-				activeDeploymentId = app.ActiveDeployment.ID
-			}
-
-			secureHeaderKey, secureHeaderValue, secureHeaderRemoved := appSecureHeader(app.Spec)
-
-			domains := make([]interface{}, len(app.Domains))
-			for i, d := range app.Domains {
-				domainName := ""
-				if d.Spec != nil {
-					domainName = d.Spec.Domain
-				}
-				domains[i] = map[string]interface{}{
-					"id":                   d.ID,
-					"name":                 domainName,
-					"phase":                string(d.Phase),
-					"certificateExpiresAt": formatDoTime(d.CertificateExpiresAt),
-				}
-			}
-
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.app", map[string]*llx.RawData{
-				"id":                     llx.StringData(app.ID),
-				"name":                   llx.StringData(name),
-				"liveUrl":                llx.StringData(app.LiveURL),
-				"createdAt":              llx.TimeData(app.CreatedAt),
-				"updatedAt":              llx.TimeData(app.UpdatedAt),
-				"activeDeploymentStatus": llx.StringData(status),
-				"spec":                   llx.DictData(spec),
-				"region":                 llx.StringData(region),
-				"tierSlug":               llx.StringData(app.TierSlug),
-				"defaultIngress":         llx.StringData(app.DefaultIngress),
-				"liveDomain":             llx.StringData(app.LiveDomain),
-				"projectId":              llx.StringData(app.ProjectID),
-				"activeDeploymentId":     llx.StringData(activeDeploymentId),
-				"domains":                llx.ArrayData(domains, "\x13"),
-
-				"enhancedThreatControlEnabled": llx.BoolData(app.Spec != nil && app.Spec.EnhancedThreatControlEnabled),
-				"secureHeaderKey":              llx.StringData(secureHeaderKey),
-				"secureHeaderValue":            llx.StringData(secureHeaderValue),
-				"secureHeaderRemoved":          llx.BoolData(secureHeaderRemoved),
-				"corsPolicies":                 llx.ArrayData(appCorsPolicies(app.Spec), types.Dict),
-				"envVars":                      llx.ArrayData(appEnvVars(app.Spec), types.Dict),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -774,65 +688,55 @@ func (r *mqlDigitalocean) alertPolicies() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		policies, resp, err := client.Monitoring.ListAlertPolicies(context.Background(), opt)
+	policies, err := paginate(context.Background(), client.Monitoring.ListAlertPolicies)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(policies))
+	for _, p := range policies {
+		entities := make([]interface{}, len(p.Entities))
+		for i, e := range p.Entities {
+			entities[i] = e
+		}
+		pTags := make([]interface{}, len(p.Tags))
+		for i, t := range p.Tags {
+			pTags[i] = t
+		}
+
+		emails := make([]interface{}, 0)
+		slacks := make([]interface{}, 0)
+		if p.Alerts.Email != nil {
+			for _, e := range p.Alerts.Email {
+				emails = append(emails, e)
+			}
+		}
+		if p.Alerts.Slack != nil {
+			for _, s := range p.Alerts.Slack {
+				slacks = append(slacks, map[string]interface{}{
+					"channel": s.Channel,
+					"url":     s.URL,
+				})
+			}
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.alertPolicy", map[string]*llx.RawData{
+			"uuid":        llx.StringData(p.UUID),
+			"type":        llx.StringData(p.Type),
+			"description": llx.StringData(p.Description),
+			"compare":     llx.StringData(string(p.Compare)),
+			"value":       llx.FloatData(float64(p.Value)),
+			"window":      llx.StringData(p.Window),
+			"enabled":     llx.BoolData(p.Enabled),
+			"entities":    llx.ArrayData(entities, "\x02"),
+			"tags":        llx.ArrayData(pTags, "\x02"),
+			"alertEmails": llx.ArrayData(emails, "\x02"),
+			"alertSlack":  llx.ArrayData(slacks, "\x13"),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, p := range policies {
-			entities := make([]interface{}, len(p.Entities))
-			for i, e := range p.Entities {
-				entities[i] = e
-			}
-			pTags := make([]interface{}, len(p.Tags))
-			for i, t := range p.Tags {
-				pTags[i] = t
-			}
-
-			emails := make([]interface{}, 0)
-			slacks := make([]interface{}, 0)
-			if p.Alerts.Email != nil {
-				for _, e := range p.Alerts.Email {
-					emails = append(emails, e)
-				}
-			}
-			if p.Alerts.Slack != nil {
-				for _, s := range p.Alerts.Slack {
-					slacks = append(slacks, map[string]interface{}{
-						"channel": s.Channel,
-						"url":     s.URL,
-					})
-				}
-			}
-
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.alertPolicy", map[string]*llx.RawData{
-				"uuid":        llx.StringData(p.UUID),
-				"type":        llx.StringData(p.Type),
-				"description": llx.StringData(p.Description),
-				"compare":     llx.StringData(string(p.Compare)),
-				"value":       llx.FloatData(float64(p.Value)),
-				"window":      llx.StringData(p.Window),
-				"enabled":     llx.BoolData(p.Enabled),
-				"entities":    llx.ArrayData(entities, "\x02"),
-				"tags":        llx.ArrayData(pTags, "\x02"),
-				"alertEmails": llx.ArrayData(emails, "\x02"),
-				"alertSlack":  llx.ArrayData(slacks, "\x13"),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -847,39 +751,29 @@ func (r *mqlDigitalocean) uptimeChecks() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		checks, resp, err := client.UptimeChecks.List(context.Background(), opt)
+	checks, err := paginate(context.Background(), client.UptimeChecks.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(checks))
+	for _, c := range checks {
+		regions := make([]interface{}, len(c.Regions))
+		for i, r := range c.Regions {
+			regions[i] = r
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.uptimeCheck", map[string]*llx.RawData{
+			"id":      llx.StringData(c.ID),
+			"name":    llx.StringData(c.Name),
+			"type":    llx.StringData(c.Type),
+			"target":  llx.StringData(c.Target),
+			"regions": llx.ArrayData(regions, "\x02"),
+			"enabled": llx.BoolData(c.Enabled),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, c := range checks {
-			regions := make([]interface{}, len(c.Regions))
-			for i, r := range c.Regions {
-				regions[i] = r
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.uptimeCheck", map[string]*llx.RawData{
-				"id":      llx.StringData(c.ID),
-				"name":    llx.StringData(c.Name),
-				"type":    llx.StringData(c.Type),
-				"target":  llx.StringData(c.Target),
-				"regions": llx.ArrayData(regions, "\x02"),
-				"enabled": llx.BoolData(c.Enabled),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -938,35 +832,25 @@ func (r *mqlDigitalocean) tags() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		tags, resp, err := client.Tags.List(context.Background(), opt)
+	tags, err := paginate(context.Background(), client.Tags.List)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(tags))
+	for _, t := range tags {
+		count := 0
+		if t.Resources != nil {
+			count = t.Resources.Count
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.tag", map[string]*llx.RawData{
+			"name":          llx.StringData(t.Name),
+			"resourceCount": llx.IntData(int64(count)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, t := range tags {
-			count := 0
-			if t.Resources != nil {
-				count = t.Resources.Count
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.tag", map[string]*llx.RawData{
-				"name":          llx.StringData(t.Name),
-				"resourceCount": llx.IntData(int64(count)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

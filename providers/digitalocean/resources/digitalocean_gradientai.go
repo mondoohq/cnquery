@@ -422,56 +422,48 @@ func (r *mqlDigitaloceanGradientaiAgent) versions() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		versions, resp, err := client.GradientAI.ListAgentVersions(context.Background(), r.Uuid.Data, opt)
+	versions, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.AgentVersion, *godo.Response, error) {
+		return client.GradientAI.ListAgentVersions(c, r.Uuid.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(versions))
+	for _, v := range versions {
+		if v == nil {
+			continue
+		}
+		tags := make([]interface{}, len(v.Tags))
+		for i, t := range v.Tags {
+			tags[i] = t
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.agent.version", map[string]*llx.RawData{
+			"__id":             llx.StringData(r.Uuid.Data + "/" + v.ID),
+			"id":               llx.StringData(v.ID),
+			"agentUuid":        llx.StringData(v.AgentUuid),
+			"name":             llx.StringData(v.Name),
+			"description":      llx.StringData(v.Description),
+			"instruction":      llx.StringData(v.Instruction),
+			"modelName":        llx.StringData(v.ModelName),
+			"versionHash":      llx.StringData(v.VersionHash),
+			"currentlyApplied": llx.BoolData(v.CurrentlyApplied),
+			"canRollback":      llx.BoolData(v.CanRollback),
+			"createdByEmail":   llx.StringData(v.CreatedByEmail),
+			"temperature":      llx.FloatData(v.Temperature),
+			"topP":             llx.FloatData(v.TopP),
+			"maxTokens":        llx.IntData(v.MaxTokens),
+			"k":                llx.IntData(v.K),
+			"provideCitations": llx.BoolData(v.ProvideCitations),
+			"retrievalMethod":  llx.StringData(v.RetrievalMethod),
+			"triggerAction":    llx.StringData(v.TriggerAction),
+			"tags":             llx.ArrayData(tags, types.String),
+			"createdAt":        llx.TimeDataPtr(gradientaiTime(v.CreatedAt)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, v := range versions {
-			if v == nil {
-				continue
-			}
-			tags := make([]interface{}, len(v.Tags))
-			for i, t := range v.Tags {
-				tags[i] = t
-			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.agent.version", map[string]*llx.RawData{
-				"__id":             llx.StringData(r.Uuid.Data + "/" + v.ID),
-				"id":               llx.StringData(v.ID),
-				"agentUuid":        llx.StringData(v.AgentUuid),
-				"name":             llx.StringData(v.Name),
-				"description":      llx.StringData(v.Description),
-				"instruction":      llx.StringData(v.Instruction),
-				"modelName":        llx.StringData(v.ModelName),
-				"versionHash":      llx.StringData(v.VersionHash),
-				"currentlyApplied": llx.BoolData(v.CurrentlyApplied),
-				"canRollback":      llx.BoolData(v.CanRollback),
-				"createdByEmail":   llx.StringData(v.CreatedByEmail),
-				"temperature":      llx.FloatData(v.Temperature),
-				"topP":             llx.FloatData(v.TopP),
-				"maxTokens":        llx.IntData(v.MaxTokens),
-				"k":                llx.IntData(v.K),
-				"provideCitations": llx.BoolData(v.ProvideCitations),
-				"retrievalMethod":  llx.StringData(v.RetrievalMethod),
-				"triggerAction":    llx.StringData(v.TriggerAction),
-				"tags":             llx.ArrayData(tags, types.String),
-				"createdAt":        llx.TimeDataPtr(gradientaiTime(v.CreatedAt)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
@@ -480,40 +472,32 @@ func (r *mqlDigitaloceanGradientaiAgent) apiKeys() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		keys, resp, err := client.GradientAI.ListAgentAPIKeys(context.Background(), r.Uuid.Data, opt)
+	keys, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.ApiKeyInfo, *godo.Response, error) {
+		return client.GradientAI.ListAgentAPIKeys(c, r.Uuid.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(keys))
+	for _, k := range keys {
+		if k == nil {
+			continue
+		}
+		// SecretKey is deliberately not surfaced.
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.agent.apiKey", map[string]*llx.RawData{
+			"__id":      llx.StringData(r.Uuid.Data + "/" + k.Uuid),
+			"uuid":      llx.StringData(k.Uuid),
+			"agentUuid": llx.StringData(r.Uuid.Data),
+			"name":      llx.StringData(k.Name),
+			"createdBy": llx.StringData(k.CreatedBy),
+			"createdAt": llx.TimeDataPtr(gradientaiTime(k.CreatedAt)),
+			"deletedAt": llx.TimeDataPtr(gradientaiTime(k.DeletedAt)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, k := range keys {
-			if k == nil {
-				continue
-			}
-			// SecretKey is deliberately not surfaced.
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.agent.apiKey", map[string]*llx.RawData{
-				"__id":      llx.StringData(r.Uuid.Data + "/" + k.Uuid),
-				"uuid":      llx.StringData(k.Uuid),
-				"agentUuid": llx.StringData(r.Uuid.Data),
-				"name":      llx.StringData(k.Name),
-				"createdBy": llx.StringData(k.CreatedBy),
-				"createdAt": llx.TimeDataPtr(gradientaiTime(k.CreatedAt)),
-				"deletedAt": llx.TimeDataPtr(gradientaiTime(k.DeletedAt)),
-			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

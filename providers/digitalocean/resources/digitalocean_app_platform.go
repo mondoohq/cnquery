@@ -112,31 +112,23 @@ func (r *mqlDigitaloceanApp) deployments() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		deployments, resp, err := client.Apps.ListDeployments(context.Background(), r.Id.Data, opt)
+	deployments, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.Deployment, *godo.Response, error) {
+		return client.Apps.ListDeployments(c, r.Id.Data, o)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(deployments))
+	for _, d := range deployments {
+		if d == nil {
+			continue
+		}
+		res, err := newAppDeployment(r.MqlRuntime, r.Id.Data, d)
 		if err != nil {
 			return nil, err
 		}
-		for _, d := range deployments {
-			if d == nil {
-				continue
-			}
-			res, err := newAppDeployment(r.MqlRuntime, r.Id.Data, d)
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
-		}
-		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }
