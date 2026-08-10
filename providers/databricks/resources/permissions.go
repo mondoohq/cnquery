@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -109,10 +110,22 @@ func flattenObjectPermissions(objectType string, objectId string, perms *iam.Obj
 	return out
 }
 
+// errNoObjectId reports that the object carries no identifier the permissions
+// API can be keyed on. Callers degrade the field to null rather than reporting
+// an empty access control list, which would read as "nobody holds access".
+var errNoObjectId = errors.New("object carries no id the permissions API can be keyed on")
+
 // mqlDatabricksPermissions fetches the workspace access control list of a single
 // object and maps it to one databricks.permission per principal and permission
 // level.
 func mqlDatabricksPermissions(runtime *plugin.Runtime, objectType string, objectId string) ([]any, error) {
+	// The object id is interpolated into the request path, so an empty one asks
+	// the API for /permissions/<type>/ and gets a 404 whose message names no
+	// object. Report what is actually wrong instead.
+	if objectId == "" {
+		return nil, errNoObjectId
+	}
+
 	ws, err := workspaceClient(runtime)
 	if err != nil {
 		return nil, err
@@ -167,6 +180,17 @@ func (r *mqlDatabricksPipeline) permissions() ([]any, error) {
 // permissions reads the endpoint access control list. The permissions API keys
 // serving endpoints on the endpoint id rather than its name, unlike the serving
 // endpoints API itself.
+//
+// A foundation model endpoint carries no id: the serving endpoints API omits it
+// from both the list and the detail response, and the permissions API rejects
+// the endpoint name in its place. Its access control list is therefore
+// unreadable, and the field reports null rather than an empty list so it cannot
+// be mistaken for an endpoint nobody holds access to.
 func (r *mqlDatabricksServingEndpoint) permissions() ([]any, error) {
-	return mqlDatabricksPermissions(r.MqlRuntime, permissionObjectServingEndpoint, r.Id.Data)
+	perms, err := mqlDatabricksPermissions(r.MqlRuntime, permissionObjectServingEndpoint, r.Id.Data)
+	if errors.Is(err, errNoObjectId) {
+		r.Permissions = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
+	}
+	return perms, err
 }
