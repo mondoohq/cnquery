@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:      "atlassian",
 	ID:        "go.mondoo.com/cnquery/v9/providers/atlassian",
-	Version:   "13.4.5",
+	Version:   "13.4.6",
 	Platforms: connection.Platforms,
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,
