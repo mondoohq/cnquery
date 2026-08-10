@@ -163,7 +163,6 @@ var (
 	resourceRe    = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
 	moduleRe      = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
 	outputRe      = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\w+)\s*=\s*(.+)$`)
-	decoratorRe   = regexp.MustCompile(`(?m)^@(\w+)\(([^)]*)\)`)
 	// Every built-in decorator may also be written through the `sys`
 	// namespace (`@sys.secure()`), which is what Bicep requires when a
 	// user-defined symbol shadows the bare name. `decNS` makes that prefix
