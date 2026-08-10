@@ -19,7 +19,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
@@ -69,12 +68,11 @@ func initGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	name := "organizations/" + orgId
 	org, err := svc.Organizations.Get(name).Do()
 	if err != nil {
-		if e, ok := err.(*googleapi.Error); ok {
-			if e.Code == 403 {
-				log.Error().Err(err).Msg("cannot fetch organization info")
-				return nil, nil, errors.New("403: permission denied")
-			}
-		}
+		// Return the error unchanged. Replacing it with a plain string here
+		// used to destroy the *googleapi.Error, which is the only thing
+		// callers can classify: discovery had to fall back to substring
+		// matching on the message to recognize a denial it could skip.
+		log.Error().Err(err).Str("organization", orgId).Msg("cannot fetch organization info")
 		return nil, nil, err
 	}
 

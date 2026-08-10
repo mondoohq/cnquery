@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
-	"google.golang.org/api/dataflow/v1b3"
+	dataflow "google.golang.org/api/dataflow/v1b3"
 	"google.golang.org/api/option"
 )
 

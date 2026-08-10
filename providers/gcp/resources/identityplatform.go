@@ -106,7 +106,7 @@ func (g *mqlGcpProjectIdentityPlatformService) config() (*mqlGcpProjectIdentityP
 
 	cfg, err := svc.Projects.GetConfig(fmt.Sprintf("projects/%s/config", projectId)).Do()
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			g.Config.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
@@ -281,7 +281,7 @@ func (g *mqlGcpProjectIdentityPlatformService) tenants() ([]any, error) {
 			return nil
 		})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			return nil, nil
 		}
 		return nil, err

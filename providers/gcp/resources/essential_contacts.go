@@ -66,7 +66,7 @@ func essentialContactsForParent(runtime *plugin.Runtime, conn *connection.GcpCon
 		// essentialcontacts.contacts.list is a separate grant a project-scoped
 		// principal rarely holds. Degrade so one missing grant at the org node
 		// does not fail the whole query.
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("parent", parent).Msg("could not list essential contacts")
 			return nil, nil
 		}

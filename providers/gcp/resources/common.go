@@ -16,9 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 
-	"google.golang.org/api/googleapi"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -225,31 +222,6 @@ func protoToDict(msg proto.Message) (map[string]any, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-// isHTTPSkippable returns true for REST API errors that indicate the API
-// is not enabled, the caller lacks permission, or the resource is not found.
-func isHTTPSkippable(err error) bool {
-	gerr, ok := err.(*googleapi.Error)
-	if !ok {
-		return false
-	}
-	if gerr.Code == 403 || gerr.Code == 404 {
-		return true
-	}
-	return strings.Contains(gerr.Message, "not enabled") || strings.Contains(gerr.Message, "has not been used")
-}
-
-// isGRPCSkippable returns true for gRPC errors that indicate the API
-// is not enabled, the caller lacks permission, or the resource is not found.
-func isGRPCSkippable(err error) bool {
-	if s, ok := status.FromError(err); ok {
-		switch s.Code() {
-		case codes.PermissionDenied, codes.Unimplemented, codes.NotFound:
-			return true
-		}
-	}
-	return false
 }
 
 func (g *mqlGcpRetryConfig) id() (string, error) {

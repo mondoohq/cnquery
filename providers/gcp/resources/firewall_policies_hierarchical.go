@@ -92,7 +92,7 @@ func listHierarchicalFirewallPolicies(runtime *plugin.Runtime, parent string) ([
 		}
 		return nil
 	}); err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("parent", parent).Msg("could not list hierarchical firewall policies")
 			return nil, nil
 		}

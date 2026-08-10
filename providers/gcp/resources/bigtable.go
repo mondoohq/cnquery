@@ -26,7 +26,7 @@ import (
 // an error in case of some locations are unavailable").
 //
 // It is a plain struct with no GRPCStatus(), so status.FromError does not
-// recognise it and isGRPCSkippable returns false -- the callers therefore took
+// recognise it and isSkippable returns false -- the callers therefore took
 // the hard-error path and threw away the instances, clusters or backups the SDK
 // had just handed them. A transient blip in one region emptied the whole
 // Bigtable inventory.
@@ -157,7 +157,7 @@ func (g *mqlGcpProjectBigtableService) instances() ([]any, error) {
 	instances, err := iac.Instances(ctx)
 	if err != nil {
 		if !bigtablePartialResult(err, "instances") {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Bigtable instances")
 				return nil, nil
 			}
@@ -247,7 +247,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 
 	clusters, err := iac.Clusters(ctx, instanceName)
 	if err != nil && !bigtablePartialResult(err, "clusters") {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Bigtable clusters")
 			return nil, nil
 		}
@@ -376,7 +376,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) iamPolicy() ([]any, error) {
 
 	policy, err := iac.InstanceIAM(instanceName).Policy(ctx)
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not get Bigtable instance IAM policy")
 			return nil, nil
 		}
@@ -428,7 +428,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 
 	tableNames, err := ac.Tables(ctx)
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Bigtable tables")
 			return nil, nil
 		}
@@ -439,7 +439,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 	for _, tableName := range tableNames {
 		tableInfo, err := ac.TableInfo(ctx, tableName)
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Str("table", tableName).Msg("could not read Bigtable table info")
 				continue
 			}
@@ -553,7 +553,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) appProfiles() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Bigtable app profiles")
 				break
 			}
@@ -634,7 +634,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 
 	clusters, err := iac.Clusters(ctx, instanceName)
 	if err != nil && !bigtablePartialResult(err, "clusters") {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list Bigtable clusters for backup lookup")
 			return nil, nil
 		}
@@ -663,7 +663,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 				break
 			}
 			if err != nil {
-				if isGRPCSkippable(err) {
+				if isSkippable(err) {
 					log.Warn().Err(err).Str("cluster", clusterID).Msg("could not list Bigtable backups")
 					break
 				}

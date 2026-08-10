@@ -145,7 +145,7 @@ func (g *mqlGcpProjectSpannerService) instances() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner instances")
 				break
 			}
@@ -257,7 +257,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) databases() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner databases")
 				break
 			}
@@ -515,7 +515,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) ddl() ([]any, error) {
 		Database: dbName,
 	})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not read Spanner database DDL")
 			return nil, nil
 		}
@@ -559,7 +559,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) backups() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner backups")
 				break
 			}
@@ -679,7 +679,7 @@ func (g *mqlGcpProjectSpannerService) instanceConfigs() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner instance configs")
 				break
 			}
@@ -843,7 +843,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) iamPolicy() ([]any, error) {
 
 	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: instanceName, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not read Spanner instance IAM policy")
 			return nil, nil
 		}
@@ -873,7 +873,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) iamPolicy() ([]any, error)
 
 	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: dbName, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
-		if isGRPCSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not read Spanner database IAM policy")
 			return nil, nil
 		}
@@ -920,7 +920,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) databaseRoles() ([]any, er
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner database roles")
 				break
 			}
@@ -993,7 +993,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) backupSchedules() ([]any, error) {
 				break
 			}
 			if err != nil {
-				if isGRPCSkippable(err) {
+				if isSkippable(err) {
 					log.Warn().Err(err).Str("database", dbName).Msg("could not list Spanner backup schedules")
 					break
 				}
@@ -1090,7 +1090,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) instancePartitions() ([]any, error
 			break
 		}
 		if err != nil {
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				log.Warn().Err(err).Msg("could not list Spanner instance partitions")
 				break
 			}

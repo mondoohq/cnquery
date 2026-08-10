@@ -61,7 +61,7 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 				break
 			}
 			if err != nil {
-				if isGRPCSkippable(err) {
+				if isSkippable(err) {
 					log.Warn().Err(err).Str("location", location).Msg("could not list BigQuery reservations")
 					break
 				}

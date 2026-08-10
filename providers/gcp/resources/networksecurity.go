@@ -169,7 +169,7 @@ func (g *mqlGcpProjectNetworkSecurityService) authorizationPolicies() ([]any, er
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list authorization policies")
 			return nil, nil
 		}
@@ -234,7 +234,7 @@ func (g *mqlGcpProjectNetworkSecurityService) serverTlsPolicies() ([]any, error)
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list server TLS policies")
 			return nil, nil
 		}
@@ -294,7 +294,7 @@ func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error)
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list client TLS policies")
 			return nil, nil
 		}
@@ -352,7 +352,7 @@ func (g *mqlGcpProjectNetworkSecurityService) tlsInspectionPolicies() ([]any, er
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list TLS inspection policies")
 			return nil, nil
 		}
@@ -413,7 +413,7 @@ func (g *mqlGcpProjectNetworkSecurityService) addressGroups() ([]any, error) {
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list address groups")
 			return nil, nil
 		}
@@ -466,7 +466,7 @@ func (g *mqlGcpProjectNetworkSecurityService) urlLists() ([]any, error) {
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list URL lists")
 			return nil, nil
 		}
@@ -478,7 +478,7 @@ func (g *mqlGcpProjectNetworkSecurityService) urlLists() ([]any, error) {
 // networkSecurityProfiles lists organization-scoped network security profiles.
 // Organization-scoped accessors have no serviceusage service-enabled pre-check
 // (enablement is per-project); a disabled API surfaces as a 403/404 that
-// isHTTPSkippable handles below.
+// isSkippable handles below.
 func (g *mqlGcpOrganization) networkSecurityProfiles() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -538,7 +538,7 @@ func (g *mqlGcpOrganization) networkSecurityProfiles() ([]any, error) {
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list network security profiles")
 			return nil, nil
 		}
@@ -591,7 +591,7 @@ func (g *mqlGcpOrganization) networkSecurityProfileGroups() ([]any, error) {
 		return nil
 	})
 	if err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list network security profile groups")
 			return nil, nil
 		}

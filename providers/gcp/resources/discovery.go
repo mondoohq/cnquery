@@ -197,30 +197,6 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	return stringx.DedupStringArray(res)
 }
 
-// isDiscoverySkippableErr returns true when a per-service discovery error
-// indicates we lack access or the API is not enabled in this project. Both
-// classes mean "we cannot see anything here" rather than "the system is
-// broken", so callers should log and move on to the next discovery target.
-func isDiscoverySkippableErr(err error) bool {
-	if err == nil {
-		return false
-	}
-	if isHTTPSkippable(err) || isGRPCSkippable(err) {
-		return true
-	}
-	// Some resource fetches rewrap the original error as a plain string
-	// before returning (for example organization.go translates a 403 into
-	// errors.New("403: permission denied")). Match the common signatures
-	// so those rewrapped forms still skip cleanly.
-	msg := err.Error()
-	return strings.Contains(msg, "permission denied") ||
-		strings.Contains(msg, "Error 403") ||
-		strings.Contains(msg, "403:") ||
-		strings.Contains(msg, "has not been used") ||
-		strings.Contains(msg, "API not enabled") ||
-		strings.Contains(msg, "is not enabled")
-}
-
 // gcpAPIServiceRe matches a GCP service-disabled error message of the form
 // "<service> API has not been used in project ...". The captured group is
 // the human-readable service name (e.g. "Memorystore",
@@ -236,7 +212,7 @@ func runDiscoveryStep(target string, fn func() error) error {
 	if err == nil {
 		return nil
 	}
-	if !isDiscoverySkippableErr(err) {
+	if !isSkippable(err) {
 		return err
 	}
 	if m := gcpAPIServiceRe.FindStringSubmatch(err.Error()); len(m) == 2 {

@@ -100,7 +100,7 @@ func (g *mqlGcpProjectStorageService) hmacKeys() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if isHTTPSkippable(err) {
+		if isSkippable(err) {
 			log.Warn().Err(err).Str("project", projectId).Msg("could not list Cloud Storage HMAC keys")
 			return nil, nil
 		}

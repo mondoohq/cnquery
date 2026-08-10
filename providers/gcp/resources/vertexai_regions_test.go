@@ -9,7 +9,7 @@ import "testing"
 //
 // Vertex AI sub-services have very different regional footprints: the RAG data
 // service is available in a handful of regions and reports the rest as
-// FailedPrecondition, which isVertexAIRegionSkippable treats as skippable.
+// FailedPrecondition, which isInapplicable treats as skippable.
 // While the skip set was shared across all 26 accessors, running ragCorpora()
 // first shrank the candidate region list for models(), endpoints() and every
 // job accessor -- silently returning a fraction of the real inventory, with

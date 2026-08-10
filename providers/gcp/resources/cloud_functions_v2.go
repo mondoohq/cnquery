@@ -55,7 +55,7 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			// Gracefully skip when the Cloud Functions API is disabled or access
 			// is denied (matches the gRPC-based sibling resources), instead of
 			// failing the whole query with a hard error.
-			if isGRPCSkippable(err) {
+			if isSkippable(err) {
 				break
 			}
 			return nil, err

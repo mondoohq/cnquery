@@ -17,8 +17,6 @@ import (
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // documentaiLocations lists the Document AI processing locations. Processors
@@ -41,18 +39,6 @@ func documentaiLocationFromName(name string) string {
 		}
 	}
 	return ""
-}
-
-// isDocumentaiSkippable returns true for errors indicating the Document AI API
-// is not enabled or the location is not available for this project.
-func isDocumentaiSkippable(err error) bool {
-	if s, ok := status.FromError(err); ok {
-		switch s.Code() {
-		case codes.PermissionDenied, codes.Unimplemented, codes.InvalidArgument, codes.NotFound:
-			return true
-		}
-	}
-	return false
 }
 
 func (g *mqlGcpProject) documentai() (*mqlGcpProjectDocumentaiService, error) {
@@ -107,7 +93,7 @@ func (g *mqlGcpProjectDocumentaiService) listProcessorsInLocation(ctx context.Co
 			break
 		}
 		if err != nil {
-			if isDocumentaiSkippable(err) {
+			if isInapplicable(err) {
 				break
 			}
 			return nil, err
@@ -209,7 +195,7 @@ func (g *mqlGcpProjectDocumentaiServiceProcessor) versions() ([]any, error) {
 			break
 		}
 		if err != nil {
-			if isDocumentaiSkippable(err) {
+			if isInapplicable(err) {
 				break
 			}
 			return nil, err

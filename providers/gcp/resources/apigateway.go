@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -14,7 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/apigateway/v1"
-	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -24,21 +22,6 @@ func newApiGatewayService(conn *connection.GcpConnection) (*apigateway.Service, 
 		return nil, err
 	}
 	return apigateway.NewService(context.Background(), option.WithHTTPClient(client))
-}
-
-// apiGatewayServiceDisabled reports whether an error indicates the API Gateway
-// service is not enabled or the caller lacks permission, in which case the
-// list call should degrade gracefully to an empty result.
-func apiGatewayServiceDisabled(err error) bool {
-	if gerr, ok := err.(*googleapi.Error); ok {
-		if gerr.Code == 403 || gerr.Code == 404 {
-			return true
-		}
-		if strings.Contains(gerr.Message, "not enabled") || strings.Contains(gerr.Message, "has not been used") {
-			return true
-		}
-	}
-	return false
 }
 
 func (g *mqlGcpProject) apiGateway() (*mqlGcpProjectApiGatewayService, error) {
@@ -96,7 +79,7 @@ func (g *mqlGcpProjectApiGatewayService) apis() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if apiGatewayServiceDisabled(err) {
+		if isSkippable(err) {
 			return []any{}, nil
 		}
 		return nil, err
@@ -142,7 +125,7 @@ func (g *mqlGcpProjectApiGatewayService) gateways() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if apiGatewayServiceDisabled(err) {
+		if isSkippable(err) {
 			return []any{}, nil
 		}
 		return nil, err
@@ -201,7 +184,7 @@ func (g *mqlGcpProjectApiGatewayServiceApi) configs() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
-		if apiGatewayServiceDisabled(err) {
+		if isSkippable(err) {
 			return []any{}, nil
 		}
 		return nil, err
