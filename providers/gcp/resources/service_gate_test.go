@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -11,93 +12,150 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-// TestNoBareServiceEnabledGate pins the service-enabled contract.
+// TestServiceGateRecordWinsTheOnce pins the interaction between the two entry
+// points. recordEnabled stores the answer the gcp.project.<service>() accessor
+// already computed; resolveEnabled computes it for the paths that did not go
+// through that accessor. Both claim the same sync.Once, which is what makes
+// them race-free against each other.
 //
-// `serviceEnabled` is populated only by the gcp.project.<service>() accessor.
-// The same resource is reachable without it -- addressed by its own type name
-// (gcp.project.cloudRunService.services), through an alias (gcp.storage), or
-// built by a resource init with CreateResource. On those paths the Go zero value
-// is `false`, so a bare
+// The nil runtime is the assertion: if the recorded answer did not win the
+// once, resolveEnabled would go build a gcp.project resource and panic.
+func TestServiceGateRecordWinsTheOnce(t *testing.T) {
+	var gate serviceGate
+	gate.recordEnabled(true)
+
+	enabled, err := gate.resolveEnabled(nil, plugin.TValue[string]{Data: "some-project"}, "compute.googleapis.com")
+	require.NoError(t, err)
+	require.True(t, enabled)
+}
+
+// TestServiceGateRecordsDisabled is the same in the other direction: a recorded
+// `false` must also short-circuit. The predecessor of this type re-resolved on
+// a recorded false, because it could not tell "checked, disabled" apart from
+// "never checked".
+func TestServiceGateRecordsDisabled(t *testing.T) {
+	var gate serviceGate
+	gate.recordEnabled(false)
+
+	enabled, err := gate.resolveEnabled(nil, plugin.TValue[string]{Data: "some-project"}, "compute.googleapis.com")
+	require.NoError(t, err)
+	require.False(t, enabled)
+}
+
+// TestServiceGatePropagatesProjectIdError checks that an unresolvable project
+// surfaces as an error rather than as `false`.
 //
-//	if !g.serviceEnabled { return nil, nil }
+// This is the whole point of the gate returning (bool, error). A failed
+// resolution folded into `false` reports "this project has nothing" for a
+// project that was never successfully checked, and every assertion over the
+// resulting empty collection passes vacuously.
+func TestServiceGatePropagatesProjectIdError(t *testing.T) {
+	boom := errors.New("project id unavailable")
+	var gate serviceGate
+
+	enabled, err := gate.resolveEnabled(nil, plugin.TValue[string]{Error: boom}, "compute.googleapis.com")
+	require.ErrorIs(t, err, boom)
+	require.False(t, enabled)
+
+	// a later recordEnabled must not paper over a resolution that already failed
+	gate.recordEnabled(true)
+	enabled, err = gate.resolveEnabled(nil, plugin.TValue[string]{Data: "p"}, "compute.googleapis.com")
+	require.ErrorIs(t, err, boom)
+	require.False(t, enabled)
+}
+
+// TestServiceGateResolvesOnce guards the memoization: repeated reads must not
+// re-resolve. A nil runtime on the second call would panic if they did.
+func TestServiceGateResolvesOnce(t *testing.T) {
+	var gate serviceGate
+	gate.recordEnabled(true)
+	for i := 0; i < 3; i++ {
+		enabled, err := gate.resolveEnabled(nil, plugin.TValue[string]{Data: "p"}, "compute.googleapis.com")
+		require.NoError(t, err)
+		require.True(t, enabled)
+	}
+}
+
+// TestServiceGateIsTheOnlyEnabledMechanism replaces the two AST tests that used
+// to police the hand-copied version of this gate.
 //
-// reports an authoritative "there is nothing here" for a service that is in fact
-// enabled and populated. An empty list is the most dangerous wrong answer for a
-// posture check: it passes vacuously instead of failing or erroring.
-//
-// Verified against a live project: gcp.project.cloudRunService.services returned
-// [] while gcp.project.cloudRun.services returned the real service.
-//
-// Every gate must therefore resolve the flag first, via the isEnabled() helper
-// (bigquery.go, storage.go, ...) or the serviceChecked companion flag (dns.go).
-func TestNoBareServiceEnabledGate(t *testing.T) {
+// Those tests existed because the mechanism was 25 lines duplicated into every
+// service file, so it could be copied wrong or forgotten entirely -- and the
+// failure mode (an unresolved flag reading as `false`) is an authoritative
+// empty collection, which no compiler and no live query complains about. The
+// embedded serviceGate makes the resolution impossible to omit, so what is left
+// to check is that nobody grows a second mechanism alongside it.
+func TestServiceGateIsTheOnlyEnabledMechanism(t *testing.T) {
 	paths, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatalf("glob package sources: %v", err)
 	}
+
+	// Fields the hand-rolled gates used. serviceGate owns this state now; a
+	// resource that re-declares any of them has grown a parallel mechanism
+	// that the gate cannot keep consistent.
+	banned := []string{"serviceEnabled bool", "serviceOnce", "serviceChecked", "serviceErr"}
 
 	fset := token.NewFileSet()
 	for _, path := range paths {
 		if strings.HasSuffix(path, "_test.go") {
 			continue
 		}
-		file, err := parser.ParseFile(fset, path, nil, 0)
+		raw, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 		if err != nil {
 			t.Fatalf("parse %s: %v", path, err)
 		}
 
-		ast.Inspect(file, func(n ast.Node) bool {
-			ifs, ok := n.(*ast.IfStmt)
-			if !ok {
-				return true
-			}
-			// match exactly `!<recv>.serviceEnabled`, with no other operand
-			unary, ok := ifs.Cond.(*ast.UnaryExpr)
-			if !ok || unary.Op != token.NOT {
-				return true
-			}
-			sel, ok := unary.X.(*ast.SelectorExpr)
-			if !ok || sel.Sel.Name != "serviceEnabled" {
-				return true
-			}
-			t.Errorf("%s: gates on serviceEnabled without resolving it first; "+
-				"an unresolved flag is false and reports an empty collection for an "+
-				"enabled service. Call isEnabled() (see bigquery.go) instead",
-				fset.Position(ifs.Pos()))
-			return true
-		})
-	}
-}
-
-// TestEveryServiceEnabledFlagHasAResolver checks the other direction: a resource
-// that carries the flag must also carry the machinery to resolve it, so a new
-// service cannot reintroduce the zero-value bug by omission.
-func TestEveryServiceEnabledFlagHasAResolver(t *testing.T) {
-	paths, err := filepath.Glob("*.go")
-	if err != nil {
-		t.Fatalf("glob package sources: %v", err)
-	}
-
-	for _, path := range paths {
-		if strings.HasSuffix(path, "_test.go") {
-			continue
-		}
-		raw, err := os.ReadFile(path)
+		raws, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("read %s: %v", path, err)
 		}
-		src := string(raw)
-		if !strings.Contains(src, "serviceEnabled bool") {
-			continue
+		src := string(raws)
+
+		for _, field := range banned {
+			if strings.Contains(src, field) {
+				t.Errorf("%s: declares %q; serviceGate owns the service-enabled state. "+
+					"Embed serviceGate in the Internal struct and forward isEnabled() to "+
+					"resolveEnabled instead", path, field)
+			}
 		}
-		// either the lazy resolver or the explicit "was it checked" companion
-		if strings.Contains(src, "serviceOnce") || strings.Contains(src, "serviceChecked") {
-			continue
+
+		// every isEnabled() must be a forwarder -- a hand-written body can
+		// reintroduce the zero-value bug the gate exists to prevent
+		for _, decl := range raw.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Name.Name != "isEnabled" || fn.Recv == nil || fn.Body == nil {
+				continue
+			}
+			if !isResolveEnabledForwarder(fn) {
+				t.Errorf("%s: isEnabled() is hand-written; it must be a single "+
+					"`return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_x)` so "+
+					"every construction path resolves the gate identically",
+					fset.Position(fn.Pos()))
+			}
 		}
-		t.Errorf("%s: declares serviceEnabled but has neither serviceOnce "+
-			"(the isEnabled() resolver) nor serviceChecked; the flag defaults to "+
-			"false and would report empty collections for an enabled service", path)
 	}
+}
+
+// isResolveEnabledForwarder reports whether fn's body is exactly
+// `return g.resolveEnabled(...)`.
+func isResolveEnabledForwarder(fn *ast.FuncDecl) bool {
+	if len(fn.Body.List) != 1 {
+		return false
+	}
+	ret, ok := fn.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(ret.Results) != 1 {
+		return false
+	}
+	call, ok := ret.Results[0].(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && sel.Sel.Name == "resolveEnabled"
 }

@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	pam "cloud.google.com/go/privilegedaccessmanager/apiv1"
 	"cloud.google.com/go/privilegedaccessmanager/apiv1/privilegedaccessmanagerpb"
@@ -23,9 +22,7 @@ import (
 )
 
 type mqlGcpProjectPrivilegedAccessManagerServiceInternal struct {
-	serviceEnabled bool
-	serviceOnce    sync.Once
-	serviceErr     error
+	serviceGate
 }
 
 func (g *mqlGcpProject) privilegedAccessManager() (*mqlGcpProjectPrivilegedAccessManagerService, error) {
@@ -47,7 +44,7 @@ func (g *mqlGcpProject) privilegedAccessManager() (*mqlGcpProjectPrivilegedAcces
 	}
 
 	svc := res.(*mqlGcpProjectPrivilegedAccessManagerService)
-	svc.serviceEnabled = serviceEnabled
+	svc.recordEnabled(serviceEnabled)
 	if !serviceEnabled {
 		log.Debug().Str("service", service_pam).Msg("gcp service is not enabled, skipping")
 	}
@@ -79,30 +76,9 @@ func (g *mqlGcpProjectPrivilegedAccessManagerService) id() (string, error) {
 	return fmt.Sprintf("%s/gcp.project.privilegedAccessManagerService", g.ProjectId.Data), nil
 }
 
-// isEnabled resolves the service-enabled gate lazily, so every construction path
-// agrees. Without it the Go zero value false would make both collections return
-// an empty list with no error on any path that does not go through the
-// gcp.project accessor, which reads as an authoritative "there is no
-// just-in-time elevation configured here".
+// isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectPrivilegedAccessManagerService) isEnabled() (bool, error) {
-	g.serviceOnce.Do(func() {
-		if g.serviceEnabled {
-			return // already set by the parent accessor
-		}
-		if g.ProjectId.Error != nil {
-			g.serviceErr = g.ProjectId.Error
-			return
-		}
-		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
-			"id": llx.StringData(g.ProjectId.Data),
-		})
-		if err != nil {
-			g.serviceErr = err
-			return
-		}
-		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_pam)
-	})
-	return g.serviceEnabled, g.serviceErr
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_pam)
 }
 
 func (g *mqlGcpProjectPrivilegedAccessManagerServiceEntitlement) id() (string, error) {

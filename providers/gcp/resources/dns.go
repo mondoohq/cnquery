@@ -80,8 +80,12 @@ func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[strin
 }
 
 type mqlGcpProjectDnsServiceInternal struct {
-	serviceEnabled bool
-	serviceChecked bool
+	serviceGate
+}
+
+// isEnabled reports whether the API is enabled on this project.
+func (g *mqlGcpProjectDnsService) isEnabled() (bool, error) {
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_dns)
 }
 
 // managedZoneDnssecNonExistence returns the DNSSEC proof-of-nonexistence mode
@@ -132,8 +136,7 @@ func (g *mqlGcpProject) dns() (*mqlGcpProjectDnsService, error) {
 	}
 
 	dnsService := res.(*mqlGcpProjectDnsService)
-	dnsService.serviceEnabled = serviceEnabled
-	dnsService.serviceChecked = true
+	dnsService.recordEnabled(serviceEnabled)
 	if !serviceEnabled {
 		log.Debug().Str("service", service_dns).Msg("gcp service is not enabled, skipping")
 	}
@@ -212,8 +215,11 @@ func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
-	// when the service is known to be disabled, we return nil
-	if g.serviceChecked && !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -353,8 +359,11 @@ func (g *mqlGcpProjectDnsServicePolicy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) policies() ([]any, error) {
-	// when the service is known to be disabled, we return nil
-	if g.serviceChecked && !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 
@@ -435,8 +444,11 @@ func (g *mqlGcpProjectDnsServiceResponsePolicy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) responsePolicies() ([]any, error) {
-	// when the service is known to be disabled, we return nil
-	if g.serviceChecked && !g.serviceEnabled {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
 		return nil, nil
 	}
 

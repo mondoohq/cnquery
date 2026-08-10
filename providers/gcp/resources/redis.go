@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	redis "cloud.google.com/go/redis/apiv1"
@@ -26,9 +25,7 @@ import (
 )
 
 type mqlGcpProjectRedisServiceInternal struct {
-	serviceEnabled bool
-	serviceOnce    sync.Once
-	serviceErr     error
+	serviceGate
 }
 
 type mqlGcpProjectRedisServiceInstanceInternal struct {
@@ -82,7 +79,7 @@ func (g *mqlGcpProject) redis() (*mqlGcpProjectRedisService, error) {
 	}
 
 	redisSvc := res.(*mqlGcpProjectRedisService)
-	redisSvc.serviceEnabled = serviceEnabled
+	redisSvc.recordEnabled(serviceEnabled)
 	if !serviceEnabled {
 		log.Debug().Str("service", service_redis).Msg("gcp service is not enabled, skipping")
 	}
@@ -1311,31 +1308,7 @@ func clusterConvertConnectionDetails(runtime *plugin.Runtime, projectId, cluster
 	return
 }
 
-// isEnabled resolves the service-enabled gate lazily.
-//
-// serviceEnabled is only set by the gcp.project.<service>() accessor, but this
-// resource is reachable without going through it: it can be addressed by its own
-// type name and resource inits build it with CreateResource. On those paths the
-// Go zero value `false` made every collection return an empty list with no error
-// -- an authoritative "there is nothing here" that makes an audit pass
-// vacuously. Resolving it here makes every construction path agree.
+// isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectRedisService) isEnabled() (bool, error) {
-	g.serviceOnce.Do(func() {
-		if g.serviceEnabled {
-			return // already set by the parent accessor
-		}
-		if g.ProjectId.Error != nil {
-			g.serviceErr = g.ProjectId.Error
-			return
-		}
-		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
-			"id": llx.StringData(g.ProjectId.Data),
-		})
-		if err != nil {
-			g.serviceErr = err
-			return
-		}
-		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_redis)
-	})
-	return g.serviceEnabled, g.serviceErr
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_redis)
 }
