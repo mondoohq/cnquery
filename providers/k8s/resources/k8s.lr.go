@@ -1356,6 +1356,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
 	},
+	"k8s.deployment.exposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
 	"k8s.deployment.desiredReplicas": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetDesiredReplicas()).ToDataRes(types.Int)
 	},
@@ -1557,6 +1560,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
 	},
+	"k8s.daemonset.exposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
 	"k8s.daemonset.selector": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetSelector()).ToDataRes(types.Dict)
 	},
@@ -1754,6 +1760,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
+	"k8s.statefulset.exposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
 	},
 	"k8s.statefulset.desiredReplicas": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetDesiredReplicas()).ToDataRes(types.Int)
@@ -1967,6 +1976,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.replicaset.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
+	"k8s.replicaset.exposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
 	},
 	"k8s.replicaset.desiredReplicas": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetDesiredReplicas()).ToDataRes(types.Int)
@@ -6500,6 +6512,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.exposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Exposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.desiredReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).DesiredReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -6772,6 +6788,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.exposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).Exposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Selector, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -7038,6 +7058,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.exposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).Exposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.desiredReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7326,6 +7350,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.replicaset.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.exposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Exposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.replicaset.desiredReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15027,6 +15055,7 @@ type mqlK8sDeployment struct {
 	InitContainers               plugin.TValue[[]any]
 	Containers                   plugin.TValue[[]any]
 	Pods                         plugin.TValue[[]any]
+	Exposures                    plugin.TValue[[]any]
 	DesiredReplicas              plugin.TValue[int64]
 	Selector                     plugin.TValue[any]
 	Strategy                     plugin.TValue[any]
@@ -15424,6 +15453,22 @@ func (c *mqlK8sDeployment) GetPods() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sDeployment) GetExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "exposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exposures()
+	})
+}
+
 func (c *mqlK8sDeployment) GetDesiredReplicas() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.DesiredReplicas, func() (int64, error) {
 		return c.desiredReplicas()
@@ -15586,6 +15631,7 @@ type mqlK8sDaemonset struct {
 	InitContainers               plugin.TValue[[]any]
 	Containers                   plugin.TValue[[]any]
 	Pods                         plugin.TValue[[]any]
+	Exposures                    plugin.TValue[[]any]
 	Selector                     plugin.TValue[any]
 	UpdateStrategy               plugin.TValue[any]
 	RevisionHistoryLimit         plugin.TValue[int64]
@@ -15982,6 +16028,22 @@ func (c *mqlK8sDaemonset) GetPods() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sDaemonset) GetExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.daemonset", c.__id, "exposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exposures()
+	})
+}
+
 func (c *mqlK8sDaemonset) GetSelector() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Selector, func() (any, error) {
 		return c.selector()
@@ -16138,6 +16200,7 @@ type mqlK8sStatefulset struct {
 	InitContainers                       plugin.TValue[[]any]
 	Containers                           plugin.TValue[[]any]
 	Pods                                 plugin.TValue[[]any]
+	Exposures                            plugin.TValue[[]any]
 	DesiredReplicas                      plugin.TValue[int64]
 	Selector                             plugin.TValue[any]
 	ServiceName                          plugin.TValue[string]
@@ -16539,6 +16602,22 @@ func (c *mqlK8sStatefulset) GetPods() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sStatefulset) GetExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "exposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exposures()
+	})
+}
+
 func (c *mqlK8sStatefulset) GetDesiredReplicas() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.DesiredReplicas, func() (int64, error) {
 		return c.desiredReplicas()
@@ -16725,6 +16804,7 @@ type mqlK8sReplicaset struct {
 	InitContainers               plugin.TValue[[]any]
 	Containers                   plugin.TValue[[]any]
 	Pods                         plugin.TValue[[]any]
+	Exposures                    plugin.TValue[[]any]
 	DesiredReplicas              plugin.TValue[int64]
 	Selector                     plugin.TValue[any]
 	MinReadySeconds              plugin.TValue[int64]
@@ -17113,6 +17193,22 @@ func (c *mqlK8sReplicaset) GetPods() *plugin.TValue[[]any] {
 		}
 
 		return c.pods()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "exposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exposures()
 	})
 }
 

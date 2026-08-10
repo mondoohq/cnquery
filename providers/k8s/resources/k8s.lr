@@ -821,6 +821,8 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   containers() []k8s.container
   // Pods backing this deployment (label-selector match; technically owned by the deployment's ReplicaSets)
   pods() []k8s.pod
+  // Network exposures that route to the pods backing this deployment
+  exposures() []k8s.networkExposure
   // Number of pods requested by the deployment
   desiredReplicas() int
   // Label selector that identifies pods owned by this deployment
@@ -998,6 +1000,8 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   containers() []k8s.container
   // Pods backing this DaemonSet (label-selector match)
   pods() []k8s.pod
+  // Network exposures that route to the pods backing this DaemonSet
+  exposures() []k8s.networkExposure
   // Label selector that identifies pods owned by this DaemonSet
   selector() dict
   // Update strategy (OnDelete or RollingUpdate with maxUnavailable/maxSurge)
@@ -1165,6 +1169,8 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   containers() []k8s.container
   // Pods backing this StatefulSet (label-selector match)
   pods() []k8s.pod
+  // Network exposures that route to the pods backing this StatefulSet
+  exposures() []k8s.networkExposure
   // Number of pods requested by the StatefulSet
   desiredReplicas() int
   // Label selector that identifies pods owned by this StatefulSet
@@ -1354,6 +1360,8 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   containers() []k8s.container
   // Pods backing this ReplicaSet (label-selector match)
   pods() []k8s.pod
+  // Network exposures that route to the pods backing this ReplicaSet
+  exposures() []k8s.networkExposure
   // Number of pods requested by the ReplicaSet
   desiredReplicas() int
   // Label selector that identifies pods owned by this ReplicaSet
