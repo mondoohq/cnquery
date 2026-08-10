@@ -268,6 +268,12 @@ func compileTransformation(c *compiler, id string, call *parser.Call) (types.Typ
 		}
 	}
 
+	// An empty array literal carries no element type, so `[] + ["a"]` would
+	// otherwise report []unset and break any downstream call that needs a
+	// concrete element type. Resolve it from whichever operand knows it. This is
+	// done after the handler lookup above so the resolved function is unchanged.
+	lt = types.CoalesceArrays(lt, rt)
+
 	returnType := h.Typ
 	if returnType == types.NoType {
 		returnType = lt

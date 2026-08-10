@@ -793,6 +793,53 @@ func TestArray(t *testing.T) {
 			Code:        "[].flat + [9]",
 			Expectation: []any{int64(9)},
 		},
+		// Regression: concatenating an empty array literal must not drop the
+		// other operand's items, and must work on either side of the operator.
+		{
+			Code:        "[1,2,3] + []",
+			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[] + [1,2,3]",
+			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[1] + [] + [2]",
+			Expectation: []any{int64(1), int64(2)},
+		},
+		{
+			Code:        "[] + [1] + [2]",
+			Expectation: []any{int64(1), int64(2)},
+		},
+		{
+			Code:        "[] + []",
+			Expectation: []any{},
+		},
+		// The result of a concat with an empty operand must keep a usable element
+		// type, so downstream calls needing a concrete type still compile.
+		// Previously `[] + [...]` yielded an []unset array, which failed to
+		// compile with "expected string, got: unset". This mirrors the shape used
+		// by CIS policies that build a path list from several sources, any of
+		// which may come back empty.
+		{
+			Code:        "paths = [] + ['a','bb']\npaths.map(_.length)",
+			Expectation: []any{int64(1), int64(2)},
+		},
+		{
+			Code:        "paths = [] + ['/etc/hosts']\npaths.any(_ == '/etc/hosts')",
+			ResultIndex: 1, Expectation: true,
+		},
+		// A null array contributes no items, just like an empty one. It must not
+		// discard the other operand's items (which used to yield null and quietly
+		// evaluate a policy against nothing) or fail the query outright.
+		{
+			Code:        "paths = ['a'] + file('/not/there').content.lines\npaths",
+			Expectation: []any{"a"},
+		},
+		{
+			Code:        "paths = file('/not/there').content.lines + ['a']\npaths",
+			Expectation: []any{"a"},
+		},
 	})
 
 	t.Run("join()", func(t *testing.T) {
