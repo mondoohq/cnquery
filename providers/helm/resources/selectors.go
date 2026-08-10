@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -11,19 +12,24 @@ import (
 	"go.mondoo.com/mql/v13/providers/helm/connection"
 )
 
-// stringArg reads a required string selector argument. ok is false when the arg
-// is absent or empty, which is the legitimate "bare resource" fast path rather
-// than a lookup miss.
-func stringArg(args map[string]*llx.RawData, key string) (string, bool) {
-	if len(args) == 0 {
-		return "", false
+// requiredStringArg reads the selector argument a resource can only be reached
+// by, erroring when it is absent or empty.
+//
+// There is no useful bare form of these resources: unlike a resource that can
+// take its identity from the asset, `helm.file` and `helm.template` have
+// nothing to resolve from without their selector. Accepting the empty case
+// would build exactly the husk these inits exist to prevent — an empty `__id`
+// that every other bare lookup then aliases onto. The full sets stay reachable
+// through `helm.chart.files` and `helm.chart.templates`.
+func requiredStringArg(args map[string]*llx.RawData, resource, key, example string) (string, error) {
+	var v string
+	if raw, ok := args[key]; ok && raw != nil {
+		v, _ = raw.Value.(string)
 	}
-	raw, ok := args[key]
-	if !ok || raw == nil {
-		return "", false
+	if v == "" {
+		return "", fmt.Errorf("%s requires a %q argument, for example %s", resource, key, example)
 	}
-	v, _ := raw.Value.(string)
-	return v, v != ""
+	return v, nil
 }
 
 // initHelmFile resolves the selector the schema documents,
@@ -38,13 +44,15 @@ func stringArg(args map[string]*llx.RawData, key string) (string, bool) {
 // A miss returns an error rather than falling through to `args, nil, nil`,
 // which would rebuild the same husk.
 func initHelmFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	path, ok := stringArg(args, "path")
-	if !ok {
-		return args, nil, nil
+	path, err := requiredStringArg(args, "helm.file", "path", `helm.file(path: "README.md")`)
+	if err != nil {
+		return nil, nil, err
 	}
 	conn, ok := runtime.Connection.(*connection.HelmConnection)
 	if !ok {
-		return args, nil, nil
+		// Falling through here would create the resource from the partial args
+		// — the same husk, just reached a different way.
+		return nil, nil, errors.New("helm.file: unexpected connection type")
 	}
 
 	for _, loaded := range conn.Charts() {
@@ -72,13 +80,13 @@ func initHelmFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 // is a chart-wide operation reached through `helm.chart.templates`. That is a
 // visible null rather than a fabricated empty string.
 func initHelmTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	name, ok := stringArg(args, "name")
-	if !ok {
-		return args, nil, nil
+	name, err := requiredStringArg(args, "helm.template", "name", `helm.template(name: "templates/deployment.yaml")`)
+	if err != nil {
+		return nil, nil, err
 	}
 	conn, ok := runtime.Connection.(*connection.HelmConnection)
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("helm.template: unexpected connection type")
 	}
 
 	for _, loaded := range conn.Charts() {
