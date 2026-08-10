@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -28,21 +29,24 @@ import (
 // another the digest), and the full set stays available through
 // `kustomize.kustomization.images`.
 func initKustomizeImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) == 0 {
-		return args, nil, nil
+	// `name` is the only way to reach this resource. Unlike a resource whose
+	// identity can come from the asset, a bare `kustomize.image` has nothing to
+	// resolve from, so accepting it would build the very husk this init exists
+	// to prevent — an empty `__id` that every other bare lookup then aliases
+	// onto. The whole set is reachable through `kustomize.kustomization.images`.
+	name := ""
+	if nameArg, ok := args["name"]; ok && nameArg != nil {
+		name, _ = nameArg.Value.(string)
 	}
-	nameArg, ok := args["name"]
-	if !ok || nameArg == nil {
-		return args, nil, nil
-	}
-	name, _ := nameArg.Value.(string)
 	if name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`kustomize.image requires a "name" argument, for example kustomize.image(name: "nginx")`)
 	}
 
 	conn, ok := runtime.Connection.(*connection.KustomizeConnection)
 	if !ok {
-		return args, nil, nil
+		// Falling through here would create the resource from the partial args
+		// — the same husk, just reached a different way.
+		return nil, nil, errors.New("kustomize.image: unexpected connection type")
 	}
 	for _, entry := range conn.Kustomizations() {
 		if entry == nil || entry.Kustomization == nil {

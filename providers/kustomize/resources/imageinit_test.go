@@ -90,13 +90,25 @@ func TestInitKustomizeImageUnknownNameErrors(t *testing.T) {
 	assert.Contains(t, err.Error(), "does-not-exist")
 }
 
-// A bare resource with no args stays a valid empty state — that is the
-// legitimate fast path, distinct from a lookup miss.
-func TestInitKustomizeImageBareResourceIsAllowed(t *testing.T) {
+// `name` is the only way to reach this resource, so a bare or empty-named
+// lookup must error. Accepting it would build the exact husk this init exists
+// to prevent: an empty `__id` that every other bare lookup then aliases onto.
+func TestInitKustomizeImageRequiresName(t *testing.T) {
 	rt := newImageTestRuntime(t, imagesKustomization)
 
-	args, res, err := initKustomizeImage(rt, map[string]*llx.RawData{})
-	require.NoError(t, err)
-	assert.Nil(t, res)
-	assert.NotNil(t, args)
+	for _, tc := range []struct {
+		name string
+		args map[string]*llx.RawData
+	}{
+		{name: "no args", args: map[string]*llx.RawData{}},
+		{name: "empty name", args: map[string]*llx.RawData{"name": llx.StringData("")}},
+		{name: "nil name", args: map[string]*llx.RawData{"name": nil}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, res, err := initKustomizeImage(rt, tc.args)
+			require.Error(t, err)
+			assert.Nil(t, res)
+			assert.Contains(t, err.Error(), `requires a "name"`)
+		})
+	}
 }
