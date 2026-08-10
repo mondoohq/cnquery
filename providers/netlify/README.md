@@ -126,11 +126,15 @@ mql> netlify.sites {
      }
 ```
 
-**Sites with public build logs**
+**Sites whose build logs are not known to be restricted**
 
 ```shell
-mql> netlify.sites.where(privateLogs == false) { name repoUrl }
+mql> netlify.sites.where(privateLogs != true) { name repoUrl privateLogs }
 ```
+
+Use `!= true` rather than `== false`. The control is tri-state, and `== false`
+matches only sites that explicitly turned it off, skipping every site still on
+the team default.
 
 **Scripts injected into served pages outside the repository**
 
@@ -212,4 +216,6 @@ reported every protected site as unprotected.
 
 **A build control the site has never set reports null**, not false. `privateLogs`,
 `skipPrs`, and `skipAutomaticBuilds` are absent from the API until they are
-configured, and the site follows the team default until then.
+configured, and the site follows the team default until then. Query them with
+`!= true` to catch both the explicit-off and the never-set case, or `== null`
+to isolate the sites inheriting the default.

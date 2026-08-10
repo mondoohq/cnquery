@@ -258,8 +258,12 @@ private netlify.envVar @defaults("key isSecret") {
 //
 // The `privateLogs`, `skipPrs`, and `skipAutomaticBuilds` controls are
 // tri-state: true, false, or null when the site has never set the control and
-// follows the team default. A comparison against false does not match null, so
-// a query for sites lacking one of these controls should test for null as well.
+// follows the team default. Test them with `!= true` rather than `== false`,
+// which matches only sites that explicitly turned the control off and skips
+// every site still on the default. For example
+// `netlify.sites.where(privateLogs != true)` finds every site whose build logs
+// are not known to be restricted, and `where(privateLogs == null)` narrows that
+// to the ones inheriting the team setting.
 private netlify.site @defaults("name url") {
   // Unique site identifier
   id string
