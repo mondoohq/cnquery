@@ -370,7 +370,7 @@ private vercel.team.sharedEnvironmentVariable @defaults("key type") {
 // A Vercel project and its deployment-protection and build posture. Query
 // `ssoProtectionDeploymentType`, `passwordProtectionDeploymentType`, and
 // `trustedIpsProtectionMode` for preview and production access controls;
-// `optionsAllowlistPaths` and `protectionConfig` for the routes and settings
+// `optionsAllowlistPaths` and `protectionBypassCount` for the routes and secrets
 // that let traffic past those controls; `aliases` for the hostnames actually
 // serving each deployment;
 // `gitForkProtection`, `requireVerifiedCommits`, and `productionBranch` for
@@ -453,10 +453,26 @@ private vercel.project @defaults("name framework") {
   optionsAllowlistPaths []string
   // Additional deployment protection configuration
   //
-  // Protection settings the project carries beyond the Vercel Authentication,
-  // password, and trusted-IP controls. Null when the project has no additional
-  // protection configuration.
-  protectionConfig dict
+  // Always null. The projects API returns no protectionConfig object on either
+  // the list or the single-project response, so nothing ever populates this
+  // field. Deprecated in favor of ssoProtectionDeploymentType,
+  // passwordProtectionDeploymentType, trustedIpsProtectionMode,
+  // optionsAllowlistPaths, and protectionBypassCount, which carry the
+  // protection settings the API does return.
+  protectionConfig @maturity("deprecated") dict
+  // Number of automation bypass secrets registered for the project
+  //
+  // Each entry is a secret that skips deployment protection for any request
+  // carrying it. Any value above zero means the controls reported by
+  // ssoProtectionDeploymentType, passwordProtectionDeploymentType, and
+  // trustedIpsProtectionMode can be bypassed regardless of how they are set.
+  // The secrets themselves are never exposed.
+  protectionBypassCount int
+  // Scopes of the automation bypass secrets registered for the project
+  //
+  // Distinct scopes across the project's bypass entries, for example
+  // automation-bypass. Empty when the project has no bypass entries.
+  protectionBypassScopes []string
   // Git provider hosting the connected repository
   //
   // One of github, gitlab, or bitbucket, or null when no repository is connected.
@@ -738,13 +754,11 @@ private vercel.deployment @defaults("name state target") {
 // A hostname bound to a deployment, which is what traffic to that hostname
 // actually reaches. An alias can outlive the release that configured it, so
 // comparing `deployment` against the project's current production deployment
-// surfaces hostnames still serving superseded builds. The
-// `protectionBypassCount` and `protectionBypassScopes` fields report automation
-// bypass entries registered for the alias, which let callers presenting the
-// bypass secret past deployment protection. The secret itself is never
-// exposed. Select an alias with
+// surfaces hostnames still serving superseded builds. Automation bypass
+// secrets are reported by `protectionBypassCount` and
+// `protectionBypassScopes` on vercel.project. Select an alias with
 // `vercel.projects.first.aliases.where(alias == "example.com")`.
-private vercel.alias @defaults("alias protectionBypassCount") {
+private vercel.alias @defaults("alias") {
   // Unique alias identifier
   id string
   // Hostname serving the deployment
@@ -767,14 +781,14 @@ private vercel.alias @defaults("alias protectionBypassCount") {
   creatorEmail string
   // Number of automation bypass entries registered for the alias
   //
-  // Each entry is a secret that skips deployment protection for requests
-  // carrying it. Any value above zero means protection can be bypassed on this
-  // hostname regardless of the project's protection settings.
-  protectionBypassCount int
+  // Deprecated in favor of vercel.project.protectionBypassCount. The alias
+  // payload does not carry bypass entries, so this is always zero.
+  protectionBypassCount @maturity("deprecated") int
   // Scopes of the automation bypass entries registered for the alias
   //
-  // Empty when the alias has no bypass entries.
-  protectionBypassScopes []string
+  // Deprecated in favor of vercel.project.protectionBypassScopes. The alias
+  // payload does not carry bypass entries, so this is always empty.
+  protectionBypassScopes @maturity("deprecated") []string
   // Time the alias was created
   createdAt time
   // Time the alias was last updated

@@ -231,6 +231,8 @@ vercel.project.passportDeploymentType 13.1.5
 vercel.project.passwordProtectionDeploymentType 13.0.0
 vercel.project.paused 13.1.5
 vercel.project.productionBranch 13.0.0
+vercel.project.protectionBypassCount 13.1.5
+vercel.project.protectionBypassScopes 13.1.5
 vercel.project.protectionConfig 13.1.5
 vercel.project.publicSource 13.0.0
 vercel.project.repositoryName 13.0.0
