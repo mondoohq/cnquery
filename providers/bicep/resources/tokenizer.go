@@ -57,10 +57,10 @@ func tokenizeBicep(content string) []bicepStatement {
 	for i < len(lines) {
 		trimmed := strings.TrimSpace(lines[i])
 
-		// Skip blank lines and comment-only lines that sit between
-		// statements (decorators are handled below, so we only land here
-		// for separators).
-		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
+		// Skip blank lines, comment-only lines, and `#` directives that sit
+		// between statements (decorators are handled below, so we only land
+		// here for separators).
+		if isSeparatorLine(trimmed) {
 			i++
 			continue
 		}
@@ -83,15 +83,15 @@ func tokenizeBicep(content string) []bicepStatement {
 			}
 			decorators = append(decorators, decLine)
 
-			// Advance past any blank/comment lines between a decorator and
-			// the statement (or the next decorator) it attaches to.
+			// Advance past any blank, comment, or directive lines between a
+			// decorator and the statement (or the next decorator) it attaches
+			// to. `#disable-next-line` idiomatically sits right here, below
+			// the decorators and above the declaration.
 			for i < len(lines) {
-				t := strings.TrimSpace(lines[i])
-				if t == "" || strings.HasPrefix(t, "//") {
-					i++
-					continue
+				if !isSeparatorLine(strings.TrimSpace(lines[i])) {
+					break
 				}
-				break
+				i++
 			}
 			if i >= len(lines) {
 				break
@@ -140,6 +140,20 @@ func tokenizeBicep(content string) []bicepStatement {
 	}
 
 	return statements
+}
+
+// isSeparatorLine reports whether a trimmed line carries no statement content
+// and may be skipped between (or inside) statements.
+//
+// Besides blank and `// …` comment lines, this covers Bicep's `#` directives —
+// `#disable-next-line <rule>` is a first-class construct that idiomatically
+// sits between a declaration's decorators and the declaration itself. Treating
+// it as content there detached every decorator onto a phantom empty statement,
+// so an `@secure()` parameter read back as not secure.
+func isSeparatorLine(trimmed string) bool {
+	return trimmed == "" ||
+		strings.HasPrefix(trimmed, "//") ||
+		strings.HasPrefix(trimmed, "#")
 }
 
 // classifyKeyword returns the canonical statement keyword for the leading

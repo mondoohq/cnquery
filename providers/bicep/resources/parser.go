@@ -150,26 +150,36 @@ type parsedImport struct {
 	wildcard  bool
 }
 
+// decNS is the leading `@` of a decorator plus an optional `sys.` namespace
+// qualifier. Bicep exposes every built-in decorator on the `sys` namespace as
+// well as bare, and a file must use the qualified form when a user-defined
+// symbol shadows the bare name — so both spellings have to match.
+const decNS = `@(?:sys\.)?`
+
 var (
-	targetScopeRe  = regexp.MustCompile(`(?m)^targetScope\s*=\s*'([^']+)'`)
-	paramRe        = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\w+)(.*)$`)
-	varRe          = regexp.MustCompile(`(?m)^var\s+(\w+)\s*=\s*(.+)$`)
-	resourceRe     = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
-	moduleRe       = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
-	outputRe       = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\w+)\s*=\s*(.+)$`)
-	decoratorRe    = regexp.MustCompile(`(?m)^@(\w+)\(([^)]*)\)`)
-	descDecRe      = regexp.MustCompile(`@description\('([^']*)'\)`)
-	secureDecRe    = regexp.MustCompile(`@secure\(\)`)
-	allowedDecRe   = regexp.MustCompile(`@allowed\(\[([^\]]*)\]\)`)
-	minLengthDecRe = regexp.MustCompile(`@minLength\(\s*(-?\d+)\s*\)`)
-	maxLengthDecRe = regexp.MustCompile(`@maxLength\(\s*(-?\d+)\s*\)`)
-	minValueDecRe  = regexp.MustCompile(`@minValue\(\s*(-?\d+)\s*\)`)
-	maxValueDecRe  = regexp.MustCompile(`@maxValue\(\s*(-?\d+)\s*\)`)
-	exportDecRe    = regexp.MustCompile(`@export\(\)`)
+	targetScopeRe = regexp.MustCompile(`(?m)^targetScope\s*=\s*'([^']+)'`)
+	paramRe       = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\w+)(.*)$`)
+	varRe         = regexp.MustCompile(`(?m)^var\s+(\w+)\s*=\s*(.+)$`)
+	resourceRe    = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
+	moduleRe      = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
+	outputRe      = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\w+)\s*=\s*(.+)$`)
+	// Every built-in decorator may also be written through the `sys`
+	// namespace (`@sys.secure()`), which is what Bicep requires when a
+	// user-defined symbol shadows the bare name. `decNS` makes that prefix
+	// optional everywhere so a namespace-qualified `@sys.secure()` is not
+	// silently read as "not secure".
+	descDecRe      = regexp.MustCompile(decNS + `description\('([^']*)'\)`)
+	secureDecRe    = regexp.MustCompile(decNS + `secure\(\)`)
+	allowedDecRe   = regexp.MustCompile(decNS + `allowed\(\[([^\]]*)\]\)`)
+	minLengthDecRe = regexp.MustCompile(decNS + `minLength\(\s*(-?\d+)\s*\)`)
+	maxLengthDecRe = regexp.MustCompile(decNS + `maxLength\(\s*(-?\d+)\s*\)`)
+	minValueDecRe  = regexp.MustCompile(decNS + `minValue\(\s*(-?\d+)\s*\)`)
+	maxValueDecRe  = regexp.MustCompile(decNS + `maxValue\(\s*(-?\d+)\s*\)`)
+	exportDecRe    = regexp.MustCompile(decNS + `export\(\)`)
 
 	// discriminatorDecRe captures the key argument of an
 	// `@discriminator('<key>')` decorator on a tagged-union type.
-	discriminatorDecRe = regexp.MustCompile(`@discriminator\(\s*'([^']*)'\s*\)`)
+	discriminatorDecRe = regexp.MustCompile(decNS + `discriminator\(\s*'([^']*)'\s*\)`)
 
 	// typeRe matches the header of a `type Name = <definition>` statement.
 	// The definition (everything after the first `=`) is captured raw;
