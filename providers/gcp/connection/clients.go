@@ -85,6 +85,26 @@ func (c *GcpConnection) Client(scope ...string) (*http.Client, error) {
 	return actual.(*http.Client), nil
 }
 
+// UseHTTPClient installs client as the HTTP client for the given scope set,
+// bypassing credential resolution and the auth stack entirely.
+//
+// This is the provider's test seam. Every google.golang.org/api service here is
+// built as
+//
+//	svc, err := foo.NewService(ctx, option.WithHTTPClient(conn.Client(scopes...)))
+//
+// so seeding the cache for a scope set points that whole service at whatever
+// transport the caller supplies. That is what makes a lister's pagination,
+// decoding and error degradation testable without credentials or a network --
+// none of which had any coverage before, in a provider whose recurring bug is a
+// listing that silently returns less than it should.
+//
+// The scopes must match the call site's, though the order does not matter:
+// Client keys the cache on a sorted scope set.
+func (c *GcpConnection) UseHTTPClient(client *http.Client, scopes ...string) {
+	c.clientCache.Store(scopeCacheKey(scopes), client)
+}
+
 func (c *GcpConnection) buildClient(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 
