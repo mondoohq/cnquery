@@ -42,8 +42,12 @@ func newAppDeployment(runtime *plugin.Runtime, appID string, d *godo.Deployment)
 		totalSteps = int64(d.Progress.TotalSteps)
 	}
 
+	id, err := resourceID("digitalocean.app.deployment", appID, d.ID)
+	if err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(runtime, "digitalocean.app.deployment", map[string]*llx.RawData{
-		"__id":                 llx.StringData("digitalocean.app.deployment/" + appID + "/" + d.ID),
+		"__id":                 llx.StringData(id),
 		"id":                   llx.StringData(d.ID),
 		"appId":                llx.StringData(appID),
 		"cause":                llx.StringData(d.Cause),
@@ -182,8 +186,12 @@ func (r *mqlDigitaloceanApp) alerts() ([]interface{}, error) {
 		for i, e := range a.Emails {
 			emails[i] = e
 		}
+		id, err := resourceID("digitalocean.app.alert", r.Id.Data, a.ID)
+		if err != nil {
+			return nil, err
+		}
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.app.alert", map[string]*llx.RawData{
-			"__id":              llx.StringData("digitalocean.app.alert/" + r.Id.Data + "/" + a.ID),
+			"__id":              llx.StringData(id),
 			"id":                llx.StringData(a.ID),
 			"appId":             llx.StringData(r.Id.Data),
 			"componentName":     llx.StringData(a.ComponentName),

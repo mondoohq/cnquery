@@ -150,8 +150,12 @@ func (r *mqlDigitaloceanFunctionNamespace) accessKeys() ([]interface{}, error) {
 
 	all := make([]interface{}, 0, len(keys))
 	for _, k := range keys {
+		id, err := resourceID("digitalocean.function.accessKey", r.Namespace.Data, k.ID)
+		if err != nil {
+			return nil, err
+		}
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.function.accessKey", map[string]*llx.RawData{
-			"__id":          llx.StringData("digitalocean.function.accessKey/" + r.Namespace.Data + "/" + k.ID),
+			"__id":          llx.StringData(id),
 			"namespaceUuid": llx.StringData(r.Uuid.Data),
 			"id":            llx.StringData(k.ID),
 			"name":          llx.StringData(k.Name),
@@ -235,8 +239,12 @@ func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 			updatedAt = &t
 		}
 
+		id, err := resourceID("digitalocean.function.action", r.Namespace.Data, pkg, a.Name)
+		if err != nil {
+			return nil, err
+		}
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.function.action", map[string]*llx.RawData{
-			"__id": llx.StringData("digitalocean.function.action/" + r.Namespace.Data + "/" + pkg + "/" + a.Name),
+			"__id": llx.StringData(id),
 			// The namespace listing leaves uuid empty; the single-namespace
 			// read above is where the real one comes from.
 			"namespaceUuid":  llx.StringData(ns.UUID),

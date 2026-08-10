@@ -578,8 +578,12 @@ func (r *mqlDigitaloceanProject) resources() ([]interface{}, error) {
 
 	all := make([]interface{}, 0, len(items))
 	for _, item := range items {
+		id, err := resourceID("digitalocean.project.resource", r.Id.Data, item.URN)
+		if err != nil {
+			return nil, err
+		}
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.project.resource", map[string]*llx.RawData{
-			"__id":         llx.StringData("digitalocean.project.resource/" + r.Id.Data + "/" + item.URN),
+			"__id":         llx.StringData(id),
 			"urn":          llx.StringData(item.URN),
 			"projectId":    llx.StringData(r.Id.Data),
 			"resourceType": llx.StringData(projectResourceType(item.URN)),
