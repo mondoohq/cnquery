@@ -76945,7 +76945,7 @@ func (c *mqlGcpProjectCloudTasksServiceQueue) GetIamPolicy() *plugin.TValue[[]an
 type mqlGcpProjectCloudSchedulerService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectCloudSchedulerServiceInternal it will be used here
+	mqlGcpProjectCloudSchedulerServiceInternal
 	ProjectId plugin.TValue[string]
 	Jobs      plugin.TValue[[]any]
 }

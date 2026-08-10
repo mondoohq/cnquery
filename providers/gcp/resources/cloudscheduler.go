@@ -6,16 +6,24 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	scheduler "cloud.google.com/go/scheduler/apiv1"
 	"cloud.google.com/go/scheduler/apiv1/schedulerpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
+
+type mqlGcpProjectCloudSchedulerServiceInternal struct {
+	serviceEnabled bool
+	serviceOnce    sync.Once
+	serviceErr     error
+}
 
 func (g *mqlGcpProject) cloudScheduler() (*mqlGcpProjectCloudSchedulerService, error) {
 	if g.Id.Error != nil {
@@ -27,7 +35,41 @@ func (g *mqlGcpProject) cloudScheduler() (*mqlGcpProjectCloudSchedulerService, e
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectCloudSchedulerService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_cloudscheduler)
+	if err != nil {
+		return nil, err
+	}
+	schedulerService := res.(*mqlGcpProjectCloudSchedulerService)
+	schedulerService.serviceEnabled = serviceEnabled
+	return schedulerService, nil
+}
+
+// isEnabled resolves the service-enabled gate lazily.
+//
+// The flag is only set by the accessor above, but this resource is reachable
+// without going through it - a resource init can build it with CreateResource.
+// Resolving it here makes every construction path agree, rather than leaving
+// the Go zero value false to report an empty list as fact.
+func (g *mqlGcpProjectCloudSchedulerService) isEnabled() (bool, error) {
+	g.serviceOnce.Do(func() {
+		if g.serviceEnabled {
+			return // already set by the parent accessor
+		}
+		if g.ProjectId.Error != nil {
+			g.serviceErr = g.ProjectId.Error
+			return
+		}
+		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+			"id": llx.StringData(g.ProjectId.Data),
+		})
+		if err != nil {
+			g.serviceErr = err
+			return
+		}
+		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_cloudscheduler)
+	})
+	return g.serviceEnabled, g.serviceErr
 }
 
 func (g *mqlGcpProjectCloudSchedulerService) id() (string, error) {
@@ -42,6 +84,21 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 		return nil, g.ProjectId.Error
 	}
 	projectId := g.ProjectId.Data
+
+	// A project that never turned Cloud Scheduler on answers ListJobs with
+	// PermissionDenied "API has not been used in project ... or it is disabled",
+	// which failed the field outright. Not having enabled a service is the
+	// ordinary state of most projects, and the answer it deserves is "no jobs",
+	// not an error, so the gate every other service resource uses applies here
+	// too.
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		log.Debug().Str("service", service_cloudscheduler).Msg("gcp service is not enabled, skipping")
+		return []any{}, nil
+	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 	creds, err := conn.Credentials(scheduler.DefaultAuthScopes()...)
