@@ -41,8 +41,12 @@ func (p *mqlVercelProject) members() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[projectMemberRecord](context.Background(), conn, "/v1/projects/"+p.Id.Data+"/members", connection.TeamQuery(p.teamID), "members")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			p.Members.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -84,8 +88,16 @@ func (g *mqlVercelAccessGroup) members() ([]any, error) {
 	query.Set("limit", "100")
 	records, err := connection.GetPagedCursor[accessGroupMemberRecord](context.Background(), conn, "/v1/access-groups/"+g.Id.Data+"/members", query, "members")
 	if err != nil {
-		// Access groups are Enterprise-only; degrade to empty elsewhere.
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			g.Members.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err
@@ -127,7 +139,16 @@ func (g *mqlVercelAccessGroup) projects() ([]any, error) {
 	query.Set("limit", "100")
 	records, err := connection.GetPagedCursor[accessGroupProjectRecord](context.Background(), conn, "/v1/access-groups/"+g.Id.Data+"/projects", query, "projects")
 	if err != nil {
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			g.Projects.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err

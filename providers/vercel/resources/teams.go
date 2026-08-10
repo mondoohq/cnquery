@@ -334,8 +334,12 @@ func (c *mqlVercelTeam) members() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[memberRecord](context.Background(), conn, "/v2/teams/"+c.Id.Data+"/members", nil, "members")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Members.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -406,9 +410,16 @@ func (c *mqlVercelTeam) sharedEnvironmentVariables() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[sharedEnvRecord](context.Background(), conn, "/v1/env", connection.TeamQuery(c.Id.Data), "data")
 	if err != nil {
-		// Shared environment variables are a paid-plan feature; treat an absent
-		// or forbidden collection as empty rather than failing the scan.
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			c.SharedEnvironmentVariables.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err
@@ -502,8 +513,12 @@ func (c *mqlVercelTeam) domains() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[domainRecord](context.Background(), conn, "/v5/domains", connection.TeamQuery(c.Id.Data), "domains")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Domains.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -539,8 +554,12 @@ func (c *mqlVercelTeam) edgeConfigs() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	var records []edgeConfigRecord
 	if err := conn.Get(context.Background(), "/v1/edge-config", connection.TeamQuery(c.Id.Data), &records); err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.EdgeConfigs.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -584,8 +603,12 @@ func (c *mqlVercelTeam) logDrains() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	var records []logDrainRecord
 	if err := conn.Get(context.Background(), "/v1/log-drains", connection.TeamQuery(c.Id.Data), &records); err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.LogDrains.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -637,8 +660,12 @@ func (c *mqlVercelTeam) webhooks() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	var records []webhookRecord
 	if err := conn.Get(context.Background(), "/v1/webhooks", connection.TeamQuery(c.Id.Data), &records); err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Webhooks.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -705,8 +732,12 @@ func (c *mqlVercelTeam) integrationConfigurations() ([]any, error) {
 	query.Set("view", "account")
 	var records []integrationConfigurationRecord
 	if err := conn.Get(context.Background(), "/v1/integrations/configurations", query, &records); err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.IntegrationConfigurations.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -763,9 +794,16 @@ func (c *mqlVercelTeam) accessGroups() ([]any, error) {
 	query.Set("limit", "100")
 	records, err := connection.GetPagedCursor[accessGroupRecord](context.Background(), conn, "/v1/access-groups", query, "accessGroups")
 	if err != nil {
-		// Access groups are an Enterprise feature; degrade to empty on plans
-		// that do not expose the endpoint.
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			c.AccessGroups.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err

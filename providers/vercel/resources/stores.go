@@ -181,8 +181,12 @@ func (c *mqlVercelTeam) stores() ([]any, error) {
 	}
 	records, err := root.teamStores(c.Id.Data)
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Stores.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -211,8 +215,12 @@ func (c *mqlVercelProject) stores() ([]any, error) {
 	}
 	records, err := root.teamStores(c.teamID)
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			c.Stores.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}

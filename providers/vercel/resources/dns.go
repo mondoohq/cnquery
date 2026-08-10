@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/vercel/connection"
 )
 
@@ -31,8 +32,12 @@ func (d *mqlVercelDomain) records() ([]any, error) {
 	conn := d.MqlRuntime.Connection.(*connection.VercelConnection)
 	records, err := connection.GetPaged[dnsRecordRecord](context.Background(), conn, "/v4/domains/"+d.Name.Data+"/records", connection.TeamQuery(d.teamID), "records")
 	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
 		if connection.IsForbidden(err) {
-			return []any{}, nil
+			d.Records.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}

@@ -75,7 +75,16 @@ func (c *mqlVercelProject) aliases() ([]any, error) {
 
 	records, err := connection.GetPagedFrom[aliasRecord](context.Background(), conn, "/v4/aliases", query, "aliases")
 	if err != nil {
-		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			c.Aliases.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the collection is not provisioned for this scope,
+		// which genuinely is none.
+		if connection.IsNotFound(err) {
 			return []any{}, nil
 		}
 		return nil, err
