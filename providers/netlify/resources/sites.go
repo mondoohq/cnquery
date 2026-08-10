@@ -37,7 +37,7 @@ type siteRecord struct {
 	BranchDeployCustomDomain  string             `json:"branch_deploy_custom_domain"`
 	DeployPreviewCustomDomain string             `json:"deploy_preview_custom_domain"`
 	NotificationEmail         string             `json:"notification_email"`
-	Password                  string             `json:"password"`
+	IDDomain                  string             `json:"id_domain"`
 	Ssl                       bool               `json:"ssl"`
 	ForceSsl                  bool               `json:"force_ssl"`
 	ManagedDns                bool               `json:"managed_dns"`
@@ -52,28 +52,24 @@ type siteRecord struct {
 	BuildSettings             *buildSettingsData `json:"build_settings"`
 }
 
-// passwordProtected reports whether the site is gated behind a site-wide
-// basic-auth password. Netlify signals that by returning the password on the
-// site rather than by a dedicated flag.
-func (r *siteRecord) passwordProtected() bool {
-	return r.Password != ""
-}
-
 // buildSettingsData is the repository configuration a build runs from. Netlify
 // returns it inline with the site.
 type buildSettingsData struct {
-	Provider        string   `json:"provider"`
-	RepoURL         string   `json:"repo_url"`
-	RepoBranch      string   `json:"repo_branch"`
-	RepoPath        string   `json:"repo_path"`
-	Cmd             string   `json:"cmd"`
-	Dir             string   `json:"dir"`
-	FunctionsDir    string   `json:"functions_dir"`
-	AllowedBranches []string `json:"allowed_branches"`
-	PublicRepo      bool     `json:"public_repo"`
-	PrivateLogs     bool     `json:"private_logs"`
-	StopBuilds      bool     `json:"stop_builds"`
-	DeployKeyID     string   `json:"deploy_key_id"`
+	Provider            string   `json:"provider"`
+	RepoURL             string   `json:"repo_url"`
+	RepoBranch          string   `json:"repo_branch"`
+	RepoPath            string   `json:"repo_path"`
+	Cmd                 string   `json:"cmd"`
+	Dir                 string   `json:"dir"`
+	FunctionsDir        string   `json:"functions_dir"`
+	AllowedBranches     []string `json:"allowed_branches"`
+	PublicRepo          bool     `json:"public_repo"`
+	PrivateLogs         *bool    `json:"private_logs"`
+	StopBuilds          bool     `json:"stop_builds"`
+	UntrustedFlow       string   `json:"untrusted_flow"`
+	SkipPrs             *bool    `json:"skip_prs"`
+	SkipAutomaticBuilds *bool    `json:"skip_automatic_builds"`
+	DeployKeyID         string   `json:"deploy_key_id"`
 }
 
 // sites lists the account's sites, narrowed to the site a discovered asset is
@@ -131,7 +127,6 @@ func newNetlifySite(runtime *plugin.Runtime, rec *siteRecord) (*mqlNetlifySite, 
 		"ssl":                       llx.BoolData(rec.Ssl),
 		"forceSsl":                  llx.BoolData(rec.ForceSsl),
 		"managedDns":                llx.BoolData(rec.ManagedDns),
-		"passwordProtected":         llx.BoolData(rec.passwordProtected()),
 		"preventNonGitProdDeploys":  llx.BoolData(rec.PreventNonGitProdDeploys),
 		"buildImage":                llx.StringData(rec.BuildImage),
 		"prerender":                 llx.StringData(rec.Prerender),
@@ -147,7 +142,11 @@ func newNetlifySite(runtime *plugin.Runtime, rec *siteRecord) (*mqlNetlifySite, 
 		"functionsDirectory":        llx.StringData(build.FunctionsDir),
 		"allowedBranches":           llx.ArrayData(strSliceToAny(build.AllowedBranches), types.String),
 		"publicRepo":                llx.BoolData(build.PublicRepo),
-		"privateLogs":               llx.BoolData(build.PrivateLogs),
+		"privateLogs":               optionalBool(build.PrivateLogs),
+		"untrustedFlow":             llx.StringData(build.UntrustedFlow),
+		"skipPrs":                   optionalBool(build.SkipPrs),
+		"skipAutomaticBuilds":       optionalBool(build.SkipAutomaticBuilds),
+		"idDomain":                  llx.StringData(rec.IDDomain),
 		"stopBuilds":                llx.BoolData(build.StopBuilds),
 	})
 	if err != nil {

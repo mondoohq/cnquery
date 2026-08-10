@@ -42,6 +42,13 @@ func (n *netlifyTime) UnmarshalJSON(b []byte) error {
 	}
 	tt, err := time.Parse(time.RFC3339, str)
 	if err != nil {
+		// A few fields carry a plain calendar date rather than a full
+		// timestamp, so that shape is parsed before treating the value as
+		// unreadable.
+		if day, dayErr := time.Parse(time.DateOnly, str); dayErr == nil {
+			n.t = &day
+			return nil
+		}
 		// A timestamp the API changed the shape of is reported as null rather
 		// than failing the whole resource, but it is logged so the change is
 		// visible instead of looking like a record that never reached the
@@ -56,6 +63,15 @@ func (n *netlifyTime) UnmarshalJSON(b []byte) error {
 // Time returns the decoded time value, or nil when the source was absent.
 func (n netlifyTime) Time() *time.Time {
 	return n.t
+}
+
+// optionalBool reports a control the API omits as null rather than as false, so
+// a site that has never set it is distinguishable from one that set it off.
+func optionalBool(v *bool) *llx.RawData {
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.BoolData(*v)
 }
 
 // strSliceToAny widens a string slice into an any slice for llx.ArrayData.
@@ -92,6 +108,8 @@ type userRecord struct {
 	FullName       string      `json:"full_name"`
 	AvatarURL      string      `json:"avatar_url"`
 	LoginProviders []string    `json:"login_providers"`
+	MfaEnabled     bool        `json:"mfa_enabled"`
+	ManagedBySso   bool        `json:"managed_by_sso_or_directory_sync"`
 	SiteCount      int64       `json:"site_count"`
 	CreatedAt      netlifyTime `json:"created_at"`
 	LastLogin      netlifyTime `json:"last_login"`
@@ -111,14 +129,16 @@ func (n *mqlNetlify) currentUser() (*mqlNetlifyUser, error) {
 	}
 
 	res, err := CreateResource(n.MqlRuntime, "netlify.user", map[string]*llx.RawData{
-		"id":             llx.StringData(id),
-		"email":          llx.StringData(rec.Email),
-		"fullName":       llx.StringData(rec.FullName),
-		"avatarUrl":      llx.StringData(rec.AvatarURL),
-		"loginProviders": llx.ArrayData(strSliceToAny(rec.LoginProviders), types.String),
-		"siteCount":      llx.IntData(rec.SiteCount),
-		"createdAt":      llx.TimeDataPtr(rec.CreatedAt.Time()),
-		"lastLogin":      llx.TimeDataPtr(rec.LastLogin.Time()),
+		"id":                          llx.StringData(id),
+		"email":                       llx.StringData(rec.Email),
+		"fullName":                    llx.StringData(rec.FullName),
+		"avatarUrl":                   llx.StringData(rec.AvatarURL),
+		"loginProviders":              llx.ArrayData(strSliceToAny(rec.LoginProviders), types.String),
+		"mfaEnabled":                  llx.BoolData(rec.MfaEnabled),
+		"managedBySsoOrDirectorySync": llx.BoolData(rec.ManagedBySso),
+		"siteCount":                   llx.IntData(rec.SiteCount),
+		"createdAt":                   llx.TimeDataPtr(rec.CreatedAt.Time()),
+		"lastLogin":                   llx.TimeDataPtr(rec.LastLogin.Time()),
 	})
 	if err != nil {
 		return nil, err

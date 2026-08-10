@@ -25,15 +25,29 @@ type mqlNetlifyAccountInternal struct {
 }
 
 type accountRecord struct {
-	ID           string      `json:"id"`
-	Slug         string      `json:"slug"`
-	Name         string      `json:"name"`
-	Type         string      `json:"type"`
-	TypeName     string      `json:"type_name"`
-	OwnerIDs     []string    `json:"owner_ids"`
-	RolesAllowed []string    `json:"roles_allowed"`
-	CreatedAt    netlifyTime `json:"created_at"`
-	UpdatedAt    netlifyTime `json:"updated_at"`
+	ID                           string      `json:"id"`
+	Slug                         string      `json:"slug"`
+	Name                         string      `json:"name"`
+	Type                         string      `json:"type"`
+	TypeName                     string      `json:"type_name"`
+	LifecycleState               string      `json:"lifecycle_state"`
+	BillingEmail                 string      `json:"billing_email"`
+	MembersCount                 int64       `json:"members_count"`
+	EnforceMfa                   string      `json:"enforce_mfa"`
+	EnforceSaml                  string      `json:"enforce_saml"`
+	SamlEnabled                  bool        `json:"saml_enabled"`
+	SamlSessionExpiration        int64       `json:"saml_session_expiration"`
+	SiteSsoLogin                 bool        `json:"site_sso_login"`
+	HasSitePassword              bool        `json:"has_site_password"`
+	SitePasswordContext          string      `json:"site_password_context"`
+	BlockSiteTransfers           bool        `json:"block_site_transfers"`
+	TeamRegistrationDomains      []string    `json:"team_registration_domains"`
+	SupportAdministrationEnabled bool        `json:"support_administration_enabled"`
+	SiteAccess                   string      `json:"site_access"`
+	OwnerIDs                     []string    `json:"owner_ids"`
+	RolesAllowed                 []string    `json:"roles_allowed"`
+	CreatedAt                    netlifyTime `json:"created_at"`
+	UpdatedAt                    netlifyTime `json:"updated_at"`
 }
 
 // accounts lists every account the token can reach, narrowed to the account the
@@ -65,14 +79,28 @@ func (n *mqlNetlify) accounts() ([]any, error) {
 
 func newNetlifyAccount(runtime *plugin.Runtime, rec *accountRecord) (*mqlNetlifyAccount, error) {
 	res, err := CreateResource(runtime, "netlify.account", map[string]*llx.RawData{
-		"id":           llx.StringData(rec.ID),
-		"slug":         llx.StringData(rec.Slug),
-		"name":         llx.StringData(rec.Name),
-		"type":         llx.StringData(rec.Type),
-		"typeName":     llx.StringData(rec.TypeName),
-		"rolesAllowed": llx.ArrayData(strSliceToAny(rec.RolesAllowed), types.String),
-		"createdAt":    llx.TimeDataPtr(rec.CreatedAt.Time()),
-		"updatedAt":    llx.TimeDataPtr(rec.UpdatedAt.Time()),
+		"id":                           llx.StringData(rec.ID),
+		"slug":                         llx.StringData(rec.Slug),
+		"name":                         llx.StringData(rec.Name),
+		"type":                         llx.StringData(rec.Type),
+		"typeName":                     llx.StringData(rec.TypeName),
+		"lifecycleState":               llx.StringData(rec.LifecycleState),
+		"billingEmail":                 llx.StringData(rec.BillingEmail),
+		"membersCount":                 llx.IntData(rec.MembersCount),
+		"enforceMfa":                   llx.StringData(rec.EnforceMfa),
+		"enforceSaml":                  llx.StringData(rec.EnforceSaml),
+		"samlEnabled":                  llx.BoolData(rec.SamlEnabled),
+		"samlSessionExpiration":        llx.IntData(rec.SamlSessionExpiration),
+		"siteSsoLogin":                 llx.BoolData(rec.SiteSsoLogin),
+		"hasSitePassword":              llx.BoolData(rec.HasSitePassword),
+		"sitePasswordContext":          llx.StringData(rec.SitePasswordContext),
+		"blockSiteTransfers":           llx.BoolData(rec.BlockSiteTransfers),
+		"teamRegistrationDomains":      llx.ArrayData(strSliceToAny(rec.TeamRegistrationDomains), types.String),
+		"supportAdministrationEnabled": llx.BoolData(rec.SupportAdministrationEnabled),
+		"siteAccess":                   llx.StringData(rec.SiteAccess),
+		"rolesAllowed":                 llx.ArrayData(strSliceToAny(rec.RolesAllowed), types.String),
+		"createdAt":                    llx.TimeDataPtr(rec.CreatedAt.Time()),
+		"updatedAt":                    llx.TimeDataPtr(rec.UpdatedAt.Time()),
 	})
 	if err != nil {
 		return nil, err
@@ -149,11 +177,17 @@ func (a *mqlNetlifyAccount) id() (string, error) {
 // --- account members ------------------------------------------------------
 
 type memberRecord struct {
-	ID        string `json:"id"`
-	FullName  string `json:"full_name"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
-	AvatarURL string `json:"avatar"`
+	ID                     string      `json:"id"`
+	UserID                 string      `json:"user_id"`
+	FullName               string      `json:"full_name"`
+	Email                  string      `json:"email"`
+	Role                   string      `json:"role"`
+	MfaEnabled             bool        `json:"mfa_enabled"`
+	Pending                bool        `json:"pending"`
+	ManagedByDirectorySync bool        `json:"managed_by_directory_sync"`
+	SiteAccess             string      `json:"site_access"`
+	LastActivityDate       netlifyTime `json:"last_activity_date"`
+	AvatarURL              string      `json:"avatar"`
 }
 
 func (a *mqlNetlifyAccount) members() ([]any, error) {
@@ -179,11 +213,17 @@ func (a *mqlNetlifyAccount) members() ([]any, error) {
 	for i := range records {
 		rec := records[i]
 		member, err := CreateResource(a.MqlRuntime, "netlify.account.member", map[string]*llx.RawData{
-			"id":        llx.StringData(rec.ID),
-			"fullName":  llx.StringData(rec.FullName),
-			"email":     llx.StringData(rec.Email),
-			"role":      llx.StringData(rec.Role),
-			"avatarUrl": llx.StringData(rec.AvatarURL),
+			"id":                     llx.StringData(rec.ID),
+			"userId":                 llx.StringData(rec.UserID),
+			"fullName":               llx.StringData(rec.FullName),
+			"email":                  llx.StringData(rec.Email),
+			"role":                   llx.StringData(rec.Role),
+			"mfaEnabled":             llx.BoolData(rec.MfaEnabled),
+			"pending":                llx.BoolData(rec.Pending),
+			"managedByDirectorySync": llx.BoolData(rec.ManagedByDirectorySync),
+			"siteAccess":             llx.StringData(rec.SiteAccess),
+			"lastActivityDate":       llx.TimeDataPtr(rec.LastActivityDate.Time()),
+			"avatarUrl":              llx.StringData(rec.AvatarURL),
 		})
 		if err != nil {
 			return nil, err
@@ -197,7 +237,10 @@ func (m *mqlNetlifyAccountMember) id() (string, error) {
 	return m.Id.Data, m.Id.Error
 }
 
-// owners resolves the account's owner ids against its roster.
+// owners resolves the account's owner ids against its roster. The ids name the
+// user behind each membership rather than the membership itself, so the match
+// runs against userId. Matching on the membership id finds nothing at all,
+// which surfaces as an account that reports no owners.
 func (a *mqlNetlifyAccount) owners() ([]any, error) {
 	members := a.GetMembers()
 	if members.Error != nil {
@@ -219,7 +262,7 @@ func (a *mqlNetlifyAccount) owners() ([]any, error) {
 		if !ok {
 			continue
 		}
-		if _, ok := owners[member.Id.Data]; ok {
+		if _, ok := owners[member.UserId.Data]; ok {
 			res = append(res, member)
 		}
 	}

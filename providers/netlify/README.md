@@ -62,6 +62,49 @@ cnspec scan netlify --token TOKEN --account acme
 
 ## Examples
 
+**Accounts that do not enforce multi-factor authentication**
+
+```shell
+mql> netlify.accounts.where(enforceMfa == "not_enforced") { slug typeName }
+```
+
+**Members without a second factor, and owners in particular**
+
+```shell
+mql> netlify.accounts { slug members.where(mfaEnabled == false) { email role } }
+mql> netlify.accounts { slug owners.where(mfaEnabled == false) { email } }
+```
+
+**Invitations still outstanding**
+
+```shell
+mql> netlify.accounts { slug members.where(pending == true) { email role } }
+```
+
+**Email domains that can join the team without an invitation**
+
+```shell
+mql> netlify.accounts.where(teamRegistrationDomains.length > 0) { slug teamRegistrationDomains }
+```
+
+**SAML sessions that stay valid for longer than a day**
+
+```shell
+mql> netlify.accounts.where(samlEnabled == true && samlSessionExpiration > 86400) { slug samlSessionExpiration }
+```
+
+**Accounts where Netlify support may administer the team**
+
+```shell
+mql> netlify.accounts.where(supportAdministrationEnabled == true) { slug }
+```
+
+**Sites that let an outside pull request build unreviewed**
+
+```shell
+mql> netlify.sites.where(untrustedFlow != "review") { name untrustedFlow repoUrl }
+```
+
 **Sites that do not redirect visitors to HTTPS**
 
 ```shell
@@ -159,5 +202,14 @@ empty result, so an audit does not pass on data that was never read.
 
 Some values the API returns are bearer secrets and are deliberately not exposed
 as fields: the trigger URL of a build hook, the delivery settings of a
-notification hook, and the site's basic-auth password (surfaced as the derived
-`passwordProtected` flag instead).
+notification hook, and the account's site JWT secret.
+
+**Site password protection is reported per account, not per site.** The API does
+not return a site's visitor password, or any per-site flag derived from it, on
+either the site list or the site detail response. The account-level
+`hasSitePassword` is the only readable signal, so a per-site field would have
+reported every protected site as unprotected.
+
+**A build control the site has never set reports null**, not false. `privateLogs`,
+`skipPrs`, and `skipAutomaticBuilds` are absent from the API until they are
+configured, and the site follows the team default until then.

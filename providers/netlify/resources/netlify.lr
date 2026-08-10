@@ -45,6 +45,13 @@ private netlify.user @defaults("email fullName") {
   // provider linked to the account. An account reachable through a git
   // provider inherits that provider's authentication controls.
   loginProviders []string
+  // Whether the account has enrolled in multi-factor authentication
+  mfaEnabled bool
+  // Whether the account is provisioned through single sign-on or directory sync
+  //
+  // A managed account's lifecycle is controlled by the identity provider, so
+  // deprovisioning there removes the access. An unmanaged account outlives it.
+  managedBySsoOrDirectorySync bool
   // Number of sites the account can reach
   siteCount int
   // Time the account was created
@@ -56,11 +63,16 @@ private netlify.user @defaults("email fullName") {
 // Netlify Account
 //
 // A Netlify team account and the posture that applies to every site under it.
-// The `members` field lists the roster with each member's role, and
+// Query `enforceMfa` and `enforceSaml` for how members authenticate,
+// `samlSessionExpiration` for how long a federated session stays valid,
+// `teamRegistrationDomains` for who may join without an invitation,
+// `supportAdministrationEnabled` for whether Netlify staff may administer the
+// team, and `blockSiteTransfers` for whether a site can be moved out. The
+// `members` field lists the roster with each member's role and enrollment, and
 // `environmentVariables` covers the variables shared across the account's
-// sites, including which are marked secret. The `rolesAllowed` field reports
-// the roles the account's plan permits, which bounds how finely access can be
-// split. Select an account with `netlify.accounts.where(slug == "acme")`.
+// sites. The `rolesAllowed` field reports the roles the account's plan permits,
+// which bounds how finely access can be split. Select an account with
+// `netlify.accounts.where(slug == "acme")`.
 private netlify.account @defaults("slug name") {
   // Unique account identifier
   id string
@@ -72,6 +84,51 @@ private netlify.account @defaults("slug name") {
   type string
   // Human-readable plan name, for example Starter, Pro, or Enterprise
   typeName string
+  // Lifecycle state of the account, for example active
+  lifecycleState string
+  // Address billing notices are sent to
+  billingEmail string
+  // Number of members on the account
+  membersCount int
+  // Whether members must enroll in multi-factor authentication
+  //
+  // One of not_enforced or a value requiring enrollment. When not enforced, a
+  // member holding administrative rights can sit behind a single factor, which
+  // the mfaEnabled field on each member reports individually.
+  enforceMfa string
+  // Whether members must authenticate through the account's SAML provider
+  //
+  // One of not_enforced or a value requiring it. When not enforced, a member
+  // may sign in with a password or a git provider even where SAML is
+  // configured, so the identity provider's controls do not apply.
+  enforceSaml string
+  // Whether SAML single sign-on is configured for the account
+  samlEnabled bool
+  // Seconds a SAML session stays valid before reauthentication is required
+  //
+  // A long window keeps a session usable well after the identity provider
+  // would have revoked it.
+  samlSessionExpiration int
+  // Whether single sign-on is required to view the account's sites
+  siteSsoLogin bool
+  // Whether any site in the account is gated behind a visitor password
+  //
+  // Reported for the account rather than per site, which is the only form the
+  // API exposes it in.
+  hasSitePassword bool
+  // Scope the site password applies to, for example all
+  sitePasswordContext string
+  // Whether moving a site out of the account is blocked
+  blockSiteTransfers bool
+  // Email domains whose users may join the account without an invitation
+  //
+  // Anyone with an address at a listed domain can add themselves to the
+  // account, so each entry is a standing grant of membership.
+  teamRegistrationDomains []string
+  // Whether Netlify support staff may administer the account
+  supportAdministrationEnabled bool
+  // Default site access members hold, for example all
+  siteAccess string
   // Members that own the account
   //
   // Resolved against the account roster, so an owner that is no longer a
@@ -104,13 +161,37 @@ private netlify.account @defaults("slug name") {
 // roster against an identity provider.
 private netlify.account.member @defaults("email role") {
   // Unique member identifier
+  //
+  // Identifies the membership, not the person. The account's ownership is
+  // recorded against userId instead.
   id string
+  // Identifier of the user account behind the membership
+  //
+  // This is the identifier the account records its owners against, and the one
+  // that matches the id of the authenticated user.
+  userId string
   // Display name of the member
   fullName string
   // Email address of the member
   email string
   // Role the member holds, for example Owner, Collaborator, or Controller
   role string
+  // Whether the member has enrolled in multi-factor authentication
+  //
+  // Reported per member whether or not the account enforces it, so an owner
+  // without a second factor is visible even where enrollment is voluntary.
+  mfaEnabled bool
+  // Whether the invitation is still outstanding
+  //
+  // A pending member has been offered access that has not been accepted. The
+  // offer stands until it is withdrawn.
+  pending bool
+  // Whether the membership is maintained by directory sync rather than by hand
+  managedByDirectorySync bool
+  // Sites the member may reach, for example all
+  siteAccess string
+  // Date the member was last active on the account
+  lastActivityDate time
   // URL of the member avatar image
   avatarUrl string
 }
@@ -151,7 +232,7 @@ private netlify.envVar @defaults("key isSecret") {
 //
 // A Netlify site and the controls that govern who can reach it and what a
 // deploy is permitted to do. Query `ssl` and `forceSsl` for transport
-// enforcement, `passwordProtected` for basic-auth gating of the whole site,
+// enforcement, `untrustedFlow` for what a fork's pull request may run,
 // `customDomain` and `domainAliases` for the names it answers on, the `repo`
 // fields for the source a build runs from, `publicRepo` and `privateLogs` for
 // build-output exposure, `stopBuilds` for whether automatic deploys are
@@ -191,12 +272,18 @@ private netlify.site @defaults("name url") {
   forceSsl bool
   // Whether Netlify serves DNS for the site's domain
   managedDns bool
-  // Whether the site is gated behind a site-wide basic-auth password
+  // How builds from untrusted contributors are handled
   //
-  // Derived from whether the site carries a basic-auth password. A protected
-  // site answers every request with a credential challenge, which is how a
-  // staging site is kept off the public internet.
-  passwordProtected bool
+  // A pull request from outside the team can run build commands with the
+  // site's environment. One of review, which holds such builds for approval,
+  // or a value permitting them to run unreviewed.
+  untrustedFlow string
+  // Whether builds are skipped for pull requests, or null when the site follows the team default
+  skipPrs bool
+  // Whether automatic builds are skipped entirely, or null when the site follows the team default
+  skipAutomaticBuilds bool
+  // Identity domain issuing JSON Web Tokens for the site's visitor access
+  idDomain string
   // Whether publishing production outside of git is blocked
   //
   // When true, a production deploy must come from the connected repository,
@@ -239,7 +326,8 @@ private netlify.site @defaults("name url") {
   // Whether build logs are restricted to account members
   //
   // Public build logs expose the build command output, including anything a
-  // build prints about its environment.
+  // build prints about its environment. Null when the site has never set the
+  // control and follows the team default.
   privateLogs bool
   // Whether automatic builds are suspended for the site
   stopBuilds bool

@@ -183,6 +183,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.user.loginProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyUser).GetLoginProviders()).ToDataRes(types.Array(types.String))
 	},
+	"netlify.user.mfaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyUser).GetMfaEnabled()).ToDataRes(types.Bool)
+	},
+	"netlify.user.managedBySsoOrDirectorySync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyUser).GetManagedBySsoOrDirectorySync()).ToDataRes(types.Bool)
+	},
 	"netlify.user.siteCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyUser).GetSiteCount()).ToDataRes(types.Int)
 	},
@@ -206,6 +212,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"netlify.account.typeName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccount).GetTypeName()).ToDataRes(types.String)
+	},
+	"netlify.account.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"netlify.account.billingEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetBillingEmail()).ToDataRes(types.String)
+	},
+	"netlify.account.membersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetMembersCount()).ToDataRes(types.Int)
+	},
+	"netlify.account.enforceMfa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetEnforceMfa()).ToDataRes(types.String)
+	},
+	"netlify.account.enforceSaml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetEnforceSaml()).ToDataRes(types.String)
+	},
+	"netlify.account.samlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetSamlEnabled()).ToDataRes(types.Bool)
+	},
+	"netlify.account.samlSessionExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetSamlSessionExpiration()).ToDataRes(types.Int)
+	},
+	"netlify.account.siteSsoLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetSiteSsoLogin()).ToDataRes(types.Bool)
+	},
+	"netlify.account.hasSitePassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetHasSitePassword()).ToDataRes(types.Bool)
+	},
+	"netlify.account.sitePasswordContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetSitePasswordContext()).ToDataRes(types.String)
+	},
+	"netlify.account.blockSiteTransfers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetBlockSiteTransfers()).ToDataRes(types.Bool)
+	},
+	"netlify.account.teamRegistrationDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetTeamRegistrationDomains()).ToDataRes(types.Array(types.String))
+	},
+	"netlify.account.supportAdministrationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetSupportAdministrationEnabled()).ToDataRes(types.Bool)
+	},
+	"netlify.account.siteAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetSiteAccess()).ToDataRes(types.String)
 	},
 	"netlify.account.owners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccount).GetOwners()).ToDataRes(types.Array(types.Resource("netlify.account.member")))
@@ -231,6 +279,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.account.member.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetId()).ToDataRes(types.String)
 	},
+	"netlify.account.member.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetUserId()).ToDataRes(types.String)
+	},
 	"netlify.account.member.fullName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetFullName()).ToDataRes(types.String)
 	},
@@ -239,6 +290,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"netlify.account.member.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetRole()).ToDataRes(types.String)
+	},
+	"netlify.account.member.mfaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetMfaEnabled()).ToDataRes(types.Bool)
+	},
+	"netlify.account.member.pending": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetPending()).ToDataRes(types.Bool)
+	},
+	"netlify.account.member.managedByDirectorySync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetManagedByDirectorySync()).ToDataRes(types.Bool)
+	},
+	"netlify.account.member.siteAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetSiteAccess()).ToDataRes(types.String)
+	},
+	"netlify.account.member.lastActivityDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountMember).GetLastActivityDate()).ToDataRes(types.Time)
 	},
 	"netlify.account.member.avatarUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetAvatarUrl()).ToDataRes(types.String)
@@ -306,8 +372,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.site.managedDns": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetManagedDns()).ToDataRes(types.Bool)
 	},
-	"netlify.site.passwordProtected": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetlifySite).GetPasswordProtected()).ToDataRes(types.Bool)
+	"netlify.site.untrustedFlow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetUntrustedFlow()).ToDataRes(types.String)
+	},
+	"netlify.site.skipPrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetSkipPrs()).ToDataRes(types.Bool)
+	},
+	"netlify.site.skipAutomaticBuilds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetSkipAutomaticBuilds()).ToDataRes(types.Bool)
+	},
+	"netlify.site.idDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetIdDomain()).ToDataRes(types.String)
 	},
 	"netlify.site.preventNonGitProdDeploys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetPreventNonGitProdDeploys()).ToDataRes(types.Bool)
@@ -555,6 +630,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifyUser).LoginProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"netlify.user.mfaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyUser).MfaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.user.managedBySsoOrDirectorySync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyUser).ManagedBySsoOrDirectorySync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"netlify.user.siteCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyUser).SiteCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -589,6 +672,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"netlify.account.typeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyAccount).TypeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.billingEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).BillingEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.membersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).MembersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.account.enforceMfa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).EnforceMfa, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.enforceSaml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).EnforceSaml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.samlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).SamlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.samlSessionExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).SamlSessionExpiration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.account.siteSsoLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).SiteSsoLogin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.hasSitePassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).HasSitePassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.sitePasswordContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).SitePasswordContext, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.blockSiteTransfers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).BlockSiteTransfers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.teamRegistrationDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).TeamRegistrationDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.account.supportAdministrationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).SupportAdministrationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.siteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).SiteAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"netlify.account.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -627,6 +766,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifyAccountMember).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"netlify.account.member.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"netlify.account.member.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyAccountMember).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -637,6 +780,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"netlify.account.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyAccountMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.member.mfaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).MfaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.member.pending": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).Pending, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.member.managedByDirectorySync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).ManagedByDirectorySync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.account.member.siteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).SiteAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.member.lastActivityDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountMember).LastActivityDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"netlify.account.member.avatarUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -735,8 +898,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifySite).ManagedDns, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"netlify.site.passwordProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNetlifySite).PasswordProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"netlify.site.untrustedFlow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).UntrustedFlow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.skipPrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).SkipPrs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.skipAutomaticBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).SkipAutomaticBuilds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.idDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).IdDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"netlify.site.preventNonGitProdDeploys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1169,14 +1344,16 @@ type mqlNetlifyUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetlifyUserInternal it will be used here
-	Id             plugin.TValue[string]
-	Email          plugin.TValue[string]
-	FullName       plugin.TValue[string]
-	AvatarUrl      plugin.TValue[string]
-	LoginProviders plugin.TValue[[]any]
-	SiteCount      plugin.TValue[int64]
-	CreatedAt      plugin.TValue[*time.Time]
-	LastLogin      plugin.TValue[*time.Time]
+	Id                          plugin.TValue[string]
+	Email                       plugin.TValue[string]
+	FullName                    plugin.TValue[string]
+	AvatarUrl                   plugin.TValue[string]
+	LoginProviders              plugin.TValue[[]any]
+	MfaEnabled                  plugin.TValue[bool]
+	ManagedBySsoOrDirectorySync plugin.TValue[bool]
+	SiteCount                   plugin.TValue[int64]
+	CreatedAt                   plugin.TValue[*time.Time]
+	LastLogin                   plugin.TValue[*time.Time]
 }
 
 // createNetlifyUser creates a new instance of this resource
@@ -1236,6 +1413,14 @@ func (c *mqlNetlifyUser) GetLoginProviders() *plugin.TValue[[]any] {
 	return &c.LoginProviders
 }
 
+func (c *mqlNetlifyUser) GetMfaEnabled() *plugin.TValue[bool] {
+	return &c.MfaEnabled
+}
+
+func (c *mqlNetlifyUser) GetManagedBySsoOrDirectorySync() *plugin.TValue[bool] {
+	return &c.ManagedBySsoOrDirectorySync
+}
+
 func (c *mqlNetlifyUser) GetSiteCount() *plugin.TValue[int64] {
 	return &c.SiteCount
 }
@@ -1253,18 +1438,32 @@ type mqlNetlifyAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlNetlifyAccountInternal
-	Id                   plugin.TValue[string]
-	Slug                 plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Type                 plugin.TValue[string]
-	TypeName             plugin.TValue[string]
-	Owners               plugin.TValue[[]any]
-	RolesAllowed         plugin.TValue[[]any]
-	CreatedAt            plugin.TValue[*time.Time]
-	UpdatedAt            plugin.TValue[*time.Time]
-	Members              plugin.TValue[[]any]
-	Sites                plugin.TValue[[]any]
-	EnvironmentVariables plugin.TValue[[]any]
+	Id                           plugin.TValue[string]
+	Slug                         plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Type                         plugin.TValue[string]
+	TypeName                     plugin.TValue[string]
+	LifecycleState               plugin.TValue[string]
+	BillingEmail                 plugin.TValue[string]
+	MembersCount                 plugin.TValue[int64]
+	EnforceMfa                   plugin.TValue[string]
+	EnforceSaml                  plugin.TValue[string]
+	SamlEnabled                  plugin.TValue[bool]
+	SamlSessionExpiration        plugin.TValue[int64]
+	SiteSsoLogin                 plugin.TValue[bool]
+	HasSitePassword              plugin.TValue[bool]
+	SitePasswordContext          plugin.TValue[string]
+	BlockSiteTransfers           plugin.TValue[bool]
+	TeamRegistrationDomains      plugin.TValue[[]any]
+	SupportAdministrationEnabled plugin.TValue[bool]
+	SiteAccess                   plugin.TValue[string]
+	Owners                       plugin.TValue[[]any]
+	RolesAllowed                 plugin.TValue[[]any]
+	CreatedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                    plugin.TValue[*time.Time]
+	Members                      plugin.TValue[[]any]
+	Sites                        plugin.TValue[[]any]
+	EnvironmentVariables         plugin.TValue[[]any]
 }
 
 // createNetlifyAccount creates a new instance of this resource
@@ -1322,6 +1521,62 @@ func (c *mqlNetlifyAccount) GetType() *plugin.TValue[string] {
 
 func (c *mqlNetlifyAccount) GetTypeName() *plugin.TValue[string] {
 	return &c.TypeName
+}
+
+func (c *mqlNetlifyAccount) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlNetlifyAccount) GetBillingEmail() *plugin.TValue[string] {
+	return &c.BillingEmail
+}
+
+func (c *mqlNetlifyAccount) GetMembersCount() *plugin.TValue[int64] {
+	return &c.MembersCount
+}
+
+func (c *mqlNetlifyAccount) GetEnforceMfa() *plugin.TValue[string] {
+	return &c.EnforceMfa
+}
+
+func (c *mqlNetlifyAccount) GetEnforceSaml() *plugin.TValue[string] {
+	return &c.EnforceSaml
+}
+
+func (c *mqlNetlifyAccount) GetSamlEnabled() *plugin.TValue[bool] {
+	return &c.SamlEnabled
+}
+
+func (c *mqlNetlifyAccount) GetSamlSessionExpiration() *plugin.TValue[int64] {
+	return &c.SamlSessionExpiration
+}
+
+func (c *mqlNetlifyAccount) GetSiteSsoLogin() *plugin.TValue[bool] {
+	return &c.SiteSsoLogin
+}
+
+func (c *mqlNetlifyAccount) GetHasSitePassword() *plugin.TValue[bool] {
+	return &c.HasSitePassword
+}
+
+func (c *mqlNetlifyAccount) GetSitePasswordContext() *plugin.TValue[string] {
+	return &c.SitePasswordContext
+}
+
+func (c *mqlNetlifyAccount) GetBlockSiteTransfers() *plugin.TValue[bool] {
+	return &c.BlockSiteTransfers
+}
+
+func (c *mqlNetlifyAccount) GetTeamRegistrationDomains() *plugin.TValue[[]any] {
+	return &c.TeamRegistrationDomains
+}
+
+func (c *mqlNetlifyAccount) GetSupportAdministrationEnabled() *plugin.TValue[bool] {
+	return &c.SupportAdministrationEnabled
+}
+
+func (c *mqlNetlifyAccount) GetSiteAccess() *plugin.TValue[string] {
+	return &c.SiteAccess
 }
 
 func (c *mqlNetlifyAccount) GetOwners() *plugin.TValue[[]any] {
@@ -1405,11 +1660,17 @@ type mqlNetlifyAccountMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetlifyAccountMemberInternal it will be used here
-	Id        plugin.TValue[string]
-	FullName  plugin.TValue[string]
-	Email     plugin.TValue[string]
-	Role      plugin.TValue[string]
-	AvatarUrl plugin.TValue[string]
+	Id                     plugin.TValue[string]
+	UserId                 plugin.TValue[string]
+	FullName               plugin.TValue[string]
+	Email                  plugin.TValue[string]
+	Role                   plugin.TValue[string]
+	MfaEnabled             plugin.TValue[bool]
+	Pending                plugin.TValue[bool]
+	ManagedByDirectorySync plugin.TValue[bool]
+	SiteAccess             plugin.TValue[string]
+	LastActivityDate       plugin.TValue[*time.Time]
+	AvatarUrl              plugin.TValue[string]
 }
 
 // createNetlifyAccountMember creates a new instance of this resource
@@ -1453,6 +1714,10 @@ func (c *mqlNetlifyAccountMember) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlNetlifyAccountMember) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
 func (c *mqlNetlifyAccountMember) GetFullName() *plugin.TValue[string] {
 	return &c.FullName
 }
@@ -1463,6 +1728,26 @@ func (c *mqlNetlifyAccountMember) GetEmail() *plugin.TValue[string] {
 
 func (c *mqlNetlifyAccountMember) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+func (c *mqlNetlifyAccountMember) GetMfaEnabled() *plugin.TValue[bool] {
+	return &c.MfaEnabled
+}
+
+func (c *mqlNetlifyAccountMember) GetPending() *plugin.TValue[bool] {
+	return &c.Pending
+}
+
+func (c *mqlNetlifyAccountMember) GetManagedByDirectorySync() *plugin.TValue[bool] {
+	return &c.ManagedByDirectorySync
+}
+
+func (c *mqlNetlifyAccountMember) GetSiteAccess() *plugin.TValue[string] {
+	return &c.SiteAccess
+}
+
+func (c *mqlNetlifyAccountMember) GetLastActivityDate() *plugin.TValue[*time.Time] {
+	return &c.LastActivityDate
 }
 
 func (c *mqlNetlifyAccountMember) GetAvatarUrl() *plugin.TValue[string] {
@@ -1558,7 +1843,10 @@ type mqlNetlifySite struct {
 	Ssl                       plugin.TValue[bool]
 	ForceSsl                  plugin.TValue[bool]
 	ManagedDns                plugin.TValue[bool]
-	PasswordProtected         plugin.TValue[bool]
+	UntrustedFlow             plugin.TValue[string]
+	SkipPrs                   plugin.TValue[bool]
+	SkipAutomaticBuilds       plugin.TValue[bool]
+	IdDomain                  plugin.TValue[string]
 	PreventNonGitProdDeploys  plugin.TValue[bool]
 	BuildImage                plugin.TValue[string]
 	Prerender                 plugin.TValue[string]
@@ -1682,8 +1970,20 @@ func (c *mqlNetlifySite) GetManagedDns() *plugin.TValue[bool] {
 	return &c.ManagedDns
 }
 
-func (c *mqlNetlifySite) GetPasswordProtected() *plugin.TValue[bool] {
-	return &c.PasswordProtected
+func (c *mqlNetlifySite) GetUntrustedFlow() *plugin.TValue[string] {
+	return &c.UntrustedFlow
+}
+
+func (c *mqlNetlifySite) GetSkipPrs() *plugin.TValue[bool] {
+	return &c.SkipPrs
+}
+
+func (c *mqlNetlifySite) GetSkipAutomaticBuilds() *plugin.TValue[bool] {
+	return &c.SkipAutomaticBuilds
+}
+
+func (c *mqlNetlifySite) GetIdDomain() *plugin.TValue[string] {
+	return &c.IdDomain
 }
 
 func (c *mqlNetlifySite) GetPreventNonGitProdDeploys() *plugin.TValue[bool] {

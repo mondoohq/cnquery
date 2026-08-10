@@ -28,7 +28,7 @@ func TestSiteRecordDecodesPostureFields(t *testing.T) {
 		"branch_deploy_custom_domain": "branch.example.com",
 		"deploy_preview_custom_domain": "preview.example.com",
 		"notification_email": "ops@example.com",
-		"password": "hunter2",
+		"id_domain": "abc.netlify.app",
 		"ssl": true,
 		"force_ssl": true,
 		"managed_dns": true,
@@ -52,6 +52,8 @@ func TestSiteRecordDecodesPostureFields(t *testing.T) {
 			"public_repo": true,
 			"private_logs": true,
 			"stop_builds": true,
+			"untrusted_flow": "review",
+			"skip_prs": false,
 			"deploy_key_id": "key_1"
 		}
 	}`
@@ -87,8 +89,17 @@ func TestSiteRecordDecodesPostureFields(t *testing.T) {
 	if build.Cmd != "npm run build" || build.Dir != "dist" || build.FunctionsDir != "netlify/functions" {
 		t.Errorf("build command fields decoded wrong: %+v", build)
 	}
-	if !build.PublicRepo || !build.PrivateLogs || !build.StopBuilds {
+	if !build.PublicRepo || !boolPtrValue(build.PrivateLogs) || !build.StopBuilds {
 		t.Errorf("build guardrail booleans decoded wrong: %+v", build)
+	}
+	if build.UntrustedFlow != "review" {
+		t.Errorf("untrusted_flow decoded wrong: %q", build.UntrustedFlow)
+	}
+	if build.SkipPrs == nil || *build.SkipPrs {
+		t.Errorf("skip_prs decoded wrong: %v", build.SkipPrs)
+	}
+	if rec.IDDomain != "abc.netlify.app" {
+		t.Errorf("id_domain decoded wrong: %q", rec.IDDomain)
 	}
 	if build.DeployKeyID != "key_1" {
 		t.Errorf("deploy key linkage decoded wrong: %q", build.DeployKeyID)
@@ -103,30 +114,6 @@ func TestSiteRecordDecodesPostureFields(t *testing.T) {
 	}
 }
 
-// passwordProtected is derived rather than reported by the API, so the mapping
-// from an absent password to "not protected" is worth pinning.
-func TestSiteRecordPasswordProtected(t *testing.T) {
-	tests := []struct {
-		payload string
-		want    bool
-	}{
-		{`{"password":"hunter2"}`, true},
-		{`{"password":""}`, false},
-		{`{}`, false},
-		{`{"password":null}`, false},
-	}
-
-	for _, tc := range tests {
-		var rec siteRecord
-		if err := json.Unmarshal([]byte(tc.payload), &rec); err != nil {
-			t.Fatalf("decode %s: %v", tc.payload, err)
-		}
-		if got := rec.passwordProtected(); got != tc.want {
-			t.Errorf("%s: expected passwordProtected %v, got %v", tc.payload, tc.want, got)
-		}
-	}
-}
-
 // A site without build settings (an upload-only site) must not panic the
 // creator, which relies on the pointer being absent rather than empty.
 func TestSiteRecordWithoutBuildSettings(t *testing.T) {
@@ -136,6 +123,103 @@ func TestSiteRecordWithoutBuildSettings(t *testing.T) {
 	}
 	if rec.BuildSettings != nil {
 		t.Fatalf("expected absent build settings, got %+v", rec.BuildSettings)
+	}
+}
+
+// boolPtrValue dereferences an optional decoded boolean for assertions.
+func boolPtrValue(v *bool) bool { return v != nil && *v }
+
+// A build control the API omits must stay absent rather than decoding to false,
+// which would report a site as having opted out of a guardrail it never set.
+func TestBuildSettingsOmittedControlsStayAbsent(t *testing.T) {
+	var rec siteRecord
+	if err := json.Unmarshal([]byte(`{"id":"s1","build_settings":{"provider":"github"}}`), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if rec.BuildSettings.PrivateLogs != nil {
+		t.Errorf("expected absent private_logs, got %v", rec.BuildSettings.PrivateLogs)
+	}
+	if rec.BuildSettings.SkipPrs != nil || rec.BuildSettings.SkipAutomaticBuilds != nil {
+		t.Error("expected absent skip flags to stay nil")
+	}
+}
+
+func TestAccountRecordDecodesGovernance(t *testing.T) {
+	const payload = `{
+		"id": "acct_1",
+		"slug": "acme",
+		"lifecycle_state": "active",
+		"billing_email": "billing@example.com",
+		"members_count": 4,
+		"enforce_mfa": "not_enforced",
+		"enforce_saml": "enforced",
+		"saml_enabled": true,
+		"saml_session_expiration": 604800,
+		"site_sso_login": true,
+		"has_site_password": true,
+		"site_password_context": "all",
+		"block_site_transfers": true,
+		"team_registration_domains": ["example.com"],
+		"support_administration_enabled": true,
+		"site_access": "all"
+	}`
+
+	var rec accountRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if rec.EnforceMfa != "not_enforced" || rec.EnforceSaml != "enforced" {
+		t.Errorf("enforcement fields decoded wrong: %+v", rec)
+	}
+	if !rec.SamlEnabled || rec.SamlSessionExpiration != 604800 {
+		t.Errorf("saml fields decoded wrong: %+v", rec)
+	}
+	if !rec.HasSitePassword || rec.SitePasswordContext != "all" {
+		t.Errorf("site password fields decoded wrong: %+v", rec)
+	}
+	if !rec.BlockSiteTransfers || !rec.SupportAdministrationEnabled {
+		t.Errorf("account guardrails decoded wrong: %+v", rec)
+	}
+	if len(rec.TeamRegistrationDomains) != 1 || rec.TeamRegistrationDomains[0] != "example.com" {
+		t.Errorf("registration domains decoded wrong: %v", rec.TeamRegistrationDomains)
+	}
+	if rec.MembersCount != 4 || rec.LifecycleState != "active" {
+		t.Errorf("account metadata decoded wrong: %+v", rec)
+	}
+}
+
+// The account records ownership against the user behind a membership, not the
+// membership itself. Matching the wrong one finds nothing and reports an
+// account with no owners at all.
+func TestMemberRecordDistinguishesMembershipFromUser(t *testing.T) {
+	const payload = `{
+		"id": "6541f71117fd8b0220d36fcf",
+		"user_id": "60a7e6bb375fd5110af858a4",
+		"email": "ada@example.com",
+		"role": "Owner",
+		"mfa_enabled": true,
+		"pending": false,
+		"managed_by_directory_sync": true,
+		"site_access": "all",
+		"last_activity_date": "2026-08-10"
+	}`
+
+	var rec memberRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if rec.ID == rec.UserID {
+		t.Fatal("membership id and user id must stay distinct")
+	}
+	if rec.UserID != "60a7e6bb375fd5110af858a4" {
+		t.Errorf("user_id decoded wrong: %q", rec.UserID)
+	}
+	if !rec.MfaEnabled || !rec.ManagedByDirectorySync || rec.Pending {
+		t.Errorf("member governance fields decoded wrong: %+v", rec)
+	}
+	// The roster reports a plain calendar date, not a full timestamp.
+	if rec.LastActivityDate.Time() == nil {
+		t.Error("last_activity_date decoded to nil")
 	}
 }
 
@@ -314,6 +398,16 @@ func TestSnippetRecordDecodesNumericID(t *testing.T) {
 	}
 }
 
+func TestUserRecordDecodesMfaAndManagement(t *testing.T) {
+	var rec userRecord
+	if err := json.Unmarshal([]byte(`{"id":"u1","mfa_enabled":true,"managed_by_sso_or_directory_sync":true}`), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if !rec.MfaEnabled || !rec.ManagedBySso {
+		t.Errorf("user governance fields decoded wrong: %+v", rec)
+	}
+}
+
 func TestUserRecordDecodesLoginProviders(t *testing.T) {
 	const payload = `{
 		"id": "user_1",
@@ -353,6 +447,7 @@ func TestNetlifyTimeHandlesAbsentAndInvalidValues(t *testing.T) {
 		{"offset", `"2026-01-02T03:04:05+02:00"`, false},
 		{"null", `null`, true},
 		{"empty string", `""`, true},
+		{"date only", `"2026-08-10"`, false},
 		{"unparseable", `"not a timestamp"`, true},
 	}
 
