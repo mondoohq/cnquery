@@ -23,7 +23,7 @@ helm {
 // files, lint results, and supply-chain provenance. Auditing a chart here
 // catches insecure workloads, unpinned dependencies, and policy violations
 // before the chart is ever installed to a cluster.
-helm.chart @defaults("name version") {
+private helm.chart @defaults("name version") {
   // Chart name from Chart.yaml
   name string
   // Chart version
@@ -162,7 +162,7 @@ helm.chart @defaults("name version") {
 // from Chart.lock and the vendored chart on disk. The `sourceType` field
 // classifies where the dependency comes from (OCI registry, chart
 // repository, or local path) for supply-chain auditing.
-helm.dependency @defaults("name version") {
+private helm.dependency @defaults("name version") {
   // Dependency name
   name string
   // Version constraint
@@ -223,7 +223,7 @@ helm.dependency @defaults("name version") {
 // whether they are pinned by tag or by digest. Parsing is offline: the
 // reference string and the dependency's version constraint are classified
 // and decomposed without ever pulling from the registry.
-helm.ociRef @defaults("reference") {
+private helm.ociRef @defaults("reference") {
   // Full OCI reference (e.g., oci://ghcr.io/acme/charts/redis)
   reference string
   // Registry host (e.g., ghcr.io)
@@ -250,7 +250,7 @@ helm.ociRef @defaults("reference") {
 // Use it for supply-chain ownership and contact audits, verifying that
 // charts declare an accountable maintainer and reaching the right party
 // for security disclosures.
-helm.maintainer @defaults("name email") {
+private helm.maintainer @defaults("name email") {
   // Maintainer name
   name string
   // Maintainer email
@@ -295,7 +295,7 @@ helm.template @defaults("name") {
 // expression, and source line. Useful for flagging dynamic constructs
 // that policy can't reason about statically, such as a `tpl` call over
 // unbounded user input.
-helm.directive @defaults("type expression") {
+private helm.directive @defaults("type expression") {
   // Directive type (if, range, include, tpl, define, with, block)
   type string
   // Full expression (e.g., ".Values.replicaCount", "include \"mychart.labels\" .")
@@ -313,7 +313,7 @@ helm.directive @defaults("type expression") {
 // rather than the unrendered template text. The `isHook` and `isCRD`
 // predicates separate lifecycle hooks and pre-installed CRDs from normally
 // applied resources.
-helm.resource @defaults("kind name") {
+private helm.resource @defaults("kind name") {
   // Kubernetes API version
   apiVersion string
   // Resource kind (Deployment, Service, etc.)

@@ -56,7 +56,7 @@ func init() {
 			Create: createHelmMaintainer,
 		},
 		"helm.template": {
-			// to override args, implement: initHelmTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initHelmTemplate,
 			Create: createHelmTemplate,
 		},
 		"helm.directive": {
@@ -68,7 +68,7 @@ func init() {
 			Create: createHelmResource,
 		},
 		"helm.file": {
-			// to override args, implement: initHelmFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initHelmFile,
 			Create: createHelmFile,
 		},
 		"helm.chart.dependencyLock": {
