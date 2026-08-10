@@ -104,6 +104,11 @@ func (r dispositionRule) matches(err error, msg string) bool {
 // putting the distinguishing fact in the message. Those are the only cases that
 // legitimately need message matching, and confining them here keeps the rest of
 // the provider off prose entirely.
+//
+// A key may be narrowed to a group of endpoints as "<service>/<scope>", for
+// when one service's endpoints disagree about what an error code means.
+// Classification tries the narrow key first and then falls back to the bare
+// service, so a scope only has to state where it differs.
 var serviceRules = map[string][]dispositionRule{
 	"macie2": {
 		{
@@ -111,9 +116,19 @@ var serviceRules = map[string][]dispositionRule{
 			messageAny:  []string{"Macie is not enabled", "Macie isn't enabled"},
 			disposition: dispositionEmpty,
 		},
-		// Macie answers a not-found on its list and get endpoints when the
-		// account has nothing configured in the region, so a bare not-found
-		// here is an empty result rather than a miss worth reporting.
+		{
+			code:        "ResourceNotFoundException",
+			messageAny:  []string{"Macie is not enabled", "Macie isn't enabled", "not enabled for your account"},
+			disposition: dispositionEmpty,
+		},
+	},
+	// The single-record configuration reads (GetMacieSession,
+	// GetAdministratorAccount, GetAutomatedDiscoveryConfiguration) answer
+	// not-found when the feature has never been configured in the region, so
+	// for these a bare not-found is an empty result. The list endpoints get no
+	// such licence: a not-found there is a resource that vanished mid-read,
+	// which the caller must see.
+	"macie2/config": {
 		{
 			code:        "ResourceNotFoundException",
 			disposition: dispositionEmpty,
@@ -148,18 +163,43 @@ var transportRegionMisses = []string{
 	"could not resolve endpoint",
 }
 
+// classificationKeys expands a classification scope into the keys to consult,
+// narrowest first: "macie2/config" yields "macie2/config" then "macie2".
+func classificationKeys(service string) []string {
+	if base, _, found := strings.Cut(service, "/"); found {
+		return []string{service, base}
+	}
+	return []string{service}
+}
+
+// serviceName strips any endpoint scope, giving the name to report a coverage
+// gap under. Users think in services, not in the groupings we classify by.
+func serviceName(service string) string {
+	base, _, _ := strings.Cut(service, "/")
+	return base
+}
+
 // classifyError decides what a lister should do about err from the named
 // service. service is the AWS service id, matching the key used to build the
-// client (for example "ecr", "macie2", "rds").
+// client (for example "ecr", "macie2", "rds"), optionally narrowed to a group
+// of endpoints as "<service>/<scope>" - see serviceRules.
+//
+// Callers must not pass a nil error: there is nothing to classify, and the
+// question only arises on an error path. A nil is answered with
+// dispositionFail because that is the one answer that cannot silently drop a
+// region's real results.
 func classifyError(service string, err error) disposition {
 	if err == nil {
 		return dispositionFail
 	}
 	msg := awsNormalizeApostrophes(err.Error())
 
-	for _, rule := range serviceRules[service] {
-		if rule.matches(err, msg) {
-			return rule.disposition
+	// The narrow key wins where it speaks; the bare service covers the rest.
+	for _, key := range classificationKeys(service) {
+		for _, rule := range serviceRules[key] {
+			if rule.matches(err, msg) {
+				return rule.disposition
+			}
 		}
 	}
 

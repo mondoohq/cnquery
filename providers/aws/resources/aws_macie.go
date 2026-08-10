@@ -27,7 +27,7 @@ func (a *mqlAwsMacie) id() (string, error) {
 func (a *mqlAwsMacie) sessions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+	return perRegion(conn, "macie2/config", func(ctx context.Context, region string) ([]any, error) {
 		svc := conn.Macie2(region)
 		res := []any{}
 
@@ -1116,7 +1116,7 @@ func (a *mqlAwsMacieInvitation) id() (string, error) {
 func (a *mqlAwsMacie) administrators() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+	return perRegion(conn, "macie2/config", func(ctx context.Context, region string) ([]any, error) {
 		svc := conn.Macie2(region)
 		res := []any{}
 		resp, err := svc.GetAdministratorAccount(ctx, &macie2.GetAdministratorAccountInput{})
@@ -1155,7 +1155,7 @@ func (a *mqlAwsMacieAdministrator) id() (string, error) {
 func (a *mqlAwsMacie) automatedDiscoveryConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+	return perRegion(conn, "macie2/config", func(ctx context.Context, region string) ([]any, error) {
 		svc := conn.Macie2(region)
 		res := []any{}
 		resp, err := svc.GetAutomatedDiscoveryConfiguration(ctx, &macie2.GetAutomatedDiscoveryConfigurationInput{})

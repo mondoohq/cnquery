@@ -84,9 +84,9 @@ func forRegions[T any](conn *connection.AwsConnection, service string, regions [
 			case dispositionEmpty:
 				// Nothing here to report, and that is the honest answer.
 			case dispositionUnreadable:
-				conn.RecordGap(service, region, connection.GapDenied)
+				conn.RecordGap(serviceName(service), region, connection.GapDenied)
 			default:
-				conn.RecordGap(service, region, connection.GapFailed)
+				conn.RecordGap(serviceName(service), region, connection.GapFailed)
 				failed++
 				if firstErr == nil {
 					firstErr = errors.Wrapf(err, "%s in %s", service, region)

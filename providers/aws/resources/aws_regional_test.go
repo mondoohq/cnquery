@@ -90,6 +90,20 @@ func TestPerRegionDeniedReadIsRecordedAsGap(t *testing.T) {
 	require.Equal(t, connection.Gap{Service: "macie2", Region: "eu-west-1", Reason: connection.GapDenied}, gaps[0])
 }
 
+// A gap from a scoped classification key is reported under the bare service.
+func TestPerRegionGapUsesBareServiceName(t *testing.T) {
+	conn := testConn("us-east-1")
+
+	_, err := perRegion(conn, "macie2/config", func(_ context.Context, _ string) ([]any, error) {
+		return nil, apiErr("AccessDeniedException", "not authorized to perform macie2:GetMacieSession")
+	})
+
+	require.NoError(t, err)
+	gaps := conn.CoverageGaps()
+	require.Len(t, gaps, 1)
+	require.Equal(t, "macie2", gaps[0].Service, "gaps are reported per service, not per endpoint scope")
+}
+
 // One bad region must not discard the regions that answered. This is the
 // behaviour change from the old fan-out, which returned the error and dropped
 // every collected result.

@@ -105,6 +105,44 @@ func TestClassifyToleratesCurlyApostrophe(t *testing.T) {
 		"curly apostrophe must classify the same as the ASCII spelling")
 }
 
+// The single-record config reads tolerate a bare not-found, because Macie
+// answers that way when the feature was never configured in the region.
+func TestClassifyMacieConfigScopeToleratesBareNotFound(t *testing.T) {
+	err := apiErr("ResourceNotFoundException", "The request failed because the resource was not found")
+	require.Equal(t, dispositionEmpty, classifyError("macie2/config", err))
+}
+
+// ...but a list endpoint gets no such licence. A not-found from ListFindings
+// is a resource that vanished mid-read, and swallowing it would report a
+// partial listing as a complete one.
+func TestClassifyMacieListDoesNotSwallowBareNotFound(t *testing.T) {
+	err := apiErr("ResourceNotFoundException", "The request failed because the resource was not found")
+	require.Equal(t, dispositionFail, classifyError("macie2", err))
+}
+
+// A scope still inherits the not-enabled rules from its bare service, so the
+// narrow key only has to state where it differs.
+func TestClassifyScopeInheritsServiceRules(t *testing.T) {
+	notEnabled := apiErr("AccessDeniedException", "Macie is not enabled")
+	require.Equal(t, dispositionEmpty, classifyError("macie2/config", notEnabled))
+
+	denied := apiErr("AccessDeniedException", "User is not authorized to perform macie2:GetMacieSession")
+	require.Equal(t, dispositionUnreadable, classifyError("macie2/config", denied))
+}
+
+// The not-enabled wording still reads as empty on the list endpoints, which is
+// the whole point of keeping that rule on the bare service.
+func TestClassifyMacieListStillHonoursNotEnabled(t *testing.T) {
+	err := apiErr("ResourceNotFoundException", "Amazon Macie isn't enabled for your account")
+	require.Equal(t, dispositionEmpty, classifyError("macie2", err))
+}
+
+// Coverage gaps are reported per service, not per endpoint scope.
+func TestServiceNameStripsScope(t *testing.T) {
+	require.Equal(t, "macie2", serviceName("macie2/config"))
+	require.Equal(t, "ecr", serviceName("ecr"))
+}
+
 // A service rule must not leak into other services: Macie's not-enabled
 // wording carries no meaning for, say, RDS.
 func TestClassifyServiceRulesAreScoped(t *testing.T) {
