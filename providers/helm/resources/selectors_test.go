@@ -121,18 +121,36 @@ func TestInitHelmFileUnknownPathErrors(t *testing.T) {
 	assert.Contains(t, err.Error(), "no/such/file.txt")
 }
 
-// A bare resource with no args stays a valid empty state — the legitimate fast
-// path, distinct from a lookup miss.
-func TestHelmSelectorBareResourcesAllowed(t *testing.T) {
+// The selector is the only way to reach these resources, so a bare or
+// empty-valued lookup must error. Accepting it would build the exact husk these
+// inits exist to prevent: an empty `__id` that every other bare lookup aliases
+// onto. The full sets stay reachable through helm.chart.files / .templates.
+func TestHelmSelectorsRequireTheirArgument(t *testing.T) {
 	rt := newSelectorRuntime(t, "../testdata/mychart")
 
-	args, res, err := initHelmFile(rt, map[string]*llx.RawData{})
-	require.NoError(t, err)
-	assert.Nil(t, res)
-	assert.NotNil(t, args)
-
-	args, res, err = initHelmTemplate(rt, map[string]*llx.RawData{})
-	require.NoError(t, err)
-	assert.Nil(t, res)
-	assert.NotNil(t, args)
+	for _, tc := range []struct {
+		name string
+		init func(*plugin.Runtime, map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+		key  string
+		want string
+	}{
+		{name: "helm.file", init: initHelmFile, key: "path", want: `helm.file requires a "path"`},
+		{name: "helm.template", init: initHelmTemplate, key: "name", want: `helm.template requires a "name"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for argName, args := range map[string]map[string]*llx.RawData{
+				"no args":    {},
+				"empty":      {tc.key: llx.StringData("")},
+				"nil":        {tc.key: nil},
+				"wrong type": {tc.key: llx.IntData(3)},
+			} {
+				t.Run(argName, func(t *testing.T) {
+					_, res, err := tc.init(rt, args)
+					require.Error(t, err)
+					assert.Nil(t, res)
+					assert.Contains(t, err.Error(), tc.want)
+				})
+			}
+		})
+	}
 }
