@@ -127,7 +127,7 @@ type dnsRecordRecord struct {
 func (z *mqlNetlifyDnsZone) records() ([]any, error) {
 	c := netlifyConn(z.MqlRuntime)
 
-	records, err := connection.GetList[dnsRecordRecord](context.Background(), c,
+	records, err := connection.GetPaged[dnsRecordRecord](context.Background(), c,
 		"/dns_zones/"+url.PathEscape(z.Id.Data)+"/dns_records", nil)
 	if err != nil {
 		if connection.IsForbidden(err) {
@@ -167,7 +167,7 @@ func (r *mqlNetlifyDnsZoneRecord) id() (string, error) {
 func (s *mqlNetlifySite) dnsZones() ([]any, error) {
 	c := netlifyConn(s.MqlRuntime)
 
-	records, err := connection.GetList[dnsZoneRecord](context.Background(), c,
+	records, err := connection.GetPaged[dnsZoneRecord](context.Background(), c,
 		"/sites/"+url.PathEscape(s.Id.Data)+"/dns", nil)
 	if err != nil {
 		if connection.IsForbidden(err) {

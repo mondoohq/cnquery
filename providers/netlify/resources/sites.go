@@ -277,7 +277,7 @@ type buildHookRecord struct {
 func (s *mqlNetlifySite) buildHooks() ([]any, error) {
 	c := netlifyConn(s.MqlRuntime)
 
-	records, err := connection.GetList[buildHookRecord](context.Background(), c,
+	records, err := connection.GetPaged[buildHookRecord](context.Background(), c,
 		"/sites/"+url.PathEscape(s.Id.Data)+"/build_hooks", nil)
 	if err != nil {
 		if connection.IsForbidden(err) {
@@ -327,7 +327,7 @@ func (s *mqlNetlifySite) notificationHooks() ([]any, error) {
 	query := url.Values{}
 	query.Set("site_id", s.Id.Data)
 
-	records, err := connection.GetList[notificationHookRecord](context.Background(), c, "/hooks", query)
+	records, err := connection.GetPaged[notificationHookRecord](context.Background(), c, "/hooks", query)
 	if err != nil {
 		if connection.IsForbidden(err) {
 			s.NotificationHooks = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
@@ -375,7 +375,7 @@ type snippetRecord struct {
 func (s *mqlNetlifySite) snippets() ([]any, error) {
 	c := netlifyConn(s.MqlRuntime)
 
-	records, err := connection.GetList[snippetRecord](context.Background(), c,
+	records, err := connection.GetPaged[snippetRecord](context.Background(), c,
 		"/sites/"+url.PathEscape(s.Id.Data)+"/snippets", nil)
 	if err != nil {
 		if connection.IsForbidden(err) {

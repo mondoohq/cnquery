@@ -66,6 +66,13 @@ func (c *NetlifyConnection) Asset() *inventory.Asset {
 // the --account flag or from the account of a discovered child asset. It is the
 // empty string when every accessible account is in scope.
 func (c *NetlifyConnection) AccountFilter() string {
+	// A discovered child asset carries the account it was scoped to under
+	// accountId, while the --account flag arrives as account. Reading only the
+	// flag would leave every discovered asset unscoped, so each one would
+	// report every account the token can reach rather than its own.
+	if account := c.option("accountId"); account != "" {
+		return account
+	}
 	return c.option("account")
 }
 

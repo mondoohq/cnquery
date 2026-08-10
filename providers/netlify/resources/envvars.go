@@ -51,7 +51,7 @@ func (a *mqlNetlifyAccount) environmentVariables() ([]any, error) {
 func fetchEnvVars(runtime *plugin.Runtime, accountID, siteID string, query url.Values) ([]any, error) {
 	c := netlifyConn(runtime)
 
-	records, err := connection.GetList[envVarRecord](context.Background(), c,
+	records, err := connection.GetPaged[envVarRecord](context.Background(), c,
 		"/accounts/"+url.PathEscape(accountID)+"/env", query)
 	if err != nil {
 		return nil, err

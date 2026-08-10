@@ -215,7 +215,7 @@ type deployKeyRecord struct {
 func (n *mqlNetlify) deployKeys() ([]any, error) {
 	c := netlifyConn(n.MqlRuntime)
 
-	records, err := connection.GetList[deployKeyRecord](context.Background(), c, "/deploy_keys", nil)
+	records, err := connection.GetPaged[deployKeyRecord](context.Background(), c, "/deploy_keys", nil)
 	if err != nil {
 		return nil, err
 	}

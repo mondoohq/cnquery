@@ -55,7 +55,7 @@ type accountRecord struct {
 func (n *mqlNetlify) accounts() ([]any, error) {
 	c := netlifyConn(n.MqlRuntime)
 
-	records, err := connection.GetList[accountRecord](context.Background(), c, "/accounts", nil)
+	records, err := connection.GetPaged[accountRecord](context.Background(), c, "/accounts", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func initNetlifyAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	// The accounts endpoint is the only one that answers for either an id or a
 	// slug, so the lookup runs against the list the token can reach.
-	records, err := connection.GetList[accountRecord](context.Background(), c, "/accounts", nil)
+	records, err := connection.GetPaged[accountRecord](context.Background(), c, "/accounts", nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -199,7 +199,7 @@ func (a *mqlNetlifyAccount) members() ([]any, error) {
 		return nil, errors.New("netlify.account.members requires the account slug")
 	}
 
-	records, err := connection.GetList[memberRecord](context.Background(), c,
+	records, err := connection.GetPaged[memberRecord](context.Background(), c,
 		"/"+url.PathEscape(slug)+"/members", nil)
 	if err != nil {
 		// A member without administrative rights cannot read the roster.

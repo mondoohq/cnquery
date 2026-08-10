@@ -159,12 +159,3 @@ func GetPaged[T any](ctx context.Context, c *NetlifyConnection, path string, que
 
 	return results, nil
 }
-
-// GetList fetches a list endpoint that does not paginate.
-func GetList[T any](ctx context.Context, c *NetlifyConnection, path string, query url.Values) ([]T, error) {
-	var out []T
-	if err := c.Get(ctx, path, query, &out); err != nil {
-		return nil, err
-	}
-	return out, nil
-}

@@ -11,6 +11,8 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 type pagedItem struct {
@@ -192,5 +194,42 @@ func TestClassifiersRejectNonAPIErrors(t *testing.T) {
 	}
 	if IsNotFound(err) {
 		t.Error("IsNotFound must not match a transport error")
+	}
+}
+
+// The account a discovered asset is scoped to arrives under a different key
+// than the --account flag. Reading only the flag leaves every discovered asset
+// unscoped, so it reports every account the token can reach rather than its
+// own.
+func TestAccountFilterPrefersTheDiscoveredAccount(t *testing.T) {
+	tests := []struct {
+		name    string
+		options map[string]string
+		want    string
+	}{
+		{"discovered asset", map[string]string{"accountId": "acct_1"}, "acct_1"},
+		{"flag only", map[string]string{"account": "acme"}, "acme"},
+		{"discovered asset wins over the flag", map[string]string{"accountId": "acct_1", "account": "acme"}, "acct_1"},
+		{"unscoped", map[string]string{}, ""},
+		{"no options at all", nil, ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			c := &NetlifyConnection{Conf: &inventory.Config{Options: tc.options}}
+			if got := c.AccountFilter(); got != tc.want {
+				t.Fatalf("expected %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestSiteFilterReadsTheDiscoveredSite(t *testing.T) {
+	c := &NetlifyConnection{Conf: &inventory.Config{Options: map[string]string{"siteId": "site_1"}}}
+	if got := c.SiteFilter(); got != "site_1" {
+		t.Fatalf("expected site_1, got %q", got)
+	}
+	if got := (&NetlifyConnection{}).SiteFilter(); got != "" {
+		t.Fatalf("expected an unscoped connection to report no site, got %q", got)
 	}
 }
