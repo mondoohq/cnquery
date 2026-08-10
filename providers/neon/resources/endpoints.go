@@ -97,6 +97,7 @@ func newNeonEndpoint(runtime *plugin.Runtime, projectID string, rec *endpointRec
 	}
 
 	res, err := CreateResource(runtime, "neon.endpoint", map[string]*llx.RawData{
+		"__id":                  llx.StringData(projectID + "/" + rec.ID),
 		"id":                    llx.StringData(rec.ID),
 		"host":                  llx.StringData(rec.Host),
 		"type":                  llx.StringData(rec.Type),
@@ -126,7 +127,7 @@ func newNeonEndpoint(runtime *plugin.Runtime, projectID string, rec *endpointRec
 }
 
 func (e *mqlNeonEndpoint) id() (string, error) {
-	return e.Id.Data, e.Id.Error
+	return e.cacheProjectID + "/" + e.Id.Data, e.Id.Error
 }
 
 // branch resolves the branch the endpoint serves.

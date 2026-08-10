@@ -28,9 +28,15 @@ func NewNeonOrganizationPlatform(orgID string) *inventory.Platform {
 }
 
 func NewNeonProjectPlatform(orgID, projectID string) *inventory.Platform {
-	pf := &inventory.Platform{
-		TechnologyUrlSegments: []string{"saas", "neon", "organization", orgID, "project", projectID},
+	// A personal project belongs to no organization. Naming one anyway would
+	// put an empty segment in the middle of the technology URL.
+	segments := []string{"saas", "neon"}
+	if orgID != "" {
+		segments = append(segments, "organization", orgID)
 	}
+	segments = append(segments, "project", projectID)
+
+	pf := &inventory.Platform{TechnologyUrlSegments: segments}
 	PlatformByName("neon-project").Apply(pf)
 	return pf
 }
