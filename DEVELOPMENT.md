@@ -236,6 +236,7 @@ use (
    ./mql/providers/mssql
    ./mql/providers/mysqldb
    ./mql/providers/neon
+   ./mql/providers/netlify
    ./mql/providers/nextdns
    ./mql/providers/nmap
    ./mql/providers/nutanix

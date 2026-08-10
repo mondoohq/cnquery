@@ -1,0 +1,398 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/netlify"
+option go_package = "go.mondoo.com/mql/v13/providers/netlify/resources"
+
+// Netlify
+//
+// Netlify account posture across every account the token can reach. The
+// `accounts` field enumerates those accounts with their members and shared
+// environment variables, `sites` flattens every site across them, `dnsZones`
+// covers Netlify-managed DNS, `deployKeys` lists the SSH keys that grant
+// repository access to builds, and `currentUser` identifies the principal the
+// token belongs to.
+netlify {
+  // Accounts the token can access
+  accounts() []netlify.account
+  // Sites across every accessible account
+  sites() []netlify.site
+  // Netlify-managed DNS zones across every accessible account
+  dnsZones() []netlify.dnsZone
+  // Deploy keys registered for the authenticated user
+  deployKeys() []netlify.deployKey
+  // Authenticated Netlify account behind the token
+  currentUser() netlify.user
+}
+
+// Netlify User
+//
+// The authenticated Netlify account behind the API token, including its email,
+// display name, sign-in providers, and last sign-in time. Use it to attribute a
+// scan to a principal and to confirm which account the token belongs to.
+private netlify.user @defaults("email fullName") {
+  // Unique user identifier
+  id string
+  // Primary email address
+  email string
+  // Display name of the account
+  fullName string
+  // URL of the account avatar image
+  avatarUrl string
+  // Identity providers the account can sign in with
+  //
+  // Contains an entry such as github, gitlab, bitbucket, or email for every
+  // provider linked to the account. An account reachable through a git
+  // provider inherits that provider's authentication controls.
+  loginProviders []string
+  // Number of sites the account can reach
+  siteCount int
+  // Time the account was created
+  createdAt time
+  // Time the account last signed in, or null when it never has
+  lastLogin time
+}
+
+// Netlify Account
+//
+// A Netlify team account and the posture that applies to every site under it.
+// The `members` field lists the roster with each member's role, and
+// `environmentVariables` covers the variables shared across the account's
+// sites, including which are marked secret. The `rolesAllowed` field reports
+// the roles the account's plan permits, which bounds how finely access can be
+// split. Select an account with `netlify.accounts.where(slug == "acme")`.
+private netlify.account @defaults("slug name") {
+  // Unique account identifier
+  id string
+  // URL-safe account slug
+  slug string
+  // Display name
+  name string
+  // Plan identifier the account is subscribed to
+  type string
+  // Human-readable plan name, for example Starter, Pro, or Enterprise
+  typeName string
+  // Members that own the account
+  //
+  // Resolved against the account roster, so an owner that is no longer a
+  // member of the account does not appear. Ownership carries every
+  // administrative right on the account, including billing and member
+  // management.
+  owners() []netlify.account.member
+  // Member roles the account's plan permits
+  //
+  // Contains entries such as Owner, Collaborator, Controller, or Billing
+  // Admin. An account whose plan permits only Owner cannot separate
+  // administrative duties from day-to-day contributors.
+  rolesAllowed []string
+  // Time the account was created
+  createdAt time
+  // Time the account was last updated
+  updatedAt time
+  // Members of the account and the role each holds
+  members() []netlify.account.member
+  // Sites belonging to the account
+  sites() []netlify.site
+  // Environment variables shared across the account's sites
+  environmentVariables() []netlify.envVar
+}
+
+// Member of a Netlify account
+//
+// A single member of an account with the role that member holds. Use `role` to
+// find members holding administrative rights and `email` to reconcile the
+// roster against an identity provider.
+private netlify.account.member @defaults("email role") {
+  // Unique member identifier
+  id string
+  // Display name of the member
+  fullName string
+  // Email address of the member
+  email string
+  // Role the member holds, for example Owner, Collaborator, or Controller
+  role string
+  // URL of the member avatar image
+  avatarUrl string
+}
+
+// Netlify Environment Variable
+//
+// An environment variable defined on an account or one of its sites, including
+// the deploy contexts it applies to and whether Netlify treats it as a secret.
+// A variable with `isSecret` false is readable by anyone who can reach the
+// build logs or the site settings, so credentials stored that way are exposed
+// well beyond the deploy. The `scopes` field reports which parts of the
+// platform receive the value.
+private netlify.envVar @defaults("key isSecret") {
+  // Variable name
+  key string
+  // Parts of the platform the variable is exposed to
+  //
+  // Contains entries such as builds, functions, runtime, and post_processing.
+  // A variable scoped to runtime reaches code served to visitors.
+  scopes []string
+  // Whether Netlify stores the value as a secret and withholds it from reads
+  isSecret bool
+  // Values set for the variable, one per deploy context
+  //
+  // Each entry carries the `context` the value applies to, such as production,
+  // deploy-preview, branch-deploy, or dev, the `contextParameter` naming the
+  // branch for a branch-deploy context, and the `value` itself. Netlify
+  // withholds the value of a secret variable, so those entries carry an empty
+  // value.
+  values []dict
+  // Email address of the account that last updated the variable
+  updatedByEmail string
+  // Time the variable was last updated
+  updatedAt time
+}
+
+// Netlify Site
+//
+// A Netlify site and the controls that govern who can reach it and what a
+// deploy is permitted to do. Query `ssl` and `forceSsl` for transport
+// enforcement, `passwordProtected` for basic-auth gating of the whole site,
+// `customDomain` and `domainAliases` for the names it answers on, the `repo`
+// fields for the source a build runs from, `publicRepo` and `privateLogs` for
+// build-output exposure, `stopBuilds` for whether automatic deploys are
+// suspended, and `preventNonGitProdDeploys` for whether production can be
+// published outside of git. The `environmentVariables`, `buildHooks`,
+// `notificationHooks`, and `snippets` fields cover what a deploy injects and
+// what can trigger one. Select a site with
+// `netlify.sites.where(name == "www")`.
+private netlify.site @defaults("name url") {
+  // Unique site identifier
+  id string
+  // Site name, which is also the subdomain of its netlify.app address
+  name string
+  // Lifecycle state of the site, for example current
+  state string
+  // Plan the site is billed under
+  plan string
+  // Primary URL the site is served on
+  url string
+  // HTTPS URL of the site, or null when no certificate is provisioned
+  sslUrl string
+  // URL of the site in the Netlify admin interface
+  adminUrl string
+  // Custom domain the site answers on, or null when it uses its netlify.app name
+  customDomain string
+  // Additional domains the site answers on
+  domainAliases []string
+  // Custom domain serving branch deploys, or null when unset
+  branchDeployCustomDomain string
+  // Custom domain serving deploy previews, or null when unset
+  deployPreviewCustomDomain string
+  // Address notified about the site's deploys, or null when unset
+  notificationEmail string
+  // Whether a TLS certificate is provisioned for the site
+  ssl bool
+  // Whether visitors are redirected from HTTP to HTTPS
+  forceSsl bool
+  // Whether Netlify serves DNS for the site's domain
+  managedDns bool
+  // Whether the site is gated behind a site-wide basic-auth password
+  //
+  // Derived from whether the site carries a basic-auth password. A protected
+  // site answers every request with a credential challenge, which is how a
+  // staging site is kept off the public internet.
+  passwordProtected bool
+  // Whether publishing production outside of git is blocked
+  //
+  // When true, a production deploy must come from the connected repository,
+  // which keeps a manual upload from reaching production unreviewed.
+  preventNonGitProdDeploys bool
+  // Build image the site's deploys run on, for example noble
+  buildImage string
+  // Prerendering service enabled for the site, or null when disabled
+  prerender string
+  // Region the site's functions execute in
+  functionsRegion string
+  // Time the site was created
+  createdAt time
+  // Time the site was last updated
+  updatedAt time
+  // Account the site belongs to
+  account() netlify.account
+  // Source control provider hosting the site's repository, for example github
+  repoProvider string
+  // URL of the repository builds are produced from
+  repoUrl string
+  // Branch published to production
+  repoBranch string
+  // Path of the repository within its provider, for example acme/www
+  repoPath string
+  // Command run to build the site
+  buildCommand string
+  // Directory published after a build completes
+  publishDirectory string
+  // Directory functions are built from
+  functionsDirectory string
+  // Branches permitted to produce deploys
+  //
+  // Empty when every branch may deploy. Listing branches here keeps an
+  // untrusted branch from publishing a preview that carries the site's
+  // environment variables.
+  allowedBranches []string
+  // Whether the connected repository is public
+  publicRepo bool
+  // Whether build logs are restricted to account members
+  //
+  // Public build logs expose the build command output, including anything a
+  // build prints about its environment.
+  privateLogs bool
+  // Whether automatic builds are suspended for the site
+  stopBuilds bool
+  // Deploy key granting the build access to the repository
+  deployKey() netlify.deployKey
+  // Environment variables that apply to the site
+  environmentVariables() []netlify.envVar
+  // Build hooks that trigger a deploy of the site
+  buildHooks() []netlify.site.buildHook
+  // Outgoing notifications configured for the site's events
+  notificationHooks() []netlify.site.notificationHook
+  // Code snippets injected into the site's pages
+  snippets() []netlify.site.snippet
+  // Netlify-managed DNS zones serving the site
+  dnsZones() []netlify.dnsZone
+}
+
+// Build hook of a Netlify site
+//
+// A URL that triggers a deploy of one branch when it receives a request. A
+// build hook is an unauthenticated trigger, so every hook is a way to start a
+// production deploy without an account. The trigger URL itself is a bearer
+// secret and is deliberately not exposed here. Use `branch` to find hooks
+// pointing at production.
+private netlify.site.buildHook @defaults("title branch") {
+  // Unique build hook identifier
+  id string
+  // Human-readable hook name
+  title string
+  // Branch the hook deploys
+  branch string
+  // Time the hook was created
+  createdAt time
+}
+
+// Notification hook of a Netlify site
+//
+// An outgoing notification fired when a site event occurs, such as a completed
+// deploy or a submitted form. Use `type` to see where the notification is sent,
+// for example email, slack, or a generic webhook URL, `event` for what triggers
+// it, and `disabled` to find hooks that are configured but inactive. The hook's
+// delivery settings can carry a bearer secret and are deliberately not exposed
+// here.
+private netlify.site.notificationHook @defaults("type event") {
+  // Unique hook identifier
+  id string
+  // Delivery mechanism, for example email, slack, or url
+  type string
+  // Event that fires the hook, for example deploy_created or submission_created
+  event string
+  // Whether the hook is configured but inactive
+  disabled bool
+  // Time the hook was created
+  createdAt time
+  // Time the hook was last updated
+  updatedAt time
+}
+
+// Snippet injected into a Netlify site
+//
+// Markup injected into every page Netlify serves for the site, held separately
+// from the repository. A snippet is script that reaches visitors without
+// passing through the build, so it is worth reconciling against what the
+// repository is reviewed to contain. The `general` field carries the markup
+// injected into every page and `goal` the markup injected on form-submission
+// success.
+private netlify.site.snippet @defaults("title") {
+  // Unique snippet identifier
+  id string
+  // Human-readable snippet name
+  title string
+  // Markup injected into every page
+  general string
+  // Location the general markup is injected at, either head or body
+  generalPosition string
+  // Markup injected after a successful form submission
+  goal string
+  // Location the goal markup is injected at, either head or body
+  goalPosition string
+}
+
+// Netlify DNS Zone
+//
+// A DNS zone Netlify serves for a domain, including its records and the
+// nameservers delegated to it. A zone whose records point at decommissioned
+// infrastructure is how a subdomain gets taken over, so `records` is worth
+// reconciling against what still exists. Select a zone with
+// `netlify.dnsZones.where(name == "example.com")`.
+private netlify.dnsZone @defaults("name") {
+  // Unique zone identifier
+  id string
+  // Domain the zone serves
+  name string
+  // Whether the zone is served by nameservers dedicated to this account
+  dedicated bool
+  // Whether the zone answers AAAA queries for Netlify-hosted records
+  ipv6Enabled bool
+  // Nameservers the domain must delegate to for the zone to answer
+  dnsServers []string
+  // Time the zone was created
+  createdAt time
+  // Time the zone was last updated
+  updatedAt time
+  // Site the zone was created for, or null when the zone stands alone
+  site() netlify.site
+  // Records published in the zone
+  records() []netlify.dnsZone.record
+}
+
+// Record in a Netlify DNS zone
+//
+// A single published DNS record. Use `type` and `value` to find records
+// delegating a name to somewhere else, such as a CNAME at a provider the
+// account no longer uses. The `managed` field reports whether Netlify
+// maintains the record for a site it hosts rather than an operator having
+// written it.
+private netlify.dnsZone.record @defaults("hostname type value") {
+  // Unique record identifier
+  id string
+  // Fully qualified name the record answers on
+  hostname string
+  // Record type, for example A, AAAA, CNAME, MX, TXT, NS, or CAA
+  type string
+  // Value the record resolves to
+  value string
+  // Seconds resolvers may cache the record
+  ttl int
+  // Priority of an MX or SRV record
+  priority int
+  // Flag byte of a CAA record
+  flag int
+  // Property tag of a CAA record, for example issue or iodef
+  tag string
+  // Whether Netlify maintains the record automatically
+  managed bool
+}
+
+// Netlify Deploy Key
+//
+// An SSH key pair Netlify registers with a source control provider so builds
+// can clone a private repository. The key grants repository access for as long
+// as it stays registered, so a key no longer attached to any site is worth
+// removing at the provider. Only the public half is exposed.
+private netlify.deployKey @defaults("id createdAt") {
+  // Unique deploy key identifier
+  id string
+  // Public half of the key pair, in OpenSSH format
+  publicKey string
+  // Time the key was created
+  createdAt time
+  // Sites whose builds clone with this key
+  //
+  // Empty when no site references the key, which is the state a rotated or
+  // abandoned key is left in while it still grants access at the provider.
+  sites() []netlify.site
+}
