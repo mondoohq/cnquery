@@ -270,18 +270,18 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	// FIXME: do not discover instances as OSes right now, only discover as API representations.
 	if stringx.ContainsAnyOf(targets, DiscoveryInstances) {
 		discover(DiscoveryInstances, func() ([]*inventory.Asset, error) {
-			return discoverInstances(runtime, subsWithConfigs)
+			return discoverInstances(runtime, subsWithConfigs, conn.Filters.General)
 		})
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryInstancesApi) {
 		discover(DiscoveryInstancesApi, func() ([]*inventory.Asset, error) {
-			return discoverInstancesApi(runtime, subsWithConfigs)
+			return discoverInstancesApi(runtime, subsWithConfigs, conn.Filters.General)
 		})
 	}
 	// FIXME: bring back the storage containers as as part of FF scanning once we can do parallel scanning
 	if stringx.ContainsAnyOf(targets, DiscoveryStorageContainers) {
 		discover(DiscoveryStorageContainers, func() ([]*inventory.Asset, error) {
-			return discoverStorageAccountsContainers(runtime, subsWithConfigs)
+			return discoverStorageAccountsContainers(runtime, subsWithConfigs, conn.Filters.General)
 		})
 	}
 
@@ -303,7 +303,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	}, nil
 }
 
-func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConfig, filters connection.GeneralDiscoveryFilters) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
 		svc, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
@@ -323,9 +323,13 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 			if props.Error != nil {
 				return nil, props.Error
 			}
+			tags := interfaceMapToStr(vm.Tags.Data)
+			if filters.IsFilteredOutByTags(tags) {
+				continue
+			}
 			asset := mqlObjectToAsset(mqlObject{
 				name:   vm.Name.Data,
-				labels: interfaceMapToStr(vm.Tags.Data),
+				labels: tags,
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -346,7 +350,7 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 	return assets, nil
 }
 
-func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig, filters connection.GeneralDiscoveryFilters) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
 		svc, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
@@ -367,13 +371,18 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 				return nil, props.Error
 			}
 
+			tags := interfaceMapToStr(vm.Tags.Data)
+			if filters.IsFilteredOutByTags(tags) {
+				continue
+			}
+
 			ipAddresses := vm.GetPublicIpAddresses()
 			if ipAddresses.Error != nil {
 				return nil, ipAddresses.Error
 			}
 			asset := mqlObjectToAsset(mqlObject{
 				name:   vm.Name.Data,
-				labels: interfaceMapToStr(vm.Tags.Data),
+				labels: tags,
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -475,9 +484,13 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 				if !ok {
 					continue
 				}
+				tags := convert.PtrMapStrToStr(resource.Tags)
+				if conn.Filters.General.IsFilteredOutByTags(tags) {
+					continue
+				}
 				asset := mqlObjectToAsset(mqlObject{
 					name:   derefStr(resource.Name),
-					labels: convert.PtrMapStrToStr(resource.Tags),
+					labels: tags,
 					azureObject: azureObject{
 						id:           derefStr(resource.ID),
 						subscription: subId,
@@ -514,7 +527,7 @@ func derefStr(s *string) string {
 	return *s
 }
 
-func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
+func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig []subWithConfig, filters connection.GeneralDiscoveryFilters) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfig {
 		svc, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
@@ -530,6 +543,12 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 		}
 		for _, account := range accounts.Data {
 			a := account.(*mqlAzureSubscriptionStorageServiceAccount)
+			// Blob containers carry no ARM tags of their own, so the tag filter
+			// is applied to the storage account they live in. Skipping the
+			// account also skips the container listing it would have cost.
+			if filters.IsFilteredOutByTags(interfaceMapToStr(a.Tags.Data)) {
+				continue
+			}
 			containers := a.GetContainers()
 			if containers.Error != nil {
 				return nil, containers.Error

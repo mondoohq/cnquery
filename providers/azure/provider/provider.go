@@ -167,6 +167,10 @@ func parseFlagsToFiltersOpts(flags map[string]*llx.Primitive) map[string]string 
 				o[k] = string(v.Value)
 			case strings.HasPrefix(k, "subscription-tag:"):
 				o[k] = string(v.Value)
+			// "tag:" and "exclude:tag:" do not overlap with each other or with
+			// "subscription-tag:", so prefix order here does not matter.
+			case strings.HasPrefix(k, "tag:") || strings.HasPrefix(k, "exclude:tag:"):
+				o[k] = string(v.Value)
 			}
 		}
 	}
