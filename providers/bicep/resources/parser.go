@@ -1166,26 +1166,74 @@ func extractBlock(lines []string, startIdx int) (string, int) {
 	return strings.Join(blockLines, "\n"), len(lines)
 }
 
-// fieldValueRegexCache stores pre-compiled regexes for extractFieldValue lookups.
-var fieldValueRegexCache = func() map[string]*regexp.Regexp {
-	fields := []string{"name", "location", "parent", "scope"}
-	m := make(map[string]*regexp.Regexp, len(fields))
-	for _, f := range fields {
-		m[f] = regexp.MustCompile(`(?m)^\s*` + regexp.QuoteMeta(f) + `\s*:\s*(.+)$`)
+// bodyObjectInner returns the contents of the outermost `{ … }` object in body,
+// skipping whatever declaration header precedes it (`resource r 'T@v' = `, or
+// the `if (…)` form). Returns "" when body contains no object.
+//
+// The walk shares scanState, so a brace inside a string literal or a comment is
+// not mistaken for the opener. An unterminated object yields everything from
+// the opener on, which keeps a truncated file readable rather than empty.
+func bodyObjectInner(body string) string {
+	st := scanState{}
+	open := -1
+	for i := 0; i < len(body); {
+		before := st.brace
+		next := st.stepAt(body, i)
+		switch {
+		case open == -1 && st.brace == before+1:
+			open = i
+		case open >= 0 && st.brace == 0:
+			return body[open+1 : i]
+		}
+		if next <= i {
+			next = i + 1
+		}
+		i = next
 	}
-	return m
-}()
-
-func extractFieldValue(body string, fieldName string) string {
-	re, ok := fieldValueRegexCache[fieldName]
-	if !ok {
-		re = regexp.MustCompile(`(?m)^\s*` + regexp.QuoteMeta(fieldName) + `\s*:\s*(.+)$`)
-	}
-	m := re.FindStringSubmatch(body)
-	if len(m) > 1 {
-		return strings.TrimSpace(m[1])
+	if open >= 0 {
+		return body[open+1:]
 	}
 	return ""
+}
+
+// topLevelFieldValue returns the raw value text of `fieldName` from the top
+// level of a resource/module body — the members at brace depth 1 — or "" when
+// the body has no such member.
+//
+// Matching has to be depth-aware. Bicep does not require a resource's own
+// `name`/`location`/`tags`/`dependsOn` to come before its `properties`, and
+// nested objects use the very same keys: subnets have names, an inline
+// `properties.template` on a `Microsoft.Resources/deployments` has its own tags
+// and dependsOn. A scan that took the first match at any indentation returned
+// the nested value, so `bicep.resource.name` could report a subnet's name.
+func topLevelFieldValue(body string, fieldName string) string {
+	inner := bodyObjectInner(body)
+	if inner == "" {
+		// No object in body — a bare `key: value` fragment. There is no
+		// nesting to be confused by, so scan it as-is.
+		inner = body
+	}
+
+	entries := splitTopLevelEntries(inner)
+	for i, entry := range entries {
+		key, value, ok := splitFirstColon(entry)
+		if !ok || strings.TrimSpace(key) != fieldName {
+			continue
+		}
+		value = strings.TrimSpace(value)
+		// Bicep allows the value's opening brace on the following line
+		// (`params:\n{ … }`). The newline after the colon sits at depth 0, so
+		// the entry splitter hands the object back as the next entry.
+		if value == "" && i+1 < len(entries) {
+			value = strings.TrimSpace(entries[i+1])
+		}
+		return value
+	}
+	return ""
+}
+
+func extractFieldValue(body string, fieldName string) string {
+	return topLevelFieldValue(body, fieldName)
 }
 
 // joinDeclHeader reassembles the declaration header — everything from
@@ -1249,41 +1297,19 @@ func extractCondition(line string) string {
 //	{
 //	  foo: 'x'
 //	}
+//
+// extractFieldBlock returns the contents of a `fieldName: { … }` object
+// declared at the top level of body. Like extractFieldValue it matches only at
+// brace depth 1, so an inline `properties.template.tags` is not mistaken for
+// the resource's own tags.
 func extractFieldBlock(body string, fieldName string) string {
-	lines := strings.Split(body, "\n")
-	for i, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, fieldName+":") {
-			continue
-		}
-		rest := strings.TrimSpace(strings.TrimPrefix(trimmed, fieldName+":"))
-		startIdx := i
-		// When the value is empty on this line, the `{` must be on a
-		// later (non-blank) line; advance to it.
-		if rest == "" {
-			j := i + 1
-			for j < len(lines) && strings.TrimSpace(lines[j]) == "" {
-				j++
-			}
-			if j >= len(lines) || !strings.HasPrefix(strings.TrimSpace(lines[j]), "{") {
-				continue
-			}
-			startIdx = j
-		} else if !strings.HasPrefix(rest, "{") {
-			continue
-		}
-		block, _ := extractBlock(lines, startIdx)
-		// Strip the outer braces
-		if idx := strings.Index(block, "{"); idx >= 0 {
-			inner := block[idx+1:]
-			if last := strings.LastIndex(inner, "}"); last >= 0 {
-				inner = inner[:last]
-			}
-			return strings.TrimSpace(inner)
-		}
-		return block
+	value := topLevelFieldValue(body, fieldName)
+	// Require a balanced object: an unterminated `{` is malformed input and
+	// reports no block rather than half of one.
+	if !strings.HasPrefix(value, "{") || !strings.HasSuffix(value, "}") {
+		return ""
 	}
-	return ""
+	return strings.TrimSpace(stripOuter(value, '{', '}'))
 }
 
 // scanState is a tiny lexer state for tracking paren/bracket/brace
@@ -1597,39 +1623,23 @@ func extractTags(body string) map[string]string {
 	return tags
 }
 
-var dependsOnHeaderRe = regexp.MustCompile(`(?m)dependsOn\s*:\s*\[`)
-
-// extractDependsOn finds a `dependsOn: [ ... ]` block and returns the
-// raw entries. It walks the body via the shared `scanState` lexer so
-// brackets that live inside string literals (`'[indexed]'`) or
-// indexed expressions (`storageAccounts['blobServices']`) don't drop
-// the closing `]` early.
+// extractDependsOn returns the raw entries of a `dependsOn: [ ... ]` declared
+// at the top level of body.
+//
+// The lookup is depth-aware for the same reason as extractFieldValue: an inline
+// `properties.template` carries its own dependsOn, and matching it would report
+// the nested template's dependencies as the resource's. splitTopLevelEntries
+// handles both newline- and comma-separated entries and shares the string-aware
+// lexer, so a `]` inside a string literal (`'[indexed]'`) or an indexed
+// expression (`storageAccounts['blobServices']`) never splits the list early.
 func extractDependsOn(body string) []string {
-	loc := dependsOnHeaderRe.FindStringIndex(body)
-	if loc == nil {
+	value := topLevelFieldValue(body, "dependsOn")
+	// Require a balanced list: an unterminated `[` is malformed input and
+	// reports no dependencies rather than a partial list.
+	if !strings.HasPrefix(value, "[") || !strings.HasSuffix(value, "]") {
 		return nil
 	}
-	// loc[1] points just past the opening `[`. Seed the scanner with
-	// that opener already consumed.
-	start := loc[1]
-	st := scanState{bracket: 1}
-	end := -1
-	i := start
-	for i < len(body) {
-		prev := i
-		i = st.stepAt(body, i)
-		if st.bracket == 0 {
-			end = prev
-			break
-		}
-	}
-	if end < 0 {
-		return nil
-	}
-	// splitTopLevelEntries handles both newline- and comma-separated
-	// entries and shares the string-aware lexer, so a `]` inside a
-	// string literal or an indexed expression never splits the list.
-	deps := splitTopLevelEntries(body[start:end])
+	deps := splitTopLevelEntries(stripOuter(value, '[', ']'))
 	if len(deps) == 0 {
 		return nil
 	}
