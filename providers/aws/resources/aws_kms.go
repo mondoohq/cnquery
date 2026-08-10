@@ -129,70 +129,40 @@ func (a *mqlAwsKms) id() (string, error) {
 func (a *mqlAwsKms) keys() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getKeys(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "kms", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("kms>getKeys>calling aws with region %s", region)
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
-}
+		svc := conn.Kms(region)
+		res := []any{}
 
-func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("kms>getKeys>calling aws with region %s", region)
-
-			svc := conn.Kms(region)
-			res := []any{}
-
-			keys := make([]types.KeyListEntry, 0)
-			params := &kms.ListKeysInput{}
-			paginator := kms.NewListKeysPaginator(svc, params, func(o *kms.ListKeysPaginatorOptions) {
-				o.Limit = 100
-			})
-			for paginator.HasMorePages() {
-				output, err := paginator.NextPage(context.TODO())
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
-				}
-				keys = append(keys, output.Keys...)
+		keys := make([]types.KeyListEntry, 0)
+		params := &kms.ListKeysInput{}
+		paginator := kms.NewListKeysPaginator(svc, params, func(o *kms.ListKeysPaginatorOptions) {
+			o.Limit = 100
+		})
+		for paginator.HasMorePages() {
+			output, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
 			}
-
-			for _, key := range keys {
-				mqlKey, err := CreateResource(a.MqlRuntime, "aws.kms.key",
-					map[string]*llx.RawData{
-						"id":     llx.StringDataPtr(key.KeyId),
-						"arn":    llx.StringDataPtr(key.KeyArn),
-						"region": llx.StringData(region),
-					})
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlKey)
-			}
-
-			return jobpool.JobResult(res), nil
+			keys = append(keys, output.Keys...)
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+
+		for _, key := range keys {
+			mqlKey, err := CreateResource(a.MqlRuntime, "aws.kms.key",
+				map[string]*llx.RawData{
+					"id":     llx.StringDataPtr(key.KeyId),
+					"arn":    llx.StringDataPtr(key.KeyArn),
+					"region": llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlKey)
+		}
+
+		return res, nil
+	})
 }
 
 func (a *mqlAwsKms) grants() ([]any, error) {
@@ -241,60 +211,27 @@ func (a *mqlAwsKms) grants() ([]any, error) {
 func (a *mqlAwsKms) customKeyStores() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getCustomKeyStoreTasks(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "kms", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Str("region", region).Msg("kms>getCustomKeyStores>describe")
 
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		entries, ok := poolOfJobs.Jobs[i].Result.([]any)
-		if !ok {
-			continue
-		}
-		res = append(res, entries...)
-	}
-	return res, nil
-}
-
-func (a *mqlAwsKms) getCustomKeyStoreTasks(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		region := region
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Str("region", region).Msg("kms>getCustomKeyStores>describe")
-
-			svc := conn.Kms(region)
-			res := []any{}
-			paginator := kms.NewDescribeCustomKeyStoresPaginator(svc, &kms.DescribeCustomKeyStoresInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(context.TODO())
+		svc := conn.Kms(region)
+		res := []any{}
+		paginator := kms.NewDescribeCustomKeyStoresPaginator(svc, &kms.DescribeCustomKeyStoresInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, entry := range page.CustomKeyStores {
+				mqlStore, err := newMqlAwsKmsCustomKeyStore(a.MqlRuntime, region, entry)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("access denied describing KMS custom key stores")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, entry := range page.CustomKeyStores {
-					mqlStore, err := newMqlAwsKmsCustomKeyStore(a.MqlRuntime, region, entry)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlStore)
-				}
+				res = append(res, mqlStore)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 // kmsCustomKeyStoreID returns the `__id` shape used by every aws.kms.customKeyStore

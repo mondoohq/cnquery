@@ -21,7 +21,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 
 	"go.mondoo.com/mql/v13/types"
@@ -144,75 +143,42 @@ func (a *mqlAwsEcr) privateRepositories() ([]any, error) {
 		return []any{}, nil
 	}
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getPrivateRepositories(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "ecr", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Ecr(region)
+		res := []any{}
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
+		// AWS caps repositoryNames at ECRDescribeRepositoriesNameLimit per request, so
+		// a larger filter is split into batches and each batch is described separately.
+		// 0 batches means all repositories should be described.
+		batches := conn.Filters.Ecr.PrivateRepositoryNameBatches()
+		if len(batches) == 0 {
+			batches = [][]string{{}}
+		}
 
-	return res, nil
-}
-
-func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	ctx := context.Background()
-
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
-	for ri := range regions {
-		region := regions[ri]
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Ecr(region)
-			res := []any{}
-
-			// AWS caps repositoryNames at ECRDescribeRepositoriesNameLimit per request, so
-			// a larger filter is split into batches and each batch is described separately.
-			// 0 batches means all repositories should be described.
-			batches := conn.Filters.Ecr.PrivateRepositoryNameBatches()
-			if len(batches) == 0 {
-				batches = [][]string{{}}
+		for _, batch := range batches {
+			req := &ecr.DescribeRepositoriesInput{}
+			if len(batch) > 0 {
+				req.RepositoryNames = batch
 			}
 
-			for _, batch := range batches {
-				req := &ecr.DescribeRepositoriesInput{}
-				if len(batch) > 0 {
-					req.RepositoryNames = batch
+			paginator := ecr.NewDescribeRepositoriesPaginator(svc, req)
+			for paginator.HasMorePages() {
+				repoResp, err := paginator.NextPage(ctx, withEcrDescribeRetries)
+				if err != nil {
+					return nil, err
 				}
-
-				paginator := ecr.NewDescribeRepositoriesPaginator(svc, req)
-				for paginator.HasMorePages() {
-					repoResp, err := paginator.NextPage(ctx, withEcrDescribeRetries)
+				for _, r := range repoResp.Repositories {
+					mqlRepoResource, err := buildEcrPrivateRepositoryResource(a.MqlRuntime, region, r)
 					if err != nil {
-						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-							return res, nil
-						}
 						return nil, err
 					}
-					for _, r := range repoResp.Repositories {
-						mqlRepoResource, err := buildEcrPrivateRepositoryResource(a.MqlRuntime, region, r)
-						if err != nil {
-							return nil, err
-						}
-						res = append(res, mqlRepoResource)
-					}
+					res = append(res, mqlRepoResource)
 				}
 			}
-
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+
+		return res, nil
+	})
 }
 
 func (a *mqlAwsEcrRepository) scanningFrequency() (string, error) {

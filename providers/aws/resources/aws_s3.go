@@ -24,7 +24,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/providers/aws/resources/awspolicy"
 	"go.mondoo.com/mql/v13/types"
@@ -61,81 +60,55 @@ func (a *mqlAwsS3) id() (string, error) {
 func (a *mqlAwsS3) buckets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getBuckets(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "s3", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.S3(region)
+		log.Debug().Str("region", region).Msg("listing S3 buckets in region")
+		params := &s3.ListBucketsInput{BucketRegion: aws.String(region)}
+		paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
+			o.Limit = 100
+		})
 
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-
-	return res, nil
-}
-
-func (a *mqlAwsS3) getBuckets(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	configuredRegions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range configuredRegions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.S3(region)
-			ctx := context.Background()
-			log.Debug().Str("region", region).Msg("listing S3 buckets in region")
-			params := &s3.ListBucketsInput{BucketRegion: aws.String(region)}
-			paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
-				o.Limit = 100
-			})
-
-			res := []any{}
-			for paginator.HasMorePages() {
-				output, err := paginator.NextPage(ctx)
-				if err != nil {
-					log.Warn().Err(err).Str("region", region).Msg("could not list S3 buckets in region")
-					break
+		res := []any{}
+		for paginator.HasMorePages() {
+			output, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, bucket := range output.Buckets {
+				if conn.Filters.S3.IsFilteredOut(convert.ToValue(bucket.Name)) {
+					continue
 				}
-				for _, bucket := range output.Buckets {
-					if conn.Filters.S3.IsFilteredOut(convert.ToValue(bucket.Name)) {
-						continue
-					}
 
-					mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
-						map[string]*llx.RawData{
-							"name":      llx.StringDataPtr(bucket.Name),
-							"arn":       llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bucket.Name))),
-							"exists":    llx.BoolData(true),
-							"location":  llx.StringData(region),
-							"createdAt": llx.TimeDataPtr(bucket.CreationDate),
-						})
+				mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
+					map[string]*llx.RawData{
+						"name":      llx.StringDataPtr(bucket.Name),
+						"arn":       llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bucket.Name))),
+						"exists":    llx.BoolData(true),
+						"location":  llx.StringData(region),
+						"createdAt": llx.TimeDataPtr(bucket.CreationDate),
+					})
+				if err != nil {
+					return nil, err
+				}
+
+				// keeps the tags lazy unless the filters need to be evaluated
+				if conn.Filters.General.HasTags() {
+					tags, err := mqlS3Bucket.(*mqlAwsS3Bucket).tags()
 					if err != nil {
 						return nil, err
 					}
 
-					// keeps the tags lazy unless the filters need to be evaluated
-					if conn.Filters.General.HasTags() {
-						tags, err := mqlS3Bucket.(*mqlAwsS3Bucket).tags()
-						if err != nil {
-							return nil, err
-						}
-
-						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-							continue
-						}
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+						continue
 					}
-
-					res = append(res, mqlS3Bucket)
 				}
-			}
 
-			return jobpool.JobResult(res), nil
+				res = append(res, mqlS3Bucket)
+			}
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+
+		return res, nil
+	})
 }
 
 func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
