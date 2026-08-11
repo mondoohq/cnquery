@@ -91,3 +91,32 @@ func TestWorkersPages(t *testing.T) {
 	assert.Equal(t, "https://marketing.pages.dev", p.Url.Data)
 	assert.Equal(t, "main", p.ProductionBranch.Data)
 }
+
+// TestWorkersUnboundAccountIssuesNoRequest is the regression guard for the empty
+// account id. `cloudflare.workers` reached bare (not via
+// cloudflare.account.workers) was built with no AccountID, so every accessor
+// requested /accounts//workers/scripts and friends. Those 404, and a 404
+// degrades to an empty list, so a malformed request read as "nothing deployed".
+// Fail before issuing the request.
+func TestWorkersUnboundAccountIssuesNoRequest(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		call func(*mqlCloudflareWorkers) ([]any, error)
+	}{
+		{"workers", (*mqlCloudflareWorkers).workers},
+		{"pages", (*mqlCloudflareWorkers).pages},
+		{"secrets", (*mqlCloudflareWorkers).secrets},
+		{"pageEnvVars", (*mqlCloudflareWorkers).pageEnvVars},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := setupTestEnv(t)
+			env.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				t.Errorf("no request may be issued without an account: %s", r.URL.Path)
+			})
+
+			res, err := tc.call(&mqlCloudflareWorkers{MqlRuntime: env.Runtime})
+			require.ErrorIs(t, err, errNoAccountBound)
+			assert.Nil(t, res, "must not degrade to an empty list, which would pass vacuously")
+		})
+	}
+}
