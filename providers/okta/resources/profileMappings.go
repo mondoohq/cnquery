@@ -118,19 +118,11 @@ func (o *mqlOktaProfileMapping) id() (string, error) {
 	return "okta.profileMapping/" + o.Id.Data, o.Id.Error
 }
 
+// Mappings also cover applications Okta manages internally, which it does not
+// serve from `/api/v1/apps`; those resolve to null rather than failing every
+// other mapping in the same query.
 func (o *mqlOktaProfileMapping) application() (*mqlOktaApplication, error) {
-	if o.cacheApplicationID == "" {
-		o.Application.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-
-	r, err := NewResource(o.MqlRuntime, "okta.application", map[string]*llx.RawData{
-		"id": llx.StringData(o.cacheApplicationID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return r.(*mqlOktaApplication), nil
+	return resolveOktaApplicationRef(o.MqlRuntime, o.cacheApplicationID, &o.Application)
 }
 
 func (o *mqlOktaProfileMapping) userType() (*mqlOktaUserType, error) {

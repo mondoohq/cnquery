@@ -154,30 +154,13 @@ func (o *mqlOktaUserType) id() (string, error) {
 	return "okta.userType/" + o.Id.Data, o.Id.Error
 }
 
+// Okta stamps the built-in user type with a system principal id rather than a
+// user id, so these resolve to null on the default type instead of failing the
+// collection. The shared resolver handles both that and an empty id.
 func (o *mqlOktaUserType) createdBy() (*mqlOktaUser, error) {
-	if o.cacheCreatedBy == "" {
-		o.CreatedBy.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return oktaUserRef(o.MqlRuntime, o.cacheCreatedBy)
+	return resolveOktaUserRef(o.MqlRuntime, o.cacheCreatedBy, &o.CreatedBy)
 }
 
 func (o *mqlOktaUserType) lastUpdatedBy() (*mqlOktaUser, error) {
-	if o.cacheLastUpdatedBy == "" {
-		o.LastUpdatedBy.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return oktaUserRef(o.MqlRuntime, o.cacheLastUpdatedBy)
-}
-
-// oktaUserRef resolves a user id to an okta.user. The runtime caches user
-// instances by id, so repeated references across resources share one fetch.
-func oktaUserRef(runtime *plugin.Runtime, id string) (*mqlOktaUser, error) {
-	r, err := NewResource(runtime, "okta.user", map[string]*llx.RawData{
-		"id": llx.StringData(id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return r.(*mqlOktaUser), nil
+	return resolveOktaUserRef(o.MqlRuntime, o.cacheLastUpdatedBy, &o.LastUpdatedBy)
 }

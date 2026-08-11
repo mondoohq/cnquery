@@ -171,8 +171,16 @@ func (a *mqlOktaApplication) scopeConsentGrants() ([]any, error) {
 
 	ctx := context.Background()
 	appID := a.Id.Data
+
 	slice, resp, err := client.ApplicationGrantsAPI.ListScopeConsentGrants(ctx, appID).Execute()
 	if err != nil {
+		// The grants collection belongs to the OAuth 2.0 client, so Okta answers
+		// 404 for an application that is not one (a bookmark or SAML app). That
+		// describes the app's type rather than a failure, and erroring here
+		// would take down every other application in the same query.
+		if isOktaFeatureUnavailable(resp, err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

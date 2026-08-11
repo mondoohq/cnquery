@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
@@ -36,8 +37,11 @@ func initOktaUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	user, _, err := client.UserAPI.GetUser(ctx, id).Execute()
+	user, resp, err := client.UserAPI.GetUser(ctx, id).Execute()
 	if err != nil {
+		if isOktaNotFound(resp) {
+			return nil, nil, fmt.Errorf("%w: okta.user %q", errOktaResourceNotFound, id)
+		}
 		return nil, nil, err
 	}
 

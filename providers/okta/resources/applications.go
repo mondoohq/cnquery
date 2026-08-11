@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
@@ -117,8 +118,11 @@ func initOktaApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	item, _, err := client.ApplicationAPI.GetApplication(ctx, id).Execute()
+	item, resp, err := client.ApplicationAPI.GetApplication(ctx, id).Execute()
 	if err != nil {
+		if isOktaNotFound(resp) {
+			return nil, nil, fmt.Errorf("%w: okta.application %q", errOktaResourceNotFound, id)
+		}
 		return nil, nil, err
 	}
 	if item == nil {

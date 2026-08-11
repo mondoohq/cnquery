@@ -62,24 +62,20 @@ func (o *mqlOktaEmailDomain) id() (string, error) {
 
 func (o *mqlOkta) emailServers() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
-	servers, resp, err := client.EmailServerAPI.ListEmailServers(ctx).Execute()
+	servers, resp, err := conn.ApiExtension().ListEmailServers(ctx)
 	if err != nil {
 		// Orgs sending through Okta's own mail infrastructure have none.
-		if isOktaFeatureUnavailable(resp, err) {
+		if isOktaRawFeatureUnavailable(resp) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	if servers == nil {
-		return nil, nil
-	}
 
 	list := []any{}
-	for i := range servers.EmailServers {
-		r, err := newMqlOktaEmailServer(o.MqlRuntime, &servers.EmailServers[i])
+	for i := range servers {
+		r, err := newMqlOktaEmailServer(o.MqlRuntime, &servers[i])
 		if err != nil {
 			return nil, err
 		}

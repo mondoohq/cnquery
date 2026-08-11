@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -131,20 +133,75 @@ func oktaBool(b *bool) bool {
 	return *b
 }
 
+// oktaErrCodeFeatureNotEnabled is the Okta error code for a feature the org is
+// not licensed for. Okta answers it with 401 rather than 403, which is the same
+// status it uses for a token that is invalid or expired (E0000011), so the two
+// can only be told apart by the code in the body.
+const oktaErrCodeFeatureNotEnabled = "E0000015"
+
+// oktaErrorCode returns the Okta error code (for example "E0000015") carried in
+// an API error's response body, or "" when the error is not an Okta API error
+// or the body does not parse. The v5 SDK only decodes the error model for a
+// couple of status codes but always keeps the raw body, so the body is the one
+// place the code can be read from reliably.
+func oktaErrorCode(err error) string {
+	var apiErr *okta.GenericOpenAPIError
+	if !errors.As(err, &apiErr) {
+		return ""
+	}
+	var body struct {
+		ErrorCode string `json:"errorCode"`
+	}
+	if json.Unmarshal(apiErr.Body(), &body) != nil {
+		return ""
+	}
+	return body.ErrorCode
+}
+
 // isOktaFeatureUnavailable reports whether an API error means the org simply
 // does not have the thing being asked about, rather than that the request
 // failed. Okta answers 404 for an endpoint belonging to a feature the org has
-// not enabled, 410 for one that has been retired, and 403 when the token's
-// admin role cannot reach it. All three describe an org with nothing to
-// report, so callers degrade to an empty result instead of failing the query
-// and taking every other resource in the scan down with them.
+// not enabled, 410 for one that has been retired, 403 when the token's admin
+// role cannot reach it, and 401 E0000015 for a feature the org is not licensed
+// for. All of those describe an org with nothing to report, so callers degrade
+// to an empty result instead of failing the query and taking every other
+// resource in the scan down with them.
+//
+// A bare 401 is deliberately not enough: it is also what an invalid or expired
+// token returns, and degrading that would report a dead credential as a clean,
+// empty scan.
 func isOktaFeatureUnavailable(resp *okta.APIResponse, err error) bool {
-	if err == nil || resp == nil {
+	// The SDK wraps a nil *http.Response in a non-nil *APIResponse whenever the
+	// request never produced a response at all (a transport error, or a
+	// rate-limit retry that ran out of attempts). StatusCode is a promoted
+	// field, so reading it in that state dereferences the nil embed and panics.
+	if err == nil || resp == nil || resp.Response == nil {
 		return false
 	}
 	switch resp.StatusCode {
 	case http.StatusForbidden, http.StatusNotFound, http.StatusGone:
 		return true
+	case http.StatusUnauthorized:
+		return oktaErrorCode(err) == oktaErrCodeFeatureNotEnabled
 	}
 	return false
+}
+
+// errOktaResourceNotFound marks a reference to an object the org does not
+// expose through the API: a deleted user, an internal application that is
+// absent from `/api/v1/apps`, or a principal id that belongs to something other
+// than the resource being resolved (Okta stamps `createdBy` with system
+// principal ids that are not users). Reference accessors report it as a null
+// field rather than failing the whole collection they were read from.
+var errOktaResourceNotFound = errors.New("okta resource not found")
+
+// isOktaStatus reports whether a response carries the given status code. Like
+// the classifiers above it tolerates the SDK's response-less *APIResponse.
+func isOktaStatus(resp *okta.APIResponse, status int) bool {
+	return resp != nil && resp.Response != nil && resp.StatusCode == status
+}
+
+// isOktaNotFound reports whether a response says the object does not exist.
+func isOktaNotFound(resp *okta.APIResponse) bool {
+	return isOktaStatus(resp, http.StatusNotFound)
 }

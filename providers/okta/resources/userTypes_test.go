@@ -127,6 +127,10 @@ func TestIsOktaFeatureUnavailable(t *testing.T) {
 		{"rate limited is a real failure", apiResponse(http.StatusTooManyRequests), err, false},
 		{"no error", apiResponse(http.StatusNotFound), nil, false},
 		{"no response", nil, err, false},
+		// The SDK hands back a non-nil *APIResponse wrapping a nil
+		// *http.Response whenever the request produced no response at all.
+		// StatusCode is promoted from that embed, so this case panicked.
+		{"response with no http response", &okta.APIResponse{}, err, false},
 	}
 
 	for _, tc := range tests {
