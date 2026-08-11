@@ -61,6 +61,8 @@ func TestIsUnavailable(t *testing.T) {
 		{StatusCode: http.StatusForbidden},
 		apiErr(http.StatusForbidden, 10042, "Please enable R2 through the Cloudflare Dashboard."),
 		apiErr(http.StatusForbidden, 9999, "access.api.error.not_enabled: Access is not enabled."),
+		// A 401 carrying a not-provisioned code: Zero Trust/Gateway on an account
+		// that never initialized it. This is why 401 is not blanket-surfaced.
 		apiErr(http.StatusUnauthorized, 1001, "Account ID is invalid or has not been initialized."),
 		// Plan-gated zone features answer with the generic code.
 		apiErr(http.StatusForbidden, 10000, "Forbidden"),
@@ -74,6 +76,12 @@ func TestIsUnavailable(t *testing.T) {
 	credentialScope := []*cloudflarev6.Error{
 		apiErr(http.StatusForbidden, 9109, "Valid user-level authentication not found"),
 		apiErr(http.StatusForbidden, 10002, "Authorization Failure: The authentication credentials are not authorized to perform the request."),
+		// The deny-list is keyed on the error code, not the status, so it applies
+		// to a 401 too. Cloudflare does populate Errors on 401 responses — the
+		// 1001 case above is an observed one — so this branch is live, not a
+		// no-op that happens to reproduce the old behavior.
+		apiErr(http.StatusUnauthorized, 9109, "Valid user-level authentication not found"),
+		apiErr(http.StatusUnauthorized, 10002, "Authorization Failure: The authentication credentials are not authorized to perform the request."),
 	}
 	for _, e := range credentialScope {
 		assert.Falsef(t, isUnavailable(e), "credential-scope failure must surface: %+v", e.Errors)
