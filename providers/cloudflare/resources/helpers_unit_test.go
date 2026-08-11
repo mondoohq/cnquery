@@ -13,6 +13,7 @@ import (
 	"time"
 
 	cloudflarev6 "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
@@ -41,10 +42,43 @@ func TestParseRFC3339(t *testing.T) {
 	assert.Equal(t, time.July, got.Month())
 }
 
-func TestIsUnavailable(t *testing.T) {
-	for _, code := range []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound} {
-		assert.Truef(t, isUnavailable(&cloudflarev6.Error{StatusCode: code}), "status %d should be treated as unavailable", code)
+// apiErr builds a *cloudflare.Error carrying the per-error code/message the API
+// actually returns, which is what separates "product not enabled" from "this
+// token may not read it".
+func apiErr(status int, code int64, msg string) *cloudflarev6.Error {
+	return &cloudflarev6.Error{
+		StatusCode: status,
+		Errors:     []shared.ErrorData{{Code: code, Message: msg}},
 	}
+}
+
+func TestIsUnavailable(t *testing.T) {
+	// 401/403/404 still degrade by default: an absent resource, an unprovisioned
+	// product, or a plan-gated feature genuinely has nothing to assess. Codes and
+	// messages below are copied from live API responses.
+	unavailable := []*cloudflarev6.Error{
+		{StatusCode: http.StatusNotFound},
+		{StatusCode: http.StatusForbidden},
+		apiErr(http.StatusForbidden, 10042, "Please enable R2 through the Cloudflare Dashboard."),
+		apiErr(http.StatusForbidden, 9999, "access.api.error.not_enabled: Access is not enabled."),
+		apiErr(http.StatusUnauthorized, 1001, "Account ID is invalid or has not been initialized."),
+		// Plan-gated zone features answer with the generic code.
+		apiErr(http.StatusForbidden, 10000, "Forbidden"),
+	}
+	for _, e := range unavailable {
+		assert.Truef(t, isUnavailable(e), "should degrade: %+v", e.Errors)
+	}
+
+	// A failure the API blames on the credentials must NOT degrade. Swallowing
+	// these is what let an under-scoped token produce vacuous passes.
+	credentialScope := []*cloudflarev6.Error{
+		apiErr(http.StatusForbidden, 9109, "Valid user-level authentication not found"),
+		apiErr(http.StatusForbidden, 10002, "Authorization Failure: The authentication credentials are not authorized to perform the request."),
+	}
+	for _, e := range credentialScope {
+		assert.Falsef(t, isUnavailable(e), "credential-scope failure must surface: %+v", e.Errors)
+	}
+
 	for _, code := range []int{http.StatusInternalServerError, http.StatusTooManyRequests, http.StatusBadRequest} {
 		assert.Falsef(t, isUnavailable(&cloudflarev6.Error{StatusCode: code}), "status %d should NOT be unavailable", code)
 	}
@@ -62,6 +96,12 @@ func TestDegradedList(t *testing.T) {
 	got, err = degradedList(&cloudflarev6.Error{StatusCode: http.StatusNotFound})
 	require.NoError(t, err)
 	assert.Empty(t, got)
+
+	// A credential-scope failure propagates, so the check reports errored rather
+	// than passing vacuously over an empty list.
+	got, err = degradedList(apiErr(http.StatusForbidden, 9109, "Valid user-level authentication not found"))
+	assert.Nil(t, got)
+	require.Error(t, err)
 
 	// Any other error propagates unchanged (not swallowed).
 	sentinel := errors.New("rate limited")
