@@ -130,15 +130,15 @@ func TestCollectRoleHoldersWithNoHolders(t *testing.T) {
 
 func TestMemoGrants(t *testing.T) {
 	newCache := func() *snowflakeGrantCache {
-		return &snowflakeGrantCache{toRole: map[string]grantResult[sdk.Grant]{}}
+		return &snowflakeGrantCache{toRole: map[string]grantResult[snowflakeGrant]{}}
 	}
 
 	t.Run("a success is fetched once", func(t *testing.T) {
 		cache := newCache()
 		calls := 0
-		fetch := func() ([]sdk.Grant, error) {
+		fetch := func() ([]snowflakeGrant, error) {
 			calls++
-			return []sdk.Grant{{Privilege: "SELECT"}}, nil
+			return []snowflakeGrant{{privilege: "SELECT"}}, nil
 		}
 
 		for range 3 {
@@ -156,7 +156,7 @@ func TestMemoGrants(t *testing.T) {
 		cache := newCache()
 		boom := errors.New("insufficient privileges")
 		calls := 0
-		fetch := func() ([]sdk.Grant, error) {
+		fetch := func() ([]snowflakeGrant, error) {
 			calls++
 			return nil, boom
 		}
@@ -171,7 +171,7 @@ func TestMemoGrants(t *testing.T) {
 	t.Run("names are memoized independently", func(t *testing.T) {
 		cache := newCache()
 		calls := 0
-		fetch := func() ([]sdk.Grant, error) {
+		fetch := func() ([]snowflakeGrant, error) {
 			calls++
 			return nil, nil
 		}
@@ -229,34 +229,34 @@ func TestParseUserRoleGrants(t *testing.T) {
 }
 
 func TestSnowflakeGrantID(t *testing.T) {
-	grant := sdk.Grant{
-		Privilege:   "SELECT",
-		GrantedOn:   sdk.ObjectTypeTable,
-		Name:        sdk.NewSchemaObjectIdentifier("DB", "SCH", "T"),
-		GrantedTo:   sdk.ObjectTypeRole,
-		GranteeName: sdk.NewAccountObjectIdentifier("ANALYST"),
+	grant := snowflakeGrant{
+		privilege:   "SELECT",
+		grantedOn:   string(sdk.ObjectTypeTable),
+		name:        `"DB"."SCH"."T"`,
+		grantedTo:   string(sdk.ObjectTypeRole),
+		granteeName: "ANALYST",
 	}
 
 	assert.Equal(t, `ANALYST/ROLE/SELECT/TABLE/"DB"."SCH"."T"`, snowflakeGrantID(grant))
 
 	// The same privilege on a different object is a different grant.
 	other := grant
-	other.Name = sdk.NewSchemaObjectIdentifier("DB", "SCH", "OTHER")
+	other.name = `"DB"."SCH"."OTHER"`
 	assert.NotEqual(t, snowflakeGrantID(grant), snowflakeGrantID(other))
 
 	// The same object granted to a different role is a different grant.
 	otherGrantee := grant
-	otherGrantee.GranteeName = sdk.NewAccountObjectIdentifier("REPORTER")
+	otherGrantee.granteeName = "REPORTER"
 	assert.NotEqual(t, snowflakeGrantID(grant), snowflakeGrantID(otherGrantee))
 }
 
 func TestSnowflakeGrantIDWithoutName(t *testing.T) {
 	// Account-level privileges carry no object name.
-	grant := sdk.Grant{
-		Privilege:   "CREATE INTEGRATION",
-		GrantedOn:   sdk.ObjectTypeAccount,
-		GrantedTo:   sdk.ObjectTypeRole,
-		GranteeName: sdk.NewAccountObjectIdentifier("ANALYST"),
+	grant := snowflakeGrant{
+		privilege:   "CREATE INTEGRATION",
+		grantedOn:   string(sdk.ObjectTypeAccount),
+		grantedTo:   string(sdk.ObjectTypeRole),
+		granteeName: "ANALYST",
 	}
 
 	assert.Equal(t, "ANALYST/ROLE/CREATE INTEGRATION/ACCOUNT/", snowflakeGrantID(grant))
