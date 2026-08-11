@@ -11,6 +11,7 @@ import (
 	"time"
 
 	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -168,11 +169,31 @@ func isUnavailable(err error) bool {
 	}
 	switch apiErr.StatusCode {
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return !isCredentialScope(apiErr)
+		if isCredentialScope(apiErr) {
+			return false
+		}
 	case http.StatusNotFound:
-		return true
+	default:
+		return false
 	}
-	return false
+	logDegraded(apiErr)
+	return true
+}
+
+// logDegraded records that a response was turned into an empty/null result. The
+// scan still succeeds, so without this the difference between "nothing is
+// configured" and "nothing was readable" leaves no trace at all. Mirrors the
+// warning the AWS provider emits when it degrades an AccessDenied region
+// (providers/aws/resources/aws_acm.go).
+func logDegraded(apiErr *cloudflare.Error) {
+	ev := log.Warn().Int("status", apiErr.StatusCode)
+	if apiErr.Request != nil && apiErr.Request.URL != nil {
+		ev = ev.Str("path", apiErr.Request.URL.Path)
+	}
+	if len(apiErr.Errors) > 0 {
+		ev = ev.Int64("code", apiErr.Errors[0].Code).Str("error", apiErr.Errors[0].Message)
+	}
+	ev.Msg("cloudflare> no data returned; reporting an empty result for this resource")
 }
 
 // isCredentialScope reports whether the API blamed the caller's credentials, as
