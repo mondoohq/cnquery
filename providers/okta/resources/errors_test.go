@@ -7,8 +7,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
@@ -183,6 +185,41 @@ func TestErrOktaResourceNotFoundIsIdentifiable(t *testing.T) {
 		"a string that merely mentions the sentinel must not match")
 
 	assert.True(t, errors.Is(
-		errors.Join(errOktaResourceNotFound, errors.New("okta.user \"00u1\"")),
+		fmt.Errorf("%w: okta.user %q", errOktaResourceNotFound, "00u1"),
 		errOktaResourceNotFound))
+}
+
+// TestNotFoundWrappingIsPairedWithAGuard keeps the two halves of the
+// null-on-missing behavior in step. A resolver's errors.Is guard is dead code
+// unless the init behind it wraps the sentinel, and an init that wraps without
+// a guard downstream just renames the failure -- either half alone reads as
+// fixed while the collection still fails. Both directions are checked by
+// source, because the behavior only shows up against a live org.
+func TestNotFoundWrappingIsPairedWithAGuard(t *testing.T) {
+	t.Parallel()
+
+	// resource -> (init that must wrap, file holding the accessor that must guard)
+	pairs := []struct{ resource, initFile, guardFile string }{
+		{"okta.user", "users.go", "resourceSets.go"},
+		{"okta.group", "groups.go", "resourceSets.go"},
+		{"okta.application", "applications.go", "resourceSets.go"},
+		{"okta.customRole", "customRoles.go", "resourceSets.go"},
+		{"okta.resourceSet", "resourceSets.go", "roles.go"},
+	}
+
+	for _, p := range pairs {
+		t.Run(p.resource, func(t *testing.T) {
+			initSrc, err := os.ReadFile(p.initFile)
+			require.NoError(t, err)
+			assert.Contains(t, string(initSrc), "errOktaResourceNotFound",
+				"%s must wrap a 404 from its init in the sentinel, or the guard in %s never fires",
+				p.initFile, p.guardFile)
+
+			guardSrc, err := os.ReadFile(p.guardFile)
+			require.NoError(t, err)
+			assert.Contains(t, string(guardSrc), "errors.Is(err, errOktaResourceNotFound)",
+				"%s must report a missing %s as null rather than failing the collection",
+				p.guardFile, p.resource)
+		})
+	}
 }

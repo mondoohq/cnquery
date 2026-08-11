@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
@@ -96,6 +97,11 @@ func (o *mqlOktaRole) resourceSet() (*mqlOktaResourceSet, error) {
 		"id": llx.StringData(o.cacheResourceSetID),
 	})
 	if err != nil {
+		// A binding can outlive the resource set it scoped.
+		if errors.Is(err, errOktaResourceNotFound) {
+			o.ResourceSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlOktaResourceSet), nil

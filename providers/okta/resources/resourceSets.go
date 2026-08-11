@@ -97,8 +97,11 @@ func initOktaResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	set, _, err := client.ResourceSetAPI.GetResourceSet(ctx, id).Execute()
+	set, resp, err := client.ResourceSetAPI.GetResourceSet(ctx, id).Execute()
 	if err != nil {
+		if isOktaNotFound(resp) {
+			return nil, nil, fmt.Errorf("%w: okta.resourceSet %q", errOktaResourceNotFound, id)
+		}
 		return nil, nil, err
 	}
 	if set == nil {
@@ -399,6 +402,10 @@ func resolveOktaCustomRoleRef(runtime *plugin.Runtime, id string, field *plugin.
 		"id": llx.StringData(id),
 	})
 	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlOktaCustomRole), nil
