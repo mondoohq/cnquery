@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "okta",
 	ID:              "go.mondoo.com/cnquery/v9/providers/okta",
-	Version:         "13.4.3",
+	Version:         "13.4.4",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
