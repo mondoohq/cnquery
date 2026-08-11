@@ -28,8 +28,8 @@ import (
 // round trips, which is the better deal against an API this chatty.
 type snowflakeGrantCache struct {
 	mu     sync.Mutex
-	toRole map[string]grantResult[sdk.Grant]
-	ofRole map[string]grantResult[sdk.Grant]
+	toRole map[string]grantResult[snowflakeGrant]
+	ofRole map[string]grantResult[snowflakeGrant]
 	toUser map[string]grantResult[userRoleGrant]
 }
 
@@ -89,8 +89,8 @@ func snowflakeAccount(runtime *plugin.Runtime) (*mqlSnowflakeAccount, error) {
 func (r *mqlSnowflakeAccount) grantCache() *snowflakeGrantCache {
 	r.grantCacheOnce.Do(func() {
 		r.cachedGrants = &snowflakeGrantCache{
-			toRole: map[string]grantResult[sdk.Grant]{},
-			ofRole: map[string]grantResult[sdk.Grant]{},
+			toRole: map[string]grantResult[snowflakeGrant]{},
+			ofRole: map[string]grantResult[snowflakeGrant]{},
 			toUser: map[string]grantResult[userRoleGrant]{},
 		}
 	})
@@ -100,27 +100,27 @@ func (r *mqlSnowflakeAccount) grantCache() *snowflakeGrantCache {
 // showGrants runs one memoized SHOW GRANTS statement. The caller picks the
 // bucket to memoize into, since the same name means different things in each
 // direction.
-func (r *mqlSnowflakeAccount) showGrants(bucket map[string]grantResult[sdk.Grant], name string, opts *sdk.ShowGrantOptions) ([]sdk.Grant, error) {
-	return memoGrants(r.grantCache(), bucket, name, func() ([]sdk.Grant, error) {
+func (r *mqlSnowflakeAccount) showGrants(bucket map[string]grantResult[snowflakeGrant], name string, statement string) ([]snowflakeGrant, error) {
+	return memoGrants(r.grantCache(), bucket, name, func() ([]snowflakeGrant, error) {
 		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-		return conn.Client().Grants.Show(context.Background(), opts)
+		return showGrantsRaw(conn, statement)
 	})
 }
 
 // grantsToRole returns SHOW GRANTS TO ROLE <name>: the privileges the role holds
 // directly, including the roles granted to it.
-func (r *mqlSnowflakeAccount) grantsToRole(name string) ([]sdk.Grant, error) {
-	return r.showGrants(r.grantCache().toRole, name, &sdk.ShowGrantOptions{
-		To: &sdk.ShowGrantsTo{Role: sdk.NewAccountObjectIdentifier(name)},
-	})
+func (r *mqlSnowflakeAccount) grantsToRole(name string) ([]snowflakeGrant, error) {
+	id := sdk.NewAccountObjectIdentifier(name)
+	return r.showGrants(r.grantCache().toRole, name,
+		"SHOW GRANTS TO ROLE "+id.FullyQualifiedName())
 }
 
 // grantsOfRole returns SHOW GRANTS OF ROLE <name>: the users and roles the role
 // has been granted to.
-func (r *mqlSnowflakeAccount) grantsOfRole(name string) ([]sdk.Grant, error) {
-	return r.showGrants(r.grantCache().ofRole, name, &sdk.ShowGrantOptions{
-		Of: &sdk.ShowGrantsOf{Role: sdk.NewAccountObjectIdentifier(name)},
-	})
+func (r *mqlSnowflakeAccount) grantsOfRole(name string) ([]snowflakeGrant, error) {
+	id := sdk.NewAccountObjectIdentifier(name)
+	return r.showGrants(r.grantCache().ofRole, name,
+		"SHOW GRANTS OF ROLE "+id.FullyQualifiedName())
 }
 
 // grantsToUser returns SHOW GRANTS TO USER <name>, the roles granted to the
@@ -245,14 +245,21 @@ func directChildRoles(account *mqlSnowflakeAccount, roleName string) ([]string, 
 	if err != nil {
 		return nil, err
 	}
+	return grantedRoleNames(grants), nil
+}
+
+// grantedRoleNames returns the roles named by grants of a role to something
+// else, in the order first seen. A grant on any other object type is not a step
+// in the hierarchy, and a role grant with no name cannot be followed.
+func grantedRoleNames(grants []snowflakeGrant) []string {
 	names := newNameSet()
 	for i := range grants {
-		if grants[i].GrantedOn != sdk.ObjectTypeRole || grants[i].Name == nil {
+		if grants[i].grantedOn != string(sdk.ObjectTypeRole) || grants[i].name == "" {
 			continue
 		}
-		names.add(grants[i].Name.Name())
+		names.add(identifierName(grants[i].name))
 	}
-	return names.order, nil
+	return names.order
 }
 
 // directParentRoles returns the roles that roleName has been granted to, which
@@ -262,14 +269,21 @@ func directParentRoles(account *mqlSnowflakeAccount, roleName string) ([]string,
 	if err != nil {
 		return nil, err
 	}
+	return granteeNames(grants, sdk.ObjectTypeRole), nil
+}
+
+// granteeNames returns the grantees of one kind named by a SHOW GRANTS OF
+// result, in the order first seen. The same statement reports both the users and
+// the roles holding a role, so the kind is what separates them.
+func granteeNames(grants []snowflakeGrant, grantedTo sdk.ObjectType) []string {
 	names := newNameSet()
 	for i := range grants {
-		if grants[i].GrantedTo != sdk.ObjectTypeRole {
+		if grants[i].grantedTo != string(grantedTo) {
 			continue
 		}
-		names.add(grants[i].GranteeName.Name())
+		names.add(grants[i].granteeName)
 	}
-	return names.order, nil
+	return names.order
 }
 
 // directRoleUsers returns the users roleName has been granted to directly.
@@ -278,14 +292,7 @@ func directRoleUsers(account *mqlSnowflakeAccount, roleName string) ([]string, e
 	if err != nil {
 		return nil, err
 	}
-	names := newNameSet()
-	for i := range grants {
-		if grants[i].GrantedTo != sdk.ObjectTypeUser {
-			continue
-		}
-		names.add(grants[i].GranteeName.Name())
-	}
-	return names.order, nil
+	return granteeNames(grants, sdk.ObjectTypeUser), nil
 }
 
 // directUserRoles returns the roles granted to userName directly.

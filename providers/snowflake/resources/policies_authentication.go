@@ -9,10 +9,15 @@ import (
 	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
+
+// allSecurityIntegrations is the keyword an authentication policy reports in
+// place of a list when it permits every security integration in the account.
+const allSecurityIntegrations = "ALL"
 
 type mqlSnowflakeAuthenticationPolicyInternal struct {
 	descLock          sync.Mutex
@@ -167,19 +172,61 @@ func (r *mqlSnowflakeAuthenticationPolicy) securityIntegrations() ([]any, error)
 	return r.descSecIntegs, nil
 }
 
+// securityIntegrationRefs resolves the policy's security integrations.
+//
+// The property is not always a list of names. A policy that does not restrict
+// which integrations may be used reports the single value ALL, which is a
+// keyword standing for every integration in the account rather than the name of
+// one, and is the value every policy carries until it is narrowed. Resolving it
+// as a name finds nothing, so ALL expands to the account's integrations instead.
 func (r *mqlSnowflakeAuthenticationPolicy) securityIntegrationRefs() ([]any, error) {
 	if err := r.gatherDescribe(); err != nil {
 		return nil, err
 	}
-	out := []any{}
+
+	names := []string{}
 	for _, s := range r.descSecIntegs {
 		name, ok := s.(string)
 		if !ok || name == "" {
 			continue
 		}
+		if strings.EqualFold(name, allSecurityIntegrations) {
+			return r.allSecurityIntegrationRefs()
+		}
+		names = append(names, name)
+	}
+
+	out := []any{}
+	for _, name := range names {
 		res, err := NewResource(r.MqlRuntime, "snowflake.securityIntegration", map[string]*llx.RawData{
 			"name": llx.StringData(name),
 		})
+		if err != nil {
+			// An integration named by the policy but no longer present in the
+			// account is reported by dropping it, not by discarding every other
+			// integration the policy does resolve.
+			log.Warn().Err(err).Str("integration", name).
+				Msg("could not resolve security integration referenced by authentication policy")
+			continue
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// allSecurityIntegrationRefs returns every security integration in the account,
+// which is what a policy means when it reports ALL.
+func (r *mqlSnowflakeAuthenticationPolicy) allSecurityIntegrationRefs() ([]any, error) {
+	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
+	integrations, err := conn.Client().SecurityIntegrations.Show(context.Background(),
+		sdk.NewShowSecurityIntegrationRequest())
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(integrations))
+	for i := range integrations {
+		res, err := newMqlSnowflakeSecurityIntegration(r.MqlRuntime, integrations[i])
 		if err != nil {
 			return nil, err
 		}

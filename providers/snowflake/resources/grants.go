@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -16,13 +15,8 @@ import (
 // account-level grants: SHOW GRANTS ON ACCOUNT
 func (r *mqlSnowflakeAccount) grants() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
 
-	on := true
-	grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-		On: &sdk.ShowGrantsOn{Account: &on},
-	})
+	grants, err := showGrantsRaw(conn, "SHOW GRANTS ON ACCOUNT")
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +288,7 @@ func (r *mqlSnowflakeDatabase) grants() ([]any, error) {
 // database later (SHOW FUTURE GRANTS IN DATABASE).
 func (r *mqlSnowflakeDatabase) futureGrants() ([]any, error) {
 	id := sdk.NewAccountObjectIdentifier(r.Name.Data)
-	return showFutureGrants(r.MqlRuntime, &sdk.ShowGrantsIn{Database: &id})
+	return showFutureGrants(r.MqlRuntime, sdk.ObjectTypeDatabase, id)
 }
 
 // grants returns the privileges granted on the schema (SHOW GRANTS ON SCHEMA).
@@ -307,7 +301,7 @@ func (r *mqlSnowflakeSchema) grants() ([]any, error) {
 // schema later (SHOW FUTURE GRANTS IN SCHEMA).
 func (r *mqlSnowflakeSchema) futureGrants() ([]any, error) {
 	id := sdk.NewDatabaseObjectIdentifier(r.DatabaseName.Data, r.Name.Data)
-	return showFutureGrants(r.MqlRuntime, &sdk.ShowGrantsIn{Schema: &id})
+	return showFutureGrants(r.MqlRuntime, sdk.ObjectTypeSchema, id)
 }
 
 // grants returns the objects an outbound share exposes (SHOW GRANTS TO SHARE).
@@ -320,11 +314,8 @@ func (r *mqlSnowflakeShare) grants() ([]any, error) {
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	grants, err := conn.Client().Grants.Show(context.Background(), &sdk.ShowGrantOptions{
-		To: &sdk.ShowGrantsTo{
-			Share: &sdk.ShowGrantsToShare{Name: sdk.NewAccountObjectIdentifier(r.Name.Data)},
-		},
-	})
+	id := sdk.NewAccountObjectIdentifier(r.Name.Data)
+	grants, err := showGrantsRaw(conn, "SHOW GRANTS TO SHARE "+id.FullyQualifiedName())
 	if err != nil {
 		return nil, err
 	}
@@ -334,11 +325,8 @@ func (r *mqlSnowflakeShare) grants() ([]any, error) {
 // grants returns the privileges granted to the database role.
 func (r *mqlSnowflakeDatabaseRole) grants() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	grants, err := conn.Client().Grants.Show(context.Background(), &sdk.ShowGrantOptions{
-		To: &sdk.ShowGrantsTo{
-			DatabaseRole: sdk.NewDatabaseObjectIdentifier(r.DatabaseName.Data, r.Name.Data),
-		},
-	})
+	id := sdk.NewDatabaseObjectIdentifier(r.DatabaseName.Data, r.Name.Data)
+	grants, err := showGrantsRaw(conn, "SHOW GRANTS TO DATABASE ROLE "+id.FullyQualifiedName())
 	if err != nil {
 		return nil, err
 	}
@@ -348,11 +336,8 @@ func (r *mqlSnowflakeDatabaseRole) grants() ([]any, error) {
 // grantees returns the roles and database roles this database role is granted to.
 func (r *mqlSnowflakeDatabaseRole) grantees() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	grants, err := conn.Client().Grants.Show(context.Background(), &sdk.ShowGrantOptions{
-		Of: &sdk.ShowGrantsOf{
-			DatabaseRole: sdk.NewDatabaseObjectIdentifier(r.DatabaseName.Data, r.Name.Data),
-		},
-	})
+	id := sdk.NewDatabaseObjectIdentifier(r.DatabaseName.Data, r.Name.Data)
+	grants, err := showGrantsRaw(conn, "SHOW GRANTS OF DATABASE ROLE "+id.FullyQualifiedName())
 	if err != nil {
 		return nil, err
 	}
@@ -361,29 +346,27 @@ func (r *mqlSnowflakeDatabaseRole) grantees() ([]any, error) {
 
 func showObjectGrants(runtime *plugin.Runtime, objectType sdk.ObjectType, id sdk.ObjectIdentifier) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	grants, err := conn.Client().Grants.Show(context.Background(), &sdk.ShowGrantOptions{
-		On: &sdk.ShowGrantsOn{Object: &sdk.Object{ObjectType: objectType, Name: id}},
-	})
+	grants, err := showGrantsRaw(conn,
+		"SHOW GRANTS ON "+string(objectType)+" "+id.FullyQualifiedName())
 	if err != nil {
 		return nil, err
 	}
 	return convertGrants(runtime, grants)
 }
 
-func showFutureGrants(runtime *plugin.Runtime, in *sdk.ShowGrantsIn) ([]any, error) {
+// showFutureGrants reads SHOW FUTURE GRANTS IN <scope> <name>, the grants that
+// will apply to objects created in that scope later.
+func showFutureGrants(runtime *plugin.Runtime, scope sdk.ObjectType, id sdk.ObjectIdentifier) ([]any, error) {
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
-	future := true
-	grants, err := conn.Client().Grants.Show(context.Background(), &sdk.ShowGrantOptions{
-		Future: &future,
-		In:     in,
-	})
+	grants, err := showGrantsRaw(conn,
+		"SHOW FUTURE GRANTS IN "+string(scope)+" "+id.FullyQualifiedName())
 	if err != nil {
 		return nil, err
 	}
 	return convertGrants(runtime, grants)
 }
 
-func convertGrants(runtime *plugin.Runtime, grants []sdk.Grant) ([]any, error) {
+func convertGrants(runtime *plugin.Runtime, grants []snowflakeGrant) ([]any, error) {
 	list := make([]any, 0, len(grants))
 	for i := range grants {
 		mqlGrant, err := newMqlSnowflakeGrant(runtime, grants[i])
@@ -399,42 +382,22 @@ func convertGrants(runtime *plugin.Runtime, grants []sdk.Grant) ([]any, error) {
 // privilege, and the object the privilege is on. Callers that merge grants from
 // several statements deduplicate on this so a privilege reached twice through
 // the role hierarchy yields one resource.
-func snowflakeGrantID(grant sdk.Grant) string {
-	objectName := ""
-	if grant.Name != nil {
-		objectName = grant.Name.FullyQualifiedName()
-	}
-	return grant.GranteeName.Name() + "/" + string(grant.GrantedTo) + "/" +
-		grant.Privilege + "/" + string(grant.GrantedOn) + "/" + objectName
+func snowflakeGrantID(grant snowflakeGrant) string {
+	return grant.granteeName + "/" + grant.grantedTo + "/" +
+		grant.privilege + "/" + grant.grantedOn + "/" + grant.name
 }
 
-func newMqlSnowflakeGrant(runtime *plugin.Runtime, grant sdk.Grant) (*mqlSnowflakeGrant, error) {
-	objectName := ""
-	if grant.Name != nil {
-		objectName = grant.Name.FullyQualifiedName()
-	}
-
-	// A future grant reports the object type it will apply to in grant_on
-	// rather than granted_on, which is empty until the object exists.
-	grantedOn := grant.GrantedOn
-	if grantedOn == "" {
-		grantedOn = grant.GrantOn
-	}
-	grantedTo := grant.GrantedTo
-	if grantedTo == "" {
-		grantedTo = grant.GrantTo
-	}
-
+func newMqlSnowflakeGrant(runtime *plugin.Runtime, grant snowflakeGrant) (*mqlSnowflakeGrant, error) {
 	r, err := CreateResource(runtime, "snowflake.grant", map[string]*llx.RawData{
 		"__id":        llx.StringData(snowflakeGrantID(grant)),
-		"privilege":   llx.StringData(grant.Privilege),
-		"grantedOn":   llx.StringData(string(grantedOn)),
-		"name":        llx.StringData(objectName),
-		"grantedTo":   llx.StringData(string(grantedTo)),
-		"granteeName": llx.StringData(grant.GranteeName.Name()),
-		"grantOption": llx.BoolData(grant.GrantOption),
-		"grantedBy":   llx.StringData(grant.GrantedBy.Name()),
-		"createdAt":   llx.TimeData(grant.CreatedOn),
+		"privilege":   llx.StringData(grant.privilege),
+		"grantedOn":   llx.StringData(grant.grantedOn),
+		"name":        llx.StringData(grant.name),
+		"grantedTo":   llx.StringData(grant.grantedTo),
+		"granteeName": llx.StringData(grant.granteeName),
+		"grantOption": llx.BoolData(grant.grantOption),
+		"grantedBy":   llx.StringData(grant.grantedBy),
+		"createdAt":   grant.createdOn,
 	})
 	if err != nil {
 		return nil, err
