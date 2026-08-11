@@ -18,10 +18,11 @@ package digest
 import (
 	"encoding/binary"
 	"fmt"
+	"hash"
+	"hash/fnv"
 	"math"
 	"sort"
 
-	"github.com/cespare/xxhash/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/protobuf/proto"
@@ -32,22 +33,23 @@ import (
 // digests produced by different versions never compare equal. Bump on any
 // change to the canonicalization rules below.
 //
-// v2: arrays are hashed as multisets (per-element sub-digests, sorted) —
-// provider enumeration order is not content. v1 hashed arrays in order and
-// produced false "changed" verdicts when e.g. macOS app enumeration
-// returned the same package set in a different order.
-const AlgoVersion = "2"
+// v1: FNV-1a 64, length-prefixed writes, arrays hashed as multisets
+// (per-element sub-digests, sorted) — provider enumeration order is not
+// content. Hashing arrays in order produces false "changed" verdicts when
+// e.g. macOS app enumeration returns the same package set in a different
+// order.
+const AlgoVersion = "1"
 
-// Hasher is a length-prefixed, domain-separated hash writer. The spike uses
-// XXH64 (already a dependency); AlgoVersion covers a later switch to a
-// 128-bit xxh3-class hash.
+// Hasher is a length-prefixed, domain-separated hash writer over FNV-1a 64
+// (stdlib hash/fnv — no third-party dependency). AlgoVersion covers a later
+// switch to a stronger or wider hash.
 type Hasher struct {
-	h *xxhash.Digest
+	h hash.Hash64
 }
 
 // NewHasher returns a Hasher domain-separated by the given literal.
 func NewHasher(domain string) *Hasher {
-	h := &Hasher{h: xxhash.New()}
+	h := &Hasher{h: fnv.New64a()}
 	h.Str(domain)
 	return h
 }
@@ -55,13 +57,13 @@ func NewHasher(domain string) *Hasher {
 func (h *Hasher) writeLen(n int) {
 	var buf [8]byte
 	binary.LittleEndian.PutUint64(buf[:], uint64(n))
-	h.h.Write(buf[:]) //nolint:errcheck // xxhash.Write never errors
+	h.h.Write(buf[:]) //nolint:errcheck // hash.Hash.Write never errors
 }
 
 // Str writes a length-prefixed string.
 func (h *Hasher) Str(s string) *Hasher {
 	h.writeLen(len(s))
-	h.h.WriteString(s) //nolint:errcheck
+	h.h.Write([]byte(s)) //nolint:errcheck
 	return h
 }
 

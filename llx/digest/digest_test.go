@@ -30,7 +30,7 @@ func strResult(codeID, s string) *llx.Result {
 func TestHashDataRowGolden(t *testing.T) {
 	d, err := HashDataRow("code-1", strResult("code-1", "hello"))
 	require.NoError(t, err)
-	assert.Equal(t, "5ef31dae55c5be30", hex(d))
+	assert.Equal(t, "bc7e2a9cf30d5d03", hex(d))
 
 	// The row key is a fold input: same payload under another key differs.
 	d2, err := HashDataRow("code-2", strResult("code-2", "hello"))
@@ -45,10 +45,10 @@ func TestHashDataRowGolden(t *testing.T) {
 	// A nil result is well-defined.
 	d4, err := HashDataRow("code-1", nil)
 	require.NoError(t, err)
-	assert.Equal(t, "e74573eb6b333daf", hex(d4))
+	assert.Equal(t, "211d667e209d5ed6", hex(d4))
 }
 
-// TestArraysAreMultisets is AlgoVersion 2's defining property: provider
+// TestArraysAreMultisets is the algorithm's defining property: provider
 // enumeration order is not content.
 func TestArraysAreMultisets(t *testing.T) {
 	arr := func(vals ...string) *llx.Result {
