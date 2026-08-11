@@ -89,6 +89,18 @@ func GetFeatures(ctx context.Context) Features {
 	return f
 }
 
+// ScanContentDigestsActive reports whether any server-activated scan-content
+// mode feature is on (unchanged-scan short-circuit ADR). The client behavior
+// is identical for every mode except client_compare: compute row/kind digests
+// while writing the scandb and stamp them into its metadata. The mode features
+// are mutually exclusive by construction - the server sends at most one.
+func (f Features) ScanContentDigestsActive() bool {
+	return f.IsActive(ScanContentModeShadow) ||
+		f.IsActive(ScanContentModeForceSend) ||
+		f.IsActive(ScanContentModeServerCompare) ||
+		f.IsActive(ScanContentModeClientCompare)
+}
+
 // InitFeatures initialized everything using the default features
 // and can turn individual features on and off based on the
 // strings that are provided. To turn a feature on just use its

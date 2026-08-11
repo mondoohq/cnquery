@@ -25,11 +25,15 @@ func _() {
 	_ = x[BiosUUIDAsID-15]
 	_ = x[ExchangeTokenForToken-16]
 	_ = x[TerraformResolveVars-17]
+	_ = x[ScanContentModeShadow-18]
+	_ = x[ScanContentModeForceSend-19]
+	_ = x[ScanContentModeServerCompare-20]
+	_ = x[ScanContentModeClientCompare-21]
 }
 
-const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2AutoUpdateEngineBiosUUIDAsIDExchangeTokenForTokenTerraformResolveVars"
+const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2AutoUpdateEngineBiosUUIDAsIDExchangeTokenForTokenTerraformResolveVarsScanContentModeShadowScanContentModeForceSendScanContentModeServerCompareScanContentModeClientCompare"
 
-var _Feature_index = [...]uint16{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201, 217, 229, 250, 270}
+var _Feature_index = [...]uint16{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201, 217, 229, 250, 270, 291, 315, 343, 371}
 
 func (i Feature) String() string {
 	idx := int(i) - 1
