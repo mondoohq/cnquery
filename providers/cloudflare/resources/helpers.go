@@ -11,6 +11,7 @@ import (
 	"time"
 
 	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -125,20 +126,83 @@ func cfTimeString(s string) *llx.RawData {
 	return llx.TimeDataPtr(&t)
 }
 
-// isUnavailable reports whether err is a 401, 403, or 404 from the Cloudflare
-// API. These statuses mean the resource isn't available to the calling token —
-// an unsupported plan, a missing permission, or an absent resource — which
-// callers treat as a null/empty result rather than a hard failure. v6 collapses
-// the v0 typed *AuthenticationError/*AuthorizationError/*NotFoundError into a
-// single *cloudflare.Error with a StatusCode.
+// credentialScopeCodes are the Cloudflare error codes that blame the caller's
+// credentials rather than the resource: the token is the wrong kind, or lacks the
+// permission outright. The API still answers 403, so status alone cannot tell
+// them apart from a plan-gated or unprovisioned product.
+//
+// They must not degrade to an empty result. cnspec scores on what the provider
+// returns, so an empty list makes `list.all(...)`/`none(...)` pass vacuously and
+// the account is reported compliant on data that was never read. An account with
+// five API tokens scanned by an account-scoped token hits exactly this: the
+// user-scoped token endpoint answers 9109, and all three api-token checks pass.
+// Surfacing the error makes those checks report as errored, which is visible.
+//
+// The deny-list stays deliberately narrow. Cloudflare overloads 403 for
+// plan-gated features too (bot management, leaked-credential checks, security.txt
+// on a free zone), and those carry the generic code 10000. A zone whose plan does
+// not include a feature genuinely has nothing to assess, so those keep degrading.
+var credentialScopeCodes = map[int64]struct{}{
+	// "Valid user-level authentication not found" — an account-scoped token used
+	// against a user-scoped endpoint such as /user/tokens.
+	9109: {},
+	// "Authorization Failure: The authentication credentials are not authorized
+	// to perform the request. Verify the credentials and try again."
+	10002: {},
+}
+
+// isUnavailable reports whether err may be degraded to a null/empty result
+// instead of failing the query.
+//
+// 401, 403, and 404 mean the resource isn't available to the calling token — an
+// unsupported plan, an unprovisioned product, or an absent resource — and empty
+// is the honest answer for those. The exception is a failure the API attributes
+// to the credentials themselves, which says nothing about whether the resource
+// exists and so must surface. See credentialScopeCodes.
+//
+// v6 collapses the v0 typed *AuthenticationError/*AuthorizationError/
+// *NotFoundError into a single *cloudflare.Error with a StatusCode.
 func isUnavailable(err error) bool {
 	var apiErr *cloudflare.Error
 	if !errors.As(err, &apiErr) {
 		return false
 	}
 	switch apiErr.StatusCode {
-	case http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound:
-		return true
+	case http.StatusUnauthorized, http.StatusForbidden:
+		if isCredentialScope(apiErr) {
+			return false
+		}
+	case http.StatusNotFound:
+	default:
+		return false
+	}
+	logDegraded(apiErr)
+	return true
+}
+
+// logDegraded records that a response was turned into an empty/null result. The
+// scan still succeeds, so without this the difference between "nothing is
+// configured" and "nothing was readable" leaves no trace at all. Mirrors the
+// warning the AWS provider emits when it degrades an AccessDenied region
+// (providers/aws/resources/aws_acm.go).
+func logDegraded(apiErr *cloudflare.Error) {
+	ev := log.Warn().Int("status", apiErr.StatusCode)
+	if apiErr.Request != nil && apiErr.Request.URL != nil {
+		ev = ev.Str("path", apiErr.Request.URL.Path)
+	}
+	if len(apiErr.Errors) > 0 {
+		ev = ev.Int64("code", apiErr.Errors[0].Code).Str("error", apiErr.Errors[0].Message)
+	}
+	ev.Msg("cloudflare> no data returned; reporting an empty result for this resource")
+}
+
+// isCredentialScope reports whether the API blamed the caller's credentials, as
+// opposed to the resource being absent or not enabled.
+func isCredentialScope(apiErr *cloudflare.Error) bool {
+	for _, e := range apiErr.Errors {
+		if _, ok := credentialScopeCodes[e.Code]; ok {
+			return true
+		}
 	}
 	return false
 }
