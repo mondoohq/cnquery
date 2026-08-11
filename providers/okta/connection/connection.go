@@ -30,6 +30,15 @@ import (
 // the token's own expiry, so this is only an upper bound.
 const accessTokenCacheTTL = 55 * time.Minute
 
+const (
+	// oktaRateLimitMaxRetries bounds how many times a request that came back
+	// 429 is retried before the field reports the failure.
+	oktaRateLimitMaxRetries = 3
+	// oktaRateLimitMaxBackoffSeconds caps how long a single retry waits, so a
+	// far-off X-Rate-Limit-Reset cannot stall a scan for minutes.
+	oktaRateLimitMaxBackoffSeconds = 30
+)
+
 type OktaConnection struct {
 	plugin.Connection
 	Conf  *inventory.Config
@@ -84,7 +93,16 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	}
 
 	orgURL := "https://" + org
-	options := []okta.ConfigSetter{okta.WithOrgUrl(orgURL)}
+	options := []okta.ConfigSetter{
+		okta.WithOrgUrl(orgURL),
+		// Okta rate limits per org, and a scan reads many collections in quick
+		// succession, so a 429 during a large scan is ordinary rather than
+		// exceptional. The SDK honors the X-Rate-Limit-Reset header when it is
+		// allowed to retry; left at the default of no retries it surfaces the
+		// 429 as a failed field instead.
+		okta.WithRateLimitMaxRetries(oktaRateLimitMaxRetries),
+		okta.WithRateLimitMaxBackOff(oktaRateLimitMaxBackoffSeconds),
+	}
 	serviceApp := false
 
 	switch {

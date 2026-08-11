@@ -22,10 +22,22 @@ import (
 // targets is not scoped at all and covers every group or application in the
 // org.
 
+// isCustomRoleAssignment reports whether the assignment grants a custom role.
+// Custom roles take their scope from the resource set they are bound to rather
+// than from a target list, so Okta rejects the target endpoints for them with a
+// 400. Read `resourceSet` to see what such an assignment covers.
+func (o *mqlOktaRole) isCustomRoleAssignment() bool {
+	return o.Type.Error == nil && o.Type.Data == "CUSTOM"
+}
+
 func (o *mqlOktaRole) groupTargets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
 	roleID := o.Id.Data
+
+	if o.isCustomRoleAssignment() {
+		return nil, nil
+	}
 
 	var groups []okta.Group
 	switch {
@@ -90,6 +102,10 @@ func (o *mqlOktaRole) appTargets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
 	roleID := o.Id.Data
+
+	if o.isCustomRoleAssignment() {
+		return nil, nil
+	}
 
 	var apps []okta.CatalogApplication
 	switch {

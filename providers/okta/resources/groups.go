@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
@@ -78,8 +79,11 @@ func initOktaGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	group, _, err := client.GroupAPI.GetGroup(ctx, id).Execute()
+	group, resp, err := client.GroupAPI.GetGroup(ctx, id).Execute()
 	if err != nil {
+		if isOktaNotFound(resp) {
+			return nil, nil, fmt.Errorf("%w: okta.group %q", errOktaResourceNotFound, id)
+		}
 		return nil, nil, err
 	}
 

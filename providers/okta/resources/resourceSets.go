@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -96,8 +97,11 @@ func initOktaResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	set, _, err := client.ResourceSetAPI.GetResourceSet(ctx, id).Execute()
+	set, resp, err := client.ResourceSetAPI.GetResourceSet(ctx, id).Execute()
 	if err != nil {
+		if isOktaNotFound(resp) {
+			return nil, nil, fmt.Errorf("%w: okta.resourceSet %q", errOktaResourceNotFound, id)
+		}
 		return nil, nil, err
 	}
 	if set == nil {
@@ -326,6 +330,15 @@ func (o *mqlOktaResourceSetBinding) groups() ([]any, error) {
 
 // --- shared typed-reference resolvers ---
 
+// Every resolver below reads the reference back through NewResource, which runs
+// the target's init and therefore issues a fetch. A reference can outlive the
+// object it names (a deleted user), point at something Okta does not serve from
+// the collection endpoint (an internal application), or carry a principal id
+// that is not the kind being resolved at all -- `createdBy` on an Okta-managed
+// object holds a system principal id, not a user id. All three come back as a
+// 404, and none of them is a reason to fail the collection the reference was
+// read from, so they resolve to a null field instead.
+
 func resolveOktaUserRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOktaUser]) (*mqlOktaUser, error) {
 	if id == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
@@ -335,6 +348,10 @@ func resolveOktaUserRef(runtime *plugin.Runtime, id string, field *plugin.TValue
 		"id": llx.StringData(id),
 	})
 	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlOktaUser), nil
@@ -349,6 +366,10 @@ func resolveOktaGroupRef(runtime *plugin.Runtime, id string, field *plugin.TValu
 		"id": llx.StringData(id),
 	})
 	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlOktaGroup), nil
@@ -363,6 +384,10 @@ func resolveOktaApplicationRef(runtime *plugin.Runtime, id string, field *plugin
 		"id": llx.StringData(id),
 	})
 	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlOktaApplication), nil
@@ -377,10 +402,18 @@ func resolveOktaCustomRoleRef(runtime *plugin.Runtime, id string, field *plugin.
 		"id": llx.StringData(id),
 	})
 	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlOktaCustomRole), nil
 }
+
+// The plural resolvers drop members the org no longer has rather than failing
+// the list, so one stale member id does not hide every other member alongside
+// it.
 
 func resolveOktaUserRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
 	list := make([]any, 0, len(ids))
@@ -389,6 +422,9 @@ func resolveOktaUserRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
 			"id": llx.StringData(id),
 		})
 		if err != nil {
+			if errors.Is(err, errOktaResourceNotFound) {
+				continue
+			}
 			return nil, err
 		}
 		list = append(list, r)
@@ -403,6 +439,9 @@ func resolveOktaGroupRefs(runtime *plugin.Runtime, ids []string) ([]any, error) 
 			"id": llx.StringData(id),
 		})
 		if err != nil {
+			if errors.Is(err, errOktaResourceNotFound) {
+				continue
+			}
 			return nil, err
 		}
 		list = append(list, r)

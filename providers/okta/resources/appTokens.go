@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
@@ -26,8 +27,12 @@ func (a *mqlOktaApplication) tokens() ([]any, error) {
 	slice, resp, err := conn.Client().ApplicationTokensAPI.
 		ListOAuth2TokensForApplication(ctx, appID).Limit(queryLimit).Execute()
 	if err != nil {
-		// Applications that do not use OAuth 2.0 have no token collection.
-		if isOktaFeatureUnavailable(resp, err) {
+		// Only OAuth 2.0 clients can hold refresh tokens. Okta rejects the
+		// request with a 400 for any other application (a bookmark or SAML
+		// app), which is a statement about the app's type rather than a
+		// failure. The request carries no caller-supplied input beyond the app
+		// id, so a 400 here has no other meaning.
+		if isOktaFeatureUnavailable(resp, err) || isOktaStatus(resp, http.StatusBadRequest) {
 			return nil, nil
 		}
 		return nil, err
