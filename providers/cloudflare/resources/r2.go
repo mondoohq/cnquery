@@ -51,6 +51,27 @@ func newR2(runtime *plugin.Runtime, accountID string) (*mqlCloudflareR2, error) 
 	return r2, nil
 }
 
+// initCloudflareR2 binds the connection's account when `cloudflare.r2` is
+// reached bare, i.e. not through cloudflare.account.r2. R2 is account-scoped, so
+// without this the resource is built with an empty AccountID and every request
+// goes to /accounts//r2/buckets.
+func initCloudflareR2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	accountID, err := connectionAccountID(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newR2(runtime, accountID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
 func (c *mqlCloudflareAccount) r2() (*mqlCloudflareR2, error) {
 	return newR2(c.MqlRuntime, c.Id.Data)
 }
@@ -90,6 +111,9 @@ func (c *mqlCloudflareR2) buckets() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	accountID := c.mqlCloudflareR2Internal.AccountID
+	if accountID == "" {
+		return nil, errNoAccountBound
+	}
 
 	var (
 		result  []any

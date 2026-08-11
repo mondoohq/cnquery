@@ -13,8 +13,37 @@ import (
 	cloudflare "github.com/cloudflare/cloudflare-go/v6"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
+
+// errNoAccountBound guards the account-scoped accessors. An empty account id
+// interpolates into a request against /accounts//… , which the API answers 404;
+// isUnavailable then degrades that to an empty list, so a malformed request
+// reads as "nothing configured" and any all()/none() check over it passes. Fail
+// instead, so the query reports why it could not run.
+var errNoAccountBound = errors.New("no Cloudflare account bound to this resource")
+
+// connectionAccountID returns the account this connection is scoped to, read
+// from the asset's platform id — the same source initCloudflareAccount uses to
+// resolve the singular cloudflare.account.
+//
+// Account-scoped resources reached bare (cloudflare.r2, cloudflare.workers) have
+// no parent to inherit an account from, so they resolve it through this.
+func connectionAccountID(runtime *plugin.Runtime) (string, error) {
+	conn, ok := runtime.Connection.(*connection.CloudflareConnection)
+	if !ok || conn.Asset() == nil {
+		return "", errors.New("no asset found")
+	}
+
+	for _, platformID := range conn.Asset().PlatformIds {
+		if accID := strings.TrimPrefix(platformID, connection.PlatformIdCloudflareAccount); accID != platformID {
+			return accID, nil
+		}
+	}
+	return "", errors.New("cannot determine the Cloudflare account for this asset; " +
+		"scan an account, or reach this resource through cloudflare.account")
+}
 
 // timeOrNil converts a cloudflare-go v6 time.Time value into MQL time data,
 // returning a null value when the timestamp is the zero value. The v6 SDK

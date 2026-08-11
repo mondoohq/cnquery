@@ -133,3 +133,22 @@ func TestR2BucketPublicAccess_forbidden(t *testing.T) {
 	assert.Equal(t, "", domain)
 	assert.Equal(t, plugin.StateIsNull|plugin.StateIsSet, bucket.PublicAccessDomain.State)
 }
+
+// TestR2BucketsUnboundAccountIssuesNoRequest is the regression guard for the
+// empty account id. `cloudflare.r2` reached bare (not via cloudflare.account.r2)
+// was built with no AccountID, so buckets() requested /accounts//r2/buckets. The
+// API answers that 404, isUnavailable degrades a 404 to an empty list, and the
+// malformed request read as "no buckets" — so r2-buckets-not-public passed on an
+// account whose buckets were never listed. Fail before issuing the request.
+func TestR2BucketsUnboundAccountIssuesNoRequest(t *testing.T) {
+	env := setupTestEnv(t)
+	env.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("no request may be issued without an account: %s", r.URL.Path)
+	})
+
+	r2 := &mqlCloudflareR2{MqlRuntime: env.Runtime} // no AccountID bound
+
+	res, err := r2.buckets()
+	require.ErrorIs(t, err, errNoAccountBound)
+	assert.Nil(t, res, "must not degrade to an empty list, which would pass vacuously")
+}

@@ -158,7 +158,7 @@ func init() {
 			Create: createCloudflareStreamsVideo,
 		},
 		"cloudflare.r2": {
-			// to override args, implement: initCloudflareR2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCloudflareR2,
 			Create: createCloudflareR2,
 		},
 		"cloudflare.r2.bucket": {
@@ -166,7 +166,7 @@ func init() {
 			Create: createCloudflareR2Bucket,
 		},
 		"cloudflare.workers": {
-			// to override args, implement: initCloudflareWorkers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initCloudflareWorkers,
 			Create: createCloudflareWorkers,
 		},
 		"cloudflare.workers.worker": {

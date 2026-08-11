@@ -29,6 +29,27 @@ func newWorkers(runtime *plugin.Runtime, accountID string) (*mqlCloudflareWorker
 	return workers, nil
 }
 
+// initCloudflareWorkers binds the connection's account when `cloudflare.workers`
+// is reached bare, i.e. not through cloudflare.account.workers. Workers are
+// account-scoped, so without this the resource is built with an empty AccountID
+// and every request goes to /accounts//workers/scripts.
+func initCloudflareWorkers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	accountID, err := connectionAccountID(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newWorkers(runtime, accountID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
 func (c *mqlCloudflareAccount) workers() (*mqlCloudflareWorkers, error) {
 	return newWorkers(c.MqlRuntime, c.Id.Data)
 }
@@ -97,6 +118,10 @@ func (c *mqlCloudflareWorkers) fetchWorkerList() ([]workerScript, error) {
 }
 
 func (c *mqlCloudflareWorkers) workers() ([]any, error) {
+	if c.mqlCloudflareWorkersInternal.AccountID == "" {
+		return nil, errNoAccountBound
+	}
+
 	workerList, err := c.fetchWorkerList()
 	if err != nil {
 		return nil, err
@@ -136,6 +161,10 @@ func (c *mqlCloudflareWorkers) workers() ([]any, error) {
 // single paged call covers it; preview/historical deployments are out of scope
 // here. Degrades to empty when Pages isn't available to the token.
 func (c *mqlCloudflareWorkers) pages() ([]any, error) {
+	if c.mqlCloudflareWorkersInternal.AccountID == "" {
+		return nil, errNoAccountBound
+	}
+
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	projects, err := cfGetPaged[pagesProject](conn, fmt.Sprintf("accounts/%s/pages/projects", c.AccountID))
@@ -185,6 +214,10 @@ func (c *mqlCloudflarePagesEnvVar) id() (string, error) {
 // account. We only surface name + type — Cloudflare's API never returns the
 // secret value, and we explicitly avoid fields that could expose plaintext.
 func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
+	if c.mqlCloudflareWorkersInternal.AccountID == "" {
+		return nil, errNoAccountBound
+	}
+
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	workerList, err := c.fetchWorkerList()
@@ -263,6 +296,10 @@ type pagesProject struct {
 // project. We expose only `{name, type, environment}` and never `value` so
 // secret bindings cannot leak even if the API were to return one.
 func (c *mqlCloudflareWorkers) pageEnvVars() ([]any, error) {
+	if c.mqlCloudflareWorkersInternal.AccountID == "" {
+		return nil, errNoAccountBound
+	}
+
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	projects, err := cfGetPaged[pagesProject](conn, fmt.Sprintf("accounts/%s/pages/projects", c.mqlCloudflareWorkersInternal.AccountID))
