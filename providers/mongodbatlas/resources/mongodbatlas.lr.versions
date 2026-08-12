@@ -2,8 +2,16 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 mongodbatlas 13.0.0
+mongodbatlas.apiAccessListEntry 13.2.1
+mongodbatlas.apiAccessListEntry.cidrBlock 13.2.1
+mongodbatlas.apiAccessListEntry.created 13.2.1
+mongodbatlas.apiAccessListEntry.ipAddress 13.2.1
+mongodbatlas.apiAccessListEntry.lastUsed 13.2.1
+mongodbatlas.apiAccessListEntry.lastUsedAddress 13.2.1
+mongodbatlas.apiAccessListEntry.requestCount 13.2.1
 mongodbatlas.apiAccessListRequired 13.0.0
 mongodbatlas.apiKey 13.0.0
+mongodbatlas.apiKey.accessList 13.2.1
 mongodbatlas.apiKey.description 13.0.0
 mongodbatlas.apiKey.id 13.0.0
 mongodbatlas.apiKey.publicKey 13.0.0
@@ -99,6 +107,7 @@ mongodbatlas.databaseUser.databaseName 13.0.0
 mongodbatlas.databaseUser.deleteAfterDate 13.0.0
 mongodbatlas.databaseUser.description 13.0.0
 mongodbatlas.databaseUser.id 13.0.0
+mongodbatlas.databaseUser.labels 13.2.1
 mongodbatlas.databaseUser.ldapAuthType 13.0.0
 mongodbatlas.databaseUser.oidcAuthType 13.0.0
 mongodbatlas.databaseUser.roles 13.0.0
@@ -255,10 +264,12 @@ mongodbatlas.searchIndex.statusDetail 13.0.1
 mongodbatlas.searchIndex.type 13.0.1
 mongodbatlas.securityContact 13.0.0
 mongodbatlas.serviceAccount 13.0.0
+mongodbatlas.serviceAccount.accessList 13.2.1
 mongodbatlas.serviceAccount.clientId 13.0.0
 mongodbatlas.serviceAccount.createdAt 13.0.0
 mongodbatlas.serviceAccount.description 13.0.0
 mongodbatlas.serviceAccount.name 13.0.0
+mongodbatlas.serviceAccount.projects 13.2.1
 mongodbatlas.serviceAccount.roles 13.0.0
 mongodbatlas.serviceAccount.secrets 13.0.0
 mongodbatlas.serviceAccounts 13.0.0
@@ -271,6 +282,7 @@ mongodbatlas.snapshotExportBucket.region 13.1.4
 mongodbatlas.snapshotExportBucket.serviceUrl 13.1.4
 mongodbatlas.snapshotExportBucket.tenantId 13.1.4
 mongodbatlas.snapshotExportBuckets 13.1.4
+mongodbatlas.streamsCrossGroupEnabled 13.2.1
 mongodbatlas.team 13.0.0
 mongodbatlas.team.id 13.0.0
 mongodbatlas.team.name 13.0.0

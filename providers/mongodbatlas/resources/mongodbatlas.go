@@ -37,6 +37,10 @@ type mqlMongodbatlasInternal struct {
 	accessRolesOnce sync.Once
 	accessRolesByID map[string]*mqlMongodbatlasCloudProviderAccessRole
 	accessRolesErr  error
+
+	projectsOnce sync.Once
+	projectsByID map[string]*mqlMongodbatlasProject
+	projectsErr  error
 }
 
 // rootMongodbatlas returns the cached root resource singleton so sub-resources
@@ -189,6 +193,18 @@ func (r *mqlMongodbatlas) maxServiceAccountSecretValidityInHours() (int64, error
 	return int64(s.GetMaxServiceAccountSecretValidityInHours()), nil
 }
 
+func (r *mqlMongodbatlas) streamsCrossGroupEnabled() (bool, error) {
+	s, err := r.fetchOrgSettings()
+	if err != nil {
+		return false, err
+	}
+	if s == nil {
+		r.StreamsCrossGroupEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return s.GetStreamsCrossGroupEnabled(), nil
+}
+
 func (r *mqlMongodbatlas) securityContact() (string, error) {
 	s, err := r.fetchOrgSettings()
 	if err != nil {
@@ -224,6 +240,17 @@ func tagMap(tags []admin.ResourceTag) map[string]any {
 	out := make(map[string]any, len(tags))
 	for _, t := range tags {
 		out[t.GetKey()] = t.GetValue()
+	}
+	return out
+}
+
+// labelMap converts the labels Atlas carries on a database user to the map form
+// llx.MapData expects. Labels are a separate type from resource tags, with the
+// same key/value shape.
+func labelMap(labels []admin.ComponentLabel) map[string]any {
+	out := make(map[string]any, len(labels))
+	for _, l := range labels {
+		out[l.GetKey()] = l.GetValue()
 	}
 	return out
 }

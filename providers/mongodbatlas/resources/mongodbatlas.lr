@@ -33,6 +33,8 @@ mongodbatlas {
   maxServiceAccountSecretValidityInHours() int
   // Email address that receives security notifications for the organization
   securityContact() string
+  // Whether Atlas Stream Processing may connect to clusters in other projects
+  streamsCrossGroupEnabled() bool
   // Projects in the organization
   projects() []mongodbatlas.project
   // Organization members
@@ -182,6 +184,8 @@ mongodbatlas.apiKey @defaults("publicKey description") {
   description string
   // Role assignments granted to the key at the organization or project level
   roleAssignments() []mongodbatlas.apiKey.roleAssignment
+  // API access list entries restricting where the key may be used from, empty when the key is usable from any address
+  accessList() []mongodbatlas.apiAccessListEntry
 }
 
 // MongoDB Atlas API key role assignment
@@ -196,6 +200,33 @@ private mongodbatlas.apiKey.roleAssignment @defaults("roleName") {
   orgLevel bool
   // Project the role applies to, null for an organization-level role
   project() mongodbatlas.project
+}
+
+// MongoDB Atlas API access list entry
+//
+// A single source address that a programmatic credential (an API key or a
+// service account) may authenticate from, keyed by the CIDR block or address it
+// grants. A credential with no entries is usable from anywhere on the internet,
+// so an empty access list is the condition to audit for, and the organization
+// setting apiAccessListRequired reports whether Atlas enforces that an entry
+// exists. Covers the granted CIDR block or single address, when the entry was
+// created, and how it has been used: the number of requests seen from it, the
+// last time it was used, and the address that used it. An entry that has never
+// been used reports a null lastUsed, which identifies stale allowances that can
+// be withdrawn.
+private mongodbatlas.apiAccessListEntry @defaults("cidrBlock ipAddress lastUsed") {
+  // CIDR block the credential may authenticate from
+  cidrBlock string
+  // Single IP address the credential may authenticate from
+  ipAddress string
+  // Time the entry was added to the access list
+  created time
+  // Number of requests Atlas has seen from this entry
+  requestCount int
+  // Time the entry was last used to authenticate, null when it has never been used
+  lastUsed time
+  // Address within the entry that most recently authenticated, empty when it has never been used
+  lastUsedAddress string
 }
 
 // MongoDB Atlas service account
@@ -217,6 +248,10 @@ mongodbatlas.serviceAccount @defaults("name clientId") {
   createdAt time
   // Issued secrets, each with its id, creation, expiry, and last-used times (no secret values)
   secrets []dict
+  // API access list entries restricting where the service account may be used from, empty when it is usable from any address
+  accessList() []mongodbatlas.apiAccessListEntry
+  // Projects the service account is assigned to
+  projects() []mongodbatlas.project
 }
 
 // MongoDB Atlas cluster
@@ -518,6 +553,8 @@ mongodbatlas.databaseUser @defaults("username databaseName") {
   scopes []dict
   // Clusters the user is scoped to, empty when the user may access all clusters in the project
   scopedClusters() []mongodbatlas.cluster
+  // Labels attached to the user, as key/value pairs
+  labels map[string]string
   // Time after which the user is automatically deleted, null when permanent
   deleteAfterDate time
 }
