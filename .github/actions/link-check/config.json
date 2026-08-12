@@ -3,6 +3,12 @@
   "ignorePatterns": [
     {
       "pattern": "^https:\\/\\/wiki\\.jenkins\\.io\\/display\\/JENKINS\\/Building\\+a\\+software\\+project"
+    },
+    {
+      "pattern": "^https:\\/\\/platform\\.openai\\.com\\/"
+    },
+    {
+      "pattern": "^https:\\/\\/console\\.mistral\\.ai"
     }
   ]
 }
