@@ -409,6 +409,8 @@ const (
 	ResourceWindowsSmbShare                               string = "windows.smb.share"
 	ResourceWindowsSmbSession                             string = "windows.smb.session"
 	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
+	ResourceWindowsPrinterDrivers                         string = "windows.printerDrivers"
+	ResourceWindowsPrinterDriver                          string = "windows.printerDriver"
 	ResourceWindowsBitlocker                              string = "windows.bitlocker"
 	ResourceWindowsBitlockerPolicy                        string = "windows.bitlocker.policy"
 	ResourceWindowsBitlockerPolicyDriveSettings           string = "windows.bitlocker.policy.driveSettings"
@@ -2116,6 +2118,14 @@ func init() {
 		"windows.smb.connection": {
 			// to override args, implement: initWindowsSmbConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsSmbConnection,
+		},
+		"windows.printerDrivers": {
+			// to override args, implement: initWindowsPrinterDrivers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPrinterDrivers,
+		},
+		"windows.printerDriver": {
+			// to override args, implement: initWindowsPrinterDriver(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPrinterDriver,
 		},
 		"windows.bitlocker": {
 			// to override args, implement: initWindowsBitlocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11116,6 +11126,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.smb.connection.dialect": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSmbConnection).GetDialect()).ToDataRes(types.String)
+	},
+	"windows.printerDrivers.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDrivers).GetList()).ToDataRes(types.Array(types.Resource("windows.printerDriver")))
+	},
+	"windows.printerDriver.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetName()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetVersion()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.modelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetModelVersion()).ToDataRes(types.Int)
+	},
+	"windows.printerDriver.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetManufacturer()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetEnvironment()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.infPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetInfPath()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.driverPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetDriverPath()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.configFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetConfigFile()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.dataFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetDataFile()).ToDataRes(types.String)
+	},
+	"windows.printerDriver.printProcessor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetPrintProcessor()).ToDataRes(types.String)
 	},
 	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
@@ -26626,6 +26669,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.smb.connection.dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSmbConnection).Dialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDrivers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDrivers).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.printerDrivers.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDrivers).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.printerDriver.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.modelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).ModelVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).Environment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.infPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).InfPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.driverPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).DriverPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.configFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).ConfigFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.dataFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).DataFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.printProcessor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).PrintProcessor, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70412,6 +70507,156 @@ func (c *mqlWindowsSmbConnection) GetUserName() *plugin.TValue[string] {
 
 func (c *mqlWindowsSmbConnection) GetDialect() *plugin.TValue[string] {
 	return &c.Dialect
+}
+
+// mqlWindowsPrinterDrivers for the windows.printerDrivers resource
+type mqlWindowsPrinterDrivers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPrinterDriversInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createWindowsPrinterDrivers creates a new instance of this resource
+func createWindowsPrinterDrivers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPrinterDrivers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.printerDrivers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPrinterDrivers) MqlName() string {
+	return "windows.printerDrivers"
+}
+
+func (c *mqlWindowsPrinterDrivers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPrinterDrivers) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.printerDrivers", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlWindowsPrinterDriver for the windows.printerDriver resource
+type mqlWindowsPrinterDriver struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPrinterDriverInternal it will be used here
+	Name           plugin.TValue[string]
+	Version        plugin.TValue[string]
+	ModelVersion   plugin.TValue[int64]
+	Manufacturer   plugin.TValue[string]
+	Environment    plugin.TValue[string]
+	InfPath        plugin.TValue[string]
+	DriverPath     plugin.TValue[string]
+	ConfigFile     plugin.TValue[string]
+	DataFile       plugin.TValue[string]
+	PrintProcessor plugin.TValue[string]
+}
+
+// createWindowsPrinterDriver creates a new instance of this resource
+func createWindowsPrinterDriver(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPrinterDriver{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.printerDriver", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPrinterDriver) MqlName() string {
+	return "windows.printerDriver"
+}
+
+func (c *mqlWindowsPrinterDriver) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPrinterDriver) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsPrinterDriver) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlWindowsPrinterDriver) GetModelVersion() *plugin.TValue[int64] {
+	return &c.ModelVersion
+}
+
+func (c *mqlWindowsPrinterDriver) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlWindowsPrinterDriver) GetEnvironment() *plugin.TValue[string] {
+	return &c.Environment
+}
+
+func (c *mqlWindowsPrinterDriver) GetInfPath() *plugin.TValue[string] {
+	return &c.InfPath
+}
+
+func (c *mqlWindowsPrinterDriver) GetDriverPath() *plugin.TValue[string] {
+	return &c.DriverPath
+}
+
+func (c *mqlWindowsPrinterDriver) GetConfigFile() *plugin.TValue[string] {
+	return &c.ConfigFile
+}
+
+func (c *mqlWindowsPrinterDriver) GetDataFile() *plugin.TValue[string] {
+	return &c.DataFile
+}
+
+func (c *mqlWindowsPrinterDriver) GetPrintProcessor() *plugin.TValue[string] {
+	return &c.PrintProcessor
 }
 
 // mqlWindowsBitlocker for the windows.bitlocker resource
