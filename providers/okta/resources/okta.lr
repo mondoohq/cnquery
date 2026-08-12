@@ -185,13 +185,15 @@ private okta.user @defaults("profile['email']" ){
   // Unique key for user
   id string
   // User's type identifier
-  typeId string
+  //
+  // Deprecated in favor of userType, which resolves the full user type.
+  typeId @maturity("deprecated") string
   // User type object
   //
-  // Carries the user-type `id`, plus any additional attributes the API
-  // returns for that type (name, displayName, description). The `typeId`
-  // field exposes the id value on its own.
-  type dict
+  // Deprecated in favor of userType. Carries the user-type `id`, plus any
+  // additional attributes the API returns for that type (name, displayName,
+  // description).
+  type @maturity("deprecated") dict
   // User credential summary
   //
   // Keys: provider ({ type, name } where type is one of OKTA,
@@ -231,6 +233,154 @@ private okta.user @defaults("profile['email']" ){
   roles() []okta.role
   // MFA factors enrolled by the user
   factors() []okta.userFactor
+  // User type assigned to the account
+  //
+  // Determines which profile schema the account is validated against. Custom
+  // user types often carry attributes beyond the ones the default type
+  // defines, so the same profile key can mean different things across types.
+  userType() okta.userType
+  // Realm the account resides in
+  //
+  // Realms partition an org's users into isolated populations, most often to
+  // hold business partners or contractors apart from employees. Null when the
+  // org does not use realms, or when the account sits in the default
+  // population.
+  realm() okta.realm
+  // Manager of the account
+  //
+  // Read from the managerId profile attribute, which HR driven provisioning
+  // populates. Null when the profile carries no managerId, or when the id
+  // names an account the org no longer exposes.
+  manager() okta.user
+  // Groups the account belongs to
+  //
+  // Every group membership regardless of how it was granted: direct
+  // assignment, a group rule, or a directory import. Application assignments
+  // and administrator grants are usually built on group membership, so this
+  // is the path from an account to the access it actually carries.
+  groups() []okta.group
+  // Applications the account can open
+  //
+  // One entry per application on the user's dashboard, including access
+  // granted indirectly through a group. This is effective application access
+  // for the account, where the assignment lists on an application cover only
+  // what was granted there directly.
+  appLinks() []okta.user.appLink
+  // OAuth 2.0 scope consent grants issued by the account
+  //
+  // The scopes this user consented to give client applications, which is the
+  // standing access third party integrations hold against the account.
+  grants() []okta.user.grant
+  // OAuth 2.0 clients holding tokens for the account
+  //
+  // Client applications with at least one active grant or refresh token
+  // issued on behalf of this user.
+  clients() []okta.user.client
+  // Identity providers the account is federated with
+  //
+  // External providers linked to this account, each an alternative sign-in
+  // path into it. An account reachable through a linked provider can be
+  // authenticated without the org's own password and factor policies
+  // applying.
+  identityProviders() []okta.identityProvider
+  // Access blocks applied to the account
+  //
+  // Each entry carries type, naming the kind of block in force, and appliesTo,
+  // describing the devices it covers. Empty for accounts with no blocks.
+  blocks() []dict
+}
+
+// Application available to an Okta user
+//
+// One application on a user's dashboard, together with the assignment that put
+// it there. Access can be granted directly or inherited from a group, and both
+// arrive here the same way, which makes this the effective view of what an
+// account can reach. The `application` field resolves the application itself
+// and is null when the link names one the org does not serve from its
+// application collection, such as an Okta internal application.
+private okta.user.appLink @defaults("label appName") {
+  // Unique identifier of the application the link points at
+  id string
+  // Display label of the application on the dashboard
+  label string
+  // URL that starts sign-in to the application
+  linkUrl string
+  // URL of the application logo
+  logoUrl string
+  // Okta catalog name of the application type
+  //
+  // The type of application rather than the instance, for example "google" or
+  // "office365". Instances of the same catalog application share this value.
+  appName string
+  // Identifier of the assignment record that granted this access
+  appAssignmentId string
+  // Whether the user has supplied credentials for the application
+  //
+  // Meaningful only for applications whose sign-on mode stores per-user
+  // credentials in Okta, such as secure web authentication.
+  credentialsSetup bool
+  // Whether the link is hidden from the user's dashboard
+  //
+  // A hidden link still grants access; it is only suppressed from the
+  // dashboard, so it does not narrow what the account can reach.
+  hidden bool
+  // Position of the link on the user's dashboard
+  sortOrder int
+  // Application the link points at
+  application() okta.application
+}
+
+// OAuth 2.0 scope consent grant issued by an Okta user
+//
+// A single scope the user consented to give a client application, which is how
+// an integration comes to hold standing access against the account. `scopeId`
+// names the scope, `issuer` the authorization server that granted it, and
+// `source` whether the consent came from the end user or was recorded
+// administratively on their behalf. `clientId` is the OAuth client credential
+// the grant was issued to, which is also what the system log records against
+// the calls the integration then makes.
+private okta.user.grant @defaults("scopeId status") {
+  // Unique identifier of the grant
+  id string
+  // Scope the user consented to
+  //
+  // For example "okta.users.read" for an Okta API scope, or a scope defined
+  // by a custom authorization server.
+  scopeId string
+  // OAuth 2.0 client the grant was issued to
+  clientId string
+  // Authorization server that issued the grant
+  issuer string
+  // Current status of the grant
+  //
+  // One of ACTIVE or REVOKED.
+  status string
+  // Origin of the consent
+  //
+  // One of END_USER, when the user approved the consent dialog, or ADMIN,
+  // when an administrator recorded the consent on their behalf.
+  source string
+  // Timestamp when the grant was created
+  created time
+  // Timestamp when the grant was last updated
+  lastUpdated time
+}
+
+// OAuth 2.0 client holding tokens for an Okta user
+//
+// A client application with at least one active grant or refresh token issued
+// on behalf of the user. Where a grant records which scope was consented to,
+// this records which integrations currently hold access, named well enough to
+// review without joining on the client credential.
+private okta.user.client @defaults("clientName") {
+  // OAuth 2.0 client identifier
+  clientId string
+  // Human readable name of the client application
+  clientName string
+  // URL of the client application's home page
+  clientUri string
+  // URL of the client application's logo
+  logoUri string
 }
 
 // Okta MFA factor enrolled by a user

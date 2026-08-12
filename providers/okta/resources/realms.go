@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
@@ -54,21 +55,67 @@ func (o *mqlOkta) realms() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaRealm(runtime *plugin.Runtime, entry *okta.Realm) (any, error) {
+// initOktaRealm allows callers to construct an okta.realm via NewResource by
+// id, which is how a user resolves the realm it resides in.
+func initOktaRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// If we already have the full set of fields, no fetch needed.
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["id"]
+	if !ok || idArg == nil || idArg.Value == nil {
+		// Bare resource construction (no id) is a valid empty state.
+		return args, nil, nil
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+	item, resp, err := client.RealmAPI.GetRealm(ctx, id).Execute()
+	if err != nil {
+		// Realms are a licensed feature, so an org that stamped a realm id on a
+		// user can still refuse to serve the realm itself. Both that and a
+		// deleted realm resolve to a null reference rather than failing the
+		// user the reference was read from.
+		if isOktaFeatureUnavailable(resp, err) {
+			return nil, nil, fmt.Errorf("%w: okta.realm %q", errOktaResourceNotFound, id)
+		}
+		return nil, nil, err
+	}
+	if item == nil {
+		return nil, nil, fmt.Errorf("%w: okta.realm %q", errOktaResourceNotFound, id)
+	}
+
+	for k, v := range oktaRealmArgs(item) {
+		args[k] = v
+	}
+	return args, nil, nil
+}
+
+func oktaRealmArgs(entry *okta.Realm) map[string]*llx.RawData {
 	var name, realmType string
 	if profile := entry.Profile; profile != nil {
 		name = profile.Name
 		realmType = oktaStr(profile.RealmType)
 	}
 
-	return CreateResource(runtime, "okta.realm", map[string]*llx.RawData{
+	return map[string]*llx.RawData{
 		"id":          llx.StringData(oktaStr(entry.Id)),
 		"name":        llx.StringData(name),
 		"realmType":   llx.StringData(realmType),
 		"isDefault":   llx.BoolDataPtr(entry.IsDefault),
 		"created":     llx.TimeDataPtr(entry.Created),
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
-	})
+	}
+}
+
+func newMqlOktaRealm(runtime *plugin.Runtime, entry *okta.Realm) (any, error) {
+	return CreateResource(runtime, "okta.realm", oktaRealmArgs(entry))
 }
 
 func (o *mqlOktaRealm) id() (string, error) {

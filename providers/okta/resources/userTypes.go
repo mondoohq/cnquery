@@ -108,8 +108,14 @@ func initOktaUserType(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	client := conn.Client()
 	ctx := context.Background()
 
-	item, _, err := client.UserTypeAPI.GetUserType(ctx, id).Execute()
+	item, resp, err := client.UserTypeAPI.GetUserType(ctx, id).Execute()
 	if err != nil {
+		// A user can outlive the type it was created under. Report that as a
+		// missing reference so the accessor reading it resolves to null,
+		// rather than failing every user in the collection.
+		if isOktaNotFound(resp) {
+			return nil, nil, fmt.Errorf("%w: okta.userType %q", errOktaResourceNotFound, id)
+		}
 		return nil, nil, err
 	}
 	if item == nil {
