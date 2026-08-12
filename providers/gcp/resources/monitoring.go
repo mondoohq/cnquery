@@ -535,6 +535,7 @@ func (g *mqlGcpProjectMonitoringService) dashboards() ([]any, error) {
 			"displayName": llx.StringData(db.DisplayName),
 			"etag":        llx.StringData(db.Etag),
 			"layout":      llx.DictData(layout),
+			"labels":      llx.MapData(convert.MapToInterfaceMap(db.GetLabels()), types.String),
 		})
 		if err != nil {
 			return nil, err

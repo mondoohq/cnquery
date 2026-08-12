@@ -11,7 +11,9 @@ import (
 	"cloud.google.com/go/bigquery/reservation/apiv1/reservationpb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -97,6 +99,7 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 				"primaryLocation":         llx.StringData(r.PrimaryLocation),
 				"secondaryLocation":       llx.StringData(r.SecondaryLocation),
 				"originalPrimaryLocation": llx.StringData(r.OriginalPrimaryLocation),
+				"labels":                  llx.MapData(convert.MapToInterfaceMap(r.GetLabels()), types.String),
 				"created":                 created,
 				"updated":                 updated,
 			})

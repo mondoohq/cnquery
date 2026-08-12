@@ -289,6 +289,7 @@ func (g *mqlGcpProjectEventarcService) channels() ([]any, error) {
 			"pubsubTopic":   llx.StringData(channel.GetPubsubTopic()),
 			"state":         llx.StringData(channel.State.String()),
 			"cryptoKeyName": llx.StringData(channel.GetCryptoKeyName()),
+			"labels":        llx.MapData(convert.MapToInterfaceMap(channel.GetLabels()), types.String),
 			"created":       llx.TimeDataPtr(timestampAsTimePtr(channel.CreateTime)),
 			"updated":       llx.TimeDataPtr(timestampAsTimePtr(channel.UpdateTime)),
 		})

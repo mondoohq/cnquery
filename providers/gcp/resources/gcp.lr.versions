@@ -797,6 +797,7 @@ gcp.project.bigqueryService.reservation.concurrency 13.11.2
 gcp.project.bigqueryService.reservation.created 13.11.2
 gcp.project.bigqueryService.reservation.edition 13.11.2
 gcp.project.bigqueryService.reservation.ignoreIdleSlots 13.11.2
+gcp.project.bigqueryService.reservation.labels 13.35.1
 gcp.project.bigqueryService.reservation.location 13.11.2
 gcp.project.bigqueryService.reservation.name 13.11.2
 gcp.project.bigqueryService.reservation.originalPrimaryLocation 13.11.2
@@ -2141,6 +2142,7 @@ gcp.project.computeService.interconnectAttachment.encryption 13.6.1
 gcp.project.computeService.interconnectAttachment.id 13.6.1
 gcp.project.computeService.interconnectAttachment.interconnect 13.6.1
 gcp.project.computeService.interconnectAttachment.interconnectUrl 13.6.1
+gcp.project.computeService.interconnectAttachment.labels 13.35.1
 gcp.project.computeService.interconnectAttachment.name 13.6.1
 gcp.project.computeService.interconnectAttachment.partnerMetadata 13.6.1
 gcp.project.computeService.interconnectAttachment.privateInterconnectInfo 13.6.1
@@ -2787,6 +2789,7 @@ gcp.project.dataprocService 9.0.0
 gcp.project.dataprocService.autoscalingPolicies 13.7.2
 gcp.project.dataprocService.autoscalingPolicy 13.7.2
 gcp.project.dataprocService.autoscalingPolicy.basicAlgorithm 13.7.2
+gcp.project.dataprocService.autoscalingPolicy.labels 13.35.1
 gcp.project.dataprocService.autoscalingPolicy.name 13.7.2
 gcp.project.dataprocService.autoscalingPolicy.projectId 13.7.2
 gcp.project.dataprocService.autoscalingPolicy.secondaryWorkerConfig 13.7.2
@@ -3200,6 +3203,7 @@ gcp.project.dnsService.responsePolicy 13.18.1
 gcp.project.dnsService.responsePolicy.description 13.18.1
 gcp.project.dnsService.responsePolicy.gkeClusters 13.18.1
 gcp.project.dnsService.responsePolicy.id 13.18.1
+gcp.project.dnsService.responsePolicy.labels 13.35.1
 gcp.project.dnsService.responsePolicy.networkUrls 13.18.1
 gcp.project.dnsService.responsePolicy.networks 13.18.1
 gcp.project.dnsService.responsePolicy.projectId 13.18.1
@@ -3247,6 +3251,7 @@ gcp.project.eventarcService.channel 13.6.1
 gcp.project.eventarcService.channel.created 13.6.1
 gcp.project.eventarcService.channel.cryptoKeyName 13.6.1
 gcp.project.eventarcService.channel.kmsKey 13.19.2
+gcp.project.eventarcService.channel.labels 13.35.1
 gcp.project.eventarcService.channel.name 13.6.1
 gcp.project.eventarcService.channel.provider 13.6.1
 gcp.project.eventarcService.channel.pubsubTopic 13.6.1
@@ -4220,6 +4225,7 @@ gcp.project.monitoringService.alertPolicy.validity 9.0.0
 gcp.project.monitoringService.dashboard 13.7.2
 gcp.project.monitoringService.dashboard.displayName 13.7.2
 gcp.project.monitoringService.dashboard.etag 13.7.2
+gcp.project.monitoringService.dashboard.labels 13.35.1
 gcp.project.monitoringService.dashboard.layout 13.7.2
 gcp.project.monitoringService.dashboard.name 13.7.2
 gcp.project.monitoringService.dashboard.projectId 13.7.2
