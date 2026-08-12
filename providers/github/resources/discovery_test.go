@@ -135,3 +135,47 @@ func TestDiscoverUserRepos(t *testing.T) {
 		))
 	})
 }
+
+// `--discover none` must mean none. The repository and user assets were
+// appended unconditionally, so a single-repo scan produced three assets (the
+// connection's own asset, the repository again, and the owner account) and ran
+// every query three times.
+func TestDiscoverRepoAsset(t *testing.T) {
+	t.Run("the default auto target emits the repository asset", func(t *testing.T) {
+		assert.True(t, discoverRepoAsset([]string{connection.DiscoveryAuto}))
+	})
+
+	t.Run("repos and all emit it too", func(t *testing.T) {
+		assert.True(t, discoverRepoAsset([]string{connection.DiscoveryRepos}))
+		assert.True(t, discoverRepoAsset(handleTargets([]string{connection.DiscoveryAll})))
+	})
+
+	t.Run("none emits nothing", func(t *testing.T) {
+		assert.False(t, discoverRepoAsset([]string{"none"}))
+		assert.False(t, discoverRepoAsset(nil))
+	})
+
+	t.Run("an unrelated target does not emit it", func(t *testing.T) {
+		assert.False(t, discoverRepoAsset([]string{connection.DiscoveryUsers}))
+	})
+}
+
+func TestDiscoverUserAsset(t *testing.T) {
+	t.Run("the default auto target emits the user asset", func(t *testing.T) {
+		assert.True(t, discoverUserAsset([]string{connection.DiscoveryAuto}))
+	})
+
+	t.Run("users and all emit it too", func(t *testing.T) {
+		assert.True(t, discoverUserAsset([]string{connection.DiscoveryUsers}))
+		assert.True(t, discoverUserAsset(handleTargets([]string{connection.DiscoveryAll})))
+	})
+
+	t.Run("none emits nothing", func(t *testing.T) {
+		assert.False(t, discoverUserAsset([]string{"none"}))
+		assert.False(t, discoverUserAsset(nil))
+	})
+
+	t.Run("an unrelated target does not emit it", func(t *testing.T) {
+		assert.False(t, discoverUserAsset([]string{connection.DiscoveryOrganization}))
+	})
+}
