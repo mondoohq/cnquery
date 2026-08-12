@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -2618,16 +2619,20 @@ func (g *mqlGithubRepository) vulnerabilityAlertsEnabled() (bool, error) {
 	return enabled, nil
 }
 
-func (g *mqlGithubRepository) privateVulnerabilityReportingEnabled() (bool, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	ownerLogin, repoName, err := repoOwnerAndName(g)
-	if err != nil {
-		return false, err
-	}
-	enabled, _, err := conn.Client().Repositories.IsPrivateReportingEnabled(conn.Context(), ownerLogin, repoName)
+func privateVulnerabilityReportingEnabledRaw(ctx context.Context, client *github.Client, ownerLogin, repoName string) (bool, error) {
+	enabled, _, err := client.Repositories.IsPrivateReportingEnabled(ctx, ownerLogin, repoName)
 	if err != nil {
 		switch githubResponseStatus(err) {
 		case http.StatusNotFound:
+			return false, nil
+		case http.StatusUnprocessableEntity:
+			// GitHub answers 422 "Repository must be public and not archived"
+			// for every private or archived repository. The setting genuinely
+			// cannot be on for those, so this is a normal answer, not a
+			// failure: letting it escape fails the entire repository listing
+			// this field was read from.
+			log.Debug().Str("owner", ownerLogin).Str("repo", repoName).
+				Msg("private vulnerability reporting is unavailable for this repository (private or archived)")
 			return false, nil
 		case http.StatusForbidden:
 			log.Warn().Err(err).Str("owner", ownerLogin).Str("repo", repoName).
@@ -2637,4 +2642,13 @@ func (g *mqlGithubRepository) privateVulnerabilityReportingEnabled() (bool, erro
 		return false, err
 	}
 	return enabled, nil
+}
+
+func (g *mqlGithubRepository) privateVulnerabilityReportingEnabled() (bool, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return false, err
+	}
+	return privateVulnerabilityReportingEnabledRaw(conn.Context(), conn.Client(), ownerLogin, repoName)
 }
