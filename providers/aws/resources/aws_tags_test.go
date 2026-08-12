@@ -4,10 +4,16 @@
 package resources
 
 import (
+	"errors"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	astypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	cstypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	emrtypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -109,6 +115,170 @@ func TestEmrTagsToMap_StringMapShape(t *testing.T) {
 	})
 	// must be a map[string]string, and key/value must not be swapped
 	assert.Equal(t, map[string]string{"k": "v"}, got)
+}
+
+func TestElasticacheTagsToMap(t *testing.T) {
+	got := elasticacheTagsToMap([]elasticache_types.Tag{
+		{Key: aws.String("env"), Value: aws.String("prod")},
+		{Key: aws.String("empty"), Value: nil},
+		{Key: nil, Value: aws.String("dropped")},
+	})
+	assert.Equal(t, map[string]any{"env": "prod", "empty": ""}, got)
+}
+
+func TestConfigTagsToMap(t *testing.T) {
+	got := configTagsToMap([]cstypes.Tag{
+		{Key: aws.String("owner"), Value: aws.String("secops")},
+		{Key: aws.String("empty"), Value: nil},
+		{Key: nil, Value: aws.String("dropped")},
+	})
+	assert.Equal(t, map[string]any{"owner": "secops", "empty": ""}, got)
+}
+
+// TestBackupManagedArn pins the guard that decides whether Backup can read a
+// resource's tags at all. Getting this wrong in the permissive direction turns
+// every recovery point of a resource Backup does not fully manage into a
+// confident "no tags", which an audit filtering on a tag would silently accept.
+func TestBackupManagedArn(t *testing.T) {
+	tests := []struct {
+		name       string
+		arn        string
+		wantRegion string
+		wantOK     bool
+	}{
+		{
+			name:       "backup vault",
+			arn:        "arn:aws:backup:us-east-1:123456789012:backup-vault:Default",
+			wantRegion: "us-east-1",
+			wantOK:     true,
+		},
+		{
+			name:       "backup-managed recovery point",
+			arn:        "arn:aws:backup:eu-west-1:123456789012:recovery-point:1a2b3c4d",
+			wantRegion: "eu-west-1",
+			wantOK:     true,
+		},
+		{
+			name:   "dynamodb recovery point is not backup-managed",
+			arn:    "arn:aws:dynamodb:us-east-1:123456789012:table/orders/backup/01234567890123-abcdefgh",
+			wantOK: false,
+		},
+		{
+			name:   "ec2 recovery point is not backup-managed",
+			arn:    "arn:aws:ec2:us-east-1::image/ami-1234567890abcdef0",
+			wantOK: false,
+		},
+		{
+			name:   "unparseable arn",
+			arn:    "not-an-arn",
+			wantOK: false,
+		},
+		{
+			name:   "empty arn",
+			arn:    "",
+			wantOK: false,
+		},
+		{
+			name:   "service prefix must match exactly, not by prefix",
+			arn:    "arn:aws:backupstorage:us-east-1:123456789012:something/x",
+			wantOK: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			region, ok := backupManagedArn(tt.arn)
+			assert.Equal(t, tt.wantOK, ok)
+			assert.Equal(t, tt.wantRegion, region)
+		})
+	}
+}
+
+func TestLazyTagsResolveTags(t *testing.T) {
+	t.Run("fetches once and caches the result", func(t *testing.T) {
+		var h lazyTags
+		calls := 0
+		fetch := func() (map[string]any, error) {
+			calls++
+			return map[string]any{"env": "prod"}, nil
+		}
+
+		for i := 0; i < 3; i++ {
+			got, err := h.resolveTags(fetch)
+			require.NoError(t, err)
+			assert.Equal(t, map[string]any{"env": "prod"}, got)
+		}
+		assert.Equal(t, 1, calls, "fetch must run only on the first read")
+	})
+
+	t.Run("caches an empty tag set so an untagged resource costs one call", func(t *testing.T) {
+		var h lazyTags
+		calls := 0
+		fetch := func() (map[string]any, error) {
+			calls++
+			return map[string]any{}, nil
+		}
+
+		for i := 0; i < 3; i++ {
+			got, err := h.resolveTags(fetch)
+			require.NoError(t, err)
+			assert.Empty(t, got)
+		}
+		assert.Equal(t, 1, calls)
+	})
+
+	t.Run("normalizes a nil map to empty", func(t *testing.T) {
+		var h lazyTags
+		got, err := h.resolveTags(func() (map[string]any, error) { return nil, nil })
+		require.NoError(t, err)
+		require.NotNil(t, got)
+		assert.Empty(t, got)
+	})
+
+	t.Run("does not cache an error", func(t *testing.T) {
+		var h lazyTags
+		calls := 0
+		fetch := func() (map[string]any, error) {
+			calls++
+			if calls == 1 {
+				return nil, errors.New("throttled")
+			}
+			return map[string]any{"env": "prod"}, nil
+		}
+
+		_, err := h.resolveTags(fetch)
+		require.Error(t, err)
+
+		// A throttled or briefly denied call must be retried rather than
+		// remembered as an empty tag set.
+		got, err := h.resolveTags(fetch)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"env": "prod"}, got)
+		assert.Equal(t, 2, calls)
+	})
+
+	t.Run("concurrent readers fetch once", func(t *testing.T) {
+		var h lazyTags
+		var calls atomic.Int64
+		fetch := func() (map[string]any, error) {
+			calls.Add(1)
+			time.Sleep(10 * time.Millisecond)
+			return map[string]any{"env": "prod"}, nil
+		}
+
+		var wg sync.WaitGroup
+		for i := 0; i < 8; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				got, err := h.resolveTags(fetch)
+				assert.NoError(t, err)
+				assert.Equal(t, map[string]any{"env": "prod"}, got)
+			}()
+		}
+		wg.Wait()
+		assert.Equal(t, int64(1), calls.Load())
+	})
 }
 
 func TestTagsToStringMap(t *testing.T) {

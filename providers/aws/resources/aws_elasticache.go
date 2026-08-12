@@ -216,6 +216,32 @@ func (a *mqlAwsElasticacheCluster) tags() (map[string]any, error) {
 	return tags, nil
 }
 
+func elasticacheTagsToMap(tags []elasticache_types.Tag) map[string]any {
+	return tagsToMap(tags,
+		func(t elasticache_types.Tag) *string { return t.Key },
+		func(t elasticache_types.Tag) *string { return t.Value })
+}
+
+// elasticacheTagsForArn reads the tags of any ElastiCache resource. None of the
+// describe responses carry tags, so every resource resolves them here.
+//
+// An access-denied response yields no tags rather than an empty set: a tag set
+// that could not be read must not be published as an authoritative "no tags".
+func elasticacheTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Elasticache(region)
+	resp, err := svc.ListTagsForResource(context.Background(), &elasticache.ListTagsForResourceInput{
+		ResourceName: &resourceArn,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return elasticacheTagsToMap(resp.TagList), nil
+}
+
 func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
 	// The KMS key protecting a cluster's data at rest lives on its replication
 	// group, so delegate through the group rather than fetching replication
@@ -388,8 +414,15 @@ func (a *mqlAwsElasticache) getReplicationGroups(conn *connection.AwsConnection)
 }
 
 type mqlAwsElasticacheReplicationGroupInternal struct {
+	lazyTags
 	cacheKmsKeyId       *string
 	cacheMemberClusters []string
+}
+
+func (a *mqlAwsElasticacheReplicationGroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func newMqlAwsElasticacheReplicationGroup(runtime *plugin.Runtime, region string, rg elasticache_types.ReplicationGroup) (*mqlAwsElasticacheReplicationGroup, error) {
@@ -570,10 +603,17 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 
 type mqlAwsElasticacheServerlessCacheInternal struct {
 	securityGroupIdHandler
+	lazyTags
 	region        string
 	accountID     string
 	subnetIds     []string
 	cacheKmsKeyId *string
+}
+
+func (a *mqlAwsElasticacheServerlessCache) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string, accountID string, cache elasticache_types.ServerlessCache) (*mqlAwsElasticacheServerlessCache, error) {
@@ -748,8 +788,18 @@ func (a *mqlAwsElasticache) getParameterGroups(conn *connection.AwsConnection) [
 	return tasks
 }
 
+type mqlAwsElasticacheParameterGroupInternal struct {
+	lazyTags
+}
+
 func (a *mqlAwsElasticacheParameterGroup) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElasticacheParameterGroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 // ── Subnet Groups ───────────────────────────────────────────────────────────
@@ -825,7 +875,14 @@ func (a *mqlAwsElasticache) getSubnetGroups(conn *connection.AwsConnection) []*j
 }
 
 type mqlAwsElasticacheSubnetGroupInternal struct {
+	lazyTags
 	cacheVpcId *string
+}
+
+func (a *mqlAwsElasticacheSubnetGroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func (a *mqlAwsElasticacheSubnetGroup) id() (string, error) {
@@ -921,8 +978,18 @@ func (a *mqlAwsElasticache) getUsers(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+type mqlAwsElasticacheUserInternal struct {
+	lazyTags
+}
+
 func (a *mqlAwsElasticacheUser) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElasticacheUser) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 // ── Service Updates ─────────────────────────────────────────────────────────
@@ -1055,8 +1122,15 @@ func (a *mqlAwsElasticache) getSnapshots(conn *connection.AwsConnection) []*jobp
 }
 
 type mqlAwsElasticacheSnapshotInternal struct {
+	lazyTags
 	cacheKmsKeyId *string
 	cacheVpcId    *string
+}
+
+func (a *mqlAwsElasticacheSnapshot) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func (a *mqlAwsElasticacheSnapshot) id() (string, error) {

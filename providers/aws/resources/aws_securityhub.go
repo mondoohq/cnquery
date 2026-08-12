@@ -92,9 +92,33 @@ func (a *mqlAwsSecurityhubHub) id() (string, error) {
 }
 
 type mqlAwsSecurityhubHubInternal struct {
+	lazyTags
 	standardsFetched bool
 	standardsLock    sync.Mutex
 	standards        []types.StandardsSubscription
+}
+
+func (a *mqlAwsSecurityhubHub) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		hubArn := a.Arn.Data
+
+		svc := conn.Securityhub(a.Region.Data)
+		resp, err := svc.ListTagsForResource(context.Background(), &securityhub.ListTagsForResourceInput{
+			ResourceArn: &hubArn,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		tags := make(map[string]any, len(resp.Tags))
+		for k, v := range resp.Tags {
+			tags[k] = v
+		}
+		return tags, nil
+	})
 }
 
 func (a *mqlAwsSecurityhubHub) getEnabledStandards() ([]types.StandardsSubscription, error) {

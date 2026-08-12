@@ -115,8 +115,34 @@ func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job
 }
 
 type mqlAwsSsmParameterInternal struct {
+	lazyTags
 	parameterCache types.ParameterMetadata
 	region         string
+}
+
+// tags reads the parameter's tags. SSM's ListTagsForResource is keyed on a
+// resource id and type rather than an ARN, and for a parameter the id is the
+// parameter name, including its leading path for a hierarchical parameter.
+func (a *mqlAwsSsmParameter) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		name := a.Name.Data
+
+		svc := conn.Ssm(a.region)
+		resp, err := svc.ListTagsForResource(context.Background(), &ssm.ListTagsForResourceInput{
+			ResourceId:   &name,
+			ResourceType: types.ResourceTypeForTaggingParameter,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		return tagsToMap(resp.TagList,
+			func(t types.Tag) *string { return t.Key },
+			func(t types.Tag) *string { return t.Value }), nil
+	})
 }
 
 func (a *mqlAwsSsmParameter) kmsKey() (*mqlAwsKmsKey, error) {

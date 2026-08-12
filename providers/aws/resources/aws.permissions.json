@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.53.0",
-  "generated_at": "2026-08-10T18:30:41+02:00",
+  "generated_at": "2026-08-12T08:57:16-07:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -78,6 +78,7 @@
     "backup:ListBackupVaults",
     "backup:ListRecoveryPointsByBackupVault",
     "backup:ListScanJobs",
+    "backup:ListTags",
     "batch:DescribeComputeEnvironments",
     "batch:DescribeJobDefinitions",
     "batch:DescribeJobQueues",
@@ -184,6 +185,7 @@
     "cloudwatch:DescribeAlarmsForMetric",
     "cloudwatch:GetMetricStatistics",
     "cloudwatch:ListMetrics",
+    "cloudwatch:ListTagsForResource",
     "codeartifact:DescribeDomain",
     "codeartifact:DescribeRepository",
     "codeartifact:GetDomainPermissionsPolicy",
@@ -232,6 +234,7 @@
     "config:DescribeRemediationConfigurations",
     "config:GetComplianceDetailsByConfigRule",
     "config:GetConformancePackComplianceSummary",
+    "config:ListTagsForResource",
     "controltower:ListEnabledBaselines",
     "controltower:ListLandingZones",
     "datasync:DescribeAgent",
@@ -907,6 +910,7 @@
     "securityhub:ListEnabledProductsForImport",
     "securityhub:ListMembers",
     "securityhub:ListSecurityControlDefinitions",
+    "securityhub:ListTagsForResource",
     "securitylake:ListSubscribers",
     "ses:GetAccount",
     "ses:GetConfigurationSet",
@@ -1486,6 +1490,12 @@
       "permission": "backup:ListScanJobs",
       "service": "backup",
       "action": "ListScanJobs",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListTags",
+      "service": "backup",
+      "action": "ListTags",
       "source_file": "aws_backups.go"
     },
     {
@@ -2143,6 +2153,12 @@
       "source_file": "aws_cloudwatch.go"
     },
     {
+      "permission": "cloudwatch:ListTagsForResource",
+      "service": "cloudwatch",
+      "action": "ListTagsForResource",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
       "permission": "codeartifact:DescribeDomain",
       "service": "codeartifact",
       "action": "DescribeDomain",
@@ -2428,6 +2444,12 @@
       "permission": "config:GetConformancePackComplianceSummary",
       "service": "config",
       "action": "GetConformancePackComplianceSummary",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:ListTagsForResource",
+      "service": "config",
+      "action": "ListTagsForResource",
       "source_file": "aws_config.go"
     },
     {
@@ -6661,6 +6683,12 @@
       "source_file": "aws_securityhub.go"
     },
     {
+      "permission": "securityhub:ListTagsForResource",
+      "service": "securityhub",
+      "action": "ListTagsForResource",
+      "source_file": "aws_securityhub.go"
+    },
+    {
       "permission": "securitylake:ListSubscribers",
       "service": "securitylake",
       "action": "ListSubscribers",
@@ -6917,6 +6945,12 @@
       "service": "ssm",
       "action": "ListResourceComplianceSummaries",
       "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:ListTagsForResource",
+      "service": "ssm",
+      "action": "ListTagsForResource",
+      "source_file": "aws_ssm.go"
     },
     {
       "permission": "ssm:ListTagsForResource",

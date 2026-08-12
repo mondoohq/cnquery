@@ -1412,6 +1412,18 @@ func (a *mqlAwsIamPolicy) policyId() (string, error) {
 	return convert.ToValue(policy.PolicyId), nil
 }
 
+// tags reads the policy tags off the cached GetPolicy response. ListPolicies,
+// which is what aws.iam.policies pages through, leaves Tags empty on every
+// Policy it returns even though the field exists, so the tags have to come from
+// the per-policy call that name and description already share.
+func (a *mqlAwsIamPolicy) tags() (map[string]any, error) {
+	policy, err := a.loadPolicy(a.Arn.Data)
+	if err != nil {
+		return nil, err
+	}
+	return iamTagsToMap(policy.Tags), nil
+}
+
 func (a *mqlAwsIamPolicy) isAttachable() (bool, error) {
 	arn := a.Arn.Data
 

@@ -699,8 +699,37 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 }
 
 type mqlAwsElbListenerInternal struct {
+	lazyTags
 	defaultActionsCache     []elbtypes.Action
 	mutualAuthTrustStoreArn string
+}
+
+// mqlAwsElbListenerRuleInternal and mqlAwsElbTruststoreInternal exist only to
+// carry the tag cache; neither resource had per-instance state before.
+type mqlAwsElbListenerRuleInternal struct {
+	lazyTags
+}
+
+type mqlAwsElbTruststoreInternal struct {
+	lazyTags
+}
+
+func (a *mqlAwsElbListener) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
+	})
+}
+
+func (a *mqlAwsElbListenerRule) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
+	})
+}
+
+func (a *mqlAwsElbTruststore) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
+	})
 }
 
 func (a *mqlAwsElb) sslPolicies() ([]any, error) {
@@ -1089,8 +1118,45 @@ func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {
 	return tags, nil
 }
 
+// elbv2TagsForArn reads the tags of one ELBv2 resource. DescribeTags accepts up
+// to 20 ARNs per request, but each resource resolves only its own: tags are a
+// computed field, and listing a load balancer's target groups must not pay for
+// tags nobody asked for. Batching would need the ARNs of sibling resources that
+// a single resource cannot see.
+//
+// An ARN the API returns no tag description for yields an empty map rather than
+// an error, since DescribeTags omits resources that carry no tags.
+func elbv2TagsForArn(runtime *plugin.Runtime, resourceArn string) (map[string]any, error) {
+	region, err := GetRegionFromArn(resourceArn)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(region)
+	resp, err := svc.DescribeTags(context.Background(), &elasticloadbalancingv2.DescribeTagsInput{
+		ResourceArns: []string{resourceArn},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, desc := range resp.TagDescriptions {
+		if convert.ToValue(desc.ResourceArn) == resourceArn {
+			return elbv2TagsToMap(desc.Tags), nil
+		}
+	}
+	return map[string]any{}, nil
+}
+
 func (a *mqlAwsElbTargetgroup) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElbTargetgroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
+	})
 }
 
 func (a *mqlAwsElbLoadbalancer) targetGroups() ([]any, error) {
@@ -1150,6 +1216,7 @@ func (a *mqlAwsElbLoadbalancer) targetGroups() ([]any, error) {
 }
 
 type mqlAwsElbTargetgroupInternal struct {
+	lazyTags
 	targetGroup elbtypes.TargetGroup
 	region      string
 }

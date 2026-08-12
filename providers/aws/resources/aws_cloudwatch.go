@@ -951,8 +951,33 @@ func (a *mqlAwsCloudwatchLoggroupMetricsfilter) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAwsCloudwatchMetricsalarmInternal struct {
+	lazyTags
+}
+
 func (a *mqlAwsCloudwatchMetricsalarm) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCloudwatchMetricsalarm) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		alarmArn := a.Arn.Data
+
+		svc := conn.Cloudwatch(a.Region.Data)
+		resp, err := svc.ListTagsForResource(context.Background(), &cloudwatch.ListTagsForResourceInput{
+			ResourceARN: &alarmArn,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		return tagsToMap(resp.Tags,
+			func(t cloudwatchtypes.Tag) *string { return t.Key },
+			func(t cloudwatchtypes.Tag) *string { return t.Value }), nil
+	})
 }
 
 // cloudwatchMetricID builds the cache key for a CloudWatch metric. ListMetrics

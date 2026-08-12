@@ -145,8 +145,18 @@ func (a *mqlAwsRds) getEventSubscriptions(conn *connection.AwsConnection) []*job
 	return tasks
 }
 
+type mqlAwsRdsEventSubscriptionInternal struct {
+	lazyTags
+}
+
 func (a *mqlAwsRdsEventSubscription) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsRdsEventSubscription) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func (a *mqlAwsRdsEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {
@@ -234,6 +244,26 @@ func newMqlAwsRdsClusterParameterGroup(runtime *plugin.Runtime, region string, p
 	}
 	mqlParameterGroup := resource.(*mqlAwsRdsClusterParameterGroup)
 	return mqlParameterGroup, nil
+}
+
+type mqlAwsRdsClusterParameterGroupInternal struct {
+	lazyTags
+}
+
+func (a *mqlAwsRdsClusterParameterGroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
+}
+
+type mqlAwsRdsParameterGroupInternal struct {
+	lazyTags
+}
+
+func (a *mqlAwsRdsParameterGroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
@@ -425,7 +455,7 @@ func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGr
 	return mqlParameterGroup, nil
 }
 
-func (a mqlAwsRdsClusterParameterGroup) parameters() ([]any, error) {
+func (a *mqlAwsRdsClusterParameterGroup) parameters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
 	svc := conn.Rds(a.Region.Data)
@@ -1963,13 +1993,17 @@ func (a *mqlAwsRdsProxy) id() (string, error) {
 }
 
 func (a *mqlAwsRdsProxy) tags() (map[string]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Rds(a.Region.Data)
-	ctx := context.Background()
-	arn := a.Arn.Data
+	return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+}
 
-	resp, err := svc.ListTagsForResource(ctx, &rds.ListTagsForResourceInput{
-		ResourceName: &arn,
+// rdsTagsForArn reads the tags of any RDS resource. RDS leaves tags out of most
+// of its describe responses, so every resource that is not a DB instance,
+// cluster, or snapshot (which carry TagList inline) resolves them here.
+func rdsTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Rds(region)
+	resp, err := svc.ListTagsForResource(context.Background(), &rds.ListTagsForResourceInput{
+		ResourceName: &resourceArn,
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
@@ -2033,7 +2067,14 @@ func (a *mqlAwsRds) getOptionGroups(conn *connection.AwsConnection) []*jobpool.J
 }
 
 type mqlAwsRdsOptionGroupInternal struct {
+	lazyTags
 	cacheVpcId string
+}
+
+func (a *mqlAwsRdsOptionGroup) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
 }
 
 func newMqlAwsRdsOptionGroup(runtime *plugin.Runtime, region string, og rds_types.OptionGroup) (*mqlAwsRdsOptionGroup, error) {
@@ -2172,7 +2213,7 @@ func (a *mqlAwsRds) getGlobalClusters(conn *connection.AwsConnection) []*jobpool
 					return nil, err
 				}
 				for _, gc := range page.GlobalClusters {
-					mqlGc, err := newMqlAwsRdsGlobalCluster(a.MqlRuntime, gc)
+					mqlGc, err := newMqlAwsRdsGlobalCluster(a.MqlRuntime, region, gc)
 					if err != nil {
 						return nil, err
 					}
@@ -2186,7 +2227,21 @@ func (a *mqlAwsRds) getGlobalClusters(conn *connection.AwsConnection) []*jobpool
 	return tasks
 }
 
-func newMqlAwsRdsGlobalCluster(runtime *plugin.Runtime, gc rds_types.GlobalCluster) (*mqlAwsRdsGlobalCluster, error) {
+// mqlAwsRdsGlobalClusterInternal carries the region the global cluster was
+// discovered through. A global cluster ARN has no region segment, so the tag
+// lookup has no other way to pick a regional RDS client.
+type mqlAwsRdsGlobalClusterInternal struct {
+	lazyTags
+	region string
+}
+
+func (a *mqlAwsRdsGlobalCluster) tags() (map[string]any, error) {
+	return a.resolveTags(func() (map[string]any, error) {
+		return rdsTagsForArn(a.MqlRuntime, a.region, a.Arn.Data)
+	})
+}
+
+func newMqlAwsRdsGlobalCluster(runtime *plugin.Runtime, region string, gc rds_types.GlobalCluster) (*mqlAwsRdsGlobalCluster, error) {
 	failoverState, err := convert.JsonToDict(gc.FailoverState)
 	if err != nil {
 		return nil, err
@@ -2215,7 +2270,9 @@ func newMqlAwsRdsGlobalCluster(runtime *plugin.Runtime, gc rds_types.GlobalClust
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsRdsGlobalCluster), nil
+	mqlGc := res.(*mqlAwsRdsGlobalCluster)
+	mqlGc.region = region
+	return mqlGc, nil
 }
 
 func (a *mqlAwsRdsDbcluster) globalCluster() (*mqlAwsRdsGlobalCluster, error) {
@@ -2241,5 +2298,5 @@ func (a *mqlAwsRdsDbcluster) globalCluster() (*mqlAwsRdsGlobalCluster, error) {
 		a.GlobalCluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return newMqlAwsRdsGlobalCluster(a.MqlRuntime, resp.GlobalClusters[0])
+	return newMqlAwsRdsGlobalCluster(a.MqlRuntime, a.Region.Data, resp.GlobalClusters[0])
 }

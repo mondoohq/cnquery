@@ -25,12 +25,108 @@ func (a *mqlAwsBackup) id() (string, error) {
 	return "aws.backup", nil
 }
 
+type mqlAwsBackupVaultInternal struct {
+	lazyTags
+}
+
 func (a *mqlAwsBackupVault) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsBackupVault) tags() (map[string]any, error) {
+	return backupResolveTags(a.MqlRuntime, &a.lazyTags, &a.Tags, a.Region.Data, a.Arn.Data)
+}
+
+type mqlAwsBackupVaultRecoveryPointInternal struct {
+	lazyTags
+}
+
 func (a *mqlAwsBackupVaultRecoveryPoint) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// tags passes no region: a recovery point has no region field, so the region
+// comes from its ARN, which is only parsed when Backup manages the resource.
+func (a *mqlAwsBackupVaultRecoveryPoint) tags() (map[string]any, error) {
+	return backupResolveTags(a.MqlRuntime, &a.lazyTags, &a.Tags, "", a.Arn.Data)
+}
+
+// backupManagedArn reports whether Backup can read tags for resourceArn, and
+// the region to read them from.
+//
+// ListTags only accepts resources Backup fully manages, whose ARNs begin with
+// arn:aws:backup. A recovery point of a resource Backup does not fully manage
+// keeps the source service's ARN (arn:aws:dynamodb, arn:aws:ec2, and so on),
+// and ListTags rejects those. Callers must report unreadable rather than empty
+// tags for them, or an audit filtering on a tag would silently treat every such
+// recovery point as untagged.
+func backupManagedArn(resourceArn string) (region string, ok bool) {
+	parsed, err := arn.Parse(resourceArn)
+	if err != nil || parsed.Service != "backup" {
+		return "", false
+	}
+	return parsed.Region, true
+}
+
+// backupResolveTags resolves and caches a Backup resource's tags, marking the
+// field null when Backup cannot read them.
+//
+// The null case sets the field's state directly instead of returning a value:
+// GetOrCompute honors a state the accessor set itself, so the field surfaces as
+// null rather than as an empty map that would read as "this resource has no
+// tags". It takes the field pointer because only the caller knows which field
+// to mark.
+func backupResolveTags(runtime *plugin.Runtime, cache *lazyTags, field *plugin.TValue[map[string]any], region, resourceArn string) (map[string]any, error) {
+	return cache.resolveTags(func() (map[string]any, error) {
+		tags, ok, err := backupTagsForArn(runtime, region, resourceArn)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return tags, nil
+	})
+}
+
+// backupTagsForArn reads the tags of a Backup-managed resource. The bool
+// reports whether the tags could be read at all; see backupManagedArn.
+func backupTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, bool, error) {
+	arnRegion, ok := backupManagedArn(resourceArn)
+	if !ok {
+		return nil, false, nil
+	}
+	if region == "" {
+		region = arnRegion
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Backup(region)
+	ctx := context.Background()
+
+	tags := map[string]any{}
+	var nextToken *string
+	for {
+		resp, err := svc.ListTags(ctx, &backup.ListTagsInput{
+			ResourceArn: &resourceArn,
+			NextToken:   nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, false, nil
+			}
+			return nil, false, err
+		}
+		for k, v := range resp.Tags {
+			tags[k] = v
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return tags, true, nil
 }
 
 func (a *mqlAwsBackup) vaults() ([]any, error) {
@@ -244,6 +340,14 @@ func (a *mqlAwsBackupVault) policyStatements() ([]any, error) {
 // ========================
 // aws.backup.plan
 // ========================
+
+type mqlAwsBackupPlanInternal struct {
+	lazyTags
+}
+
+func (a *mqlAwsBackupPlan) tags() (map[string]any, error) {
+	return backupResolveTags(a.MqlRuntime, &a.lazyTags, &a.Tags, a.Region.Data, a.Arn.Data)
+}
 
 func (a *mqlAwsBackupPlan) id() (string, error) {
 	return a.Arn.Data, nil
@@ -929,10 +1033,15 @@ func (a *mqlAwsBackupScanJob) scannerRole() (*mqlAwsIamRole, error) {
 // ========================
 
 type mqlAwsBackupAccessPointInternal struct {
+	lazyTags
 	cacheVaultArn         string
 	cacheVaultName        string
 	cacheRecoveryPointArn string
 	cacheRegion           string
+}
+
+func (a *mqlAwsBackupAccessPoint) tags() (map[string]any, error) {
+	return backupResolveTags(a.MqlRuntime, &a.lazyTags, &a.Tags, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsBackupAccessPoint) id() (string, error) {
