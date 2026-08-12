@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.5
 
 require (
-	github.com/gopcua/opcua v0.9.0
+	github.com/gopcua/opcua v0.9.1
 	github.com/mozillazg/go-slugify v0.2.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.32.2
