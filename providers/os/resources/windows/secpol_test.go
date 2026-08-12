@@ -135,7 +135,7 @@ func TestSidLookupScript(t *testing.T) {
 
 func TestParseSidLookup(t *testing.T) {
 	lookup, err := ParseSidLookup(strings.NewReader(
-		"Gast\tS-1-5-32-546\r\nDOMAIN\\Some User\tS-1-5-21-1-2-3-1001\nbroken line\nNoSid\t\nEmpty\tnot-a-sid\n",
+		"Gast\tS-1-5-32-546\r\nDOMAIN\\Some User\t*S-1-5-21-1-2-3-1001\nbroken line\nNoSid\t\nEmpty\tnot-a-sid\n",
 	))
 	require.NoError(t, err)
 

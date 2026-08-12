@@ -51,7 +51,16 @@ func (s *mqlSecpol) runPowershell(script string) (string, error) {
 		return "", err
 	}
 
-	out := o.(*mqlCommand).GetStdout()
+	cmd := o.(*mqlCommand)
+	exit := cmd.GetExitcode()
+	if exit.Error != nil {
+		return "", exit.Error
+	}
+	if exit.Data != 0 {
+		return "", fmt.Errorf("powershell exited with %d: %s", exit.Data, cmd.GetStderr().Data)
+	}
+
+	out := cmd.GetStdout()
 	if out.Error != nil {
 		return "", out.Error
 	}

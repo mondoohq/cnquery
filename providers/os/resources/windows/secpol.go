@@ -22,6 +22,7 @@ type Secpol struct {
 	PrivilegeRights map[string]any
 }
 
+// SidResolver maps account names to SIDs, with or without secedit's leading "*".
 type SidResolver func(names []string) (map[string]string, error)
 
 // ParseSecpol reports [Privilege Rights] principals as SIDs. Localized account
@@ -214,7 +215,7 @@ func ParseSidLookup(r io.Reader) (map[string]string, error) {
 			continue
 		}
 		name = strings.TrimSpace(name)
-		sid = strings.TrimSpace(sid)
+		sid = normalizePrivilegeRight(sid)
 		if name == "" || !isSecurityIdentifier(sid) {
 			continue
 		}
