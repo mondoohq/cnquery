@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	scheduler "cloud.google.com/go/scheduler/apiv1"
@@ -20,9 +19,7 @@ import (
 )
 
 type mqlGcpProjectCloudSchedulerServiceInternal struct {
-	serviceEnabled bool
-	serviceOnce    sync.Once
-	serviceErr     error
+	serviceGate
 }
 
 func (g *mqlGcpProject) cloudScheduler() (*mqlGcpProjectCloudSchedulerService, error) {
@@ -41,35 +38,13 @@ func (g *mqlGcpProject) cloudScheduler() (*mqlGcpProjectCloudSchedulerService, e
 		return nil, err
 	}
 	schedulerService := res.(*mqlGcpProjectCloudSchedulerService)
-	schedulerService.serviceEnabled = serviceEnabled
+	schedulerService.recordEnabled(serviceEnabled)
 	return schedulerService, nil
 }
 
-// isEnabled resolves the service-enabled gate lazily.
-//
-// The flag is only set by the accessor above, but this resource is reachable
-// without going through it - a resource init can build it with CreateResource.
-// Resolving it here makes every construction path agree, rather than leaving
-// the Go zero value false to report an empty list as fact.
+// isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectCloudSchedulerService) isEnabled() (bool, error) {
-	g.serviceOnce.Do(func() {
-		if g.serviceEnabled {
-			return // already set by the parent accessor
-		}
-		if g.ProjectId.Error != nil {
-			g.serviceErr = g.ProjectId.Error
-			return
-		}
-		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
-			"id": llx.StringData(g.ProjectId.Data),
-		})
-		if err != nil {
-			g.serviceErr = err
-			return
-		}
-		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_cloudscheduler)
-	})
-	return g.serviceEnabled, g.serviceErr
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_cloudscheduler)
 }
 
 func (g *mqlGcpProjectCloudSchedulerService) id() (string, error) {

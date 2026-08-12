@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	networkmanagement "cloud.google.com/go/networkmanagement/apiv1"
 	"cloud.google.com/go/networkmanagement/apiv1/networkmanagementpb"
@@ -23,9 +22,7 @@ import (
 )
 
 type mqlGcpProjectNetworkManagementServiceInternal struct {
-	serviceEnabled bool
-	serviceOnce    sync.Once
-	serviceErr     error
+	serviceGate
 }
 
 func (g *mqlGcpProject) networkManagement() (*mqlGcpProjectNetworkManagementService, error) {
@@ -47,7 +44,7 @@ func (g *mqlGcpProject) networkManagement() (*mqlGcpProjectNetworkManagementServ
 	}
 
 	svc := res.(*mqlGcpProjectNetworkManagementService)
-	svc.serviceEnabled = serviceEnabled
+	svc.recordEnabled(serviceEnabled)
 	if !serviceEnabled {
 		log.Debug().Str("service", service_networkmanagement).Msg("gcp service is not enabled, skipping")
 	}
@@ -79,28 +76,9 @@ func (g *mqlGcpProjectNetworkManagementService) id() (string, error) {
 	return fmt.Sprintf("%s/gcp.project.networkManagementService", g.ProjectId.Data), nil
 }
 
-// isEnabled resolves the service-enabled gate lazily so every construction path
-// agrees, rather than letting the Go zero value report an empty test list as an
-// authoritative "no reachability evidence exists".
+// isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectNetworkManagementService) isEnabled() (bool, error) {
-	g.serviceOnce.Do(func() {
-		if g.serviceEnabled {
-			return // already set by the parent accessor
-		}
-		if g.ProjectId.Error != nil {
-			g.serviceErr = g.ProjectId.Error
-			return
-		}
-		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
-			"id": llx.StringData(g.ProjectId.Data),
-		})
-		if err != nil {
-			g.serviceErr = err
-			return
-		}
-		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_networkmanagement)
-	})
-	return g.serviceEnabled, g.serviceErr
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_networkmanagement)
 }
 
 // networkManagementCredentials returns credentials scoped for the Network

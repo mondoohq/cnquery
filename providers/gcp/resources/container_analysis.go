@@ -22,8 +22,7 @@ import (
 )
 
 type mqlGcpProjectContainerAnalysisServiceInternal struct {
-	serviceEnabled bool
-	serviceChecked bool
+	serviceGate
 }
 
 func (g *mqlGcpProject) containerAnalysis() (*mqlGcpProjectContainerAnalysisService, error) {
@@ -45,8 +44,7 @@ func (g *mqlGcpProject) containerAnalysis() (*mqlGcpProjectContainerAnalysisServ
 	}
 
 	svc := res.(*mqlGcpProjectContainerAnalysisService)
-	svc.serviceEnabled = serviceEnabled
-	svc.serviceChecked = true
+	svc.recordEnabled(serviceEnabled)
 	if !serviceEnabled {
 		log.Debug().Str("service", service_containeranalysis).Msg("gcp service is not enabled, skipping")
 	}
@@ -54,32 +52,9 @@ func (g *mqlGcpProject) containerAnalysis() (*mqlGcpProjectContainerAnalysisServ
 	return svc, nil
 }
 
-// isEnabled reports whether the Container Analysis API is enabled for the
-// project. When the service is reached through gcp.project.containerAnalysis the
-// flag is set by that accessor, but a direct query of
-// gcp.project.containerAnalysisService is built through the init function, which
-// cannot set it. Resolve it lazily here so the direct-query path doesn't
-// silently return empty occurrences/notes.
+// isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectContainerAnalysisService) isEnabled() (bool, error) {
-	if g.serviceChecked {
-		return g.serviceEnabled, nil
-	}
-	if g.ProjectId.Error != nil {
-		return false, g.ProjectId.Error
-	}
-	proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
-		"id": llx.StringData(g.ProjectId.Data),
-	})
-	if err != nil {
-		return false, err
-	}
-	enabled, err := proj.(*mqlGcpProject).isServiceEnabled(service_containeranalysis)
-	if err != nil {
-		return false, err
-	}
-	g.serviceEnabled = enabled
-	g.serviceChecked = true
-	return enabled, nil
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_containeranalysis)
 }
 
 func initGcpProjectContainerAnalysisService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

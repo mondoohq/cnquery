@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
@@ -23,9 +22,7 @@ import (
 )
 
 type mqlGcpProjectNetworkConnectivityServiceInternal struct {
-	serviceEnabled bool
-	serviceOnce    sync.Once
-	serviceErr     error
+	serviceGate
 }
 
 type mqlGcpProjectNetworkConnectivityServiceHubInternal struct {
@@ -59,7 +56,7 @@ func (g *mqlGcpProject) networkConnectivity() (*mqlGcpProjectNetworkConnectivity
 	}
 
 	svc := res.(*mqlGcpProjectNetworkConnectivityService)
-	svc.serviceEnabled = serviceEnabled
+	svc.recordEnabled(serviceEnabled)
 	if !serviceEnabled {
 		log.Debug().Str("service", service_networkconnectivity).Msg("gcp service is not enabled, skipping")
 	}
@@ -91,29 +88,9 @@ func (g *mqlGcpProjectNetworkConnectivityService) id() (string, error) {
 	return fmt.Sprintf("%s/gcp.project.networkConnectivityService", g.ProjectId.Data), nil
 }
 
-// isEnabled resolves the service-enabled gate lazily so every construction path
-// agrees. Without it the Go zero value false would make both collections return
-// an empty list with no error whenever the resource is not reached through the
-// gcp.project accessor, which reads as "there is no connectivity fabric here".
+// isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectNetworkConnectivityService) isEnabled() (bool, error) {
-	g.serviceOnce.Do(func() {
-		if g.serviceEnabled {
-			return // already set by the parent accessor
-		}
-		if g.ProjectId.Error != nil {
-			g.serviceErr = g.ProjectId.Error
-			return
-		}
-		proj, err := CreateResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
-			"id": llx.StringData(g.ProjectId.Data),
-		})
-		if err != nil {
-			g.serviceErr = err
-			return
-		}
-		g.serviceEnabled, g.serviceErr = proj.(*mqlGcpProject).isServiceEnabled(service_networkconnectivity)
-	})
-	return g.serviceEnabled, g.serviceErr
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_networkconnectivity)
 }
 
 // networkConnectivityCredentials returns credentials scoped for the Network
