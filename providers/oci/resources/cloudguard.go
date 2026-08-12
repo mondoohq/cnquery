@@ -238,6 +238,8 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			"state":              llx.StringData(string(target.LifecycleState)),
 			"recipeCount":        llx.IntDataPtr(target.RecipeCount),
 			"created":            llx.TimeDataPtr(created),
+			"freeformTags":       llx.MapData(strMapToAny(target.FreeformTags), types.String),
+			"definedTags":        llx.MapData(definedTagsToAny(target.DefinedTags), types.Any),
 			"systemTags":         llx.MapData(definedTagsToAny(target.SystemTags), types.Dict),
 		})
 		if err != nil {
@@ -554,6 +556,8 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 			"detectorType":  llx.StringData(string(recipe.Detector)),
 			"state":         llx.StringData(string(recipe.LifecycleState)),
 			"created":       llx.TimeDataPtr(created),
+			"freeformTags":  llx.MapData(strMapToAny(recipe.FreeformTags), types.String),
+			"definedTags":   llx.MapData(definedTagsToAny(recipe.DefinedTags), types.Any),
 			"systemTags":    llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
 		})
 		if err != nil {
@@ -620,6 +624,8 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 			"isInheritanceAfterDeleteEnabled": llx.BoolDataPtr(zone.IsInheritanceAfterDeleteEnabled),
 			"state":                           llx.StringData(string(zone.LifecycleState)),
 			"created":                         llx.TimeDataPtr(created),
+			"freeformTags":                    llx.MapData(strMapToAny(zone.FreeformTags), types.String),
+			"definedTags":                     llx.MapData(definedTagsToAny(zone.DefinedTags), types.Any),
 			"systemTags":                      llx.MapData(definedTagsToAny(zone.SystemTags), types.Dict),
 		})
 		if err != nil {
@@ -678,6 +684,8 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 			"owner":         llx.StringData(string(recipe.Owner)),
 			"state":         llx.StringData(string(recipe.LifecycleState)),
 			"created":       llx.TimeDataPtr(created),
+			"freeformTags":  llx.MapData(strMapToAny(recipe.FreeformTags), types.String),
+			"definedTags":   llx.MapData(definedTagsToAny(recipe.DefinedTags), types.Any),
 			"systemTags":    llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
 		})
 		if err != nil {
@@ -744,6 +752,8 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 			"services":      llx.ArrayData(services, types.String),
 			"state":         llx.StringData(string(policy.LifecycleState)),
 			"created":       llx.TimeDataPtr(created),
+			"freeformTags":  llx.MapData(strMapToAny(policy.FreeformTags), types.String),
+			"definedTags":   llx.MapData(definedTagsToAny(policy.DefinedTags), types.Any),
 			"systemTags":    llx.MapData(definedTagsToAny(policy.SystemTags), types.Dict),
 		})
 		if err != nil {

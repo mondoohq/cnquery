@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciOns) id() (string, error) {
@@ -58,6 +59,8 @@ func (o *mqlOciOns) topics() ([]any, error) {
 					"compartmentID": llx.StringDataPtr(topic.CompartmentId),
 					"state":         llx.StringData(string(topic.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(strMapToAny(topic.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(topic.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -180,11 +183,13 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 		}
 
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.ons.subscription", map[string]*llx.RawData{
-			"id":       llx.StringDataPtr(sub.Id),
-			"protocol": llx.StringDataPtr(sub.Protocol),
-			"endpoint": llx.StringDataPtr(sub.Endpoint),
-			"state":    llx.StringData(string(sub.LifecycleState)),
-			"created":  llx.TimeDataPtr(created),
+			"id":           llx.StringDataPtr(sub.Id),
+			"protocol":     llx.StringDataPtr(sub.Protocol),
+			"endpoint":     llx.StringDataPtr(sub.Endpoint),
+			"state":        llx.StringData(string(sub.LifecycleState)),
+			"created":      llx.TimeDataPtr(created),
+			"freeformTags": llx.MapData(strMapToAny(sub.FreeformTags), types.String),
+			"definedTags":  llx.MapData(definedTagsToAny(sub.DefinedTags), types.Any),
 		})
 		if err != nil {
 			return nil, err

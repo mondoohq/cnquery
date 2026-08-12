@@ -1308,6 +1308,8 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 					"availabilityDomain": llx.StringDataPtr(publicIp.AvailabilityDomain),
 					"state":              llx.StringData(string(publicIp.LifecycleState)),
 					"created":            llx.TimeDataPtr(created),
+					"freeformTags":       llx.MapData(strMapToAny(publicIp.FreeformTags), types.String),
+					"definedTags":        llx.MapData(definedTagsToAny(publicIp.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err

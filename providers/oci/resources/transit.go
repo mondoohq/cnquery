@@ -206,6 +206,8 @@ func (o *mqlOciNetworkDrg) newDrgAttachment(att core.DrgAttachment) (*mqlOciNetw
 		"isCrossTenancy": llx.BoolDataPtr(att.IsCrossTenancy),
 		"state":          llx.StringData(string(att.LifecycleState)),
 		"created":        llx.TimeDataPtr(created),
+		"freeformTags":   llx.MapData(strMapToAny(att.FreeformTags), types.String),
+		"definedTags":    llx.MapData(definedTagsToAny(att.DefinedTags), types.Any),
 	})
 	if err != nil {
 		return nil, err

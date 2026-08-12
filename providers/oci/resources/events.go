@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciEvents) id() (string, error) {
@@ -53,6 +54,8 @@ func (o *mqlOciEvents) rules() ([]any, error) {
 					"isEnabled":     llx.BoolDataPtr(rule.IsEnabled),
 					"state":         llx.StringData(string(rule.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(strMapToAny(rule.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(rule.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err

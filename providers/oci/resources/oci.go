@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOci) id() (string, error) {
@@ -66,20 +67,7 @@ func (o *mqlOci) compartments() ([]any, error) {
 
 	res := []any{}
 	for i := range compartments {
-		compartment := compartments[i]
-
-		var created *time.Time
-		if compartment.TimeCreated != nil {
-			created = &compartment.TimeCreated.Time
-		}
-
-		mqlCompartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
-			"id":          llx.StringDataPtr(compartment.Id),
-			"name":        llx.StringDataPtr(compartment.Name),
-			"description": llx.StringDataPtr(compartment.Description),
-			"created":     llx.TimeDataPtr(created),
-			"state":       llx.StringData(string(compartment.LifecycleState)),
-		})
+		mqlCompartment, err := CreateResource(o.MqlRuntime, "oci.compartment", ociCompartmentArgs(compartments[i]))
 		if err != nil {
 			return nil, err
 		}
@@ -87,6 +75,43 @@ func (o *mqlOci) compartments() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// ociCompartmentArgs builds the MQL fields for a compartment.
+//
+// Both the lister and initOciCompartment create oci.compartment, so a field
+// added to one and forgotten in the other ships unset rather than null, which
+// crosses the plugin boundary as a primitive with no type information. Building
+// both from here makes the two impossible to drift apart.
+func ociCompartmentArgs(compartment identity.Compartment) map[string]*llx.RawData {
+	var created *time.Time
+	if compartment.TimeCreated != nil {
+		created = &compartment.TimeCreated.Time
+	}
+
+	return map[string]*llx.RawData{
+		"id":           llx.StringDataPtr(compartment.Id),
+		"name":         llx.StringDataPtr(compartment.Name),
+		"description":  llx.StringDataPtr(compartment.Description),
+		"created":      llx.TimeDataPtr(created),
+		"state":        llx.StringData(string(compartment.LifecycleState)),
+		"freeformTags": llx.MapData(strMapToAny(compartment.FreeformTags), types.String),
+		"definedTags":  llx.MapData(definedTagsToAny(compartment.DefinedTags), types.Any),
+	}
+}
+
+// ociCompartmentUnreadable marks every field except id explicitly null, for a
+// compartment the caller may see by OCID but not read.
+//
+// The field list is derived from ociCompartmentArgs rather than written out, so
+// a field added there is nulled here without a second edit.
+func ociCompartmentUnreadable(args map[string]*llx.RawData) {
+	for name := range ociCompartmentArgs(identity.Compartment{}) {
+		if name == "id" {
+			continue
+		}
+		args[name] = llx.NilData
+	}
 }
 
 func (o *mqlOciCompartment) id() (string, error) {
@@ -119,24 +144,13 @@ func initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		// explicitly null. Leaving them unset sends a primitive with no type
 		// information across the plugin boundary, which surfaces client-side as
 		// an unattributed coercion warning rather than a readable null.
-		args["name"] = llx.NilData
-		args["description"] = llx.NilData
-		args["created"] = llx.NilData
-		args["state"] = llx.NilData
+		ociCompartmentUnreadable(args)
 		return args, nil, nil
 	}
-	compartment := resp.Compartment
 
-	var created *time.Time
-	if compartment.TimeCreated != nil {
-		created = &compartment.TimeCreated.Time
+	for name, value := range ociCompartmentArgs(resp.Compartment) {
+		args[name] = value
 	}
-
-	args["id"] = llx.StringDataPtr(compartment.Id)
-	args["name"] = llx.StringDataPtr(compartment.Name)
-	args["description"] = llx.StringDataPtr(compartment.Description)
-	args["created"] = llx.TimeDataPtr(created)
-	args["state"] = llx.StringData(string(compartment.LifecycleState))
 	return args, nil, nil
 }
 
@@ -155,6 +169,8 @@ func initOciTenancy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["id"] = llx.StringDataPtr(tenancy.Id)
 	args["name"] = llx.StringDataPtr(tenancy.Name)
 	args["description"] = llx.StringDataPtr(tenancy.Description)
+	args["freeformTags"] = llx.MapData(strMapToAny(tenancy.FreeformTags), types.String)
+	args["definedTags"] = llx.MapData(definedTagsToAny(tenancy.DefinedTags), types.Any)
 
 	return args, nil, nil
 }

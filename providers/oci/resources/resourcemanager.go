@@ -205,12 +205,14 @@ func (o *mqlOciResourceManagerStack) jobs() ([]any, error) {
 		job := jobs[i]
 
 		mqlJob, err := CreateResource(o.MqlRuntime, "oci.resourceManager.job", map[string]*llx.RawData{
-			"id":        llx.StringDataPtr(job.Id),
-			"name":      llx.StringDataPtr(job.DisplayName),
-			"operation": llx.StringData(string(job.Operation)),
-			"state":     llx.StringData(string(job.LifecycleState)),
-			"created":   sdkTimeData(job.TimeCreated),
-			"finished":  sdkTimeData(job.TimeFinished),
+			"id":           llx.StringDataPtr(job.Id),
+			"name":         llx.StringDataPtr(job.DisplayName),
+			"operation":    llx.StringData(string(job.Operation)),
+			"state":        llx.StringData(string(job.LifecycleState)),
+			"created":      sdkTimeData(job.TimeCreated),
+			"finished":     sdkTimeData(job.TimeFinished),
+			"freeformTags": llx.MapData(strMapToAny(job.FreeformTags), types.String),
+			"definedTags":  llx.MapData(definedTagsToAny(job.DefinedTags), types.Any),
 		})
 		if err != nil {
 			return nil, err
