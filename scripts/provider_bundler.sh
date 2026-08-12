@@ -55,6 +55,24 @@ ${REPOROOT}/lr go ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr --dist ${PROVID
 echo "  - Generate the resource versions..."
 ${REPOROOT}/lr versions ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr
 
+# Windows binaries carry a VERSIONINFO resource and an application manifest.
+# Without them the provider .exe reports no CompanyName/ProductName/
+# FileDescription, which contributes to heuristic AV/EDR misclassification.
+#
+# This has to happen before the build loop below: both windows targets share
+# these files, so generating them inside build_bundle would race whenever
+# MAX_PARALLEL > 1.
+echo "  - Generate the Windows version resource..."
+WINRES_JSON="${PROVIDER_DIST}/winres.json"
+sed "s/__PROVIDER_NAME__/${PROVIDER_NAME}/g" \
+  "${REPOROOT}/scripts/winres/provider.json.tmpl" > "${WINRES_JSON}"
+go run github.com/tc-hib/go-winres@v0.3.3 make \
+  --in "${WINRES_JSON}" \
+  --out "${PROVIDER_PATH}/rsrc" \
+  --arch amd64,arm64 \
+  --file-version "${PROVIDER_VERSION}" \
+  --product-version "${PROVIDER_VERSION}"
+
 build_bundle(){
   set -eo pipefail
   local GOOS=$1
@@ -76,8 +94,12 @@ build_bundle(){
     PROVIDER_EXECUTABLE="${PROVIDER_EXECUTABLE}.exe"
   fi
 
-  # Build the binary into the arch-specific directory
-  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${ARCH_DIST}/${PROVIDER_EXECUTABLE} main.go
+  # Build the binary into the arch-specific directory.
+  #
+  # NOTE: the build target must stay the package ("."), not main.go. Go only
+  # links rsrc_windows_*.syso when building a package directory; passing an
+  # explicit .go file silently drops the version resource and manifest.
+  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${ARCH_DIST}/${PROVIDER_EXECUTABLE} .
 
   if [[ "${GOOS}" == "windows" ]]; then
     ### SIGN THE BINARY
@@ -150,6 +172,12 @@ fi
 
 echo "  - Building ${#BUILDS[@]} architecture targets (max parallel: ${MAX_PARALLEL})..."
 
+# The generated resource objects live in the provider source directory, so drop
+# them once every target has been linked rather than leaving them in the tree.
+remove_winres() {
+  rm -f "${PROVIDER_PATH}"/rsrc_windows_*.syso
+}
+
 # Kill all background build processes on interrupt/termination
 cleanup() {
   echo ""
@@ -158,6 +186,7 @@ cleanup() {
     kill "$pid" 2>/dev/null || true
   done
   wait 2>/dev/null
+  remove_winres
   exit 130
 }
 trap cleanup INT TERM
@@ -185,6 +214,8 @@ done
 for pid in "${PIDS[@]}"; do
   wait "$pid" || FAILED=1
 done
+
+remove_winres
 
 if [ $FAILED -ne 0 ]; then
   echo "One or more architecture builds failed."

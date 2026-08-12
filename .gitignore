@@ -18,6 +18,8 @@ data/
 # primarily used to ignore all dist files built for providers
 providers/*.resources.json
 providers/*/dist
+# generated Windows version resource (see scripts/provider_bundler.sh)
+providers/*/rsrc_windows_*.syso
 providers/*/resources/*.resources.json
 providers/mock_coordinator.go
 providers/mock_plugin_interface.go
