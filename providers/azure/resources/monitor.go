@@ -475,6 +475,7 @@ func (a *mqlAzureSubscriptionMonitorService) actionGroups() ([]any, error) {
 					"id":                         llx.StringDataPtr(ag.ID),
 					"name":                       llx.StringDataPtr(ag.Name),
 					"location":                   llx.StringDataPtr(ag.Location),
+					"tags":                       llx.MapData(convert.PtrMapStrToInterface(ag.Tags), types.String),
 					"enabled":                    llx.BoolDataPtr(enabled),
 					"groupShortName":             llx.StringData(groupShortName),
 					"emailReceivers":             llx.ArrayData(emailReceivers, types.Dict),
@@ -625,6 +626,8 @@ func (a *mqlAzureSubscriptionMonitorService) metricAlerts() ([]any, error) {
 			mqlMa, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.metricAlert", map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(ma.ID),
 				"name":                 llx.StringDataPtr(ma.Name),
+				"location":             llx.StringDataPtr(ma.Location),
+				"tags":                 llx.MapData(convert.PtrMapStrToInterface(ma.Tags), types.String),
 				"description":          llx.StringData(description),
 				"enabled":              llx.BoolDataPtr(enabled),
 				"severity":             llx.IntData(severity),
@@ -740,6 +743,8 @@ func (a *mqlAzureSubscriptionMonitorService) scheduledQueryRules() ([]any, error
 			mqlSqr, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.scheduledQueryRule", map[string]*llx.RawData{
 				"id":                  llx.StringDataPtr(sqr.ID),
 				"name":                llx.StringDataPtr(sqr.Name),
+				"location":            llx.StringDataPtr(sqr.Location),
+				"tags":                llx.MapData(convert.PtrMapStrToInterface(sqr.Tags), types.String),
 				"displayName":         llx.StringData(displayName),
 				"description":         llx.StringData(description),
 				"enabled":             llx.BoolDataPtr(enabled),

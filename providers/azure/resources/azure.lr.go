@@ -5301,6 +5301,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateway.connection.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetLocation()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetProperties()).ToDataRes(types.Dict)
 	},
@@ -9822,6 +9825,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.database.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceDatabase).GetName()).ToDataRes(types.String)
 	},
+	"azure.subscription.sqlService.database.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceDatabase).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.database.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceDatabase).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.sqlService.database.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceDatabase).GetType()).ToDataRes(types.String)
 	},
@@ -12027,6 +12036,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.metricAlert.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetName()).ToDataRes(types.String)
 	},
+	"azure.subscription.monitorService.metricAlert.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.metricAlert.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.monitorService.metricAlert.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).GetDescription()).ToDataRes(types.String)
 	},
@@ -12071,6 +12086,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.scheduledQueryRule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"azure.subscription.monitorService.scheduledQueryRule.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).GetDisplayName()).ToDataRes(types.String)
@@ -12119,6 +12140,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.actionGroup.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.actionGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"azure.subscription.monitorService.actionGroup.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActionGroup).GetEnabled()).ToDataRes(types.Bool)
@@ -15909,6 +15933,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.recoveryServicesService.vault.backupPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetName()).ToDataRes(types.String)
 	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.recoveryServicesService.vault.backupPolicy.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetType()).ToDataRes(types.String)
 	},
@@ -15920,6 +15950,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.recoveryServicesService.vault.protectedItem.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"azure.subscription.recoveryServicesService.vault.protectedItem.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetType()).ToDataRes(types.String)
@@ -17006,6 +17042,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.frontDoorService.profile.endpoint.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.profile.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"azure.subscription.frontDoorService.profile.endpoint.hostName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).GetHostName()).ToDataRes(types.String)
@@ -24245,6 +24284,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -30801,6 +30844,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.database.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceDatabase).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.database.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceDatabase).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.database.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceDatabase).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -34013,6 +34064,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.monitorService.metricAlert.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.metricAlert.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.monitorService.metricAlert.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceMetricAlert).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -34075,6 +34134,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.scheduledQueryRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.scheduledQueryRule.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceScheduledQueryRule).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.scheduledQueryRule.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34143,6 +34210,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.actionGroup.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.actionGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceActionGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.actionGroup.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39661,6 +39732,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.recoveryServicesService.vault.backupPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -39679,6 +39758,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.recoveryServicesService.vault.protectedItem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.recoveryServicesService.vault.protectedItem.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41287,6 +41374,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.frontDoorService.profile.endpoint.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.profile.endpoint.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55580,6 +55671,7 @@ type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection struct {
 	Type                           plugin.TValue[string]
 	Etag                           plugin.TValue[string]
 	Location                       plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
 	Properties                     plugin.TValue[any]
 	ConnectionType                 plugin.TValue[string]
 	ConnectionStatus               plugin.TValue[string]
@@ -55654,6 +55746,10 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetE
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetLocation() *plugin.TValue[string] {
 	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetProperties() *plugin.TValue[any] {
@@ -71191,6 +71287,8 @@ type mqlAzureSubscriptionSqlServiceDatabase struct {
 	// optional: if you define mqlAzureSubscriptionSqlServiceDatabaseInternal it will be used here
 	Id                                      plugin.TValue[string]
 	Name                                    plugin.TValue[string]
+	Location                                plugin.TValue[string]
+	Tags                                    plugin.TValue[map[string]any]
 	Type                                    plugin.TValue[string]
 	Collation                               plugin.TValue[string]
 	CreationDate                            plugin.TValue[*time.Time]
@@ -71273,6 +71371,14 @@ func (c *mqlAzureSubscriptionSqlServiceDatabase) GetId() *plugin.TValue[string] 
 
 func (c *mqlAzureSubscriptionSqlServiceDatabase) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSqlServiceDatabase) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionSqlServiceDatabase) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionSqlServiceDatabase) GetType() *plugin.TValue[string] {
@@ -79282,6 +79388,8 @@ type mqlAzureSubscriptionMonitorServiceMetricAlert struct {
 	mqlAzureSubscriptionMonitorServiceMetricAlertInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
+	Location             plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
 	Description          plugin.TValue[string]
 	Enabled              plugin.TValue[bool]
 	Severity             plugin.TValue[int64]
@@ -79340,6 +79448,14 @@ func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetId() *plugin.TValue[s
 
 func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionMonitorServiceMetricAlert) GetDescription() *plugin.TValue[string] {
@@ -79425,6 +79541,8 @@ type mqlAzureSubscriptionMonitorServiceScheduledQueryRule struct {
 	mqlAzureSubscriptionMonitorServiceScheduledQueryRuleInternal
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
+	Location            plugin.TValue[string]
+	Tags                plugin.TValue[map[string]any]
 	DisplayName         plugin.TValue[string]
 	Description         plugin.TValue[string]
 	Enabled             plugin.TValue[bool]
@@ -79483,6 +79601,14 @@ func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetId() *plugin.T
 
 func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionMonitorServiceScheduledQueryRule) GetDisplayName() *plugin.TValue[string] {
@@ -79569,6 +79695,7 @@ type mqlAzureSubscriptionMonitorServiceActionGroup struct {
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
 	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
 	Enabled                    plugin.TValue[bool]
 	GroupShortName             plugin.TValue[string]
 	EmailReceivers             plugin.TValue[[]any]
@@ -79629,6 +79756,10 @@ func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetName() *plugin.TValue
 
 func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetLocation() *plugin.TValue[string] {
 	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionMonitorServiceActionGroup) GetEnabled() *plugin.TValue[bool] {
@@ -93186,6 +93317,8 @@ type mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy struct {
 	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicyInternal it will be used here
 	Id         plugin.TValue[string]
 	Name       plugin.TValue[string]
+	Location   plugin.TValue[string]
+	Tags       plugin.TValue[map[string]any]
 	Type       plugin.TValue[string]
 	Properties plugin.TValue[any]
 }
@@ -93235,6 +93368,14 @@ func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetName()
 	return &c.Name
 }
 
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
@@ -93250,6 +93391,8 @@ type mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem struct {
 	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItemInternal it will be used here
 	Id         plugin.TValue[string]
 	Name       plugin.TValue[string]
+	Location   plugin.TValue[string]
+	Tags       plugin.TValue[map[string]any]
 	Type       plugin.TValue[string]
 	Properties plugin.TValue[any]
 }
@@ -93297,6 +93440,14 @@ func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetId() 
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetType() *plugin.TValue[string] {
@@ -97566,6 +97717,7 @@ type mqlAzureSubscriptionFrontDoorServiceProfileEndpoint struct {
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
 	HostName          plugin.TValue[string]
 	EnabledState      plugin.TValue[string]
 	ProvisioningState plugin.TValue[string]
@@ -97620,6 +97772,10 @@ func (c *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) GetName() *plugin.
 
 func (c *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) GetLocation() *plugin.TValue[string] {
 	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) GetHostName() *plugin.TValue[string] {

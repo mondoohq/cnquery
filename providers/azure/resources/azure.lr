@@ -2621,6 +2621,8 @@ private azure.subscription.networkService.virtualNetworkGateway.connection @defa
   etag string
   // VNet gateway Connection location
   location string
+  // VNet gateway Connection tags
+  tags map[string]string
   // VNet gateway Connection properties
   properties dict
   // Connection type (one of: "IPsec", "Vnet2Vnet", "ExpressRoute", "VPNClient")
@@ -7004,6 +7006,10 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   id string
   // SQL database name
   name string
+  // SQL database location
+  location string
+  // SQL database tags
+  tags map[string]string
   // SQL database type
   type string
   // SQL database collation
@@ -8972,6 +8978,10 @@ private azure.subscription.monitorService.metricAlert @defaults("name enabled se
   id string
   // Rule name
   name string
+  // Location
+  location string
+  // Rule tags
+  tags map[string]string
   // Description
   description string
   // Whether the rule is enabled
@@ -9015,6 +9025,10 @@ private azure.subscription.monitorService.scheduledQueryRule @defaults("name dis
   id string
   // Rule name
   name string
+  // Location
+  location string
+  // Rule tags
+  tags map[string]string
   // Display name
   displayName string
   // Description
@@ -9060,6 +9074,8 @@ private azure.subscription.monitorService.actionGroup @defaults("name groupShort
   name string
   // Location
   location string
+  // Action group tags
+  tags map[string]string
   // Whether the action group is enabled; a disabled group receives no notifications
   enabled bool
   // Short name shown as the source of SMS and other length-limited notifications
@@ -12755,6 +12771,10 @@ private azure.subscription.recoveryServicesService.vault.backupPolicy @defaults(
   id string
   // Backup policy name
   name string
+  // Backup policy location
+  location string
+  // Backup policy tags
+  tags map[string]string
   // Resource type
   type string
   // Backup policy properties
@@ -12773,6 +12793,10 @@ private azure.subscription.recoveryServicesService.vault.protectedItem @defaults
   id string
   // Protected item name
   name string
+  // Protected item location
+  location string
+  // Protected item tags
+  tags map[string]string
   // Resource type
   type string
   // Protected item properties
@@ -14073,6 +14097,8 @@ private azure.subscription.frontDoorService.profile.endpoint @defaults("id name 
   name string
   // Endpoint location
   location string
+  // Endpoint tags
+  tags map[string]string
   // Endpoint hostname
   hostName string
   // Enabled state (Enabled, Disabled)

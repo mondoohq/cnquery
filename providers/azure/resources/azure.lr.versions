@@ -2552,6 +2552,7 @@ azure.subscription.frontDoorService.profile.endpoint.route.systemMetadata 13.22.
 azure.subscription.frontDoorService.profile.endpoint.route.type 13.5.1
 azure.subscription.frontDoorService.profile.endpoint.routes 13.5.1
 azure.subscription.frontDoorService.profile.endpoint.systemMetadata 13.22.1
+azure.subscription.frontDoorService.profile.endpoint.tags 13.34.1
 azure.subscription.frontDoorService.profile.endpoints 13.3.3
 azure.subscription.frontDoorService.profile.frontDoorId 13.3.3
 azure.subscription.frontDoorService.profile.id 13.3.3
@@ -3275,6 +3276,7 @@ azure.subscription.monitorService.actionGroup.logicAppReceivers 13.32.1
 azure.subscription.monitorService.actionGroup.name 13.32.1
 azure.subscription.monitorService.actionGroup.smsReceivers 13.32.1
 azure.subscription.monitorService.actionGroup.systemMetadata 13.32.1
+azure.subscription.monitorService.actionGroup.tags 13.34.1
 azure.subscription.monitorService.actionGroup.voiceReceivers 13.32.1
 azure.subscription.monitorService.actionGroup.webhookReceivers 13.32.1
 azure.subscription.monitorService.actionGroups 13.32.1
@@ -3369,10 +3371,12 @@ azure.subscription.monitorService.metricAlert.enabled 13.32.1
 azure.subscription.monitorService.metricAlert.evaluationFrequency 13.32.1
 azure.subscription.monitorService.metricAlert.id 13.32.1
 azure.subscription.monitorService.metricAlert.lastUpdatedTime 13.32.1
+azure.subscription.monitorService.metricAlert.location 13.34.1
 azure.subscription.monitorService.metricAlert.name 13.32.1
 azure.subscription.monitorService.metricAlert.scopes 13.32.1
 azure.subscription.monitorService.metricAlert.severity 13.32.1
 azure.subscription.monitorService.metricAlert.systemMetadata 13.32.1
+azure.subscription.monitorService.metricAlert.tags 13.34.1
 azure.subscription.monitorService.metricAlert.targetResourceRegion 13.32.1
 azure.subscription.monitorService.metricAlert.targetResourceType 13.32.1
 azure.subscription.monitorService.metricAlert.windowSize 13.32.1
@@ -3411,11 +3415,13 @@ azure.subscription.monitorService.scheduledQueryRule.displayName 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.enabled 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.evaluationFrequency 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.id 13.32.1
+azure.subscription.monitorService.scheduledQueryRule.location 13.34.1
 azure.subscription.monitorService.scheduledQueryRule.muteActionsDuration 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.name 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.scopes 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.severity 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.systemMetadata 13.32.1
+azure.subscription.monitorService.scheduledQueryRule.tags 13.34.1
 azure.subscription.monitorService.scheduledQueryRule.targetResourceTypes 13.32.1
 azure.subscription.monitorService.scheduledQueryRule.windowSize 13.32.1
 azure.subscription.monitorService.scheduledQueryRules 13.32.1
@@ -4718,6 +4724,7 @@ azure.subscription.networkService.virtualNetworkGateway.connection.properties 9.
 azure.subscription.networkService.virtualNetworkGateway.connection.provisioningState 13.10.2
 azure.subscription.networkService.virtualNetworkGateway.connection.routingConfiguration 13.25.1
 azure.subscription.networkService.virtualNetworkGateway.connection.routingWeight 13.10.2
+azure.subscription.networkService.virtualNetworkGateway.connection.tags 13.34.1
 azure.subscription.networkService.virtualNetworkGateway.connection.type 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.connection.useLocalAzureIpAddress 13.10.2
 azure.subscription.networkService.virtualNetworkGateway.connection.usePolicyBasedTrafficSelectors 13.10.2
@@ -5142,8 +5149,10 @@ azure.subscription.recoveryServicesService.vault.backupConfig.storageTypeState 1
 azure.subscription.recoveryServicesService.vault.backupPolicies 13.3.3
 azure.subscription.recoveryServicesService.vault.backupPolicy 13.3.3
 azure.subscription.recoveryServicesService.vault.backupPolicy.id 13.3.3
+azure.subscription.recoveryServicesService.vault.backupPolicy.location 13.34.1
 azure.subscription.recoveryServicesService.vault.backupPolicy.name 13.3.3
 azure.subscription.recoveryServicesService.vault.backupPolicy.properties 13.3.3
+azure.subscription.recoveryServicesService.vault.backupPolicy.tags 13.34.1
 azure.subscription.recoveryServicesService.vault.backupPolicy.type 13.3.3
 azure.subscription.recoveryServicesService.vault.backupStorageVersion 13.3.3
 azure.subscription.recoveryServicesService.vault.costManagementGranularityLevel 13.30.1
@@ -5168,8 +5177,10 @@ azure.subscription.recoveryServicesService.vault.privateEndpointStateForBackup 1
 azure.subscription.recoveryServicesService.vault.privateEndpointStateForSiteRecovery 13.3.3
 azure.subscription.recoveryServicesService.vault.protectedItem 13.3.3
 azure.subscription.recoveryServicesService.vault.protectedItem.id 13.3.3
+azure.subscription.recoveryServicesService.vault.protectedItem.location 13.34.1
 azure.subscription.recoveryServicesService.vault.protectedItem.name 13.3.3
 azure.subscription.recoveryServicesService.vault.protectedItem.properties 13.3.3
+azure.subscription.recoveryServicesService.vault.protectedItem.tags 13.34.1
 azure.subscription.recoveryServicesService.vault.protectedItem.type 13.3.3
 azure.subscription.recoveryServicesService.vault.protectedItems 13.3.3
 azure.subscription.recoveryServicesService.vault.provisioningState 13.3.3
@@ -5515,6 +5526,7 @@ azure.subscription.sqlService.database.ledgerDigestUpload.digestStorageEndpoint 
 azure.subscription.sqlService.database.ledgerDigestUpload.id 13.8.2
 azure.subscription.sqlService.database.ledgerDigestUpload.name 13.8.2
 azure.subscription.sqlService.database.ledgerDigestUpload.state 13.8.2
+azure.subscription.sqlService.database.location 13.34.1
 azure.subscription.sqlService.database.longTermRetentionPolicy 11.4.28
 azure.subscription.sqlService.database.longtermretentionpolicy 11.4.28
 azure.subscription.sqlService.database.longtermretentionpolicy.id 11.4.28
@@ -5543,6 +5555,7 @@ azure.subscription.sqlService.database.serviceLevelObjective 9.0.1
 azure.subscription.sqlService.database.sourceDatabaseDeletionDate 9.0.1
 azure.subscription.sqlService.database.sourceDatabaseId 9.0.1
 azure.subscription.sqlService.database.status 9.0.1
+azure.subscription.sqlService.database.tags 13.34.1
 azure.subscription.sqlService.database.threatDetectionPolicy 9.0.1
 azure.subscription.sqlService.database.transparentDataEncryption 9.0.1
 azure.subscription.sqlService.database.transparentDataEncryptionEnabled 13.8.2

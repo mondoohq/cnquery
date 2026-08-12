@@ -2997,6 +2997,7 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 				"name":       llx.StringDataPtr(cn.Name),
 				"etag":       llx.StringDataPtr(cn.Etag),
 				"location":   llx.StringDataPtr(cn.Location),
+				"tags":       llx.MapData(convert.PtrMapStrToInterface(cn.Tags), types.String),
 				"properties": llx.DictData(props),
 			}
 			if cn.Properties != nil {
