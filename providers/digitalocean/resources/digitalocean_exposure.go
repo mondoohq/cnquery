@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -369,13 +370,16 @@ func (b *mqlDigitaloceanSpacesBucket) hasWildcardPolicy() (bool, error) {
 // account on the platform rather than only this one. publicAccessBlocked is
 // only true when all four block-public-access settings are on, so a bucket with
 // a public grant and partial blocking is reported as public rather than
-// silently cleared.
+// silently cleared. On DigitalOcean that field is null, because Spaces has no
+// block-public-access control at all, and a control that does not exist
+// cannot clear a public grant either: the verdict rests on the ACL and the
+// policy.
 func (b *mqlDigitaloceanSpacesBucket) isPublic() (bool, error) {
 	blocked := b.GetPublicAccessBlocked()
 	if blocked.Error != nil {
 		return false, blocked.Error
 	}
-	if blocked.Data {
+	if blocked.State&plugin.StateIsNull == 0 && blocked.Data {
 		return false, nil
 	}
 

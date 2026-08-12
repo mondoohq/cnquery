@@ -6,11 +6,13 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // This file holds the shared resource arg-builders and the singular
@@ -152,7 +154,13 @@ func initDigitaloceanDatabase(runtime *plugin.Runtime, args map[string]*llx.RawD
 }
 
 // firewallArgs maps a cloud firewall to its MQL fields.
-func firewallArgs(fw *godo.Firewall) map[string]*llx.RawData {
+//
+// It takes the runtime because a firewall's pending changes are modeled as
+// resources rather than raw values. Building them here keeps the lister and
+// initDigitaloceanFirewall on a single path, so the field cannot end up
+// populated when a firewall is reached one way and empty when it is reached
+// the other.
+func firewallArgs(runtime *plugin.Runtime, fw *godo.Firewall) (map[string]*llx.RawData, error) {
 	inbound := make([]interface{}, len(fw.InboundRules))
 	for i, rule := range fw.InboundRules {
 		m := map[string]interface{}{
@@ -193,16 +201,47 @@ func firewallArgs(fw *godo.Firewall) map[string]*llx.RawData {
 		tags[i] = t
 	}
 
-	return map[string]*llx.RawData{
-		"id":            llx.StringData(fw.ID),
-		"name":          llx.StringData(fw.Name),
-		"status":        llx.StringData(fw.Status),
-		"createdAt":     llx.TimeDataPtr(parseDoTime(fw.Created)),
-		"inboundRules":  llx.ArrayData(inbound, "\x13"),
-		"outboundRules": llx.ArrayData(outbound, "\x13"),
-		"dropletIds":    llx.ArrayData(dropletIds, "\x05"),
-		"tags":          llx.ArrayData(tags, "\x02"),
+	pending, err := firewallPendingChanges(runtime, fw)
+	if err != nil {
+		return nil, err
 	}
+
+	return map[string]*llx.RawData{
+		"id":             llx.StringData(fw.ID),
+		"name":           llx.StringData(fw.Name),
+		"status":         llx.StringData(fw.Status),
+		"createdAt":      llx.TimeDataPtr(parseDoTime(fw.Created)),
+		"inboundRules":   llx.ArrayData(inbound, "\x13"),
+		"outboundRules":  llx.ArrayData(outbound, "\x13"),
+		"dropletIds":     llx.ArrayData(dropletIds, "\x05"),
+		"tags":           llx.ArrayData(tags, "\x02"),
+		"pendingChanges": llx.ArrayData(pending, types.Resource("digitalocean.firewall.pendingChange")),
+	}, nil
+}
+
+// firewallPendingChanges builds the per-droplet changes a firewall has not
+// finished applying. The droplet id is kept on the resource rather than
+// exposed as a field: it is the cache key's distinguishing part and resolves
+// to a droplet through the typed accessor.
+func firewallPendingChanges(runtime *plugin.Runtime, fw *godo.Firewall) ([]interface{}, error) {
+	changes := make([]interface{}, 0, len(fw.PendingChanges))
+	for _, pc := range fw.PendingChanges {
+		id, err := resourceID("digitalocean.firewall.pendingChange", fw.ID, strconv.Itoa(pc.DropletID))
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(runtime, "digitalocean.firewall.pendingChange", map[string]*llx.RawData{
+			"__id":     llx.StringData(id),
+			"removing": llx.BoolData(pc.Removing),
+			"status":   llx.StringData(pc.Status),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res.(*mqlDigitaloceanFirewallPendingChange).cacheDropletID = int64(pc.DropletID)
+		changes = append(changes, res)
+	}
+	return changes, nil
 }
 
 func initDigitaloceanFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -221,7 +260,11 @@ func initDigitaloceanFirewall(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
-	return firewallArgs(fw), nil, nil
+	fwArgs, err := firewallArgs(runtime, fw)
+	if err != nil {
+		return nil, nil, err
+	}
+	return fwArgs, nil, nil
 }
 
 // loadBalancerArgs maps a load balancer to its MQL fields.

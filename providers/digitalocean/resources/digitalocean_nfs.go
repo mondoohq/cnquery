@@ -9,6 +9,7 @@ import (
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -95,6 +96,80 @@ func (r *mqlDigitaloceanNfs) vpcs() ([]interface{}, error) {
 
 type mqlDigitaloceanNfsAccessPointInternal struct {
 	cacheVpcID string
+}
+
+// The parent share is kept on the snapshot rather than resolved by id.
+// Snapshots are only ever built from the share's own accessor, so the
+// resource is already in hand and no second lookup is needed.
+type mqlDigitaloceanNfsSnapshotInternal struct {
+	cacheShare *mqlDigitaloceanNfs
+}
+
+// snapshots lists the point-in-time copies taken of the NFS share. The list
+// API is scoped to one share in one region, so it requires a separate call
+// per share.
+func (r *mqlDigitaloceanNfs) snapshots() ([]interface{}, error) {
+	shareID := r.Id.Data
+	if shareID == "" {
+		return []interface{}{}, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+	region := r.Region.Data
+
+	snaps, err := paginate(context.Background(), func(ctx context.Context, opt *godo.ListOptions) ([]*godo.NfsSnapshot, *godo.Response, error) {
+		return client.Nfs.ListSnapshots(ctx, opt, shareID, region)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(snaps))
+	for _, s := range snaps {
+		if s == nil {
+			continue
+		}
+		args, err := nfsSnapshotArgs(s)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.nfs.snapshot", args)
+		if err != nil {
+			return nil, err
+		}
+		res.(*mqlDigitaloceanNfsSnapshot).cacheShare = r
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+// nfsSnapshotArgs maps an NFS snapshot to its MQL fields. An unparseable or
+// absent timestamp stays null rather than becoming the zero time, which would
+// date a restore point to 1 January year 1.
+func nfsSnapshotArgs(s *godo.NfsSnapshot) (map[string]*llx.RawData, error) {
+	id, err := resourceID("digitalocean.nfs.snapshot", s.ID)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]*llx.RawData{
+		"__id":          llx.StringData(id),
+		"id":            llx.StringData(s.ID),
+		"name":          llx.StringData(s.Name),
+		"region":        llx.StringData(s.Region),
+		"sizeGibibytes": llx.IntData(int64(s.SizeGib)),
+		"status":        llx.StringData(string(s.Status)),
+		"shareId":       llx.StringData(s.ShareID),
+		"createdAt":     llx.TimeDataPtr(parseDoTime(s.CreatedAt)),
+	}, nil
+}
+
+func (r *mqlDigitaloceanNfsSnapshot) share() (*mqlDigitaloceanNfs, error) {
+	if r.cacheShare == nil {
+		r.Share.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return r.cacheShare, nil
 }
 
 // accessPoints lists the access points that export the NFS share. The

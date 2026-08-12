@@ -264,7 +264,11 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 		if skipFirewall(conn.Filters.General, &fw) {
 			continue
 		}
-		res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall", firewallArgs(&fw))
+		fwArgs, err := firewallArgs(r.MqlRuntime, &fw)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall", fwArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -386,6 +390,8 @@ func (r *mqlDigitaloceanDomain) records() ([]interface{}, error) {
 			"priority":   llx.IntData(int64(rec.Priority)),
 			"port":       llx.IntData(int64(rec.Port)),
 			"weight":     llx.IntData(int64(rec.Weight)),
+			"tag":        llx.StringData(rec.Tag),
+			"flags":      llx.IntData(int64(rec.Flags)),
 		})
 		if err != nil {
 			return nil, err
