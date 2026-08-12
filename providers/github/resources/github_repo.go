@@ -1774,13 +1774,7 @@ func (g *mqlGithubRepository) closedIssues() ([]any, error) {
 	return g.getIssues("closed")
 }
 
-func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-	ownerLogin, repoName, err := repoOwnerAndName(g)
-	if err != nil {
-		return nil, err
-	}
-
+func listIssuesRaw(ctx context.Context, client *github.Client, ownerLogin, repoName, state string) ([]*github.Issue, error) {
 	listOpts := &github.IssueListByRepoOptions{
 		State: state,
 		ListOptions: github.ListOptions{
@@ -1789,19 +1783,42 @@ func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 	}
 	var allIssues []*github.Issue
 	for {
-		issues, resp, err := conn.Client().Issues.ListByRepo(conn.Context(), ownerLogin, repoName, listOpts)
+		issues, resp, err := client.Issues.ListByRepo(ctx, ownerLogin, repoName, listOpts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
-			}
-			log.Error().Err(err).Msg("unable to get issues")
 			return nil, err
 		}
-		allIssues = append(allIssues, issues...)
+		for _, issue := range issues {
+			// Every pull request is also an issue, and this endpoint returns
+			// both. Only the `pull_request` member tells them apart. Pull
+			// requests are reported by openMergeRequests/closedMergeRequests,
+			// so keeping them here would count the same work twice.
+			if issue.IsPullRequest() {
+				continue
+			}
+			allIssues = append(allIssues, issue)
+		}
 		if resp.NextPage == 0 {
 			break
 		}
 		listOpts.ListOptions.Page = resp.NextPage
+	}
+	return allIssues, nil
+}
+
+func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
+	}
+
+	allIssues, err := listIssuesRaw(conn.Context(), conn.Client(), ownerLogin, repoName, state)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		log.Error().Err(err).Msg("unable to get issues")
+		return nil, err
 	}
 
 	res := []any{}
