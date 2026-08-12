@@ -10359,49 +10359,6 @@ windows.auditPolicy.subcategory @defaults("name success failure") {
 // blocks inbound traffic by default on each profile, and `rules` to audit
 // which allow/block rules are active. Backed by the `Get-NetFirewallProfile`
 // and `Get-NetFirewallRule` PowerShell cmdlets.
-// Print drivers registered with the Windows spooler
-//
-// Enumerated from the spooler rather than from installed software: a driver
-// delivered as an INF/CAB package lands in the driver store and creates no
-// Add/Remove Programs entry, so it is invisible to a software inventory while
-// still being loaded by the print spooler.
-windows.printerDrivers {
-  []windows.printerDriver
-}
-
-// An installed Windows print driver
-windows.printerDriver @defaults("name version manufacturer") {
-  // Driver name as the spooler reports it
-  name string
-  // Vendor's driver version in dotted form, e.g. "3.0.0.0"
-  //
-  // Windows stores this packed into a single 64-bit integer; this is the
-  // unpacked form vendors publish and advise on. Empty when the spooler
-  // reports no version.
-  version string
-  // Raw packed 64-bit driver version as the spooler stores it
-  packedVersion int
-  // Driver model version: 2, 3 or 4
-  //
-  // The spooler interface generation, NOT the vendor's release number. Version
-  // 4 drivers are the isolated, package-aware kind.
-  modelVersion int
-  // Driver manufacturer
-  manufacturer string
-  // Print environment the driver is registered under, e.g. "Windows x64"
-  environment string
-  // Path of the INF the driver package was installed from
-  infPath string
-  // Path of the driver DLL
-  driverPath string
-  // Path of the driver configuration DLL
-  configFile string
-  // Path of the driver data file
-  dataFile string
-  // Print processor the driver uses
-  printProcessor string
-}
-
 windows.firewall {
   // Global firewall settings (Get-NetFirewallSetting), as a dictionary of setting name to value
   settings() dict
@@ -10718,6 +10675,51 @@ private windows.smb.connection @defaults("serverName shareName") {
 // lock, and protection status of each `volume`, plus the BitLocker Group
 // Policy (FVE) settings under `policy`. Use it to verify that OS and data
 // drives are encrypted and protected.
+// Print drivers registered with the Windows spooler
+//
+// Print drivers as the spooler reports them, with the vendor version, the
+// manufacturer, the print environment each is registered under, and the INF
+// the package was installed from. Use it to assert which drivers are present
+// and at which version. Drivers are read from the spooler rather than from
+// installed software, because a driver delivered as an INF/CAB package lands
+// in the driver store and creates no Add/Remove Programs entry, so a software
+// inventory cannot see it while the spooler is still loading it.
+windows.printerDrivers {
+  []windows.printerDriver
+}
+
+// Installed Windows print driver
+windows.printerDriver @defaults("name version manufacturer") {
+  // Driver name as the spooler reports it
+  name string
+  // Vendor driver version in dotted form, for example "3.0.0.0"
+  //
+  // Windows stores this packed into a single 64-bit integer holding four
+  // 16-bit fields. This is the unpacked form vendors publish and advise on,
+  // and it is lossless: every field of the packed value appears here. Empty
+  // when the spooler reports no version.
+  version string
+  // Driver model version: 2, 3 or 4
+  //
+  // The spooler interface generation, not the vendor release number. Version 4
+  // drivers are the isolated, package-aware kind.
+  modelVersion int
+  // Driver manufacturer
+  manufacturer string
+  // Print environment the driver is registered under, for example "Windows x64"
+  environment string
+  // Path of the INF the driver package was installed from
+  infPath string
+  // Path of the driver DLL
+  driverPath string
+  // Path of the driver configuration DLL
+  configFile string
+  // Path of the driver data file
+  dataFile string
+  // Print processor the driver uses
+  printProcessor string
+}
+
 windows.bitlocker {
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume

@@ -38,18 +38,29 @@ func TestParsePrinterDrivers(t *testing.T) {
 // into one 64-bit integer as four 16-bit fields, most significant first, so the
 // raw value is meaningless on its own. Vendors publish the dotted form.
 func TestDottedVersionUnpacksTheWindowsEncoding(t *testing.T) {
+	// Build the packed value from its four fields rather than writing the
+	// shifts inline: an inline "a<<48 | 0<<32 | c<<16 | 0" reads as documenting
+	// all four positions but the zero terms are no-ops, which staticcheck
+	// rightly flags as a mistake waiting to happen.
+	packed := func(a, b, c, d uint64) uint64 {
+		return a<<48 | b<<32 | c<<16 | d
+	}
+
 	for _, tc := range []struct {
 		packed uint64
 		want   string
 	}{
-		// 6.0.24328.0 — 6<<48 | 0<<32 | 24328<<16 | 0
-		{6<<48 | 0<<32 | 24328<<16 | 0, "6.0.24328.0"},
-		// 3.0.0.0, the shape a printer vendor advises on ("Ver.3.0.0.0")
-		{3 << 48, "3.0.0.0"},
-		// every field distinct, so a transposed shift is caught
-		{1<<48 | 2<<32 | 3<<16 | 4, "1.2.3.4"},
-		// the widest each field goes
-		{0xFFFF<<48 | 0xFFFF<<32 | 0xFFFF<<16 | 0xFFFF, "65535.65535.65535.65535"},
+		{packed(6, 0, 24328, 0), "6.0.24328.0"},
+		// The shape a printer vendor advises on ("Ver.3.0.0.0").
+		{packed(3, 0, 0, 0), "3.0.0.0"},
+		// Every field distinct, so a transposed shift is caught.
+		{packed(1, 2, 3, 4), "1.2.3.4"},
+		// The widest each field goes.
+		{packed(0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF), "65535.65535.65535.65535"},
+		// The high bit set: the value exceeds what a signed 64-bit integer can
+		// hold, which is why this is exposed as a dotted string rather than as
+		// a packed number.
+		{packed(0x8000, 0, 0, 1), "32768.0.0.1"},
 	} {
 		assert.Equal(t, tc.want, PrinterDriver{DriverVersion: tc.packed}.DottedVersion())
 	}
