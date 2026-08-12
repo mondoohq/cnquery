@@ -10720,12 +10720,6 @@ windows.printerDriver @defaults("name version manufacturer") {
 // lock, and protection status of each `volume`, plus the BitLocker Group
 // Policy (FVE) settings under `policy`. Use it to verify that OS and data
 // drives are encrypted and protected.
-// Windows BitLocker drive encryption
-//
-// BitLocker Drive Encryption state across volumes: the encryption,
-// lock, and protection status of each `volume`, plus the BitLocker Group
-// Policy (FVE) settings under `policy`. Use it to verify that OS and data
-// drives are encrypted and protected.
 windows.bitlocker {
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
