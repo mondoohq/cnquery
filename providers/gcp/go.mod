@@ -60,10 +60,17 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
+	go.mondoo.com/mql/v13 v13.32.2
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.292.0
-	google.golang.org/genproto v0.0.0-20260807164820-c8921c73eeea
+	// Held back: cloud.google.com/go/accesscontextmanager v1.15.0 (the latest
+	// release) imports google.golang.org/genproto/googleapis/identity/
+	// accesscontextmanager/type, which go-genproto deleted in
+	// v0.0.0-20260807164820-c8921c73eeea as part of its ongoing alias pruning.
+	// Bumping past this pin breaks the gcp provider build until upstream ships
+	// an accesscontextmanager regenerated against the pruned genproto.
+	google.golang.org/genproto v0.0.0-20260803160001-6ac0973c030d
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 )
 
@@ -72,7 +79,6 @@ require (
 	cloud.google.com/go/grafeas v0.3.17 // indirect
 	cloud.google.com/go/osconfig v1.22.0 // indirect
 	github.com/CycloneDX/cyclonedx-go v0.11.0 // indirect
-	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.35.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.59.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.59.0 // indirect
