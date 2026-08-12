@@ -411,6 +411,42 @@ func resolveOktaCustomRoleRef(runtime *plugin.Runtime, id string, field *plugin.
 	return r.(*mqlOktaCustomRole), nil
 }
 
+func resolveOktaUserTypeRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOktaUserType]) (*mqlOktaUserType, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(runtime, "okta.userType", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return r.(*mqlOktaUserType), nil
+}
+
+func resolveOktaRealmRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOktaRealm]) (*mqlOktaRealm, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(runtime, "okta.realm", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		if errors.Is(err, errOktaResourceNotFound) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return r.(*mqlOktaRealm), nil
+}
+
 // The plural resolvers drop members the org no longer has rather than failing
 // the list, so one stale member id does not hide every other member alongside
 // it.

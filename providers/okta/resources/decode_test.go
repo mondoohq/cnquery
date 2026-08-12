@@ -76,7 +76,9 @@ func TestOktaUserArgs_FromGroupMember(t *testing.T) {
 	var m okta.GroupMember
 	require.NoError(t, json.Unmarshal([]byte(payload), &m))
 
-	args, err := oktaUserArgs(&m)
+	user, err := oktaUserFromAny(&m)
+	require.NoError(t, err)
+	args, err := oktaUserArgs(user)
 	require.NoError(t, err)
 
 	assert.Equal(t, "00u9zzz", args["id"].Value)

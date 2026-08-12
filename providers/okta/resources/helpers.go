@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 // The v5 Okta SDK is OpenAPI-generated and models almost every scalar as a
@@ -124,6 +125,16 @@ func oktaCollectPages[T any](first []T, resp *okta.APIResponse) ([]T, error) {
 		all = append(all, page...)
 	}
 	return all, nil
+}
+
+// oktaUnreadableList marks a list field as read but absent, for the case where
+// the org will not answer for it at all: an unlicensed feature, a retired
+// endpoint, or a token whose admin role cannot reach it. Returning an empty
+// slice instead would report "this account has none" as fact, and an audit
+// written on that list would pass without anything having been checked.
+func oktaUnreadableList(field *plugin.TValue[[]any]) ([]any, error) {
+	field.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func oktaBool(b *bool) bool {
