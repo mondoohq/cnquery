@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 // Package checksum computes canonical, structural content checksums over llx
