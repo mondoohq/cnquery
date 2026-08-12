@@ -103,18 +103,13 @@ Features:
   idx: 18
   start: v13.x
   status: new
-- id: ScanContentModeForceSend
-  desc: "Server-activated scan-content mode: like shadow - digests computed and written, nothing skipped. The operational parking mode while the server keeps baselines warm."
+- id: ScanContentModeServerCompare
+  desc: "Server-activated scan-content mode: digests computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow."
   idx: 19
   start: v13.x
   status: new
-- id: ScanContentModeServerCompare
-  desc: "Server-activated scan-content mode: digests computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow."
-  idx: 20
-  start: v13.x
-  status: new
 - id: ScanContentModeClientCompare
-  desc: "Server-activated scan-content mode: digests computed and written, and the client may pull the baseline manifest, compare kind digests, and skip the upload PUT when all four match, completing with unchanged=true."
-  idx: 21
+  desc: "Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true. (The server-side no_compare kill switch emits nothing - a client that receives no ScanContentMode* feature does no digest work.)"
+  idx: 20
   start: v13.x
   status: new

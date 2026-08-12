@@ -102,24 +102,19 @@ const (
 	// status: new
 	ScanContentModeShadow Feature = 18
 
-	// Server-activated scan-content mode: like shadow - digests computed and written, nothing skipped. The operational parking mode while the server keeps baselines warm.
-	// start:  v13.x
-	// status: new
-	ScanContentModeForceSend Feature = 19
-
 	// Server-activated scan-content mode: digests computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow.
 	// start:  v13.x
 	// status: new
-	ScanContentModeServerCompare Feature = 20
+	ScanContentModeServerCompare Feature = 19
 
-	// Server-activated scan-content mode: digests computed and written, and the client may pull the baseline manifest, compare kind digests, and skip the upload PUT when all four match, completing with unchanged=true.
+	// Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true. (The server-side no_compare kill switch emits nothing - a client that receives no ScanContentMode* feature does no digest work.)
 	// start:  v13.x
 	// status: new
-	ScanContentModeClientCompare Feature = 21
+	ScanContentModeClientCompare Feature = 20
 
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 22
+	MAX_FEATURES byte = 21
 )
 
 var FeaturesValue = map[string]Feature{
@@ -141,7 +136,6 @@ var FeaturesValue = map[string]Feature{
 	"ExchangeTokenForToken":        ExchangeTokenForToken,
 	"TerraformResolveVars":         TerraformResolveVars,
 	"ScanContentModeShadow":        ScanContentModeShadow,
-	"ScanContentModeForceSend":     ScanContentModeForceSend,
 	"ScanContentModeServerCompare": ScanContentModeServerCompare,
 	"ScanContentModeClientCompare": ScanContentModeClientCompare,
 }
@@ -163,7 +157,6 @@ var AvailableFeatures = Features{
 	byte(ExchangeTokenForToken),
 	byte(TerraformResolveVars),
 	byte(ScanContentModeShadow),
-	byte(ScanContentModeForceSend),
 	byte(ScanContentModeServerCompare),
 	byte(ScanContentModeClientCompare),
 }
