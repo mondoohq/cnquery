@@ -10669,12 +10669,6 @@ private windows.smb.connection @defaults("serverName shareName") {
   dialect string
 }
 
-// Windows BitLocker drive encryption
-//
-// BitLocker Drive Encryption state across volumes: the encryption,
-// lock, and protection status of each `volume`, plus the BitLocker Group
-// Policy (FVE) settings under `policy`. Use it to verify that OS and data
-// drives are encrypted and protected.
 // Print drivers registered with the Windows spooler
 //
 // Print drivers as the spooler reports them, with the vendor version, the
@@ -10720,6 +10714,18 @@ windows.printerDriver @defaults("name version manufacturer") {
   printProcessor string
 }
 
+// Windows BitLocker drive encryption
+//
+// BitLocker Drive Encryption state across volumes: the encryption,
+// lock, and protection status of each `volume`, plus the BitLocker Group
+// Policy (FVE) settings under `policy`. Use it to verify that OS and data
+// drives are encrypted and protected.
+// Windows BitLocker drive encryption
+//
+// BitLocker Drive Encryption state across volumes: the encryption,
+// lock, and protection status of each `volume`, plus the BitLocker Group
+// Policy (FVE) settings under `policy`. Use it to verify that OS and data
+// drives are encrypted and protected.
 windows.bitlocker {
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
