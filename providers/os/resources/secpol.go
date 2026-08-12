@@ -21,28 +21,41 @@ func (s *mqlSecpol) policy() (*windows.Secpol, error) {
 		return s._policy, nil
 	}
 
-	encoded := powershell.Encode(windows.SecpolScript)
-
-	o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData(encoded),
-	})
+	out, err := s.runPowershell(windows.SecpolScript)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not run secedit: %w", err)
 	}
 
-	cmd := o.(*mqlCommand)
-	out := cmd.GetStdout()
-	if out.Error != nil {
-		return nil, fmt.Errorf("could not run auditpol: %w", out.Error)
-	}
-
-	policy, err := windows.ParseSecpol(strings.NewReader(out.Data))
+	policy, err := windows.ParseSecpol(strings.NewReader(out), s.resolveSids)
 	if err != nil {
 		return nil, err
 	}
 	s._policy = policy
 
 	return policy, nil
+}
+
+func (s *mqlSecpol) resolveSids(names []string) (map[string]string, error) {
+	out, err := s.runPowershell(windows.SidLookupScript(names))
+	if err != nil {
+		return nil, err
+	}
+	return windows.ParseSidLookup(strings.NewReader(out))
+}
+
+func (s *mqlSecpol) runPowershell(script string) (string, error) {
+	o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData(powershell.Encode(script)),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	out := o.(*mqlCommand).GetStdout()
+	if out.Error != nil {
+		return "", out.Error
+	}
+	return out.Data, nil
 }
 
 func (s *mqlSecpol) systemaccess() (map[string]any, error) {
