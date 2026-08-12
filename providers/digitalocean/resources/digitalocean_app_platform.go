@@ -112,6 +112,89 @@ func (r *mqlDigitaloceanAppDeployment) previousDeployment() (*mqlDigitaloceanApp
 	return newAppDeployment(r.MqlRuntime, r.AppId.Data, deployment)
 }
 
+// The app listing already carries the VPC attachment, the dedicated egress
+// addresses, the resolved buildpacks, and the pinned and in-flight
+// deployments. They are cached here so the accessors build from what the
+// listing returned rather than re-fetching the app.
+type mqlDigitaloceanAppInternal struct {
+	cacheVpcID                string
+	cacheDedicatedIps         []*godo.AppDedicatedIp
+	cacheBuildpacks           []*godo.Buildpack
+	cachePinnedDeployment     *godo.Deployment
+	cacheInProgressDeployment *godo.Deployment
+}
+
+func (r *mqlDigitaloceanApp) vpc() (*mqlDigitaloceanVpc, error) {
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVpcID)
+}
+
+func (r *mqlDigitaloceanApp) dedicatedIps() ([]interface{}, error) {
+	all := make([]interface{}, 0, len(r.cacheDedicatedIps))
+	for _, d := range r.cacheDedicatedIps {
+		if d == nil {
+			continue
+		}
+		id, err := resourceID("digitalocean.app.dedicatedIp", r.Id.Data, d.ID)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.app.dedicatedIp", map[string]*llx.RawData{
+			"__id":   llx.StringData(id),
+			"id":     llx.StringData(d.ID),
+			"ip":     llx.StringData(d.Ip),
+			"status": llx.StringData(string(d.Status)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDigitaloceanApp) buildpacks() ([]interface{}, error) {
+	all := make([]interface{}, 0, len(r.cacheBuildpacks))
+	for _, b := range r.cacheBuildpacks {
+		if b == nil {
+			continue
+		}
+		id, err := resourceID("digitalocean.app.buildpack", r.Id.Data, b.ID)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.app.buildpack", map[string]*llx.RawData{
+			"__id":         llx.StringData(id),
+			"id":           llx.StringData(b.ID),
+			"name":         llx.StringData(b.Name),
+			"version":      llx.StringData(b.Version),
+			"majorVersion": llx.IntData(int64(b.MajorVersion)),
+			"latest":       llx.BoolData(b.Latest),
+			"docsLink":     llx.StringData(b.DocsLink),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDigitaloceanApp) pinnedDeployment() (*mqlDigitaloceanAppDeployment, error) {
+	if r.cachePinnedDeployment == nil {
+		r.PinnedDeployment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newAppDeployment(r.MqlRuntime, r.Id.Data, r.cachePinnedDeployment)
+}
+
+func (r *mqlDigitaloceanApp) inProgressDeployment() (*mqlDigitaloceanAppDeployment, error) {
+	if r.cacheInProgressDeployment == nil {
+		r.InProgressDeployment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newAppDeployment(r.MqlRuntime, r.Id.Data, r.cacheInProgressDeployment)
+}
+
 func (r *mqlDigitaloceanApp) deployments() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()

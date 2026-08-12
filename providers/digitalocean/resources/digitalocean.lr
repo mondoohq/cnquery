@@ -19,6 +19,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/digitalocean/resources"
 digitalocean {
   // Droplets (virtual machines)
   droplets() []digitalocean.droplet
+  // MicroDroplets (container instances that pause when idle)
+  microDroplets() []digitalocean.microDroplet
   // Firewalls
   firewalls() []digitalocean.firewall
   // Managed databases
@@ -240,6 +242,61 @@ digitalocean.droplet @defaults("id name status") {
   snapshots() []digitalocean.snapshot
 }
 
+// DigitalOcean MicroDroplet
+//
+// Container instance that runs a single image and pauses itself when no
+// traffic arrives. The `networking` mode decides whether the instance
+// answers on an address reachable from the internet or only from inside
+// a VPC, and `isPublic` reduces that to the predicate an exposure audit
+// asks for. Also queryable are the `image` it runs, the `endpoint` it
+// serves on, the hardware `size`, the lifecycle `state`, and the
+// auto-pause and auto-resume settings that decide whether it keeps
+// running while unused. MicroDroplets are not covered by cloud
+// firewalls, so `networking` is the only ingress control there is.
+// Select one by id with `digitalocean.microDroplet(id: "...")`.
+digitalocean.microDroplet @defaults("id name region state networking") {
+  // MicroDroplet ID
+  id string
+  // MicroDroplet name
+  name string
+  // Region slug the instance runs in
+  region string
+  // Lifecycle state
+  //
+  // One of creating, running, pausing, paused, resuming, terminating,
+  // terminated, failed, or unknown.
+  state string
+  // Size slug describing the allocated hardware
+  size string
+  // Network placement of the instance
+  //
+  // Either public, meaning the instance answers on an address reachable
+  // from the internet, or vpc, meaning it answers only inside the VPC.
+  // Reported as unknown when the API names no mode.
+  networking string
+  // Container image the instance runs
+  image string
+  // Address the instance serves traffic on
+  //
+  // Reachable from the internet when `networking` is public, and private
+  // to the VPC otherwise.
+  endpoint string
+  // Whether the instance is reachable from the internet
+  //
+  // True unless the instance is placed in a VPC. A mode the API does not
+  // name counts as reachable, so an instance whose placement cannot be
+  // established is reported as exposed rather than passing silently.
+  isPublic() bool
+  // Whether the instance pauses itself after a period without traffic
+  autoPauseEnabled bool
+  // Idle period after which the instance pauses itself; empty when auto-pause is not configured
+  autoPauseIdleTimeout string
+  // Whether an incoming request resumes a paused instance
+  autoResumeEnabled bool
+  // Time the resource was created
+  createdAt time
+}
+
 // DigitalOcean firewall
 //
 // Cloud-firewall rule set governing traffic to and from a group of
@@ -280,6 +337,28 @@ digitalocean.firewall @defaults("id name status") {
   droplets() []digitalocean.droplet
   // Tags used to target droplets
   tags []string
+  // Droplets the firewall has not finished applying to
+  pendingChanges []digitalocean.firewall.pendingChange
+}
+
+// Pending change to a DigitalOcean cloud firewall
+//
+// One droplet the firewall has not finished applying to. A firewall
+// reports its own `status` as succeeded once the rule set is accepted,
+// while individual droplets are still being added or removed, so a rule
+// set can read as active before it governs traffic on every droplet it
+// targets. Each entry names the affected `droplet`, reports whether the
+// droplet is being taken out of the firewall rather than added through
+// `removing`, and tracks how far the change has progressed in `status`.
+// A non-empty list means the firewall is not yet the whole story for the
+// droplets it covers.
+private digitalocean.firewall.pendingChange @defaults("status removing") {
+  // Droplet the change applies to
+  droplet() digitalocean.droplet
+  // Whether the droplet is being removed from the firewall rather than added
+  removing bool
+  // Progress of the change (waiting, in-progress, succeeded, failed)
+  status string
 }
 
 // Ingress rule of a DigitalOcean cloud firewall
@@ -483,6 +562,46 @@ digitalocean.database @defaults("id name engine") {
   standbyPrivateConnectionHost string
   // Standby (failover) private connection port reachable within the VPC; zero when the cluster has no standby node
   standbyPrivateConnectionPort int
+  // Destinations the cluster ships its service logs to
+  logsinks() []digitalocean.database.logsink
+}
+
+// Log sink on a DigitalOcean managed database cluster
+//
+// One destination a managed database forwards its service logs to. The
+// `type` names the protocol (rsyslog, elasticsearch, opensearch, or
+// datadog) and `name` is the operator-chosen label. Transport is
+// described by `server` and `port` for a syslog sink or `url` for a
+// search-cluster sink, with `tlsEnabled` reporting whether the delivery
+// is encrypted. An empty `logsinks` list on a production cluster means
+// its logs live only inside the retention window DigitalOcean keeps, so
+// nothing survives for later investigation. The certificate and key
+// material configured on a sink is deliberately not exposed.
+private digitalocean.database.logsink @defaults("name type tlsEnabled") {
+  // ID of the parent database cluster
+  databaseId string
+  // Parent database cluster
+  database() digitalocean.database
+  // Sink ID
+  sinkId string
+  // Operator-chosen name for the sink
+  name string
+  // Sink protocol (rsyslog, elasticsearch, opensearch, or datadog)
+  type string
+  // Hostname or address of a syslog sink; empty on search-cluster sinks
+  server string
+  // Port of a syslog sink; null on search-cluster sinks
+  port int
+  // Endpoint URL of a search-cluster sink; empty on syslog sinks
+  url string
+  // Whether log delivery to this sink is encrypted with TLS
+  tlsEnabled bool
+  // Message format a syslog sink receives (rfc5424, rfc3164, or custom)
+  format string
+  // Index name prefix a search-cluster sink writes under
+  indexPrefix string
+  // Days a search-cluster sink keeps an index before removing it; null when unset
+  indexRetentionDays int
 }
 
 // DigitalOcean database automated backup
@@ -677,9 +796,11 @@ digitalocean.domain @defaults("name") {
 // A single DNS record within a DigitalOcean-managed domain. Surfaces
 // the record `type` (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA), the record
 // `name` (subdomain), the `data` it resolves to, the `ttl`, and the
-// `priority`, `port`, and `weight` used by MX and SRV records. Use this
-// to audit zone contents (for example, dangling CNAMEs or unexpected
-// records).
+// `priority`, `port`, and `weight` used by MX and SRV records. CAA
+// records carry their property in `tag` and the issuer-critical bit in
+// `flags`, which together decide which certificate authorities may issue
+// for the domain. Use this to audit zone contents (for example, dangling
+// CNAMEs, unexpected records, or a domain that constrains no issuer).
 private digitalocean.domain.record @defaults("type name data") {
   // Name of the parent domain
   domainName string
@@ -699,6 +820,20 @@ private digitalocean.domain.record @defaults("type name data") {
   port int
   // Weight (SRV)
   weight int
+  // Certificate-authority property the record sets (CAA)
+  //
+  // One of issue (authorities allowed to issue certificates for the
+  // domain), issuewild (authorities allowed to issue wildcard
+  // certificates), or iodef (where to report a policy violation). Read it
+  // alongside `data`, which holds the authority or reporting URL the
+  // property applies to. Empty on every record type other than CAA.
+  tag string
+  // Flags byte of a CAA record
+  //
+  // Bit 0 is the issuer-critical flag: when set (value 128), a
+  // certificate authority that does not understand the property in `tag`
+  // must refuse to issue. Zero on every record type other than CAA.
+  flags int
 }
 
 // DigitalOcean block storage volume
@@ -734,6 +869,12 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   dropletIds @maturity("deprecated") []int
   // Droplets this volume is attached to
   droplets() []digitalocean.droplet
+  // Snapshots taken of this volume
+  //
+  // Point-in-time copies of the volume. An empty list on a volume holding
+  // persistent data means nothing can be restored from before the current
+  // state.
+  snapshots() []digitalocean.snapshot
 }
 
 // DigitalOcean load balancer
@@ -1446,6 +1587,73 @@ digitalocean.app @defaults("id name") {
   // exposed, so this reports where a credential is held rather than what
   // it is.
   envVars []dict
+  // VPC the app's components run inside; null on an app with no VPC attachment
+  vpc() digitalocean.vpc
+  // Private addresses the app holds inside its VPC
+  //
+  // Addresses allocated to the app's components within the attached VPC.
+  // These are the sources a VPC-internal firewall rule has to admit for
+  // the app to reach a database or another private service. Empty on an
+  // app with no VPC attachment.
+  vpcEgressIps []string
+  // Fixed public addresses the app egresses from
+  //
+  // Dedicated egress addresses, available on higher App Platform tiers,
+  // that give an app a stable public source address for outbound traffic.
+  // Without them an app egresses from a shared pool, so a downstream
+  // allowlist cannot be narrowed to this app alone.
+  dedicatedIps() []digitalocean.app.dedicatedIp
+  // Base hostname the app's default ingress is published under
+  liveUrlBase string
+  // Cloud-native-buildpack stack the app builds against
+  //
+  // Version of the underlying build stack, which decides the set of
+  // buildpacks available to the app. Empty on an app deployed from a
+  // container image rather than built from source.
+  buildpackStackId string
+  // Buildpacks the app builds with
+  buildpacks() []digitalocean.app.buildpack
+  // Deployment the app is pinned to, overriding automatic promotion; null when not pinned
+  pinnedDeployment() digitalocean.app.deployment
+  // Deployment currently rolling out; null when no deployment is in flight
+  inProgressDeployment() digitalocean.app.deployment
+}
+
+// Dedicated egress address of an App Platform application
+//
+// One fixed public address an app sends outbound traffic from. The `ip`
+// is what a downstream allowlist has to admit, and `status` reports
+// whether the address is assigned and usable yet.
+private digitalocean.app.dedicatedIp @defaults("ip status") {
+  // Address ID
+  id string
+  // Public IPv4 address
+  ip string
+  // Assignment status of the address (UNKNOWN, ASSIGNING, ASSIGNED, or REMOVED)
+  status string
+}
+
+// Buildpack used by an App Platform application
+//
+// One cloud-native buildpack that compiles a source-built component. The
+// `id` names the buildpack, `version` is the full semantic version it
+// resolved to, and `majorVersion` is the line the app is pinned to.
+// `latest` reports whether that line is the newest available, which is
+// the signal that a component builds on a stack that no longer receives
+// updates.
+private digitalocean.app.buildpack @defaults("name version latest") {
+  // Buildpack ID
+  id string
+  // Human-readable buildpack name
+  name string
+  // Full semantic version the buildpack resolved to
+  version string
+  // Major version line the buildpack is pinned to
+  majorVersion int
+  // Whether the pinned major version line is the newest available
+  latest bool
+  // Link to the buildpack's documentation
+  docsLink string
 }
 
 // DigitalOcean App Platform deployment
@@ -1673,26 +1881,36 @@ digitalocean.spacesKey @defaults("name accessKey") {
 // DigitalOcean Spaces bucket
 //
 // Object storage bucket in DigitalOcean Spaces, the S3-compatible
-// storage service. The resolved access posture (public-access block,
-// anonymous and authenticated-read ACLs), at-rest encryption
-// settings, versioning state, bucket policy, CORS rules, and
-// lifecycle rules make this the place to catch publicly readable or
-// writable buckets, unencrypted data, missing versioning, and overly
-// permissive CORS or lifecycle configuration. Auditing requires
+// storage service. The resolved access posture (anonymous and
+// authenticated-read ACLs and the bucket policy, combined by
+// `isPublic`), at-rest encryption settings, versioning state, CORS
+// rules, and lifecycle rules make this the place to catch publicly
+// readable or writable buckets, unencrypted data, missing versioning,
+// and overly permissive CORS or lifecycle configuration. Spaces
+// implements a subset of S3, so controls S3 offers but Spaces does not
+// read as null rather than as a setting that is switched off; see
+// `publicAccessBlocked`. Auditing requires
 // Spaces credentials supplied via the `DIGITALOCEAN_SPACES_KEY` and
 // `DIGITALOCEAN_SPACES_SECRET` environment variables; an optional
 // `DIGITALOCEAN_SPACES_REGION` scopes the listing to one region,
 // otherwise the provider iterates the known Spaces regions.
-digitalocean.spacesBucket @defaults("name region publicAccessBlocked encryptionEnabled versioningStatus") {
+digitalocean.spacesBucket @defaults("name region encryptionEnabled versioningStatus") {
   // Bucket name (globally unique within DigitalOcean Spaces)
   name string
   // Spaces region the bucket lives in (e.g., "nyc3", "sfo3", "ams3", "sgp1", "fra1", "syd1", "tor1", "blr1")
   region string
   // Time the bucket was created
   createdAt time
-  // Whether the bucket-level Public Access Block is fully in effect (all four block flags on)
+  // Whether the bucket-level public-access block is fully in effect
   //
-  // True when `BlockPublicAcls`, `BlockPublicPolicy`, `IgnorePublicAcls`, and `RestrictPublicBuckets` are all set on the bucket's `PublicAccessBlock` configuration. DigitalOcean's S3-compatible API exposes this at the bucket level only, with no account-wide toggle. False can mean either an explicit weakening or no configuration at all.
+  // True when all four block-public-access controls are set on the
+  // bucket. Null on DigitalOcean, because Spaces does not implement the
+  // block-public-access API and answers that the operation is not
+  // supported, so there is no setting to read; a null here reports that
+  // the control does not exist rather than that it is switched off.
+  // Determine whether a bucket is reachable anonymously with `isPublic`
+  // and `hasWildcardPolicy`, which read the bucket ACL and policy
+  // directly.
   publicAccessBlocked bool
   // Whether the bucket ACL grants READ to the AllUsers group (anonymous read)
   publicReadAcl bool
@@ -1728,17 +1946,16 @@ digitalocean.spacesBucket @defaults("name region publicAccessBlocked encryptionE
   // group, or the bucket policy allows the wildcard principal, and public
   // access is not blocked. The authenticated-users group covers every
   // account on the platform rather than only this one, so it counts as
-  // public. publicAccessBlocked is only set when all four block-public-access
-  // settings are on, so a bucket with a public grant and partial blocking is
-  // reported as public.
+  // public. Spaces has no block-public-access control to override those
+  // grants, so on DigitalOcean the verdict rests on the ACL and the
+  // policy alone.
   isPublic() bool
   // Whether the bucket policy allows the wildcard principal
   //
   // True when any Allow statement in the bucket policy names "*" as its
   // principal, which grants the action to every requester. This describes
-  // the policy alone; isPublic combines it with the ACL grants and the
-  // block-public-access settings to say whether the bucket is actually
-  // reachable.
+  // the policy alone; isPublic combines it with the ACL grants to say
+  // whether the bucket is actually reachable.
   hasWildcardPolicy() bool
 }
 
@@ -2078,7 +2295,38 @@ digitalocean.nfs @defaults("id name region status") {
   vpcs() []digitalocean.vpc
   // Access points that export the share to clients
   accessPoints() []digitalocean.nfs.accessPoint
+  // Snapshots taken of the share
+  //
+  // Point-in-time copies of the share's contents. An empty list means the
+  // data on the share has no restore point behind it.
+  snapshots() []digitalocean.nfs.snapshot
   // Time the share was created
+  createdAt time
+}
+
+// Snapshot of a DigitalOcean NFS share
+//
+// Point-in-time copy of an NFS share's contents, taken so the share can
+// be restored to that moment. The `status` reports whether the copy has
+// finished and is usable, `sizeGibibytes` is how much it holds, and
+// `createdAt` is what dates a restore point. Select the parent share
+// through `share`.
+private digitalocean.nfs.snapshot @defaults("name status sizeGibibytes createdAt") {
+  // Snapshot ID
+  id string
+  // Snapshot name
+  name string
+  // Region slug the snapshot is stored in
+  region string
+  // Size of the snapshot in gibibytes
+  sizeGibibytes int
+  // Lifecycle status of the snapshot (CREATING, AVAILABLE, DELETING, or ERROR)
+  status string
+  // ID of the share the snapshot was taken from
+  shareId string
+  // Share the snapshot was taken from
+  share() digitalocean.nfs
+  // Time the snapshot was created
   createdAt time
 }
 

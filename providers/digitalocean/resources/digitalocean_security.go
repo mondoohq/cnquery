@@ -56,6 +56,10 @@ type mqlDigitaloceanInternal struct {
 
 	snapshotIndexOnce sync.Once
 	snapshotIndex     map[string]*mqlDigitaloceanSnapshot
+	// snapshotsBySource groups the same snapshots by the resource they were
+	// taken from, keyed "<resourceType>/<resourceId>", so a volume or droplet
+	// can list its own snapshots without a per-resource API call.
+	snapshotsBySource map[string][]any
 	snapshotIndexErr  error
 
 	imageIndexOnce sync.Once
@@ -341,21 +345,8 @@ func (r *mqlDigitalocean) snapshotsByIDs(ids []string) ([]any, error) {
 	if len(ids) == 0 {
 		return []any{}, nil
 	}
-	r.snapshotIndexOnce.Do(func() {
-		snapshots := r.GetSnapshots()
-		if snapshots.Error != nil {
-			r.snapshotIndexErr = snapshots.Error
-			return
-		}
-		idx := make(map[string]*mqlDigitaloceanSnapshot, len(snapshots.Data))
-		for _, s := range snapshots.Data {
-			ms := s.(*mqlDigitaloceanSnapshot)
-			idx[ms.Id.Data] = ms
-		}
-		r.snapshotIndex = idx
-	})
-	if r.snapshotIndexErr != nil {
-		return nil, r.snapshotIndexErr
+	if err := r.ensureSnapshotIndex(); err != nil {
+		return nil, err
 	}
 	out := make([]any, 0, len(ids))
 	for _, id := range ids {
@@ -363,6 +354,46 @@ func (r *mqlDigitalocean) snapshotsByIDs(ids []string) ([]any, error) {
 			out = append(out, s)
 		}
 	}
+	return out, nil
+}
+
+// ensureSnapshotIndex fetches the account-wide snapshot list once and indexes
+// it both by snapshot id and by the resource each snapshot was taken from.
+func (r *mqlDigitalocean) ensureSnapshotIndex() error {
+	r.snapshotIndexOnce.Do(func() {
+		snapshots := r.GetSnapshots()
+		if snapshots.Error != nil {
+			r.snapshotIndexErr = snapshots.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanSnapshot, len(snapshots.Data))
+		bySource := make(map[string][]any, len(snapshots.Data))
+		for _, s := range snapshots.Data {
+			ms := s.(*mqlDigitaloceanSnapshot)
+			idx[ms.Id.Data] = ms
+			key := ms.ResourceType.Data + "/" + ms.ResourceId.Data
+			bySource[key] = append(bySource[key], ms)
+		}
+		r.snapshotIndex = idx
+		r.snapshotsBySource = bySource
+	})
+	return r.snapshotIndexErr
+}
+
+// snapshotsForSource returns the snapshots taken from one resource, read out
+// of the account-wide snapshot list. Going through the shared index keeps
+// this to a single API call for the whole account: the per-resource endpoints
+// would cost one call per volume.
+func (r *mqlDigitalocean) snapshotsForSource(resourceType, resourceID string) ([]any, error) {
+	if resourceID == "" {
+		return []any{}, nil
+	}
+	if err := r.ensureSnapshotIndex(); err != nil {
+		return nil, err
+	}
+	found := r.snapshotsBySource[resourceType+"/"+resourceID]
+	out := make([]any, len(found))
+	copy(out, found)
 	return out, nil
 }
 

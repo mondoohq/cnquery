@@ -647,6 +647,24 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 			}
 		}
 
+		vpcID := ""
+		vpcEgressIps := []interface{}{}
+		if app.VPC != nil {
+			vpcID = app.VPC.ID
+			for _, e := range app.VPC.EgressIPs {
+				if e != nil && e.IP != "" {
+					vpcEgressIps = append(vpcEgressIps, e.IP)
+				}
+			}
+		}
+
+		buildpackStackId := ""
+		var buildpacks []*godo.Buildpack
+		if app.BuildConfig != nil && app.BuildConfig.CNBVersioning != nil {
+			buildpackStackId = app.BuildConfig.CNBVersioning.StackID
+			buildpacks = app.BuildConfig.CNBVersioning.Buildpacks
+		}
+
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.app", map[string]*llx.RawData{
 			"id":                     llx.StringData(app.ID),
 			"name":                   llx.StringData(name),
@@ -669,10 +687,20 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 			"secureHeaderRemoved":          llx.BoolData(secureHeaderRemoved),
 			"corsPolicies":                 llx.ArrayData(appCorsPolicies(app.Spec), types.Dict),
 			"envVars":                      llx.ArrayData(appEnvVars(app.Spec), types.Dict),
+
+			"liveUrlBase":      llx.StringData(app.LiveURLBase),
+			"vpcEgressIps":     llx.ArrayData(vpcEgressIps, types.String),
+			"buildpackStackId": llx.StringData(buildpackStackId),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlApp := res.(*mqlDigitaloceanApp)
+		mqlApp.cacheVpcID = vpcID
+		mqlApp.cacheDedicatedIps = app.DedicatedIps
+		mqlApp.cacheBuildpacks = buildpacks
+		mqlApp.cachePinnedDeployment = app.PinnedDeployment
+		mqlApp.cacheInProgressDeployment = app.InProgressDeployment
 		all = append(all, res)
 	}
 	return all, nil

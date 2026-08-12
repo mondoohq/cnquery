@@ -226,15 +226,13 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		createdAt = &t
 	}
 
-	publicAccessBlocked := false
-	if pab, err := client.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{Bucket: aws.String(name)}); err == nil {
-		if cfg := pab.PublicAccessBlockConfiguration; cfg != nil {
-			publicAccessBlocked = aws.ToBool(cfg.BlockPublicAcls) &&
-				aws.ToBool(cfg.BlockPublicPolicy) &&
-				aws.ToBool(cfg.IgnorePublicAcls) &&
-				aws.ToBool(cfg.RestrictPublicBuckets)
-		}
-	} else if !isNoSuchConfiguration(err) && !isUnsupportedOperation(err) {
+	var pabCfg *s3types.PublicAccessBlockConfiguration
+	pab, pabErr := client.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{Bucket: aws.String(name)})
+	if pab != nil {
+		pabCfg = pab.PublicAccessBlockConfiguration
+	}
+	publicAccessBlocked, err := publicAccessBlockedValue(pabCfg, pabErr)
+	if err != nil {
 		return nil, err
 	}
 
@@ -343,7 +341,7 @@ func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, 
 		"name":                 llx.StringData(name),
 		"region":               llx.StringData(region),
 		"createdAt":            llx.TimeDataPtr(createdAt),
-		"publicAccessBlocked":  llx.BoolData(publicAccessBlocked),
+		"publicAccessBlocked":  llx.BoolDataPtr(publicAccessBlocked),
 		"publicReadAcl":        llx.BoolData(publicReadAcl),
 		"publicWriteAcl":       llx.BoolData(publicWriteAcl),
 		"authenticatedReadAcl": llx.BoolData(authenticatedReadAcl),
@@ -434,6 +432,35 @@ func isNoSuchConfiguration(err error) bool {
 		}
 	}
 	return false
+}
+
+// publicAccessBlockedValue folds a GetPublicAccessBlock answer into the
+// bucket's publicAccessBlocked field, keeping three outcomes apart.
+//
+// A service that does not implement the call has no such control, so there is
+// nothing to report and the field is null. DigitalOcean Spaces answers this
+// way on every account: reporting false there would state as fact that public
+// access is not blocked, when in truth nothing was ever read and no setting
+// exists to read. A bucket with no configuration, on a service that does
+// implement the call, is a real answer and means nothing is blocked. Any
+// other failure is a failure and must not become a posture claim.
+func publicAccessBlockedValue(cfg *s3types.PublicAccessBlockConfiguration, err error) (*bool, error) {
+	if err != nil {
+		if isUnsupportedOperation(err) {
+			return nil, nil
+		}
+		if !isNoSuchConfiguration(err) {
+			return nil, err
+		}
+		notBlocked := false
+		return &notBlocked, nil
+	}
+	blocked := cfg != nil &&
+		aws.ToBool(cfg.BlockPublicAcls) &&
+		aws.ToBool(cfg.BlockPublicPolicy) &&
+		aws.ToBool(cfg.IgnorePublicAcls) &&
+		aws.ToBool(cfg.RestrictPublicBuckets)
+	return &blocked, nil
 }
 
 // isUnsupportedOperation returns true when the S3 API answers that it does

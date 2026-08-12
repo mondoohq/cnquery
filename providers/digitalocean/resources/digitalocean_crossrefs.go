@@ -122,6 +122,33 @@ func (r *mqlDigitaloceanAlertPolicy) droplets() ([]any, error) {
 	return parent.dropletByIDs(ids)
 }
 
+// ----- Volume snapshots -----
+
+// snapshots lists the snapshots taken of this volume. Volume snapshots
+// appear in the account-wide snapshot list tagged with the volume they came
+// from, so they are read from there rather than through the per-volume
+// endpoint, which would cost one call per volume.
+func (r *mqlDigitaloceanVolume) snapshots() ([]interface{}, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return parent.snapshotsForSource("volume", r.Id.Data)
+}
+
+// ----- Firewall pending change -----
+
+// The droplet a pending change applies to is kept here rather than as a
+// field: it distinguishes one change from another in the cache key and is
+// otherwise only useful resolved.
+type mqlDigitaloceanFirewallPendingChangeInternal struct {
+	cacheDropletID int64
+}
+
+func (r *mqlDigitaloceanFirewallPendingChange) droplet() (*mqlDigitaloceanDroplet, error) {
+	return dropletRef(r.MqlRuntime, r.cacheDropletID, &r.Droplet)
+}
+
 // ----- BYOIP prefix resource assignment -----
 
 func (r *mqlDigitaloceanByoipPrefixResource) droplet() (*mqlDigitaloceanDroplet, error) {
