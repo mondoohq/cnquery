@@ -257,6 +257,32 @@ func Enforce(left, right Type) (Type, bool) {
 	return right, len(left) == len(right)
 }
 
+// CoalesceArrays returns whichever of two array types carries a usable element
+// type. An empty array literal has none: `[]` compiles to []unset. Without this,
+// `[] + ["a"]` would keep the left type and yield an []unset result that fails
+// to compile downstream, while `["a"] + []` works, making operand order matter.
+//
+// Only a genuinely unknown element type is replaced. Mismatched but known types
+// keep the left one, preserving the existing behavior of `["a"] + [1]`.
+// Non-array types are returned unchanged, so arithmetic on scalars is unaffected.
+func CoalesceArrays(left, right Type) Type {
+	if left.IsArray() && right.IsArray() && arrayElemUnset(left) && !arrayElemUnset(right) {
+		return right
+	}
+	return left
+}
+
+// arrayElemUnset reports whether an array type lacks a usable element type,
+// either because it carries none at all (bare ArrayLike) or because the element
+// type is unset/null. Only call this on array types.
+func arrayElemUnset(typ Type) bool {
+	if len(typ) < 2 {
+		return true
+	}
+	child := typ.Child()
+	return child == Unset || child == Nil
+}
+
 // Child returns the child type of arrays and maps
 func (typ Type) Child() Type {
 	switch typ[0] {

@@ -1132,36 +1132,23 @@ func tarrayConcatTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return nil, rref, err
 	}
 
-	if items.Value == nil {
-		return &RawData{Type: items.Type}, 0, nil
-	}
+	// Either side may be empty or null, and either side may be the one carrying
+	// the element type, since `[]` resolves to []unset. Resolving the type from
+	// both operands keeps the result usable regardless of operand order.
+	resType := types.CoalesceArrays(bind.Type, items.Type)
 
-	v, _ := bind.Value.([]any)
-	if v == nil {
-		if items.Value == nil {
-			return &RawData{Type: bind.Type}, 0, nil
-		}
-		return nil, 0, errors.New("cannot add arrays to null")
-	}
+	// A null operand contributes no items, the same as an empty one. Treating it
+	// as empty keeps the other operand's items instead of discarding them or
+	// failing the whole query.
+	left, _ := bind.Value.([]any)
+	right, _ := items.Value.([]any)
 
-	list := items.Value.([]any)
-	if len(list) == 0 {
-		return bind, 0, nil
-	}
-
-	res := make([]any, len(v)+len(list))
-	var idx int
-	for i := range v {
-		res[idx] = v[i]
-		idx++
-	}
-	for i := range list {
-		res[idx] = list[i]
-		idx++
-	}
+	res := make([]any, 0, len(left)+len(right))
+	res = append(res, left...)
+	res = append(res, right...)
 
 	return &RawData{
-		Type:  bind.Type,
+		Type:  resType,
 		Value: res,
 	}, 0, nil
 }

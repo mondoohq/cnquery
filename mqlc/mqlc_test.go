@@ -488,6 +488,37 @@ func TestCompiler_Arithmetics(t *testing.T) {
 			assert.Equal(t, 1, len(chunks[1].Function.Args))
 		})
 	})
+
+	// An empty array literal compiles to []unset. The concat result must still
+	// report a concrete element type, otherwise any downstream call that needs
+	// one fails to compile, and the value renders with no type information.
+	t.Run("concat with an empty array keeps the element type", func(t *testing.T) {
+		list := []struct {
+			code     string
+			expected types.Type
+		}{
+			{`["a"] + ["b"]`, types.Array(types.String)},
+			{`["a"] + []`, types.Array(types.String)},
+			{`[] + ["a"]`, types.Array(types.String)},
+			{`[] + ["a"] + ["b"]`, types.Array(types.String)},
+			{`[] + [1]`, types.Array(types.Int)},
+			{`[] + []`, types.Array(types.Unset)},
+			// A known element type is never rewritten by the other operand.
+			{`["a"] + [1]`, types.Array(types.String)},
+		}
+
+		for i := range list {
+			cur := list[i]
+			t.Run(cur.code, func(t *testing.T) {
+				compileT(t, cur.code, func(res *llx.CodeBundle) {
+					chunks := res.CodeV2.Blocks[0].Chunks
+					last := chunks[len(chunks)-1]
+					require.Equal(t, "+", last.Id)
+					assert.Equal(t, cur.expected, types.Type(last.Function.Type))
+				})
+			})
+		}
+	})
 }
 
 func TestCompiler_OperatorPrecedence(t *testing.T) {

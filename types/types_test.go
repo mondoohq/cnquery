@@ -69,3 +69,37 @@ func TestEqual_NilOperands(t *testing.T) {
 		assert.True(t, eq(nil, nil), "%s: nil == nil", c.typ.Label())
 	}
 }
+
+func TestCoalesceArrays(t *testing.T) {
+	list := []struct {
+		title    string
+		left     Type
+		right    Type
+		expected Type
+	}{
+		// An empty array literal compiles to []unset, so the element type has to
+		// come from the other operand no matter which side it sits on.
+		{"unset left takes the right element type", Array(Unset), Array(String), Array(String)},
+		{"unset right keeps the left element type", Array(String), Array(Unset), Array(String)},
+		{"both unset stay unset", Array(Unset), Array(Unset), Array(Unset)},
+		{"null element type is also replaced", Array(Nil), Array(Int), Array(Int)},
+		{"bare array carries no element type", ArrayLike, Array(String), Array(String)},
+
+		// Known element types are never rewritten, mismatched or not.
+		{"matching element types keep left", Array(String), Array(String), Array(String)},
+		{"mismatched element types keep left", Array(String), Array(Int), Array(String)},
+		{"resource arrays keep left", Array(Resource("a")), Array(Unset), Array(Resource("a"))},
+
+		// Arithmetic on scalars must be untouched.
+		{"non-array left is returned unchanged", Int, Array(String), Int},
+		{"non-array right is returned unchanged", Array(Unset), String, Array(Unset)},
+		{"two scalars are returned unchanged", String, String, String},
+	}
+
+	for i := range list {
+		cur := list[i]
+		t.Run(cur.title, func(t *testing.T) {
+			assert.Equal(t, cur.expected, CoalesceArrays(cur.left, cur.right))
+		})
+	}
+}
