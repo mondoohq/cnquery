@@ -64,7 +64,7 @@ ${REPOROOT}/lr versions ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr
 # MAX_PARALLEL > 1.
 echo "  - Generate the Windows version resource..."
 WINRES_JSON="${PROVIDER_DIST}/winres.json"
-sed "s/__PROVIDER_NAME__/${PROVIDER_NAME}/g" \
+sed "s|__PROVIDER_NAME__|${PROVIDER_NAME}|g" \
   "${REPOROOT}/scripts/winres/provider.json.tmpl" > "${WINRES_JSON}"
 go run github.com/tc-hib/go-winres@v0.3.3 make \
   --in "${WINRES_JSON}" \
