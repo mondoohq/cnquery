@@ -773,6 +773,8 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) backupPolicies() ([]a
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(policy.ID),
 					"name":       llx.StringDataPtr(policy.Name),
+					"location":   llx.StringDataPtr(policy.Location),
+					"tags":       llx.MapData(convert.PtrMapStrToInterface(policy.Tags), types.String),
 					"type":       llx.StringDataPtr(policy.Type),
 					"properties": llx.DictData(properties),
 				})
@@ -833,6 +835,8 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) protectedItems() ([]a
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(item.ID),
 					"name":       llx.StringDataPtr(item.Name),
+					"location":   llx.StringDataPtr(item.Location),
+					"tags":       llx.MapData(convert.PtrMapStrToInterface(item.Tags), types.String),
 					"type":       llx.StringDataPtr(item.Type),
 					"properties": llx.DictData(properties),
 				})

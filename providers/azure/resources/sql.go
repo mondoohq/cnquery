@@ -309,6 +309,8 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 			args := map[string]*llx.RawData{
 				"id":               llx.StringDataPtr(entry.ID),
 				"name":             llx.StringDataPtr(entry.Name),
+				"location":         llx.StringDataPtr(entry.Location),
+				"tags":             llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 				"type":             llx.StringDataPtr(entry.Type),
 				"collation":        llx.StringDataPtr(entry.Properties.Collation),
 				"creationDate":     llx.TimeDataPtr(entry.Properties.CreationDate),

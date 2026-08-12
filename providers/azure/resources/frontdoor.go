@@ -266,6 +266,7 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) endpoints() ([]any, error)
 				"id":                llx.StringDataPtr(ep.ID),
 				"name":              llx.StringDataPtr(ep.Name),
 				"location":          llx.StringDataPtr(ep.Location),
+				"tags":              llx.MapData(convert.PtrMapStrToInterface(ep.Tags), types.String),
 				"hostName":          llx.StringData(hostName),
 				"enabledState":      llx.StringData(enabledState),
 				"provisioningState": llx.StringData(provisioningState),
