@@ -94,6 +94,30 @@ func (r *mqlMongodbatlas) projects() ([]any, error) {
 	return out, nil
 }
 
+// orgProjectsByID lists the organization's projects once and caches them by id
+// on the root resource. Resolving a project reference through this map keeps a
+// list of references to one API call, where hydrating each one by id would run
+// the project init, and therefore a GetProject call, per reference.
+func (r *mqlMongodbatlas) orgProjectsByID() (map[string]*mqlMongodbatlasProject, error) {
+	r.projectsOnce.Do(func() {
+		projects, err := r.projects()
+		if err != nil {
+			r.projectsErr = err
+			return
+		}
+		m := make(map[string]*mqlMongodbatlasProject, len(projects))
+		for _, p := range projects {
+			proj, ok := p.(*mqlMongodbatlasProject)
+			if !ok {
+				continue
+			}
+			m[proj.Id.Data] = proj
+		}
+		r.projectsByID = m
+	})
+	return r.projectsByID, r.projectsErr
+}
+
 func (r *mqlMongodbatlas) orgUsers() ([]any, error) {
 	oid, err := orgID(r.MqlRuntime)
 	if err != nil {

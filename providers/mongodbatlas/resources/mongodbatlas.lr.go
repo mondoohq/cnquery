@@ -23,6 +23,7 @@ const (
 	ResourceMongodbatlasTeam                    string = "mongodbatlas.team"
 	ResourceMongodbatlasApiKey                  string = "mongodbatlas.apiKey"
 	ResourceMongodbatlasApiKeyRoleAssignment    string = "mongodbatlas.apiKey.roleAssignment"
+	ResourceMongodbatlasApiAccessListEntry      string = "mongodbatlas.apiAccessListEntry"
 	ResourceMongodbatlasServiceAccount          string = "mongodbatlas.serviceAccount"
 	ResourceMongodbatlasCluster                 string = "mongodbatlas.cluster"
 	ResourceMongodbatlasBackupScheduleConfig    string = "mongodbatlas.backupScheduleConfig"
@@ -76,6 +77,10 @@ func init() {
 		"mongodbatlas.apiKey.roleAssignment": {
 			// to override args, implement: initMongodbatlasApiKeyRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMongodbatlasApiKeyRoleAssignment,
+		},
+		"mongodbatlas.apiAccessListEntry": {
+			// to override args, implement: initMongodbatlasApiAccessListEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodbatlasApiAccessListEntry,
 		},
 		"mongodbatlas.serviceAccount": {
 			// to override args, implement: initMongodbatlasServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -252,6 +257,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.securityContact": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetSecurityContact()).ToDataRes(types.String)
 	},
+	"mongodbatlas.streamsCrossGroupEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlas).GetStreamsCrossGroupEnabled()).ToDataRes(types.Bool)
+	},
 	"mongodbatlas.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetProjects()).ToDataRes(types.Array(types.Resource("mongodbatlas.project")))
 	},
@@ -393,6 +401,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.apiKey.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasApiKey).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("mongodbatlas.apiKey.roleAssignment")))
 	},
+	"mongodbatlas.apiKey.accessList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiKey).GetAccessList()).ToDataRes(types.Array(types.Resource("mongodbatlas.apiAccessListEntry")))
+	},
 	"mongodbatlas.apiKey.roleAssignment.roleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasApiKeyRoleAssignment).GetRoleName()).ToDataRes(types.String)
 	},
@@ -401,6 +412,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.apiKey.roleAssignment.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasApiKeyRoleAssignment).GetProject()).ToDataRes(types.Resource("mongodbatlas.project"))
+	},
+	"mongodbatlas.apiAccessListEntry.cidrBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiAccessListEntry).GetCidrBlock()).ToDataRes(types.String)
+	},
+	"mongodbatlas.apiAccessListEntry.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiAccessListEntry).GetIpAddress()).ToDataRes(types.String)
+	},
+	"mongodbatlas.apiAccessListEntry.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiAccessListEntry).GetCreated()).ToDataRes(types.Time)
+	},
+	"mongodbatlas.apiAccessListEntry.requestCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiAccessListEntry).GetRequestCount()).ToDataRes(types.Int)
+	},
+	"mongodbatlas.apiAccessListEntry.lastUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiAccessListEntry).GetLastUsed()).ToDataRes(types.Time)
+	},
+	"mongodbatlas.apiAccessListEntry.lastUsedAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasApiAccessListEntry).GetLastUsedAddress()).ToDataRes(types.String)
 	},
 	"mongodbatlas.serviceAccount.clientId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasServiceAccount).GetClientId()).ToDataRes(types.String)
@@ -419,6 +448,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.serviceAccount.secrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasServiceAccount).GetSecrets()).ToDataRes(types.Array(types.Dict))
+	},
+	"mongodbatlas.serviceAccount.accessList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasServiceAccount).GetAccessList()).ToDataRes(types.Array(types.Resource("mongodbatlas.apiAccessListEntry")))
+	},
+	"mongodbatlas.serviceAccount.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasServiceAccount).GetProjects()).ToDataRes(types.Array(types.Resource("mongodbatlas.project")))
 	},
 	"mongodbatlas.cluster.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetId()).ToDataRes(types.String)
@@ -686,6 +721,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.databaseUser.scopedClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasDatabaseUser).GetScopedClusters()).ToDataRes(types.Array(types.Resource("mongodbatlas.cluster")))
+	},
+	"mongodbatlas.databaseUser.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasDatabaseUser).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"mongodbatlas.databaseUser.deleteAfterDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasDatabaseUser).GetDeleteAfterDate()).ToDataRes(types.Time)
@@ -1020,6 +1058,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlas).SecurityContact, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.streamsCrossGroupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlas).StreamsCrossGroupEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"mongodbatlas.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlas).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1228,6 +1270,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlasApiKey).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.apiKey.accessList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiKey).AccessList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"mongodbatlas.apiKey.roleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasApiKeyRoleAssignment).__id, ok = v.Value.(string)
 		return
@@ -1242,6 +1288,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.apiKey.roleAssignment.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasApiKeyRoleAssignment).Project, ok = plugin.RawToTValue[*mqlMongodbatlasProject](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.cidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.requestCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).RequestCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.lastUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).LastUsed, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.apiAccessListEntry.lastUsedAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasApiAccessListEntry).LastUsedAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1270,6 +1344,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.serviceAccount.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasServiceAccount).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.serviceAccount.accessList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasServiceAccount).AccessList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.serviceAccount.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasServiceAccount).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1650,6 +1732,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.databaseUser.scopedClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasDatabaseUser).ScopedClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.databaseUser.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasDatabaseUser).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.databaseUser.deleteAfterDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2121,6 +2207,7 @@ type mqlMongodbatlas struct {
 	GenAiFeaturesEnabled                   plugin.TValue[bool]
 	MaxServiceAccountSecretValidityInHours plugin.TValue[int64]
 	SecurityContact                        plugin.TValue[string]
+	StreamsCrossGroupEnabled               plugin.TValue[bool]
 	Projects                               plugin.TValue[[]any]
 	OrgUsers                               plugin.TValue[[]any]
 	Teams                                  plugin.TValue[[]any]
@@ -2226,6 +2313,12 @@ func (c *mqlMongodbatlas) GetMaxServiceAccountSecretValidityInHours() *plugin.TV
 func (c *mqlMongodbatlas) GetSecurityContact() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SecurityContact, func() (string, error) {
 		return c.securityContact()
+	})
+}
+
+func (c *mqlMongodbatlas) GetStreamsCrossGroupEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StreamsCrossGroupEnabled, func() (bool, error) {
+		return c.streamsCrossGroupEnabled()
 	})
 }
 
@@ -2888,6 +2981,7 @@ type mqlMongodbatlasApiKey struct {
 	PublicKey       plugin.TValue[string]
 	Description     plugin.TValue[string]
 	RoleAssignments plugin.TValue[[]any]
+	AccessList      plugin.TValue[[]any]
 }
 
 // createMongodbatlasApiKey creates a new instance of this resource
@@ -2947,6 +3041,22 @@ func (c *mqlMongodbatlasApiKey) GetRoleAssignments() *plugin.TValue[[]any] {
 		}
 
 		return c.roleAssignments()
+	})
+}
+
+func (c *mqlMongodbatlasApiKey) GetAccessList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessList, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.apiKey", c.__id, "accessList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessList()
 	})
 }
 
@@ -3016,6 +3126,75 @@ func (c *mqlMongodbatlasApiKeyRoleAssignment) GetProject() *plugin.TValue[*mqlMo
 	})
 }
 
+// mqlMongodbatlasApiAccessListEntry for the mongodbatlas.apiAccessListEntry resource
+type mqlMongodbatlasApiAccessListEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMongodbatlasApiAccessListEntryInternal it will be used here
+	CidrBlock       plugin.TValue[string]
+	IpAddress       plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	RequestCount    plugin.TValue[int64]
+	LastUsed        plugin.TValue[*time.Time]
+	LastUsedAddress plugin.TValue[string]
+}
+
+// createMongodbatlasApiAccessListEntry creates a new instance of this resource
+func createMongodbatlasApiAccessListEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbatlasApiAccessListEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodbatlas.apiAccessListEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) MqlName() string {
+	return "mongodbatlas.apiAccessListEntry"
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) GetCidrBlock() *plugin.TValue[string] {
+	return &c.CidrBlock
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) GetRequestCount() *plugin.TValue[int64] {
+	return &c.RequestCount
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) GetLastUsed() *plugin.TValue[*time.Time] {
+	return &c.LastUsed
+}
+
+func (c *mqlMongodbatlasApiAccessListEntry) GetLastUsedAddress() *plugin.TValue[string] {
+	return &c.LastUsedAddress
+}
+
 // mqlMongodbatlasServiceAccount for the mongodbatlas.serviceAccount resource
 type mqlMongodbatlasServiceAccount struct {
 	MqlRuntime *plugin.Runtime
@@ -3027,6 +3206,8 @@ type mqlMongodbatlasServiceAccount struct {
 	Roles       plugin.TValue[[]any]
 	CreatedAt   plugin.TValue[*time.Time]
 	Secrets     plugin.TValue[[]any]
+	AccessList  plugin.TValue[[]any]
+	Projects    plugin.TValue[[]any]
 }
 
 // createMongodbatlasServiceAccount creates a new instance of this resource
@@ -3083,6 +3264,38 @@ func (c *mqlMongodbatlasServiceAccount) GetCreatedAt() *plugin.TValue[*time.Time
 
 func (c *mqlMongodbatlasServiceAccount) GetSecrets() *plugin.TValue[[]any] {
 	return &c.Secrets
+}
+
+func (c *mqlMongodbatlasServiceAccount) GetAccessList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessList, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.serviceAccount", c.__id, "accessList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessList()
+	})
+}
+
+func (c *mqlMongodbatlasServiceAccount) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.serviceAccount", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
 }
 
 // mqlMongodbatlasCluster for the mongodbatlas.cluster resource
@@ -3734,6 +3947,7 @@ type mqlMongodbatlasDatabaseUser struct {
 	Roles           plugin.TValue[[]any]
 	Scopes          plugin.TValue[[]any]
 	ScopedClusters  plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
 	DeleteAfterDate plugin.TValue[*time.Time]
 }
 
@@ -3823,6 +4037,10 @@ func (c *mqlMongodbatlasDatabaseUser) GetScopedClusters() *plugin.TValue[[]any] 
 
 		return c.scopedClusters()
 	})
+}
+
+func (c *mqlMongodbatlasDatabaseUser) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 func (c *mqlMongodbatlasDatabaseUser) GetDeleteAfterDate() *plugin.TValue[*time.Time] {

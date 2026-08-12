@@ -64,6 +64,7 @@ func (r *mqlMongodbatlas) databaseUsers() ([]any, error) {
 				"oidcAuthType":    llx.StringData(u.GetOidcAuthType()),
 				"roles":           llx.ArrayData(roles, types.Dict),
 				"scopes":          llx.ArrayData(scopes, types.Dict),
+				"labels":          llx.MapData(labelMap(u.GetLabels()), types.String),
 				"deleteAfterDate": llx.TimeDataPtr(timePtr(u.GetDeleteAfterDate())),
 			})
 			if err != nil {
