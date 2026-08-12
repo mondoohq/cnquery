@@ -107,14 +107,19 @@ const (
 	// status: new
 	ScanContentModeServerCompare Feature = 19
 
-	// Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true. (The server-side no_compare kill switch emits nothing - a client that receives no ScanContentMode* feature does no digest work.)
+	// Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true.
 	// start:  v13.x
 	// status: new
 	ScanContentModeClientCompare Feature = 20
 
+	// The kill switch: do NO scan-content digest work and upload in full - behaves exactly like the feature being absent today. Exists as an explicit client-facing signal so that once comparison ships enabled-by-default (no enabling flag), the server can still turn it off per scope; it overrides any other ScanContentMode* feature and any client default.
+	// start:  v13.x
+	// status: new
+	ScanContentModeNoCompare Feature = 21
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 21
+	MAX_FEATURES byte = 22
 )
 
 var FeaturesValue = map[string]Feature{
@@ -138,6 +143,7 @@ var FeaturesValue = map[string]Feature{
 	"ScanContentModeShadow":        ScanContentModeShadow,
 	"ScanContentModeServerCompare": ScanContentModeServerCompare,
 	"ScanContentModeClientCompare": ScanContentModeClientCompare,
+	"ScanContentModeNoCompare":     ScanContentModeNoCompare,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -159,4 +165,5 @@ var AvailableFeatures = Features{
 	byte(ScanContentModeShadow),
 	byte(ScanContentModeServerCompare),
 	byte(ScanContentModeClientCompare),
+	byte(ScanContentModeNoCompare),
 }

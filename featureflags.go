@@ -89,13 +89,17 @@ func GetFeatures(ctx context.Context) Features {
 	return f
 }
 
-// ScanContentDigestsActive reports whether any server-activated scan-content
-// mode feature is on (unchanged-scan short-circuit ADR). The client behavior
-// is identical for every mode except client_compare: compute row digests
-// while writing the scandb into its digest columns. The mode features are
-// mutually exclusive by construction - the server sends at most one, and a
-// server in no_compare (or off) sends none, which disables all digest work.
+// ScanContentDigestsActive reports whether the client should compute scan
+// content row digests while writing the scandb (unchanged-scan short-circuit
+// ADR). ScanContentModeNoCompare is the kill switch and overrides
+// everything - including, once comparison ships enabled-by-default, the
+// client's own default - so it is checked first. The mode features are
+// otherwise mutually exclusive by construction: the server sends at most
+// one.
 func (f Features) ScanContentDigestsActive() bool {
+	if f.IsActive(ScanContentModeNoCompare) {
+		return false
+	}
 	return f.IsActive(ScanContentModeShadow) ||
 		f.IsActive(ScanContentModeServerCompare) ||
 		f.IsActive(ScanContentModeClientCompare)

@@ -109,7 +109,12 @@ Features:
   start: v13.x
   status: new
 - id: ScanContentModeClientCompare
-  desc: "Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true. (The server-side no_compare kill switch emits nothing - a client that receives no ScanContentMode* feature does no digest work.)"
+  desc: "Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true."
   idx: 20
+  start: v13.x
+  status: new
+- id: ScanContentModeNoCompare
+  desc: "The kill switch: do NO scan-content digest work and upload in full - behaves exactly like the feature being absent today. Exists as an explicit client-facing signal so that once comparison ships enabled-by-default (no enabling flag), the server can still turn it off per scope; it overrides any other ScanContentMode* feature and any client default."
+  idx: 21
   start: v13.x
   status: new
