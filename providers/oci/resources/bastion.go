@@ -68,6 +68,8 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 					"dnsProxyStatus": llx.StringData(string(b.DnsProxyStatus)),
 					"created":        llx.TimeDataPtr(created),
 					"timeUpdated":    llx.TimeDataPtr(timeUpdated),
+					"freeformTags":   llx.MapData(strMapToAny(b.FreeformTags), types.String),
+					"definedTags":    llx.MapData(definedTagsToAny(b.DefinedTags), types.Any),
 					"systemTags":     llx.MapData(definedTagsToAny(b.SystemTags), types.Dict),
 				})
 				if err != nil {

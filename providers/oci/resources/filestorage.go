@@ -79,6 +79,8 @@ func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 						"meteredBytes":       llx.IntDataPtr(fs.MeteredBytes),
 						"isCloneParent":      llx.BoolDataPtr(fs.IsCloneParent),
 						"created":            llx.TimeDataPtr(created),
+						"freeformTags":       llx.MapData(strMapToAny(fs.FreeformTags), types.String),
+						"definedTags":        llx.MapData(definedTagsToAny(fs.DefinedTags), types.Any),
 						"systemTags":         llx.MapData(definedTagsToAny(fs.SystemTags), types.Dict),
 					})
 					if err != nil {

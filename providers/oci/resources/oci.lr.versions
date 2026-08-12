@@ -488,7 +488,9 @@ oci.bastion.instance.clientCidrBlockAllowList 13.16.4
 oci.bastion.instance.compartment 13.6.2
 oci.bastion.instance.compartmentID 13.0.6
 oci.bastion.instance.created 13.0.6
+oci.bastion.instance.definedTags 13.18.1
 oci.bastion.instance.dnsProxyStatus 13.0.6
+oci.bastion.instance.freeformTags 13.18.1
 oci.bastion.instance.id 13.0.6
 oci.bastion.instance.maxSessionTtlInSeconds 13.16.4
 oci.bastion.instance.maxSessionsAllowed 13.16.4
@@ -559,8 +561,10 @@ oci.cloudGuard.detectorRecipe 13.0.6
 oci.cloudGuard.detectorRecipe.compartment 13.12.2
 oci.cloudGuard.detectorRecipe.compartmentID 13.12.2
 oci.cloudGuard.detectorRecipe.created 13.0.6
+oci.cloudGuard.detectorRecipe.definedTags 13.18.1
 oci.cloudGuard.detectorRecipe.description 13.0.6
 oci.cloudGuard.detectorRecipe.detectorType 13.0.6
+oci.cloudGuard.detectorRecipe.freeformTags 13.18.1
 oci.cloudGuard.detectorRecipe.id 13.0.6
 oci.cloudGuard.detectorRecipe.name 13.0.6
 oci.cloudGuard.detectorRecipe.owner 13.0.6
@@ -613,7 +617,9 @@ oci.cloudGuard.securityPolicy.category 13.5.1
 oci.cloudGuard.securityPolicy.compartment 13.12.2
 oci.cloudGuard.securityPolicy.compartmentID 13.5.1
 oci.cloudGuard.securityPolicy.created 13.5.1
+oci.cloudGuard.securityPolicy.definedTags 13.18.1
 oci.cloudGuard.securityPolicy.description 13.5.1
+oci.cloudGuard.securityPolicy.freeformTags 13.18.1
 oci.cloudGuard.securityPolicy.friendlyName 13.5.1
 oci.cloudGuard.securityPolicy.id 13.5.1
 oci.cloudGuard.securityPolicy.name 13.5.1
@@ -625,7 +631,9 @@ oci.cloudGuard.securityZone 13.5.1
 oci.cloudGuard.securityZone.compartment 13.12.2
 oci.cloudGuard.securityZone.compartmentID 13.5.1
 oci.cloudGuard.securityZone.created 13.5.1
+oci.cloudGuard.securityZone.definedTags 13.18.1
 oci.cloudGuard.securityZone.description 13.5.1
+oci.cloudGuard.securityZone.freeformTags 13.18.1
 oci.cloudGuard.securityZone.id 13.5.1
 oci.cloudGuard.securityZone.isInheritanceAfterDeleteEnabled 13.5.1
 oci.cloudGuard.securityZone.name 13.5.1
@@ -636,7 +644,9 @@ oci.cloudGuard.securityZoneRecipe 13.5.1
 oci.cloudGuard.securityZoneRecipe.compartment 13.12.2
 oci.cloudGuard.securityZoneRecipe.compartmentID 13.5.1
 oci.cloudGuard.securityZoneRecipe.created 13.5.1
+oci.cloudGuard.securityZoneRecipe.definedTags 13.18.1
 oci.cloudGuard.securityZoneRecipe.description 13.5.1
+oci.cloudGuard.securityZoneRecipe.freeformTags 13.18.1
 oci.cloudGuard.securityZoneRecipe.id 13.5.1
 oci.cloudGuard.securityZoneRecipe.name 13.5.1
 oci.cloudGuard.securityZoneRecipe.owner 13.5.1
@@ -651,6 +661,8 @@ oci.cloudGuard.target 13.0.6
 oci.cloudGuard.target.compartment 13.12.2
 oci.cloudGuard.target.compartmentID 13.0.6
 oci.cloudGuard.target.created 13.0.6
+oci.cloudGuard.target.definedTags 13.18.1
+oci.cloudGuard.target.freeformTags 13.18.1
 oci.cloudGuard.target.id 13.0.6
 oci.cloudGuard.target.name 13.0.6
 oci.cloudGuard.target.recipeCount 13.0.6
@@ -661,7 +673,9 @@ oci.cloudGuard.target.targetResourceType 13.0.6
 oci.cloudGuard.targets 13.0.6
 oci.compartment 9.0.0
 oci.compartment.created 9.0.0
+oci.compartment.definedTags 13.18.1
 oci.compartment.description 9.0.0
+oci.compartment.freeformTags 13.18.1
 oci.compartment.id 9.0.0
 oci.compartment.name 9.0.0
 oci.compartment.state 9.0.0
@@ -672,6 +686,8 @@ oci.compute.blockVolume.availabilityDomain 13.0.6
 oci.compute.blockVolume.compartment 13.6.2
 oci.compute.blockVolume.compartmentID 13.0.6
 oci.compute.blockVolume.created 13.0.6
+oci.compute.blockVolume.definedTags 13.18.1
+oci.compute.blockVolume.freeformTags 13.18.1
 oci.compute.blockVolume.id 13.0.6
 oci.compute.blockVolume.isAutoTuneEnabled 13.0.6
 oci.compute.blockVolume.isHydrated 13.0.6
@@ -689,6 +705,8 @@ oci.compute.bootVolume.availabilityDomain 13.0.6
 oci.compute.bootVolume.compartment 13.6.2
 oci.compute.bootVolume.compartmentID 13.0.6
 oci.compute.bootVolume.created 13.0.6
+oci.compute.bootVolume.definedTags 13.18.1
+oci.compute.bootVolume.freeformTags 13.18.1
 oci.compute.bootVolume.id 13.0.6
 oci.compute.bootVolume.image 13.6.2
 oci.compute.bootVolume.imageId 13.0.6
@@ -1088,7 +1106,9 @@ oci.events.rule.compartment 13.6.2
 oci.events.rule.compartmentID 13.0.6
 oci.events.rule.condition 13.0.6
 oci.events.rule.created 13.0.6
+oci.events.rule.definedTags 13.18.1
 oci.events.rule.description 13.0.6
+oci.events.rule.freeformTags 13.18.1
 oci.events.rule.id 13.0.6
 oci.events.rule.isEnabled 13.0.6
 oci.events.rule.name 13.0.6
@@ -1100,6 +1120,8 @@ oci.fileStorage.fileSystem.availabilityDomain 13.0.6
 oci.fileStorage.fileSystem.compartment 13.12.2
 oci.fileStorage.fileSystem.compartmentID 13.0.6
 oci.fileStorage.fileSystem.created 13.0.6
+oci.fileStorage.fileSystem.definedTags 13.18.1
+oci.fileStorage.fileSystem.freeformTags 13.18.1
 oci.fileStorage.fileSystem.id 13.0.6
 oci.fileStorage.fileSystem.isCloneParent 13.12.2
 oci.fileStorage.fileSystem.kmsKey 13.0.6
@@ -1476,6 +1498,8 @@ oci.kms.key.compartment 13.6.2
 oci.kms.key.compartmentID 13.0.6
 oci.kms.key.created 13.0.6
 oci.kms.key.curveId 13.15.1
+oci.kms.key.definedTags 13.18.1
+oci.kms.key.freeformTags 13.18.1
 oci.kms.key.id 13.0.6
 oci.kms.key.isAutoRotationEnabled 13.0.6
 oci.kms.key.keyVersions 13.1.1
@@ -1501,6 +1525,8 @@ oci.kms.vault 13.0.6
 oci.kms.vault.compartment 13.6.2
 oci.kms.vault.compartmentID 13.0.6
 oci.kms.vault.created 13.0.6
+oci.kms.vault.definedTags 13.18.1
+oci.kms.vault.freeformTags 13.18.1
 oci.kms.vault.id 13.0.6
 oci.kms.vault.keys 13.0.6
 oci.kms.vault.managementEndpoint 13.0.6
@@ -1553,6 +1579,8 @@ oci.logging.log 13.0.6
 oci.logging.log.category 13.4.1
 oci.logging.log.configuration 13.0.6
 oci.logging.log.created 13.0.6
+oci.logging.log.definedTags 13.18.1
+oci.logging.log.freeformTags 13.18.1
 oci.logging.log.id 13.0.6
 oci.logging.log.isEnabled 13.0.6
 oci.logging.log.logGroup 13.0.6
@@ -1568,7 +1596,9 @@ oci.logging.logGroup 13.0.6
 oci.logging.logGroup.compartment 13.12.2
 oci.logging.logGroup.compartmentID 13.0.6
 oci.logging.logGroup.created 13.0.6
+oci.logging.logGroup.definedTags 13.18.1
 oci.logging.logGroup.description 13.0.6
+oci.logging.logGroup.freeformTags 13.18.1
 oci.logging.logGroup.id 13.0.6
 oci.logging.logGroup.logs 13.0.6
 oci.logging.logGroup.name 13.0.6
@@ -1579,7 +1609,9 @@ oci.monitoring 13.0.6
 oci.monitoring.alarm 13.0.6
 oci.monitoring.alarm.compartment 13.6.2
 oci.monitoring.alarm.compartmentID 13.0.6
+oci.monitoring.alarm.definedTags 13.18.1
 oci.monitoring.alarm.destinations 13.0.6
+oci.monitoring.alarm.freeformTags 13.18.1
 oci.monitoring.alarm.id 13.0.6
 oci.monitoring.alarm.isEnabled 13.0.6
 oci.monitoring.alarm.metricCompartmentId 13.0.6
@@ -1664,7 +1696,9 @@ oci.network.drgAttachment 13.13.1
 oci.network.drgAttachment.compartment 13.13.1
 oci.network.drgAttachment.compartmentID 13.13.1
 oci.network.drgAttachment.created 13.13.1
+oci.network.drgAttachment.definedTags 13.18.1
 oci.network.drgAttachment.drg 13.13.1
+oci.network.drgAttachment.freeformTags 13.18.1
 oci.network.drgAttachment.id 13.13.1
 oci.network.drgAttachment.ipsecConnection 13.13.1
 oci.network.drgAttachment.isCrossTenancy 13.13.1
@@ -1799,6 +1833,8 @@ oci.network.publicIp.availabilityDomain 13.8.2
 oci.network.publicIp.compartment 13.12.2
 oci.network.publicIp.compartmentID 13.8.2
 oci.network.publicIp.created 13.8.2
+oci.network.publicIp.definedTags 13.18.1
+oci.network.publicIp.freeformTags 13.18.1
 oci.network.publicIp.id 13.8.2
 oci.network.publicIp.ipAddress 13.8.2
 oci.network.publicIp.lifetime 13.8.2
@@ -1968,6 +2004,8 @@ oci.networkFirewall.firewall 13.0.6
 oci.networkFirewall.firewall.compartment 13.12.2
 oci.networkFirewall.firewall.compartmentID 13.0.6
 oci.networkFirewall.firewall.created 13.0.6
+oci.networkFirewall.firewall.definedTags 13.18.1
+oci.networkFirewall.firewall.freeformTags 13.18.1
 oci.networkFirewall.firewall.healthStatus 13.8.2
 oci.networkFirewall.firewall.id 13.0.6
 oci.networkFirewall.firewall.ipv4Address 13.0.6
@@ -2009,7 +2047,9 @@ oci.networkFirewall.policy.decryptionRule.name 13.16.4
 oci.networkFirewall.policy.decryptionRule.priorityOrder 13.16.4
 oci.networkFirewall.policy.decryptionRule.secret 13.16.4
 oci.networkFirewall.policy.decryptionRules 13.16.4
+oci.networkFirewall.policy.definedTags 13.18.1
 oci.networkFirewall.policy.description 13.0.6
+oci.networkFirewall.policy.freeformTags 13.18.1
 oci.networkFirewall.policy.id 13.0.6
 oci.networkFirewall.policy.name 13.0.6
 oci.networkFirewall.policy.securityRule 13.16.4
@@ -2164,6 +2204,8 @@ oci.oke.nodePool.bootVolumeSizeInGBs 13.16.4
 oci.oke.nodePool.cluster 13.12.2
 oci.oke.nodePool.compartment 13.12.2
 oci.oke.nodePool.compartmentID 13.0.6
+oci.oke.nodePool.definedTags 13.18.1
+oci.oke.nodePool.freeformTags 13.18.1
 oci.oke.nodePool.id 13.0.6
 oci.oke.nodePool.kubernetesVersion 13.0.6
 oci.oke.nodePool.name 13.0.6
@@ -2179,7 +2221,9 @@ oci.oke.nodePool.systemTags 13.12.2
 oci.ons 13.0.6
 oci.ons.subscription 13.0.6
 oci.ons.subscription.created 13.0.6
+oci.ons.subscription.definedTags 13.18.1
 oci.ons.subscription.endpoint 13.0.6
+oci.ons.subscription.freeformTags 13.18.1
 oci.ons.subscription.id 13.0.6
 oci.ons.subscription.protocol 13.0.6
 oci.ons.subscription.state 13.0.6
@@ -2188,7 +2232,9 @@ oci.ons.topic 13.0.6
 oci.ons.topic.compartment 13.6.2
 oci.ons.topic.compartmentID 13.0.6
 oci.ons.topic.created 13.0.6
+oci.ons.topic.definedTags 13.18.1
 oci.ons.topic.description 13.0.6
+oci.ons.topic.freeformTags 13.18.1
 oci.ons.topic.id 13.0.6
 oci.ons.topic.name 13.0.6
 oci.ons.topic.state 13.0.6
@@ -2306,7 +2352,9 @@ oci.resourceManager 13.17.2
 oci.resourceManager.job 13.17.2
 oci.resourceManager.job.compartment 13.17.2
 oci.resourceManager.job.created 13.17.2
+oci.resourceManager.job.definedTags 13.18.1
 oci.resourceManager.job.finished 13.17.2
+oci.resourceManager.job.freeformTags 13.18.1
 oci.resourceManager.job.id 13.17.2
 oci.resourceManager.job.name 13.17.2
 oci.resourceManager.job.operation 13.17.2
@@ -2386,7 +2434,9 @@ oci.streaming.streamPool.subnet 13.17.2
 oci.streaming.streamPools 13.17.2
 oci.streaming.streams 13.17.2
 oci.tenancy 9.0.0
+oci.tenancy.definedTags 13.18.1
 oci.tenancy.description 9.0.0
+oci.tenancy.freeformTags 13.18.1
 oci.tenancy.id 9.0.0
 oci.tenancy.name 9.0.0
 oci.tenancy.retentionPeriod 9.0.0

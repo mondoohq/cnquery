@@ -469,6 +469,8 @@ func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 					"isAutoTuneEnabled":    llx.BoolDataPtr(vol.IsAutoTuneEnabled),
 					"sourceVolumeBackupId": llx.StringData(sourceVolumeBackupID),
 					"created":              llx.TimeDataPtr(created),
+					"freeformTags":         llx.MapData(strMapToAny(vol.FreeformTags), types.String),
+					"definedTags":          llx.MapData(definedTagsToAny(vol.DefinedTags), types.Any),
 					"systemTags":           llx.MapData(definedTagsToAny(vol.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -571,6 +573,8 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 					"state":                    llx.StringData(string(bv.LifecycleState)),
 					"sourceBootVolumeBackupId": llx.StringData(sourceBootVolumeBackupID),
 					"created":                  llx.TimeDataPtr(created),
+					"freeformTags":             llx.MapData(strMapToAny(bv.FreeformTags), types.String),
+					"definedTags":              llx.MapData(definedTagsToAny(bv.DefinedTags), types.Any),
 					"systemTags":               llx.MapData(definedTagsToAny(bv.SystemTags), types.Dict),
 				})
 				if err != nil {

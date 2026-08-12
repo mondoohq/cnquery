@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciKms) id() (string, error) {
@@ -60,6 +61,8 @@ func (o *mqlOciKms) vaults() ([]any, error) {
 					"state":              llx.StringData(string(vault.LifecycleState)),
 					"managementEndpoint": llx.StringDataPtr(vault.ManagementEndpoint),
 					"created":            llx.TimeDataPtr(created),
+					"freeformTags":       llx.MapData(strMapToAny(vault.FreeformTags), types.String),
+					"definedTags":        llx.MapData(definedTagsToAny(vault.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -171,6 +174,8 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 			"state":                 llx.StringData(string(key.LifecycleState)),
 			"isAutoRotationEnabled": llx.BoolDataPtr(key.IsAutoRotationEnabled),
 			"created":               llx.TimeDataPtr(created),
+			"freeformTags":          llx.MapData(strMapToAny(key.FreeformTags), types.String),
+			"definedTags":           llx.MapData(definedTagsToAny(key.DefinedTags), types.Any),
 		})
 		if err != nil {
 			return nil, err

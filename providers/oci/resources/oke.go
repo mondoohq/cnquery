@@ -307,6 +307,8 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			"bootVolumeSizeInGBs": llx.IntDataPtr(bootVolumeSizeInGBs),
 			"sshPublicKey":        llx.StringDataPtr(np.SshPublicKey),
 			"state":               llx.StringData(string(np.LifecycleState)),
+			"freeformTags":        llx.MapData(strMapToAny(np.FreeformTags), types.String),
+			"definedTags":         llx.MapData(definedTagsToAny(np.DefinedTags), types.Any),
 			"systemTags":          llx.MapData(definedTagsToAny(np.SystemTags), types.Dict),
 		})
 		if err != nil {

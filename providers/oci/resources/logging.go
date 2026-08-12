@@ -55,6 +55,8 @@ func (o *mqlOciLogging) logGroups() ([]any, error) {
 					"compartmentID": llx.StringDataPtr(lg.CompartmentId),
 					"state":         llx.StringData(string(lg.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(strMapToAny(lg.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(lg.DefinedTags), types.Any),
 					"systemTags":    llx.MapData(definedTagsToAny(lg.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -177,6 +179,8 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 			"sourceResource":    llx.StringData(sourceResource),
 			"created":           llx.TimeDataPtr(logCreated),
 			"timeLastModified":  llx.TimeDataPtr(logLastModified),
+			"freeformTags":      llx.MapData(strMapToAny(l.FreeformTags), types.String),
+			"definedTags":       llx.MapData(definedTagsToAny(l.DefinedTags), types.Any),
 			"systemTags":        llx.MapData(definedTagsToAny(l.SystemTags), types.Dict),
 		})
 		if err != nil {

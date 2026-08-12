@@ -67,6 +67,8 @@ func (o *mqlOciMonitoring) alarms() ([]any, error) {
 					"destinations":        llx.ArrayData(destinations, types.String),
 					"isEnabled":           llx.BoolDataPtr(alarm.IsEnabled),
 					"state":               llx.StringData(string(alarm.LifecycleState)),
+					"freeformTags":        llx.MapData(strMapToAny(alarm.FreeformTags), types.String),
+					"definedTags":         llx.MapData(definedTagsToAny(alarm.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err

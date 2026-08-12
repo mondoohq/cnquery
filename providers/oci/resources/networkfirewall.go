@@ -71,6 +71,8 @@ func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 					"created":            llx.TimeDataPtr(created),
 					"timeUpdated":        llx.TimeDataPtr(timeUpdated),
 					"securityAttributes": llx.MapData(definedTagsToAny(fw.SecurityAttributes), types.Dict),
+					"freeformTags":       llx.MapData(strMapToAny(fw.FreeformTags), types.String),
+					"definedTags":        llx.MapData(definedTagsToAny(fw.DefinedTags), types.Any),
 					"systemTags":         llx.MapData(definedTagsToAny(fw.SystemTags), types.Dict),
 				})
 				if err != nil {
@@ -181,6 +183,8 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 					"compartmentID": llx.StringDataPtr(p.CompartmentId),
 					"state":         llx.StringData(string(p.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(strMapToAny(p.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
 					"systemTags":    llx.MapData(definedTagsToAny(p.SystemTags), types.Dict),
 				})
 				if err != nil {
