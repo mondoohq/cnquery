@@ -97,22 +97,22 @@ const (
 	// status: new
 	TerraformResolveVars Feature = 17
 
-	// Server-activated scan-content mode (unchanged-scan short-circuit ADR): compute row/kind digests while writing the scandb and stamp them into its metadata. Shadow changes nothing else - every scan still uploads in full.
+	// Server-activated scan-content mode (unchanged-scan short-circuit ADR): compute row/kind checksums while writing the scandb and stamp them into its metadata. Shadow changes nothing else - every scan still uploads in full.
 	// start:  v13.x
 	// status: new
 	ScanContentModeShadow Feature = 18
 
-	// Server-activated scan-content mode: digests computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow.
+	// Server-activated scan-content mode: checksums computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow.
 	// start:  v13.x
 	// status: new
 	ScanContentModeServerCompare Feature = 19
 
-	// Server-activated scan-content mode: digests computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true.
+	// Server-activated scan-content mode: checksums computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true.
 	// start:  v13.x
 	// status: new
 	ScanContentModeClientCompare Feature = 20
 
-	// The kill switch: do NO scan-content digest work and upload in full - behaves exactly like the feature being absent today. Exists as an explicit client-facing signal so that once comparison ships enabled-by-default (no enabling flag), the server can still turn it off per scope; it overrides any other ScanContentMode* feature and any client default.
+	// The kill switch: do NO scan-content checksum work and upload in full - behaves exactly like the feature being absent today. Exists as an explicit client-facing signal so that once comparison ships enabled-by-default (no enabling flag), the server can still turn it off per scope; it overrides any other ScanContentMode* feature and any client default.
 	// start:  v13.x
 	// status: new
 	ScanContentModeNoCompare Feature = 21

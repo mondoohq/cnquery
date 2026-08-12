@@ -1,7 +1,7 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package digest
+package checksum
 
 import (
 	"fmt"
@@ -26,10 +26,10 @@ func strResult(codeID, s string) *llx.Result {
 }
 
 // TestHashDataRowGolden pins the algorithm's output bits. These vectors are
-// the shared contract with every consumer that recomputes digests (the
-// server's port pins the same values): if a refactor changes any of them, it
-// changed the algorithm — bump AlgoVersion and update all consumers, or
-// revert.
+// the shared contract with every consumer that recomputes checksums (cnspec's
+// scandb writer and the server pin the same package): if a refactor changes
+// any of them, it changed the algorithm — bump AlgoVersion and update all
+// consumers, or revert.
 func TestHashDataRowGolden(t *testing.T) {
 	d, err := HashDataRow("code-1", strResult("code-1", "hello"))
 	require.NoError(t, err)
@@ -99,6 +99,29 @@ func TestDictPayloadIsDecoded(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// TestAssetValueIsExplicit: Asset payloads are decoded and hashed
+// field-by-field — both identity fields are fold inputs.
+func TestAssetValueIsExplicit(t *testing.T) {
+	asset := func(rt, id string) *llx.Result {
+		raw, err := (&llx.AssetValue{ResourceType: rt, ResourceId: id}).MarshalVT()
+		require.NoError(t, err)
+		return &llx.Result{Data: &llx.Primitive{Type: string(types.Asset), Value: raw}}
+	}
+
+	d1, err := HashDataRow("k", asset("aws.instance", "i-1"))
+	require.NoError(t, err)
+	d2, err := HashDataRow("k", asset("aws.instance", "i-2"))
+	require.NoError(t, err)
+	d3, err := HashDataRow("k", asset("gcp.instance", "i-1"))
+	require.NoError(t, err)
+	assert.NotEqual(t, d1, d2)
+	assert.NotEqual(t, d1, d3)
+
+	same, err := HashDataRow("k", asset("aws.instance", "i-1"))
+	require.NoError(t, err)
+	assert.Equal(t, d1, same)
+}
+
 // TestLengthPrefixing: length-prefixed writes mean concatenation ambiguity
 // cannot collide ("ab"+"c" vs "a"+"bc").
 func TestLengthPrefixing(t *testing.T) {
@@ -133,7 +156,7 @@ func hashPrim(t *testing.T, p *llx.Primitive) uint64 {
 
 // TestDeterminismPerType covers every value shape CanonPrimitive
 // canonicalizes. Each case constructs the primitive FRESH per call — two
-// independent constructions must digest identically (structural equality,
+// independent constructions must checksum identically (structural equality,
 // not pointer identity), and the mutated variant must differ.
 func TestDeterminismPerType(t *testing.T) {
 	t0 := time.Unix(1700000000, 0).UTC()
@@ -196,10 +219,10 @@ func TestDeterminismPerType(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			d1 := hashPrim(t, tc.make())
 			d2 := hashPrim(t, tc.make())
-			assert.Equal(t, d1, d2, "two independent constructions must digest identically")
+			assert.Equal(t, d1, d2, "two independent constructions must checksum identically")
 			assert.NotEqual(t, d1, hashPrim(t, tc.mutated()), "mutated value must differ")
 			if prev, dup := seen[d1]; dup {
-				t.Fatalf("digest collides with case %q", prev)
+				t.Fatalf("checksum collides with case %q", prev)
 			}
 			seen[d1] = tc.name
 		})
@@ -209,7 +232,7 @@ func TestDeterminismPerType(t *testing.T) {
 // TestMapOrderInsensitivity: map canonicalization sorts keys. Go randomizes
 // map iteration per range, so hashing the same map repeatedly would already
 // diverge if the sort were missing; two maps built in reverse insertion
-// orders must digest identically too.
+// orders must checksum identically too.
 func TestMapOrderInsensitivity(t *testing.T) {
 	build := func(reverse bool) *llx.Primitive {
 		m := map[string]*llx.Primitive{}
@@ -231,7 +254,7 @@ func TestMapOrderInsensitivity(t *testing.T) {
 
 	changed := build(false)
 	changed.Map["key-07"] = llx.IntPrimitive(99)
-	assert.NotEqual(t, want, hashPrim(t, changed), "a changed value must change the digest")
+	assert.NotEqual(t, want, hashPrim(t, changed), "a changed value must change the checksum")
 }
 
 // TestArrayOrderInsensitivityMixed: the multiset property holds for arrays of
