@@ -114,6 +114,20 @@ func (m *mqlHetznerZone) rrsets() ([]any, error) {
 	return out, nil
 }
 
+// mqlHetznerZoneRrsetInternal keeps the raw record set so entries() can build
+// one resource per value without re-listing the zone.
+type mqlHetznerZoneRrsetInternal struct {
+	cacheRrset *hcloud.ZoneRRSet
+}
+
+// mqlHetznerZoneRrsetRecordInternal carries the record set a value belongs to.
+// The record's own type lives there, and resolving a target starts by asking
+// whether that type carries an address at all.
+type mqlHetznerZoneRrsetRecordInternal struct {
+	cacheZoneID int64
+	cacheRrset  *hcloud.ZoneRRSet
+}
+
 func (r *mqlHetznerZoneRrset) id() (string, error) {
 	return fmt.Sprintf("hetzner.zone.rrset/%d/%s", r.ZoneId.Data, r.Id.Data), nil
 }
@@ -140,7 +154,9 @@ func newMqlHetznerZoneRrset(runtime *plugin.Runtime, zoneID int64, rr *hcloud.Zo
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerZoneRrset), nil
+	m := res.(*mqlHetznerZoneRrset)
+	m.cacheRrset = rr
+	return m, nil
 }
 
 func (m *mqlHetznerZoneRrset) zone() (*mqlHetznerZone, error) {
