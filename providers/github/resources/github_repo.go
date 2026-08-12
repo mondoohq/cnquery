@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -2091,6 +2092,39 @@ func (g *mqlGithubDependabotAlert) id() (string, error) {
 	return "github.dependabotAlert/" + strconv.FormatInt(g.Number.Data, 10), nil
 }
 
+// listDependabotAlertsRaw collects every Dependabot alert for a repository.
+//
+// The endpoint paginates by cursor, not by page: its Link header advertises the
+// next page as `after=<cursor>`, so the page-based NextPage stays zero and a
+// walk driven by it stops after the first page, silently reporting at most
+// paginationPerPage alerts for a repository that has more.
+func listDependabotAlertsRaw(ctx context.Context, client *github.Client, ownerLogin, repoName string) ([]*github.DependabotAlert, error) {
+	listOpts := &github.ListAlertsOptions{
+		ListCursorOptions: github.ListCursorOptions{PerPage: paginationPerPage},
+	}
+
+	var allAlerts []*github.DependabotAlert
+	seenCursors := map[string]struct{}{}
+	for {
+		alerts, resp, err := client.Dependabot.ListRepoAlerts(ctx, ownerLogin, repoName, listOpts)
+		if err != nil {
+			return nil, err
+		}
+		allAlerts = append(allAlerts, alerts...)
+		if resp.After == "" {
+			break
+		}
+		// A server that keeps handing back a cursor we already followed would
+		// otherwise loop forever, re-collecting the same page.
+		if _, ok := seenCursors[resp.After]; ok {
+			break
+		}
+		seenCursors[resp.After] = struct{}{}
+		listOpts.ListCursorOptions.After = resp.After
+	}
+	return allAlerts, nil
+}
+
 func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	ownerLogin, repoName, err := repoOwnerAndName(g)
@@ -2098,29 +2132,17 @@ func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
 		return nil, err
 	}
 
-	listOpts := &github.ListAlertsOptions{
-		ListOptions: github.ListOptions{PerPage: paginationPerPage},
-	}
-
-	var allAlerts []*github.DependabotAlert
-	for {
-		alerts, resp, err := conn.Client().Dependabot.ListRepoAlerts(conn.Context(), ownerLogin, repoName, listOpts)
-		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
-			}
-			// Dependabot alerts may not be enabled or accessible
-			if strings.Contains(err.Error(), "403") {
-				log.Debug().Msg("Dependabot alerts are not accessible for this repository")
-				return nil, nil
-			}
-			return nil, err
+	allAlerts, err := listDependabotAlertsRaw(conn.Context(), conn.Client(), ownerLogin, repoName)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
 		}
-		allAlerts = append(allAlerts, alerts...)
-		if resp.NextPage == 0 {
-			break
+		// Dependabot alerts may not be enabled or accessible
+		if strings.Contains(err.Error(), "403") {
+			log.Debug().Msg("Dependabot alerts are not accessible for this repository")
+			return nil, nil
 		}
-		listOpts.ListOptions.Page = resp.NextPage
+		return nil, err
 	}
 
 	res := []any{}
