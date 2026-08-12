@@ -6501,6 +6501,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.reservation.originalPrimaryLocation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetOriginalPrimaryLocation()).ToDataRes(types.String)
 	},
+	"gcp.project.bigqueryService.reservation.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.bigqueryService.reservation.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetCreated()).ToDataRes(types.Time)
 	},
@@ -6722,6 +6725,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dnsService.responsePolicy.gkeClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetGkeClusters()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dnsService.responsePolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.gkeService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeService).GetProjectId()).ToDataRes(types.String)
@@ -9558,6 +9564,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataprocService.autoscalingPolicy.basicAlgorithm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetBasicAlgorithm()).ToDataRes(types.Dict)
 	},
+	"gcp.project.dataprocService.autoscalingPolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.cloudRunService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -10169,6 +10178,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.monitoringService.dashboard.layout": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetLayout()).ToDataRes(types.Dict)
+	},
+	"gcp.project.monitoringService.dashboard.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.monitoringService.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceService).GetProjectId()).ToDataRes(types.String)
@@ -13683,6 +13695,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.interconnectAttachment.dataplaneVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInterconnectAttachment).GetDataplaneVersion()).ToDataRes(types.Int)
 	},
+	"gcp.project.computeService.interconnectAttachment.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInterconnectAttachment).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.computeService.interconnectAttachment.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInterconnectAttachment).GetCreated()).ToDataRes(types.Time)
 	},
@@ -16439,6 +16454,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.eventarcService.channel.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEventarcServiceChannel).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.eventarcService.channel.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectEventarcServiceChannel).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.eventarcService.channel.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEventarcServiceChannel).GetCreated()).ToDataRes(types.Time)
@@ -24411,6 +24429,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigqueryServiceReservation).OriginalPrimaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.bigqueryService.reservation.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.bigqueryService.reservation.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceReservation).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -24733,6 +24755,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dnsService.responsePolicy.gkeClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceResponsePolicy).GkeClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28883,6 +28909,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).BasicAlgorithm, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.autoscalingPolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudRunService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunService).__id, ok = v.Value.(string)
 		return
@@ -29769,6 +29799,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.monitoringService.dashboard.layout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceDashboard).Layout, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.monitoringService.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34875,6 +34909,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInterconnectAttachment).DataplaneVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.interconnectAttachment.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInterconnectAttachment).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.interconnectAttachment.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInterconnectAttachment).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -38885,6 +38923,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.eventarcService.channel.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectEventarcServiceChannel).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.eventarcService.channel.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectEventarcServiceChannel).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.eventarcService.channel.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56025,6 +56067,7 @@ type mqlGcpProjectBigqueryServiceReservation struct {
 	PrimaryLocation         plugin.TValue[string]
 	SecondaryLocation       plugin.TValue[string]
 	OriginalPrimaryLocation plugin.TValue[string]
+	Labels                  plugin.TValue[map[string]any]
 	Created                 plugin.TValue[*time.Time]
 	Updated                 plugin.TValue[*time.Time]
 }
@@ -56108,6 +56151,10 @@ func (c *mqlGcpProjectBigqueryServiceReservation) GetSecondaryLocation() *plugin
 
 func (c *mqlGcpProjectBigqueryServiceReservation) GetOriginalPrimaryLocation() *plugin.TValue[string] {
 	return &c.OriginalPrimaryLocation
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 func (c *mqlGcpProjectBigqueryServiceReservation) GetCreated() *plugin.TValue[*time.Time] {
@@ -56826,6 +56873,7 @@ type mqlGcpProjectDnsServiceResponsePolicy struct {
 	NetworkUrls        plugin.TValue[[]any]
 	Networks           plugin.TValue[[]any]
 	GkeClusters        plugin.TValue[[]any]
+	Labels             plugin.TValue[map[string]any]
 }
 
 // createGcpProjectDnsServiceResponsePolicy creates a new instance of this resource
@@ -56903,6 +56951,10 @@ func (c *mqlGcpProjectDnsServiceResponsePolicy) GetNetworks() *plugin.TValue[[]a
 
 func (c *mqlGcpProjectDnsServiceResponsePolicy) GetGkeClusters() *plugin.TValue[[]any] {
 	return &c.GkeClusters
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 // mqlGcpProjectGkeService for the gcp.project.gkeService resource
@@ -66736,6 +66788,7 @@ type mqlGcpProjectDataprocServiceAutoscalingPolicy struct {
 	WorkerConfig          plugin.TValue[any]
 	SecondaryWorkerConfig plugin.TValue[any]
 	BasicAlgorithm        plugin.TValue[any]
+	Labels                plugin.TValue[map[string]any]
 }
 
 // createGcpProjectDataprocServiceAutoscalingPolicy creates a new instance of this resource
@@ -66793,6 +66846,10 @@ func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetSecondaryWorkerConfig
 
 func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetBasicAlgorithm() *plugin.TValue[any] {
 	return &c.BasicAlgorithm
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 // mqlGcpProjectCloudRunService for the gcp.project.cloudRunService resource
@@ -68755,6 +68812,7 @@ type mqlGcpProjectMonitoringServiceDashboard struct {
 	DisplayName plugin.TValue[string]
 	Etag        plugin.TValue[string]
 	Layout      plugin.TValue[any]
+	Labels      plugin.TValue[map[string]any]
 }
 
 // createGcpProjectMonitoringServiceDashboard creates a new instance of this resource
@@ -68812,6 +68870,10 @@ func (c *mqlGcpProjectMonitoringServiceDashboard) GetEtag() *plugin.TValue[strin
 
 func (c *mqlGcpProjectMonitoringServiceDashboard) GetLayout() *plugin.TValue[any] {
 	return &c.Layout
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 // mqlGcpProjectMonitoringServiceService for the gcp.project.monitoringService.service resource
@@ -80650,6 +80712,7 @@ type mqlGcpProjectComputeServiceInterconnectAttachment struct {
 	Region                    plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink                  plugin.TValue[string]
 	DataplaneVersion          plugin.TValue[int64]
+	Labels                    plugin.TValue[map[string]any]
 	Created                   plugin.TValue[*time.Time]
 }
 
@@ -80824,6 +80887,10 @@ func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetSelfLink() *plugi
 
 func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetDataplaneVersion() *plugin.TValue[int64] {
 	return &c.DataplaneVersion
+}
+
+func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetCreated() *plugin.TValue[*time.Time] {
@@ -90621,6 +90688,7 @@ type mqlGcpProjectEventarcServiceChannel struct {
 	State         plugin.TValue[string]
 	CryptoKeyName plugin.TValue[string]
 	KmsKey        plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	Labels        plugin.TValue[map[string]any]
 	Created       plugin.TValue[*time.Time]
 	Updated       plugin.TValue[*time.Time]
 }
@@ -90700,6 +90768,10 @@ func (c *mqlGcpProjectEventarcServiceChannel) GetKmsKey() *plugin.TValue[*mqlGcp
 
 		return c.kmsKey()
 	})
+}
+
+func (c *mqlGcpProjectEventarcServiceChannel) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 func (c *mqlGcpProjectEventarcServiceChannel) GetCreated() *plugin.TValue[*time.Time] {

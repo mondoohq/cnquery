@@ -1386,6 +1386,7 @@ func (g *mqlGcpProjectDataprocService) autoscalingPolicies() ([]any, error) {
 						"workerConfig":          llx.DictData(workerConfig),
 						"secondaryWorkerConfig": llx.DictData(secondaryWorkerConfig),
 						"basicAlgorithm":        llx.DictData(basicAlgorithm),
+						"labels":                llx.MapData(convert.MapToInterfaceMap(policy.Labels), types.String),
 					})
 					if err != nil {
 						log.Error().Err(err).Send()

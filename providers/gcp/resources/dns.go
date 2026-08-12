@@ -494,6 +494,7 @@ func (g *mqlGcpProjectDnsService) responsePolicies() ([]any, error) {
 				"description":        llx.StringData(responsePolicy.Description),
 				"networkUrls":        llx.ArrayData(networkUrls, types.String),
 				"gkeClusters":        llx.ArrayData(gkeClusters, types.String),
+				"labels":             llx.MapData(convert.MapToInterfaceMap(responsePolicy.Labels), types.String),
 			})
 			if err != nil {
 				return err

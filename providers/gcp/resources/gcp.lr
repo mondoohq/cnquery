@@ -4211,6 +4211,8 @@ private gcp.project.bigqueryService.reservation @defaults("name slotCapacity edi
   secondaryLocation string
   // Location where the reservation was originally created
   originalPrimaryLocation string
+  // User-provided labels for the reservation
+  labels map[string]string
   // Creation timestamp
   created time
   // Last update timestamp
@@ -4475,6 +4477,8 @@ private gcp.project.dnsService.responsePolicy @defaults("responsePolicyName") {
   networks() []gcp.project.computeService.network
   // Resource names of the GKE clusters this response policy is applied to
   gkeClusters []string
+  // User-provided labels for the response policy
+  labels map[string]string
 }
 
 // Google Kubernetes Engine (GKE)
@@ -7776,6 +7780,8 @@ private gcp.project.dataprocService.autoscalingPolicy @defaults("name") {
   // clusters add and remove workers. `sparkStandaloneConfig` carries the
   // equivalent settings for Spark Standalone clusters.
   basicAlgorithm dict
+  // User-provided labels for the policy
+  labels map[string]string
 }
 
 // Google Cloud (GCP) Cloud Run
@@ -8451,6 +8457,8 @@ private gcp.project.monitoringService.dashboard @defaults("name displayName") {
   // `rowLayout`, or `columnLayout`) describing how charts and widgets are
   // arranged.
   layout dict
+  // User-provided labels for the dashboard
+  labels map[string]string
 }
 
 // Google Cloud (GCP) Cloud Monitoring service (for SLO tracking)
@@ -12435,6 +12443,8 @@ private gcp.project.computeService.interconnectAttachment @defaults("name type s
   selfLink string
   // Dataplane version
   dataplaneVersion int
+  // User-provided labels for the attachment
+  labels map[string]string
   // Creation timestamp
   created time
 }
@@ -15390,6 +15400,8 @@ private gcp.project.eventarcService.channel @defaults("name state") {
   cryptoKeyName @maturity("deprecated") string
   // Customer-managed Cloud KMS key used to encrypt events flowing through the channel at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // User-provided labels for the channel
+  labels map[string]string
   // Creation time
   created time
   // Last update time

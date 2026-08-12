@@ -851,6 +851,7 @@ func (g *mqlGcpProjectComputeService) interconnectAttachments() ([]any, error) {
 					"regionUrl":                 llx.StringData(ia.Region),
 					"selfLink":                  llx.StringData(ia.SelfLink),
 					"dataplaneVersion":          llx.IntData(ia.DataplaneVersion),
+					"labels":                    llx.MapData(convert.MapToInterfaceMap(ia.Labels), types.String),
 					"created":                   llx.TimeDataPtr(parseTime(ia.CreationTimestamp)),
 				})
 				if err != nil {
