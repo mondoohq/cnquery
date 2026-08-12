@@ -20,6 +20,30 @@ type mqlHetznerInternal struct {
 	serversOnce sync.Once
 	serversList []*hcloud.Server
 	serversErr  error
+
+	// The remaining caches serve DNS record resolution, which asks whether an
+	// address record points at anything the project holds. Answering that for
+	// one record needs every public address in the project, so each list is
+	// taken once per scan and shared across all records. See
+	// hetzner_dnsrecords.go.
+	primaryIPsOnce sync.Once
+	primaryIPsList []*hcloud.PrimaryIP
+	primaryIPsErr  error
+
+	floatingIPsOnce sync.Once
+	floatingIPsList []*hcloud.FloatingIP
+	floatingIPsErr  error
+
+	loadBalancersOnce sync.Once
+	loadBalancersList []*hcloud.LoadBalancer
+	loadBalancersErr  error
+
+	// zoneRecords backs the reverse edge, server.dnsRecords. It costs a zone
+	// list plus one record-set list per zone, so it stays separate from the
+	// address lists above and is only paid when that edge is queried.
+	zoneRecordsOnce sync.Once
+	zoneRecordsList []zoneRecord
+	zoneRecordsErr  error
 }
 
 type mqlHetznerServerInternal struct {
@@ -35,6 +59,7 @@ type mqlHetznerServerInternal struct {
 	cachePrivateNet     []hcloud.ServerPrivateNet
 	cacheFirewalls      []*hcloud.ServerFirewallStatus
 	cacheLoadBalancers  []*hcloud.LoadBalancer
+	cachePublicNet      hcloud.ServerPublicNet
 }
 
 func (r *mqlHetznerServer) id() (string, error) {
@@ -148,6 +173,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 	m.cacheImage = s.Image
 	m.cacheVolumes = s.Volumes
 	m.cacheFloatingIPs = s.PublicNet.FloatingIPs
+	m.cachePublicNet = s.PublicNet
 	m.cachePrimaryIPv4ID = s.PublicNet.IPv4.ID
 	m.cachePrimaryIPv6ID = s.PublicNet.IPv6.ID
 	m.cachePlacementGroup = s.PlacementGroup

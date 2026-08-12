@@ -112,6 +112,13 @@ private hetzner.server @defaults("id name status") {
   publicIpv6Blocked bool
   // Reverse DNS (PTR) records for addresses in the public IPv6 network (each dict: ip, dnsPtr)
   publicIpv6DnsPtr []dict
+  // DNS records in the project's zones that resolve to this server
+  //
+  // The A and AAAA records whose value is the server's public IPv4 address or
+  // falls inside its public IPv6 network. Pairs with `exposure` to name the
+  // hostnames that reach an internet-reachable server. Records published in
+  // zones outside the project are not visible here.
+  dnsRecords() []hetzner.zone.rrset.record
   // Firewalls applied to the server
   firewalls() []hetzner.firewall
   // Firewalls applied to the server, with per-binding application status (applied, pending)
@@ -1180,9 +1187,45 @@ private hetzner.zone.rrset @defaults("name type") {
   // TTL in seconds (0 when the record falls back to the zone default)
   ttl int
   // Records in the set [{value, comment}]
-  records []dict
+  //
+  // Deprecated in favor of entries.
+  records @maturity("deprecated") []dict
+  // Values in the record set and the project resources they point at
+  entries() []hetzner.zone.rrset.record
   // Resource protection (change)
   protection dict
   // User-defined labels for organizing the resource
   labels map[string]string
+}
+
+// DNS record within a record set
+//
+// Single value inside a record set together with the project resources it
+// points at. For address records the value is matched against every public
+// IPv4 and IPv6 address the project holds, which surfaces names that still
+// resolve to an address the project no longer owns. Record types that carry
+// no address report null for the target fields.
+private hetzner.zone.rrset.record @defaults("value targetsProjectResource") {
+  // Record value, an IPv4 or IPv6 address for A and AAAA records
+  value string
+  // Free-form comment stored alongside the record
+  comment string
+  // Record set the value belongs to
+  rrset() hetzner.zone.rrset
+  // Whether the value matches a public address the project holds
+  //
+  // Null on record types that carry no address. False on an A or AAAA record
+  // means no server, primary IP, floating IP, or load balancer in the project
+  // holds the address. A record can legitimately point outside the project, at
+  // a dedicated Robot server or an external host, so false marks a candidate
+  // for review rather than a finding.
+  targetsProjectResource() bool
+  // Servers holding the address
+  servers() []hetzner.server
+  // Primary IPs holding the address
+  primaryIps() []hetzner.primaryIp
+  // Floating IPs holding the address
+  floatingIps() []hetzner.floatingIp
+  // Load balancers holding the address
+  loadBalancers() []hetzner.loadBalancer
 }
