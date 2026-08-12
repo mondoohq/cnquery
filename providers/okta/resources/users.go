@@ -299,6 +299,8 @@ func (o *mqlOktaUser) identityProviders() ([]any, error) {
 	}
 
 	ctx := context.Background()
+	// No .Limit here: the SDK request type for this endpoint offers only
+	// Execute, so the API sets the page size.
 	slice, resp, err := client.UserAPI.ListUserIdentityProviders(ctx, o.Id.Data).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
@@ -331,6 +333,7 @@ func (o *mqlOktaUser) blocks() ([]any, error) {
 	}
 
 	ctx := context.Background()
+	// No .Limit here, for the same reason as identityProviders above.
 	slice, resp, err := client.UserAPI.ListUserBlocks(ctx, o.Id.Data).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {

@@ -21,17 +21,23 @@ import (
 // so re-marshaling an SDK AppLink and decoding it here recovers the full
 // object. Decoding straight off the SDK struct would leave every field empty
 // without erroring.
+//
+// The tags carry no omitempty: this struct is only ever decoded into, where the
+// option has no effect, and every zero value here is a real reading. A link at
+// the top of the dashboard has sortOrder 0, and false is the ordinary answer
+// for both booleans, so an omitempty that ever reached a marshal would drop
+// exactly the values worth reporting.
 type oktaAppLinkRaw struct {
-	Id               string `json:"id,omitempty"`
-	Label            string `json:"label,omitempty"`
-	LinkUrl          string `json:"linkUrl,omitempty"`
-	LogoUrl          string `json:"logoUrl,omitempty"`
-	AppName          string `json:"appName,omitempty"`
-	AppInstanceId    string `json:"appInstanceId,omitempty"`
-	AppAssignmentId  string `json:"appAssignmentId,omitempty"`
-	CredentialsSetup bool   `json:"credentialsSetup,omitempty"`
-	Hidden           bool   `json:"hidden,omitempty"`
-	SortOrder        int64  `json:"sortOrder,omitempty"`
+	Id               string `json:"id"`
+	Label            string `json:"label"`
+	LinkUrl          string `json:"linkUrl"`
+	LogoUrl          string `json:"logoUrl"`
+	AppName          string `json:"appName"`
+	AppInstanceId    string `json:"appInstanceId"`
+	AppAssignmentId  string `json:"appAssignmentId"`
+	CredentialsSetup bool   `json:"credentialsSetup"`
+	Hidden           bool   `json:"hidden"`
+	SortOrder        int64  `json:"sortOrder"`
 }
 
 // mqlOktaUserAppLinkInternal caches the application id behind the application
@@ -74,6 +80,9 @@ func (o *mqlOktaUser) appLinks() ([]any, error) {
 	userID := o.Id.Data
 
 	ctx := context.Background()
+	// No .Limit here: the SDK request type for this endpoint offers only
+	// Execute, so the API sets the page size. The paging loop below still
+	// applies, since the response can carry a next link either way.
 	slice, resp, err := client.UserAPI.ListAppLinks(ctx, userID).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
@@ -184,6 +193,7 @@ func (o *mqlOktaUser) clients() ([]any, error) {
 	userID := o.Id.Data
 
 	ctx := context.Background()
+	// No .Limit here, for the same reason as appLinks above.
 	slice, resp, err := client.UserAPI.ListUserClients(ctx, userID).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
