@@ -199,15 +199,17 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 	if err != nil {
 		return nil, err
 	}
-	cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
-	cfg.Options["repository"] = repo.Name.Data
-	assetList = append(assetList, &inventory.Asset{
-		PlatformIds: []string{connection.NewGitHubRepoIdentifier(owner, repo.Name.Data)},
-		Name:        owner + "/" + repo.Name.Data,
-		Platform:    connection.NewGitHubRepoPlatform(owner, repo.Name.Data),
-		Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
-		Connections: []*inventory.Config{cfg},
-	})
+	if discoverRepoAsset(targets) {
+		cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+		cfg.Options["repository"] = repo.Name.Data
+		assetList = append(assetList, &inventory.Asset{
+			PlatformIds: []string{connection.NewGitHubRepoIdentifier(owner, repo.Name.Data)},
+			Name:        owner + "/" + repo.Name.Data,
+			Platform:    connection.NewGitHubRepoPlatform(owner, repo.Name.Data),
+			Labels:      convert.DictToTypedMap[string](repo.CustomProperties.Data),
+			Connections: []*inventory.Config{cfg},
+		})
+	}
 
 	iacAssets, err := discoverRepoIac(conn, repo, targets)
 	if err != nil {
@@ -236,15 +238,17 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 	if err != nil {
 		return nil, err
 	}
-	cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
-	cfg.Options["user"] = user.Login.Data
-	assetList = append(assetList, &inventory.Asset{
-		PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
-		Name:        user.Name.Data,
-		Platform:    connection.NewGithubUserPlatform(user.Login.Data),
-		Labels:      make(map[string]string),
-		Connections: []*inventory.Config{cfg},
-	})
+	if discoverUserAsset(targets) {
+		cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+		cfg.Options["user"] = user.Login.Data
+		assetList = append(assetList, &inventory.Asset{
+			PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
+			Name:        user.Name.Data,
+			Platform:    connection.NewGithubUserPlatform(user.Login.Data),
+			Labels:      make(map[string]string),
+			Connections: []*inventory.Config{cfg},
+		})
+	}
 
 	if discoverUserRepos(conf, targets) {
 		repos, err := userScopeRepos(runtime, conn, user)
@@ -338,6 +342,20 @@ func userScopeRepos(runtime *plugin.Runtime, conn *connection.GithubConnection, 
 // explicit repository is configured: discover() also reaches the user path
 // through the owner fallback of single-repo scans, which must not fan out to
 // every repository the owner has.
+// discoverRepoAsset reports whether the repository itself should be emitted as
+// an asset, mirroring the target check the organization asset already makes.
+func discoverRepoAsset(targets []string) bool {
+	return stringx.ContainsAnyOf(targets,
+		connection.DiscoveryRepos, connection.DiscoveryAll, connection.DiscoveryAuto)
+}
+
+// discoverUserAsset reports whether the account being scanned should be emitted
+// as an asset.
+func discoverUserAsset(targets []string) bool {
+	return stringx.ContainsAnyOf(targets,
+		connection.DiscoveryUsers, connection.DiscoveryAll, connection.DiscoveryAuto)
+}
+
 func discoverUserRepos(conf *inventory.Config, targets []string) bool {
 	return conf.Options["repository"] == "" &&
 		stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryAll, connection.DiscoveryAuto)
