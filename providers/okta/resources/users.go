@@ -339,9 +339,14 @@ func (o *mqlOktaUser) blocks() ([]any, error) {
 		return nil, err
 	}
 
-	list := make([]any, 0, len(slice))
-	for i := range slice {
-		block, err := convert.JsonToDict(&slice[i])
+	all, err := oktaCollectPages(slice, resp)
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]any, 0, len(all))
+	for i := range all {
+		block, err := convert.JsonToDict(&all[i])
 		if err != nil {
 			return nil, err
 		}
