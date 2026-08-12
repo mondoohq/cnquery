@@ -115,3 +115,71 @@ func ParsePrinterDrivers(r io.Reader) ([]PrinterDriver, error) {
 	}
 	return out, nil
 }
+
+// purlToken reduces a driver or vendor string to a PURL token: lowercase, with
+// anything outside [a-z0-9.+] folded to a single "-".
+//
+// The same normalisation both sides of a match must agree on, so it is written
+// once here rather than at each call site.
+func purlToken(s string) string {
+	var b strings.Builder
+	dash := false
+	for _, r := range strings.ToLower(strings.TrimSpace(s)) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9', r == '.', r == '+':
+			b.WriteRune(r)
+			dash = false
+		default:
+			if b.Len() > 0 && !dash {
+				b.WriteByte('-')
+				dash = true
+			}
+		}
+	}
+	// Trailing punctuation is never part of a name. A "." survives the loop
+	// because it is a legal token character mid-string ("Ver.3.0"), but
+	// "Ricoh Company, Ltd." would otherwise end "-ltd." and miss the suffix
+	// list below.
+	return strings.Trim(b.String(), "-.")
+}
+
+// vendorSuffixes are the corporate suffixes a driver's Manufacturer carries
+// that its advisories do not: "Ricoh Company, Ltd." and "RICOH" have to reach
+// the same token.
+var vendorSuffixes = []string{
+	"-company-ltd", "-company-limited", "-co-ltd", "-corporation", "-corp",
+	"-industries-ltd", "-industries", "-inc", "-ltd", "-gmbh", "-kk",
+}
+
+// VendorToken reduces a driver's Manufacturer to the vendor namespace.
+func VendorToken(manufacturer string) string {
+	token := purlToken(manufacturer)
+	for _, suffix := range vendorSuffixes {
+		if strings.HasSuffix(token, suffix) {
+			token = strings.TrimSuffix(token, suffix)
+			break
+		}
+	}
+	return strings.Trim(token, "-")
+}
+
+// Purl is the package URL identifying this driver, empty when it cannot be
+// identified.
+//
+// Returns nothing rather than a partial identity when the manufacturer or name
+// is missing. A vendor-less driver PURL would match whatever advisory happened
+// to carry the same driver name, and driver names are emphatically not unique
+// across vendors, so guessing here attaches one vendor's vulnerability to
+// another vendor's driver.
+func (d PrinterDriver) Purl() string {
+	vendor := VendorToken(d.Manufacturer)
+	name := purlToken(d.Name)
+	if vendor == "" || name == "" {
+		return ""
+	}
+	p := "pkg:windows-driver/" + vendor + "/" + name
+	if v := d.DottedVersion(); v != "" {
+		p += "@" + v
+	}
+	return p
+}

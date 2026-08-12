@@ -10686,6 +10686,14 @@ windows.printerDrivers {
 windows.printerDriver @defaults("name version manufacturer") {
   // Driver name as the spooler reports it
   name string
+  // Package URL identifying this driver
+  //
+  // A pkg:windows-driver purl whose namespace is the vendor, for example
+  // pkg:windows-driver/ricoh/pcl-6-driver@4.40.0.0. Empty when the spooler
+  // reports no manufacturer or no name, because a driver name alone does not
+  // identify a driver: "PCL 6 Driver" and "PostScript3 Driver" name page
+  // description languages that every printer vendor ships a driver for.
+  purl string
   // Vendor driver version in dotted form, for example "3.0.0.0"
   //
   // Windows stores this packed into a single 64-bit integer holding four

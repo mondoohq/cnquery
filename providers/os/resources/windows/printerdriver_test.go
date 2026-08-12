@@ -90,3 +90,62 @@ func TestParsePrinterDriversAcceptsAStringVersion(t *testing.T) {
 	assert.Equal(t, uint64(844433520133734400), drivers[0].DriverVersion)
 	assert.Equal(t, int64(3), drivers[0].MajorVersion)
 }
+
+// TestPurlKeepsVendorsApart is the reason the vendor is the namespace.
+//
+// Driver names are NOT unique across vendors: "PCL 6 Driver" and
+// "PostScript3 Driver" name page description languages that every printer
+// vendor ships a driver for. Keying on the name alone would match one vendor's
+// advisory against another vendor's driver.
+func TestPurlKeepsVendorsApart(t *testing.T) {
+	ricoh := PrinterDriver{Name: "PCL 6 Driver", Manufacturer: "RICOH", DriverVersion: 3 << 48}
+	brother := PrinterDriver{Name: "PCL 6 Driver", Manufacturer: "Brother", DriverVersion: 3 << 48}
+
+	assert.Equal(t, "pkg:windows-driver/ricoh/pcl-6-driver@3.0.0.0", ricoh.Purl())
+	assert.Equal(t, "pkg:windows-driver/brother/pcl-6-driver@3.0.0.0", brother.Purl())
+	assert.NotEqual(t, ricoh.Purl(), brother.Purl(), "same driver name, different vendors")
+}
+
+// TestVendorTokenNormalisesCorporateSuffixes: the spooler reports the
+// manufacturer as the INF spells it, which carries corporate suffixes the
+// vendor's advisories do not.
+func TestVendorTokenNormalisesCorporateSuffixes(t *testing.T) {
+	for _, in := range []string{"RICOH", "Ricoh", "Ricoh Company, Ltd.", "RICOH COMPANY, LTD."} {
+		assert.Equal(t, "ricoh", VendorToken(in), "input %q", in)
+	}
+	for _, in := range []string{"Brother", "Brother Industries, Ltd", "brother industries"} {
+		assert.Equal(t, "brother", VendorToken(in), "input %q", in)
+	}
+	assert.Equal(t, "konica-minolta", VendorToken("Konica Minolta, Inc."))
+}
+
+// TestPurlRefusesAPartialIdentity: a vendor-less driver PURL would match
+// whatever advisory carried the same driver name, so an unidentifiable driver
+// yields nothing at all.
+func TestPurlRefusesAPartialIdentity(t *testing.T) {
+	assert.Empty(t, PrinterDriver{Name: "PCL 6 Driver"}.Purl(), "no manufacturer")
+	assert.Empty(t, PrinterDriver{Manufacturer: "RICOH"}.Purl(), "no name")
+	assert.Empty(t, PrinterDriver{Name: "  ", Manufacturer: "  "}.Purl())
+
+	// A driver with no version is still identifiable; the PURL simply carries
+	// no version, and an unversioned package cannot match a bounded advisory.
+	assert.Equal(t, "pkg:windows-driver/ricoh/lan-fax-driver",
+		PrinterDriver{Name: "LAN Fax Driver", Manufacturer: "RICOH"}.Purl())
+}
+
+// TestPurlOnRealVendorDriverNames uses the names Ricoh publishes in its own
+// advisories, which are what the catalog rows have to line up with.
+func TestPurlOnRealVendorDriverNames(t *testing.T) {
+	for name, want := range map[string]string{
+		"PostScript3 Driver":                 "pkg:windows-driver/ricoh/postscript3-driver",
+		"PCL 6 Driver":                       "pkg:windows-driver/ricoh/pcl-6-driver",
+		"PS Driver for Universal Print":      "pkg:windows-driver/ricoh/ps-driver-for-universal-print",
+		"PCL6 Driver for Universal Print":    "pkg:windows-driver/ricoh/pcl6-driver-for-universal-print",
+		"PCL6 V4 Driver for Universal Print": "pkg:windows-driver/ricoh/pcl6-v4-driver-for-universal-print",
+		"LAN Fax Driver":                     "pkg:windows-driver/ricoh/lan-fax-driver",
+		"Generic PCL5 Driver":                "pkg:windows-driver/ricoh/generic-pcl5-driver",
+	} {
+		got := PrinterDriver{Name: name, Manufacturer: "RICOH"}.Purl()
+		assert.Equal(t, want, got, "name %q", name)
+	}
+}
