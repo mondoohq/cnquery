@@ -970,7 +970,7 @@ func (a *mqlAwsCloudwatchMetricsalarm) tags() (map[string]any, error) {
 		})
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return nil, nil
+				return nil, errTagsUnreadable
 			}
 			return nil, err
 		}
