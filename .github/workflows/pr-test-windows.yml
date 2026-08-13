@@ -6,6 +6,10 @@ on:
       - "providers/os/**"
       - ".github/workflows/pr-test-windows.yml"
 
+concurrency:
+  group: pr-test-windows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
 
