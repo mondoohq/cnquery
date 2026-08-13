@@ -339,7 +339,7 @@ func manyCurrentProviders() Status {
 	s.Client.Providers = nil
 	for _, name := range []string{
 		"ansible", "arista", "atlassian", "aws", "azure", "cloudflare",
-		"equinix", "gcp", "github", "gitlab", "google-workspace", "k8s",
+		"elasticsearch", "gcp", "github", "gitlab", "google-workspace", "k8s",
 		"ms365", "network", "oci", "okta", "opcua", "os", "slack",
 		"terraform", "vcd", "vsphere",
 	} {
