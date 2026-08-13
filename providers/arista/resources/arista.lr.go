@@ -763,9 +763,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.spt.mstInterface.detail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSptMstInterface).GetDetail()).ToDataRes(types.Dict)
 	},
-	"arista.eos.spt.mstInterface.boundaryType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosSptMstInterface).GetBoundaryType()).ToDataRes(types.String)
-	},
 	"arista.eos.spt.mstInterface.counters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSptMstInterface).GetCounters()).ToDataRes(types.Dict)
 	},
@@ -2291,10 +2288,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.spt.mstInterface.detail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSptMstInterface).Detail, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
-	"arista.eos.spt.mstInterface.boundaryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosSptMstInterface).BoundaryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.spt.mstInterface.counters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5442,7 +5435,6 @@ type mqlAristaEosSptMstInterface struct {
 	PortNumber           plugin.TValue[int64]
 	IsEdgePort           plugin.TValue[bool]
 	Detail               plugin.TValue[any]
-	BoundaryType         plugin.TValue[string]
 	Counters             plugin.TValue[any]
 	Features             plugin.TValue[any]
 }
@@ -5530,10 +5522,6 @@ func (c *mqlAristaEosSptMstInterface) GetIsEdgePort() *plugin.TValue[bool] {
 
 func (c *mqlAristaEosSptMstInterface) GetDetail() *plugin.TValue[any] {
 	return &c.Detail
-}
-
-func (c *mqlAristaEosSptMstInterface) GetBoundaryType() *plugin.TValue[string] {
-	return &c.BoundaryType
 }
 
 func (c *mqlAristaEosSptMstInterface) GetCounters() *plugin.TValue[any] {
