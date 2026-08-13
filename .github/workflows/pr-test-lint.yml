@@ -266,9 +266,9 @@ jobs:
     # github.event.commits[0].author.username (the git commit author) because git commit
     # metadata is user-controlled and can be spoofed by anyone via git config.
     # github.actor is set by GitHub's authentication layer and is tamper-proof.
-    # This workflow now triggers on pull_request, where github.ref is the merge
-    # ref (refs/pull/N/merge). Match the PR's source branch via github.head_ref.
-    if: ${{ (startsWith(github.head_ref, 'version/providers_update_') || startsWith(github.head_ref, 'version/deps_update_')) && github.actor == 'mondoo-tools' }}
+    # Triggers on both pull_request (github.head_ref = the PR's source branch) and
+    # push to main (github.head_ref is empty there, so fall back to github.ref_name).
+    if: ${{ (startsWith(github.head_ref || github.ref_name, 'version/providers_update_') || startsWith(github.head_ref || github.ref_name, 'version/deps_update_')) && github.actor == 'mondoo-tools' }}
     permissions:
       contents: write
       pull-requests: write
