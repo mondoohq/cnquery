@@ -8569,6 +8569,11 @@ aws.secretsmanager {
 aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
+  // Region the secret lives in
+  //
+  // Distinct from `primaryRegion`, which AWS only returns for secrets that are
+  // replicated to other Regions and is empty for every other secret.
+  region string
   // Creation date of the secret
   createdAt time
   // Description of the secret
@@ -9509,6 +9514,8 @@ aws.emr {
 private aws.emr.cluster @defaults("arn") {
   // ARN for the cluster
   arn string
+  // Region the cluster lives in
+  region string
   // Name of the cluster
   name string
   // An approximation of the cost of the cluster, represented in m1.small/hours

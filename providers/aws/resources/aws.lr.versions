@@ -5102,6 +5102,7 @@ aws.emr.cluster.name 11.15.2
 aws.emr.cluster.normalizedInstanceHours 11.15.2
 aws.emr.cluster.outpostArn 11.15.2
 aws.emr.cluster.placementGroups 13.21.4
+aws.emr.cluster.region 13.53.1
 aws.emr.cluster.releaseLabel 13.21.4
 aws.emr.cluster.repoUpgradeOnBoot 13.21.4
 aws.emr.cluster.scaleDownBehavior 13.21.4
@@ -10037,6 +10038,7 @@ aws.secretsmanager.secret.nextRotationDate 11.15.2
 aws.secretsmanager.secret.owningService 11.15.2
 aws.secretsmanager.secret.policyStatements 13.32.2
 aws.secretsmanager.secret.primaryRegion 11.15.2
+aws.secretsmanager.secret.region 13.53.1
 aws.secretsmanager.secret.replicaRegion 13.6.3
 aws.secretsmanager.secret.replicaRegion.id 13.6.3
 aws.secretsmanager.secret.replicaRegion.kmsKey 13.12.1
