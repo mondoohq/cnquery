@@ -432,10 +432,6 @@ gitlab.group @defaults("name visibility webURL") {
   membershipLock bool
   // Whether forking projects outside this group is forbidden
   preventForkingOutsideGroup bool
-  // Whether group email notifications are disabled
-  //
-  // Deprecated in favor of emailsEnabled.
-  emailsDisabled @maturity("deprecated") bool
   // Whether group email notifications are enabled
   emailsEnabled bool
   // Whether group mentions within issues and merge requests are disabled
@@ -684,10 +680,6 @@ gitlab.project @defaults("fullName visibility webURL") {
   mirror bool
   // URL of the project
   webURL string
-  // Whether project email notifications are disabled
-  //
-  // Deprecated in favor of emailsEnabled.
-  emailsDisabled @maturity("deprecated") bool
   // Whether project email notifications are enabled
   emailsEnabled bool
   // Whether merging merge requests is allowed when a pipeline is skipped
@@ -696,34 +688,14 @@ gitlab.project @defaults("fullName visibility webURL") {
   onlyAllowMergeIfPipelineSucceeds bool
   // Whether merging merge requests is allowed only if all discussions are resolved
   onlyAllowMergeIfAllDiscussionsAreResolved bool
-  // Whether the issues feature is enabled
-  //
-  // Deprecated in favor of issuesAccessLevel.
-  issuesEnabled @maturity("deprecated") bool
   // Visibility of the issues feature (disabled, private, enabled)
   issuesAccessLevel string
-  // Whether the merge request feature is enabled
-  //
-  // Deprecated in favor of mergeRequestsAccessLevel.
-  mergeRequestsEnabled @maturity("deprecated") bool
   // Visibility of the merge requests feature (disabled, private, enabled)
   mergeRequestsAccessLevel string
-  // Whether the wiki feature is enabled
-  //
-  // Deprecated in favor of wikiAccessLevel.
-  wikiEnabled @maturity("deprecated") bool
   // Visibility of the wiki feature (disabled, private, enabled)
   wikiAccessLevel string
-  // Whether the snippets feature is enabled
-  //
-  // Deprecated in favor of snippetsAccessLevel.
-  snippetsEnabled @maturity("deprecated") bool
   // Visibility of the snippets feature (disabled, private, enabled)
   snippetsAccessLevel string
-  // Whether the container registry feature is enabled
-  //
-  // Deprecated in favor of containerRegistryAccessLevel.
-  containerRegistryEnabled @maturity("deprecated") bool
   // Visibility of the container registry feature (disabled, private, enabled)
   containerRegistryAccessLevel string
   // Whether the Service Desk feature is enabled
@@ -788,10 +760,6 @@ gitlab.project @defaults("fullName visibility webURL") {
   projectFiles() []gitlab.project.file
   // List of webhooks for the project
   webhooks() []gitlab.project.webhook
-  // Whether CI jobs are enabled
-  //
-  // Deprecated in favor of buildsAccessLevel.
-  jobsEnabled @maturity("deprecated") bool
   // Visibility of the CI/CD builds feature (disabled, private, enabled)
   buildsAccessLevel string
   // Whether the repo is empty
@@ -1548,11 +1516,6 @@ private gitlab.project.label @defaults("name color") {
   textColor string
   // Label description
   description string
-  // HTML-formatted description
-  //
-  // Deprecated in favor of description. The GitLab client library does not
-  // model the API's description_html field, so this always resolves to null.
-  descriptionHtml @maturity("deprecated") string
   // Count of open issues with this label
   openIssuesCount int
   // Count of closed issues with this label
@@ -1579,11 +1542,6 @@ private gitlab.group.label @defaults("name color") {
   textColor string
   // Label description
   description string
-  // HTML-formatted description
-  //
-  // Deprecated in favor of description. The GitLab client library does not
-  // model the API's description_html field, so this always resolves to null.
-  descriptionHtml @maturity("deprecated") string
   // Count of open issues with this label
   openIssuesCount int
   // Count of closed issues with this label
