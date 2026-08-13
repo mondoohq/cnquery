@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "cassandra",
 	ID:              "go.mondoo.com/mql/v13/providers/cassandra",
-	Version:         "13.0.1",
+	Version:         "13.0.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
