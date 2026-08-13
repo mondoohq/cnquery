@@ -45,6 +45,7 @@ func (r *mqlWindowsPrinterDrivers) list() ([]any, error) {
 		res, err := CreateResource(r.MqlRuntime, "windows.printerDriver", map[string]*llx.RawData{
 			"name":           llx.StringData(d.Name),
 			"purl":           llx.StringData(d.Purl()),
+			"hardwareId":     llx.StringData(d.HardwareID),
 			"version":        llx.StringData(d.DottedVersion()),
 			"modelVersion":   llx.IntData(d.MajorVersion),
 			"manufacturer":   llx.StringData(d.Manufacturer),

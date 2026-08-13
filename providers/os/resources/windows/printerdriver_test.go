@@ -37,15 +37,16 @@ func TestParsePrinterDrivers(t *testing.T) {
 // TestDottedVersionUnpacksTheWindowsEncoding: Windows packs a driver version
 // into one 64-bit integer as four 16-bit fields, most significant first, so the
 // raw value is meaningless on its own. Vendors publish the dotted form.
-func TestDottedVersionUnpacksTheWindowsEncoding(t *testing.T) {
-	// Build the packed value from its four fields rather than writing the
-	// shifts inline: an inline "a<<48 | 0<<32 | c<<16 | 0" reads as documenting
-	// all four positions but the zero terms are no-ops, which staticcheck
-	// rightly flags as a mistake waiting to happen.
-	packed := func(a, b, c, d uint64) uint64 {
-		return a<<48 | b<<32 | c<<16 | d
-	}
+// packed builds Windows' packed 64-bit driver version from its four fields.
+//
+// Written as a helper rather than inline: an inline "a<<48 | 0<<32 | c<<16 | 0"
+// reads as documenting all four positions but the zero terms are no-ops, which
+// staticcheck rightly flags as a mistake waiting to happen.
+func packed(a, b, c, d uint64) uint64 {
+	return a<<48 | b<<32 | c<<16 | d
+}
 
+func TestDottedVersionUnpacksTheWindowsEncoding(t *testing.T) {
 	for _, tc := range []struct {
 		packed uint64
 		want   string
@@ -148,4 +149,101 @@ func TestPurlOnRealVendorDriverNames(t *testing.T) {
 		got := PrinterDriver{Name: name, Manufacturer: "RICOH"}.Purl()
 		assert.Equal(t, want, got, "name %q", name)
 	}
+}
+
+// TestPurlIsKeyedOnTheHardwareID is the property the whole identity rests on:
+// a driver keeps the same PURL across an update.
+//
+// Both rows are real. Two published Ricoh universal-print-driver packages, 2.3
+// years and nine minor versions apart, register a NAME carrying their own
+// release while declaring the SAME hardware ID in their INF:
+//
+//	oemsetup.inf DriverVer 11/07/2016,4.12.0.0 -> "RICOH PCL6 UniversalDriver V4.12"
+//	oemsetup.inf DriverVer 01/28/2019,4.21.0.0 -> "RICOH PCL6 UniversalDriver V4.21"
+//	both: USBPRINT\RICOHPCL6DriveforUP, LPTENUM\RICOHPCL6DriveforUP, RICOHPCL6DriveforUP
+//
+// Keyed on the name these are two different packages; keyed on the hardware ID
+// they are one product at two versions, which is what an upgrade actually is.
+func TestPurlIsKeyedOnTheHardwareID(t *testing.T) {
+	v412 := PrinterDriver{
+		Name:          "RICOH PCL6 UniversalDriver V4.12",
+		Manufacturer:  "RICOH",
+		HardwareID:    "RICOHPCL6DriveforUP",
+		DriverVersion: packed(4, 12, 0, 0),
+	}
+	v421 := PrinterDriver{
+		Name:          "RICOH PCL6 UniversalDriver V4.21",
+		Manufacturer:  "RICOH",
+		HardwareID:    "RICOHPCL6DriveforUP",
+		DriverVersion: packed(4, 21, 0, 0),
+	}
+
+	assert.Equal(t, "pkg:windows-driver/ricoh/ricohpcl6driveforup@4.12.0.0", v412.Purl())
+	assert.Equal(t, "pkg:windows-driver/ricoh/ricohpcl6driveforup@4.21.0.0", v421.Purl())
+
+	// The identity is the same across the upgrade; only the version moves.
+	assert.Equal(t, purlWithoutVersion(v412.Purl()), purlWithoutVersion(v421.Purl()),
+		"an update must not change the driver's identity")
+}
+
+// TestPurlFallsBackToTheNameWithoutAHardwareID. Some drivers report none, and a
+// degraded identity beats no finding — but it must at least survive an update,
+// so the release is stripped from the name.
+func TestPurlFallsBackToTheNameWithoutAHardwareID(t *testing.T) {
+	v412 := PrinterDriver{Name: "RICOH PCL6 UniversalDriver V4.12", Manufacturer: "RICOH", DriverVersion: packed(4, 12, 0, 0)}
+	v421 := PrinterDriver{Name: "RICOH PCL6 UniversalDriver V4.21", Manufacturer: "RICOH", DriverVersion: packed(4, 21, 0, 0)}
+
+	assert.Equal(t, "pkg:windows-driver/ricoh/pcl6-universaldriver@4.12.0.0", v412.Purl())
+	assert.Equal(t, "pkg:windows-driver/ricoh/pcl6-universaldriver@4.21.0.0", v421.Purl())
+	assert.Equal(t, purlWithoutVersion(v412.Purl()), purlWithoutVersion(v421.Purl()))
+}
+
+// TestDriverNameTokenKeepsTheModelVersion is the trap the trailing anchor
+// exists for. Both names contain "V4", in different roles:
+//
+//	RICOH PCL6 UniversalDriver V4.34    V4.34 is the release   -> stripped
+//	RICOH PCL6 V4 UniversalDriver V2.0  V4 is the driver MODEL -> kept
+//
+// Stripping "V4" from the second would merge two different products, which
+// have different advisories and different bounds.
+func TestDriverNameTokenKeepsTheModelVersion(t *testing.T) {
+	assert.Equal(t, "pcl6-universaldriver",
+		driverNameToken("RICOH PCL6 UniversalDriver V4.34", "RICOH"))
+	assert.Equal(t, "pcl6-v4-universaldriver",
+		driverNameToken("RICOH PCL6 V4 UniversalDriver V2.0", "RICOH"))
+	assert.NotEqual(t,
+		driverNameToken("RICOH PCL6 UniversalDriver V4.34", "RICOH"),
+		driverNameToken("RICOH PCL6 V4 UniversalDriver V2.0", "RICOH"))
+
+	// A name with no release suffix is unchanged apart from the vendor prefix.
+	assert.Equal(t, "ps-universaldriver", driverNameToken("RICOH PS UniversalDriver", "RICOH"))
+
+	// The leading word is dropped only when it IS the manufacturer, since the
+	// vendor already forms the PURL namespace and repeating it says nothing.
+	assert.Equal(t, "print-to-pdf", driverNameToken("Microsoft Print To PDF", "Microsoft Corp"))
+	// A different vendor's name in the string is part of the product, not a
+	// prefix: dropping it would merge unrelated drivers under one identity.
+	assert.Equal(t, "hp-laserjet-driver", driverNameToken("HP LaserJet Driver", "RICOH"))
+}
+
+// TestPurlOnCapturedWindowsDrivers uses the four drivers a real Windows 11 host
+// reported, verbatim, including the GUID hardware IDs Microsoft's class drivers
+// declare. A GUID is as stable an identity as a vendor string.
+func TestPurlOnCapturedWindowsDrivers(t *testing.T) {
+	for _, tc := range []struct{ name, hwid, want string }{
+		{"Universal Print Class Driver", "{6d170653-5280-44c2-ba44-2c04bc9d46da}", "pkg:windows-driver/microsoft/6d170653-5280-44c2-ba44-2c04bc9d46da"},
+		{"Microsoft Print To PDF", "{084f01fa-e634-4d77-83ee-074817c03581}", "pkg:windows-driver/microsoft/084f01fa-e634-4d77-83ee-074817c03581"},
+	} {
+		d := PrinterDriver{Name: tc.name, Manufacturer: "Microsoft", HardwareID: tc.hwid}
+		assert.Equal(t, tc.want, d.Purl(), "driver %q", tc.name)
+	}
+}
+
+// purlWithoutVersion drops the @version so two releases can be compared on
+// identity alone.
+func purlWithoutVersion(p string) string {
+	if i := strings.LastIndex(p, "@"); i > 0 {
+		return p[:i]
+	}
+	return p
 }

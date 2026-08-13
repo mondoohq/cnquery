@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -28,7 +29,7 @@ import (
 // object as an object rather than a one-element array, which would otherwise
 // need two parse paths.
 const PrinterDriversScript = `
-@(Get-PrinterDriver -ErrorAction SilentlyContinue | Select-Object -Property Name,PrinterEnvironment,Manufacturer,DriverVersion,MajorVersion,InfPath,ConfigFile,DataFile,DriverPath,PrintProcessor) | ConvertTo-Json -Compress
+@(Get-PrinterDriver -ErrorAction SilentlyContinue | Select-Object -Property Name,PrinterEnvironment,Manufacturer,DriverVersion,MajorVersion,HardwareID,InfPath,ConfigFile,DataFile,DriverPath,PrintProcessor) | ConvertTo-Json -Compress
 `
 
 // PrinterDriver is one driver as the spooler reports it.
@@ -42,7 +43,12 @@ type PrinterDriver struct {
 	DriverVersion uint64 `json:"DriverVersion"`
 	// MajorVersion is the driver MODEL version (2, 3, 4) — the spooler
 	// interface generation, not the vendor's release number.
-	MajorVersion   int64  `json:"MajorVersion"`
+	MajorVersion int64 `json:"MajorVersion"`
+	// HardwareID is the identifier the vendor declares in the driver's INF.
+	// Unlike Name it does not change between releases — Windows uses it to rank
+	// and upgrade drivers, so a vendor that changed it would break updates for
+	// every existing installation. See Purl.
+	HardwareID     string `json:"HardwareID"`
 	InfPath        string `json:"InfPath"`
 	ConfigFile     string `json:"ConfigFile"`
 	DataFile       string `json:"DataFile"`
@@ -163,20 +169,83 @@ func VendorToken(manufacturer string) string {
 	return strings.Trim(token, "-")
 }
 
+// releaseSuffixPattern matches a release number a vendor appends to a driver
+// name: the "V4.34" in "RICOH PCL6 UniversalDriver V4.34".
+//
+// Anchored to the END of the string, which is the whole point. Real driver
+// names carry "V4" in two different roles:
+//
+//	RICOH PCL6 UniversalDriver V4.34    V4.34 is the release      -> strip
+//	RICOH PCL6 V4 UniversalDriver V2.0  V4 is the driver MODEL    -> keep
+//
+// Anchoring separates them without knowing anything about either.
+var releaseSuffixPattern = regexp.MustCompile(`(?i)\s+v?\d+(?:\.\d+)+\s*$`)
+
+// driverNameToken reduces a driver Name to a token that survives an update.
+//
+// Strips a leading vendor word and a trailing release, because a name carrying
+// its own release number changes with every driver update and so cannot be an
+// identity. Used only when HardwareID is unavailable — see Purl.
+func driverNameToken(name, manufacturer string) string {
+	name = releaseSuffixPattern.ReplaceAllString(strings.TrimSpace(name), "")
+
+	// Drop a leading vendor word ("RICOH PCL6 …" -> "PCL6 …") so the token does
+	// not repeat the namespace it already sits in.
+	if vendor := VendorToken(manufacturer); vendor != "" {
+		if fields := strings.Fields(name); len(fields) > 1 && purlToken(fields[0]) == vendor {
+			name = strings.Join(fields[1:], " ")
+		}
+	}
+	return purlToken(name)
+}
+
 // Purl is the package URL identifying this driver, empty when it cannot be
 // identified.
 //
-// Returns nothing rather than a partial identity when the manufacturer or name
-// is missing. A vendor-less driver PURL would match whatever advisory happened
-// to carry the same driver name, and driver names are emphatically not unique
-// across vendors, so guessing here attaches one vendor's vulnerability to
-// another vendor's driver.
+// # The identity is HardwareID, not Name
+//
+// The name the spooler reports carries the driver's own release number, so it
+// changes with every update. The hardware ID does not. Two published Ricoh
+// universal-print-driver packages, 2.3 years and nine minor versions apart,
+// declare the same one:
+//
+//	4.12.0.0 (2016)  "RICOH PCL6 UniversalDriver V4.12"  RICOHPCL6DriveforUP
+//	4.21.0.0 (2019)  "RICOH PCL6 UniversalDriver V4.21"  RICOHPCL6DriveforUP
+//
+// So a PURL keyed on the name identifies a release, while one keyed on the
+// hardware ID identifies the product — which is what anything tracking a
+// driver across upgrades needs.
+//
+// Name is left exactly as the spooler reported it; only the identity is
+// canonicalised.
+//
+// # Fallback
+//
+// A driver with no hardware ID falls back to the name with its vendor prefix
+// and trailing release removed. That is a degraded identity: it is stable
+// across releases but not across a vendor rewording its product.
+//
+// # Why an empty result rather than a partial one
+//
+// Returns nothing when the manufacturer or the token is missing. A vendor-less
+// driver PURL would match whatever advisory happened to carry the same driver
+// name, and driver names are emphatically not unique across vendors — every
+// printer vendor ships something called "PCL 6 Driver" — so guessing here
+// attaches one vendor's vulnerability to another vendor's driver.
 func (d PrinterDriver) Purl() string {
 	vendor := VendorToken(d.Manufacturer)
-	name := purlToken(d.Name)
-	if vendor == "" || name == "" {
+	if vendor == "" {
 		return ""
 	}
+
+	name := purlToken(d.HardwareID)
+	if name == "" {
+		name = driverNameToken(d.Name, d.Manufacturer)
+	}
+	if name == "" {
+		return ""
+	}
+
 	p := "pkg:windows-driver/" + vendor + "/" + name
 	if v := d.DottedVersion(); v != "" {
 		p += "@" + v

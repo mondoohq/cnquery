@@ -3789,6 +3789,7 @@ windows.printerDriver.configFile 13.40.6
 windows.printerDriver.dataFile 13.40.6
 windows.printerDriver.driverPath 13.40.6
 windows.printerDriver.environment 13.40.6
+windows.printerDriver.hardwareId 13.40.6
 windows.printerDriver.infPath 13.40.6
 windows.printerDriver.manufacturer 13.40.6
 windows.printerDriver.modelVersion 13.40.6
