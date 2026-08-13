@@ -62,19 +62,18 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 					updated = &g.TimeUpdated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.apigateway.gateway", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(g.Id),
-					"name":          llx.StringDataPtr(g.DisplayName),
-					"compartmentID": llx.StringDataPtr(g.CompartmentId),
-					"endpointType":  llx.StringData(string(g.EndpointType)),
-					"ipMode":        llx.StringData(string(g.IpMode)),
-					"hostname":      llx.StringDataPtr(g.Hostname),
-					"state":         llx.StringData(string(g.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"timeUpdated":   llx.TimeDataPtr(updated),
-					"freeformTags":  llx.MapData(strMapToAny(g.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(g.DefinedTags), types.Any),
-					"systemTags":    llx.MapData(definedTagsToAny(g.SystemTags), types.Dict),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.apigateway.gateway", stringValue(g.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(g.Id),
+					"name":         llx.StringDataPtr(g.DisplayName),
+					"endpointType": llx.StringData(string(g.EndpointType)),
+					"ipMode":       llx.StringData(string(g.IpMode)),
+					"hostname":     llx.StringDataPtr(g.Hostname),
+					"state":        llx.StringData(string(g.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"timeUpdated":  llx.TimeDataPtr(updated),
+					"freeformTags": llx.MapData(strMapToAny(g.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(g.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(g.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -92,6 +91,7 @@ func (o *mqlOciApigateway) gateways() ([]any, error) {
 }
 
 type mqlOciApigatewayGatewayInternal struct {
+	ociCompartmentRef
 	cacheRegion        string
 	cacheSubnetID      string
 	cacheCertificateID string
@@ -265,18 +265,17 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 					updated = &d.TimeUpdated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.apigateway.deployment", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(d.Id),
-					"name":          llx.StringDataPtr(d.DisplayName),
-					"compartmentID": llx.StringDataPtr(d.CompartmentId),
-					"pathPrefix":    llx.StringDataPtr(d.PathPrefix),
-					"endpoint":      llx.StringDataPtr(d.Endpoint),
-					"state":         llx.StringData(string(d.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"timeUpdated":   llx.TimeDataPtr(updated),
-					"freeformTags":  llx.MapData(strMapToAny(d.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(d.DefinedTags), types.Any),
-					"systemTags":    llx.MapData(definedTagsToAny(d.SystemTags), types.Dict),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.apigateway.deployment", stringValue(d.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(d.Id),
+					"name":         llx.StringDataPtr(d.DisplayName),
+					"pathPrefix":   llx.StringDataPtr(d.PathPrefix),
+					"endpoint":     llx.StringDataPtr(d.Endpoint),
+					"state":        llx.StringData(string(d.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"timeUpdated":  llx.TimeDataPtr(updated),
+					"freeformTags": llx.MapData(strMapToAny(d.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(d.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(d.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -292,6 +291,7 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 }
 
 type mqlOciApigatewayDeploymentInternal struct {
+	ociCompartmentRef
 	cacheRegion    string
 	cacheGatewayID string
 
@@ -636,10 +636,9 @@ func (o *mqlOciApigateway) certificates() ([]any, error) {
 
 				subjectNames := convert.SliceAnyToInterface(c.SubjectNames)
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.apigateway.certificate", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.apigateway.certificate", stringValue(c.CompartmentId), map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(c.Id),
 					"name":              llx.StringDataPtr(c.DisplayName),
-					"compartmentID":     llx.StringDataPtr(c.CompartmentId),
 					"subjectNames":      llx.ArrayData(subjectNames, types.String),
 					"timeNotValidAfter": llx.TimeDataPtr(notValidAfter),
 					"state":             llx.StringData(string(c.LifecycleState)),
@@ -687,4 +686,8 @@ func initOciApigatewayCertificate(runtime *plugin.Runtime, args map[string]*llx.
 
 func (o *mqlOciApigatewayCertificate) id() (string, error) {
 	return "oci.apigateway.certificate/" + o.Id.Data, nil
+}
+
+type mqlOciApigatewayCertificateInternal struct {
+	ociCompartmentRef
 }

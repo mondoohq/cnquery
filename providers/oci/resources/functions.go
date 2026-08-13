@@ -69,10 +69,9 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 					return nil, err
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.functions.application", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.functions.application", stringValue(app.CompartmentId), map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(app.Id),
 					"name":              llx.StringDataPtr(app.DisplayName),
-					"compartmentID":     llx.StringDataPtr(app.CompartmentId),
 					"state":             llx.StringData(string(app.LifecycleState)),
 					"shape":             llx.StringData(string(app.Shape)),
 					"traceConfig":       llx.DictData(traceConfig),
@@ -97,6 +96,7 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 }
 
 type mqlOciFunctionsApplicationInternal struct {
+	ociCompartmentRef
 	app            ociRetryLazy[*functions.Application]
 	cacheRegion    string
 	cacheSubnetIDs []string
@@ -222,10 +222,9 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			return nil, err
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.functions.function", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.functions.function", stringValue(fn.CompartmentId), map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(fn.Id),
 			"name":             llx.StringDataPtr(fn.DisplayName),
-			"compartmentID":    llx.StringDataPtr(fn.CompartmentId),
 			"applicationId":    llx.StringDataPtr(fn.ApplicationId),
 			"state":            llx.StringData(string(fn.LifecycleState)),
 			"image":            llx.StringDataPtr(fn.Image),
@@ -252,6 +251,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 }
 
 type mqlOciFunctionsFunctionInternal struct {
+	ociCompartmentRef
 	fn          ociRetryLazy[*functions.Function]
 	cacheRegion string
 }

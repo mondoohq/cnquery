@@ -32,6 +32,43 @@ import (
 //
 // resolveRef does both once.
 
+// ociCompartmentRef carries a resource's raw compartment OCID. The OCID is not
+// part of the schema, so it rides on the internal struct and feeds only the
+// compartment() accessor and asset discovery. Every resource exposing
+// compartment() embeds this through its mqlOci<Resource>Internal struct.
+type ociCompartmentRef struct {
+	cacheCompartmentID string
+}
+
+func (c *ociCompartmentRef) setCompartmentID(id string) {
+	c.cacheCompartmentID = id
+}
+
+// ociCompartmentSetter is satisfied by every resource embedding
+// ociCompartmentRef, which lets createOciResourceInCompartment stash the OCID
+// without knowing the concrete resource type.
+type ociCompartmentSetter interface {
+	setCompartmentID(string)
+}
+
+// createOciResourceInCompartment creates a resource and records the compartment
+// OCID it was listed from, so compartment() resolves without the OCID being a
+// field on the resource. A resource that reaches here without embedding
+// ociCompartmentRef would silently lose its compartment(), so the mismatch is
+// reported rather than ignored.
+func createOciResourceInCompartment(runtime *plugin.Runtime, name string, compartmentID string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res, err := CreateResource(runtime, name, args)
+	if err != nil {
+		return nil, err
+	}
+	setter, ok := res.(ociCompartmentSetter)
+	if !ok {
+		return nil, errors.New(name + " does not embed ociCompartmentRef")
+	}
+	setter.setCompartmentID(compartmentID)
+	return res, nil
+}
+
 // resolveRef resolves a typed resource from an OCID, marking the field null
 // when there is no id to resolve.
 //
@@ -194,7 +231,7 @@ func cachedCompartment(runtime *plugin.Runtime, lookup compartmentLookup, id str
 	return typed, nil
 }
 
-// ociCompartmentRef resolves the compartment a lister embeds in the resource it
+// ociCompartmentResource resolves the compartment a lister embeds in the resource it
 // is building, rather than one read later through an accessor.
 //
 // These are the costliest copies of the same call: the compartment is resolved
@@ -202,7 +239,7 @@ func cachedCompartment(runtime *plugin.Runtime, lookup compartmentLookup, id str
 // or not anything asks for the field. The tree answers them for free, and an
 // OCID it does not cover keeps the direct read - which is what fills in a
 // compartment outside the listing.
-func ociCompartmentRef(runtime *plugin.Runtime, id *string) (plugin.Resource, error) {
+func ociCompartmentResource(runtime *plugin.Runtime, id *string) (plugin.Resource, error) {
 	return compartmentRef(runtime, ociCompartmentLookup(runtime), id)
 }
 
@@ -397,315 +434,297 @@ func resolveOciTopics(runtime *plugin.Runtime, ids []any) ([]any, error) {
 // ----- compute -----
 
 func (o *mqlOciComputeInstance) image() (*mqlOciComputeImage, error) {
-	return resolveOciImage(o.MqlRuntime, o.ImageId.Data, &o.Image)
+	return resolveOciImage(o.MqlRuntime, o.cacheImageID, &o.Image)
 }
 
 func (o *mqlOciComputeBootVolume) image() (*mqlOciComputeImage, error) {
-	return resolveOciImage(o.MqlRuntime, o.ImageId.Data, &o.Image)
+	return resolveOciImage(o.MqlRuntime, o.cacheImageID, &o.Image)
 }
 
 func (o *mqlOciComputeBootVolume) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciComputeBlockVolume) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciComputeVnic) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciComputeVnic) securityGroups() ([]any, error) {
-	if o.NsgIds.Error != nil {
-		return nil, o.NsgIds.Error
-	}
-	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+	return resolveOciSecurityGroups(o.MqlRuntime, o.cacheNsgIDs)
 }
 
 func (o *mqlOciLoadBalancerLoadBalancer) securityGroups() ([]any, error) {
-	if o.NsgIds.Error != nil {
-		return nil, o.NsgIds.Error
-	}
-	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+	return resolveOciSecurityGroups(o.MqlRuntime, o.cacheNsgIDs)
 }
 
 // ----- kms -----
 
 func (o *mqlOciKmsVault) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciKmsKey) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciKmsKey) vault() (*mqlOciKmsVault, error) {
-	return resolveOciVault(o.MqlRuntime, o.VaultId.Data, &o.Vault)
+	return resolveOciVault(o.MqlRuntime, o.cacheVaultID, &o.Vault)
 }
 
 func (o *mqlOciKmsKeyVersion) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciKmsKeyVersion) vault() (*mqlOciKmsVault, error) {
-	return resolveOciVault(o.MqlRuntime, o.VaultId.Data, &o.Vault)
+	return resolveOciVault(o.MqlRuntime, o.cacheVaultID, &o.Vault)
 }
 
 // ----- events / ons / monitoring -----
 
 func (o *mqlOciEventsRule) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciOnsTopic) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciMonitoringAlarm) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciMonitoringAlarm) topics() ([]any, error) {
-	if o.Destinations.Error != nil {
-		return nil, o.Destinations.Error
-	}
-	return resolveOciTopics(o.MqlRuntime, o.Destinations.Data)
+	return resolveOciTopics(o.MqlRuntime, o.cacheDestinations)
 }
 
 // ----- bastion / vault.secret -----
 
 func (o *mqlOciBastionInstance) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciVaultSecret) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 // ----- database -----
 
 func (o *mqlOciDatabaseDbSystem) securityGroups() ([]any, error) {
-	if o.NsgIds.Error != nil {
-		return nil, o.NsgIds.Error
-	}
-	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+	return resolveOciSecurityGroups(o.MqlRuntime, o.cacheNsgIDs)
 }
 
 func (o *mqlOciDatabaseDbSystem) backupSecurityGroups() ([]any, error) {
-	if o.BackupNetworkNsgIds.Error != nil {
-		return nil, o.BackupNetworkNsgIds.Error
-	}
-	return resolveOciSecurityGroups(o.MqlRuntime, o.BackupNetworkNsgIds.Data)
+	return resolveOciSecurityGroups(o.MqlRuntime, o.cacheBackupNetworkNsgIDs)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) securityGroups() ([]any, error) {
-	if o.NsgIds.Error != nil {
-		return nil, o.NsgIds.Error
-	}
-	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+	return resolveOciSecurityGroups(o.MqlRuntime, o.cacheNsgIDs)
 }
 
 // ----- compartment accessors (ownership) -----
 
 func (o *mqlOciIdentityUser) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityGroup) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityPolicy) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityOauth2ClientCredential) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityDynamicGroup) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityIdentityProvider) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciIdentityNetworkSource) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkPublicIp) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkVcn) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkSubnet) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkInternetGateway) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkNatGateway) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkRouteTable) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciLoggingLogGroup) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciObjectStorageBucket) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciFileStorageFileSystem) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCloudGuardTarget) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCloudGuardSecurityZone) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCloudGuardSecurityZoneRecipe) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCloudGuardSecurityPolicy) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciLoadBalancerLoadBalancer) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkFirewallFirewall) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkFirewallPolicy) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciOkeCluster) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciOkeNodePool) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciWafFirewall) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciWafPolicy) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciFunctionsApplication) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciFunctionsFunction) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciContainerInstancesInstance) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciContainerInstancesContainer) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDatabaseBackup) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabaseBackup) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDatabaseDbSystem) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciApigatewayGateway) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciApigatewayDeployment) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciApigatewayCertificate) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCertificatesCertificate) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCertificatesCertificateAuthority) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCertificatesCaBundle) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciRedisCluster) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeConfiguration) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeTargetDatabase) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeSecurityAssessment) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeUserAssessment) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeSensitiveDataModel) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeSensitiveType) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciDataSafeMaskingPolicy) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciCloudGuardDetectorRecipe) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 // ----- source / lineage accessors -----
@@ -778,4 +797,14 @@ func (o *mqlOciDatabaseDbSystem) sourceDbSystem() (*mqlOciDatabaseDbSystem, erro
 
 func (o *mqlOciDatabaseAutonomousDatabase) sourceDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
 	return resolveRef(o.MqlRuntime, "oci.database.autonomousDatabase", ocidOrEmpty(o.cacheSourceID), &o.SourceDatabase)
+}
+
+type mqlOciKmsKeyVersionInternal struct {
+	ociCompartmentRef
+	cacheVaultID string
+}
+
+type mqlOciMonitoringAlarmInternal struct {
+	ociCompartmentRef
+	cacheDestinations []any
 }

@@ -107,10 +107,9 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					return nil, err
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.containerInstances.instance", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.containerInstances.instance", stringValue(ci.CompartmentId), map[string]*llx.RawData{
 					"id":                               llx.StringDataPtr(ci.Id),
 					"name":                             llx.StringDataPtr(ci.DisplayName),
-					"compartmentID":                    llx.StringDataPtr(ci.CompartmentId),
 					"availabilityDomain":               llx.StringDataPtr(ci.AvailabilityDomain),
 					"state":                            llx.StringData(string(ci.LifecycleState)),
 					"shape":                            llx.StringDataPtr(ci.Shape),
@@ -139,6 +138,7 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 }
 
 type mqlOciContainerInstancesInstanceInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 }
 
@@ -157,7 +157,7 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 
 	items, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerinstances.ContainerSummary, *string, error) {
 		response, err := svc.ListContainers(ctx, containerinstances.ListContainersRequest{
-			CompartmentId:       common.String(o.CompartmentID.Data),
+			CompartmentId:       common.String(o.cacheCompartmentID),
 			ContainerInstanceId: common.String(o.Id.Data),
 			Page:                page,
 		})
@@ -189,10 +189,9 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 
 		sec := ociContainerSecurityContext(c.SecurityContext)
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.containerInstances.container", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.containerInstances.container", stringValue(c.CompartmentId), map[string]*llx.RawData{
 			"id":                          llx.StringDataPtr(c.Id),
 			"name":                        llx.StringDataPtr(c.DisplayName),
-			"compartmentID":               llx.StringDataPtr(c.CompartmentId),
 			"availabilityDomain":          llx.StringDataPtr(c.AvailabilityDomain),
 			"state":                       llx.StringData(string(c.LifecycleState)),
 			"containerInstanceId":         llx.StringDataPtr(c.ContainerInstanceId),
@@ -222,4 +221,8 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 
 func (o *mqlOciContainerInstancesContainer) id() (string, error) {
 	return "oci.containerInstances.container/" + o.Id.Data, nil
+}
+
+type mqlOciContainerInstancesContainerInternal struct {
+	ociCompartmentRef
 }

@@ -56,10 +56,9 @@ func (o *mqlOciFileStorage) fileSystems() ([]any, error) {
 						parentFileSystemID = stringValue(fs.SourceDetails.ParentFileSystemId)
 					}
 
-					mqlInstance, err := CreateResource(o.MqlRuntime, "oci.fileStorage.fileSystem", map[string]*llx.RawData{
+					mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.fileStorage.fileSystem", stringValue(fs.CompartmentId), map[string]*llx.RawData{
 						"id":                    llx.StringDataPtr(fs.Id),
 						"name":                  llx.StringDataPtr(fs.DisplayName),
-						"compartmentID":         llx.StringDataPtr(fs.CompartmentId),
 						"availabilityDomain":    llx.StringDataPtr(fs.AvailabilityDomain),
 						"state":                 llx.StringData(string(fs.LifecycleState)),
 						"meteredBytes":          llx.IntDataPtr(fs.MeteredBytes),
@@ -102,6 +101,7 @@ func ociListFileSystems(ctx context.Context, fsClient *filestorage.FileStorageCl
 }
 
 type mqlOciFileStorageFileSystemInternal struct {
+	ociCompartmentRef
 	cacheKmsKeyID           string
 	cacheParentFileSystemID string
 	cacheRegion             string

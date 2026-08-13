@@ -142,7 +142,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				// the connection already holds carries those fields, so this
 				// is populated without a per-instance GetCompartment call and
 				// falls back to the direct read for an OCID it lacks.
-				compartment, err := ociCompartmentRef(o.MqlRuntime, instance.CompartmentId)
+				compartment, err := ociCompartmentResource(o.MqlRuntime, instance.CompartmentId)
 				if err != nil {
 					return nil, err
 				}
@@ -157,7 +157,6 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					"availabilityDomain":          llx.StringDataPtr(instance.AvailabilityDomain),
 					"compartment":                 llx.ResourceData(compartment, "oci.compartment"),
 					"faultDomain":                 llx.StringDataPtr(instance.FaultDomain),
-					"imageId":                     llx.StringDataPtr(instance.ImageId),
 					"dedicatedVmHostId":           llx.StringDataPtr(instance.DedicatedVmHostId),
 					"platformConfig":              llx.DictData(platformConfig),
 					"launchOptions":               llx.DictData(launchOptions),
@@ -182,6 +181,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				}
 				mqlInst := mqlInstance.(*mqlOciComputeInstance)
 				mqlInst.cacheRegion = region
+				mqlInst.cacheImageID = stringValue(instance.ImageId)
 				mqlInst.cacheCompartmentID = stringValue(instance.CompartmentId)
 				if src, ok := instance.SourceDetails.(core.InstanceSourceViaBootVolumeDetails); ok {
 					mqlInst.cacheBootVolumeID = stringValue(src.BootVolumeId)
@@ -214,6 +214,7 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 }
 
 type mqlOciComputeInstanceInternal struct {
+	cacheImageID       string
 	cacheRegion        string
 	cacheBootVolumeID  string
 	cacheCompartmentID string
@@ -302,6 +303,8 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 }
 
 type mqlOciComputeVnicInternal struct {
+	ociCompartmentRef
+	cacheNsgIDs   []any
 	cacheSubnetID string
 }
 
@@ -365,7 +368,7 @@ func (o *mqlOciCompute) images() ([]any, error) {
 					created = &image.TimeCreated.Time
 				}
 
-				compartment, err := ociCompartmentRef(o.MqlRuntime, image.CompartmentId)
+				compartment, err := ociCompartmentResource(o.MqlRuntime, image.CompartmentId)
 				if err != nil {
 					return nil, err
 				}
@@ -456,10 +459,9 @@ func (o *mqlOciCompute) blockVolumes() ([]any, error) {
 					sourceVolumeBackupID = stringValue(d.Id)
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.blockVolume", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.compute.blockVolume", stringValue(vol.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(vol.Id),
 					"name":                 llx.StringDataPtr(vol.DisplayName),
-					"compartmentID":        llx.StringDataPtr(vol.CompartmentId),
 					"availabilityDomain":   llx.StringDataPtr(vol.AvailabilityDomain),
 					"sizeInGBs":            llx.IntDataPtr(vol.SizeInGBs),
 					"vpusPerGB":            llx.IntDataPtr(vol.VpusPerGB),
@@ -506,6 +508,7 @@ func (o *mqlOciCompute) getBlockVolumesForRegion(ctx context.Context, client *co
 }
 
 type mqlOciComputeBlockVolumeInternal struct {
+	ociCompartmentRef
 	cacheKmsKeyID       string
 	cacheSourceVolumeID string
 }
@@ -562,13 +565,11 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 					sourceBootVolumeBackupID = stringValue(d.Id)
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.bootVolume", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.compute.bootVolume", stringValue(bv.CompartmentId), map[string]*llx.RawData{
 					"id":                       llx.StringDataPtr(bv.Id),
 					"name":                     llx.StringDataPtr(bv.DisplayName),
-					"compartmentID":            llx.StringDataPtr(bv.CompartmentId),
 					"availabilityDomain":       llx.StringDataPtr(bv.AvailabilityDomain),
 					"sizeInGBs":                llx.IntDataPtr(bv.SizeInGBs),
-					"imageId":                  llx.StringDataPtr(bv.ImageId),
 					"state":                    llx.StringData(string(bv.LifecycleState)),
 					"sourceBootVolumeBackupId": llx.StringData(sourceBootVolumeBackupID),
 					"created":                  llx.TimeDataPtr(created),
@@ -580,6 +581,7 @@ func (o *mqlOciCompute) bootVolumes() ([]any, error) {
 					return nil, err
 				}
 				mqlBV := mqlInstance.(*mqlOciComputeBootVolume)
+				mqlBV.cacheImageID = stringValue(bv.ImageId)
 				mqlBV.cacheKmsKeyID = stringValue(bv.KmsKeyId)
 				mqlBV.cacheSourceBootVolumeID = sourceBootVolumeID
 				res = append(res, mqlBV)
@@ -610,6 +612,8 @@ func (o *mqlOciCompute) getBootVolumesForRegion(ctx context.Context, client *cor
 }
 
 type mqlOciComputeBootVolumeInternal struct {
+	ociCompartmentRef
+	cacheImageID            string
 	cacheKmsKeyID           string
 	cacheSourceBootVolumeID string
 }

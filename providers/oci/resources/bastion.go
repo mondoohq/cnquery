@@ -59,10 +59,9 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 					timeUpdated = &b.TimeUpdated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.bastion.instance", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.bastion.instance", stringValue(b.CompartmentId), map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(b.Id),
 					"name":           llx.StringDataPtr(b.Name),
-					"compartmentID":  llx.StringDataPtr(b.CompartmentId),
 					"bastionType":    llx.StringDataPtr(b.BastionType),
 					"state":          llx.StringData(string(b.LifecycleState)),
 					"dnsProxyStatus": llx.StringData(string(b.DnsProxyStatus)),
@@ -87,6 +86,7 @@ func (o *mqlOciBastion) bastions() ([]any, error) {
 }
 
 type mqlOciBastionInstanceInternal struct {
+	ociCompartmentRef
 	cacheTargetVcnID    string
 	cacheTargetSubnetID string
 	cacheRegion         string

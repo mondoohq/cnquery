@@ -52,15 +52,14 @@ func (o *mqlOciOns) topics() ([]any, error) {
 					created = &topic.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.ons.topic", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(topic.TopicId),
-					"name":          llx.StringDataPtr(topic.Name),
-					"description":   llx.StringDataPtr(topic.Description),
-					"compartmentID": llx.StringDataPtr(topic.CompartmentId),
-					"state":         llx.StringData(string(topic.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(topic.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(topic.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.ons.topic", stringValue(topic.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(topic.TopicId),
+					"name":         llx.StringDataPtr(topic.Name),
+					"description":  llx.StringDataPtr(topic.Description),
+					"state":        llx.StringData(string(topic.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(topic.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(topic.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -97,6 +96,7 @@ func (o *mqlOciOns) getTopicsForRegion(ctx context.Context, client *ons.Notifica
 }
 
 type mqlOciOnsTopicInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 }
 

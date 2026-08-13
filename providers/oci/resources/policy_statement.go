@@ -437,3 +437,7 @@ func (a *mqlOciIdentityPolicyStatement) compartment() (*mqlOciCompartment, error
 	}
 	return match, nil
 }
+
+type mqlOciIdentityPolicyInternal struct {
+	ociCompartmentRef
+}

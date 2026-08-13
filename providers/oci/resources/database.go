@@ -78,10 +78,9 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					return nil, err
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.dbSystem", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.dbSystem", stringValue(s.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(s.Id),
 					"name":                 llx.StringDataPtr(s.DisplayName),
-					"compartmentID":        llx.StringDataPtr(s.CompartmentId),
 					"availabilityDomain":   llx.StringDataPtr(s.AvailabilityDomain),
 					"shape":                llx.StringDataPtr(s.Shape),
 					"databaseEdition":      llx.StringData(string(s.DatabaseEdition)),
@@ -95,8 +94,6 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					"nodeCount":            llx.IntData(intValue(s.NodeCount)),
 					"dataStorageSizeInGBs": llx.IntData(intValue(s.DataStorageSizeInGBs)),
 					"licenseModel":         llx.StringData(string(s.LicenseModel)),
-					"nsgIds":               llx.ArrayData(convert.SliceAnyToInterface(s.NsgIds), types.String),
-					"backupNetworkNsgIds":  llx.ArrayData(convert.SliceAnyToInterface(s.BackupNetworkNsgIds), types.String),
 					"state":                llx.StringData(string(s.LifecycleState)),
 					"created":              llx.TimeDataPtr(created),
 					"freeformTags":         llx.MapData(strMapToAny(s.FreeformTags), types.String),
@@ -120,6 +117,8 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					return nil, err
 				}
 				mqlDb := mqlInstance.(*mqlOciDatabaseDbSystem)
+				mqlDb.cacheNsgIDs = convert.SliceAnyToInterface(s.NsgIds)
+				mqlDb.cacheBackupNetworkNsgIDs = convert.SliceAnyToInterface(s.BackupNetworkNsgIds)
 				mqlDb.cacheKmsKeyID = stringValue(s.KmsKeyId)
 				mqlDb.cacheSubnetID = stringValue(s.SubnetId)
 				mqlDb.cacheSourceDbSystemID = stringValue(s.SourceDbSystemId)
@@ -132,10 +131,13 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
-	cacheKmsKeyID         string
-	cacheSubnetID         string
-	cacheSourceDbSystemID string
-	cacheBackupSubnetID   string
+	ociCompartmentRef
+	cacheNsgIDs              []any
+	cacheBackupNetworkNsgIDs []any
+	cacheKmsKeyID            string
+	cacheSubnetID            string
+	cacheSourceDbSystemID    string
+	cacheBackupSubnetID      string
 }
 
 func (o *mqlOciDatabaseDbSystem) backupSubnet() (*mqlOciNetworkSubnet, error) {
@@ -227,10 +229,9 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					}
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.autonomousDatabase", stringValue(a.CompartmentId), map[string]*llx.RawData{
 					"id":                          llx.StringDataPtr(a.Id),
 					"name":                        llx.StringDataPtr(a.DisplayName),
-					"compartmentID":               llx.StringDataPtr(a.CompartmentId),
 					"dbName":                      llx.StringDataPtr(a.DbName),
 					"isRefreshableClone":          llx.BoolDataPtr(a.IsRefreshableClone),
 					"dbVersion":                   llx.StringDataPtr(a.DbVersion),
@@ -253,7 +254,6 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					"openMode":                    llx.StringData(string(a.OpenMode)),
 					"permissionLevel":             llx.StringData(string(a.PermissionLevel)),
 					"licenseModel":                llx.StringData(string(a.LicenseModel)),
-					"nsgIds":                      llx.ArrayData(convert.SliceAnyToInterface(a.NsgIds), types.String),
 					"privateEndpointIp":           llx.StringDataPtr(a.PrivateEndpointIp),
 					"privateEndpointLabel":        llx.StringDataPtr(a.PrivateEndpointLabel),
 					"connectionUrls":              llx.DictData(connectionUrls),
@@ -268,6 +268,7 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					return nil, err
 				}
 				mqlAdb := mqlInstance.(*mqlOciDatabaseAutonomousDatabase)
+				mqlAdb.cacheNsgIDs = convert.SliceAnyToInterface(a.NsgIds)
 				mqlAdb.cacheKmsKeyID = stringValue(a.KmsKeyId)
 				mqlAdb.cacheVaultID = stringValue(a.VaultId)
 				mqlAdb.cacheSubnetID = stringValue(a.SubnetId)
@@ -280,6 +281,8 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 }
 
 type mqlOciDatabaseAutonomousDatabaseInternal struct {
+	ociCompartmentRef
+	cacheNsgIDs   []any
 	cacheKmsKeyID string
 	cacheVaultID  string
 	cacheSubnetID string
@@ -380,10 +383,9 @@ func (o *mqlOciDatabase) backups() ([]any, error) {
 					sizeGBs = *b.DatabaseSizeInGBs
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.backup", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.backup", stringValue(b.CompartmentId), map[string]*llx.RawData{
 					"id":                       llx.StringDataPtr(b.Id),
 					"name":                     llx.StringDataPtr(b.DisplayName),
-					"compartmentID":            llx.StringDataPtr(b.CompartmentId),
 					"databaseId":               llx.StringDataPtr(b.DatabaseId),
 					"availabilityDomain":       llx.StringDataPtr(b.AvailabilityDomain),
 					"type":                     llx.StringData(string(b.Type)),
@@ -414,6 +416,7 @@ func (o *mqlOciDatabase) backups() ([]any, error) {
 }
 
 type mqlOciDatabaseBackupInternal struct {
+	ociCompartmentRef
 	cacheKmsKeyID string
 	cacheVaultID  string
 }
@@ -501,10 +504,9 @@ func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
 					sizeTBs = *b.SizeInTBs
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.autonomousDatabaseBackup", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.autonomousDatabaseBackup", stringValue(b.CompartmentId), map[string]*llx.RawData{
 					"id":                    llx.StringDataPtr(b.Id),
 					"name":                  llx.StringDataPtr(b.DisplayName),
-					"compartmentID":         llx.StringDataPtr(b.CompartmentId),
 					"type":                  llx.StringData(string(b.Type)),
 					"isAutomatic":           llx.BoolDataPtr(b.IsAutomatic),
 					"isRestorable":          llx.BoolDataPtr(b.IsRestorable),
@@ -558,6 +560,7 @@ func (o *mqlOciDatabaseAutonomousDatabase) backups() ([]any, error) {
 }
 
 type mqlOciDatabaseAutonomousDatabaseBackupInternal struct {
+	ociCompartmentRef
 	cacheAutonomousDatabaseID string
 	cacheKmsKeyID             string
 	cacheVaultID              string

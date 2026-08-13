@@ -60,10 +60,9 @@ func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 					timeUpdated = &fw.TimeUpdated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.firewall", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.networkFirewall.firewall", stringValue(fw.CompartmentId), map[string]*llx.RawData{
 					"id":                 llx.StringDataPtr(fw.Id),
 					"name":               llx.StringDataPtr(fw.DisplayName),
-					"compartmentID":      llx.StringDataPtr(fw.CompartmentId),
 					"ipv4Address":        llx.StringDataPtr(fw.Ipv4Address),
 					"ipv6Address":        llx.StringDataPtr(fw.Ipv6Address),
 					"shape":              llx.StringDataPtr(fw.Shape),
@@ -90,6 +89,7 @@ func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 }
 
 type mqlOciNetworkFirewallFirewallInternal struct {
+	ociCompartmentRef
 	cacheSubnetID string
 	cachePolicyID string
 	cacheRegion   string
@@ -177,15 +177,14 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 					created = &p.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(p.Id),
-					"name":          llx.StringDataPtr(p.DisplayName),
-					"compartmentID": llx.StringDataPtr(p.CompartmentId),
-					"state":         llx.StringData(string(p.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(p.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
-					"systemTags":    llx.MapData(definedTagsToAny(p.SystemTags), types.Dict),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.networkFirewall.policy", stringValue(p.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(p.Id),
+					"name":         llx.StringDataPtr(p.DisplayName),
+					"state":        llx.StringData(string(p.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(p.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(p.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -199,6 +198,7 @@ func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 }
 
 type mqlOciNetworkFirewallPolicyInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 	detail      ociRetryLazy[*networkfirewall.NetworkFirewallPolicy]
 }

@@ -115,7 +115,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			// empty only when the enumeration didn't hit a region.
 			return ociDiscovered{
 				id: sl.Id.Data, name: sl.Name.Data,
-				compartment: sl.CompartmentID.Data, region: sl.cacheRegion,
+				compartment: sl.cacheCompartmentID, region: sl.cacheRegion,
 				labels: tagsToLabels(sl.FreeformTags.Data),
 			}, true
 		},
@@ -136,7 +136,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			// scan connects to.
 			return ociDiscovered{
 				id: u.Id.Data, name: u.Name.Data,
-				compartment: u.CompartmentID.Data, region: "global",
+				compartment: u.cacheCompartmentID, region: "global",
 				labels: tagsToLabels(u.FreeformTags.Data),
 			}, true
 		},
@@ -154,7 +154,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: p.Id.Data, name: p.Name.Data,
-				compartment: p.CompartmentID.Data, region: "global",
+				compartment: p.cacheCompartmentID, region: "global",
 				labels: tagsToLabels(p.FreeformTags.Data),
 			}, true
 		},
@@ -180,7 +180,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 				// Buckets aren't globally unique by name alone - namespace
 				// qualifies them - so use namespace/name to match the __id.
 				id: b.Namespace.Data + "/" + b.Name.Data, name: b.Name.Data,
-				compartment: b.CompartmentID.Data, region: regionKey,
+				compartment: b.cacheCompartmentID, region: regionKey,
 				// Tags on a bucket require an extra GetBucket call. Surface
 				// empty labels rather than paying N round-trips at discovery
 				// time just to populate them.
@@ -201,7 +201,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: d.Id.Data, name: d.Name.Data,
-				compartment: d.CompartmentID.Data, region: d.cacheRegion,
+				compartment: d.cacheCompartmentID, region: d.cacheRegion,
 				labels: tagsToLabels(d.FreeformTags.Data),
 			}, true
 		},
@@ -219,7 +219,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: lb.Id.Data, name: lb.Name.Data,
-				compartment: lb.CompartmentID.Data, region: lb.cacheRegion,
+				compartment: lb.cacheCompartmentID, region: lb.cacheRegion,
 				labels: tagsToLabels(lb.FreeformTags.Data),
 			}, true
 		},
@@ -237,7 +237,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: c.Id.Data, name: c.Name.Data,
-				compartment: c.CompartmentID.Data, region: c.cacheRegion,
+				compartment: c.cacheCompartmentID, region: c.cacheRegion,
 				labels: tagsToLabels(c.FreeformTags.Data),
 			}, true
 		},
@@ -255,7 +255,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: s.Id.Data, name: s.Name.Data,
-				compartment: s.CompartmentID.Data, region: s.cacheRegion,
+				compartment: s.cacheCompartmentID, region: s.cacheRegion,
 				labels: tagsToLabels(s.FreeformTags.Data),
 			}, true
 		},
@@ -273,7 +273,7 @@ var ociDiscoveryTargets = []ociDiscoveryTarget{
 			}
 			return ociDiscovered{
 				id: c.Id.Data, name: c.Name.Data,
-				compartment: c.CompartmentID.Data, region: c.cacheRegion,
+				compartment: c.cacheCompartmentID, region: c.cacheRegion,
 				labels: tagsToLabels(c.FreeformTags.Data),
 			}, true
 		},
