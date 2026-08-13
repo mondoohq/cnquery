@@ -4,6 +4,11 @@
 package resources
 
 import (
+	"errors"
+	"sync"
+	"sync/atomic"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
@@ -25,6 +30,80 @@ func tagsToStringMap[T any](tags []T, key func(T) *string, value func(T) *string
 		m[*k] = convert.ToValue(value(tags[i]))
 	}
 	return m
+}
+
+// lazyTags caches a tag lookup that costs its own API call. Most AWS services
+// leave tags out of their list and describe responses, so those resources
+// declare tags as a computed field and resolve it through this handler on first
+// read. Embed it in the resource's Internal struct:
+//
+//	type mqlAwsRdsParameterGroupInternal struct {
+//		lazyTags
+//	}
+//
+//	func (a *mqlAwsRdsParameterGroup) tags() (map[string]any, error) {
+//		return a.resolveTags(&a.Tags, func() (map[string]any, error) { ... })
+//	}
+//
+// A resource with no tags caches an empty map, so an untagged resource costs
+// one call rather than one per read. Errors are not cached: a throttled call is
+// worth retrying, and caching the failure would turn it into a permanent empty
+// tag set.
+type lazyTags struct {
+	cacheTags   map[string]any
+	tagsFetched atomic.Bool
+	tagsLock    sync.Mutex
+}
+
+// errTagsUnreadable reports that a tag lookup could not be performed at all, as
+// distinct from a resource that carries no tags. Access-denied is the usual
+// cause; Backup also raises it for resources it does not manage.
+//
+// The distinction matters because an empty tag map is an assertion. A scan role
+// without the tag permission would otherwise report every resource as untagged,
+// and an audit that exempts resources by tag, or requires one, would pass
+// vacuously over the whole account. An unreadable tag set cannot prove a match,
+// so we do not claim one. This mirrors the reasoning in fetchTagsConcurrently.
+var errTagsUnreadable = errors.New("tags could not be read")
+
+// resolveTags runs fetch once and caches the result, and is the only place tag
+// nullness is decided.
+//
+// fetch reports an unreadable tag set by returning errTagsUnreadable, which
+// marks field null rather than caching an empty map. It takes the field pointer
+// because only the caller knows which field to mark, and because setting the
+// state is the one way to make a computed map field surface as null:
+// GetOrCompute honors a state the accessor set itself. A nil map with no error
+// still means "no tags" and is normalized to an empty map.
+func (h *lazyTags) resolveTags(field *plugin.TValue[map[string]any], fetch func() (map[string]any, error)) (map[string]any, error) {
+	if h.tagsFetched.Load() {
+		return h.cacheTags, nil
+	}
+	h.tagsLock.Lock()
+	defer h.tagsLock.Unlock()
+	if h.tagsFetched.Load() {
+		return h.cacheTags, nil
+	}
+
+	tags, err := fetch()
+	if err != nil {
+		if errors.Is(err, errTagsUnreadable) {
+			// Cache the miss: a missing permission does not change mid-scan,
+			// and re-asking per read would cost a denied call every time.
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			h.cacheTags = nil
+			h.tagsFetched.Store(true)
+			return nil, nil
+		}
+		return nil, err
+	}
+	if tags == nil {
+		tags = map[string]any{}
+	}
+
+	h.cacheTags = tags
+	h.tagsFetched.Store(true)
+	return tags, nil
 }
 
 // tagsToMap is tagsToStringMap with a map[string]any result, the shape MQL

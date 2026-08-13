@@ -852,6 +852,7 @@ aws.backup.accessPoint.resourceType 13.52.2
 aws.backup.accessPoint.sourceResourceArn 13.52.2
 aws.backup.accessPoint.status 13.52.2
 aws.backup.accessPoint.statusMessage 13.52.2
+aws.backup.accessPoint.tags 13.53.1
 aws.backup.accessPoint.vault 13.52.2
 aws.backup.accessPoints 13.52.2
 aws.backup.lifecycle 11.15.2
@@ -904,6 +905,7 @@ aws.backup.plan.selection.name 13.35.2
 aws.backup.plan.selection.notResources 13.35.2
 aws.backup.plan.selection.resources 13.35.2
 aws.backup.plan.selections 13.6.3
+aws.backup.plan.tags 13.53.1
 aws.backup.plan.versionId 11.15.2
 aws.backup.plans 11.15.2
 aws.backup.scanJob 13.28.1
@@ -947,6 +949,7 @@ aws.backup.vault.name 11.15.2
 aws.backup.vault.policyStatements 13.32.2
 aws.backup.vault.recoveryPoints 11.15.2
 aws.backup.vault.region 11.15.2
+aws.backup.vault.tags 13.53.1
 aws.backup.vaultRecoveryPoint 11.15.2
 aws.backup.vaultRecoveryPoint.accessPoints 13.52.2
 aws.backup.vaultRecoveryPoint.arn 11.15.2
@@ -962,6 +965,7 @@ aws.backup.vaultRecoveryPoint.resourceType 11.15.2
 aws.backup.vaultRecoveryPoint.sourceBackupVaultArn 13.35.2
 aws.backup.vaultRecoveryPoint.sourceResourceArn 13.35.2
 aws.backup.vaultRecoveryPoint.status 11.15.2
+aws.backup.vaultRecoveryPoint.tags 13.53.1
 aws.backup.vaults 11.15.2
 aws.batch 13.1.1
 aws.batch.computeEnvironment 13.1.1
@@ -2198,6 +2202,7 @@ aws.cloudwatch.metricsalarm.stateReason 11.15.2
 aws.cloudwatch.metricsalarm.stateReasonData 13.49.1
 aws.cloudwatch.metricsalarm.stateUpdatedAt 13.49.1
 aws.cloudwatch.metricsalarm.statistic 13.49.1
+aws.cloudwatch.metricsalarm.tags 13.53.1
 aws.cloudwatch.metricsalarm.threshold 13.49.1
 aws.cloudwatch.metricsalarm.thresholdMetricId 13.49.1
 aws.cloudwatch.metricsalarm.treatMissingData 13.49.1
@@ -2536,6 +2541,7 @@ aws.config.aggregator.organizationAggregationSource.allAwsRegions 13.5.0
 aws.config.aggregator.organizationAggregationSource.awsRegions 13.5.0
 aws.config.aggregator.organizationAggregationSource.iamRole 13.5.0
 aws.config.aggregator.region 13.5.0
+aws.config.aggregator.tags 13.53.1
 aws.config.aggregators 13.5.0
 aws.config.conformancePack 13.12.1
 aws.config.conformancePack.arn 13.12.1
@@ -2549,6 +2555,7 @@ aws.config.conformancePack.region 13.12.1
 aws.config.conformancePack.ruleCompliance 13.12.1
 aws.config.conformancePack.ruleCompliance.complianceType 13.12.1
 aws.config.conformancePack.ruleCompliance.ruleName 13.12.1
+aws.config.conformancePack.tags 13.53.1
 aws.config.conformancePacks 13.12.1
 aws.config.deliveryChannels 11.15.2
 aws.config.deliverychannel 11.15.2
@@ -2600,6 +2607,7 @@ aws.config.rule.remediation.targetId 13.12.1
 aws.config.rule.remediation.targetType 13.12.1
 aws.config.rule.source 11.15.2
 aws.config.rule.state 11.15.2
+aws.config.rule.tags 13.53.1
 aws.config.rules 11.15.2
 aws.controltower 13.10.0
 aws.controltower.enabledBaseline 13.10.0
@@ -4736,6 +4744,7 @@ aws.elasticache.parameterGroup.family 13.12.1
 aws.elasticache.parameterGroup.isGlobal 13.12.1
 aws.elasticache.parameterGroup.name 13.12.1
 aws.elasticache.parameterGroup.region 13.12.1
+aws.elasticache.parameterGroup.tags 13.53.1
 aws.elasticache.parameterGroups 13.12.1
 aws.elasticache.replicationGroup 13.49.1
 aws.elasticache.replicationGroup.arn 13.49.1
@@ -4770,6 +4779,7 @@ aws.elasticache.replicationGroup.snapshotWindow 13.49.1
 aws.elasticache.replicationGroup.snapshottingClusterId 13.49.1
 aws.elasticache.replicationGroup.status 13.49.1
 aws.elasticache.replicationGroup.storageEncryptionType 13.49.1
+aws.elasticache.replicationGroup.tags 13.53.1
 aws.elasticache.replicationGroup.transitEncryptionEnabled 13.49.1
 aws.elasticache.replicationGroup.transitEncryptionMode 13.49.1
 aws.elasticache.replicationGroup.userGroupIds 13.49.1
@@ -4791,6 +4801,7 @@ aws.elasticache.serverlessCache.securityGroups 11.15.2
 aws.elasticache.serverlessCache.snapshotRetentionLimit 11.15.2
 aws.elasticache.serverlessCache.status 11.15.2
 aws.elasticache.serverlessCache.subnets 11.15.2
+aws.elasticache.serverlessCache.tags 13.53.1
 aws.elasticache.serverlessCaches 11.15.2
 aws.elasticache.serviceUpdate 13.12.1
 aws.elasticache.serviceUpdate.autoUpdateAfterRecommendedApplyByDate 13.12.1
@@ -4822,6 +4833,7 @@ aws.elasticache.snapshot.replicationGroupId 13.12.1
 aws.elasticache.snapshot.snapshotRetentionLimit 13.12.1
 aws.elasticache.snapshot.snapshotSource 13.12.1
 aws.elasticache.snapshot.status 13.12.1
+aws.elasticache.snapshot.tags 13.53.1
 aws.elasticache.snapshot.vpc 13.12.1
 aws.elasticache.snapshots 13.12.1
 aws.elasticache.subnetGroup 13.12.1
@@ -4831,6 +4843,7 @@ aws.elasticache.subnetGroup.name 13.12.1
 aws.elasticache.subnetGroup.region 13.12.1
 aws.elasticache.subnetGroup.subnets 13.12.1
 aws.elasticache.subnetGroup.supportedNetworkTypes 13.12.1
+aws.elasticache.subnetGroup.tags 13.53.1
 aws.elasticache.subnetGroup.vpc 13.12.1
 aws.elasticache.subnetGroups 13.12.1
 aws.elasticache.user 13.12.1
@@ -4841,6 +4854,7 @@ aws.elasticache.user.engine 13.12.1
 aws.elasticache.user.minimumEngineVersion 13.12.1
 aws.elasticache.user.region 13.12.1
 aws.elasticache.user.status 13.12.1
+aws.elasticache.user.tags 13.53.1
 aws.elasticache.user.userGroupIds 13.12.1
 aws.elasticache.user.userId 13.12.1
 aws.elasticache.user.userName 13.12.1
@@ -4930,9 +4944,11 @@ aws.elb.listener.rule.arn 13.49.1
 aws.elb.listener.rule.conditions 13.49.1
 aws.elb.listener.rule.isDefault 13.49.1
 aws.elb.listener.rule.priority 13.49.1
+aws.elb.listener.rule.tags 13.53.1
 aws.elb.listener.rules 13.49.1
 aws.elb.listener.sslPolicy 11.15.2
 aws.elb.listener.sslPolicyRef 13.49.1
+aws.elb.listener.tags 13.53.1
 aws.elb.listener.trustStore 13.49.1
 aws.elb.loadBalancers 11.15.2
 aws.elb.loadbalancer 11.15.2
@@ -5019,6 +5035,7 @@ aws.elb.targetgroup.port 11.15.2
 aws.elb.targetgroup.protocol 11.15.2
 aws.elb.targetgroup.protocolVersion 11.15.2
 aws.elb.targetgroup.region 11.16.1
+aws.elb.targetgroup.tags 13.53.1
 aws.elb.targetgroup.targetType 11.15.2
 aws.elb.targetgroup.unhealthyThresholdCount 11.15.2
 aws.elb.targetgroup.vpc 11.15.2
@@ -5029,6 +5046,7 @@ aws.elb.truststore.name 13.49.1
 aws.elb.truststore.numberOfCaCertificates 13.49.1
 aws.elb.truststore.region 13.49.1
 aws.elb.truststore.status 13.49.1
+aws.elb.truststore.tags 13.53.1
 aws.elb.truststore.totalRevokedEntries 13.49.1
 aws.emr 11.15.2
 aws.emr.blockPublicAccessConfiguration 13.12.1
@@ -6111,6 +6129,7 @@ aws.iam.policy.name 11.15.2
 aws.iam.policy.policyId 11.15.2
 aws.iam.policy.scope 11.15.2
 aws.iam.policy.statements 13.32.2
+aws.iam.policy.tags 13.53.1
 aws.iam.policy.updatedAt 11.15.2
 aws.iam.policy.versions 11.15.2
 aws.iam.policyStatement 13.32.2
@@ -8090,6 +8109,7 @@ aws.rds.clusterParameterGroup.family 11.15.2
 aws.rds.clusterParameterGroup.name 11.15.2
 aws.rds.clusterParameterGroup.parameters 11.15.2
 aws.rds.clusterParameterGroup.region 11.15.2
+aws.rds.clusterParameterGroup.tags 13.53.1
 aws.rds.clusterParameterGroups 11.15.2
 aws.rds.clusters 11.15.2
 aws.rds.dbcluster 11.15.2
@@ -8260,6 +8280,7 @@ aws.rds.eventSubscription.sourceIds 13.6.3
 aws.rds.eventSubscription.sourceType 13.6.3
 aws.rds.eventSubscription.status 13.6.3
 aws.rds.eventSubscription.subscriptionCreationTime 13.6.3
+aws.rds.eventSubscription.tags 13.53.1
 aws.rds.eventSubscriptions 13.6.3
 aws.rds.globalCluster 13.21.4
 aws.rds.globalCluster.arn 13.21.4
@@ -8276,6 +8297,7 @@ aws.rds.globalCluster.members 13.21.4
 aws.rds.globalCluster.status 13.21.4
 aws.rds.globalCluster.storageEncrypted 13.21.4
 aws.rds.globalCluster.storageEncryptionType 13.21.4
+aws.rds.globalCluster.tags 13.53.1
 aws.rds.globalClusters 13.21.4
 aws.rds.instances 11.15.2
 aws.rds.optionGroup 13.21.4
@@ -8290,6 +8312,7 @@ aws.rds.optionGroup.options 13.21.4
 aws.rds.optionGroup.region 13.21.4
 aws.rds.optionGroup.sourceAccountId 13.21.4
 aws.rds.optionGroup.sourceOptionGroup 13.21.4
+aws.rds.optionGroup.tags 13.53.1
 aws.rds.optionGroup.vpc 13.21.4
 aws.rds.optionGroups 13.21.4
 aws.rds.parameterGroup 11.15.2
@@ -8311,6 +8334,7 @@ aws.rds.parameterGroup.parameter.supportedEngineModes 11.15.2
 aws.rds.parameterGroup.parameter.value 11.15.2
 aws.rds.parameterGroup.parameters 11.15.2
 aws.rds.parameterGroup.region 11.15.2
+aws.rds.parameterGroup.tags 13.53.1
 aws.rds.parameterGroups 11.15.2
 aws.rds.pendingMaintenanceAction 11.15.2
 aws.rds.pendingMaintenanceAction.action 11.15.2
@@ -10091,6 +10115,7 @@ aws.securityhub.hub.members 13.12.1
 aws.securityhub.hub.region 11.15.2
 aws.securityhub.hub.standardSubscriptions 13.12.1
 aws.securityhub.hub.subscribedAt 11.15.2
+aws.securityhub.hub.tags 13.53.1
 aws.securityhub.hubs 11.15.2
 aws.securityhub.insight 13.12.1
 aws.securityhub.insight.arn 13.12.1
@@ -10483,6 +10508,7 @@ aws.ssm.parameter.lastModifiedUser 13.26.3
 aws.ssm.parameter.name 11.15.2
 aws.ssm.parameter.policies 13.26.3
 aws.ssm.parameter.region 11.15.2
+aws.ssm.parameter.tags 13.53.1
 aws.ssm.parameter.tier 11.15.2
 aws.ssm.parameter.type 11.15.2
 aws.ssm.parameter.version 11.15.2

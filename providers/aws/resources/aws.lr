@@ -2725,6 +2725,9 @@ private aws.iam.policy @defaults("arn name") {
   // principal has used, and totalAuthenticatedEntities counts the principals
   // that did use each service.
   lastAccessedServices() []aws.iam.serviceLastAccessed
+
+  // Tags for the policy
+  tags() map[string]string
 }
 
 // AWS IAM policy version
@@ -6551,6 +6554,9 @@ private aws.elb.truststore @defaults("name arn status") {
   numberOfCaCertificates int
   // Number of revoked certificate entries loaded into the trust store
   totalRevokedEntries int
+
+  // Tags for the trust store
+  tags() map[string]string
 }
 
 // AWS Elastic Load Balancer (ELB) Target Group
@@ -6603,6 +6609,9 @@ private aws.elb.targetgroup @defaults("name port ec2Targets lambdaTargets") {
   ipTargets() []string
   // Region where the target group exists
   region string
+
+  // Tags for the target group
+  tags() map[string]string
 }
 
 // AWS ELB target group attributes
@@ -6842,6 +6851,9 @@ private aws.elb.listener @defaults("arn port protocol") {
   trustStore() aws.elb.truststore
   // Rules that route requests reaching the listener
   rules() []aws.elb.listener.rule
+
+  // Tags for the listener
+  tags() map[string]string
 }
 
 // AWS ELB listener rule
@@ -6870,6 +6882,9 @@ private aws.elb.listener.rule @defaults("arn priority isDefault") {
   // authenticate-cognito, or authenticate-oidc), an `Order`, and the config
   // block for that type.
   actions []dict
+
+  // Tags for the listener rule
+  tags() map[string]string
 }
 
 // AWS ELB load balancer attributes
@@ -8230,6 +8245,9 @@ private aws.securityhub.hub @defaults("arn region") {
   members() []aws.securityhub.member
   // Products enabled for finding import
   enabledProducts() []aws.securityhub.enabledProduct
+
+  // Tags for the hub
+  tags() map[string]string
 }
 
 // AWS Security Hub enabled standard subscription
@@ -10889,6 +10907,9 @@ private aws.cloudwatch.metricsalarm @defaults("arn") {
   alarmConfigurationUpdatedAt time
   // Time the alarm state was last updated
   stateUpdatedAt time
+
+  // Tags for the alarm
+  tags() map[string]string
 }
 
 // Amazon CloudWatch metric
@@ -13074,6 +13095,9 @@ private aws.backup.accessPoint @defaults("name status resourceType region") {
   metadata map[string]string
   // Time the access point was created
   createdAt time
+
+  // Tags for the access point
+  tags() map[string]string
 }
 
 // AWS Backup vault
@@ -13111,6 +13135,9 @@ private aws.backup.vault @defaults("name region") {
   // True when an Allow statement grants a wildcard principal access that is not
   // scoped by a source-restricting condition.
   isPublic() bool
+
+  // Tags for the backup vault
+  tags() map[string]string
 }
 
 // AWS Backup vault recovery point
@@ -13151,6 +13178,14 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   isEncrypted bool
   // Backup access points exposing this recovery point through S3 APIs
   accessPoints() []aws.backup.accessPoint
+
+  // Tags for the recovery point
+  //
+  // Null for recovery points of resources that Backup does not fully
+  // manage. Their ARNs belong to the source service (for example
+  // arn:aws:dynamodb) rather than arn:aws:backup, and Backup cannot
+  // read tags for them.
+  tags() map[string]string
 }
 
 // AWS Backup lifecycle settings
@@ -13194,6 +13229,9 @@ private aws.backup.plan @defaults("name region") {
   selections() @maturity("deprecated") []dict
   // Resource selections that assign resources to this backup plan
   resourceSelections() []aws.backup.plan.selection
+
+  // Tags for the backup plan
+  tags() map[string]string
 }
 
 // AWS Backup plan resource selection
@@ -13748,6 +13786,9 @@ private aws.rds.optionGroup @defaults("optionGroupName engineName majorEngineVer
   // Permanent, Port, OptionSettings (list of Name/Value/AllowedValues),
   // VpcSecurityGroupMemberships, and DBSecurityGroupMemberships.
   options []dict
+
+  // Tags for the option group
+  tags() map[string]string
 }
 
 // Amazon Aurora global cluster
@@ -13794,6 +13835,9 @@ private aws.rds.globalCluster @defaults("globalClusterIdentifier engine status")
   //
   // Each entry contains DBClusterArn, IsWriter, GlobalWriteForwardingStatus, SynchronizationStatus, and Readers (list of secondary cluster ARNs).
   members []dict
+
+  // Tags for the global cluster
+  tags() map[string]string
 }
 
 // Amazon RDS Backup Setting
@@ -14351,6 +14395,9 @@ aws.rds.clusterParameterGroup @defaults("name family region arn") {
   // Region of the parameters
   region string
   parameters() []aws.rds.parameterGroup.parameter
+
+  // Tags for the cluster parameter group
+  tags() map[string]string
 }
 
 // Amazon RDS DB parameter group
@@ -14374,6 +14421,9 @@ aws.rds.parameterGroup @defaults("name family region arn") {
   region string
   // The parameters of the group
   parameters() []aws.rds.parameterGroup.parameter
+
+  // Tags for the parameter group
+  tags() map[string]string
 }
 
 // Amazon RDS parameter
@@ -14529,6 +14579,9 @@ private aws.elasticache.replicationGroup @defaults("replicationGroupId status de
   logDeliveryConfigurations []dict
   // Group settings that are pending application
   pendingModifiedValues dict
+
+  // Tags for the replication group
+  tags() map[string]string
 }
 
 // Amazon ElastiCache cluster
@@ -14684,6 +14737,9 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   createdAt time
   // Subnets associated with the serverless cache
   subnets() []aws.vpc.subnet
+
+  // Tags for the serverless cache
+  tags() map[string]string
 }
 
 // Amazon ElastiCache parameter group
@@ -14706,6 +14762,9 @@ private aws.elasticache.parameterGroup @defaults("name family") {
   description string
   // Whether the parameter group is associated with a Global datastore
   isGlobal bool
+
+  // Tags for the parameter group
+  tags() map[string]string
 }
 
 // Amazon ElastiCache subnet group
@@ -14734,6 +14793,9 @@ private aws.elasticache.subnetGroup @defaults("name") {
   supportedNetworkTypes []string
   // VPC associated with this subnet group
   vpc() aws.vpc
+
+  // Tags for the subnet group
+  tags() map[string]string
 }
 
 // Amazon ElastiCache RBAC user
@@ -14767,6 +14829,9 @@ private aws.elasticache.user @defaults("userName status engine") {
   // Dict with `Type` (the authentication mode, one of password, no-password,
   // or iam) and `PasswordCount` (number of configured passwords, up to two).
   authentication dict
+
+  // Tags for the user
+  tags() map[string]string
 }
 
 // Amazon ElastiCache service update
@@ -14842,6 +14907,9 @@ private aws.elasticache.snapshot @defaults("name status engine") {
   vpc() aws.vpc
   // When the source cluster was created
   cacheClusterCreatedAt time
+
+  // Tags for the snapshot
+  tags() map[string]string
 }
 
 // Amazon Redshift
@@ -17644,6 +17712,9 @@ private aws.ssm.parameter {
   // `NoChangeNotification`), `policyText` (the JSON policy body), and `policyStatus`
   // (one of `Pending`, `Finished`, `Failed`, `InProgress`).
   policies []dict
+
+  // Tags for the parameter
+  tags() map[string]string
 }
 
 // Amazon SSM instance
@@ -19985,6 +20056,9 @@ private aws.config.rule @defaults("name id region state") {
   complianceDetails() []aws.config.rule.complianceDetail
   // Remediation configuration associated with this rule
   remediation() aws.config.rule.remediation
+
+  // Tags for the rule
+  tags() map[string]string
 }
 
 // AWS Config rule compliance detail for an individual resource
@@ -20103,6 +20177,9 @@ private aws.config.conformancePack @defaults("name region") {
   complianceStatus() string
   // Compliance status of individual rules within the conformance pack
   ruleCompliance() []aws.config.conformancePack.ruleCompliance
+
+  // Tags for the conformance pack
+  tags() map[string]string
 }
 
 // AWS Config conformance pack rule compliance
@@ -20129,6 +20206,9 @@ private aws.config.aggregator @defaults("name region") {
   createdAt time
   // Time the aggregator was last updated
   lastUpdatedAt time
+
+  // Tags for the aggregator
+  tags() map[string]string
 }
 
 // AWS Config aggregator account aggregation source
@@ -24917,6 +24997,9 @@ private aws.rds.eventSubscription @defaults("arn name status") {
   customerAwsId string
   // Time the subscription was created (string format from AWS API)
   subscriptionCreationTime string
+
+  // Tags for the event subscription
+  tags() map[string]string
 }
 
 // AWS Glue workflow

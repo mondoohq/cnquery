@@ -24,6 +24,62 @@ func (a *mqlAwsConfig) id() (string, error) {
 	return "aws.config", nil
 }
 
+func configTagsToMap(tags []cstypes.Tag) map[string]any {
+	return tagsToMap(tags,
+		func(t cstypes.Tag) *string { return t.Key },
+		func(t cstypes.Tag) *string { return t.Value })
+}
+
+// configTagsForArn reads the tags of a Config resource. ListTagsForResource
+// covers config rules, conformance packs, and aggregators, none of which carry
+// tags in their describe responses.
+func configTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.ConfigService(region)
+	ctx := context.Background()
+
+	tags := map[string]any{}
+	var nextToken *string
+	for {
+		resp, err := svc.ListTagsForResource(ctx, &configservice.ListTagsForResourceInput{
+			ResourceArn: &resourceArn,
+			NextToken:   nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, errTagsUnreadable
+			}
+			return nil, err
+		}
+		for k, v := range configTagsToMap(resp.Tags) {
+			tags[k] = v
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return tags, nil
+}
+
+func (a *mqlAwsConfigRule) tags() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
+		return configTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
+}
+
+func (a *mqlAwsConfigConformancePack) tags() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
+		return configTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
+}
+
+func (a *mqlAwsConfigAggregator) tags() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
+		return configTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	})
+}
+
 func (a *mqlAwsConfig) recorders() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -431,9 +487,18 @@ func (a *mqlAwsConfig) getAggregators(conn *connection.AwsConnection) []*jobpool
 }
 
 type mqlAwsConfigAggregatorInternal struct {
+	lazyTags
 	cacheOrgRoleArn       *string
 	cacheOrgAllAwsRegions bool
 	cacheOrgAwsRegions    []string
+}
+
+type mqlAwsConfigRuleInternal struct {
+	lazyTags
+}
+
+type mqlAwsConfigConformancePackInternal struct {
+	lazyTags
 }
 
 func (a *mqlAwsConfigAggregator) id() (string, error) {
