@@ -2,7 +2,17 @@ name: Generated Code Test
 
 ## Only trigger tests if source is changing
 on:
+  # Run on PRs so the arc-runner job can be skipped while the PR is a draft
+  # (see the `if` guard below); ready_for_review re-triggers it.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "**.proto"
+      - "**.lr"
+      - "**.go"
+  # Still validate merges to main.
   push:
+    branches: [main]
     paths:
       - "**.proto"
       - "**.lr"
@@ -22,6 +32,7 @@ permissions:
 jobs:
   # Check if there is any dirty change for generated files
   generated-files:
+    if: ${{ !github.event.pull_request.draft }} # skip on draft PRs (runs on ready_for_review / push to main)
     runs-on:
       group: arc-runners
     steps:
