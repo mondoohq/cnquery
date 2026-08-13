@@ -115,6 +115,9 @@ type mqlDigitaloceanDropletInternal struct {
 	// accessors can resolve them without a refetch.
 	cacheSnapshotIDs []int
 	cacheBackupIDs   []int
+	// cacheVPCUUID holds the UUID of the VPC the droplet is attached to so
+	// the typed vpc() accessor can resolve it without a refetch.
+	cacheVPCUUID string
 }
 
 func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
@@ -168,14 +171,6 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			}
 		}
 
-		imageDict := map[string]interface{}{}
-		if d.Image != nil {
-			imageDict["id"] = float64(d.Image.ID)
-			imageDict["name"] = d.Image.Name
-			imageDict["distribution"] = d.Image.Distribution
-			imageDict["slug"] = d.Image.Slug
-		}
-
 		regionSlug := ""
 		if d.Region != nil {
 			regionSlug = d.Region.Slug
@@ -220,11 +215,9 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			"privateIpv4":           llx.StringData(privateIPv4),
 			"publicIpv6":            llx.StringData(publicIPv6),
 			"tags":                  llx.ArrayData(tags, "\x02"),
-			"vpcUuid":               llx.StringData(d.VPCUUID),
 			"features":              llx.ArrayData(features, "\x02"),
 			"backupsEnabled":        llx.BoolData(backupsEnabled),
 			"monitoringEnabled":     llx.BoolData(monitoringEnabled),
-			"image":                 llx.DictData(imageDict),
 			"kernel":                llx.DictData(kernelDict),
 			"nextBackupWindowStart": llx.TimeDataPtr(nextBackupStart),
 			"nextBackupWindowEnd":   llx.TimeDataPtr(nextBackupEnd),
@@ -232,12 +225,14 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Cache the godo image for the typed baseImage() accessor, plus the
-		// volume / snapshot / backup image IDs for the typed volumes(),
-		// snapshots(), and backups() accessors — all without a refetch.
+		// Cache the godo image for the typed baseImage() accessor, the VPC
+		// UUID for vpc(), plus the volume / snapshot / backup image IDs for
+		// the typed volumes(), snapshots(), and backups() accessors — all
+		// without a refetch.
 		mqlDroplet := res.(*mqlDigitaloceanDroplet)
 		mqlDroplet.image = d.Image
 		mqlDroplet.size = d.Size
+		mqlDroplet.cacheVPCUUID = d.VPCUUID
 		mqlDroplet.cacheVolumeIDs = d.VolumeIDs
 		mqlDroplet.cacheSnapshotIDs = d.SnapshotIDs
 		mqlDroplet.cacheBackupIDs = d.BackupIDs
@@ -264,11 +259,7 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 		if skipFirewall(conn.Filters.General, &fw) {
 			continue
 		}
-		fwArgs, err := firewallArgs(r.MqlRuntime, &fw)
-		if err != nil {
-			return nil, err
-		}
-		res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall", fwArgs)
+		res, err := newMqlFirewall(r.MqlRuntime, &fw)
 		if err != nil {
 			return nil, err
 		}
@@ -417,10 +408,6 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, v := range volumes {
-			dropletIds := make([]interface{}, len(v.DropletIDs))
-			for i, id := range v.DropletIDs {
-				dropletIds[i] = int64(id)
-			}
 			tags := make([]interface{}, len(v.Tags))
 			for i, t := range v.Tags {
 				tags[i] = t
@@ -440,11 +427,13 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 				"filesystemLabel": llx.StringData(v.FilesystemLabel),
 				"createdAt":       llx.TimeData(v.CreatedAt),
 				"tags":            llx.ArrayData(tags, "\x02"),
-				"dropletIds":      llx.ArrayData(dropletIds, "\x05"),
 			})
 			if err != nil {
 				return nil, err
 			}
+			// Cache the attached droplet IDs so the typed droplets() accessor
+			// can resolve them without a refetch.
+			res.(*mqlDigitaloceanVolume).cacheDropletIDs = toIntSlice(v.DropletIDs)
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -457,6 +446,12 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 		opt.ListOptions.Page = page + 1
 	}
 	return all, nil
+}
+
+type mqlDigitaloceanVolumeInternal struct {
+	// cacheDropletIDs holds the IDs of the droplets the volume is attached
+	// to so the typed droplets() accessor can resolve them without a refetch.
+	cacheDropletIDs []any
 }
 
 func (r *mqlDigitaloceanVolume) id() (string, error) {
@@ -477,11 +472,10 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 		if skipLoadBalancer(conn.Filters.General, &lb) {
 			continue
 		}
-		res, err := CreateResource(r.MqlRuntime, "digitalocean.loadBalancer", loadBalancerArgs(&lb))
+		res, err := newMqlLoadBalancer(r.MqlRuntime, &lb)
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlDigitaloceanLoadBalancer).cacheTargetLoadBalancerIDs = lb.TargetLoadBalancerIDs
 		all = append(all, res)
 	}
 	return all, nil
@@ -492,6 +486,11 @@ type mqlDigitaloceanLoadBalancerInternal struct {
 	// load balancer fans out to, so targetLoadBalancers() can resolve them
 	// without a refetch.
 	cacheTargetLoadBalancerIDs []string
+	// cacheVPCUUID and cacheDropletIDs hold the VPC the load balancer is
+	// attached to and the droplets behind it, so the typed vpc() and
+	// droplets() accessors can resolve them without a refetch.
+	cacheVPCUUID    string
+	cacheDropletIDs []any
 }
 
 func (r *mqlDigitaloceanLoadBalancer) id() (string, error) {
@@ -545,7 +544,7 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 		if skipKubernetesCluster(conn.Filters.General, c) {
 			continue
 		}
-		res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.cluster", kubernetesClusterArgs(c))
+		res, err := newMqlKubernetesCluster(r.MqlRuntime, c)
 		if err != nil {
 			return nil, err
 		}
