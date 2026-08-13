@@ -376,7 +376,7 @@ func (a *mqlAwsApprunnerService) tags() (map[string]any, error) {
 	resp, err := svc.ListTagsForResource(ctx, &apprunner.ListTagsForResourceInput{ResourceArn: aws.String(a.Arn.Data)})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return map[string]any{}, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}

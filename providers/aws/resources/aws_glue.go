@@ -239,7 +239,7 @@ func (a *mqlAwsGlueCrawler) tags() (map[string]any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}
@@ -409,7 +409,7 @@ func (a *mqlAwsGlueJob) tags() (map[string]any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}
@@ -968,7 +968,7 @@ func (a *mqlAwsGlueWorkflow) tags() (map[string]any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}
@@ -1187,7 +1187,7 @@ func (a *mqlAwsGlueTrigger) tags() (map[string]any, error) {
 	resp, err := svc.GetTags(ctx, &glue.GetTagsInput{ResourceArn: &arn})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}
@@ -1289,7 +1289,7 @@ func (a *mqlAwsGlueSchemaRegistry) tags() (map[string]any, error) {
 	resp, err := svc.GetTags(ctx, &glue.GetTagsInput{ResourceArn: &arn})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}
@@ -1458,7 +1458,7 @@ func (a *mqlAwsGlueSchema) tags() (map[string]any, error) {
 	resp, err := svc.GetTags(ctx, &glue.GetTagsInput{ResourceArn: &arn})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}

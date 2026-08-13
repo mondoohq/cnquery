@@ -197,16 +197,20 @@ func vpcLatticeAuthPolicy(svc *vpclattice.Client, resourceArn string) (string, e
 
 func (a *mqlAwsVpclatticeServiceNetwork) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	return vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+	tags, err := vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+	return tagsOrUnreadable(&a.Tags, tags, err)
 }
 
+// vpcLatticeTags lists the tags on a VPC Lattice resource. A denied call is
+// reported as errTagsUnreadable, which each caller turns into a null tags field
+// rather than an empty one.
 func vpcLatticeTags(svc *vpclattice.Client, resourceArn string) (map[string]any, error) {
 	resp, err := svc.ListTagsForResource(context.Background(), &vpclattice.ListTagsForResourceInput{
 		ResourceArn: &resourceArn,
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return map[string]any{}, nil
+			return nil, errTagsUnreadable
 		}
 		return nil, err
 	}
@@ -428,7 +432,8 @@ func (a *mqlAwsVpclatticeService) hasWildcardAuthPolicy() (bool, error) {
 
 func (a *mqlAwsVpclatticeService) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	return vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+	tags, err := vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+	return tagsOrUnreadable(&a.Tags, tags, err)
 }
 
 func (a *mqlAwsVpclatticeService) listeners() ([]any, error) {
@@ -541,7 +546,8 @@ type mqlAwsVpclatticeTargetGroupInternal struct {
 
 func (a *mqlAwsVpclatticeTargetGroup) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	return vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+	tags, err := vpcLatticeTags(conn.VpcLattice(a.Region.Data), a.Arn.Data)
+	return tagsOrUnreadable(&a.Tags, tags, err)
 }
 
 // mqlAwsVpclatticeListenerInternal carries the region of the service the
@@ -553,7 +559,8 @@ type mqlAwsVpclatticeListenerInternal struct {
 
 func (a *mqlAwsVpclatticeListener) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	return vpcLatticeTags(conn.VpcLattice(a.region), a.Arn.Data)
+	tags, err := vpcLatticeTags(conn.VpcLattice(a.region), a.Arn.Data)
+	return tagsOrUnreadable(&a.Tags, tags, err)
 }
 
 // services resolves the services routing traffic to this target group. A target

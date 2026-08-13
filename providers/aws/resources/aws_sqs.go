@@ -486,7 +486,7 @@ func (a *mqlAwsSqsQueue) tags() (map[string]any, error) {
 	resp, err := svc.ListQueueTags(ctx, &sqs.ListQueueTagsInput{QueueUrl: aws.String(a.Url.Data)})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}

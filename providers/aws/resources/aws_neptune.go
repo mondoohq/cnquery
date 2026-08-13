@@ -163,7 +163,7 @@ func (a *mqlAwsNeptuneCluster) tags() (map[string]any, error) {
 	resp, err := svc.ListTagsForResource(ctx, &neptune.ListTagsForResourceInput{ResourceName: &arnVal})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return map[string]any{}, nil
+			return markTagsUnreadable(&a.Tags)
 		}
 		return nil, err
 	}
