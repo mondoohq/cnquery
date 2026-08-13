@@ -729,6 +729,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 			resType = "Microsoft.KeyVault/vaults/privateEndpointConnections"
 		}
 
+		var pecPrivateEndpointID string
 		privateEndpoint := map[string]*llx.RawData{
 			"__id": llx.StringDataPtr(entry.ID),
 			"id":   llx.StringDataPtr(entry.ID),
@@ -748,7 +749,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 			privateEndpoint["properties"] = llx.DictData(propsMap)
 
 			if props.PrivateEndpoint != nil {
-				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				pecPrivateEndpointID = convert.ToValue(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
 				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
@@ -765,7 +766,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 			}
 		}
 
-		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+		mqlRes, err := newAzurePrivateEndpointConnection(a.MqlRuntime, privateEndpoint, pecPrivateEndpointID)
 		if err != nil {
 			return nil, err
 		}
@@ -2151,6 +2152,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnectio
 			resType = "Microsoft.KeyVault/managedHSMs/privateEndpointConnections"
 		}
 
+		var pecPrivateEndpointID string
 		privateEndpoint := map[string]*llx.RawData{
 			"__id": llx.StringDataPtr(entry.ID),
 			"id":   llx.StringDataPtr(entry.ID),
@@ -2170,7 +2172,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnectio
 			privateEndpoint["properties"] = llx.DictData(propsMap)
 
 			if props.PrivateEndpoint != nil {
-				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				pecPrivateEndpointID = convert.ToValue(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
 				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
@@ -2187,7 +2189,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnectio
 			}
 		}
 
-		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+		mqlRes, err := newAzurePrivateEndpointConnection(a.MqlRuntime, privateEndpoint, pecPrivateEndpointID)
 		if err != nil {
 			return nil, err
 		}

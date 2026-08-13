@@ -1092,7 +1092,6 @@ func raiTopicToMql(runtime *plugin.Runtime, t *armcognitiveservices.RaiTopic) (*
 		"status":         llx.StringData(status),
 		"failedReason":   llx.StringData(failedReason),
 		"sampleBlobUrl":  llx.StringData(sampleBlobUrl),
-		"createdAt":      llx.TimeDataPtr(createdAt),
 		"creationTime":   llx.TimeDataPtr(createdAt),
 		"lastModifiedAt": llx.TimeDataPtr(lastModifiedAt),
 	})

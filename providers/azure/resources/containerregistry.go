@@ -165,10 +165,6 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 		props = &armcontainerregistry.RegistryProperties{}
 	}
 
-	identity, err := convert.JsonToDict(reg.Identity)
-	if err != nil {
-		return nil, err
-	}
 	var regPrincipalId, regTenantId *string
 	var userAssignedIdentityIds []string
 	if reg.Identity != nil {
@@ -222,7 +218,6 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 			"type":                             llx.StringDataPtr(reg.Type),
 			"tags":                             llx.MapData(convert.PtrMapStrToInterface(reg.Tags), types.String),
 			"skuName":                          llx.StringData(skuName),
-			"identity":                         llx.DictData(identity),
 			"principalId":                      llx.StringDataPtr(regPrincipalId),
 			"tenantId":                         llx.StringDataPtr(regTenantId),
 			"adminUserEnabled":                 llx.BoolDataPtr(props.AdminUserEnabled),
@@ -487,6 +482,7 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) privateEndpointCo
 			resType = "Microsoft.ContainerRegistry/registries/privateEndpointConnections"
 		}
 
+		var pecPrivateEndpointID string
 		pecArgs := map[string]*llx.RawData{
 			"__id": llx.StringDataPtr(pec.ID),
 			"id":   llx.StringDataPtr(pec.ID),
@@ -503,7 +499,7 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) privateEndpointCo
 			pecArgs["properties"] = llx.DictData(propsMap)
 
 			if props.PrivateEndpoint != nil {
-				pecArgs["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				pecPrivateEndpointID = convert.ToValue(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
 				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
@@ -520,7 +516,7 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) privateEndpointCo
 			}
 		}
 
-		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, pecArgs)
+		mqlRes, err := newAzurePrivateEndpointConnection(a.MqlRuntime, pecArgs, pecPrivateEndpointID)
 		if err != nil {
 			return nil, err
 		}

@@ -44,10 +44,6 @@ type mqlAzureSubscriptionSqlServiceServerInternal struct {
 	encryptionProtectorResp *sql.EncryptionProtectorsClientGetResponse
 	encryptionProtectorErr  error
 
-	connectionPolicyOnce sync.Once
-	connectionPolicyResp *sql.ServerConnectionPoliciesClientGetResponse
-	connectionPolicyErr  error
-
 	cachePrimaryUserAssignedIdentityId string
 }
 
@@ -62,40 +58,6 @@ func (a *mqlAzureSubscriptionSqlServiceServer) primaryUserAssignedIdentity() (*m
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionManagedIdentity), nil
-}
-
-// fetchConnectionPolicy retrieves the server-scoped ConnectionPolicy. Cached
-// with sync.Once so the server's connectionPolicy() accessor and per-database
-// connectionPolicy() accessors share a single API call (the policy is keyed
-// on the server, not the database — see Azure docs).
-func (a *mqlAzureSubscriptionSqlServiceServer) fetchConnectionPolicy() (*sql.ServerConnectionPoliciesClientGetResponse, error) {
-	a.connectionPolicyOnce.Do(func() {
-		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-		resourceID, err := ParseResourceID(a.Id.Data)
-		if err != nil {
-			a.connectionPolicyErr = err
-			return
-		}
-		server, err := resourceID.Component("servers")
-		if err != nil {
-			a.connectionPolicyErr = err
-			return
-		}
-		client, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-			ClientOptions: conn.ClientOptions(),
-		})
-		if err != nil {
-			a.connectionPolicyErr = err
-			return
-		}
-		resp, err := client.Get(context.Background(), resourceID.ResourceGroup, server, sql.ConnectionPolicyNameDefault, &sql.ServerConnectionPoliciesClientGetOptions{})
-		if err != nil {
-			a.connectionPolicyErr = err
-			return
-		}
-		a.connectionPolicyResp = &resp
-	})
-	return a.connectionPolicyResp, a.connectionPolicyErr
 }
 
 type mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal struct {
@@ -501,117 +463,6 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (any, error) {
-	policy, err := a.fetchConnectionPolicy()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(policy)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	secAlertClient, err := sql.NewServerSecurityAlertPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	policy, err := secAlertClient.Get(ctx, resourceID.ResourceGroup, server, sql.SecurityAlertPolicyNameDefault, &sql.ServerSecurityAlertPoliciesClientGetOptions{})
-	if err != nil {
-		if isAzureNotConfigured(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDict(policy.ServerSecurityAlertPolicy.Properties)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-	auditClient, err := sql.NewServerBlobAuditingPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server, &sql.ServerBlobAuditingPoliciesClientGetOptions{})
-	if err != nil {
-		if isAzureNotConfigured(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDict(policy.ServerBlobAuditingPolicy.Properties)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	serverClient, err := sql.NewServerAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	threatPolicy, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.AdvancedThreatProtectionNameDefault, &sql.ServerAdvancedThreatProtectionSettingsClientGetOptions{})
-	if err != nil {
-		if isAzureNotConfigured(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDict(threatPolicy.Properties)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (any, error) {
-	resp, err := a.fetchEncryptionProtector()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(resp.EncryptionProtector.Properties)
-}
-
 func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtectorServerKeyType() (string, error) {
 	resp, err := a.fetchEncryptionProtector()
 	if err != nil {
@@ -734,44 +585,6 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	return res.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings), err
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	database, err := resourceID.Component("databases")
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := sql.NewTransparentDataEncryptionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.TransparentDataEncryptionNameCurrent, &sql.TransparentDataEncryptionsClientGetOptions{})
-	if err != nil {
-		if isAzureNotConfigured(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDict(policy.LogicalDatabaseTransparentDataEncryption.Properties)
-}
-
 func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -816,106 +629,6 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]any, error) {
 	}
 
 	return res, nil
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	database, err := resourceID.Component("databases")
-	if err != nil {
-		return nil, err
-	}
-	client, err := sql.NewDatabaseSecurityAlertPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.SecurityAlertPolicyNameDefault, &sql.DatabaseSecurityAlertPoliciesClientGetOptions{})
-	if err != nil {
-		if isAzureNotConfigured(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDict(policy.DatabaseSecurityAlertPolicy.Properties)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (any, error) {
-	resourceID, err := ParseResourceID(a.Id.Data)
-	if err != nil {
-		return nil, err
-	}
-	serverName, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-	serverId := "/subscriptions/" + resourceID.SubscriptionID +
-		"/resourceGroups/" + resourceID.ResourceGroup +
-		"/providers/Microsoft.Sql/servers/" + serverName
-
-	serverRes, err := NewResource(a.MqlRuntime, "azure.subscription.sqlService.server",
-		map[string]*llx.RawData{"id": llx.StringData(serverId)})
-	if err != nil {
-		return nil, err
-	}
-	policy, err := serverRes.(*mqlAzureSubscriptionSqlServiceServer).fetchConnectionPolicy()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(policy.ServerConnectionPolicy.Properties)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	database, err := resourceID.Component("databases")
-	if err != nil {
-		return nil, err
-	}
-
-	auditClient, err := sql.NewDatabaseBlobAuditingPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server, database, &sql.DatabaseBlobAuditingPoliciesClientGetOptions{})
-	if err != nil {
-		if isAzureNotConfigured(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
 }
 
 type mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotectionInternal struct {

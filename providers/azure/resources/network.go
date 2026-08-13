@@ -578,10 +578,6 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 				RetentionDays: int(convert.ToValue(rp.Days)),
 			}
 		}
-		retentionPolicyDict, err := convert.JsonToDict(retentionPolicy)
-		if err != nil {
-			return nil, err
-		}
 		var flowLogAnalytics flowLogAnalyticsConfig
 		if fac := props.FlowAnalyticsConfiguration; fac != nil && fac.NetworkWatcherFlowAnalyticsConfiguration != nil {
 			nwfac := fac.NetworkWatcherFlowAnalyticsConfiguration
@@ -593,17 +589,12 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 				WorkspaceId:         convert.ToValue(nwfac.WorkspaceID),
 			}
 		}
-		flowLogAnalyticsDict, err := convert.JsonToDict(flowLogAnalytics)
-		if err != nil {
-			return nil, err
-		}
 		var formatType *string
 		var formatVersion *int32
 		if f := props.Format; f != nil {
 			formatType = (*string)(f.Type)
 			formatVersion = f.Version
 		}
-		args["retentionPolicy"] = llx.DictData(retentionPolicyDict)
 		args["retentionEnabled"] = llx.BoolData(retentionPolicy.Enabled)
 		args["retentionDays"] = llx.IntData(int64(retentionPolicy.RetentionDays))
 		args["format"] = llx.StringDataPtr(formatType)
@@ -613,7 +604,6 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 		args["targetResourceId"] = llx.StringDataPtr(props.TargetResourceID)
 		args["targetResourceGuid"] = llx.StringDataPtr(props.TargetResourceGUID)
 		args["provisioningState"] = llx.StringDataPtr((*string)(props.ProvisioningState))
-		args["analytics"] = llx.DictData(flowLogAnalyticsDict)
 		args["trafficAnalyticsEnabled"] = llx.BoolData(flowLogAnalytics.Enabled)
 		args["trafficAnalyticsInterval"] = llx.IntData(int64(flowLogAnalytics.AnalyticsInterval))
 		args["trafficAnalyticsWorkspaceId"] = llx.StringData(flowLogAnalytics.WorkspaceResourceId)
@@ -758,14 +748,12 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 			return nil, err
 		}
 		isPublic := false
-		var publicIpAddressId string
 		var privateIpAddress string
 		var ddosCustomPolicyId string
 		var publicIpAddressIDPtr, subnetIDPtr *string
 		if ipConfig.Properties != nil {
 			if ipConfig.Properties.PublicIPAddress != nil && ipConfig.Properties.PublicIPAddress.ID != nil {
 				isPublic = true
-				publicIpAddressId = *ipConfig.Properties.PublicIPAddress.ID
 				publicIpAddressIDPtr = ipConfig.Properties.PublicIPAddress.ID
 			}
 			if ipConfig.Properties.Subnet != nil {
@@ -788,7 +776,6 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 				"zones":              llx.ArrayData(strPtrsToAny(ipConfig.Zones), types.String),
 				"properties":         llx.DictData(props),
 				"isPublic":           llx.BoolData(isPublic),
-				"publicIpAddressId":  llx.StringData(publicIpAddressId),
 				"privateIpAddress":   llx.StringData(privateIpAddress),
 				"ddosCustomPolicyId": llx.StringData(ddosCustomPolicyId),
 			})
@@ -1534,17 +1521,21 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) peerings() ([]any, er
 					"peeringState":                          llx.StringDataPtr((*string)(p.Properties.PeeringState)),
 					"peeringSyncLevel":                      llx.StringDataPtr((*string)(p.Properties.PeeringSyncLevel)),
 					"provisioningState":                     llx.StringDataPtr((*string)(p.Properties.ProvisioningState)),
-					"remoteVirtualNetworkId":                llx.StringData(remoteVnetId),
 					"remoteVirtualNetworkEncryptionEnabled": llx.BoolData(remoteEncEnabled),
 					"remoteVirtualNetworkEncryptionEnforcement": llx.StringData(remoteEncEnforcement),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlPeering.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering).cacheRemoteVirtualNetworkId = remoteVnetId
 			res = append(res, mqlPeering)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceVirtualNetworkPeeringInternal struct {
+	cacheRemoteVirtualNetworkId string
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) id() (string, error) {
@@ -1557,14 +1548,14 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) id() (string, 
 // correctly. Returns null when the peering has no remote virtual network
 // reference.
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) remoteVirtualNetwork() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
-	if a.RemoteVirtualNetworkId.Data == "" {
+	if a.cacheRemoteVirtualNetworkId == "" {
 		a.RemoteVirtualNetwork.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	resourceID, err := ParseResourceID(a.RemoteVirtualNetworkId.Data)
+	resourceID, err := ParseResourceID(a.cacheRemoteVirtualNetworkId)
 	if err != nil {
 		return nil, err
 	}
@@ -1707,16 +1698,6 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 				var aadTenant, aadAudience, aadIssuer string
 				radiusConfigured := false
 				if vc := vng.Properties.VPNClientConfiguration; vc != nil {
-					// Scrub the RADIUS shared secret before serializing the raw
-					// configuration so it is never exposed through the dict.
-					scrubbed := *vc
-					scrubbed.RadiusServerSecret = nil
-					vpnClientDict, err := convert.JsonToDict(&scrubbed)
-					if err != nil {
-						return nil, err
-					}
-					args["vpnClientConfiguration"] = llx.DictData(vpnClientDict)
-
 					for _, at := range vc.VPNAuthenticationTypes {
 						if at != nil {
 							vpnClientAuthTypes = append(vpnClientAuthTypes, string(*at))
@@ -1729,8 +1710,6 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 					aadAudience = convert.ToValue(vc.AADAudience)
 					aadIssuer = convert.ToValue(vc.AADIssuer)
 					radiusConfigured = (vc.RadiusServerAddress != nil && *vc.RadiusServerAddress != "") || len(vc.RadiusServers) > 0
-				} else {
-					args["vpnClientConfiguration"] = llx.NilData
 				}
 				args["vpnClientAuthenticationTypes"] = llx.ArrayData(vpnClientAuthTypes, types.String)
 				args["vpnClientAddressPool"] = llx.ArrayData(vpnClientAddressPool, types.String)
@@ -2092,7 +2071,6 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 			"tags":                                llx.MapData(convert.PtrMapStrToInterface(pe.Tags), types.String),
 			"type":                                llx.StringDataPtr(pe.Type),
 			"provisioningState":                   llx.StringData(provisioningState),
-			"subnetId":                            llx.StringData(subnetId),
 			"customNetworkInterfaceName":          llx.StringData(customNicName),
 			"billingSku":                          llx.StringData(billingSku),
 			"privateLinkServiceConnections":       llx.ArrayData(plsConns, types.ResourceLike),
@@ -2103,23 +2081,25 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 	}
 	mqlPe := res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint)
 	mqlPe.cacheNetworkInterfaceIDs = nicIDs
+	mqlPe.cacheSubnetId = subnetId
 	return mqlPe, nil
 }
 
 type mqlAzureSubscriptionNetworkServicePrivateEndpointInternal struct {
 	cacheNetworkInterfaceIDs []string
+	cacheSubnetId            string
 }
 
 // subnet resolves the subnet the private endpoint's network interface is
 // allocated in, the network location from which the linked resource is
 // privately reachable.
 func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
-	if a.SubnetId.Data == "" {
+	if a.cacheSubnetId == "" {
 		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
-		map[string]*llx.RawData{"id": llx.StringData(a.SubnetId.Data)})
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheSubnetId)})
 	if err != nil {
 		return nil, err
 	}
@@ -2319,22 +2299,27 @@ func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.Priva
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.privateEndpoint.serviceconnection",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringData(subResourceCacheID(c.ID, parentID, collection, convert.ToValue(c.Name))),
-			"id":                   llx.StringDataPtr(c.ID),
-			"name":                 llx.StringDataPtr(c.Name),
-			"privateLinkServiceId": llx.StringData(plsId),
-			"groupIds":             llx.ArrayData(groupIds, types.String),
-			"connectionStatus":     llx.StringData(connectionStatus),
-			"requestMessage":       llx.StringData(requestMessage),
+			"__id":             llx.StringData(subResourceCacheID(c.ID, parentID, collection, convert.ToValue(c.Name))),
+			"id":               llx.StringDataPtr(c.ID),
+			"name":             llx.StringDataPtr(c.Name),
+			"groupIds":         llx.ArrayData(groupIds, types.String),
+			"connectionStatus": llx.StringData(connectionStatus),
+			"requestMessage":   llx.StringData(requestMessage),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection), nil
+	mqlConn := res.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection)
+	mqlConn.cachePrivateLinkServiceId = plsId
+	return mqlConn, nil
+}
+
+type mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnectionInternal struct {
+	cachePrivateLinkServiceId string
 }
 
 func (a *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) privateLinkService() (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
-	plsId := a.PrivateLinkServiceId.Data
+	plsId := a.cachePrivateLinkServiceId
 	if plsId == "" {
 		a.PrivateLinkService.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -2649,7 +2634,7 @@ func (a *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConn
 }
 
 func (a *mqlAzureSubscriptionPrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
-	peId := a.PrivateEndpointId.Data
+	peId := a.cachePrivateEndpointId
 	if peId == "" {
 		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -3415,7 +3400,7 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 	if err != nil {
 		return nil, err
 	}
-	var mode, enabledState string
+	var mode string
 	enabled := true
 	var requestBodyCheck *bool
 	var maxRequestBodySizeInKb, fileUploadLimitInMb *int64
@@ -3432,7 +3417,6 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 				mode = string(*ps.Mode)
 			}
 			if ps.State != nil {
-				enabledState = string(*ps.State)
 			}
 			requestBodyCheck = ps.RequestBodyCheck
 			if ps.MaxRequestBodySizeInKb != nil {
@@ -3470,7 +3454,6 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 		"etag":                   llx.StringDataPtr(waf.Etag),
 		"properties":             llx.DictData(props),
 		"mode":                   llx.StringData(mode),
-		"enabledState":           llx.StringData(enabledState),
 		"enabled":                llx.BoolData(enabled),
 		"requestBodyCheck":       llx.BoolDataPtr(requestBodyCheck),
 		"maxRequestBodySizeInKb": llx.IntDataPtr(maxRequestBodySizeInKb),
@@ -3861,7 +3844,6 @@ func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.Application
 	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.sslCertificate", map[string]*llx.RawData{
 		"id":                llx.StringData(id),
 		"name":              llx.StringData(name),
-		"keyVaultSecretId":  llx.StringData(keyVaultSecretId),
 		"publicCertData":    llx.StringData(publicCertData),
 		"provisioningState": llx.StringData(provisioningState),
 	})
@@ -3870,21 +3852,23 @@ func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.Application
 	}
 	sslCert := res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate)
 	sslCert.cacheHsmKeyId = hsmKeyId
+	sslCert.cacheKeyVaultSecretId = keyVaultSecretId
 	return sslCert, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificateInternal struct {
-	cacheHsmKeyId string
+	cacheHsmKeyId         string
+	cacheKeyVaultSecretId string
 }
 
 // keyVaultSecret resolves the typed Key Vault secret backing this certificate
 // from its secret URI. Returns null for certificates uploaded directly.
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) keyVaultSecret() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
-	if a.KeyVaultSecretId.Data == "" {
+	if a.cacheKeyVaultSecretId == "" {
 		a.KeyVaultSecret.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return newKeyVaultSecretResource(a.MqlRuntime, a.KeyVaultSecretId.Data)
+	return newKeyVaultSecretResource(a.MqlRuntime, a.cacheKeyVaultSecretId)
 }
 
 // hsmKey resolves the typed Managed HSM key backing this certificate from its
@@ -4368,10 +4352,6 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) natRules() ([]any, error) {
 		if natRule == nil {
 			continue
 		}
-		props, err := convert.JsonToDict(natRule.Properties)
-		if err != nil {
-			return nil, err
-		}
 		var action string
 		var priority *int64
 		rules := []any{}
@@ -4383,20 +4363,20 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) natRules() ([]any, error) {
 				v := int64(*p.Priority)
 				priority = &v
 			}
-			rules, err = convert.JsonToDictSlice(p.Rules)
+			r, err := convert.JsonToDictSlice(p.Rules)
 			if err != nil {
 				return nil, err
 			}
+			rules = r
 		}
 		mqlNatRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.natRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(natRule.ID),
-				"name":       llx.StringDataPtr(natRule.Name),
-				"etag":       llx.StringDataPtr(natRule.Etag),
-				"properties": llx.DictData(props),
-				"action":     llx.StringData(action),
-				"priority":   llx.IntDataPtr(priority),
-				"rules":      llx.ArrayData(rules, types.Dict),
+				"id":       llx.StringDataPtr(natRule.ID),
+				"name":     llx.StringDataPtr(natRule.Name),
+				"etag":     llx.StringDataPtr(natRule.Etag),
+				"action":   llx.StringData(action),
+				"priority": llx.IntDataPtr(priority),
+				"rules":    llx.ArrayData(rules, types.Dict),
 			})
 		if err != nil {
 			return nil, err
@@ -4415,10 +4395,6 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) networkRules() ([]any, erro
 		if networkRule == nil {
 			continue
 		}
-		props, err := convert.JsonToDict(networkRule.Properties)
-		if err != nil {
-			return nil, err
-		}
 		var action string
 		var priority *int64
 		rules := []any{}
@@ -4430,20 +4406,20 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) networkRules() ([]any, erro
 				v := int64(*p.Priority)
 				priority = &v
 			}
-			rules, err = convert.JsonToDictSlice(p.Rules)
+			r, err := convert.JsonToDictSlice(p.Rules)
 			if err != nil {
 				return nil, err
 			}
+			rules = r
 		}
 		mqlNetworkRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.networkRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(networkRule.ID),
-				"name":       llx.StringDataPtr(networkRule.Name),
-				"etag":       llx.StringDataPtr(networkRule.Etag),
-				"properties": llx.DictData(props),
-				"action":     llx.StringData(action),
-				"priority":   llx.IntDataPtr(priority),
-				"rules":      llx.ArrayData(rules, types.Dict),
+				"id":       llx.StringDataPtr(networkRule.ID),
+				"name":     llx.StringDataPtr(networkRule.Name),
+				"etag":     llx.StringDataPtr(networkRule.Etag),
+				"action":   llx.StringData(action),
+				"priority": llx.IntDataPtr(priority),
+				"rules":    llx.ArrayData(rules, types.Dict),
 			})
 		if err != nil {
 			return nil, err
@@ -4462,10 +4438,6 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) applicationRules() ([]any, 
 		if appRule == nil {
 			continue
 		}
-		props, err := convert.JsonToDict(appRule.Properties)
-		if err != nil {
-			return nil, err
-		}
 		var action string
 		var priority *int64
 		rules := []any{}
@@ -4477,20 +4449,20 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) applicationRules() ([]any, 
 				v := int64(*p.Priority)
 				priority = &v
 			}
-			rules, err = convert.JsonToDictSlice(p.Rules)
+			r, err := convert.JsonToDictSlice(p.Rules)
 			if err != nil {
 				return nil, err
 			}
+			rules = r
 		}
 		mqlAppRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.applicationRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(appRule.ID),
-				"name":       llx.StringDataPtr(appRule.Name),
-				"etag":       llx.StringDataPtr(appRule.Etag),
-				"properties": llx.DictData(props),
-				"action":     llx.StringData(action),
-				"priority":   llx.IntDataPtr(priority),
-				"rules":      llx.ArrayData(rules, types.Dict),
+				"id":       llx.StringDataPtr(appRule.ID),
+				"name":     llx.StringDataPtr(appRule.Name),
+				"etag":     llx.StringDataPtr(appRule.Etag),
+				"action":   llx.StringData(action),
+				"priority": llx.IntDataPtr(priority),
+				"rules":    llx.ArrayData(rules, types.Dict),
 			})
 		if err != nil {
 			return nil, err
@@ -5088,11 +5060,9 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 			"enableIPForwarding":          enableIPForwarding,
 			"enableAcceleratedNetworking": enableAcceleratedNetworking,
 			"primary":                     primary,
-			"networkSecurityGroupId":      llx.StringData(networkSecurityGroupId),
 			"dnsServers":                  llx.ArrayData(dnsServers, types.String),
 			"appliedDnsServers":           llx.ArrayData(appliedDnsServers, types.String),
 			"internalDnsNameLabel":        llx.StringData(internalDnsNameLabel),
-			"ipConfigurations":            llx.ArrayData(ipConfigs, types.Dict),
 		})
 	if err != nil {
 		return nil, err
@@ -6036,9 +6006,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionByp
 				"description":          llx.StringDataPtr(rule.Description),
 				"protocol":             llx.StringData(protocol),
 				"sourceAddresses":      llx.ArrayData(strPtrsToAny(rule.SourceAddresses), types.String),
-				"sourceIpGroups":       llx.ArrayData(strPtrsToAny(rule.SourceIPGroups), types.String),
 				"destinationAddresses": llx.ArrayData(strPtrsToAny(rule.DestinationAddresses), types.String),
-				"destinationIpGroups":  llx.ArrayData(strPtrsToAny(rule.DestinationIPGroups), types.String),
 				"destinationPorts":     llx.ArrayData(strPtrsToAny(rule.DestinationPorts), types.String),
 			})
 		if err != nil {

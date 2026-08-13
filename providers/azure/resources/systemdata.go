@@ -71,27 +71,27 @@ func (a *mqlAzureSubscriptionResource) systemMetadata() (*mqlAzureSubscriptionSy
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDisk) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceSnapshot) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceHybridMachine) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceHybridMachineExtension) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

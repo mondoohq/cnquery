@@ -22,6 +22,10 @@ import (
 
 type mqlAzureSubscriptionDataFactoryServiceFactoryInternal struct {
 	cacheUserAssignedIdentityIds []string
+	cacheCmkKeyName              string
+	cacheCmkKeyVaultUri          string
+	cacheCmkKeyVersion           string
+	cacheCmkUserAssignedIdentity string
 	cacheSystemData              any
 }
 
@@ -94,7 +98,6 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 			var provisioningState string
 			var version string
 			var repoConfig any
-			var encryption any
 			var cmkKeyName, cmkKeyVaultUri, cmkKeyVersion, cmkUserAssignedIdentity string
 			var created *llx.RawData
 
@@ -115,10 +118,6 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 					}
 				}
 				if factory.Properties.Encryption != nil {
-					encryption, err = convert.JsonToDict(factory.Properties.Encryption)
-					if err != nil {
-						return nil, err
-					}
 					if factory.Properties.Encryption.KeyName != nil {
 						cmkKeyName = *factory.Properties.Encryption.KeyName
 					}
@@ -140,30 +139,29 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 
 			mqlFactory, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionDataFactoryServiceFactory,
 				map[string]*llx.RawData{
-					"__id":                    llx.StringDataPtr(factory.ID),
-					"id":                      llx.StringDataPtr(factory.ID),
-					"name":                    llx.StringDataPtr(factory.Name),
-					"location":                llx.StringDataPtr(factory.Location),
-					"tags":                    llx.MapData(convert.PtrMapStrToInterface(factory.Tags), types.String),
-					"type":                    llx.StringDataPtr(factory.Type),
-					"properties":              llx.DictData(properties),
-					"publicNetworkAccess":     llx.StringData(publicNetworkAccess),
-					"identity":                llx.DictData(identity),
-					"provisioningState":       llx.StringData(provisioningState),
-					"version":                 llx.StringData(version),
-					"repoConfiguration":       llx.DictData(repoConfig),
-					"encryption":              llx.DictData(encryption),
-					"cmkKeyName":              llx.StringData(cmkKeyName),
-					"cmkKeyVaultUri":          llx.StringData(cmkKeyVaultUri),
-					"cmkKeyVersion":           llx.StringData(cmkKeyVersion),
-					"cmkUserAssignedIdentity": llx.StringData(cmkUserAssignedIdentity),
-					"created":                 created,
+					"__id":                llx.StringDataPtr(factory.ID),
+					"id":                  llx.StringDataPtr(factory.ID),
+					"name":                llx.StringDataPtr(factory.Name),
+					"location":            llx.StringDataPtr(factory.Location),
+					"tags":                llx.MapData(convert.PtrMapStrToInterface(factory.Tags), types.String),
+					"type":                llx.StringDataPtr(factory.Type),
+					"properties":          llx.DictData(properties),
+					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
+					"identity":            llx.DictData(identity),
+					"provisioningState":   llx.StringData(provisioningState),
+					"version":             llx.StringData(version),
+					"repoConfiguration":   llx.DictData(repoConfig),
+					"created":             created,
 				})
 			if err != nil {
 				return nil, err
 			}
 			factoryRes := mqlFactory.(*mqlAzureSubscriptionDataFactoryServiceFactory)
 			factoryRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			factoryRes.cacheCmkKeyName = cmkKeyName
+			factoryRes.cacheCmkKeyVaultUri = cmkKeyVaultUri
+			factoryRes.cacheCmkKeyVersion = cmkKeyVersion
+			factoryRes.cacheCmkUserAssignedIdentity = cmkUserAssignedIdentity
 			sysData, err := convert.JsonToDict(factory.SystemData)
 			if err != nil {
 				return nil, err
@@ -181,14 +179,14 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) id() (string, error) {
 
 // cmkKey returns a typed reference to the Key Vault key used for customer-managed encryption.
 func (a *mqlAzureSubscriptionDataFactoryServiceFactory) cmkKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
-	vaultURI := strings.TrimSuffix(a.CmkKeyVaultUri.Data, "/")
-	keyName := a.CmkKeyName.Data
+	vaultURI := strings.TrimSuffix(a.cacheCmkKeyVaultUri, "/")
+	keyName := a.cacheCmkKeyName
 	if vaultURI == "" || keyName == "" {
 		a.CmkKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	keyURI := vaultURI + "/keys/" + keyName
-	if version := a.CmkKeyVersion.Data; version != "" {
+	if version := a.cacheCmkKeyVersion; version != "" {
 		keyURI += "/" + version
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, keyURI)
@@ -196,7 +194,7 @@ func (a *mqlAzureSubscriptionDataFactoryServiceFactory) cmkKey() (*mqlAzureSubsc
 
 // cmkIdentity returns the user-assigned managed identity used to access the CMK.
 func (a *mqlAzureSubscriptionDataFactoryServiceFactory) cmkIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
-	id := a.CmkUserAssignedIdentity.Data
+	id := a.cacheCmkUserAssignedIdentity
 	if id == "" {
 		a.CmkIdentity.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

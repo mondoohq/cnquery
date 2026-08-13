@@ -158,7 +158,6 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		"tags":                        llx.MapData(convert.PtrMapStrToInterface(p.Tags), types.String),
 		"type":                        llx.StringDataPtr(p.Type),
 		"properties":                  llx.DictData(properties),
-		"profileStatus":               llx.StringDataPtr(nil),
 		"status":                      llx.BoolData(false),
 		"trafficRoutingMethod":        llx.StringDataPtr(nil),
 		"trafficViewEnrollmentStatus": llx.StringDataPtr(nil),
@@ -174,10 +173,6 @@ func azureTrafficManagerProfileToMql(runtime *plugin.Runtime, p *trafficmanager.
 		return CreateResource(runtime, "azure.subscription.networkService.trafficManagerProfile", args)
 	}
 
-	if props.ProfileStatus != nil {
-		s := string(*props.ProfileStatus)
-		args["profileStatus"] = llx.StringData(s)
-	}
 	args["status"] = llx.BoolData(trafficManagerProfileEnabled(props))
 	if props.TrafficRoutingMethod != nil {
 		s := string(*props.TrafficRoutingMethod)
@@ -239,7 +234,6 @@ func azureTrafficManagerEndpointToMql(runtime *plugin.Runtime, ep *trafficmanage
 		"type":                  llx.StringDataPtr(ep.Type),
 		"properties":            llx.DictData(properties),
 		"alwaysServe":           llx.StringDataPtr(nil),
-		"endpointStatus":        llx.StringDataPtr(nil),
 		"status":                llx.BoolData(false),
 		"endpointMonitorStatus": llx.StringDataPtr(nil),
 		"target":                llx.StringDataPtr(nil),
@@ -263,10 +257,6 @@ func azureTrafficManagerEndpointToMql(runtime *plugin.Runtime, ep *trafficmanage
 	if props.AlwaysServe != nil {
 		s := string(*props.AlwaysServe)
 		args["alwaysServe"] = llx.StringData(s)
-	}
-	if props.EndpointStatus != nil {
-		s := string(*props.EndpointStatus)
-		args["endpointStatus"] = llx.StringData(s)
 	}
 	args["status"] = llx.BoolData(trafficManagerEndpointEnabled(props))
 	if props.EndpointMonitorStatus != nil {

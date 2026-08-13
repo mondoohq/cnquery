@@ -80,8 +80,8 @@ func TestBatchAccountDataConversion(t *testing.T) {
 
 		// Dict fields
 		assert.NotNil(t, rawData["properties"].Value)
-		assert.NotNil(t, rawData["identity"].Value)
 		assert.NotNil(t, rawData["tags"].Value)
+		assert.Equal(t, "principal-123", rawData["principalId"].Value)
 	})
 
 	t.Run("EnumConversions", func(t *testing.T) {
@@ -121,15 +121,12 @@ func TestBatchAccountDataConversion(t *testing.T) {
 		assert.Nil(t, rawData["poolQuota"].Value)
 		assert.Nil(t, rawData["dedicatedCoreQuotaPerVmFamilyEnforced"].Value)
 		assert.Nil(t, rawData["allowedAuthenticationModes"].Value)
-		assert.Nil(t, rawData["autoStorage"].Value)
-		assert.Nil(t, rawData["encryption"].Value)
-		assert.Nil(t, rawData["keyVaultReference"].Value)
 		assert.Nil(t, rawData["networkProfile"].Value)
 		assert.Nil(t, rawData["privateEndpointConnections"].Value)
 		assert.Nil(t, rawData["dedicatedCoreQuotaPerVmFamily"].Value)
 
 		// Nil identity
-		assert.Nil(t, rawData["identity"].Value)
+		assert.Equal(t, "", rawData["principalId"].Value)
 
 		// Present fields still work
 		assert.Equal(t, "Succeeded", rawData["provisioningState"].Value)
