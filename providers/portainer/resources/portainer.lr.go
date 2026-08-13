@@ -221,9 +221,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"portainer.settings.disableKubeconfigDownload": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerSettings).GetDisableKubeconfigDownload()).ToDataRes(types.Bool)
 	},
-	"portainer.settings.enableHostManagementFeatures": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPortainerSettings).GetEnableHostManagementFeatures()).ToDataRes(types.Bool)
-	},
 	"portainer.settings.disableKubeRolesSync": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPortainerSettings).GetDisableKubeRolesSync()).ToDataRes(types.Bool)
 	},
@@ -559,10 +556,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"portainer.settings.disableKubeconfigDownload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPortainerSettings).DisableKubeconfigDownload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"portainer.settings.enableHostManagementFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPortainerSettings).EnableHostManagementFeatures, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"portainer.settings.disableKubeRolesSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1136,7 +1129,6 @@ type mqlPortainerSettings struct {
 	AllowVolumeBrowserForRegularUsers         plugin.TValue[bool]
 	DisableKubeShell                          plugin.TValue[bool]
 	DisableKubeconfigDownload                 plugin.TValue[bool]
-	EnableHostManagementFeatures              plugin.TValue[bool]
 	DisableKubeRolesSync                      plugin.TValue[bool]
 	KubectlShellImage                         plugin.TValue[string]
 	KubeconfigExpiry                          plugin.TValue[string]
@@ -1241,10 +1233,6 @@ func (c *mqlPortainerSettings) GetDisableKubeShell() *plugin.TValue[bool] {
 
 func (c *mqlPortainerSettings) GetDisableKubeconfigDownload() *plugin.TValue[bool] {
 	return &c.DisableKubeconfigDownload
-}
-
-func (c *mqlPortainerSettings) GetEnableHostManagementFeatures() *plugin.TValue[bool] {
-	return &c.EnableHostManagementFeatures
 }
 
 func (c *mqlPortainerSettings) GetDisableKubeRolesSync() *plugin.TValue[bool] {
