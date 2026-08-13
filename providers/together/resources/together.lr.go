@@ -363,9 +363,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"together.cluster.reservationEndTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTogetherCluster).GetReservationEndTime()).ToDataRes(types.Time)
 	},
-	"together.cluster.storageVolumes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTogetherCluster).GetStorageVolumes()).ToDataRes(types.Array(types.Resource("together.clusterStorageVolume")))
-	},
 	"together.secret.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTogetherSecret).GetId()).ToDataRes(types.String)
 	},
@@ -848,10 +845,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"together.cluster.reservationEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTogetherCluster).ReservationEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"together.cluster.storageVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTogetherCluster).StorageVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"together.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1757,7 +1750,7 @@ func (c *mqlTogetherFile) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlTogetherCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlTogetherClusterInternal
+	// optional: if you define mqlTogetherClusterInternal it will be used here
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	ClusterType          plugin.TValue[string]
@@ -1775,7 +1768,6 @@ type mqlTogetherCluster struct {
 	CreatedAt            plugin.TValue[*time.Time]
 	ReservationStartTime plugin.TValue[*time.Time]
 	ReservationEndTime   plugin.TValue[*time.Time]
-	StorageVolumes       plugin.TValue[[]any]
 }
 
 // createTogetherCluster creates a new instance of this resource
@@ -1881,22 +1873,6 @@ func (c *mqlTogetherCluster) GetReservationStartTime() *plugin.TValue[*time.Time
 
 func (c *mqlTogetherCluster) GetReservationEndTime() *plugin.TValue[*time.Time] {
 	return &c.ReservationEndTime
-}
-
-func (c *mqlTogetherCluster) GetStorageVolumes() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.StorageVolumes, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("together.cluster", c.__id, "storageVolumes")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.storageVolumes()
-	})
 }
 
 // mqlTogetherSecret for the together.secret resource
