@@ -66,7 +66,6 @@ func (r *mqlPortainer) settings() (*mqlPortainerSettings, error) {
 		"allowVolumeBrowserForRegularUsers":         llx.BoolData(settings.AllowVolumeBrowserForRegularUsers),
 		"disableKubeShell":                          llx.BoolData(settings.DisableKubeShell),
 		"disableKubeconfigDownload":                 llx.BoolData(settings.DisableKubeconfigDownload),
-		"enableHostManagementFeatures":              llx.BoolData(settings.EnableHostManagementFeatures),
 		"disableKubeRolesSync":                      llx.BoolData(settings.DisableKubeRolesSync),
 		"kubectlShellImage":                         llx.StringData(settings.KubectlShellImage),
 		"kubeconfigExpiry":                          llx.StringData(settings.KubeconfigExpiry),
