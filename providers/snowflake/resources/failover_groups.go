@@ -14,7 +14,8 @@ import (
 )
 
 type mqlSnowflakeFailoverGroupInternal struct {
-	id sdk.AccountObjectIdentifier
+	id         sdk.AccountObjectIdentifier
+	cacheOwner string
 }
 
 func (r *mqlSnowflakeAccount) failoverGroups() ([]any, error) {
@@ -72,7 +73,6 @@ func newMqlSnowflakeFailoverGroup(runtime *plugin.Runtime, g sdk.FailoverGroup) 
 		"nextScheduledRefresh":    llx.StringData(g.NextScheduledRefresh),
 		"regionGroup":             llx.StringData(g.RegionGroup),
 		"snowflakeRegion":         llx.StringData(g.SnowflakeRegion),
-		"owner":                   llx.StringData(g.Owner),
 		"comment":                 llx.StringData(g.Comment),
 		"createdAt":               llx.TimeData(g.CreatedOn),
 	})
@@ -81,6 +81,7 @@ func newMqlSnowflakeFailoverGroup(runtime *plugin.Runtime, g sdk.FailoverGroup) 
 	}
 	mqlGroup := r.(*mqlSnowflakeFailoverGroup)
 	mqlGroup.id = g.ID()
+	mqlGroup.cacheOwner = g.Owner
 	return mqlGroup, nil
 }
 
@@ -111,5 +112,5 @@ func (r *mqlSnowflakeFailoverGroup) shares() ([]any, error) {
 }
 
 func (r *mqlSnowflakeFailoverGroup) ownerRole() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheOwner, &r.OwnerRole)
 }

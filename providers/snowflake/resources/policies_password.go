@@ -45,7 +45,6 @@ func newMqlSnowflakePasswordPolicy(runtime *plugin.Runtime, passwordPolicy sdk.P
 		"databaseName": llx.StringData(passwordPolicy.DatabaseName),
 		"schemaName":   llx.StringData(passwordPolicy.SchemaName),
 		"kind":         llx.StringData(passwordPolicy.Kind),
-		"owner":        llx.StringData(passwordPolicy.Owner),
 		"comment":      llx.StringData(passwordPolicy.Comment),
 		"createdAt":    llx.TimeData(passwordPolicy.CreatedOn),
 	})
@@ -53,7 +52,14 @@ func newMqlSnowflakePasswordPolicy(runtime *plugin.Runtime, passwordPolicy sdk.P
 		return nil, err
 	}
 	mqlResource := r.(*mqlSnowflakePasswordPolicy)
+	mqlResource.cacheOwner = passwordPolicy.Owner
 	return mqlResource, nil
+}
+
+// mqlSnowflakePasswordPolicyInternal holds the owning role name that
+// ownerRole() resolves.
+type mqlSnowflakePasswordPolicyInternal struct {
+	cacheOwner string
 }
 
 func (r *mqlSnowflakePasswordPolicy) gatherPasswordPolicyDetails() error {
@@ -169,5 +175,5 @@ func (r *mqlSnowflakePasswordPolicy) passwordHistory() (int64, error) {
 }
 
 func (r *mqlSnowflakePasswordPolicy) ownerRole() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheOwner, &r.OwnerRole)
 }
