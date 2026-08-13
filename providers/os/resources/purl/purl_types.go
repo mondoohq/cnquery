@@ -17,6 +17,17 @@ var (
 	TypeAppx Type = "appx"
 	// TypeMacos is a pkg:macos purl.
 	TypeMacos Type = "macos"
+	// TypeWindowsDriver is a pkg:windows-driver purl.
+	//
+	// Drivers are not ordinary Windows software and must not share pkg:windows
+	// with it. A vendor bundle that shipped an installer registers in
+	// Add/Remove Programs as well as with the spooler, so the same driver can
+	// be reported twice; the type keeps those apart. The namespace is the
+	// VENDOR, because driver names are not unique across vendors: "PCL 6
+	// Driver" and "PostScript3 Driver" name page description languages every
+	// printer vendor ships a driver for, so keying on the name alone would
+	// match one vendor's advisory against another's driver.
+	TypeWindowsDriver Type = "windows-driver"
 	// Type_X_Platform is a pkg:platform purl.
 	Type_X_Platform Type = "platform"
 	// TypeSnap is a pkg:snap purl.
@@ -36,18 +47,19 @@ var (
 	TypeRPM     = Type(packageurl.TypeRPM)
 
 	KnownTypes = map[Type]struct{}{
-		TypeAppx:        {},
-		TypeWindows:     {},
-		TypeMacos:       {},
-		Type_X_Platform: {},
-		TypeGeneric:     {},
-		TypeApk:         {},
-		TypeDebian:      {},
-		TypeAlpm:        {},
-		TypeEbuild:      {},
-		TypeNix:         {},
-		TypeRPM:         {},
-		TypeCos:         {},
+		TypeAppx:          {},
+		TypeWindows:       {},
+		TypeWindowsDriver: {},
+		TypeMacos:         {},
+		Type_X_Platform:   {},
+		TypeGeneric:       {},
+		TypeApk:           {},
+		TypeDebian:        {},
+		TypeAlpm:          {},
+		TypeEbuild:        {},
+		TypeNix:           {},
+		TypeRPM:           {},
+		TypeCos:           {},
 	}
 )
 
