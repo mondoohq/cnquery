@@ -14,10 +14,22 @@ import (
 
 // mqlProxmoxUserInternal caches the inline token list from
 // /access/users?full=1 so `proxmox.users { tokens }` doesn't fan out
-// into a per-user /access/users/<id>/token fetch (N+1).
+// into a per-user /access/users/<id>/token fetch (N+1). It also holds the
+// raw group-membership names that groupRefs() resolves, since /access/users
+// returns them inline and GetUsers() is not cached.
 type mqlProxmoxUserInternal struct {
 	cachedTokens    []any
 	cachedTokensSet bool
+	cachedGroups    []string
+}
+
+// splitProxmoxGroups splits the comma-separated group list that
+// /access/users returns inline. Returns nil for an empty list.
+func splitProxmoxGroups(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	return strings.Split(raw, ",")
 }
 
 // ---------------------------------------------------------------------------
