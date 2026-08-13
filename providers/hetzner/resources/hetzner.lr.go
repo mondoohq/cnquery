@@ -323,9 +323,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.server.serverType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetServerType()).ToDataRes(types.Resource("hetzner.serverType"))
 	},
-	"hetzner.server.datacenter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerServer).GetDatacenter()).ToDataRes(types.Resource("hetzner.datacenter"))
-	},
 	"hetzner.server.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetLocation()).ToDataRes(types.Resource("hetzner.location"))
 	},
@@ -719,9 +716,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.primaryIp.blocked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerPrimaryIp).GetBlocked()).ToDataRes(types.Bool)
 	},
-	"hetzner.primaryIp.datacenter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerPrimaryIp).GetDatacenter()).ToDataRes(types.Resource("hetzner.datacenter"))
-	},
 	"hetzner.primaryIp.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerPrimaryIp).GetLocation()).ToDataRes(types.Resource("hetzner.location"))
 	},
@@ -880,9 +874,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.loadBalancerType.maxAssignedCertificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancerType).GetMaxAssignedCertificates()).ToDataRes(types.Int)
-	},
-	"hetzner.loadBalancerType.deprecated": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerLoadBalancerType).GetDeprecated()).ToDataRes(types.Time)
 	},
 	"hetzner.loadBalancerType.deprecation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancerType).GetDeprecation()).ToDataRes(types.Dict)
@@ -1060,9 +1051,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.datacenter.serverTypesAvailableForMigration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerDatacenter).GetServerTypesAvailableForMigration()).ToDataRes(types.Array(types.Resource("hetzner.serverType")))
-	},
-	"hetzner.datacenter.servers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerDatacenter).GetServers()).ToDataRes(types.Array(types.Resource("hetzner.server")))
 	},
 	"hetzner.storageBox.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerStorageBox).GetId()).ToDataRes(types.Int)
@@ -1449,10 +1437,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.server.serverType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).ServerType, ok = plugin.RawToTValue[*mqlHetznerServerType](v.Value, v.Error)
-		return
-	},
-	"hetzner.server.datacenter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlHetznerServer).Datacenter, ok = plugin.RawToTValue[*mqlHetznerDatacenter](v.Value, v.Error)
 		return
 	},
 	"hetzner.server.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2023,10 +2007,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerPrimaryIp).Blocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"hetzner.primaryIp.datacenter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlHetznerPrimaryIp).Datacenter, ok = plugin.RawToTValue[*mqlHetznerDatacenter](v.Value, v.Error)
-		return
-	},
 	"hetzner.primaryIp.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerPrimaryIp).Location, ok = plugin.RawToTValue[*mqlHetznerLocation](v.Value, v.Error)
 		return
@@ -2257,10 +2237,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.loadBalancerType.maxAssignedCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancerType).MaxAssignedCertificates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"hetzner.loadBalancerType.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlHetznerLoadBalancerType).Deprecated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"hetzner.loadBalancerType.deprecation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2521,10 +2497,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.datacenter.serverTypesAvailableForMigration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerDatacenter).ServerTypesAvailableForMigration, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"hetzner.datacenter.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlHetznerDatacenter).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"hetzner.storageBox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3313,7 +3285,6 @@ type mqlHetznerServer struct {
 	Created           plugin.TValue[*time.Time]
 	PrimaryDiskSize   plugin.TValue[int64]
 	ServerType        plugin.TValue[*mqlHetznerServerType]
-	Datacenter        plugin.TValue[*mqlHetznerDatacenter]
 	Location          plugin.TValue[*mqlHetznerLocation]
 	Image             plugin.TValue[*mqlHetznerImage]
 	PrivateNet        plugin.TValue[[]any]
@@ -3415,22 +3386,6 @@ func (c *mqlHetznerServer) GetServerType() *plugin.TValue[*mqlHetznerServerType]
 		}
 
 		return c.serverType()
-	})
-}
-
-func (c *mqlHetznerServer) GetDatacenter() *plugin.TValue[*mqlHetznerDatacenter] {
-	return plugin.GetOrCompute[*mqlHetznerDatacenter](&c.Datacenter, func() (*mqlHetznerDatacenter, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.server", c.__id, "datacenter")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlHetznerDatacenter), nil
-			}
-		}
-
-		return c.datacenter()
 	})
 }
 
@@ -4816,7 +4771,6 @@ type mqlHetznerPrimaryIp struct {
 	AssigneeId   plugin.TValue[int64]
 	AutoDelete   plugin.TValue[bool]
 	Blocked      plugin.TValue[bool]
-	Datacenter   plugin.TValue[*mqlHetznerDatacenter]
 	Location     plugin.TValue[*mqlHetznerLocation]
 	Server       plugin.TValue[*mqlHetznerServer]
 	DnsPtr       plugin.TValue[[]any]
@@ -4892,22 +4846,6 @@ func (c *mqlHetznerPrimaryIp) GetAutoDelete() *plugin.TValue[bool] {
 
 func (c *mqlHetznerPrimaryIp) GetBlocked() *plugin.TValue[bool] {
 	return &c.Blocked
-}
-
-func (c *mqlHetznerPrimaryIp) GetDatacenter() *plugin.TValue[*mqlHetznerDatacenter] {
-	return plugin.GetOrCompute[*mqlHetznerDatacenter](&c.Datacenter, func() (*mqlHetznerDatacenter, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.primaryIp", c.__id, "datacenter")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlHetznerDatacenter), nil
-			}
-		}
-
-		return c.datacenter()
-	})
 }
 
 func (c *mqlHetznerPrimaryIp) GetLocation() *plugin.TValue[*mqlHetznerLocation] {
@@ -5514,7 +5452,6 @@ type mqlHetznerLoadBalancerType struct {
 	MaxServices             plugin.TValue[int64]
 	MaxTargets              plugin.TValue[int64]
 	MaxAssignedCertificates plugin.TValue[int64]
-	Deprecated              plugin.TValue[*time.Time]
 	Deprecation             plugin.TValue[any]
 }
 
@@ -5581,10 +5518,6 @@ func (c *mqlHetznerLoadBalancerType) GetMaxTargets() *plugin.TValue[int64] {
 
 func (c *mqlHetznerLoadBalancerType) GetMaxAssignedCertificates() *plugin.TValue[int64] {
 	return &c.MaxAssignedCertificates
-}
-
-func (c *mqlHetznerLoadBalancerType) GetDeprecated() *plugin.TValue[*time.Time] {
-	return &c.Deprecated
 }
 
 func (c *mqlHetznerLoadBalancerType) GetDeprecation() *plugin.TValue[any] {
@@ -6152,7 +6085,6 @@ type mqlHetznerDatacenter struct {
 	SupportedServerTypes             plugin.TValue[[]any]
 	AvailableServerTypes             plugin.TValue[[]any]
 	ServerTypesAvailableForMigration plugin.TValue[[]any]
-	Servers                          plugin.TValue[[]any]
 }
 
 // createHetznerDatacenter creates a new instance of this resource
@@ -6265,22 +6197,6 @@ func (c *mqlHetznerDatacenter) GetServerTypesAvailableForMigration() *plugin.TVa
 		}
 
 		return c.serverTypesAvailableForMigration()
-	})
-}
-
-func (c *mqlHetznerDatacenter) GetServers() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.datacenter", c.__id, "servers")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.servers()
 	})
 }
 

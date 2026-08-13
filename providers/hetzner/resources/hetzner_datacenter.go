@@ -93,14 +93,6 @@ func (m *mqlHetznerDatacenter) serverTypesAvailableForMigration() ([]any, error)
 	return serverTypeRefs(m.MqlRuntime, m.cacheServerTypesAvailableMigration)
 }
 
-func (m *mqlHetznerDatacenter) servers() ([]any, error) {
-	// Hetzner removed the datacenter association from servers, so servers can no
-	// longer be mapped back to a datacenter (a location holds many datacenters,
-	// so the server's location cannot recover it). The field is retained
-	// (deprecated) and always resolves to an empty list.
-	return []any{}, nil
-}
-
 func serverTypeRefs(runtime *plugin.Runtime, types []*hcloud.ServerType) ([]any, error) {
 	out := make([]any, 0, len(types))
 	for _, t := range types {
