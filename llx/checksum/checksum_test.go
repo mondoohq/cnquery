@@ -5,6 +5,7 @@ package checksum
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -325,4 +326,55 @@ func BenchmarkHashDataRow_Array500(b *testing.B) {
 			}
 		}
 	})
+}
+
+// TestFloatNormalization: semantically equal floats must hash equally —
+// negative zero folds as positive zero and every NaN payload folds to one
+// canonical sentinel. Bit-level noise must never read as content change.
+func TestFloatNormalization(t *testing.T) {
+	sum := func(v float64) uint64 {
+		h := NewHasher("t")
+		h.F64(v)
+		require.NoError(t, h.Err())
+		return h.Sum64()
+	}
+	assert.Equal(t, sum(0.0), sum(math.Copysign(0, -1)), "-0.0 must fold as +0.0")
+	otherNaN := math.Float64frombits(0x7FF8000000000042) // a different NaN payload
+	assert.Equal(t, sum(math.NaN()), sum(otherNaN), "all NaNs fold to one sentinel")
+	assert.NotEqual(t, sum(1.5), sum(2.5))
+	assert.NotEqual(t, sum(0), sum(math.NaN()))
+}
+
+// TestNilPrimitiveSentinel: a Nil primitive hashes by explicit sentinel —
+// whatever bytes sit in a Nil's Value are not content and must not change
+// the checksum.
+func TestNilPrimitiveSentinel(t *testing.T) {
+	sum := func(p *llx.Primitive) uint64 {
+		h := NewHasher("t")
+		require.NoError(t, CanonPrimitive(h, p))
+		require.NoError(t, h.Err())
+		return h.Sum64()
+	}
+	empty := &llx.Primitive{Type: string(types.Nil)}
+	withJunk := &llx.Primitive{Type: string(types.Nil), Value: []byte("junk")}
+	assert.Equal(t, sum(empty), sum(withJunk))
+}
+
+// TestCanonDepthLimit: pathological dict nesting errors out instead of
+// overflowing the stack; the caller fails open to a full upload.
+func TestCanonDepthLimit(t *testing.T) {
+	cur := llx.StringPrimitive("x")
+	for i := 0; i < maxCanonDepth+1; i++ {
+		b, err := proto.Marshal(cur)
+		require.NoError(t, err)
+		cur = &llx.Primitive{Type: string(types.Dict), Value: b}
+	}
+	err := CanonPrimitive(NewHasher("t"), cur)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "nesting exceeds depth")
+
+	// A legal shallow dict still hashes fine.
+	b, err := proto.Marshal(llx.StringPrimitive("x"))
+	require.NoError(t, err)
+	require.NoError(t, CanonPrimitive(NewHasher("t"), &llx.Primitive{Type: string(types.Dict), Value: b}))
 }

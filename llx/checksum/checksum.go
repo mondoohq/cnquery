@@ -48,13 +48,33 @@ import (
 // v1: FNV-1a 64 (stdlib hash/fnv — no third-party dependency),
 // length-prefixed writes, explicit canonicalization of the fixed message
 // set, arrays hashed as multisets (sorted per-element sub-checksums —
-// provider enumeration order is not content).
+// provider enumeration order is not content), floats normalized (-0.0
+// folds as +0.0, every NaN as one canonical bit pattern), nesting bounded
+// at maxCanonDepth.
 const AlgoVersion = "1"
+
+// maxCanonDepth bounds primitive nesting during canonicalization. Each Dict
+// layer is a proto-encoded Primitive whose Value is another Primitive, so a
+// hostile or corrupted payload could otherwise recurse without limit. Real
+// llx values are a handful of levels deep; exceeding this is corruption and
+// errors out (the caller fails open to a full upload, never a wrong skip).
+const maxCanonDepth = 64
+
+// canonicalNaN is the single bit pattern every NaN folds to: two NaNs are
+// semantically the same "no value" even when their payload bits differ, and
+// hashing payload bits would report identical scans as changed.
+const canonicalNaN = 0x7FF8000000000001
 
 // Hasher is a length-prefixed, domain-separated hash writer over FNV-1a 64.
 // AlgoVersion covers a later switch to a stronger or wider hash.
+//
+// Write errors are recorded, not ignored: the first error sticks, later
+// writes become no-ops, and Err surfaces it. The row-level Hash* functions
+// and the exported canon helpers check it before returning a sum, so a
+// failed write can never silently produce a valid-looking checksum.
 type Hasher struct {
-	h hash.Hash64
+	h   hash.Hash64
+	err error
 }
 
 // NewHasher returns a Hasher domain-separated by the given literal.
@@ -64,23 +84,33 @@ func NewHasher(domain string) *Hasher {
 	return h
 }
 
+// write funnels every hash write through one error-checked path.
+func (h *Hasher) write(b []byte) {
+	if h.err != nil {
+		return
+	}
+	if _, err := h.h.Write(b); err != nil {
+		h.err = err
+	}
+}
+
 func (h *Hasher) writeLen(n int) {
 	var buf [8]byte
 	binary.LittleEndian.PutUint64(buf[:], uint64(n))
-	h.h.Write(buf[:]) //nolint:errcheck // hash.Hash.Write never errors
+	h.write(buf[:])
 }
 
 // Str writes a length-prefixed string.
 func (h *Hasher) Str(s string) *Hasher {
 	h.writeLen(len(s))
-	h.h.Write([]byte(s)) //nolint:errcheck
+	h.write([]byte(s))
 	return h
 }
 
 // Bytes writes a length-prefixed byte slice.
 func (h *Hasher) Bytes(b []byte) *Hasher {
 	h.writeLen(len(b))
-	h.h.Write(b) //nolint:errcheck
+	h.write(b)
 	return h
 }
 
@@ -88,7 +118,7 @@ func (h *Hasher) Bytes(b []byte) *Hasher {
 func (h *Hasher) U64(v uint64) *Hasher {
 	var buf [8]byte
 	binary.LittleEndian.PutUint64(buf[:], v)
-	h.h.Write(buf[:]) //nolint:errcheck
+	h.write(buf[:])
 	return h
 }
 
@@ -98,8 +128,18 @@ func (h *Hasher) U32(v uint32) *Hasher { return h.U64(uint64(v)) }
 // I64 writes a fixed-width int64.
 func (h *Hasher) I64(v int64) *Hasher { return h.U64(uint64(v)) }
 
-// F64 writes a float64 by bit pattern.
-func (h *Hasher) F64(v float64) *Hasher { return h.U64(math.Float64bits(v)) }
+// F64 writes a float64 by normalized bit pattern: +0.0 and -0.0 fold
+// identically, and every NaN folds to canonicalNaN — bit-level noise in
+// semantically equal values must not read as content change.
+func (h *Hasher) F64(v float64) *Hasher {
+	if v == 0 { // true for both +0.0 and -0.0
+		return h.U64(0)
+	}
+	if math.IsNaN(v) {
+		return h.U64(canonicalNaN)
+	}
+	return h.U64(math.Float64bits(v))
+}
 
 // Bool writes a single canonical byte.
 func (h *Hasher) Bool(v bool) *Hasher {
@@ -109,8 +149,14 @@ func (h *Hasher) Bool(v bool) *Hasher {
 	return h.U64(0)
 }
 
-// Sum64 finalizes the hash.
+// Sum64 finalizes the hash. Callers that reached it through the Hash* row
+// functions or the exported canon helpers have already had Err checked;
+// direct users must check Err themselves.
 func (h *Hasher) Sum64() uint64 { return h.h.Sum64() }
+
+// Err returns the first write error, if any. A Hasher with a non-nil Err
+// must not have its sum used.
+func (h *Hasher) Err() error { return h.err }
 
 // Multiset hashes a list as a multiset: each element hashed independently
 // under domain, the sorted element checksums folded in. Element order is not
@@ -121,12 +167,15 @@ func (h *Hasher) Sum64() uint64 { return h.h.Sum64() }
 func Multiset[T any](h *Hasher, domain string, items []T, canon func(*Hasher, T) error) error {
 	h.writeLen(len(items))
 	if len(items) == 0 {
-		return nil
+		return h.Err()
 	}
 	sums := make([]uint64, len(items))
 	for i, el := range items {
 		eh := NewHasher(domain)
 		if err := canon(eh, el); err != nil {
+			return err
+		}
+		if err := eh.Err(); err != nil {
 			return err
 		}
 		sums[i] = eh.Sum64()
@@ -135,7 +184,7 @@ func Multiset[T any](h *Hasher, domain string, items []T, canon func(*Hasher, T)
 	for _, s := range sums {
 		h.U64(s)
 	}
-	return nil
+	return h.Err()
 }
 
 // CanonResultMap hashes a key/result map key-sorted. Exported for the same
@@ -153,22 +202,35 @@ func CanonResultMap(h *Hasher, m map[string]*llx.Result) error {
 			return err
 		}
 	}
-	return nil
+	return h.Err()
 }
 
 // CanonPrimitive hashes an llx.Primitive structurally. Scalar Value bytes
 // are hashed as-is (they are llx's own canonical scalar encodings, not
 // proto-marshaled messages). Dict and Asset primitives carry nested encoded
 // messages in Value; those are decoded and re-walked, never hashed raw.
-// Arrays are hashed as multisets; maps key-sorted.
+// Arrays are hashed as multisets; maps key-sorted. Nesting deeper than
+// maxCanonDepth is corruption and errors out.
 func CanonPrimitive(h *Hasher, p *llx.Primitive) error {
+	return canonPrimitive(h, p, 0)
+}
+
+func canonPrimitive(h *Hasher, p *llx.Primitive, depth int) error {
+	if depth > maxCanonDepth {
+		return fmt.Errorf("canon: primitive nesting exceeds depth %d", maxCanonDepth)
+	}
 	if p == nil {
 		h.Str("<nil>")
-		return nil
+		return h.Err()
 	}
 	h.Str(p.Type)
 
 	switch types.Type(p.Type) {
+	case types.Nil:
+		// Explicit sentinel: a Nil primitive's Value bytes are not content,
+		// and must never become content by accident if a future encoder
+		// stores something there.
+		h.Str("nil")
 	case types.Dict:
 		if len(p.Value) > 0 {
 			inner := &llx.Primitive{}
@@ -176,7 +238,7 @@ func CanonPrimitive(h *Hasher, p *llx.Primitive) error {
 				return fmt.Errorf("canon: failed to decode dict payload: %w", err)
 			}
 			h.Str("dict")
-			if err := CanonPrimitive(h, inner); err != nil {
+			if err := canonPrimitive(h, inner, depth+1); err != nil {
 				return err
 			}
 		} else {
@@ -197,7 +259,9 @@ func CanonPrimitive(h *Hasher, p *llx.Primitive) error {
 		h.Bytes(p.Value)
 	}
 
-	if err := Multiset(h, "array_element", p.Array, CanonPrimitive); err != nil {
+	if err := Multiset(h, "array_element", p.Array, func(eh *Hasher, el *llx.Primitive) error {
+		return canonPrimitive(eh, el, depth+1)
+	}); err != nil {
 		return err
 	}
 
@@ -210,7 +274,7 @@ func CanonPrimitive(h *Hasher, p *llx.Primitive) error {
 		h.writeLen(len(keys))
 		for _, k := range keys {
 			h.Str(k)
-			if err := CanonPrimitive(h, p.Map[k]); err != nil {
+			if err := canonPrimitive(h, p.Map[k], depth+1); err != nil {
 				return err
 			}
 		}
@@ -218,7 +282,7 @@ func CanonPrimitive(h *Hasher, p *llx.Primitive) error {
 		h.writeLen(0)
 	}
 
-	return nil
+	return h.Err()
 }
 
 // CanonResult hashes an llx.Result's error and data. The CodeId is NOT

@@ -89,20 +89,42 @@ func GetFeatures(ctx context.Context) Features {
 	return f
 }
 
+// ScanContentMode returns the single active scan-content mode feature
+// (unchanged-scan short-circuit ADR), or 0 when no mode is active — the
+// explicit form of the modes' mutual exclusivity. The server sends at most
+// one mode, but nothing type-level enforces that on arbitrary Features
+// values, so precedence is defined here: ScanContentModeNoCompare is the
+// kill switch and wins over everything; the remaining modes rank by how
+// much they enable (client_compare > server_compare > shadow), so a
+// contradictory feature set degrades predictably rather than arbitrarily.
+func (f Features) ScanContentMode() Feature {
+	switch {
+	case f.IsActive(ScanContentModeNoCompare):
+		return ScanContentModeNoCompare
+	case f.IsActive(ScanContentModeClientCompare):
+		return ScanContentModeClientCompare
+	case f.IsActive(ScanContentModeServerCompare):
+		return ScanContentModeServerCompare
+	case f.IsActive(ScanContentModeShadow):
+		return ScanContentModeShadow
+	default:
+		return 0
+	}
+}
+
 // ScanContentChecksumsActive reports whether the client should compute scan
 // content row checksums while writing the scandb (unchanged-scan
 // short-circuit ADR). ScanContentModeNoCompare is the kill switch and
 // overrides everything - including, once comparison ships
-// enabled-by-default, the client's own default - so it is checked first. The
-// mode features are otherwise mutually exclusive by construction: the server
-// sends at most one.
+// enabled-by-default, the client's own default - so every mode except it
+// (and off) computes checksums.
 func (f Features) ScanContentChecksumsActive() bool {
-	if f.IsActive(ScanContentModeNoCompare) {
+	switch f.ScanContentMode() {
+	case ScanContentModeShadow, ScanContentModeServerCompare, ScanContentModeClientCompare:
+		return true
+	default:
 		return false
 	}
-	return f.IsActive(ScanContentModeShadow) ||
-		f.IsActive(ScanContentModeServerCompare) ||
-		f.IsActive(ScanContentModeClientCompare)
 }
 
 // InitFeatures initialized everything using the default features
