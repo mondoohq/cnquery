@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -109,4 +110,139 @@ func TestPolicyTemplateName(t *testing.T) {
 	t.Run("nil template", func(t *testing.T) {
 		assert.Equal(t, "", (&Policy{}).TemplateName())
 	})
+}
+
+// A misspelled struct tag decodes to the zero value, which for these fields is
+// the safe-looking answer: a locked, expired, or suspended account would read
+// as healthy and an audit would pass on it. Pin every security-relevant tag
+// against a payload shaped like the documented response.
+func TestSystemUserDecodePinsSecurityTags(t *testing.T) {
+	raw := `{
+		"_id": "x1",
+		"id": "u1",
+		"username": "alice",
+		"email": "alice@example.com",
+		"activated": true,
+		"suspended": true,
+		"account_locked": true,
+		"password_expired": true,
+		"passwordless_sudo": true,
+		"sudo": true,
+		"ldap_binding_user": true,
+		"enable_managed_uid": true,
+		"totp_enabled": true,
+		"state": "ACTIVATED",
+		"mfa": {"configured": true, "exclusion": true}
+	}`
+
+	var u SystemUser
+	require.NoError(t, json.Unmarshal([]byte(raw), &u))
+
+	assert.Equal(t, "u1", u.ID)
+	assert.Equal(t, "x1", u.XID)
+	assert.Equal(t, "alice", u.Username)
+	assert.True(t, u.Activated)
+	assert.True(t, u.Suspended)
+	assert.True(t, u.AccountLocked)
+	assert.True(t, u.PasswordExpired)
+	assert.True(t, u.PasswordlessSudo)
+	assert.True(t, u.Sudo)
+	assert.True(t, u.LdapBindingUser)
+	assert.True(t, u.EnableManagedUID)
+	assert.True(t, u.TotpEnabled)
+	assert.Equal(t, "ACTIVATED", u.State)
+	require.NotNil(t, u.MFA)
+	assert.True(t, u.MFA.Configured)
+	assert.True(t, u.MFA.Exclusion)
+}
+
+// An absent field must decode to the safe reading rather than being mistaken
+// for a value the API actually reported.
+func TestSystemUserDecodeAbsentFields(t *testing.T) {
+	var u SystemUser
+	require.NoError(t, json.Unmarshal([]byte(`{"id":"u1"}`), &u))
+
+	assert.False(t, u.Suspended)
+	assert.False(t, u.AccountLocked)
+	assert.False(t, u.PasswordExpired)
+	assert.False(t, u.TotpEnabled)
+	assert.Nil(t, u.MFA, "absent mfa must stay nil, not an empty configuration")
+}
+
+// The SSH toggles decide whether a host accepts root logins and passwords, so a
+// wrong tag here reports a permissive host as hardened.
+func TestSystemDecodePinsSecurityTags(t *testing.T) {
+	raw := `{
+		"_id": "x1",
+		"id": "s1",
+		"hostname": "host-1",
+		"displayName": "Host One",
+		"os": "Ubuntu",
+		"version": "24.04",
+		"agentVersion": "1.2.3",
+		"arch": "x86_64",
+		"active": true,
+		"allowSshRootLogin": true,
+		"allowSshPasswordAuthentication": true,
+		"allowMultiFactorAuthentication": true,
+		"allowPublicKeyAuthentication": true,
+		"hasServiceAccount": true,
+		"remoteIP": "203.0.113.10",
+		"fde": {"active": true},
+		"systemInsights": {"state": "enabled"}
+	}`
+
+	var s System
+	require.NoError(t, json.Unmarshal([]byte(raw), &s))
+
+	assert.Equal(t, "s1", s.ID)
+	assert.Equal(t, "x1", s.XID)
+	assert.Equal(t, "host-1", s.Hostname)
+	assert.Equal(t, "Host One", s.DisplayName)
+	assert.Equal(t, "x86_64", s.Arch)
+	assert.True(t, s.Active)
+	assert.True(t, s.AllowSshRootLogin)
+	assert.True(t, s.AllowSshPasswordAuthentication)
+	assert.True(t, s.AllowMultiFactorAuthentication)
+	assert.True(t, s.AllowPublicKeyAuthentication)
+	assert.True(t, s.HasServiceAccount)
+	assert.Equal(t, "203.0.113.10", s.RemoteIP)
+	require.NotNil(t, s.FDE)
+	assert.True(t, s.FDE.Active)
+	assert.True(t, s.FdeActive())
+	assert.True(t, s.InsightsEnabled())
+}
+
+func TestSystemDecodeAbsentFields(t *testing.T) {
+	var s System
+	require.NoError(t, json.Unmarshal([]byte(`{"id":"s1"}`), &s))
+
+	assert.False(t, s.AllowSshRootLogin)
+	assert.False(t, s.AllowSshPasswordAuthentication)
+	assert.Nil(t, s.FDE)
+	assert.False(t, s.FdeActive(), "a host with no fde object is not encrypted")
+	assert.False(t, s.InsightsEnabled())
+}
+
+// ssoUrl is a top-level string on the application document (the `sso` object
+// that sits beside it carries the connector's type and flags, not the URL), so
+// the tag is pinned here against that shape.
+func TestApplicationDecodePinsSsoURL(t *testing.T) {
+	raw := `{
+		"id": "a1",
+		"name": "app-1",
+		"displayName": "App One",
+		"ssoUrl": "https://sso.jumpcloud.com/saml2/app-1",
+		"active": true,
+		"sso": {"type": "saml", "jit": true}
+	}`
+
+	var a Application
+	require.NoError(t, json.Unmarshal([]byte(raw), &a))
+
+	assert.Equal(t, "a1", a.ID)
+	assert.Equal(t, "app-1", a.Name)
+	assert.Equal(t, "App One", a.DisplayName)
+	assert.Equal(t, "https://sso.jumpcloud.com/saml2/app-1", a.SsoURL)
+	assert.True(t, a.Active)
 }
