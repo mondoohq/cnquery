@@ -575,9 +575,6 @@ func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
 				"portNumber":           llx.IntData(int64(iface.PortNumber)),
 				"isEdgePort":           llx.BoolData(iface.IsEdgePort),
 				"detail":               llx.DictData(detail),
-				// Deprecated: duplicates state; no real boundary source exists
-				// in the SDK response yet.
-				"boundaryType": llx.StringData(iface.State),
 			})
 			if err != nil {
 				return nil, err

@@ -403,7 +403,6 @@ arista.eos.snmpSetting 9.0.0
 arista.eos.snmpSetting.enabled 9.0.0
 arista.eos.snmpSetting.notifications 9.0.0
 arista.eos.spt.mstInterface 9.0.0
-arista.eos.spt.mstInterface.boundaryType 9.0.0
 arista.eos.spt.mstInterface.cost 9.0.0
 arista.eos.spt.mstInterface.counters 9.0.0
 arista.eos.spt.mstInterface.detail 9.0.0
