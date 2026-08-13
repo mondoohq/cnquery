@@ -752,14 +752,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.server.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
-	"stackit.server.serviceAccountMails": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitServer).GetServiceAccountMails()).ToDataRes(types.Array(types.String))
-	},
 	"stackit.server.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("stackit.serviceAccount")))
-	},
-	"stackit.server.nics": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitServer).GetNics()).ToDataRes(types.Array(types.Dict))
 	},
 	"stackit.server.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("stackit.nic")))
@@ -3299,16 +3293,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
-	"stackit.server.serviceAccountMails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitServer).ServiceAccountMails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"stackit.server.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"stackit.server.nics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitServer).Nics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.server.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7439,39 +7425,37 @@ func (c *mqlStackitProject) GetLabels() *plugin.TValue[map[string]any] {
 type mqlStackitServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitServerInternal it will be used here
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Status              plugin.TValue[string]
-	PowerStatus         plugin.TValue[string]
-	MachineType         plugin.TValue[string]
-	AvailabilityZone    plugin.TValue[string]
-	CreatedAt           plugin.TValue[*time.Time]
-	LaunchedAt          plugin.TValue[*time.Time]
-	UpdatedAt           plugin.TValue[*time.Time]
-	ErrorMessage        plugin.TValue[string]
-	ConfigDrive         plugin.TValue[bool]
-	VtpmEnabled         plugin.TValue[bool]
-	KeypairName         plugin.TValue[string]
-	KeyPair             plugin.TValue[*mqlStackitKeyPair]
-	ImageId             plugin.TValue[string]
-	Image               plugin.TValue[*mqlStackitImage]
-	VolumeIds           plugin.TValue[[]any]
-	Volumes             plugin.TValue[[]any]
-	SecurityGroupIds    plugin.TValue[[]any]
-	SecurityGroups      plugin.TValue[[]any]
-	Exposure            plugin.TValue[*mqlStackitNetworkExposure]
-	ServiceAccountMails plugin.TValue[[]any]
-	ServiceAccounts     plugin.TValue[[]any]
-	Nics                plugin.TValue[[]any]
-	NetworkInterfaces   plugin.TValue[[]any]
-	Backups             plugin.TValue[[]any]
-	BackupSchedules     plugin.TValue[[]any]
-	Updates             plugin.TValue[[]any]
-	UpdateSchedules     plugin.TValue[[]any]
-	UserData            plugin.TValue[string]
-	Labels              plugin.TValue[map[string]any]
-	Metadata            plugin.TValue[map[string]any]
+	mqlStackitServerInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	PowerStatus       plugin.TValue[string]
+	MachineType       plugin.TValue[string]
+	AvailabilityZone  plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	LaunchedAt        plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	ErrorMessage      plugin.TValue[string]
+	ConfigDrive       plugin.TValue[bool]
+	VtpmEnabled       plugin.TValue[bool]
+	KeypairName       plugin.TValue[string]
+	KeyPair           plugin.TValue[*mqlStackitKeyPair]
+	ImageId           plugin.TValue[string]
+	Image             plugin.TValue[*mqlStackitImage]
+	VolumeIds         plugin.TValue[[]any]
+	Volumes           plugin.TValue[[]any]
+	SecurityGroupIds  plugin.TValue[[]any]
+	SecurityGroups    plugin.TValue[[]any]
+	Exposure          plugin.TValue[*mqlStackitNetworkExposure]
+	ServiceAccounts   plugin.TValue[[]any]
+	NetworkInterfaces plugin.TValue[[]any]
+	Backups           plugin.TValue[[]any]
+	BackupSchedules   plugin.TValue[[]any]
+	Updates           plugin.TValue[[]any]
+	UpdateSchedules   plugin.TValue[[]any]
+	UserData          plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	Metadata          plugin.TValue[map[string]any]
 }
 
 // createStackitServer creates a new instance of this resource
@@ -7655,10 +7639,6 @@ func (c *mqlStackitServer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposu
 	})
 }
 
-func (c *mqlStackitServer) GetServiceAccountMails() *plugin.TValue[[]any] {
-	return &c.ServiceAccountMails
-}
-
 func (c *mqlStackitServer) GetServiceAccounts() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ServiceAccounts, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -7673,10 +7653,6 @@ func (c *mqlStackitServer) GetServiceAccounts() *plugin.TValue[[]any] {
 
 		return c.serviceAccounts()
 	})
-}
-
-func (c *mqlStackitServer) GetNics() *plugin.TValue[[]any] {
-	return &c.Nics
 }
 
 func (c *mqlStackitServer) GetNetworkInterfaces() *plugin.TValue[[]any] {
