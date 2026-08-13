@@ -345,14 +345,6 @@ func (r *mqlAlicloudMongodbInstance) encrypted() (bool, error) {
 	return tea.BoolValue(attr.Encrypted), nil
 }
 
-func (r *mqlAlicloudMongodbInstance) encryptionKey() (string, error) {
-	attr, err := r.attribute()
-	if err != nil || attr == nil {
-		return "", err
-	}
-	return tea.StringValue(attr.EncryptionKey), nil
-}
-
 // kmsKey resolves the KMS key used for disk encryption, or null when disk
 // encryption is disabled.
 func (r *mqlAlicloudMongodbInstance) kmsKey() (*mqlAlicloudKmsKey, error) {

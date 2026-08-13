@@ -1187,9 +1187,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.disk.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsDisk).GetEncrypted()).ToDataRes(types.Bool)
 	},
-	"alicloud.ecs.disk.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudEcsDisk).GetKmsKeyId()).ToDataRes(types.String)
-	},
 	"alicloud.ecs.disk.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsDisk).GetKmsKey()).ToDataRes(types.Resource("alicloud.kms.key"))
 	},
@@ -2815,9 +2812,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.mongodb.instance.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetEncrypted()).ToDataRes(types.Bool)
-	},
-	"alicloud.mongodb.instance.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudMongodbInstance).GetEncryptionKey()).ToDataRes(types.String)
 	},
 	"alicloud.mongodb.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetKmsKey()).ToDataRes(types.Resource("alicloud.kms.key"))
@@ -6713,10 +6707,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcsDisk).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"alicloud.ecs.disk.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudEcsDisk).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"alicloud.ecs.disk.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsDisk).KmsKey, ok = plugin.RawToTValue[*mqlAlicloudKmsKey](v.Value, v.Error)
 		return
@@ -9007,10 +8997,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.mongodb.instance.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudMongodbInstance).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"alicloud.mongodb.instance.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudMongodbInstance).EncryptionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.mongodb.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15277,7 +15263,6 @@ type mqlAlicloudEcsDisk struct {
 	Size               plugin.TValue[int64]
 	Status             plugin.TValue[string]
 	Encrypted          plugin.TValue[bool]
-	KmsKeyId           plugin.TValue[string]
 	KmsKey             plugin.TValue[*mqlAlicloudKmsKey]
 	Instance           plugin.TValue[*mqlAlicloudEcsInstance]
 	Device             plugin.TValue[string]
@@ -15362,10 +15347,6 @@ func (c *mqlAlicloudEcsDisk) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAlicloudEcsDisk) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
-}
-
-func (c *mqlAlicloudEcsDisk) GetKmsKeyId() *plugin.TValue[string] {
-	return &c.KmsKeyId
 }
 
 func (c *mqlAlicloudEcsDisk) GetKmsKey() *plugin.TValue[*mqlAlicloudKmsKey] {
@@ -20269,7 +20250,6 @@ type mqlAlicloudMongodbInstance struct {
 	MaintainStartTime     plugin.TValue[string]
 	MaintainEndTime       plugin.TValue[string]
 	Encrypted             plugin.TValue[bool]
-	EncryptionKey         plugin.TValue[string]
 	KmsKey                plugin.TValue[*mqlAlicloudKmsKey]
 	ReleaseProtection     plugin.TValue[bool]
 	CurrentKernelVersion  plugin.TValue[string]
@@ -20512,12 +20492,6 @@ func (c *mqlAlicloudMongodbInstance) GetMaintainEndTime() *plugin.TValue[string]
 func (c *mqlAlicloudMongodbInstance) GetEncrypted() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Encrypted, func() (bool, error) {
 		return c.encrypted()
-	})
-}
-
-func (c *mqlAlicloudMongodbInstance) GetEncryptionKey() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.EncryptionKey, func() (string, error) {
-		return c.encryptionKey()
 	})
 }
 

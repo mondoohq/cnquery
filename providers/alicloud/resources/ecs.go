@@ -90,10 +90,11 @@ type mqlAlicloudEcsInstanceInternal struct {
 }
 
 // mqlAlicloudEcsDiskInternal caches the identifiers needed to resolve the
-// disk's typed instance reference without a repeat API call.
+// disk's typed instance and KMS key references without a repeat API call.
 type mqlAlicloudEcsDiskInternal struct {
 	cacheRegion     string
 	cacheInstanceID string
+	cacheKmsKeyID   string
 }
 
 // mqlAlicloudEcsSecuritygroupPermissionInternal caches the identifiers needed
@@ -585,7 +586,6 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 					"size":               llx.IntDataPtr(disk.Size),
 					"status":             llx.StringDataPtr(disk.Status),
 					"encrypted":          llx.BoolDataPtr(disk.Encrypted),
-					"kmsKeyId":           llx.StringDataPtr(disk.KMSKeyId),
 					"device":             llx.StringDataPtr(disk.Device),
 					"deleteWithInstance": llx.BoolDataPtr(disk.DeleteWithInstance),
 					"deleteAutoSnapshot": llx.BoolDataPtr(disk.DeleteAutoSnapshot),
@@ -606,6 +606,7 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 				mqlDisk := resource.(*mqlAlicloudEcsDisk)
 				mqlDisk.cacheRegion = region
 				mqlDisk.cacheInstanceID = strDeref(disk.InstanceId)
+				mqlDisk.cacheKmsKeyID = strDeref(disk.KMSKeyId)
 				res = append(res, mqlDisk)
 			}
 
@@ -634,11 +635,11 @@ func (r *mqlAlicloudEcsDisk) instance() (*mqlAlicloudEcsInstance, error) {
 // kmsKey resolves the KMS key that encrypts the disk, or null when the disk is
 // not encrypted.
 func (r *mqlAlicloudEcsDisk) kmsKey() (*mqlAlicloudKmsKey, error) {
-	if r.KmsKeyId.Data == "" {
+	if r.cacheKmsKeyID == "" {
 		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	key, err := resolveKmsKey(r.MqlRuntime, r.RegionId.Data, r.KmsKeyId.Data)
+	key, err := resolveKmsKey(r.MqlRuntime, r.cacheRegion, r.cacheKmsKeyID)
 	if err != nil || key == nil {
 		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

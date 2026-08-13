@@ -613,10 +613,6 @@ alicloud.ecs.disk @defaults("diskId diskName category size status") {
   status string
   // Whether the disk is encrypted
   encrypted bool
-  // KMS key ID used to encrypt the disk
-  //
-  // Deprecated in favor of kmsKey.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used to encrypt the disk, null when the disk is not encrypted
   kmsKey() alicloud.kms.key
   // Instance the disk is attached to
@@ -2532,10 +2528,6 @@ alicloud.mongodb.instance {
   maintainEndTime() string
   // Whether disk encryption is enabled for the instance
   encrypted() bool
-  // KMS key ID used for disk encryption, empty when disk encryption is disabled
-  //
-  // Deprecated in favor of kmsKey.
-  encryptionKey() @maturity("deprecated") string
   // KMS key used for disk encryption, null when disk encryption is disabled
   kmsKey() alicloud.kms.key
   // Whether release protection is enabled for the instance
