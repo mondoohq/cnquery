@@ -19,6 +19,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectDataplexServiceLakeInternal struct {
+	cacheServiceAccount string
+}
+
 func (g *mqlGcpProjectDataplexService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -128,7 +132,6 @@ func (g *mqlGcpProjectDataplexService) lakes() ([]any, error) {
 				"created":                      llx.TimeDataPtr(parseTime(lake.CreateTime)),
 				"updated":                      llx.TimeDataPtr(parseTime(lake.UpdateTime)),
 				"labels":                       llx.MapData(convert.MapToInterfaceMap(lake.Labels), types.String),
-				"serviceAccount":               llx.StringData(lake.ServiceAccount),
 				"metastoreService":             llx.StringData(metastoreService),
 				"activeAssets":                 llx.IntData(activeAssets),
 				"securityPolicyApplyingAssets": llx.IntData(securityPolicyApplyingAssets),
@@ -137,6 +140,8 @@ func (g *mqlGcpProjectDataplexService) lakes() ([]any, error) {
 				log.Error().Err(err).Send()
 				continue
 			}
+			mqlRef := mqlLake.(*mqlGcpProjectDataplexServiceLake)
+			mqlRef.cacheServiceAccount = lake.ServiceAccount
 			mqlLakes = append(mqlLakes, mqlLake)
 		}
 		return nil
@@ -160,10 +165,7 @@ func dataplexLocation(name string) string {
 }
 
 func (g *mqlGcpProjectDataplexServiceLake) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.ServiceAccount.Error != nil {
-		return nil, g.ServiceAccount.Error
-	}
-	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccount.Data, g.ProjectId.Data)
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheServiceAccount, g.ProjectId.Data)
 	if err != nil {
 		return nil, err
 	}

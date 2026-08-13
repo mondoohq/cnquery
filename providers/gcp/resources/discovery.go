@@ -1100,13 +1100,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			}
 			for i := range networks.Data {
 				network := networks.Data[i].(*mqlGcpProjectComputeServiceSubnetwork)
-				region := network.GetRegionUrl()
-				if region.Error != nil {
-					return region.Error
-				}
 				assetList = append(assetList, &inventory.Asset{
 					PlatformIds: []string{
-						connection.NewResourcePlatformID("compute", gcpProject.Id.Data, RegionNameFromRegionUrl(region.Data), "subnetwork", network.Name.Data),
+						connection.NewResourcePlatformID("compute", gcpProject.Id.Data, RegionNameFromRegionUrl(network.cacheRegionUrl), "subnetwork", network.Name.Data),
 					},
 					Name: network.Name.Data,
 					Platform: &inventory.Platform{
@@ -1115,7 +1111,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 						Runtime:               "gcp",
 						Kind:                  "gcp-object",
 						Family:                []string{"google"},
-						TechnologyUrlSegments: connection.ResourceTechnologyUrl("compute", gcpProject.Id.Data, RegionNameFromRegionUrl(region.Data), "subnetwork", network.Name.Data),
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("compute", gcpProject.Id.Data, RegionNameFromRegionUrl(network.cacheRegionUrl), "subnetwork", network.Name.Data),
 					},
 					Labels:      map[string]string{},
 					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config

@@ -223,11 +223,6 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			return nil, err
 		}
 
-		vulnerability, err := protoToDict(occ.GetVulnerability())
-		if err != nil {
-			return nil, err
-		}
-
 		var (
 			vulnSeverity, vulnEffectiveSeverity       string
 			vulnCvssScore                             float64
@@ -257,11 +252,6 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			}
 		}
 
-		build, err := protoToDict(occ.GetBuild())
-		if err != nil {
-			return nil, err
-		}
-
 		image, err := protoToDict(occ.GetImage())
 		if err != nil {
 			return nil, err
@@ -278,11 +268,6 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 		}
 
 		discovery, err := protoToDict(occ.GetDiscovery())
-		if err != nil {
-			return nil, err
-		}
-
-		attestation, err := protoToDict(occ.GetAttestation())
 		if err != nil {
 			return nil, err
 		}
@@ -341,7 +326,6 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			"noteName":                       llx.StringData(occ.NoteName),
 			"kind":                           llx.StringData(occ.Kind.String()),
 			"remediation":                    llx.StringData(occ.Remediation),
-			"vulnerability":                  llx.DictData(vulnerability),
 			"vulnerabilitySeverity":          llx.StringData(vulnSeverity),
 			"vulnerabilityEffectiveSeverity": llx.StringData(vulnEffectiveSeverity),
 			"vulnerabilityCvssScore":         llx.FloatData(vulnCvssScore),
@@ -349,7 +333,6 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			"vulnerabilityShortDescription":  llx.StringData(vulnShortDescription),
 			"vulnerabilityLongDescription":   llx.StringData(vulnLongDescription),
 			"vulnerabilityPackageIssues":     llx.ArrayData(vulnPackageIssues, types.Dict),
-			"build":                          llx.DictData(build),
 			"buildProvenanceId":              llx.StringData(buildProvenanceID),
 			"buildCreator":                   llx.StringData(buildCreator),
 			"buildCreateTime":                llx.TimeDataPtr(buildCreateTime),
@@ -364,7 +347,6 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			"packageInfo":                    llx.DictData(packageInfo),
 			"deployment":                     llx.DictData(deployment),
 			"discovery":                      llx.DictData(discovery),
-			"attestation":                    llx.DictData(attestation),
 			"attestationSerializedPayload":   llx.StringData(attestationSerializedPayload),
 			"attestationSignatures":          llx.ArrayData(attestationSignatures, types.Dict),
 			"created":                        llx.TimeDataPtr(timestampAsTimePtr(occ.CreateTime)),

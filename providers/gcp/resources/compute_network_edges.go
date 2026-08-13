@@ -17,6 +17,27 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectComputeServiceBackendServiceBackendInternal struct {
+	cacheGroupUrl string
+}
+
+type mqlGcpProjectComputeServiceForwardingRuleInternal struct {
+	cacheBackendServiceUrl string
+	cacheNetworkUrl        string
+	cacheRegionUrl         string
+	cacheSubnetworkUrl     string
+}
+
+type mqlGcpProjectComputeServiceRouteInternal struct {
+	cacheNetworkUrl string
+}
+
+type mqlGcpProjectComputeServiceTargetPoolInternal struct {
+	cacheBackupPoolUrl     string
+	cacheRegionUrl         string
+	cacheSecurityPolicyUrl string
+}
+
 // ---------------------------------------------------------------
 // Shared URL helpers
 // ---------------------------------------------------------------
@@ -331,10 +352,7 @@ func resolveComputeRefs(urls plugin.TValue[[]any], runtime *plugin.Runtime, reso
 // ---------------------------------------------------------------
 
 func (g *mqlGcpProjectComputeServiceForwardingRule) backendService() (*mqlGcpProjectComputeServiceBackendService, error) {
-	if g.BackendServiceUrl.Error != nil {
-		return nil, g.BackendServiceUrl.Error
-	}
-	bs, err := getBackendServiceByUrl(g.BackendServiceUrl.Data, g.MqlRuntime)
+	bs, err := getBackendServiceByUrl(g.cacheBackendServiceUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -439,10 +457,7 @@ func (g *mqlGcpProjectComputeServiceForwardingRule) targetSslProxy() (*mqlGcpPro
 // ---------------------------------------------------------------
 
 func (g *mqlGcpProjectComputeServiceBackendService) edgeSecurityPolicy() (*mqlGcpProjectComputeServiceSecurityPolicy, error) {
-	if g.EdgeSecurityPolicyUrl.Error != nil {
-		return nil, g.EdgeSecurityPolicyUrl.Error
-	}
-	sp, err := getSecurityPolicyByUrl(g.EdgeSecurityPolicyUrl.Data, g.MqlRuntime)
+	sp, err := getSecurityPolicyByUrl(g.cacheEdgeSecurityPolicyUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -463,14 +478,11 @@ func (g *mqlGcpProjectComputeServiceBackendService) healthCheckRefs() ([]any, er
 }
 
 func (g *mqlGcpProjectComputeServiceBackendServiceBackend) instanceGroup() (*mqlGcpProjectComputeServiceInstanceGroup, error) {
-	if g.GroupUrl.Error != nil {
-		return nil, g.GroupUrl.Error
-	}
-	if computeURLCollection(g.GroupUrl.Data) != "instanceGroups" {
+	if computeURLCollection(g.cacheGroupUrl) != "instanceGroups" {
 		g.InstanceGroup.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	ig, err := getInstanceGroupByUrl(g.GroupUrl.Data, g.MqlRuntime)
+	ig, err := getInstanceGroupByUrl(g.cacheGroupUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -481,14 +493,11 @@ func (g *mqlGcpProjectComputeServiceBackendServiceBackend) instanceGroup() (*mql
 }
 
 func (g *mqlGcpProjectComputeServiceBackendServiceBackend) networkEndpointGroup() (*mqlGcpProjectComputeServiceNetworkEndpointGroup, error) {
-	if g.GroupUrl.Error != nil {
-		return nil, g.GroupUrl.Error
-	}
-	if computeURLCollection(g.GroupUrl.Data) != "networkEndpointGroups" {
+	if computeURLCollection(g.cacheGroupUrl) != "networkEndpointGroups" {
 		g.NetworkEndpointGroup.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	neg, err := getNetworkEndpointGroupByUrl(g.GroupUrl.Data, g.MqlRuntime)
+	neg, err := getNetworkEndpointGroupByUrl(g.cacheGroupUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -503,10 +512,7 @@ func (g *mqlGcpProjectComputeServiceBackendServiceBackend) networkEndpointGroup(
 // ---------------------------------------------------------------
 
 func (g *mqlGcpProjectComputeServiceUrlMap) defaultService() (*mqlGcpProjectComputeServiceBackendService, error) {
-	if g.DefaultServiceUrl.Error != nil {
-		return nil, g.DefaultServiceUrl.Error
-	}
-	bs, err := getBackendServiceByUrl(g.DefaultServiceUrl.Data, g.MqlRuntime)
+	bs, err := getBackendServiceByUrl(g.cacheDefaultServiceUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -517,10 +523,7 @@ func (g *mqlGcpProjectComputeServiceUrlMap) defaultService() (*mqlGcpProjectComp
 }
 
 func (g *mqlGcpProjectComputeServiceTargetTcpProxy) service() (*mqlGcpProjectComputeServiceBackendService, error) {
-	if g.ServiceUrl.Error != nil {
-		return nil, g.ServiceUrl.Error
-	}
-	bs, err := getBackendServiceByUrl(g.ServiceUrl.Data, g.MqlRuntime)
+	bs, err := getBackendServiceByUrl(g.cacheServiceUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -531,10 +534,7 @@ func (g *mqlGcpProjectComputeServiceTargetTcpProxy) service() (*mqlGcpProjectCom
 }
 
 func (g *mqlGcpProjectComputeServiceTargetSslProxy) service() (*mqlGcpProjectComputeServiceBackendService, error) {
-	if g.ServiceUrl.Error != nil {
-		return nil, g.ServiceUrl.Error
-	}
-	bs, err := getBackendServiceByUrl(g.ServiceUrl.Data, g.MqlRuntime)
+	bs, err := getBackendServiceByUrl(g.cacheServiceUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -549,10 +549,7 @@ func (g *mqlGcpProjectComputeServiceTargetSslProxy) service() (*mqlGcpProjectCom
 // ---------------------------------------------------------------
 
 func (g *mqlGcpProjectComputeServiceTargetPool) backupPool() (*mqlGcpProjectComputeServiceTargetPool, error) {
-	if g.BackupPoolUrl.Error != nil {
-		return nil, g.BackupPoolUrl.Error
-	}
-	tp, err := getTargetPoolByUrl(g.BackupPoolUrl.Data, g.MqlRuntime)
+	tp, err := getTargetPoolByUrl(g.cacheBackupPoolUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -563,10 +560,7 @@ func (g *mqlGcpProjectComputeServiceTargetPool) backupPool() (*mqlGcpProjectComp
 }
 
 func (g *mqlGcpProjectComputeServiceTargetPool) securityPolicy() (*mqlGcpProjectComputeServiceSecurityPolicy, error) {
-	if g.SecurityPolicyUrl.Error != nil {
-		return nil, g.SecurityPolicyUrl.Error
-	}
-	sp, err := getSecurityPolicyByUrl(g.SecurityPolicyUrl.Data, g.MqlRuntime)
+	sp, err := getSecurityPolicyByUrl(g.cacheSecurityPolicyUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}

@@ -22,6 +22,11 @@ type mqlGcpProjectCloudSchedulerServiceInternal struct {
 	serviceGate
 }
 
+type mqlGcpProjectCloudSchedulerServiceJobInternal struct {
+	cacheOauthServiceAccountEmail string
+	cacheOidcServiceAccountEmail  string
+}
+
 func (g *mqlGcpProject) cloudScheduler() (*mqlGcpProjectCloudSchedulerService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -140,18 +145,16 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 		}
 
 		jobArgs := map[string]*llx.RawData{
-			"projectId":                llx.StringData(projectId),
-			"name":                     llx.StringData(job.Name),
-			"schedule":                 llx.StringData(job.Schedule),
-			"timeZone":                 llx.StringData(job.TimeZone),
-			"state":                    llx.StringData(job.State.String()),
-			"description":              llx.StringData(job.Description),
-			"lastAttemptTime":          llx.TimeDataPtr(lastAttemptTime),
-			"scheduleTime":             llx.TimeDataPtr(scheduleTime),
-			"userUpdateTime":           llx.TimeDataPtr(userUpdateTime),
-			"targetType":               llx.StringData(targetType),
-			"oidcServiceAccountEmail":  llx.StringData(oidcServiceAccountEmail),
-			"oauthServiceAccountEmail": llx.StringData(oauthServiceAccountEmail),
+			"projectId":       llx.StringData(projectId),
+			"name":            llx.StringData(job.Name),
+			"schedule":        llx.StringData(job.Schedule),
+			"timeZone":        llx.StringData(job.TimeZone),
+			"state":           llx.StringData(job.State.String()),
+			"description":     llx.StringData(job.Description),
+			"lastAttemptTime": llx.TimeDataPtr(lastAttemptTime),
+			"scheduleTime":    llx.TimeDataPtr(scheduleTime),
+			"userUpdateTime":  llx.TimeDataPtr(userUpdateTime),
+			"targetType":      llx.StringData(targetType),
 		}
 		if retryConfig != nil {
 			jobArgs["retryConfig"] = llx.ResourceData(retryConfig, "gcp.retryConfig")
@@ -160,8 +163,11 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlJ := mqlJob.(*mqlGcpProjectCloudSchedulerServiceJob)
+		mqlJ.cacheOidcServiceAccountEmail = oidcServiceAccountEmail
+		mqlJ.cacheOauthServiceAccountEmail = oauthServiceAccountEmail
 		if retryConfig == nil {
-			mqlJob.(*mqlGcpProjectCloudSchedulerServiceJob).RetryConfig.State = plugin.StateIsNull | plugin.StateIsSet
+			mqlJ.RetryConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		}
 		res = append(res, mqlJob)
 	}
@@ -170,10 +176,7 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 }
 
 func (g *mqlGcpProjectCloudSchedulerServiceJob) oidcServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.OidcServiceAccountEmail.Error != nil {
-		return nil, g.OidcServiceAccountEmail.Error
-	}
-	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.OidcServiceAccountEmail.Data, g.ProjectId.Data)
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheOidcServiceAccountEmail, g.ProjectId.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -184,10 +187,7 @@ func (g *mqlGcpProjectCloudSchedulerServiceJob) oidcServiceAccount() (*mqlGcpPro
 }
 
 func (g *mqlGcpProjectCloudSchedulerServiceJob) oauthServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.OauthServiceAccountEmail.Error != nil {
-		return nil, g.OauthServiceAccountEmail.Error
-	}
-	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.OauthServiceAccountEmail.Data, g.ProjectId.Data)
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheOauthServiceAccountEmail, g.ProjectId.Data)
 	if err != nil {
 		return nil, err
 	}

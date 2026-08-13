@@ -22,6 +22,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfigInternal struct {
+	cachePeeredNetwork string
+}
+
 func (g *mqlGcpProject) cloudBuild() (*mqlGcpProjectCloudBuildService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -517,21 +521,19 @@ func buildWorkerPoolNetworkConfig(runtime *plugin.Runtime, parentName string, cf
 	nc := cfg.NetworkConfig
 	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.workerPool.networkConfig", map[string]*llx.RawData{
 		"id":                   llx.StringData(parentName + "/networkConfig"),
-		"peeredNetwork":        llx.StringData(nc.PeeredNetwork),
 		"peeredNetworkIpRange": llx.StringData(nc.PeeredNetworkIpRange),
 		"egressOption":         llx.StringData(nc.EgressOption.String()),
 	})
 	if err != nil {
 		return nil, err
 	}
+	mqlRef := res.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig)
+	mqlRef.cachePeeredNetwork = nc.PeeredNetwork
 	return res.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig), nil
 }
 
 func (g *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) peeredNetworkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.PeeredNetwork.Error != nil {
-		return nil, g.PeeredNetwork.Error
-	}
-	n, err := getNetworkByUrl(g.PeeredNetwork.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cachePeeredNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -659,7 +661,6 @@ func newCloudBuild(runtime *plugin.Runtime, projectId string, b *cloudbuildpb.Bu
 		"buildTriggerId":   llx.StringData(b.BuildTriggerId),
 		"logUrl":           llx.StringData(b.LogUrl),
 		"logsBucket":       llx.StringData(b.LogsBucket),
-		"serviceAccount":   llx.StringData(b.ServiceAccount),
 		"substitutions":    llx.MapData(substitutions, types.String),
 		"tags":             llx.ArrayData(tags, types.String),
 	})

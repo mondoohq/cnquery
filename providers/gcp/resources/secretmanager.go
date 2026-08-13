@@ -27,6 +27,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type mqlGcpProjectSecretmanagerServiceSecretInternal struct {
+	cacheCustomerManagedEncryption []any
+}
+
 func (g *mqlGcpProjectSecretmanagerService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -178,29 +182,30 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 		cmeKeys := extractCustomerManagedEncryptionKeys(s)
 
 		mqlSecret, err := CreateResource(g.MqlRuntime, "gcp.project.secretmanagerService.secret", map[string]*llx.RawData{
-			"projectId":                 llx.StringData(projectId),
-			"resourcePath":              llx.StringData(s.Name),
-			"name":                      llx.StringData(parseResourceName(s.Name)),
-			"createTime":                llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
-			"labels":                    llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
-			"replication":               llx.DictData(replicationDict),
-			"replicationType":           llx.StringData(replicationType),
-			"topics":                    llx.ArrayData(topicNames, types.String),
-			"expireTime":                llx.TimeDataPtr(timestampAsTimePtr(s.GetExpireTime())),
-			"ttl":                       llx.StringData(ttl),
-			"etag":                      llx.StringData(s.Etag),
-			"rotation":                  llx.DictData(rotationDict),
-			"rotationPeriod":            llx.StringData(rotationPeriod),
-			"nextRotationTime":          llx.TimeDataPtr(nextRotationTime),
-			"versionAliases":            llx.MapData(versionAliasesMap, types.Int),
-			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
-			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
-			"customerManagedEncryption": llx.ArrayData(cmeKeys, types.String),
-			"tags":                      llx.MapData(convert.MapToInterfaceMap(s.Tags), types.String),
+			"projectId":         llx.StringData(projectId),
+			"resourcePath":      llx.StringData(s.Name),
+			"name":              llx.StringData(parseResourceName(s.Name)),
+			"createTime":        llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
+			"labels":            llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
+			"replication":       llx.DictData(replicationDict),
+			"replicationType":   llx.StringData(replicationType),
+			"topics":            llx.ArrayData(topicNames, types.String),
+			"expireTime":        llx.TimeDataPtr(timestampAsTimePtr(s.GetExpireTime())),
+			"ttl":               llx.StringData(ttl),
+			"etag":              llx.StringData(s.Etag),
+			"rotation":          llx.DictData(rotationDict),
+			"rotationPeriod":    llx.StringData(rotationPeriod),
+			"nextRotationTime":  llx.TimeDataPtr(nextRotationTime),
+			"versionAliases":    llx.MapData(versionAliasesMap, types.Int),
+			"annotations":       llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
+			"versionDestroyTtl": llx.TimeDataPtr(mqlVersionDestroyTtl),
+			"tags":              llx.MapData(convert.MapToInterfaceMap(s.Tags), types.String),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlSecret.(*mqlGcpProjectSecretmanagerServiceSecret)
+		mqlRef.cacheCustomerManagedEncryption = cmeKeys
 		secrets = append(secrets, mqlSecret)
 	}
 	return secrets, nil
@@ -361,10 +366,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) public() (bool, error) {
 }
 
 func (g *mqlGcpProjectSecretmanagerServiceSecret) kmsKeys() ([]any, error) {
-	if g.CustomerManagedEncryption.Error != nil {
-		return nil, g.CustomerManagedEncryption.Error
-	}
-	keys := g.CustomerManagedEncryption.Data
+	keys := g.cacheCustomerManagedEncryption
 	if len(keys) == 0 {
 		return []any{}, nil
 	}
@@ -419,10 +421,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) managedBy() (string, error) {
 }
 
 func (g *mqlGcpProjectSecretmanagerServiceSecret) customerManagedEncryptionEnabled() (bool, error) {
-	if g.CustomerManagedEncryption.Error != nil {
-		return false, g.CustomerManagedEncryption.Error
-	}
-	return len(g.CustomerManagedEncryption.Data) > 0, nil
+	return len(g.cacheCustomerManagedEncryption) > 0, nil
 }
 
 func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {

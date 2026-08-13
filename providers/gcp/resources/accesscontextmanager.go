@@ -228,22 +228,11 @@ func (g *mqlGcpAccesscontextmanagerAccessPolicy) servicePerimeters() ([]any, err
 			return nil, err
 		}
 
-		status, err := protoToDict(perimeter.Status)
-		if err != nil {
-			return nil, err
-		}
-		spec, err := protoToDict(perimeter.Spec)
-		if err != nil {
-			return nil, err
-		}
-
 		mqlPerimeter, err := CreateResource(g.MqlRuntime, "gcp.accesscontextmanager.servicePerimeter", map[string]*llx.RawData{
 			"name":                  llx.StringData(perimeter.Name),
 			"title":                 llx.StringData(perimeter.Title),
 			"description":           llx.StringData(perimeter.Description),
 			"perimeterType":         llx.StringData(perimeter.PerimeterType.String()),
-			"status":                llx.DictData(status),
-			"spec":                  llx.DictData(spec),
 			"useExplicitDryRunSpec": llx.BoolData(perimeter.UseExplicitDryRunSpec),
 			"createTime":            llx.TimeDataPtr(timestampAsTimePtr(perimeter.CreateTime)),
 			"updateTime":            llx.TimeDataPtr(timestampAsTimePtr(perimeter.UpdateTime)),

@@ -457,10 +457,8 @@ func newMqlVertexaiEndpoint(runtime *plugin.Runtime, projectId string, ep *aipla
 		"name":                                 llx.StringData(ep.Name),
 		"displayName":                          llx.StringData(ep.DisplayName),
 		"description":                          llx.StringData(ep.Description),
-		"deployedModels":                       llx.ArrayData(deployedModels, types.Dict),
 		"deployments":                          llx.ArrayData(deployments, types.Resource("gcp.project.vertexaiService.endpoint.deployment")),
 		"encryptionSpec":                       llx.DictData(encryptionSpec),
-		"network":                              llx.StringData(ep.Network),
 		"enablePrivateServiceConnect":          llx.BoolData(ep.EnablePrivateServiceConnect),
 		"pscProjectAllowlist":                  llx.ArrayData(pscProjectAllowlist, types.String),
 		"pscServiceAttachment":                 llx.StringData(pscServiceAttachment),
@@ -481,6 +479,8 @@ func newMqlVertexaiEndpoint(runtime *plugin.Runtime, projectId string, ep *aipla
 	if err != nil {
 		return nil, err
 	}
+	mqlRef := mqlEndpoint.(*mqlGcpProjectVertexaiServiceEndpoint)
+	mqlRef.cacheNetwork = ep.Network
 	res := mqlEndpoint.(*mqlGcpProjectVertexaiServiceEndpoint)
 	res.cacheKmsKeyName = ep.GetEncryptionSpec().GetKmsKeyName()
 	return res, nil
@@ -530,10 +530,7 @@ func (g *mqlGcpProjectVertexaiServiceEndpoint) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiServiceEndpoint) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.Network.Error != nil {
-		return nil, g.Network.Error
-	}
-	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -725,8 +722,6 @@ func newMqlVertexaiPipelineJob(runtime *plugin.Runtime, job *aiplatformpb.Pipeli
 		"state":            llx.StringData(job.State.String()),
 		"pipelineSpec":     llx.DictData(pipelineSpec),
 		"runtimeConfig":    llx.DictData(runtimeConfig),
-		"serviceAccount":   llx.StringData(job.ServiceAccount),
-		"network":          llx.StringData(job.Network),
 		"encryptionSpec":   llx.DictData(encryptionSpec),
 		"templateUri":      llx.StringData(job.TemplateUri),
 		"templateMetadata": llx.DictData(templateMetadata),
@@ -741,6 +736,9 @@ func newMqlVertexaiPipelineJob(runtime *plugin.Runtime, job *aiplatformpb.Pipeli
 	if err != nil {
 		return nil, err
 	}
+	mqlRef := mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob)
+	mqlRef.cacheServiceAccount = job.ServiceAccount
+	mqlRef.cacheNetwork = job.Network
 	res := mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob)
 	res.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 	res.cacheScheduleName = job.ScheduleName
@@ -752,13 +750,10 @@ func (g *mqlGcpProjectVertexaiServicePipelineJob) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiServicePipelineJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.ServiceAccount.Error != nil {
-		return nil, g.ServiceAccount.Error
-	}
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
-	email := g.ServiceAccount.Data
+	email := g.cacheServiceAccount
 	projectId := projectFromResourceName(g.Name.Data)
 	if email == "" || projectId == "" {
 		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
@@ -776,10 +771,7 @@ func (g *mqlGcpProjectVertexaiServicePipelineJob) serviceAccountRef() (*mqlGcpPr
 }
 
 func (g *mqlGcpProjectVertexaiServicePipelineJob) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.Network.Error != nil {
-		return nil, g.Network.Error
-	}
-	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -790,10 +782,7 @@ func (g *mqlGcpProjectVertexaiServicePipelineJob) networkRef() (*mqlGcpProjectCo
 }
 
 func (g *mqlGcpProjectVertexaiServiceIndexEndpoint) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.Network.Error != nil {
-		return nil, g.Network.Error
-	}
-	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -1053,13 +1042,10 @@ func (g *mqlGcpProjectVertexaiServiceCustomJob) id() (string, error) {
 }
 
 func (g *mqlGcpProjectVertexaiServiceCustomJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.ServiceAccount.Error != nil {
-		return nil, g.ServiceAccount.Error
-	}
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
-	email := g.ServiceAccount.Data
+	email := g.cacheServiceAccount
 	projectId := projectFromResourceName(g.Name.Data)
 	if email == "" || projectId == "" {
 		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
@@ -1076,14 +1062,11 @@ func (g *mqlGcpProjectVertexaiServiceCustomJob) serviceAccountRef() (*mqlGcpProj
 }
 
 func (g *mqlGcpProjectVertexaiServiceCustomJob) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.Network.Error != nil {
-		return nil, g.Network.Error
-	}
-	if g.Network.Data == "" {
+	if g.cacheNetwork == "" {
 		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -1371,8 +1354,6 @@ func mqlVertexAICustomJobFromProto(runtime *plugin.Runtime, job *aiplatformpb.Cu
 		"displayName":     llx.StringData(job.DisplayName),
 		"state":           llx.StringData(job.State.String()),
 		"jobSpec":         llx.DictData(jobSpec),
-		"serviceAccount":  llx.StringData(serviceAccount),
-		"network":         llx.StringData(network),
 		"enableWebAccess": llx.BoolData(enableWebAccess),
 		"labels":          llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
 		"encryptionSpec":  llx.DictData(encryptionSpec),
@@ -1385,6 +1366,9 @@ func mqlVertexAICustomJobFromProto(runtime *plugin.Runtime, job *aiplatformpb.Cu
 	if err != nil {
 		return nil, err
 	}
+	mqlRef := res.(*mqlGcpProjectVertexaiServiceCustomJob)
+	mqlRef.cacheServiceAccount = serviceAccount
+	mqlRef.cacheNetwork = network
 	res.(*mqlGcpProjectVertexaiServiceCustomJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 	return res.(*mqlGcpProjectVertexaiServiceCustomJob), nil
 }
@@ -1606,7 +1590,6 @@ func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
 				"displayName":              llx.StringData(ep.DisplayName),
 				"description":              llx.StringData(ep.Description),
 				"deployedIndexes":          llx.ArrayData(deployedIndexes, types.Dict),
-				"network":                  llx.StringData(ep.Network),
 				"publicEndpointEnabled":    llx.BoolData(ep.PublicEndpointEnabled),
 				"publicEndpointDomainName": llx.StringData(ep.PublicEndpointDomainName),
 				"labels":                   llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
@@ -1617,6 +1600,8 @@ func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlRef := mqlEP.(*mqlGcpProjectVertexaiServiceIndexEndpoint)
+			mqlRef.cacheNetwork = ep.Network
 			mqlEP.(*mqlGcpProjectVertexaiServiceIndexEndpoint).cacheKmsKeyName = ep.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlEP)
 		}
@@ -2007,7 +1992,6 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 				"jobState":                llx.StringData(job.JobState.String()),
 				"kernelName":              llx.StringData(job.KernelName),
 				"executionUser":           llx.StringData(job.GetExecutionUser()),
-				"scheduleResourceName":    llx.StringData(job.ScheduleResourceName),
 				"executionTimeoutSeconds": llx.IntData(timeoutSeconds),
 				"labels":                  llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
 				"encryptionSpec":          llx.DictData(encryptionSpec),
@@ -2017,6 +2001,8 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlRef := mqlJob.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob)
+			mqlRef.cacheScheduleResourceName = job.ScheduleResourceName
 			mqlNotebookJob := mqlJob.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob)
 			mqlNotebookJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			mqlNotebookJob.cacheServiceAccountEmail = job.GetServiceAccount()
@@ -3146,6 +3132,7 @@ func (a *mqlGcpProjectVertexaiServiceModel) pipelineJob() (*mqlGcpProjectVertexa
 
 type mqlGcpProjectVertexaiServiceEndpointInternal struct {
 	cacheKmsKeyName string
+	cacheNetwork    string
 }
 
 func (a *mqlGcpProjectVertexaiServiceEndpoint) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -3153,8 +3140,10 @@ func (a *mqlGcpProjectVertexaiServiceEndpoint) kmsKey() (*mqlGcpProjectKmsServic
 }
 
 type mqlGcpProjectVertexaiServicePipelineJobInternal struct {
-	cacheKmsKeyName   string
-	cacheScheduleName string
+	cacheKmsKeyName     string
+	cacheScheduleName   string
+	cacheNetwork        string
+	cacheServiceAccount string
 }
 
 func (a *mqlGcpProjectVertexaiServicePipelineJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -3204,7 +3193,9 @@ func (a *mqlGcpProjectVertexaiServiceTensorboard) kmsKey() (*mqlGcpProjectKmsSer
 }
 
 type mqlGcpProjectVertexaiServiceCustomJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName     string
+	cacheNetwork        string
+	cacheServiceAccount string
 }
 
 func (a *mqlGcpProjectVertexaiServiceCustomJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -3225,6 +3216,7 @@ func (a *mqlGcpProjectVertexaiServiceIndex) kmsKey() (*mqlGcpProjectKmsServiceKe
 
 type mqlGcpProjectVertexaiServiceIndexEndpointInternal struct {
 	cacheKmsKeyName string
+	cacheNetwork    string
 }
 
 func (a *mqlGcpProjectVertexaiServiceIndexEndpoint) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -3395,6 +3387,7 @@ type mqlGcpProjectVertexaiServiceNotebookExecutionJobInternal struct {
 	cacheServiceAccountEmail         string
 	cacheProjectId                   string
 	cacheNotebookRuntimeTemplateName string
+	cacheScheduleResourceName        string
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -3420,10 +3413,7 @@ func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) notebookRuntimeTempla
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) scheduleRef() (*mqlGcpProjectVertexaiServiceSchedule, error) {
-	if a.ScheduleResourceName.Error != nil {
-		return nil, a.ScheduleResourceName.Error
-	}
-	name := a.ScheduleResourceName.Data
+	name := a.cacheScheduleResourceName
 	if name == "" {
 		a.ScheduleRef.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

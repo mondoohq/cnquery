@@ -24,6 +24,11 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectDataprocServiceClusterConfigGceClusterInternal struct {
+	cacheNetworkUri    string
+	cacheSubnetworkUri string
+}
+
 type mqlGkeNodePoolAccelerator struct {
 	AcceleratorCount int64  `json:"acceleratorCount"`
 	AcceleratorType  string `json:"acceleratorType"`
@@ -315,20 +320,21 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 								"confidentialInstance":    llx.DictData(mqlConfidentialInstanceCfg),
 								"internalIpOnly":          llx.BoolData(c.Config.GceClusterConfig.InternalIpOnly),
 								"metadata":                llx.MapData(convert.MapToInterfaceMap(c.Config.GceClusterConfig.Metadata), types.String),
-								"networkUri":              llx.StringData(c.Config.GceClusterConfig.NetworkUri),
 								"nodeGroupAffinity":       llx.DictData(mqlNodeGroupAffinityCfg),
 								"privateIpv6GoogleAccess": llx.StringData(c.Config.GceClusterConfig.PrivateIpv6GoogleAccess),
 								"reservationAffinity":     llx.ResourceData(mqlReservationAffinity, "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity"),
 								"serviceAccountEmail":     llx.StringData(c.Config.GceClusterConfig.ServiceAccount),
 								"serviceAccountScopes":    llx.ArrayData(convert.SliceAnyToInterface(c.Config.GceClusterConfig.ServiceAccountScopes), types.String),
 								"shieldedInstanceConfig":  llx.ResourceData(mqlShieldedCfg, "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig"),
-								"subnetworkUri":           llx.StringData(c.Config.GceClusterConfig.SubnetworkUri),
 								"tags":                    llx.ArrayData(convert.SliceAnyToInterface(c.Config.GceClusterConfig.Tags), types.String),
 								"zoneUri":                 llx.StringData(c.Config.GceClusterConfig.ZoneUri),
 							})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
+							mqlRef := mqlGceClusterCfg.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster)
+							mqlRef.cacheNetworkUri = c.Config.GceClusterConfig.NetworkUri
+							mqlRef.cacheSubnetworkUri = c.Config.GceClusterConfig.SubnetworkUri
 						}
 
 						var mqlGkeClusterCfg plugin.Resource
@@ -688,10 +694,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.NetworkUri.Error != nil {
-		return nil, g.NetworkUri.Error
-	}
-	n, err := getNetworkByUrl(g.NetworkUri.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheNetworkUri, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -702,10 +705,7 @@ func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) network() (*mqlGcp
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
-	if g.SubnetworkUri.Error != nil {
-		return nil, g.SubnetworkUri.Error
-	}
-	s, err := getSubnetworkByUrl(g.SubnetworkUri.Data, g.MqlRuntime)
+	s, err := getSubnetworkByUrl(g.cacheSubnetworkUri, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
