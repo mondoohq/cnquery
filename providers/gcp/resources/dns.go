@@ -190,6 +190,7 @@ func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 type mqlGcpProjectDnsServiceManagedzoneInternal struct {
 	cacheAuthorizedNetworkUrls []string
+	cachePeeringNetwork        string
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) authorizedNetworks() ([]any, error) {
@@ -211,10 +212,7 @@ func (g *mqlGcpProjectDnsServiceManagedzone) managedBy() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) peeringNetworkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.PeeringNetwork.Error != nil {
-		return nil, g.PeeringNetwork.Error
-	}
-	n, err := getNetworkByUrl(g.PeeringNetwork.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cachePeeringNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -358,11 +356,12 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				"dnssecDefaultKeyAlgorithms": llx.ArrayData(dnssecAlgorithms, types.String),
 				"privateVisibilityConfig":    llx.DictData(mqlPrivateVisibilityCfg),
 				"forwardingTargets":          llx.ArrayData(forwardingTargets, types.String),
-				"peeringNetwork":             llx.StringData(peeringNetwork),
 			})
 			if err != nil {
 				return err
 			}
+			mqlRef := mqlManagedZone.(*mqlGcpProjectDnsServiceManagedzone)
+			mqlRef.cachePeeringNetwork = peeringNetwork
 			mqlManagedZone.(*mqlGcpProjectDnsServiceManagedzone).cacheAuthorizedNetworkUrls = authorizedNetworkUrls
 			res = append(res, mqlManagedZone)
 		}

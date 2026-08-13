@@ -149,18 +149,18 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 	}
 
 	// Networks the instance is attached to.
-	nics := g.GetNetworkInterfaces()
+	nics := g.GetNics()
 	if nics.Error != nil {
 		return nil, nics.Error
 	}
 	instanceNetworks := map[string]bool{}
 	for _, n := range nics.Data {
-		nic, ok := n.(map[string]any)
+		nic, ok := n.(*mqlGcpProjectComputeServiceInstanceNetworkInterface)
 		if !ok {
 			continue
 		}
-		if network, ok := nic["network"].(string); ok && network != "" {
-			instanceNetworks[networkNameFromUrl(network)] = true
+		if nic.cacheNetworkUrl != "" {
+			instanceNetworks[networkNameFromUrl(nic.cacheNetworkUrl)] = true
 		}
 	}
 

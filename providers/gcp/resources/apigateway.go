@@ -16,6 +16,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectApiGatewayServiceApiConfigInternal struct {
+	cacheGatewayServiceAccount string
+}
+
 func newApiGatewayService(conn *connection.GcpConnection) (*apigateway.Service, error) {
 	client, err := conn.Client(apigateway.CloudPlatformScope)
 	if err != nil {
@@ -166,20 +170,21 @@ func (g *mqlGcpProjectApiGatewayServiceApi) configs() ([]any, error) {
 			}
 
 			mqlConfig, err := CreateResource(g.MqlRuntime, "gcp.project.apiGatewayService.apiConfig", map[string]*llx.RawData{
-				"projectId":             llx.StringData(projectId),
-				"name":                  llx.StringData(c.Name),
-				"displayName":           llx.StringData(c.DisplayName),
-				"state":                 llx.StringData(c.State),
-				"serviceConfigId":       llx.StringData(c.ServiceConfigId),
-				"gatewayServiceAccount": llx.StringData(c.GatewayServiceAccount),
-				"createTime":            llx.TimeDataPtr(parseTime(c.CreateTime)),
-				"updateTime":            llx.TimeDataPtr(parseTime(c.UpdateTime)),
-				"labels":                llx.MapData(convert.MapToInterfaceMap(c.Labels), types.String),
-				"openapiDocuments":      llx.ArrayData(openapiDocuments, types.Dict),
+				"projectId":        llx.StringData(projectId),
+				"name":             llx.StringData(c.Name),
+				"displayName":      llx.StringData(c.DisplayName),
+				"state":            llx.StringData(c.State),
+				"serviceConfigId":  llx.StringData(c.ServiceConfigId),
+				"createTime":       llx.TimeDataPtr(parseTime(c.CreateTime)),
+				"updateTime":       llx.TimeDataPtr(parseTime(c.UpdateTime)),
+				"labels":           llx.MapData(convert.MapToInterfaceMap(c.Labels), types.String),
+				"openapiDocuments": llx.ArrayData(openapiDocuments, types.Dict),
 			})
 			if err != nil {
 				return err
 			}
+			mqlRef := mqlConfig.(*mqlGcpProjectApiGatewayServiceApiConfig)
+			mqlRef.cacheGatewayServiceAccount = c.GatewayServiceAccount
 			res = append(res, mqlConfig)
 		}
 		return nil
@@ -194,10 +199,7 @@ func (g *mqlGcpProjectApiGatewayServiceApi) configs() ([]any, error) {
 }
 
 func (g *mqlGcpProjectApiGatewayServiceApiConfig) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.GatewayServiceAccount.Error != nil {
-		return nil, g.GatewayServiceAccount.Error
-	}
-	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.GatewayServiceAccount.Data, g.ProjectId.Data)
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheGatewayServiceAccount, g.ProjectId.Data)
 	if err != nil {
 		return nil, err
 	}

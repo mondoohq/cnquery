@@ -49,7 +49,8 @@ type mqlGcpProjectRedisServiceInternal struct {
 }
 
 type mqlGcpProjectRedisServiceInstanceInternal struct {
-	cacheKmsKey string
+	cacheKmsKey            string
+	cacheAuthorizedNetwork string
 }
 
 func (g *mqlGcpProjectRedisServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -170,10 +171,7 @@ func (g *mqlGcpProjectRedisService) id() (string, error) {
 }
 
 func (g *mqlGcpProjectRedisServiceInstance) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.AuthorizedNetwork.Error != nil {
-		return nil, g.AuthorizedNetwork.Error
-	}
-	n, err := getNetworkByUrl(g.AuthorizedNetwork.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheAuthorizedNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -284,11 +282,9 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 			"redisVersion":           llx.StringData(instance.RedisVersion),
 			"reservedIpRange":        llx.StringData(instance.ReservedIpRange),
 			"secondaryIpRange":       llx.StringData(instance.SecondaryIpRange),
-			"AuthorizedNetwork":      llx.StringData(instance.AuthorizedNetwork),
 			"persistenceIamIdentity": llx.StringData(instance.PersistenceIamIdentity),
 			"connectMode":            llx.StringData(instance.ConnectMode.String()),
 			"readEndpoint":           llx.StringData(instance.ReadEndpoint),
-			"customerManagedKey":     llx.StringData(instance.CustomerManagedKey),
 			"maintenanceVersion":     llx.StringData(instance.MaintenanceVersion),
 			"host":                   llx.StringData(instance.Host),
 			"currentLocationId":      llx.StringData(instance.CurrentLocationId),
@@ -324,6 +320,8 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlRedisInstance.(*mqlGcpProjectRedisServiceInstance)
+		mqlRef.cacheAuthorizedNetwork = instance.AuthorizedNetwork
 		mqlRedisInstance.(*mqlGcpProjectRedisServiceInstance).cacheKmsKey = instance.CustomerManagedKey
 		res = append(res, mqlRedisInstance)
 	}
@@ -724,7 +722,6 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 			"sizeGb":                        llx.IntData(sizeGb),
 			"preciseSizeGb":                 llx.FloatData(preciseSizeGb),
 			"deletionProtectionEnabled":     llx.BoolData(deletionProtection),
-			"kmsKey":                        llx.StringData(kmsKey),
 			"backupCollection":              llx.StringData(backupCollection),
 			"redisConfigs":                  llx.MapData(convert.MapToInterfaceMap(cluster.RedisConfigs), types.String),
 			"persistenceConfig":             llx.DictData(persistenceConfig),

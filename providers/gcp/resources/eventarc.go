@@ -20,6 +20,14 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectEventarcServiceChannelInternal struct {
+	cacheCryptoKeyName string
+}
+
+type mqlGcpProjectEventarcServiceTriggerInternal struct {
+	cacheServiceAccount string
+}
+
 type mqlGcpProjectEventarcServiceInternal struct {
 	serviceGate
 }
@@ -83,13 +91,10 @@ func (g *mqlGcpProjectEventarcServiceTrigger) id() (string, error) {
 }
 
 func (g *mqlGcpProjectEventarcServiceTrigger) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
-	if g.ServiceAccount.Error != nil {
-		return nil, g.ServiceAccount.Error
-	}
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
-	email := g.ServiceAccount.Data
+	email := g.cacheServiceAccount
 	projectId := projectFromResourceName(g.Name.Data)
 	if email == "" || projectId == "" {
 		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
@@ -202,7 +207,6 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 			"name":                 llx.StringData(trigger.Name),
 			"uid":                  llx.StringData(trigger.Uid),
 			"eventFilters":         llx.ArrayData(eventFilters, types.Resource("gcp.project.eventarcService.trigger.eventFilter")),
-			"serviceAccount":       llx.StringData(trigger.ServiceAccount),
 			"destination":          llx.DictData(destination),
 			"transport":            llx.DictData(transport),
 			"channelName":          llx.StringData(trigger.Channel),
@@ -215,6 +219,8 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlTrigger.(*mqlGcpProjectEventarcServiceTrigger)
+		mqlRef.cacheServiceAccount = trigger.ServiceAccount
 		res = append(res, mqlTrigger)
 	}
 
@@ -230,11 +236,7 @@ func (g *mqlGcpProjectEventarcServiceChannel) id() (string, error) {
 }
 
 func (g *mqlGcpProjectEventarcServiceChannel) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
-	keyName := g.GetCryptoKeyName()
-	if keyName.Error != nil {
-		return nil, keyName.Error
-	}
-	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, keyName.Data)
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheCryptoKeyName)
 }
 
 func (g *mqlGcpProjectEventarcService) channels() ([]any, error) {
@@ -283,19 +285,20 @@ func (g *mqlGcpProjectEventarcService) channels() ([]any, error) {
 		}
 
 		mqlChannel, err := CreateResource(g.MqlRuntime, "gcp.project.eventarcService.channel", map[string]*llx.RawData{
-			"name":          llx.StringData(channel.Name),
-			"uid":           llx.StringData(channel.Uid),
-			"provider":      llx.StringData(channel.Provider),
-			"pubsubTopic":   llx.StringData(channel.GetPubsubTopic()),
-			"state":         llx.StringData(channel.State.String()),
-			"cryptoKeyName": llx.StringData(channel.GetCryptoKeyName()),
-			"labels":        llx.MapData(convert.MapToInterfaceMap(channel.GetLabels()), types.String),
-			"created":       llx.TimeDataPtr(timestampAsTimePtr(channel.CreateTime)),
-			"updated":       llx.TimeDataPtr(timestampAsTimePtr(channel.UpdateTime)),
+			"name":        llx.StringData(channel.Name),
+			"uid":         llx.StringData(channel.Uid),
+			"provider":    llx.StringData(channel.Provider),
+			"pubsubTopic": llx.StringData(channel.GetPubsubTopic()),
+			"state":       llx.StringData(channel.State.String()),
+			"labels":      llx.MapData(convert.MapToInterfaceMap(channel.GetLabels()), types.String),
+			"created":     llx.TimeDataPtr(timestampAsTimePtr(channel.CreateTime)),
+			"updated":     llx.TimeDataPtr(timestampAsTimePtr(channel.UpdateTime)),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlChannel.(*mqlGcpProjectEventarcServiceChannel)
+		mqlRef.cacheCryptoKeyName = channel.GetCryptoKeyName()
 		res = append(res, mqlChannel)
 	}
 

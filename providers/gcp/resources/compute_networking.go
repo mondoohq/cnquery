@@ -20,6 +20,45 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectComputeServiceInterconnectAttachmentInternal struct {
+	cacheInterconnectUrl string
+	cacheRegionUrl       string
+	cacheRouterUrl       string
+}
+
+type mqlGcpProjectComputeServiceNetworkEndpointGroupInternal struct {
+	cacheNetworkUrl    string
+	cacheRegionUrl     string
+	cacheSubnetworkUrl string
+	cacheZoneUrl       string
+}
+
+type mqlGcpProjectComputeServicePacketMirroringInternal struct {
+	cacheRegionUrl string
+}
+
+type mqlGcpProjectComputeServiceServiceAttachmentInternal struct {
+	cacheRegionUrl string
+}
+
+type mqlGcpProjectComputeServiceTargetSslProxyInternal struct {
+	cacheServiceUrl   string
+	cacheSslPolicyUrl string
+}
+
+type mqlGcpProjectComputeServiceTargetTcpProxyInternal struct {
+	cacheRegionUrl  string
+	cacheServiceUrl string
+}
+
+type mqlGcpProjectComputeServiceVpnTunnelInternal struct {
+	cachePeerExternalGateway string
+	cachePeerGcpGateway      string
+	cacheRegionUrl           string
+	cacheRouterUrl           string
+	cacheVpnGatewayUrl       string
+}
+
 // ---------------------------------------------------------------
 // Cross-reference helper functions
 // ---------------------------------------------------------------
@@ -88,7 +127,7 @@ func getVpnGatewayByUrl(gwUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	// VPN gateways are region-scoped and have regionUrl; match by name + region
 	for _, g := range gateways.Data {
 		gw := g.(*mqlGcpProjectComputeServiceVpnGateway)
-		if gw.GetName().Data == targetName && strings.HasSuffix(gw.RegionUrl.Data, "/"+targetRegion) {
+		if gw.GetName().Data == targetName && strings.HasSuffix(gw.cacheRegionUrl, "/"+targetRegion) {
 			return gw, nil
 		}
 	}
@@ -196,10 +235,7 @@ func getSecurityPolicyByUrl(policyUrl string, runtime *plugin.Runtime) (*mqlGcpP
 // vpnTunnel cross-references
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) router() (*mqlGcpProjectComputeServiceRouter, error) {
-	if g.RouterUrl.Error != nil {
-		return nil, g.RouterUrl.Error
-	}
-	routerUrl := g.RouterUrl.Data
+	routerUrl := g.cacheRouterUrl
 	if routerUrl == "" {
 		g.Router.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -215,10 +251,7 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) router() (*mqlGcpProjectComputeSe
 }
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) vpnGateway() (*mqlGcpProjectComputeServiceVpnGateway, error) {
-	if g.VpnGatewayUrl.Error != nil {
-		return nil, g.VpnGatewayUrl.Error
-	}
-	gwUrl := g.VpnGatewayUrl.Data
+	gwUrl := g.cacheVpnGatewayUrl
 	if gwUrl == "" {
 		g.VpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -234,10 +267,7 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) vpnGateway() (*mqlGcpProjectCompu
 }
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) peerExternalVpnGateway() (*mqlGcpProjectComputeServiceExternalVpnGateway, error) {
-	if g.PeerExternalGateway.Error != nil {
-		return nil, g.PeerExternalGateway.Error
-	}
-	gwUrl := g.PeerExternalGateway.Data
+	gwUrl := g.cachePeerExternalGateway
 	if gwUrl == "" {
 		g.PeerExternalVpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -253,10 +283,7 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) peerExternalVpnGateway() (*mqlGcp
 }
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) peerGcpVpnGateway() (*mqlGcpProjectComputeServiceVpnGateway, error) {
-	if g.PeerGcpGateway.Error != nil {
-		return nil, g.PeerGcpGateway.Error
-	}
-	gwUrl := g.PeerGcpGateway.Data
+	gwUrl := g.cachePeerGcpGateway
 	if gwUrl == "" {
 		g.PeerGcpVpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -274,10 +301,7 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) peerGcpVpnGateway() (*mqlGcpProje
 // interconnectAttachment cross-references
 
 func (g *mqlGcpProjectComputeServiceInterconnectAttachment) interconnect() (*mqlGcpProjectComputeServiceInterconnect, error) {
-	if g.InterconnectUrl.Error != nil {
-		return nil, g.InterconnectUrl.Error
-	}
-	icUrl := g.InterconnectUrl.Data
+	icUrl := g.cacheInterconnectUrl
 	if icUrl == "" {
 		g.Interconnect.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -293,10 +317,7 @@ func (g *mqlGcpProjectComputeServiceInterconnectAttachment) interconnect() (*mql
 }
 
 func (g *mqlGcpProjectComputeServiceInterconnectAttachment) router() (*mqlGcpProjectComputeServiceRouter, error) {
-	if g.RouterUrl.Error != nil {
-		return nil, g.RouterUrl.Error
-	}
-	routerUrl := g.RouterUrl.Data
+	routerUrl := g.cacheRouterUrl
 	if routerUrl == "" {
 		g.Router.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -314,10 +335,7 @@ func (g *mqlGcpProjectComputeServiceInterconnectAttachment) router() (*mqlGcpPro
 // backendService cross-references
 
 func (g *mqlGcpProjectComputeServiceBackendService) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.NetworkUrl.Error != nil {
-		return nil, g.NetworkUrl.Error
-	}
-	networkUrl := g.NetworkUrl.Data
+	networkUrl := g.cacheNetworkUrl
 	if networkUrl == "" {
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -333,10 +351,7 @@ func (g *mqlGcpProjectComputeServiceBackendService) network() (*mqlGcpProjectCom
 }
 
 func (g *mqlGcpProjectComputeServiceBackendService) securityPolicy() (*mqlGcpProjectComputeServiceSecurityPolicy, error) {
-	if g.SecurityPolicyUrl.Error != nil {
-		return nil, g.SecurityPolicyUrl.Error
-	}
-	policyUrl := g.SecurityPolicyUrl.Data
+	policyUrl := g.cacheSecurityPolicyUrl
 	if policyUrl == "" {
 		g.SecurityPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -360,10 +375,7 @@ func (g *mqlGcpProjectComputeServiceRoute) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceRoute) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.NetworkUrl.Error != nil {
-		return nil, g.NetworkUrl.Error
-	}
-	networkUrl := g.NetworkUrl.Data
+	networkUrl := g.cacheNetworkUrl
 	if networkUrl == "" {
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -432,7 +444,6 @@ func (g *mqlGcpProjectComputeService) routes() ([]any, error) {
 				"description":      llx.StringData(r.Description),
 				"destRange":        llx.StringData(r.DestRange),
 				"priority":         llx.IntData(r.Priority),
-				"networkUrl":       llx.StringData(r.Network),
 				"nextHopGateway":   llx.StringData(r.NextHopGateway),
 				"nextHopInstance":  llx.StringData(r.NextHopInstance),
 				"nextHopIp":        llx.StringData(r.NextHopIp),
@@ -452,6 +463,8 @@ func (g *mqlGcpProjectComputeService) routes() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlRef := mqlRoute.(*mqlGcpProjectComputeServiceRoute)
+			mqlRef.cacheNetworkUrl = r.Network
 			res = append(res, mqlRoute)
 		}
 		return nil
@@ -532,7 +545,6 @@ func (g *mqlGcpProjectComputeService) serviceAttachments() ([]any, error) {
 					"producerForwardingRule": llx.StringData(sa.ProducerForwardingRule),
 					"targetService":          llx.StringData(sa.TargetService),
 					"reconcileConnections":   llx.BoolData(sa.ReconcileConnections),
-					"regionUrl":              llx.StringData(sa.Region),
 					"selfLink":               llx.StringData(sa.SelfLink),
 					"fingerprint":            llx.StringData(sa.Fingerprint),
 					"created":                llx.TimeDataPtr(parseTime(sa.CreationTimestamp)),
@@ -540,6 +552,8 @@ func (g *mqlGcpProjectComputeService) serviceAttachments() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlSA.(*mqlGcpProjectComputeServiceServiceAttachment)
+				mqlRef.cacheRegionUrl = sa.Region
 				res = append(res, mqlSA)
 			}
 		}
@@ -559,10 +573,7 @@ func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.NetworkUrl.Error != nil {
-		return nil, g.NetworkUrl.Error
-	}
-	networkUrl := g.NetworkUrl.Data
+	networkUrl := g.cacheNetworkUrl
 	if networkUrl == "" {
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -578,10 +589,7 @@ func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) network() (*mqlGcpProj
 }
 
 func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
-	if g.SubnetworkUrl.Error != nil {
-		return nil, g.SubnetworkUrl.Error
-	}
-	subnetUrl := g.SubnetworkUrl.Data
+	subnetUrl := g.cacheSubnetworkUrl
 	if subnetUrl == "" {
 		g.Subnetwork.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -657,10 +665,6 @@ func (g *mqlGcpProjectComputeService) networkEndpointGroups() ([]any, error) {
 					"networkEndpointType": llx.StringData(neg.NetworkEndpointType),
 					"defaultPort":         llx.IntData(neg.DefaultPort),
 					"size":                llx.IntData(neg.Size),
-					"networkUrl":          llx.StringData(neg.Network),
-					"subnetworkUrl":       llx.StringData(neg.Subnetwork),
-					"zoneUrl":             llx.StringData(neg.Zone),
-					"regionUrl":           llx.StringData(neg.Region),
 					"cloudRun":            llx.DictData(cloudRun),
 					"appEngine":           llx.DictData(appEngine),
 					"cloudFunction":       llx.DictData(cloudFunction),
@@ -673,6 +677,11 @@ func (g *mqlGcpProjectComputeService) networkEndpointGroups() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlNEG.(*mqlGcpProjectComputeServiceNetworkEndpointGroup)
+				mqlRef.cacheNetworkUrl = neg.Network
+				mqlRef.cacheSubnetworkUrl = neg.Subnetwork
+				mqlRef.cacheZoneUrl = neg.Zone
+				mqlRef.cacheRegionUrl = neg.Region
 				res = append(res, mqlNEG)
 			}
 		}
@@ -837,8 +846,6 @@ func (g *mqlGcpProjectComputeService) interconnectAttachments() ([]any, error) {
 					"type":                      llx.StringData(ia.Type),
 					"state":                     llx.StringData(ia.State),
 					"edgeAvailabilityDomain":    llx.StringData(ia.EdgeAvailabilityDomain),
-					"interconnectUrl":           llx.StringData(ia.Interconnect),
-					"routerUrl":                 llx.StringData(ia.Router),
 					"cloudRouterIpAddress":      llx.StringData(ia.CloudRouterIpAddress),
 					"customerRouterIpAddress":   llx.StringData(ia.CustomerRouterIpAddress),
 					"cloudRouterIpv6Address":    llx.StringData(ia.CloudRouterIpv6Address),
@@ -848,7 +855,6 @@ func (g *mqlGcpProjectComputeService) interconnectAttachments() ([]any, error) {
 					"vlanTag8021q":              llx.IntData(ia.VlanTag8021q),
 					"partnerMetadata":           llx.DictData(partnerMetadata),
 					"privateInterconnectInfo":   llx.DictData(privateInfo),
-					"regionUrl":                 llx.StringData(ia.Region),
 					"selfLink":                  llx.StringData(ia.SelfLink),
 					"dataplaneVersion":          llx.IntData(ia.DataplaneVersion),
 					"labels":                    llx.MapData(convert.MapToInterfaceMap(ia.Labels), types.String),
@@ -857,6 +863,10 @@ func (g *mqlGcpProjectComputeService) interconnectAttachments() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlIA.(*mqlGcpProjectComputeServiceInterconnectAttachment)
+				mqlRef.cacheInterconnectUrl = ia.Interconnect
+				mqlRef.cacheRouterUrl = ia.Router
+				mqlRef.cacheRegionUrl = ia.Region
 				res = append(res, mqlIA)
 			}
 		}
@@ -988,14 +998,15 @@ func (g *mqlGcpProjectComputeService) targetTcpProxies() ([]any, error) {
 					"description": llx.StringData(tp.Description),
 					"proxyHeader": llx.StringData(tp.ProxyHeader),
 					"proxyBind":   llx.BoolData(tp.ProxyBind),
-					"serviceUrl":  llx.StringData(tp.Service),
-					"regionUrl":   llx.StringData(tp.Region),
 					"selfLink":    llx.StringData(tp.SelfLink),
 					"created":     llx.TimeDataPtr(parseTime(tp.CreationTimestamp)),
 				})
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlTP.(*mqlGcpProjectComputeServiceTargetTcpProxy)
+				mqlRef.cacheServiceUrl = tp.Service
+				mqlRef.cacheRegionUrl = tp.Region
 				res = append(res, mqlTP)
 			}
 		}
@@ -1015,10 +1026,7 @@ func (g *mqlGcpProjectComputeServiceTargetSslProxy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceTargetSslProxy) sslPolicy() (*mqlGcpProjectComputeServiceSslPolicy, error) {
-	if g.SslPolicyUrl.Error != nil {
-		return nil, g.SslPolicyUrl.Error
-	}
-	sslPolicyUrl := g.SslPolicyUrl.Data
+	sslPolicyUrl := g.cacheSslPolicyUrl
 	if sslPolicyUrl == "" {
 		g.SslPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1069,9 +1077,7 @@ func (g *mqlGcpProjectComputeService) targetSslProxies() ([]any, error) {
 				"name":               llx.StringData(sp.Name),
 				"description":        llx.StringData(sp.Description),
 				"proxyHeader":        llx.StringData(sp.ProxyHeader),
-				"serviceUrl":         llx.StringData(sp.Service),
 				"sslCertificateUrls": llx.ArrayData(convert.SliceAnyToInterface(sp.SslCertificates), types.String),
-				"sslPolicyUrl":       llx.StringData(sp.SslPolicy),
 				"certificateMap":     llx.StringData(sp.CertificateMap),
 				"selfLink":           llx.StringData(sp.SelfLink),
 				"created":            llx.TimeDataPtr(parseTime(sp.CreationTimestamp)),
@@ -1079,6 +1085,9 @@ func (g *mqlGcpProjectComputeService) targetSslProxies() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlRef := mqlSP.(*mqlGcpProjectComputeServiceTargetSslProxy)
+			mqlRef.cacheServiceUrl = sp.Service
+			mqlRef.cacheSslPolicyUrl = sp.SslPolicy
 			res = append(res, mqlSP)
 		}
 		return nil
@@ -1155,13 +1164,14 @@ func (g *mqlGcpProjectComputeService) packetMirrorings() ([]any, error) {
 					"collectorIlb":      llx.DictData(collectorIlb),
 					"mirroredResources": llx.DictData(mirroredResources),
 					"filter":            llx.DictData(filter),
-					"regionUrl":         llx.StringData(pm.Region),
 					"selfLink":          llx.StringData(pm.SelfLink),
 					"created":           llx.TimeDataPtr(parseTime(pm.CreationTimestamp)),
 				})
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlPM.(*mqlGcpProjectComputeServicePacketMirroring)
+				mqlRef.cacheRegionUrl = pm.Region
 				res = append(res, mqlPM)
 			}
 		}
@@ -1282,22 +1292,23 @@ func (g *mqlGcpProjectComputeService) targetPools() ([]any, error) {
 		for _, scopedList := range page.Items {
 			for _, tp := range scopedList.TargetPools {
 				mqlTP, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.targetPool", map[string]*llx.RawData{
-					"id":                llx.StringData(fmt.Sprintf("%d", tp.Id)),
-					"name":              llx.StringData(tp.Name),
-					"description":       llx.StringData(tp.Description),
-					"sessionAffinity":   llx.StringData(tp.SessionAffinity),
-					"failoverRatio":     llx.FloatData(tp.FailoverRatio),
-					"backupPoolUrl":     llx.StringData(tp.BackupPool),
-					"healthCheckUrls":   llx.ArrayData(convert.SliceAnyToInterface(tp.HealthChecks), types.String),
-					"instanceUrls":      llx.ArrayData(convert.SliceAnyToInterface(tp.Instances), types.String),
-					"securityPolicyUrl": llx.StringData(tp.SecurityPolicy),
-					"regionUrl":         llx.StringData(tp.Region),
-					"selfLink":          llx.StringData(tp.SelfLink),
-					"created":           llx.TimeDataPtr(parseTime(tp.CreationTimestamp)),
+					"id":              llx.StringData(fmt.Sprintf("%d", tp.Id)),
+					"name":            llx.StringData(tp.Name),
+					"description":     llx.StringData(tp.Description),
+					"sessionAffinity": llx.StringData(tp.SessionAffinity),
+					"failoverRatio":   llx.FloatData(tp.FailoverRatio),
+					"healthCheckUrls": llx.ArrayData(convert.SliceAnyToInterface(tp.HealthChecks), types.String),
+					"instanceUrls":    llx.ArrayData(convert.SliceAnyToInterface(tp.Instances), types.String),
+					"selfLink":        llx.StringData(tp.SelfLink),
+					"created":         llx.TimeDataPtr(parseTime(tp.CreationTimestamp)),
 				})
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlTP.(*mqlGcpProjectComputeServiceTargetPool)
+				mqlRef.cacheBackupPoolUrl = tp.BackupPool
+				mqlRef.cacheSecurityPolicyUrl = tp.SecurityPolicy
+				mqlRef.cacheRegionUrl = tp.Region
 				res = append(res, mqlTP)
 			}
 		}

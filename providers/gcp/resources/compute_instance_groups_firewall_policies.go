@@ -59,8 +59,6 @@ func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
 					"projectId":   llx.StringData(projectId),
 					"name":        llx.StringData(ig.Name),
 					"description": llx.StringData(ig.Description),
-					"zoneUrl":     llx.StringData(ig.Zone),
-					"networkUrl":  llx.StringData(ig.Network),
 					"size":        llx.IntData(ig.Size),
 					"namedPorts":  llx.ArrayData(namedPorts, types.Dict),
 					"created":     llx.TimeDataPtr(parseTime(ig.CreationTimestamp)),
@@ -69,6 +67,9 @@ func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlIG.(*mqlGcpProjectComputeServiceInstanceGroup)
+				mqlRef.cacheZoneUrl = ig.Zone
+				mqlRef.cacheNetworkUrl = ig.Network
 				mqlIG.(*mqlGcpProjectComputeServiceInstanceGroup).cacheSubnetworkUrl = ig.Subnetwork
 				res = append(res, mqlIG)
 			}
@@ -86,6 +87,8 @@ func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
 
 type mqlGcpProjectComputeServiceInstanceGroupInternal struct {
 	cacheSubnetworkUrl string
+	cacheNetworkUrl    string
+	cacheZoneUrl       string
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroup) id() (string, error) {
@@ -93,10 +96,7 @@ func (g *mqlGcpProjectComputeServiceInstanceGroup) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroup) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.NetworkUrl.Error != nil {
-		return nil, g.NetworkUrl.Error
-	}
-	net, err := getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
+	net, err := getNetworkByUrl(g.cacheNetworkUrl, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +159,6 @@ func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
 					"projectId":           llx.StringData(projectId),
 					"name":                llx.StringData(igm.Name),
 					"description":         llx.StringData(igm.Description),
-					"zoneUrl":             llx.StringData(igm.Zone),
-					"regionUrl":           llx.StringData(igm.Region),
 					"instanceTemplateUrl": llx.StringData(igm.InstanceTemplate),
 					"targetSize":          llx.IntData(igm.TargetSize),
 					"currentActions":      llx.DictData(currentActions),
@@ -175,6 +173,9 @@ func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				mqlRef := mqlIGM.(*mqlGcpProjectComputeServiceInstanceGroupManager)
+				mqlRef.cacheZoneUrl = igm.Zone
+				mqlRef.cacheRegionUrl = igm.Region
 				templateUrl := igm.InstanceTemplate
 				if templateUrl == "" {
 					for _, v := range igm.Versions {
@@ -201,6 +202,8 @@ func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
 
 type mqlGcpProjectComputeServiceInstanceGroupManagerInternal struct {
 	cacheInstanceTemplateUrl string
+	cacheRegionUrl           string
+	cacheZoneUrl             string
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroupManager) id() (string, error) {
@@ -289,12 +292,13 @@ func (g *mqlGcpProjectComputeService) firewallPolicies() ([]any, error) {
 				"selfLink":       llx.StringData(fp.SelfLink),
 				"ruleTupleCount": llx.IntData(fp.RuleTupleCount),
 				"created":        llx.TimeDataPtr(parseTime(fp.CreationTimestamp)),
-				"regionUrl":      llx.StringData(fp.Region),
 				"associations":   llx.ArrayData(associations, types.Dict),
 			})
 			if err != nil {
 				return err
 			}
+			mqlRef := mqlFP.(*mqlGcpProjectComputeServiceFirewallPolicy)
+			mqlRef.cacheRegionUrl = fp.Region
 			mqlPolicy := mqlFP.(*mqlGcpProjectComputeServiceFirewallPolicy)
 			mqlPolicy.cacheRules = fp.Rules
 			res = append(res, mqlFP)
@@ -311,7 +315,8 @@ func (g *mqlGcpProjectComputeService) firewallPolicies() ([]any, error) {
 }
 
 type mqlGcpProjectComputeServiceFirewallPolicyInternal struct {
-	cacheRules []*compute.FirewallPolicyRule
+	cacheRules     []*compute.FirewallPolicyRule
+	cacheRegionUrl string
 }
 
 func (g *mqlGcpProjectComputeServiceFirewallPolicy) id() (string, error) {
