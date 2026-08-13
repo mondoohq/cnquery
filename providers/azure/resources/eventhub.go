@@ -452,18 +452,6 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 	return res, nil
 }
 
-// networkRuleSet fetches the namespace-level network rule set.
-func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRuleSet() (any, error) {
-	props, err := a.fetchNetworkRuleSetProperties()
-	if err != nil {
-		return nil, err
-	}
-	if props == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(props)
-}
-
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules, error) {
 	props, err := a.fetchNetworkRuleSetProperties()
 	if err != nil {

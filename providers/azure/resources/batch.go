@@ -125,17 +125,9 @@ func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 }
 
 func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawData, error) {
-	identityData := llx.NilData
 	principalId := llx.StringData("")
-	if account.Identity != nil {
-		identity, err := convert.JsonToDict(account.Identity)
-		if err != nil {
-			return nil, err
-		}
-		identityData = llx.DictData(identity)
-		if account.Identity.PrincipalID != nil {
-			principalId = llx.StringData(*account.Identity.PrincipalID)
-		}
+	if account.Identity != nil && account.Identity.PrincipalID != nil {
+		principalId = llx.StringData(*account.Identity.PrincipalID)
 	}
 
 	propertiesData := llx.NilData
@@ -152,9 +144,6 @@ func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawDa
 		lowPriorityCoreQuota                  = llx.NilData
 		poolQuota                             = llx.NilData
 		allowedAuthenticationModes            = llx.NilData
-		autoStorage                           = llx.NilData
-		encryption                            = llx.NilData
-		keyVaultReference                     = llx.NilData
 		networkProfile                        = llx.NilData
 		privateEndpointConnections            = llx.NilData
 	)
@@ -210,27 +199,6 @@ func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawDa
 			allowedAuthenticationModes = llx.ArrayData(values, types.String)
 		}
 
-		if props.AutoStorage != nil {
-			if dict, err := convert.JsonToDict(props.AutoStorage); err != nil {
-				return nil, err
-			} else if dict != nil {
-				autoStorage = llx.DictData(dict)
-			}
-		}
-		if props.Encryption != nil {
-			if dict, err := convert.JsonToDict(props.Encryption); err != nil {
-				return nil, err
-			} else if dict != nil {
-				encryption = llx.DictData(dict)
-			}
-		}
-		if props.KeyVaultReference != nil {
-			if dict, err := convert.JsonToDict(props.KeyVaultReference); err != nil {
-				return nil, err
-			} else if dict != nil {
-				keyVaultReference = llx.DictData(dict)
-			}
-		}
 		if props.NetworkProfile != nil {
 			if dict, err := convert.JsonToDict(props.NetworkProfile); err != nil {
 				return nil, err
@@ -276,7 +244,6 @@ func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawDa
 		"location":                              llx.StringDataPtr(account.Location),
 		"tags":                                  llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 		"type":                                  llx.StringDataPtr(account.Type),
-		"identity":                              identityData,
 		"principalId":                           principalId,
 		"properties":                            propertiesData,
 		"accountEndpoint":                       accountEndpoint,
@@ -291,9 +258,6 @@ func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawDa
 		"lowPriorityCoreQuota":                  lowPriorityCoreQuota,
 		"poolQuota":                             poolQuota,
 		"allowedAuthenticationModes":            allowedAuthenticationModes,
-		"autoStorage":                           autoStorage,
-		"encryption":                            encryption,
-		"keyVaultReference":                     keyVaultReference,
 		"networkProfile":                        networkProfile,
 		"privateEndpointConnections":            privateEndpointConnections,
 	}, nil

@@ -40,7 +40,8 @@ func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) id(
 }
 
 type mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnectionInternal struct {
-	cacheSystemData any
+	cacheSystemData        any
+	cachePrivateEndpointId string
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -51,12 +52,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) sys
 // connection so the subnet and virtual network it is reachable from can be
 // traversed, giving the private-access path into the storage account.
 func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
-	if a.PrivateEndpointId.Data == "" {
+	if a.cachePrivateEndpointId == "" {
 		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint",
-		map[string]*llx.RawData{"id": llx.StringData(a.PrivateEndpointId.Data)})
+		map[string]*llx.RawData{"id": llx.StringData(a.cachePrivateEndpointId)})
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +290,6 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) privateEndpointConnections()
 					"id":                llx.StringDataPtr(c.ID),
 					"name":              llx.StringDataPtr(c.Name),
 					"type":              llx.StringDataPtr(c.Type),
-					"privateEndpointId": llx.StringData(privateEndpointId),
 					"status":            llx.StringData(status),
 					"description":       llx.StringData(description),
 					"actionsRequired":   llx.StringData(actionsRequired),
@@ -302,7 +302,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) privateEndpointConnections()
 			if err != nil {
 				return nil, err
 			}
-			mqlPe.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).cacheSystemData = sysData
+			mqlPec := mqlPe.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection)
+			mqlPec.cacheSystemData = sysData
+			mqlPec.cachePrivateEndpointId = privateEndpointId
 			res = append(res, mqlPe)
 		}
 	}

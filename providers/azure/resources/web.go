@@ -98,7 +98,12 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		"type":       llx.StringDataPtr(site.Type),
 		"kind":       llx.StringDataPtr(site.Kind),
 		"properties": llx.DictData(properties),
-		"identity":   llx.DictData(identity),
+	}
+
+	// appslot still exposes the raw identity dict; appsite models it through
+	// identityType, principalId, systemAssignedIdentity and userAssignedIdentities.
+	if resourceType == ResourceAzureSubscriptionWebServiceAppslot {
+		args["identity"] = llx.DictData(identity)
 	}
 
 	// Only set these fields for appsite, not appslot (which doesn't have them)
@@ -167,6 +172,9 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		mqlAppsite := res.(*mqlAzureSubscriptionWebServiceAppsite)
 		mqlAppsite.cacheSystemData = sysData
 		mqlAppsite.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+		if site.Identity != nil && site.Identity.TenantID != nil {
+			mqlAppsite.cacheIdentityTenantId = *site.Identity.TenantID
+		}
 	case ResourceAzureSubscriptionWebServiceAppslot:
 		res.(*mqlAzureSubscriptionWebServiceAppslot).cacheSystemData = sysData
 	}
@@ -176,6 +184,7 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 type mqlAzureSubscriptionWebServiceAppsiteInternal struct {
 	cacheSystemData              any
 	cacheUserAssignedIdentityIds []string
+	cacheIdentityTenantId        string
 }
 
 type mqlAzureSubscriptionWebServiceAppslotInternal struct {
@@ -723,7 +732,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) userAssignedIdentities() ([]any,
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
-	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, a.cacheIdentityTenantId, &a.SystemAssignedIdentity)
 }
 
 // keyVaultReferenceIdentityRef resolves the user-assigned managed identity used
@@ -1687,6 +1696,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 			if entry.ID == nil || *entry.ID == "" {
 				continue
 			}
+			var pecPrivateEndpointID string
 			privateEndpoint := map[string]*llx.RawData{
 				"__id":        llx.StringDataPtr(entry.ID),
 				"id":          llx.StringDataPtr(entry.ID),
@@ -1706,7 +1716,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 
 				privateEndpoint["ipAddresses"] = llx.ArrayData(strPtrsToAny(props.IPAddresses), types.String)
 				if props.PrivateEndpoint != nil {
-					privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+					pecPrivateEndpointID = convert.ToValue(props.PrivateEndpoint.ID)
 				}
 				if props.PrivateLinkServiceConnectionState != nil {
 					stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
@@ -1723,7 +1733,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 				}
 			}
 
-			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+			mqlRes, err := newAzurePrivateEndpointConnection(a.MqlRuntime, privateEndpoint, pecPrivateEndpointID)
 			if err != nil {
 				return nil, err
 			}

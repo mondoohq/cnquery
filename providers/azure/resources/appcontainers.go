@@ -26,6 +26,7 @@ import (
 type mqlAzureSubscriptionContainerAppServiceContainerAppInternal struct {
 	cacheSystemData              any
 	cacheUserAssignedIdentityIds []string
+	cacheIdentityTenantId        string
 	cacheRGAndName               struct {
 		resourceGroup string
 		name          string
@@ -209,7 +210,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) userAssignedIdenti
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
-	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, a.cacheIdentityTenantId, &a.SystemAssignedIdentity)
 }
 
 // managedEnvironment resolves the parent managed environment of the container
@@ -742,7 +743,6 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 	registries := []any{}
 	registryUsesIdentity := false
 	secretNames := []any{}
-	identity := map[string]any{}
 	scaleRules := []any{}
 	volumes := []any{}
 	var minReplicas, maxReplicas *int32
@@ -878,14 +878,13 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 
 	var principalId *string
 	var userAssignedIdentityIds []string
+	var identityTenantId string
 	if entry.Identity != nil {
-		d, err := convert.JsonToDict(entry.Identity)
-		if err != nil {
-			return nil, err
-		}
-		identity = d
 		principalId = entry.Identity.PrincipalID
 		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
+		if entry.Identity.TenantID != nil {
+			identityTenantId = *entry.Identity.TenantID
+		}
 	}
 	if entry.Kind != nil {
 		kind = string(*entry.Kind)
@@ -919,7 +918,6 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 			"minReplicas":              llx.IntDataDefault(minReplicas, 0),
 			"maxReplicas":              llx.IntDataDefault(maxReplicas, 0),
 			"scaleRules":               llx.ArrayData(scaleRules, types.Dict),
-			"identity":                 llx.DictData(identity),
 			"principalId":              llx.StringDataPtr(principalId),
 			"registries":               llx.ArrayData(registries, types.Dict),
 			"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
@@ -932,6 +930,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 
 	appRes := mqlApp.(*mqlAzureSubscriptionContainerAppServiceContainerApp)
 	appRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	appRes.cacheIdentityTenantId = identityTenantId
 	rg, name := resourceGroupAndName(appRes.Id.Data, "containerApps")
 	appRes.cacheRGAndName.resourceGroup = rg
 	appRes.cacheRGAndName.name = name

@@ -283,7 +283,6 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"fipsEncryptionEnabled":         llx.BoolDataPtr(fipsEncryptionEnabled),
 			"resiliencyProfile":             llx.DictData(resiliencyProfileDict),
 			"scheduledEventsPolicy":         llx.DictData(scheduledEventsPolicyDict),
-			"systemData":                    llx.DictData(systemDataDict),
 			"computerName":                  llx.StringDataPtr(computerName),
 			"adminUsername":                 llx.StringDataPtr(adminUsername),
 			"licenseType":                   llx.StringDataPtr(licenseType),
@@ -307,6 +306,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		return nil, err
 	}
 	mqlVm := res.(*mqlAzureSubscriptionComputeServiceVm)
+	mqlVm.cacheSystemData = systemDataDict
 	mqlVm.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	return mqlVm, nil
 }
@@ -363,6 +363,7 @@ type mqlAzureSubscriptionComputeServiceVmInternal struct {
 	extensionsList               []*compute.VirtualMachineExtension
 	extensionsError              error
 	cacheUserAssignedIdentityIds []string
+	cacheSystemData              any
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.VirtualMachineExtension, error) {
@@ -570,7 +571,6 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		"zones":             llx.ArrayData(zones, types.String),
 		"sku":               llx.DictData(sku),
 		"properties":        llx.DictData(properties),
-		"systemData":        llx.DictData(systemData),
 	}
 
 	// Cached for secureVmDiskEncryptionSet(); the confidential-VM guest state
@@ -655,11 +655,13 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 	}
 	mqlDisk := res.(*mqlAzureSubscriptionComputeServiceDisk)
 	mqlDisk.cacheSecureVMDiskEncryptionSetID = secureVMDesID
+	mqlDisk.cacheSystemData = systemData
 	return mqlDisk, nil
 }
 
 type mqlAzureSubscriptionComputeServiceDiskInternal struct {
 	cacheSecureVMDiskEncryptionSetID *string
+	cacheSystemData                  any
 }
 
 // secureVmDiskEncryptionSet resolves the encryption set protecting a
@@ -1333,6 +1335,7 @@ func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnection
 			resType = "Microsoft.Compute/diskAccesses/privateEndpointConnections"
 		}
 
+		var pecPrivateEndpointID string
 		privateEndpoint := map[string]*llx.RawData{
 			"__id": llx.StringDataPtr(entry.ID),
 			"id":   llx.StringDataPtr(entry.ID),
@@ -1352,7 +1355,7 @@ func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnection
 			privateEndpoint["properties"] = llx.DictData(propsMap)
 
 			if props.PrivateEndpoint != nil {
-				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				pecPrivateEndpointID = convert.ToValue(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
 				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(entry.ID),
@@ -1369,7 +1372,7 @@ func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnection
 			}
 		}
 
-		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+		mqlRes, err := newAzurePrivateEndpointConnection(a.MqlRuntime, privateEndpoint, pecPrivateEndpointID)
 		if err != nil {
 			return nil, err
 		}
@@ -1484,6 +1487,7 @@ type mqlAzureSubscriptionComputeServiceSnapshotInternal struct {
 	cacheSourceDiskId  *string
 	cacheDESId         *string
 	cacheSecureVMDESId *string
+	cacheSystemData    any
 }
 
 func (a *mqlAzureSubscriptionComputeServiceSnapshot) id() (string, error) {
@@ -1553,7 +1557,6 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		"type":       llx.StringDataPtr(snap.Type),
 		"sku":        llx.DictData(sku),
 		"properties": llx.DictData(properties),
-		"systemData": llx.DictData(systemData),
 	}
 
 	var cacheSourceDiskId, cacheDESId, cacheSecureVMDESId *string
@@ -1641,6 +1644,7 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 	mqlSnap.cacheSourceDiskId = cacheSourceDiskId
 	mqlSnap.cacheDESId = cacheDESId
 	mqlSnap.cacheSecureVMDESId = cacheSecureVMDESId
+	mqlSnap.cacheSystemData = systemData
 	return mqlSnap, nil
 }
 

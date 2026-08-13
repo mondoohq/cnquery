@@ -290,11 +290,6 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			agentPoolProfiles, err := convert.JsonToDictSlice(entry.Properties.AgentPoolProfiles)
-			if err != nil {
-				return nil, err
-			}
-
 			var createdAt *time.Time
 			if entry.SystemData != nil {
 				createdAt = entry.SystemData.CreatedAt
@@ -406,7 +401,6 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"fqdn":                              llx.StringDataPtr(entry.Properties.Fqdn),
 					"fqdnSubdomain":                     llx.StringDataPtr(entry.Properties.FqdnSubdomain),
 					"privateFqdn":                       llx.StringDataPtr(entry.Properties.PrivateFQDN),
-					"agentPoolProfiles":                 llx.DictData(agentPoolProfiles),
 					"addonProfiles":                     llx.DictData(addonProfiles),
 					"httpProxyConfig":                   llx.DictData(httpProxyConfig),
 					"networkProfile":                    llx.DictData(networkProfile),

@@ -316,7 +316,6 @@ func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization
 			"id":            llx.StringDataPtr(roleAssignment.Name), // name is the id :-)
 			"description":   llx.StringDataPtr(roleAssignment.Properties.Description),
 			"scope":         llx.StringDataPtr(roleAssignment.Properties.Scope),
-			"type":          llx.StringData(principalType),
 			"principalId":   llx.StringDataPtr(roleAssignment.Properties.PrincipalID),
 			"principalType": llx.StringData(principalType),
 			"condition":     llx.StringDataPtr(roleAssignment.Properties.Condition),
