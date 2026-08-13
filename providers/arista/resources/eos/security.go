@@ -50,10 +50,6 @@ type AaaConfig struct {
 	AccountingCommands map[string][]string
 	// AccountingExec holds method lists for "aaa accounting exec".
 	AccountingExec map[string][]string
-	// TacacsServers lists configured TACACS+ server hostnames/IPs.
-	TacacsServers []string
-	// RadiusServers lists configured RADIUS server hostnames/IPs.
-	RadiusServers []string
 	// DefaultLoginPermitsLocalOnly is true when the default authentication
 	// list contains "local" with no `group` token preceding it — i.e. the
 	// local user database is the only authentication source for the default
@@ -80,10 +76,6 @@ var (
 		`^aaa accounting commands\s+(\S+)\s+(\S+)\s+(\S+)(?:\s+(.+))?$`)
 	aaaAcctExecRe = regexp.MustCompile(
 		`^aaa accounting exec\s+(\S+)\s+(\S+)(?:\s+(.+))?$`)
-	tacacsHostRe = regexp.MustCompile(
-		`^tacacs-server host\s+(\S+)`)
-	radiusHostRe = regexp.MustCompile(
-		`^radius-server host\s+(\S+)`)
 )
 
 // ParseAaaConfig extracts AAA configuration from running-config.
@@ -136,14 +128,6 @@ func ParseAaaConfig(runningConfig string) *AaaConfig {
 		}
 		if m := aaaAcctExecRe.FindStringSubmatch(line); m != nil {
 			cfg.AccountingExec[m[1]] = strings.Fields(m[3])
-			continue
-		}
-		if m := tacacsHostRe.FindStringSubmatch(line); m != nil {
-			cfg.TacacsServers = append(cfg.TacacsServers, m[1])
-			continue
-		}
-		if m := radiusHostRe.FindStringSubmatch(line); m != nil {
-			cfg.RadiusServers = append(cfg.RadiusServers, m[1])
 			continue
 		}
 	}

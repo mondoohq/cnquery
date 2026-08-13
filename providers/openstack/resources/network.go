@@ -1089,18 +1089,17 @@ func buildSecurityGroupRules(runtime *plugin.Runtime, sg *groups.SecGroup) ([]an
 	for i := range sg.Rules {
 		rule := &sg.Rules[i]
 		res, err := CreateResource(runtime, "openstack.securityGroup.rule", map[string]*llx.RawData{
-			"__id":                 llx.StringData("openstack.securityGroup.rule/" + rule.ID),
-			"id":                   llx.StringData(rule.ID),
-			"direction":            llx.StringData(rule.Direction),
-			"ethertype":            llx.StringData(rule.EtherType),
-			"protocol":             llx.StringData(rule.Protocol),
-			"portRangeMin":         llx.IntData(int64(rule.PortRangeMin)),
-			"portRangeMax":         llx.IntData(int64(rule.PortRangeMax)),
-			"remoteIpPrefix":       llx.StringData(rule.RemoteIPPrefix),
-			"remoteAddressGroupId": llx.StringData(rule.RemoteAddressGroupID),
-			"description":          llx.StringData(rule.Description),
-			"createdAt":            llx.TimeDataPtr(timePtr(rule.CreatedAt)),
-			"updatedAt":            llx.TimeDataPtr(timePtr(rule.UpdatedAt)),
+			"__id":           llx.StringData("openstack.securityGroup.rule/" + rule.ID),
+			"id":             llx.StringData(rule.ID),
+			"direction":      llx.StringData(rule.Direction),
+			"ethertype":      llx.StringData(rule.EtherType),
+			"protocol":       llx.StringData(rule.Protocol),
+			"portRangeMin":   llx.IntData(int64(rule.PortRangeMin)),
+			"portRangeMax":   llx.IntData(int64(rule.PortRangeMax)),
+			"remoteIpPrefix": llx.StringData(rule.RemoteIPPrefix),
+			"description":    llx.StringData(rule.Description),
+			"createdAt":      llx.TimeDataPtr(timePtr(rule.CreatedAt)),
+			"updatedAt":      llx.TimeDataPtr(timePtr(rule.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err

@@ -177,16 +177,26 @@ func storageBoxRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerStor
 	return ref.(*mqlHetznerStorageBox), nil
 }
 
+// mqlHetznerStorageBoxSubaccountInternal and its snapshot counterpart hold the
+// storage box the entry belongs to, which the storageBox accessor resolves.
+type mqlHetznerStorageBoxSubaccountInternal struct {
+	cacheStorageBoxID int64
+}
+
+type mqlHetznerStorageBoxSnapshotInternal struct {
+	cacheStorageBoxID int64
+}
+
 func (m *mqlHetznerStorageBoxSubaccount) storageBox() (*mqlHetznerStorageBox, error) {
-	return storageBoxRef(m.MqlRuntime, &m.StorageBox, m.StorageBoxId.Data)
+	return storageBoxRef(m.MqlRuntime, &m.StorageBox, m.cacheStorageBoxID)
 }
 
 func (m *mqlHetznerStorageBoxSnapshot) storageBox() (*mqlHetznerStorageBox, error) {
-	return storageBoxRef(m.MqlRuntime, &m.StorageBox, m.StorageBoxId.Data)
+	return storageBoxRef(m.MqlRuntime, &m.StorageBox, m.cacheStorageBoxID)
 }
 
 func (r *mqlHetznerStorageBoxSubaccount) id() (string, error) {
-	return fmt.Sprintf("hetzner.storageBox.subaccount/%d/%d", r.StorageBoxId.Data, r.Id.Data), nil
+	return fmt.Sprintf("hetzner.storageBox.subaccount/%d/%d", r.cacheStorageBoxID, r.Id.Data), nil
 }
 
 func newMqlHetznerStorageBoxSubaccount(runtime *plugin.Runtime, storageBoxID int64, sa *hcloud.StorageBoxSubaccount) (*mqlHetznerStorageBoxSubaccount, error) {
@@ -201,7 +211,6 @@ func newMqlHetznerStorageBoxSubaccount(runtime *plugin.Runtime, storageBoxID int
 	res, err := CreateResource(runtime, "hetzner.storageBox.subaccount", map[string]*llx.RawData{
 		"__id":                llx.StringData(fmt.Sprintf("hetzner.storageBox.subaccount/%d/%d", storageBoxID, sa.ID)),
 		"id":                  llx.IntData(sa.ID),
-		"storageBoxId":        llx.IntData(storageBoxID),
 		"name":                llx.StringData(sa.Name),
 		"username":            llx.StringData(sa.Username),
 		"homeDirectory":       llx.StringData(sa.HomeDirectory),
@@ -218,18 +227,19 @@ func newMqlHetznerStorageBoxSubaccount(runtime *plugin.Runtime, storageBoxID int
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerStorageBoxSubaccount), nil
+	m := res.(*mqlHetznerStorageBoxSubaccount)
+	m.cacheStorageBoxID = storageBoxID
+	return m, nil
 }
 
 func (r *mqlHetznerStorageBoxSnapshot) id() (string, error) {
-	return fmt.Sprintf("hetzner.storageBox.snapshot/%d/%d", r.StorageBoxId.Data, r.Id.Data), nil
+	return fmt.Sprintf("hetzner.storageBox.snapshot/%d/%d", r.cacheStorageBoxID, r.Id.Data), nil
 }
 
 func newMqlHetznerStorageBoxSnapshot(runtime *plugin.Runtime, storageBoxID int64, sn *hcloud.StorageBoxSnapshot) (*mqlHetznerStorageBoxSnapshot, error) {
 	res, err := CreateResource(runtime, "hetzner.storageBox.snapshot", map[string]*llx.RawData{
 		"__id":           llx.StringData(fmt.Sprintf("hetzner.storageBox.snapshot/%d/%d", storageBoxID, sn.ID)),
 		"id":             llx.IntData(sn.ID),
-		"storageBoxId":   llx.IntData(storageBoxID),
 		"name":           llx.StringData(sn.Name),
 		"description":    llx.StringData(sn.Description),
 		"isAutomatic":    llx.BoolData(sn.IsAutomatic),
@@ -241,5 +251,7 @@ func newMqlHetznerStorageBoxSnapshot(runtime *plugin.Runtime, storageBoxID int64
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerStorageBoxSnapshot), nil
+	m := res.(*mqlHetznerStorageBoxSnapshot)
+	m.cacheStorageBoxID = storageBoxID
+	return m, nil
 }

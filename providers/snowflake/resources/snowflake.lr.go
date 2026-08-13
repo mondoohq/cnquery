@@ -1077,9 +1077,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.grant.grantOption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeGrant).GetGrantOption()).ToDataRes(types.Bool)
 	},
-	"snowflake.grant.grantedBy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeGrant).GetGrantedBy()).ToDataRes(types.String)
-	},
 	"snowflake.grant.grantedByRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeGrant).GetGrantedByRole()).ToDataRes(types.Resource("snowflake.role"))
 	},
@@ -3599,10 +3596,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.grant.grantOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeGrant).GrantOption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"snowflake.grant.grantedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeGrant).GrantedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.grant.grantedByRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8520,7 +8513,7 @@ func (c *mqlSnowflakeWarehouse) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlSnowflakeGrant struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeGrantInternal it will be used here
+	mqlSnowflakeGrantInternal
 	Privilege     plugin.TValue[string]
 	GrantedOn     plugin.TValue[string]
 	Name          plugin.TValue[string]
@@ -8529,7 +8522,6 @@ type mqlSnowflakeGrant struct {
 	GranteeRole   plugin.TValue[*mqlSnowflakeRole]
 	GranteeUser   plugin.TValue[*mqlSnowflakeUser]
 	GrantOption   plugin.TValue[bool]
-	GrantedBy     plugin.TValue[string]
 	GrantedByRole plugin.TValue[*mqlSnowflakeRole]
 	CreatedAt     plugin.TValue[*time.Time]
 }
@@ -8620,10 +8612,6 @@ func (c *mqlSnowflakeGrant) GetGranteeUser() *plugin.TValue[*mqlSnowflakeUser] {
 
 func (c *mqlSnowflakeGrant) GetGrantOption() *plugin.TValue[bool] {
 	return &c.GrantOption
-}
-
-func (c *mqlSnowflakeGrant) GetGrantedBy() *plugin.TValue[string] {
-	return &c.GrantedBy
 }
 
 func (c *mqlSnowflakeGrant) GetGrantedByRole() *plugin.TValue[*mqlSnowflakeRole] {

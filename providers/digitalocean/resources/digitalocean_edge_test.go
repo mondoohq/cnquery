@@ -12,15 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDictInt(t *testing.T) {
-	// Dict values are JSON-native, so a port arrives as a float64.
-	assert.Equal(t, int64(443), dictInt(float64(443)))
-	assert.Equal(t, int64(443), dictInt(int64(443)))
-	assert.Equal(t, int64(443), dictInt(443))
-	assert.Equal(t, int64(0), dictInt("443"))
-	assert.Equal(t, int64(0), dictInt(nil))
-}
-
 func TestAppSecureHeader(t *testing.T) {
 	t.Run("reads a header the ingress sets", func(t *testing.T) {
 		spec := &godo.AppSpec{Ingress: &godo.AppIngressSpec{

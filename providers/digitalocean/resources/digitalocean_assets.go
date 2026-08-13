@@ -255,18 +255,6 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		tags[i] = t
 	}
 
-	fwdRules := make([]interface{}, len(lb.ForwardingRules))
-	for i, rule := range lb.ForwardingRules {
-		fwdRules[i] = map[string]interface{}{
-			"entryProtocol":  rule.EntryProtocol,
-			"entryPort":      float64(rule.EntryPort),
-			"targetProtocol": rule.TargetProtocol,
-			"targetPort":     float64(rule.TargetPort),
-			"certificateId":  rule.CertificateID,
-			"tlsPassthrough": rule.TlsPassthrough,
-		}
-	}
-
 	hc := map[string]interface{}{}
 	if lb.HealthCheck != nil {
 		hc["protocol"] = lb.HealthCheck.Protocol
@@ -335,7 +323,6 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		"enableProxyProtocol":          llx.BoolData(lb.EnableProxyProtocol),
 		"enableBackendKeepalive":       llx.BoolData(lb.EnableBackendKeepalive),
 		"tags":                         llx.ArrayData(tags, "\x02"),
-		"forwardingRules":              llx.ArrayData(fwdRules, "\x13"),
 		"healthCheck":                  llx.DictData(hc),
 		"stickySessions":               llx.DictData(ss),
 		"disableLetsEncryptDnsRecords": llx.BoolDataPtr(lb.DisableLetsEncryptDNSRecords),
@@ -390,6 +377,7 @@ func newMqlLoadBalancer(runtime *plugin.Runtime, lb *godo.LoadBalancer) (*mqlDig
 	mqlLB.cacheVPCUUID = lb.VPCUUID
 	mqlLB.cacheDropletIDs = toIntSlice(lb.DropletIDs)
 	mqlLB.cacheTargetLoadBalancerIDs = lb.TargetLoadBalancerIDs
+	mqlLB.cacheForwardingRules = lb.ForwardingRules
 	return mqlLB, nil
 }
 

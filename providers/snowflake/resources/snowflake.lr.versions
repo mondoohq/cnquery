@@ -309,7 +309,6 @@ snowflake.function.secrets 13.3.7
 snowflake.grant 13.0.7
 snowflake.grant.createdAt 13.0.7
 snowflake.grant.grantOption 13.0.7
-snowflake.grant.grantedBy 13.0.7
 snowflake.grant.grantedByRole 13.4.5
 snowflake.grant.grantedOn 13.0.7
 snowflake.grant.grantedTo 13.0.7

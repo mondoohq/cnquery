@@ -10,7 +10,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/vercel/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 // mqlVercelAliasInternal caches the team the alias was listed under and the
@@ -106,18 +105,16 @@ func (c *mqlVercelProject) aliases() ([]any, error) {
 		}
 
 		resource, err := CreateResource(c.MqlRuntime, "vercel.alias", map[string]*llx.RawData{
-			"id":                     llx.StringData(rec.UID),
-			"alias":                  llx.StringData(rec.Alias),
-			"redirect":               llx.StringDataPtr(rec.Redirect),
-			"redirectStatusCode":     llx.IntDataPtr(rec.RedirectStatusCode),
-			"creatorUid":             llx.StringData(creatorUID),
-			"creatorUsername":        llx.StringData(creatorUsername),
-			"creatorEmail":           llx.StringData(creatorEmail),
-			"protectionBypassCount":  llx.IntData(int64(len(rec.ProtectionBypass))),
-			"protectionBypassScopes": llx.ArrayData(bypassScopes(rec.ProtectionBypass), types.String),
-			"createdAt":              llx.TimeDataPtr(created),
-			"updatedAt":              llx.TimeDataPtr(rec.UpdatedAt.Time()),
-			"deletedAt":              llx.TimeDataPtr(rec.DeletedAt.Time()),
+			"id":                 llx.StringData(rec.UID),
+			"alias":              llx.StringData(rec.Alias),
+			"redirect":           llx.StringDataPtr(rec.Redirect),
+			"redirectStatusCode": llx.IntDataPtr(rec.RedirectStatusCode),
+			"creatorUid":         llx.StringData(creatorUID),
+			"creatorUsername":    llx.StringData(creatorUsername),
+			"creatorEmail":       llx.StringData(creatorEmail),
+			"createdAt":          llx.TimeDataPtr(created),
+			"updatedAt":          llx.TimeDataPtr(rec.UpdatedAt.Time()),
+			"deletedAt":          llx.TimeDataPtr(rec.DeletedAt.Time()),
 		})
 		if err != nil {
 			return nil, err

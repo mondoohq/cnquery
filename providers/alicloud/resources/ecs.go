@@ -87,6 +87,11 @@ type mqlAlicloudEcsInstanceInternal struct {
 	// ran", which is the case for an instance built by its init function.
 	cacheRamRoleName string
 	ramRoleFetched   bool
+
+	// cacheSecurityGroupIDs holds the security groups the instance is a member
+	// of, which securityGroups() resolves and the reverse edge on a group
+	// matches against.
+	cacheSecurityGroupIDs []string
 }
 
 // mqlAlicloudEcsDiskInternal caches the identifiers needed to resolve the
@@ -411,7 +416,6 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 		"localStorageCapacity":    llx.IntDataPtr(inst.LocalStorageCapacity),
 		"resourceGroupId":         llx.StringDataPtr(inst.ResourceGroupId),
 		"networkType":             llx.StringDataPtr(inst.InstanceNetworkType),
-		"securityGroupIds":        llx.ArrayData(llx.TArr2Raw(securityGroupIds), types.String),
 		"privateIpAddresses":      llx.ArrayData(llx.TArr2Raw(privateIps), types.String),
 		"publicIpAddresses":       llx.ArrayData(llx.TArr2Raw(publicIps), types.String),
 		"eipAddress":              llx.StringDataPtr(eip),
@@ -430,6 +434,7 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 	mqlInst.cacheVpcID = strDeref(vpcId)
 	mqlInst.cacheVswitchID = strDeref(vswitchId)
 	mqlInst.cacheImageID = strDeref(inst.ImageId)
+	mqlInst.cacheSecurityGroupIDs = securityGroupIds
 	return mqlInst, nil
 }
 
@@ -489,10 +494,8 @@ func (r *mqlAlicloudEcsInstance) id() (string, error) {
 // listing the groups in the instance's region and matching by ID.
 func (r *mqlAlicloudEcsInstance) securityGroups() ([]any, error) {
 	wanted := map[string]struct{}{}
-	for _, id := range r.SecurityGroupIds.Data {
-		if s, ok := id.(string); ok {
-			wanted[s] = struct{}{}
-		}
+	for _, id := range r.cacheSecurityGroupIDs {
+		wanted[id] = struct{}{}
 	}
 	if len(wanted) == 0 {
 		return []any{}, nil
@@ -1098,8 +1101,8 @@ func (r *mqlAlicloudEcsSecuritygroup) instances() ([]any, error) {
 		if !ok {
 			continue
 		}
-		for _, id := range inst.SecurityGroupIds.Data {
-			if s, ok := id.(string); ok && s == sgId {
+		for _, id := range inst.cacheSecurityGroupIDs {
+			if id == sgId {
 				res = append(res, inst)
 				break
 			}

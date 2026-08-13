@@ -30,8 +30,6 @@ radius-server host 10.0.0.5
 	assert.Equal(t, []string{"group", "tacacs+", "none"}, a.AuthorizationExec["default"])
 	assert.Equal(t, []string{"group", "tacacs+"}, a.AccountingCommands["all/default"])
 	assert.Equal(t, []string{"group", "tacacs+"}, a.AccountingExec["default"])
-	assert.Equal(t, []string{"10.0.0.1", "10.0.0.2"}, a.TacacsServers)
-	assert.Equal(t, []string{"10.0.0.5"}, a.RadiusServers)
 	// Local is a fallback after group, not the only option.
 	assert.False(t, a.DefaultLoginPermitsLocalOnly)
 }
@@ -57,7 +55,6 @@ func TestParseAaaConfig_LocalBeforeGroup(t *testing.T) {
 func TestParseAaaConfig_NoConfig(t *testing.T) {
 	a := ParseAaaConfig("")
 	assert.Empty(t, a.AuthenticationLogin)
-	assert.Empty(t, a.TacacsServers)
 	assert.False(t, a.DefaultLoginPermitsLocalOnly)
 }
 

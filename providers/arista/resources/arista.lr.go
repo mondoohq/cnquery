@@ -883,12 +883,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.bgp.peer.prefixesAccepted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgpPeer).GetPrefixesAccepted()).ToDataRes(types.Int)
 	},
-	"arista.eos.bgp.peer.inboundRouteMap": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosBgpPeer).GetInboundRouteMap()).ToDataRes(types.String)
-	},
-	"arista.eos.bgp.peer.outboundRouteMap": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosBgpPeer).GetOutboundRouteMap()).ToDataRes(types.String)
-	},
 	"arista.eos.bgp.peer.inboundPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgpPeer).GetInboundPolicy()).ToDataRes(types.Resource("arista.eos.routeMap"))
 	},
@@ -1185,12 +1179,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.aaa.accountingExec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetAccountingExec()).ToDataRes(types.Map(types.String, types.Array(types.String)))
-	},
-	"arista.eos.aaa.tacacsServers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosAaa).GetTacacsServers()).ToDataRes(types.Array(types.String))
-	},
-	"arista.eos.aaa.radiusServers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosAaa).GetRadiusServers()).ToDataRes(types.Array(types.String))
 	},
 	"arista.eos.aaa.tacacsServerHosts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetTacacsServerHosts()).ToDataRes(types.Array(types.Resource("arista.eos.aaa.tacacsServer")))
@@ -2474,14 +2462,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosBgpPeer).PrefixesAccepted, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"arista.eos.bgp.peer.inboundRouteMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosBgpPeer).InboundRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"arista.eos.bgp.peer.outboundRouteMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosBgpPeer).OutboundRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"arista.eos.bgp.peer.inboundPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosBgpPeer).InboundPolicy, ok = plugin.RawToTValue[*mqlAristaEosRouteMap](v.Value, v.Error)
 		return
@@ -2932,14 +2912,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.aaa.accountingExec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAaa).AccountingExec, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
-		return
-	},
-	"arista.eos.aaa.tacacsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosAaa).TacacsServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"arista.eos.aaa.radiusServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosAaa).RadiusServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.aaa.tacacsServerHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5939,7 +5911,7 @@ func (c *mqlAristaEosBgpVrf) GetPeers() *plugin.TValue[[]any] {
 type mqlAristaEosBgpPeer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosBgpPeerInternal it will be used here
+	mqlAristaEosBgpPeerInternal
 	VrfName                plugin.TValue[string]
 	PeerAddress            plugin.TValue[string]
 	RemoteAs               plugin.TValue[string]
@@ -5947,8 +5919,6 @@ type mqlAristaEosBgpPeer struct {
 	Uptime                 plugin.TValue[int64]
 	PrefixesReceived       plugin.TValue[int64]
 	PrefixesAccepted       plugin.TValue[int64]
-	InboundRouteMap        plugin.TValue[string]
-	OutboundRouteMap       plugin.TValue[string]
 	InboundPolicy          plugin.TValue[*mqlAristaEosRouteMap]
 	OutboundPolicy         plugin.TValue[*mqlAristaEosRouteMap]
 	PasswordConfigured     plugin.TValue[bool]
@@ -6024,14 +5994,6 @@ func (c *mqlAristaEosBgpPeer) GetPrefixesReceived() *plugin.TValue[int64] {
 
 func (c *mqlAristaEosBgpPeer) GetPrefixesAccepted() *plugin.TValue[int64] {
 	return &c.PrefixesAccepted
-}
-
-func (c *mqlAristaEosBgpPeer) GetInboundRouteMap() *plugin.TValue[string] {
-	return &c.InboundRouteMap
-}
-
-func (c *mqlAristaEosBgpPeer) GetOutboundRouteMap() *plugin.TValue[string] {
-	return &c.OutboundRouteMap
 }
 
 func (c *mqlAristaEosBgpPeer) GetInboundPolicy() *plugin.TValue[*mqlAristaEosRouteMap] {
@@ -7206,8 +7168,6 @@ type mqlAristaEosAaa struct {
 	AuthorizationExec            plugin.TValue[map[string]any]
 	AccountingCommands           plugin.TValue[map[string]any]
 	AccountingExec               plugin.TValue[map[string]any]
-	TacacsServers                plugin.TValue[[]any]
-	RadiusServers                plugin.TValue[[]any]
 	TacacsServerHosts            plugin.TValue[[]any]
 	RadiusServerHosts            plugin.TValue[[]any]
 	ServerGroups                 plugin.TValue[[]any]
@@ -7284,14 +7244,6 @@ func (c *mqlAristaEosAaa) GetAccountingCommands() *plugin.TValue[map[string]any]
 
 func (c *mqlAristaEosAaa) GetAccountingExec() *plugin.TValue[map[string]any] {
 	return &c.AccountingExec
-}
-
-func (c *mqlAristaEosAaa) GetTacacsServers() *plugin.TValue[[]any] {
-	return &c.TacacsServers
-}
-
-func (c *mqlAristaEosAaa) GetRadiusServers() *plugin.TValue[[]any] {
-	return &c.RadiusServers
 }
 
 func (c *mqlAristaEosAaa) GetTacacsServerHosts() *plugin.TValue[[]any] {

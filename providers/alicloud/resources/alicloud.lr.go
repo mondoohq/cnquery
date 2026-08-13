@@ -1127,9 +1127,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.instance.vswitch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsInstance).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
 	},
-	"alicloud.ecs.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudEcsInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
-	},
 	"alicloud.ecs.instance.privateIpAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsInstance).GetPrivateIpAddresses()).ToDataRes(types.Array(types.String))
 	},
@@ -2567,9 +2564,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.rds.instance.securityIPList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetSecurityIPList()).ToDataRes(types.Array(types.String))
 	},
-	"alicloud.rds.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudRdsInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
-	},
 	"alicloud.rds.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
 	},
@@ -2689,9 +2683,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.redis.instance.securityIPList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetSecurityIPList()).ToDataRes(types.Array(types.String))
-	},
-	"alicloud.redis.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudRedisInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
 	"alicloud.redis.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
@@ -2833,9 +2824,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.mongodb.instance.securityIPList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetSecurityIPList()).ToDataRes(types.Array(types.String))
-	},
-	"alicloud.mongodb.instance.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudMongodbInstance).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
 	"alicloud.mongodb.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodbInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
@@ -6623,10 +6611,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcsInstance).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
 		return
 	},
-	"alicloud.ecs.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudEcsInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"alicloud.ecs.instance.privateIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsInstance).PrivateIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -8655,10 +8639,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRdsInstance).SecurityIPList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"alicloud.rds.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudRdsInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"alicloud.rds.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRdsInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -8825,10 +8805,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.redis.instance.securityIPList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRedisInstance).SecurityIPList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"alicloud.redis.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudRedisInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.redis.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9025,10 +9001,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.mongodb.instance.securityIPList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudMongodbInstance).SecurityIPList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"alicloud.mongodb.instance.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudMongodbInstance).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.mongodb.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14887,7 +14859,6 @@ type mqlAlicloudEcsInstance struct {
 	NetworkType             plugin.TValue[string]
 	Vpc                     plugin.TValue[*mqlAlicloudVpcNetwork]
 	Vswitch                 plugin.TValue[*mqlAlicloudVpcVswitch]
-	SecurityGroupIds        plugin.TValue[[]any]
 	PrivateIpAddresses      plugin.TValue[[]any]
 	PublicIpAddresses       plugin.TValue[[]any]
 	EipAddress              plugin.TValue[string]
@@ -15172,10 +15143,6 @@ func (c *mqlAlicloudEcsInstance) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswi
 
 		return c.vswitch()
 	})
-}
-
-func (c *mqlAlicloudEcsInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return &c.SecurityGroupIds
 }
 
 func (c *mqlAlicloudEcsInstance) GetPrivateIpAddresses() *plugin.TValue[[]any] {
@@ -19510,7 +19477,6 @@ type mqlAlicloudRdsInstance struct {
 	SslExpireTime           plugin.TValue[*time.Time]
 	TdeEnabled              plugin.TValue[bool]
 	SecurityIPList          plugin.TValue[[]any]
-	SecurityGroupIds        plugin.TValue[[]any]
 	SecurityGroups          plugin.TValue[[]any]
 	BlueGreenDeploymentName plugin.TValue[string]
 	BlueInstanceName        plugin.TValue[string]
@@ -19751,12 +19717,6 @@ func (c *mqlAlicloudRdsInstance) GetSecurityIPList() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlAlicloudRdsInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.SecurityGroupIds, func() ([]any, error) {
-		return c.securityGroupIds()
-	})
-}
-
 func (c *mqlAlicloudRdsInstance) GetSecurityGroups() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -19907,7 +19867,6 @@ type mqlAlicloudRedisInstance struct {
 	SslEnabled       plugin.TValue[bool]
 	TdeEnabled       plugin.TValue[bool]
 	SecurityIPList   plugin.TValue[[]any]
-	SecurityGroupIds plugin.TValue[[]any]
 	SecurityGroups   plugin.TValue[[]any]
 	AuthEnabled      plugin.TValue[bool]
 }
@@ -20119,12 +20078,6 @@ func (c *mqlAlicloudRedisInstance) GetSecurityIPList() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlAlicloudRedisInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.SecurityGroupIds, func() ([]any, error) {
-		return c.securityGroupIds()
-	})
-}
-
 func (c *mqlAlicloudRedisInstance) GetSecurityGroups() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -20257,7 +20210,6 @@ type mqlAlicloudMongodbInstance struct {
 	SslExpireTime         plugin.TValue[*time.Time]
 	TdeEnabled            plugin.TValue[bool]
 	SecurityIPList        plugin.TValue[[]any]
-	SecurityGroupIds      plugin.TValue[[]any]
 	SecurityGroups        plugin.TValue[[]any]
 	AuditPolicyEnabled    plugin.TValue[bool]
 }
@@ -20544,12 +20496,6 @@ func (c *mqlAlicloudMongodbInstance) GetTdeEnabled() *plugin.TValue[bool] {
 func (c *mqlAlicloudMongodbInstance) GetSecurityIPList() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityIPList, func() ([]any, error) {
 		return c.securityIPList()
-	})
-}
-
-func (c *mqlAlicloudMongodbInstance) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.SecurityGroupIds, func() ([]any, error) {
-		return c.securityGroupIds()
 	})
 }
 

@@ -722,9 +722,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.monitor.modified": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogMonitor).GetModified()).ToDataRes(types.Time)
 	},
-	"datadog.monitor.creator": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogMonitor).GetCreator()).ToDataRes(types.String)
-	},
 	"datadog.monitor.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogMonitor).GetCreatedBy()).ToDataRes(types.Resource("datadog.user"))
 	},
@@ -757,9 +754,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"datadog.dashboard.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogDashboard).GetModifiedAt()).ToDataRes(types.Time)
-	},
-	"datadog.dashboard.authorHandle": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogDashboard).GetAuthorHandle()).ToDataRes(types.String)
 	},
 	"datadog.dashboard.author": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogDashboard).GetAuthor()).ToDataRes(types.Resource("datadog.user"))
@@ -800,9 +794,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.syntheticsTest.monitorId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSyntheticsTest).GetMonitorId()).ToDataRes(types.Int)
 	},
-	"datadog.syntheticsTest.creator": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSyntheticsTest).GetCreator()).ToDataRes(types.String)
-	},
 	"datadog.syntheticsTest.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSyntheticsTest).GetCreatedBy()).ToDataRes(types.Resource("datadog.user"))
 	},
@@ -835,9 +826,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"datadog.slo.timeframe": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSlo).GetTimeframe()).ToDataRes(types.String)
-	},
-	"datadog.slo.creator": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSlo).GetCreator()).ToDataRes(types.String)
 	},
 	"datadog.slo.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSlo).GetCreatedBy()).ToDataRes(types.Resource("datadog.user"))
@@ -2071,10 +2059,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatadogMonitor).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"datadog.monitor.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogMonitor).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"datadog.monitor.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogMonitor).CreatedBy, ok = plugin.RawToTValue[*mqlDatadogUser](v.Value, v.Error)
 		return
@@ -2121,10 +2105,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.dashboard.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogDashboard).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"datadog.dashboard.authorHandle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogDashboard).AuthorHandle, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"datadog.dashboard.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2183,10 +2163,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatadogSyntheticsTest).MonitorId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"datadog.syntheticsTest.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSyntheticsTest).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"datadog.syntheticsTest.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogSyntheticsTest).CreatedBy, ok = plugin.RawToTValue[*mqlDatadogUser](v.Value, v.Error)
 		return
@@ -2233,10 +2209,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.slo.timeframe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogSlo).Timeframe, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"datadog.slo.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSlo).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"datadog.slo.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4864,7 +4836,7 @@ func (c *mqlDatadogRole) GetUsers() *plugin.TValue[[]any] {
 type mqlDatadogMonitor struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogMonitorInternal it will be used here
+	mqlDatadogMonitorInternal
 	Id                plugin.TValue[int64]
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
@@ -4875,7 +4847,6 @@ type mqlDatadogMonitor struct {
 	Priority          plugin.TValue[int64]
 	Created           plugin.TValue[*time.Time]
 	Modified          plugin.TValue[*time.Time]
-	Creator           plugin.TValue[string]
 	CreatedBy         plugin.TValue[*mqlDatadogUser]
 	RestrictionPolicy plugin.TValue[*mqlDatadogRestrictionPolicy]
 	NotifyNoData      plugin.TValue[bool]
@@ -4959,10 +4930,6 @@ func (c *mqlDatadogMonitor) GetModified() *plugin.TValue[*time.Time] {
 	return &c.Modified
 }
 
-func (c *mqlDatadogMonitor) GetCreator() *plugin.TValue[string] {
-	return &c.Creator
-}
-
 func (c *mqlDatadogMonitor) GetCreatedBy() *plugin.TValue[*mqlDatadogUser] {
 	return plugin.GetOrCompute[*mqlDatadogUser](&c.CreatedBy, func() (*mqlDatadogUser, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5007,7 +4974,7 @@ func (c *mqlDatadogMonitor) GetOptions() *plugin.TValue[any] {
 type mqlDatadogDashboard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogDashboardInternal it will be used here
+	mqlDatadogDashboardInternal
 	Id                plugin.TValue[string]
 	Title             plugin.TValue[string]
 	Description       plugin.TValue[string]
@@ -5015,7 +4982,6 @@ type mqlDatadogDashboard struct {
 	Url               plugin.TValue[string]
 	CreatedAt         plugin.TValue[*time.Time]
 	ModifiedAt        plugin.TValue[*time.Time]
-	AuthorHandle      plugin.TValue[string]
 	Author            plugin.TValue[*mqlDatadogUser]
 	IsReadOnly        plugin.TValue[bool]
 	RestrictionPolicy plugin.TValue[*mqlDatadogRestrictionPolicy]
@@ -5087,10 +5053,6 @@ func (c *mqlDatadogDashboard) GetModifiedAt() *plugin.TValue[*time.Time] {
 	return &c.ModifiedAt
 }
 
-func (c *mqlDatadogDashboard) GetAuthorHandle() *plugin.TValue[string] {
-	return &c.AuthorHandle
-}
-
 func (c *mqlDatadogDashboard) GetAuthor() *plugin.TValue[*mqlDatadogUser] {
 	return plugin.GetOrCompute[*mqlDatadogUser](&c.Author, func() (*mqlDatadogUser, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5147,7 +5109,7 @@ func (c *mqlDatadogDashboard) GetSharedDashboards() *plugin.TValue[[]any] {
 type mqlDatadogSyntheticsTest struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogSyntheticsTestInternal it will be used here
+	mqlDatadogSyntheticsTestInternal
 	PublicId  plugin.TValue[string]
 	Name      plugin.TValue[string]
 	Type      plugin.TValue[string]
@@ -5157,7 +5119,6 @@ type mqlDatadogSyntheticsTest struct {
 	Tags      plugin.TValue[[]any]
 	Locations plugin.TValue[[]any]
 	MonitorId plugin.TValue[int64]
-	Creator   plugin.TValue[string]
 	CreatedBy plugin.TValue[*mqlDatadogUser]
 	Config    plugin.TValue[any]
 	Options   plugin.TValue[any]
@@ -5236,10 +5197,6 @@ func (c *mqlDatadogSyntheticsTest) GetMonitorId() *plugin.TValue[int64] {
 	return &c.MonitorId
 }
 
-func (c *mqlDatadogSyntheticsTest) GetCreator() *plugin.TValue[string] {
-	return &c.Creator
-}
-
 func (c *mqlDatadogSyntheticsTest) GetCreatedBy() *plugin.TValue[*mqlDatadogUser] {
 	return plugin.GetOrCompute[*mqlDatadogUser](&c.CreatedBy, func() (*mqlDatadogUser, error) {
 		if c.MqlRuntime.HasRecording {
@@ -5268,7 +5225,7 @@ func (c *mqlDatadogSyntheticsTest) GetOptions() *plugin.TValue[any] {
 type mqlDatadogSlo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogSloInternal it will be used here
+	mqlDatadogSloInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
@@ -5277,7 +5234,6 @@ type mqlDatadogSlo struct {
 	TargetThreshold   plugin.TValue[float64]
 	WarningThreshold  plugin.TValue[float64]
 	Timeframe         plugin.TValue[string]
-	Creator           plugin.TValue[string]
 	CreatedBy         plugin.TValue[*mqlDatadogUser]
 	CreatedAt         plugin.TValue[*time.Time]
 	ModifiedAt        plugin.TValue[*time.Time]
@@ -5352,10 +5308,6 @@ func (c *mqlDatadogSlo) GetWarningThreshold() *plugin.TValue[float64] {
 
 func (c *mqlDatadogSlo) GetTimeframe() *plugin.TValue[string] {
 	return &c.Timeframe
-}
-
-func (c *mqlDatadogSlo) GetCreator() *plugin.TValue[string] {
-	return &c.Creator
 }
 
 func (c *mqlDatadogSlo) GetCreatedBy() *plugin.TValue[*mqlDatadogUser] {

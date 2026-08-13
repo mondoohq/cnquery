@@ -1334,9 +1334,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.loadBalancer.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetTags()).ToDataRes(types.Array(types.String))
 	},
-	"digitalocean.loadBalancer.forwardingRules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDigitaloceanLoadBalancer).GetForwardingRules()).ToDataRes(types.Array(types.Dict))
-	},
 	"digitalocean.loadBalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetListeners()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer.listener")))
 	},
@@ -4727,10 +4724,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.loadBalancer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanLoadBalancer).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"digitalocean.loadBalancer.forwardingRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDigitaloceanLoadBalancer).ForwardingRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.loadBalancer.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11036,7 +11029,6 @@ type mqlDigitaloceanLoadBalancer struct {
 	Vpc                          plugin.TValue[*mqlDigitaloceanVpc]
 	Droplets                     plugin.TValue[[]any]
 	Tags                         plugin.TValue[[]any]
-	ForwardingRules              plugin.TValue[[]any]
 	Listeners                    plugin.TValue[[]any]
 	HealthCheck                  plugin.TValue[any]
 	StickySessions               plugin.TValue[any]
@@ -11170,10 +11162,6 @@ func (c *mqlDigitaloceanLoadBalancer) GetDroplets() *plugin.TValue[[]any] {
 
 func (c *mqlDigitaloceanLoadBalancer) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
-}
-
-func (c *mqlDigitaloceanLoadBalancer) GetForwardingRules() *plugin.TValue[[]any] {
-	return &c.ForwardingRules
 }
 
 func (c *mqlDigitaloceanLoadBalancer) GetListeners() *plugin.TValue[[]any] {

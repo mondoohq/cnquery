@@ -153,13 +153,6 @@ private stackit.server @defaults("id name status machineType") {
   errorMessage string
   // Whether a config drive is attached
   configDrive bool
-  // Whether a virtual TPM (vTPM) device is attached for measured boot
-  //
-  // Always false. STACKIT withdrew the vTPM server attribute because the
-  // feature was never functional, so the API no longer reports it and this
-  // field cannot describe real server state. Do not write audits against
-  // it. It will be removed in the next major release.
-  vtpmEnabled @maturity("deprecated") bool
   // SSH key pair name used at boot (empty if none)
   keypairName string
   // SSH key pair used at boot (nullable)

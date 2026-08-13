@@ -758,11 +758,6 @@ snowflake.grant @defaults("privilege grantedOn name granteeName") {
   grantOption bool
   // Role that issued the grant
   //
-  // Deprecated in favor of grantedByRole. The name of the role that ran the
-  // GRANT statement.
-  grantedBy @maturity("deprecated") string
-  // Role that issued the grant
-  //
   // Null when no issuing role was recorded, such as for a privilege Snowflake
   // grants implicitly, and when the role is not one the session can list.
   grantedByRole() snowflake.role

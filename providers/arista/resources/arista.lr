@@ -646,16 +646,6 @@ private arista.eos.bgp.peer @defaults("peerAddress") {
   prefixesReceived int
   // Number of prefixes accepted from peer (after inbound filtering)
   prefixesAccepted int
-  // Inbound route map name
-  //
-  // Deprecated in favor of inboundPolicy, which resolves to the route-map
-  // itself so its clauses can be inspected.
-  inboundRouteMap @maturity("deprecated") string
-  // Outbound route map name
-  //
-  // Deprecated in favor of outboundPolicy, which resolves to the route-map
-  // itself so its clauses can be inspected.
-  outboundRouteMap @maturity("deprecated") string
   // Route-map applied to routes received from the peer
   //
   // Null when no inbound policy is applied, which accepts whatever the peer
@@ -1062,18 +1052,6 @@ arista.eos.aaa {
   accountingCommands map[string][]string
   // Accounting exec method lists
   accountingExec map[string][]string
-  // TACACS+ server hostnames
-  //
-  // Deprecated in favor of tacacsServerHosts, which reports the same hosts
-  // along with the routing instance, ports, timeout, and whether the shared
-  // secret is stored in the clear.
-  tacacsServers @maturity("deprecated") []string
-  // RADIUS server hostnames
-  //
-  // Deprecated in favor of radiusServerHosts, which reports the same hosts
-  // along with the routing instance, ports, timeout, retransmit count, and
-  // whether the shared secret is stored in the clear.
-  radiusServers @maturity("deprecated") []string
   // TACACS+ servers with their transport and shared-secret state
   tacacsServerHosts() []arista.eos.aaa.tacacsServer
   // RADIUS servers with their transport and shared-secret state

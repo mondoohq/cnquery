@@ -451,15 +451,6 @@ private vercel.project @defaults("name framework") {
   // passwordProtectionDeploymentType, and trustedIpsProtectionMode does not
   // cover every route. Empty when no paths are exempt.
   optionsAllowlistPaths []string
-  // Additional deployment protection configuration
-  //
-  // Always null. The projects API returns no protectionConfig object on either
-  // the list or the single-project response, so nothing ever populates this
-  // field. Deprecated in favor of ssoProtectionDeploymentType,
-  // passwordProtectionDeploymentType, trustedIpsProtectionMode,
-  // optionsAllowlistPaths, and protectionBypassCount, which carry the
-  // protection settings the API does return.
-  protectionConfig @maturity("deprecated") dict
   // Number of automation bypass secrets registered for the project
   //
   // Each entry is a secret that skips deployment protection for any request
@@ -779,16 +770,6 @@ private vercel.alias @defaults("alias") {
   creatorUsername string
   // Email of the account that created the alias
   creatorEmail string
-  // Number of automation bypass entries registered for the alias
-  //
-  // Deprecated in favor of vercel.project.protectionBypassCount. The alias
-  // payload does not carry bypass entries, so this is always zero.
-  protectionBypassCount @maturity("deprecated") int
-  // Scopes of the automation bypass entries registered for the alias
-  //
-  // Deprecated in favor of vercel.project.protectionBypassScopes. The alias
-  // payload does not carry bypass entries, so this is always empty.
-  protectionBypassScopes @maturity("deprecated") []string
   // Time the alias was created
   createdAt time
   // Time the alias was last updated

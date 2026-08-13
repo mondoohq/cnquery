@@ -80,8 +80,6 @@ func (a *mqlAristaEos) aaa() (*mqlAristaEosAaa, error) {
 		"authorizationExec":            llx.MapData(methodMapToDict(cfg.AuthorizationExec), types.Array(types.String)),
 		"accountingCommands":           llx.MapData(methodMapToDict(cfg.AccountingCommands), types.Array(types.String)),
 		"accountingExec":               llx.MapData(methodMapToDict(cfg.AccountingExec), types.Array(types.String)),
-		"tacacsServers":                llx.ArrayData(stringSliceToAny(cfg.TacacsServers), types.String),
-		"radiusServers":                llx.ArrayData(stringSliceToAny(cfg.RadiusServers), types.String),
 		"rootAccountEnabled":           llx.BoolData(root.Enabled),
 		"rootAccountNoPassword":        llx.BoolData(root.NoPassword),
 		"rootSecretFormat":             llx.StringData(root.SecretFormat),

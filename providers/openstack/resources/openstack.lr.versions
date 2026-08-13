@@ -1134,7 +1134,6 @@ openstack.securityGroup.rule.portRangeMin 13.0.1
 openstack.securityGroup.rule.project 13.2.1
 openstack.securityGroup.rule.protocol 13.0.1
 openstack.securityGroup.rule.remoteAddressGroup 13.7.6
-openstack.securityGroup.rule.remoteAddressGroupId 13.5.2
 openstack.securityGroup.rule.remoteGroup 13.0.1
 openstack.securityGroup.rule.remoteIpPrefix 13.0.1
 openstack.securityGroup.rule.securityGroup 13.0.1
