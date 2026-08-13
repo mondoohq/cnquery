@@ -407,7 +407,6 @@ alicloud.ecs.disk.enableAutoSnapshot 13.0.0
 alicloud.ecs.disk.encrypted 13.0.0
 alicloud.ecs.disk.instance 13.0.0
 alicloud.ecs.disk.kmsKey 13.0.1
-alicloud.ecs.disk.kmsKeyId 13.0.0
 alicloud.ecs.disk.performanceLevel 13.0.0
 alicloud.ecs.disk.portable 13.0.0
 alicloud.ecs.disk.regionId 13.0.0
@@ -736,7 +735,6 @@ alicloud.mongodb.instance.dbInstanceStorage 13.0.0
 alicloud.mongodb.instance.dbInstanceType 13.0.0
 alicloud.mongodb.instance.destroyTime 13.0.0
 alicloud.mongodb.instance.encrypted 13.0.0
-alicloud.mongodb.instance.encryptionKey 13.0.0
 alicloud.mongodb.instance.engine 13.0.0
 alicloud.mongodb.instance.engineVersion 13.0.0
 alicloud.mongodb.instance.expireTime 13.0.0
