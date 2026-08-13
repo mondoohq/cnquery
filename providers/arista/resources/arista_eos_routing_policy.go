@@ -260,11 +260,15 @@ func resolveRouteMap(runtime *plugin.Runtime, name string) (*mqlAristaEosRouteMa
 	return nil, nil
 }
 
+// mqlAristaEosBgpPeerInternal holds the route map names the running-config
+// applies to the session, which the policy accessors resolve to route maps.
+type mqlAristaEosBgpPeerInternal struct {
+	cacheInboundRouteMap  string
+	cacheOutboundRouteMap string
+}
+
 func (a *mqlAristaEosBgpPeer) inboundPolicy() (*mqlAristaEosRouteMap, error) {
-	if a.InboundRouteMap.Error != nil {
-		return nil, a.InboundRouteMap.Error
-	}
-	mqlMap, err := resolveRouteMap(a.MqlRuntime, a.InboundRouteMap.Data)
+	mqlMap, err := resolveRouteMap(a.MqlRuntime, a.cacheInboundRouteMap)
 	if err != nil {
 		return nil, err
 	}
@@ -276,10 +280,7 @@ func (a *mqlAristaEosBgpPeer) inboundPolicy() (*mqlAristaEosRouteMap, error) {
 }
 
 func (a *mqlAristaEosBgpPeer) outboundPolicy() (*mqlAristaEosRouteMap, error) {
-	if a.OutboundRouteMap.Error != nil {
-		return nil, a.OutboundRouteMap.Error
-	}
-	mqlMap, err := resolveRouteMap(a.MqlRuntime, a.OutboundRouteMap.Data)
+	mqlMap, err := resolveRouteMap(a.MqlRuntime, a.cacheOutboundRouteMap)
 	if err != nil {
 		return nil, err
 	}

@@ -491,6 +491,9 @@ type mqlDigitaloceanLoadBalancerInternal struct {
 	// droplets() accessors can resolve them without a refetch.
 	cacheVPCUUID    string
 	cacheDropletIDs []any
+	// cacheForwardingRules holds the port mappings the load balancer accepts
+	// connections on, so listeners() can build one resource per rule.
+	cacheForwardingRules []godo.ForwardingRule
 }
 
 func (r *mqlDigitaloceanLoadBalancer) id() (string, error) {

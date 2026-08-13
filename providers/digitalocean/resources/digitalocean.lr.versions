@@ -733,7 +733,6 @@ digitalocean.loadBalancer.enableProxyProtocol 13.0.1
 digitalocean.loadBalancer.exposure 13.7.1
 digitalocean.loadBalancer.firewallAllow 13.6.2
 digitalocean.loadBalancer.firewallDeny 13.6.2
-digitalocean.loadBalancer.forwardingRules 13.0.1
 digitalocean.loadBalancer.glbSettings 13.6.2
 digitalocean.loadBalancer.healthCheck 13.0.1
 digitalocean.loadBalancer.httpIdleTimeoutSeconds 13.6.2

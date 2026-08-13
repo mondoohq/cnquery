@@ -13,51 +13,29 @@ import (
 
 // listeners builds one resource per forwarding rule so the certificate a
 // listener presents can be reached from the rule itself.
-//
-// The rules are read back out of the forwardingRules field rather than cached
-// off the godo object, because a load balancer is built from two paths (the
-// account listing and the discovered-asset init) that both go through
-// loadBalancerArgs. A cache populated in only one of them would leave the
-// other's listeners silently empty.
 func (l *mqlDigitaloceanLoadBalancer) listeners() ([]interface{}, error) {
 	id := l.GetId()
 	if id.Error != nil {
 		return nil, id.Error
 	}
-	rules := l.GetForwardingRules()
-	if rules.Error != nil {
-		return nil, rules.Error
-	}
 
-	all := make([]interface{}, 0, len(rules.Data))
-	for _, r := range rules.Data {
-		rule, ok := r.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		entryProtocol, _ := rule["entryProtocol"].(string)
-		entryPort := dictInt(rule["entryPort"])
-		targetProtocol, _ := rule["targetProtocol"].(string)
-		targetPort := dictInt(rule["targetPort"])
-		certificateId, _ := rule["certificateId"].(string)
-		tlsPassthrough, _ := rule["tlsPassthrough"].(bool)
-
+	all := make([]interface{}, 0, len(l.cacheForwardingRules))
+	for _, rule := range l.cacheForwardingRules {
 		res, err := CreateResource(l.MqlRuntime, "digitalocean.loadBalancer.listener", map[string]*llx.RawData{
 			// An entry port can only be bound once per load balancer, so the
 			// protocol and port pair is a stable key.
-			"__id":           llx.StringData("digitalocean.loadBalancer.listener/" + id.Data + "/" + entryProtocol + ":" + strconv.FormatInt(entryPort, 10)),
+			"__id":           llx.StringData("digitalocean.loadBalancer.listener/" + id.Data + "/" + rule.EntryProtocol + ":" + strconv.Itoa(rule.EntryPort)),
 			"loadBalancerId": llx.StringData(id.Data),
-			"entryProtocol":  llx.StringData(entryProtocol),
-			"entryPort":      llx.IntData(entryPort),
-			"targetProtocol": llx.StringData(targetProtocol),
-			"targetPort":     llx.IntData(targetPort),
-			"tlsPassthrough": llx.BoolData(tlsPassthrough),
+			"entryProtocol":  llx.StringData(rule.EntryProtocol),
+			"entryPort":      llx.IntData(int64(rule.EntryPort)),
+			"targetProtocol": llx.StringData(rule.TargetProtocol),
+			"targetPort":     llx.IntData(int64(rule.TargetPort)),
+			"tlsPassthrough": llx.BoolData(rule.TlsPassthrough),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlDigitaloceanLoadBalancerListener).cacheCertificateID = certificateId
+		res.(*mqlDigitaloceanLoadBalancerListener).cacheCertificateID = rule.CertificateID
 		all = append(all, res)
 	}
 	return all, nil
@@ -90,20 +68,6 @@ func (l *mqlDigitaloceanLoadBalancerListener) certificate() (*mqlDigitaloceanCer
 		return nil, nil
 	}
 	return cert, nil
-}
-
-// dictInt reads a number out of a dict. Values stored in a dict are JSON-native,
-// so a port arrives as a float64, but tolerate the integer forms too.
-func dictInt(v any) int64 {
-	switch t := v.(type) {
-	case float64:
-		return int64(t)
-	case int64:
-		return t
-	case int:
-		return int64(t)
-	}
-	return 0
 }
 
 // appCorsPolicies flattens the CORS policy on each ingress route.

@@ -890,13 +890,6 @@ digitalocean.loadBalancer @defaults("id name status") {
   droplets() []digitalocean.droplet
   // Tags
   tags []string
-  // Forwarding rules
-  //
-  // Deprecated in favor of listeners, which resolves the certificate each
-  // rule presents. Listener mappings from incoming connections to backend
-  // targets. Each dict has keys entryProtocol, entryPort, targetProtocol,
-  // targetPort, certificateId, and tlsPassthrough.
-  forwardingRules @maturity("deprecated") []dict
   // Listeners the load balancer accepts connections on
   //
   // One entry per forwarding rule, carrying the protocol and port traffic

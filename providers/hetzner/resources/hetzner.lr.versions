@@ -102,9 +102,7 @@ hetzner.loadBalancer.outgoingTraffic 13.0.1
 hetzner.loadBalancer.privateNet 13.0.1
 hetzner.loadBalancer.privateNet.ip 13.0.1
 hetzner.loadBalancer.privateNet.loadBalancer 13.7.6
-hetzner.loadBalancer.privateNet.loadBalancerId 13.0.1
 hetzner.loadBalancer.privateNet.network 13.0.1
-hetzner.loadBalancer.privateNet.networkId 13.0.1
 hetzner.loadBalancer.protection 13.0.1
 hetzner.loadBalancer.publicNet 13.0.1
 hetzner.loadBalancer.servers 13.5.2
@@ -115,7 +113,6 @@ hetzner.loadBalancer.service.healthCheck 13.0.1
 hetzner.loadBalancer.service.http 13.0.1
 hetzner.loadBalancer.service.listenPort 13.0.1
 hetzner.loadBalancer.service.loadBalancer 13.7.6
-hetzner.loadBalancer.service.loadBalancerId 13.0.1
 hetzner.loadBalancer.service.protocol 13.0.1
 hetzner.loadBalancer.service.proxyProtocol 13.0.1
 hetzner.loadBalancer.services 13.0.1
@@ -125,7 +122,6 @@ hetzner.loadBalancer.target.ip 13.0.1
 hetzner.loadBalancer.target.labelSelector 13.0.1
 hetzner.loadBalancer.target.labelSelectorTargets 13.5.2
 hetzner.loadBalancer.target.loadBalancer 13.7.6
-hetzner.loadBalancer.target.loadBalancerId 13.0.1
 hetzner.loadBalancer.target.server 13.0.1
 hetzner.loadBalancer.target.type 13.0.1
 hetzner.loadBalancer.target.usePrivateIp 13.0.1
@@ -202,9 +198,7 @@ hetzner.server.dnsRecords 13.7.7
 hetzner.server.exposure 13.3.1
 hetzner.server.firewallBinding 13.1.2
 hetzner.server.firewallBinding.firewall 13.1.2
-hetzner.server.firewallBinding.firewallId 13.1.2
 hetzner.server.firewallBinding.server 13.7.6
-hetzner.server.firewallBinding.serverId 13.1.2
 hetzner.server.firewallBinding.status 13.1.2
 hetzner.server.firewallBindings 13.1.2
 hetzner.server.firewalls 13.0.1
@@ -229,9 +223,7 @@ hetzner.server.privateNet.aliasIps 13.0.1
 hetzner.server.privateNet.ip 13.0.1
 hetzner.server.privateNet.macAddress 13.0.1
 hetzner.server.privateNet.network 13.0.1
-hetzner.server.privateNet.networkId 13.0.1
 hetzner.server.privateNet.server 13.7.6
-hetzner.server.privateNet.serverId 13.0.1
 hetzner.server.protection 13.0.1
 hetzner.server.publicIpv4 13.0.6
 hetzner.server.publicIpv4Blocked 13.0.6
@@ -255,10 +247,8 @@ hetzner.serverType.location 13.0.1
 hetzner.serverType.location.available 13.0.1
 hetzner.serverType.location.deprecation 13.0.1
 hetzner.serverType.location.location 13.0.1
-hetzner.serverType.location.locationId 13.0.1
 hetzner.serverType.location.recommended 13.0.1
 hetzner.serverType.location.serverType 13.7.6
-hetzner.serverType.location.serverTypeId 13.0.1
 hetzner.serverType.locations 13.0.1
 hetzner.serverType.memory 13.0.1
 hetzner.serverType.name 13.0.1
@@ -298,7 +288,6 @@ hetzner.storageBox.snapshot.name 13.4.2
 hetzner.storageBox.snapshot.size 13.4.2
 hetzner.storageBox.snapshot.sizeFilesystem 13.4.2
 hetzner.storageBox.snapshot.storageBox 13.7.6
-hetzner.storageBox.snapshot.storageBoxId 13.4.2
 hetzner.storageBox.snapshotPlan 13.4.2
 hetzner.storageBox.snapshots 13.4.2
 hetzner.storageBox.sshEnabled 13.4.2
@@ -317,7 +306,6 @@ hetzner.storageBox.subaccount.sambaEnabled 13.4.2
 hetzner.storageBox.subaccount.server 13.4.2
 hetzner.storageBox.subaccount.sshEnabled 13.4.2
 hetzner.storageBox.subaccount.storageBox 13.7.6
-hetzner.storageBox.subaccount.storageBoxId 13.4.2
 hetzner.storageBox.subaccount.username 13.4.2
 hetzner.storageBox.subaccount.webdavEnabled 13.4.2
 hetzner.storageBox.subaccounts 13.4.2
@@ -378,11 +366,9 @@ hetzner.zone.rrset.record.rrset 13.7.7
 hetzner.zone.rrset.record.servers 13.7.7
 hetzner.zone.rrset.record.targetsProjectResource 13.7.7
 hetzner.zone.rrset.record.value 13.7.7
-hetzner.zone.rrset.records 13.4.2
 hetzner.zone.rrset.ttl 13.4.2
 hetzner.zone.rrset.type 13.4.2
 hetzner.zone.rrset.zone 13.4.2
-hetzner.zone.rrset.zoneId 13.4.2
 hetzner.zone.rrsets 13.4.2
 hetzner.zone.status 13.4.2
 hetzner.zone.ttl 13.4.2

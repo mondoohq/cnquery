@@ -138,7 +138,6 @@ type projectRecord struct {
 	Link                                 *projectLink          `json:"link"`
 	Crons                                *cronsRecord          `json:"crons"`
 	OptionsAllowlist                     *optionsAllowlist     `json:"optionsAllowlist"`
-	ProtectionConfig                     map[string]any        `json:"protectionConfig"`
 	// Keyed by the bypass secret itself, so the keys are credential material
 	// and only the entry values may be surfaced.
 	ProtectionBypass map[string]protectionBypassEntry `json:"protectionBypass"`
@@ -269,7 +268,6 @@ func newVercelProject(runtime *plugin.Runtime, teamID string, rec *projectRecord
 		"trustedIpsDeploymentType":         llx.StringDataPtr(trustedType),
 		"trustedIpsAddresses":              llx.ArrayData(trustedAddresses, types.Dict),
 		"optionsAllowlistPaths":            llx.ArrayData(allowlistPaths(rec.OptionsAllowlist), types.String),
-		"protectionConfig":                 llx.DictData(dictOrNil(rec.ProtectionConfig)),
 		"protectionBypassCount":            llx.IntData(int64(len(rec.ProtectionBypass))),
 		"protectionBypassScopes":           llx.ArrayData(bypassScopes(rec.ProtectionBypass), types.String),
 		"repositoryType":                   llx.StringDataPtr(repoType),

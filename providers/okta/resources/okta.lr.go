@@ -575,12 +575,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaUser).GetId()).ToDataRes(types.String)
 	},
-	"okta.user.typeId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOktaUser).GetTypeId()).ToDataRes(types.String)
-	},
-	"okta.user.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOktaUser).GetType()).ToDataRes(types.Dict)
-	},
 	"okta.user.credentials": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaUser).GetCredentials()).ToDataRes(types.Dict)
 	},
@@ -2330,14 +2324,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"okta.user.typeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUser).TypeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"okta.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUser).Type, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.user.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5471,8 +5457,6 @@ type mqlOktaUser struct {
 	__id       string
 	mqlOktaUserInternal
 	Id                    plugin.TValue[string]
-	TypeId                plugin.TValue[string]
-	Type                  plugin.TValue[any]
 	Credentials           plugin.TValue[any]
 	Activated             plugin.TValue[*time.Time]
 	Created               plugin.TValue[*time.Time]
@@ -5535,14 +5519,6 @@ func (c *mqlOktaUser) MqlID() string {
 
 func (c *mqlOktaUser) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOktaUser) GetTypeId() *plugin.TValue[string] {
-	return &c.TypeId
-}
-
-func (c *mqlOktaUser) GetType() *plugin.TValue[any] {
-	return &c.Type
 }
 
 func (c *mqlOktaUser) GetCredentials() *plugin.TValue[any] {

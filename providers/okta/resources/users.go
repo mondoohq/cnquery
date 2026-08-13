@@ -22,9 +22,8 @@ import (
 type mqlOktaUserInternal struct {
 	cacheRealmId   string
 	cacheManagerId string
-	// cacheUserTypeId duplicates the deprecated typeId field on purpose, so
-	// that removing typeId is a schema change on its own rather than one that
-	// also takes the userType reference with it.
+	// cacheUserTypeId holds the user type the account is assigned, which
+	// userType resolves to the full type.
 	cacheUserTypeId string
 }
 
@@ -145,14 +144,6 @@ func oktaUserManagerId(user *okta.User) string {
 
 // oktaUserArgs builds the okta.user resource fields.
 func oktaUserArgs(user *okta.User) (map[string]*llx.RawData, error) {
-	userType, err := convert.JsonToDict(user.Type)
-	if err != nil {
-		return nil, err
-	}
-	var userTypeId string
-	if user.Type != nil {
-		userTypeId = oktaStr(user.Type.Id)
-	}
 	credentials, err := convert.JsonToDict(user.Credentials)
 	if err != nil {
 		return nil, err
@@ -164,8 +155,6 @@ func oktaUserArgs(user *okta.User) (map[string]*llx.RawData, error) {
 
 	return map[string]*llx.RawData{
 		"id":                    llx.StringData(oktaStr(user.Id)),
-		"type":                  llx.DictData(userType),
-		"typeId":                llx.StringData(userTypeId),
 		"credentials":           llx.DictData(credentials),
 		"activated":             llx.TimeDataPtr(user.Activated.Get()),
 		"created":               llx.TimeDataPtr(user.Created),

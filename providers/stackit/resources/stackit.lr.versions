@@ -629,7 +629,6 @@ stackit.server.updates 13.4.2
 stackit.server.userData 13.0.0
 stackit.server.volumeIds 13.0.0
 stackit.server.volumes 13.0.0
-stackit.server.vtpmEnabled 13.4.2
 stackit.servers 13.0.0
 stackit.serviceAccount 13.0.0
 stackit.serviceAccount.accessTokens 13.0.0

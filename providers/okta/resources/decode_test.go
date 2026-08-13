@@ -26,8 +26,7 @@ func TestOktaBool(t *testing.T) {
 }
 
 // TestOktaUserArgs_FromUser exercises the *okta.User fast path: pointer/Nullable
-// fields are dereferenced, the typed profile is flattened to a dict, and the
-// nested type id is lifted out.
+// fields are dereferenced and the typed profile is flattened to a dict.
 func TestOktaUserArgs_FromUser(t *testing.T) {
 	const payload = `{
 		"id": "00u1abc",
@@ -47,7 +46,6 @@ func TestOktaUserArgs_FromUser(t *testing.T) {
 
 	assert.Equal(t, "00u1abc", args["id"].Value)
 	assert.Equal(t, "ACTIVE", args["status"].Value)
-	assert.Equal(t, "otyp123", args["typeId"].Value)
 	assert.Equal(t, "PROVISIONED", args["transitioningToStatus"].Value)
 
 	profile, ok := args["profile"].Value.(map[string]any)
@@ -63,6 +61,11 @@ func TestOktaUserArgs_FromUser(t *testing.T) {
 	activated, ok := args["activated"].Value.(*time.Time)
 	require.True(t, ok, "activated (NullableTime) should be a *time.Time")
 	assert.NotNil(t, activated)
+
+	// The user type is not a schema field; its id reaches userType through the
+	// internal cache, so pin that it decodes off the SDK record.
+	require.NotNil(t, u.Type)
+	assert.Equal(t, "otyp123", oktaStr(u.Type.Id))
 }
 
 // TestOktaUserArgs_FromGroupMember exercises the JSON-normalization branch used

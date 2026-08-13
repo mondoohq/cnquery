@@ -81,12 +81,6 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 	launchedAt, ok2 := s.GetLaunchedAtOk()
 	updatedAt, ok3 := s.GetUpdatedAtOk()
 
-	// STACKIT withdrew the vTPM server attribute in iaas v1.14.0: the feature
-	// was never functional and the API stopped reporting it, so there is
-	// nothing left to read. The deprecated field reports false until it is
-	// dropped in the next major release.
-	const vtpmEnabled = false
-
 	args := map[string]*llx.RawData{
 		"id":               llx.StringData(s.GetId()),
 		"name":             llx.StringData(s.GetName()),
@@ -99,7 +93,6 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 		"updatedAt":        llx.TimeDataPtr(timeOrNil(updatedAt, ok3)),
 		"errorMessage":     llx.StringData(s.GetErrorMessage()),
 		"configDrive":      llx.BoolData(s.GetConfigDrive()),
-		"vtpmEnabled":      llx.BoolData(vtpmEnabled),
 		"keypairName":      llx.StringData(s.GetKeypairName()),
 		"imageId":          llx.StringData(s.GetImageId()),
 		"volumeIds":        strSliceData(s.GetVolumes()),

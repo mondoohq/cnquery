@@ -307,16 +307,28 @@ func teamArgs(t datadogV2.Team) map[string]*llx.RawData {
 
 func dashboardArgs(d datadogV1.DashboardSummaryDefinition) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
-		"id":           llx.StringData(d.GetId()),
-		"title":        llx.StringData(d.GetTitle()),
-		"description":  llx.StringData(d.GetDescription()),
-		"layoutType":   llx.StringData(string(d.GetLayoutType())),
-		"url":          llx.StringData(d.GetUrl()),
-		"createdAt":    llx.TimeDataPtr(timePtr(d.GetCreatedAt())),
-		"modifiedAt":   llx.TimeDataPtr(timePtr(d.GetModifiedAt())),
-		"authorHandle": llx.StringData(d.GetAuthorHandle()),
-		"isReadOnly":   llx.BoolData(d.GetIsReadOnly()),
+		"id":          llx.StringData(d.GetId()),
+		"title":       llx.StringData(d.GetTitle()),
+		"description": llx.StringData(d.GetDescription()),
+		"layoutType":  llx.StringData(string(d.GetLayoutType())),
+		"url":         llx.StringData(d.GetUrl()),
+		"createdAt":   llx.TimeDataPtr(timePtr(d.GetCreatedAt())),
+		"modifiedAt":  llx.TimeDataPtr(timePtr(d.GetModifiedAt())),
+		"isReadOnly":  llx.BoolData(d.GetIsReadOnly()),
 	}
+}
+
+// newDashboard builds a dashboard and primes the author handle the authorship
+// edge resolves against. Both the listing and the init go through here so a
+// dashboard reached by id resolves its author the same way a listed one does.
+func newDashboard(runtime *plugin.Runtime, d datadogV1.DashboardSummaryDefinition) (*mqlDatadogDashboard, error) {
+	res, err := CreateResource(runtime, "datadog.dashboard", dashboardArgs(d))
+	if err != nil {
+		return nil, err
+	}
+	dashboard := res.(*mqlDatadogDashboard)
+	dashboard.cacheAuthorHandle = d.GetAuthorHandle()
+	return dashboard, nil
 }
 
 func permissionArgs(p datadogV2.Permission) map[string]*llx.RawData {
@@ -406,7 +418,11 @@ func initDatadogDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	for _, d := range dashboards {
 		if d.GetId() == id {
-			return dashboardArgs(d), nil, nil
+			res, err := newDashboard(runtime, d)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
 		}
 	}
 	return nil, nil, fmt.Errorf("datadog.dashboard %q not found", id)
@@ -957,19 +973,38 @@ func (r *mqlDatadogApplicationKey) owner() (*mqlDatadogUser, error) {
 }
 
 // --- Authorship edges ---
+//
+// The API reports authorship as a bare handle or email. Each resource keeps
+// that raw reference here and exposes only the user it resolves to.
+
+type mqlDatadogMonitorInternal struct {
+	cacheCreator string
+}
+
+type mqlDatadogDashboardInternal struct {
+	cacheAuthorHandle string
+}
+
+type mqlDatadogSloInternal struct {
+	cacheCreator string
+}
+
+type mqlDatadogSyntheticsTestInternal struct {
+	cacheCreator string
+}
 
 func (r *mqlDatadogMonitor) createdBy() (*mqlDatadogUser, error) {
-	return resolveUserRef(r.MqlRuntime, r.Creator.Data, &r.CreatedBy)
+	return resolveUserRef(r.MqlRuntime, r.cacheCreator, &r.CreatedBy)
 }
 
 func (r *mqlDatadogDashboard) author() (*mqlDatadogUser, error) {
-	return resolveUserRef(r.MqlRuntime, r.AuthorHandle.Data, &r.Author)
+	return resolveUserRef(r.MqlRuntime, r.cacheAuthorHandle, &r.Author)
 }
 
 func (r *mqlDatadogSlo) createdBy() (*mqlDatadogUser, error) {
-	return resolveUserRef(r.MqlRuntime, r.Creator.Data, &r.CreatedBy)
+	return resolveUserRef(r.MqlRuntime, r.cacheCreator, &r.CreatedBy)
 }
 
 func (r *mqlDatadogSyntheticsTest) createdBy() (*mqlDatadogUser, error) {
-	return resolveUserRef(r.MqlRuntime, r.Creator.Data, &r.CreatedBy)
+	return resolveUserRef(r.MqlRuntime, r.cacheCreator, &r.CreatedBy)
 }

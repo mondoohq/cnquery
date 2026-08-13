@@ -34,7 +34,6 @@ datadog.authnMapping.team 13.0.21
 datadog.authnMappings 13.0.21
 datadog.dashboard 13.0.1
 datadog.dashboard.author 13.0.21
-datadog.dashboard.authorHandle 13.0.1
 datadog.dashboard.createdAt 13.0.1
 datadog.dashboard.description 13.0.1
 datadog.dashboard.id 13.0.1
@@ -192,7 +191,6 @@ datadog.logsRestrictionQuery.userCount 13.0.21
 datadog.monitor 13.0.1
 datadog.monitor.created 13.0.1
 datadog.monitor.createdBy 13.0.21
-datadog.monitor.creator 13.0.1
 datadog.monitor.id 13.0.1
 datadog.monitor.message 13.0.1
 datadog.monitor.modified 13.0.1
@@ -354,7 +352,6 @@ datadog.sharedDashboard.token 13.0.21
 datadog.slo 13.0.1
 datadog.slo.createdAt 13.0.1
 datadog.slo.createdBy 13.0.21
-datadog.slo.creator 13.0.1
 datadog.slo.description 13.0.1
 datadog.slo.id 13.0.1
 datadog.slo.modifiedAt 13.0.1
@@ -386,7 +383,6 @@ datadog.syntheticsPrivateLocations 13.0.1
 datadog.syntheticsTest 13.0.1
 datadog.syntheticsTest.config 13.0.1
 datadog.syntheticsTest.createdBy 13.0.21
-datadog.syntheticsTest.creator 13.0.1
 datadog.syntheticsTest.locations 13.0.1
 datadog.syntheticsTest.message 13.0.1
 datadog.syntheticsTest.monitorId 13.0.1

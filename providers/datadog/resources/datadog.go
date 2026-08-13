@@ -241,13 +241,13 @@ func (r *mqlDatadog) monitors() ([]interface{}, error) {
 				"priority":     llx.IntData(priority),
 				"created":      llx.TimeDataPtr(timePtr(m.GetCreated())),
 				"modified":     llx.TimeDataPtr(timePtr(m.GetModified())),
-				"creator":      llx.StringData(creator),
 				"notifyNoData": llx.BoolData(notifyNoData),
 				"options":      llx.DictData(options),
 			})
 			if err != nil {
 				return nil, err
 			}
+			res.(*mqlDatadogMonitor).cacheCreator = creator
 			all = append(all, res)
 		}
 
@@ -273,7 +273,7 @@ func (r *mqlDatadog) dashboards() ([]interface{}, error) {
 
 	var all []interface{}
 	for _, d := range dashboards {
-		res, err := CreateResource(r.MqlRuntime, "datadog.dashboard", dashboardArgs(d))
+		res, err := newDashboard(r.MqlRuntime, d)
 		if err != nil {
 			return nil, err
 		}
@@ -342,13 +342,13 @@ func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
 			"tags":      llx.ArrayData(tags, "\x02"),
 			"locations": llx.ArrayData(locations, "\x02"),
 			"monitorId": llx.IntData(t.GetMonitorId()),
-			"creator":   llx.StringData(creator),
 			"config":    llx.DictData(config),
 			"options":   llx.DictData(options),
 		})
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlDatadogSyntheticsTest).cacheCreator = creator
 		all = append(all, res)
 	}
 	return all, nil
@@ -413,7 +413,6 @@ func (r *mqlDatadog) slos() ([]interface{}, error) {
 				"targetThreshold":  llx.FloatData(targetThreshold),
 				"warningThreshold": llx.FloatData(warningThreshold),
 				"timeframe":        llx.StringData(timeframe),
-				"creator":          llx.StringData(creator),
 				"createdAt":        llx.TimeDataPtr(epochSecondsToTimePtr(s.GetCreatedAt())),
 				"modifiedAt":       llx.TimeDataPtr(epochSecondsToTimePtr(s.GetModifiedAt())),
 				"monitorIds":       llx.ArrayData(monitorIds, "\x05"),
@@ -421,6 +420,7 @@ func (r *mqlDatadog) slos() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			res.(*mqlDatadogSlo).cacheCreator = creator
 			all = append(all, res)
 		}
 

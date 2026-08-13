@@ -1524,9 +1524,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.securityGroup.rule.remoteIpPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteIpPrefix()).ToDataRes(types.String)
 	},
-	"openstack.securityGroup.rule.remoteAddressGroupId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteAddressGroupId()).ToDataRes(types.String)
-	},
 	"openstack.securityGroup.rule.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetDescription()).ToDataRes(types.String)
 	},
@@ -5752,10 +5749,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.securityGroup.rule.remoteIpPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackSecurityGroupRule).RemoteIpPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.securityGroup.rule.remoteAddressGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackSecurityGroupRule).RemoteAddressGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.securityGroup.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14000,7 +13993,6 @@ type mqlOpenstackSecurityGroupRule struct {
 	PortRangeMin         plugin.TValue[int64]
 	PortRangeMax         plugin.TValue[int64]
 	RemoteIpPrefix       plugin.TValue[string]
-	RemoteAddressGroupId plugin.TValue[string]
 	Description          plugin.TValue[string]
 	CreatedAt            plugin.TValue[*time.Time]
 	UpdatedAt            plugin.TValue[*time.Time]
@@ -14074,10 +14066,6 @@ func (c *mqlOpenstackSecurityGroupRule) GetPortRangeMax() *plugin.TValue[int64] 
 
 func (c *mqlOpenstackSecurityGroupRule) GetRemoteIpPrefix() *plugin.TValue[string] {
 	return &c.RemoteIpPrefix
-}
-
-func (c *mqlOpenstackSecurityGroupRule) GetRemoteAddressGroupId() *plugin.TValue[string] {
-	return &c.RemoteAddressGroupId
 }
 
 func (c *mqlOpenstackSecurityGroupRule) GetDescription() *plugin.TValue[string] {

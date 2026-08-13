@@ -957,12 +957,6 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   portRangeMax int
   // Remote IP prefix (CIDR; empty when matched by remote group instead)
   remoteIpPrefix string
-  // Remote address group ID the rule matches
-  //
-  // Deprecated in favor of remoteAddressGroup, which resolves the same
-  // value to the address group and its addresses. Empty when the rule
-  // is matched by IP prefix or remote security group instead.
-  remoteAddressGroupId @maturity("deprecated") string
   // Description
   description string
   // Creation timestamp

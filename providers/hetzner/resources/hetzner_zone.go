@@ -117,7 +117,8 @@ func (m *mqlHetznerZone) rrsets() ([]any, error) {
 // mqlHetznerZoneRrsetInternal keeps the raw record set so entries() can build
 // one resource per value without re-listing the zone.
 type mqlHetznerZoneRrsetInternal struct {
-	cacheRrset *hcloud.ZoneRRSet
+	cacheRrset  *hcloud.ZoneRRSet
+	cacheZoneID int64
 }
 
 // mqlHetznerZoneRrsetRecordInternal carries the record set a value belongs to.
@@ -129,25 +130,16 @@ type mqlHetznerZoneRrsetRecordInternal struct {
 }
 
 func (r *mqlHetznerZoneRrset) id() (string, error) {
-	return fmt.Sprintf("hetzner.zone.rrset/%d/%s", r.ZoneId.Data, r.Id.Data), nil
+	return fmt.Sprintf("hetzner.zone.rrset/%d/%s", r.cacheZoneID, r.Id.Data), nil
 }
 
 func newMqlHetznerZoneRrset(runtime *plugin.Runtime, zoneID int64, rr *hcloud.ZoneRRSet) (*mqlHetznerZoneRrset, error) {
-	records := make([]any, 0, len(rr.Records))
-	for _, rec := range rr.Records {
-		records = append(records, map[string]any{
-			"value":   rec.Value,
-			"comment": rec.Comment,
-		})
-	}
 	res, err := CreateResource(runtime, "hetzner.zone.rrset", map[string]*llx.RawData{
 		"__id":       llx.StringData(fmt.Sprintf("hetzner.zone.rrset/%d/%s", zoneID, rr.ID)),
 		"id":         llx.StringData(rr.ID),
-		"zoneId":     llx.IntData(zoneID),
 		"name":       llx.StringData(rr.Name),
 		"type":       llx.StringData(string(rr.Type)),
 		"ttl":        llx.IntDataDefault(rr.TTL, 0),
-		"records":    dictArrayData(records),
 		"protection": llx.DictData(map[string]any{"change": rr.Protection.Change}),
 		"labels":     labelData(rr.Labels),
 	})
@@ -156,12 +148,13 @@ func newMqlHetznerZoneRrset(runtime *plugin.Runtime, zoneID int64, rr *hcloud.Zo
 	}
 	m := res.(*mqlHetznerZoneRrset)
 	m.cacheRrset = rr
+	m.cacheZoneID = zoneID
 	return m, nil
 }
 
 func (m *mqlHetznerZoneRrset) zone() (*mqlHetznerZone, error) {
 	ref, err := NewResource(m.MqlRuntime, "hetzner.zone", map[string]*llx.RawData{
-		"id": llx.IntData(m.ZoneId.Data),
+		"id": llx.IntData(m.cacheZoneID),
 	})
 	if err != nil {
 		return nil, err

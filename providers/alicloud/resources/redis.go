@@ -249,18 +249,18 @@ func (r *mqlAlicloudRedisInstance) securityIPList() ([]any, error) {
 	return res, nil
 }
 
-// securityGroups resolves the raw security group ID list into typed groups.
-// Reading through the securityGroupIds field reuses its memoized result, so the
-// two fields share one DescribeSecurityGroupConfiguration call.
+// securityGroups resolves the security groups attached to the instance. The
+// group IDs come from DescribeSecurityGroupConfiguration, which is called once
+// per instance because the runtime memoizes this field.
 func (r *mqlAlicloudRedisInstance) securityGroups() ([]any, error) {
-	ids := r.GetSecurityGroupIds()
-	if ids.Error != nil {
-		return nil, ids.Error
+	ids, err := r.fetchSecurityGroupIds()
+	if err != nil {
+		return nil, err
 	}
-	return resolveEcsSecuritygroups(r.MqlRuntime, r.region, ids.Data)
+	return resolveEcsSecuritygroups(r.MqlRuntime, r.region, ids)
 }
 
-func (r *mqlAlicloudRedisInstance) securityGroupIds() ([]any, error) {
+func (r *mqlAlicloudRedisInstance) fetchSecurityGroupIds() ([]any, error) {
 	client, id, err := r.redisClient()
 	if err != nil {
 		return nil, err

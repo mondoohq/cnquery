@@ -476,7 +476,6 @@ alicloud.ecs.instance.publicIpAddresses 13.0.0
 alicloud.ecs.instance.ramRole 13.2.5
 alicloud.ecs.instance.regionId 13.0.0
 alicloud.ecs.instance.resourceGroupId 13.0.0
-alicloud.ecs.instance.securityGroupIds 13.0.0
 alicloud.ecs.instance.securityGroups 13.0.0
 alicloud.ecs.instance.serialNumber 13.0.0
 alicloud.ecs.instance.spotDuration 13.0.0
@@ -754,7 +753,6 @@ alicloud.mongodb.instance.releaseTime 13.0.0
 alicloud.mongodb.instance.replicationFactor 13.0.0
 alicloud.mongodb.instance.resourceGroupId 13.0.0
 alicloud.mongodb.instance.secondaryZoneId 13.0.0
-alicloud.mongodb.instance.securityGroupIds 13.0.0
 alicloud.mongodb.instance.securityGroups 13.2.5
 alicloud.mongodb.instance.securityIPList 13.0.0
 alicloud.mongodb.instance.sslEnabled 13.0.0
@@ -1057,7 +1055,6 @@ alicloud.rds.instance.payType 13.0.0
 alicloud.rds.instance.port 13.0.0
 alicloud.rds.instance.regionId 13.0.0
 alicloud.rds.instance.resourceGroupId 13.0.0
-alicloud.rds.instance.securityGroupIds 13.0.0
 alicloud.rds.instance.securityGroups 13.2.5
 alicloud.rds.instance.securityIPList 13.0.0
 alicloud.rds.instance.sslEnabled 13.0.0
@@ -1095,7 +1092,6 @@ alicloud.redis.instance.qps 13.0.0
 alicloud.redis.instance.regionId 13.0.0
 alicloud.redis.instance.resourceGroupId 13.0.0
 alicloud.redis.instance.secondaryZoneId 13.0.0
-alicloud.redis.instance.securityGroupIds 13.0.0
 alicloud.redis.instance.securityGroups 13.2.5
 alicloud.redis.instance.securityIPList 13.0.0
 alicloud.redis.instance.sslEnabled 13.0.0

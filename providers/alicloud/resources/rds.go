@@ -430,18 +430,18 @@ func (r *mqlAlicloudRdsInstance) masterInstance() (*mqlAlicloudRdsInstance, erro
 	return resolveRdsInstance(r.MqlRuntime, r.cacheRegion, r.cacheMasterInstanceID)
 }
 
-// securityGroups resolves the raw security group ID list into typed groups.
-// Reading through the securityGroupIds field reuses its memoized result, so the
-// two fields share one DescribeSecurityGroupConfiguration call.
+// securityGroups resolves the security groups attached to the instance. The
+// group IDs come from DescribeSecurityGroupConfiguration, which is called once
+// per instance because the runtime memoizes this field.
 func (r *mqlAlicloudRdsInstance) securityGroups() ([]any, error) {
-	ids := r.GetSecurityGroupIds()
-	if ids.Error != nil {
-		return nil, ids.Error
+	ids, err := r.fetchSecurityGroupIds()
+	if err != nil {
+		return nil, err
 	}
-	return resolveEcsSecuritygroups(r.MqlRuntime, r.region, ids.Data)
+	return resolveEcsSecuritygroups(r.MqlRuntime, r.region, ids)
 }
 
-func (r *mqlAlicloudRdsInstance) securityGroupIds() ([]any, error) {
+func (r *mqlAlicloudRdsInstance) fetchSecurityGroupIds() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	client, err := conn.RdsClient(r.region)
 	if err != nil {

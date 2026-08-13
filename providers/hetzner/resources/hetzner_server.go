@@ -335,8 +335,15 @@ func (m *mqlHetznerServer) privateNet() ([]any, error) {
 
 // --- server.privateNet sub-resource ---
 
+// mqlHetznerServerPrivateNetInternal holds the server and network the
+// attachment joins, which the server and network accessors resolve.
+type mqlHetznerServerPrivateNetInternal struct {
+	cacheServerID  int64
+	cacheNetworkID int64
+}
+
 func (r *mqlHetznerServerPrivateNet) id() (string, error) {
-	return fmt.Sprintf("hetzner.server.privateNet/%d/%d", r.ServerId.Data, r.NetworkId.Data), nil
+	return fmt.Sprintf("hetzner.server.privateNet/%d/%d", r.cacheServerID, r.cacheNetworkID), nil
 }
 
 func newMqlHetznerServerPrivateNet(runtime *plugin.Runtime, serverID int64, p hcloud.ServerPrivateNet) (*mqlHetznerServerPrivateNet, error) {
@@ -350,8 +357,6 @@ func newMqlHetznerServerPrivateNet(runtime *plugin.Runtime, serverID int64, p hc
 	}
 	res, err := CreateResource(runtime, "hetzner.server.privateNet", map[string]*llx.RawData{
 		"__id":       llx.StringData(fmt.Sprintf("hetzner.server.privateNet/%d/%d", serverID, networkID)),
-		"serverId":   llx.IntData(serverID),
-		"networkId":  llx.IntData(networkID),
 		"ip":         llx.StringData(ipString(p.IP)),
 		"aliasIps":   llx.ArrayData(aliases, types.String),
 		"macAddress": llx.StringData(p.MACAddress),
@@ -359,7 +364,10 @@ func newMqlHetznerServerPrivateNet(runtime *plugin.Runtime, serverID int64, p hc
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerServerPrivateNet), nil
+	m := res.(*mqlHetznerServerPrivateNet)
+	m.cacheServerID = serverID
+	m.cacheNetworkID = networkID
+	return m, nil
 }
 
 // serverRef builds a lazy hetzner.server reference from its id, used by the
@@ -379,16 +387,16 @@ func serverRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerServer],
 }
 
 func (m *mqlHetznerServerPrivateNet) server() (*mqlHetznerServer, error) {
-	return serverRef(m.MqlRuntime, &m.Server, m.ServerId.Data)
+	return serverRef(m.MqlRuntime, &m.Server, m.cacheServerID)
 }
 
 func (m *mqlHetznerServerPrivateNet) network() (*mqlHetznerNetwork, error) {
-	if m.NetworkId.Data == 0 {
+	if m.cacheNetworkID == 0 {
 		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	ref, err := NewResource(m.MqlRuntime, "hetzner.network", map[string]*llx.RawData{
-		"id": llx.IntData(m.NetworkId.Data),
+		"id": llx.IntData(m.cacheNetworkID),
 	})
 	if err != nil {
 		return nil, err
@@ -398,34 +406,42 @@ func (m *mqlHetznerServerPrivateNet) network() (*mqlHetznerNetwork, error) {
 
 // --- server.firewallBinding sub-resource ---
 
+// mqlHetznerServerFirewallBindingInternal holds the server and firewall the
+// binding joins, which the server and firewall accessors resolve.
+type mqlHetznerServerFirewallBindingInternal struct {
+	cacheServerID   int64
+	cacheFirewallID int64
+}
+
 func (r *mqlHetznerServerFirewallBinding) id() (string, error) {
-	return fmt.Sprintf("hetzner.server.firewallBinding/%d/%d", r.ServerId.Data, r.FirewallId.Data), nil
+	return fmt.Sprintf("hetzner.server.firewallBinding/%d/%d", r.cacheServerID, r.cacheFirewallID), nil
 }
 
 func newMqlHetznerServerFirewallBinding(runtime *plugin.Runtime, serverID int64, fw *hcloud.ServerFirewallStatus) (*mqlHetznerServerFirewallBinding, error) {
 	res, err := CreateResource(runtime, "hetzner.server.firewallBinding", map[string]*llx.RawData{
-		"__id":       llx.StringData(fmt.Sprintf("hetzner.server.firewallBinding/%d/%d", serverID, fw.Firewall.ID)),
-		"serverId":   llx.IntData(serverID),
-		"firewallId": llx.IntData(fw.Firewall.ID),
-		"status":     llx.StringData(string(fw.Status)),
+		"__id":   llx.StringData(fmt.Sprintf("hetzner.server.firewallBinding/%d/%d", serverID, fw.Firewall.ID)),
+		"status": llx.StringData(string(fw.Status)),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerServerFirewallBinding), nil
+	m := res.(*mqlHetznerServerFirewallBinding)
+	m.cacheServerID = serverID
+	m.cacheFirewallID = fw.Firewall.ID
+	return m, nil
 }
 
 func (m *mqlHetznerServerFirewallBinding) server() (*mqlHetznerServer, error) {
-	return serverRef(m.MqlRuntime, &m.Server, m.ServerId.Data)
+	return serverRef(m.MqlRuntime, &m.Server, m.cacheServerID)
 }
 
 func (m *mqlHetznerServerFirewallBinding) firewall() (*mqlHetznerFirewall, error) {
-	if m.FirewallId.Data == 0 {
+	if m.cacheFirewallID == 0 {
 		m.Firewall.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	ref, err := NewResource(m.MqlRuntime, "hetzner.firewall", map[string]*llx.RawData{
-		"id": llx.IntData(m.FirewallId.Data),
+		"id": llx.IntData(m.cacheFirewallID),
 	})
 	if err != nil {
 		return nil, err
