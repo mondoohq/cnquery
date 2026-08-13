@@ -84,6 +84,7 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	args["arn"] = llx.StringDataPtr(resp.ARN)
+	args["region"] = llx.StringData(region)
 	args["createdAt"] = llx.TimeDataPtr(resp.CreatedDate)
 	args["description"] = llx.StringDataPtr(resp.Description)
 	args["lastAccessedDate"] = llx.TimeDataPtr(resp.LastAccessedDate)
@@ -225,6 +226,7 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 				for _, secret := range secrets.SecretList {
 					args := map[string]*llx.RawData{
 						"arn":              llx.StringDataPtr(secret.ARN),
+						"region":           llx.StringData(region),
 						"createdAt":        llx.TimeDataPtr(secret.CreatedDate),
 						"description":      llx.StringDataPtr(secret.Description),
 						"lastAccessedDate": llx.TimeDataPtr(secret.LastAccessedDate),

@@ -13688,6 +13688,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.secretsmanager.secret.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetArn()).ToDataRes(types.String)
 	},
+	"aws.secretsmanager.secret.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.secretsmanager.secret.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -14659,6 +14662,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.emr.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.emr.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetName()).ToDataRes(types.String)
@@ -49712,6 +49718,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecretsmanagerSecret).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.secretsmanager.secret.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.secretsmanager.secret.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -51138,6 +51148,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.emr.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -117443,6 +117457,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	__id       string
 	mqlAwsSecretsmanagerSecretInternal
 	Arn                  plugin.TValue[string]
+	Region               plugin.TValue[string]
 	CreatedAt            plugin.TValue[*time.Time]
 	Description          plugin.TValue[string]
 	KmsKey               plugin.TValue[*mqlAwsKmsKey]
@@ -117508,6 +117523,10 @@ func (c *mqlAwsSecretsmanagerSecret) MqlID() string {
 
 func (c *mqlAwsSecretsmanagerSecret) GetArn() *plugin.TValue[string] {
 	return &c.Arn
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -121235,6 +121254,7 @@ type mqlAwsEmrCluster struct {
 	__id       string
 	mqlAwsEmrClusterInternal
 	Arn                        plugin.TValue[string]
+	Region                     plugin.TValue[string]
 	Name                       plugin.TValue[string]
 	NormalizedInstanceHours    plugin.TValue[int64]
 	OutpostArn                 plugin.TValue[string]
@@ -121318,6 +121338,10 @@ func (c *mqlAwsEmrCluster) MqlID() string {
 
 func (c *mqlAwsEmrCluster) GetArn() *plugin.TValue[string] {
 	return &c.Arn
+}
+
+func (c *mqlAwsEmrCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsEmrCluster) GetName() *plugin.TValue[string] {
