@@ -495,7 +495,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		instanceType:    instance.InstanceType.Data,
 		accountId:       accountId,
 		instanceId:      instance.InstanceId.Data,
-		launchTime:      instance.LaunchTime.Data,
+		launchTime:      instance.cacheLaunchTime,
 	}
 	if instance.GetImage().Data != nil {
 		info.image = &instance.GetImage().Data.Id.Data
@@ -748,7 +748,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 	}
 	state := container.Status.Data
 	containerArn := container.Arn.Data
-	taskArn := container.TaskArn.Data
+	taskArn := container.cacheTaskArn
 	publicIp := container.GetPublicIp().Data
 	region := container.Region.Data
 

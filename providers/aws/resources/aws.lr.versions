@@ -149,7 +149,6 @@ aws.apigateway.stage.tags 11.15.2
 aws.apigateway.stage.tracingEnabled 11.15.2
 aws.apigateway.stage.variables 11.15.2
 aws.apigateway.stage.webAcl 13.12.1
-aws.apigateway.stage.webAclArn 11.15.2
 aws.apigateway.usagePlan 13.20.1
 aws.apigateway.usagePlan.apiStages 13.20.1
 aws.apigateway.usagePlan.arn 13.20.1
@@ -381,7 +380,6 @@ aws.appmesh.virtualNode 13.6.3
 aws.appmesh.virtualNode.arn 13.6.3
 aws.appmesh.virtualNode.backendDefaults 13.21.4
 aws.appmesh.virtualNode.backendServices 13.12.1
-aws.appmesh.virtualNode.backends 13.6.3
 aws.appmesh.virtualNode.createdAt 13.21.4
 aws.appmesh.virtualNode.lastUpdatedAt 13.21.4
 aws.appmesh.virtualNode.listeners 13.21.4
@@ -392,7 +390,6 @@ aws.appmesh.virtualNode.meshOwner 13.21.4
 aws.appmesh.virtualNode.name 13.6.3
 aws.appmesh.virtualNode.region 13.6.3
 aws.appmesh.virtualNode.resourceOwner 13.21.4
-aws.appmesh.virtualNode.serviceDiscovery 13.6.3
 aws.appmesh.virtualNode.serviceDiscoveryCloudMapAttributes 13.21.4
 aws.appmesh.virtualNode.serviceDiscoveryCloudMapIpPreference 13.21.4
 aws.appmesh.virtualNode.serviceDiscoveryCloudMapNamespaceName 13.21.4
@@ -565,7 +562,6 @@ aws.appstream.fleet.enableDefaultInternetAccess 11.15.6
 aws.appstream.fleet.fleetErrors 13.45.1
 aws.appstream.fleet.fleetType 11.15.6
 aws.appstream.fleet.iamRole 13.12.1
-aws.appstream.fleet.iamRoleArn 11.15.6
 aws.appstream.fleet.idleDisconnectTimeoutInSeconds 11.15.6
 aws.appstream.fleet.image 13.45.1
 aws.appstream.fleet.imageArn 11.15.6
@@ -615,7 +611,6 @@ aws.appstream.imageBuilder.disableIMDSV1 13.14.2
 aws.appstream.imageBuilder.domainJoinInfo 11.15.6
 aws.appstream.imageBuilder.enableDefaultInternetAccess 11.15.6
 aws.appstream.imageBuilder.iamRole 13.12.1
-aws.appstream.imageBuilder.iamRoleArn 11.15.6
 aws.appstream.imageBuilder.imageArn 11.15.6
 aws.appstream.imageBuilder.instanceType 11.15.6
 aws.appstream.imageBuilder.name 11.15.6
@@ -630,7 +625,6 @@ aws.appstream.images 13.20.1
 aws.appstream.session 13.20.1
 aws.appstream.session.authenticationType 13.20.1
 aws.appstream.session.connectionState 13.20.1
-aws.appstream.session.eniId 13.20.1
 aws.appstream.session.eniPrivateIpAddress 13.20.1
 aws.appstream.session.fleet 13.20.1
 aws.appstream.session.fleetName 13.20.1
@@ -749,7 +743,6 @@ aws.athena.namedQuery.name 11.16.1
 aws.athena.namedQuery.queryString 11.16.1
 aws.athena.namedQuery.queryWorkgroup 13.45.1
 aws.athena.namedQuery.region 11.16.1
-aws.athena.namedQuery.workGroup 11.16.1
 aws.athena.table 13.45.1
 aws.athena.table.columns 13.45.1
 aws.athena.table.createdAt 13.45.1
@@ -778,7 +771,6 @@ aws.athena.workgroup.region 11.16.1
 aws.athena.workgroup.requesterPaysEnabled 11.16.1
 aws.athena.workgroup.resultAclOption 13.45.1
 aws.athena.workgroup.resultBucket 13.45.1
-aws.athena.workgroup.resultConfiguration 11.16.1
 aws.athena.workgroup.resultEncryptionOption 13.40.2
 aws.athena.workgroup.resultOutputLocation 13.40.2
 aws.athena.workgroup.state 11.16.1
@@ -878,7 +870,6 @@ aws.backup.plan.rule 11.15.2
 aws.backup.plan.rule.completionWindowMinutes 11.15.2
 aws.backup.plan.rule.copyAction 11.15.2
 aws.backup.plan.rule.copyAction.deleteAfterDays 11.15.2
-aws.backup.plan.rule.copyAction.destinationBackupVaultArn 11.15.2
 aws.backup.plan.rule.copyAction.destinationVault 13.12.1
 aws.backup.plan.rule.copyAction.id 11.15.2
 aws.backup.plan.rule.copyAction.moveToColdStorageAfterDays 11.15.2
@@ -904,7 +895,6 @@ aws.backup.plan.selection.listOfTags 13.35.2
 aws.backup.plan.selection.name 13.35.2
 aws.backup.plan.selection.notResources 13.35.2
 aws.backup.plan.selection.resources 13.35.2
-aws.backup.plan.selections 13.6.3
 aws.backup.plan.tags 13.53.1
 aws.backup.plan.versionId 11.15.2
 aws.backup.plans 11.15.2
@@ -939,7 +929,6 @@ aws.backup.vault.accessPolicy 13.32.2
 aws.backup.vault.arn 11.15.2
 aws.backup.vault.createdAt 11.15.2
 aws.backup.vault.encryptionKey 13.12.1
-aws.backup.vault.encryptionKeyArn 11.15.2
 aws.backup.vault.isPublic 13.37.1
 aws.backup.vault.locked 11.15.2
 aws.backup.vault.lockedAt 11.15.2
@@ -957,9 +946,7 @@ aws.backup.vaultRecoveryPoint.completionDate 11.15.2
 aws.backup.vaultRecoveryPoint.createdAt 11.15.2
 aws.backup.vaultRecoveryPoint.createdBy 11.15.2
 aws.backup.vaultRecoveryPoint.encryptionKey 13.12.1
-aws.backup.vaultRecoveryPoint.encryptionKeyArn 11.15.2
 aws.backup.vaultRecoveryPoint.iamRole 13.12.1
-aws.backup.vaultRecoveryPoint.iamRoleArn 11.15.2
 aws.backup.vaultRecoveryPoint.isEncrypted 11.15.2
 aws.backup.vaultRecoveryPoint.resourceType 11.15.2
 aws.backup.vaultRecoveryPoint.sourceBackupVaultArn 13.35.2
@@ -980,9 +967,7 @@ aws.batch.computeEnvironment.ec2KeyPair 13.14.1
 aws.batch.computeEnvironment.ecsCluster 13.1.1
 aws.batch.computeEnvironment.eksCluster 13.14.1
 aws.batch.computeEnvironment.eksKubernetesNamespace 13.14.1
-aws.batch.computeEnvironment.iamRole 13.1.1
 aws.batch.computeEnvironment.image 13.14.1
-aws.batch.computeEnvironment.imageId 13.14.1
 aws.batch.computeEnvironment.instanceRole 13.14.1
 aws.batch.computeEnvironment.instanceTypes 13.1.1
 aws.batch.computeEnvironment.launchTemplateId 13.14.1
@@ -1043,28 +1028,23 @@ aws.batch.jobDefinition.arn 13.1.1
 aws.batch.jobDefinition.container 13.12.1
 aws.batch.jobDefinition.containerProperties 13.1.1
 aws.batch.jobDefinition.containerProperties.command 13.12.1
-aws.batch.jobDefinition.containerProperties.environment 13.12.1
 aws.batch.jobDefinition.containerProperties.environmentVariables 13.14.1
 aws.batch.jobDefinition.containerProperties.executionRole 13.12.1
-aws.batch.jobDefinition.containerProperties.fargateConfig 13.12.1
 aws.batch.jobDefinition.containerProperties.fargatePlatformVersion 13.14.1
 aws.batch.jobDefinition.containerProperties.image 13.12.1
 aws.batch.jobDefinition.containerProperties.jobRole 13.12.1
 aws.batch.jobDefinition.containerProperties.linuxDevices 13.14.1
 aws.batch.jobDefinition.containerProperties.linuxInitProcessEnabled 13.14.1
 aws.batch.jobDefinition.containerProperties.linuxMaxSwap 13.14.1
-aws.batch.jobDefinition.containerProperties.linuxParameters 13.12.1
 aws.batch.jobDefinition.containerProperties.linuxSharedMemorySize 13.14.1
 aws.batch.jobDefinition.containerProperties.linuxSwappiness 13.14.1
 aws.batch.jobDefinition.containerProperties.linuxTmpfs 13.14.1
-aws.batch.jobDefinition.containerProperties.logConfiguration 13.12.1
 aws.batch.jobDefinition.containerProperties.logDriver 13.14.1
 aws.batch.jobDefinition.containerProperties.logOptions 13.14.1
 aws.batch.jobDefinition.containerProperties.logSecretOptions 13.14.1
 aws.batch.jobDefinition.containerProperties.memory 13.12.1
 aws.batch.jobDefinition.containerProperties.privileged 13.12.1
 aws.batch.jobDefinition.containerProperties.readonlyRootFilesystem 13.12.1
-aws.batch.jobDefinition.containerProperties.resourceRequirements 13.12.1
 aws.batch.jobDefinition.containerProperties.resourceRequirementsMap 13.14.1
 aws.batch.jobDefinition.containerProperties.secret 13.14.1
 aws.batch.jobDefinition.containerProperties.secret.name 13.14.1
@@ -1105,7 +1085,6 @@ aws.batch.jobDefinition.jobTimeout 13.12.1
 aws.batch.jobDefinition.name 13.1.1
 aws.batch.jobDefinition.nodeMainNode 13.14.1
 aws.batch.jobDefinition.nodeNumNodes 13.14.1
-aws.batch.jobDefinition.nodeProperties 13.1.1
 aws.batch.jobDefinition.nodeRangeProperties 13.14.1
 aws.batch.jobDefinition.nodeRangeProperty 13.14.1
 aws.batch.jobDefinition.nodeRangeProperty.container 13.14.1
@@ -1412,14 +1391,12 @@ aws.bedrock.batchInferenceJob.message 13.26.3
 aws.bedrock.batchInferenceJob.modelId 13.26.3
 aws.bedrock.batchInferenceJob.outputDataConfig 13.26.3
 aws.bedrock.batchInferenceJob.region 13.26.3
-aws.bedrock.batchInferenceJob.roleArn 13.26.3
 aws.bedrock.batchInferenceJob.status 13.26.3
 aws.bedrock.batchInferenceJob.submitTime 13.26.3
 aws.bedrock.batchInferenceJob.timeoutDurationInHours 13.26.3
 aws.bedrock.batchInferenceJobs 13.26.3
 aws.bedrock.customModel 13.10.0
 aws.bedrock.customModel.baseModel 13.12.1
-aws.bedrock.customModel.baseModelArn 13.10.0
 aws.bedrock.customModel.customizationType 13.10.0
 aws.bedrock.customModel.isPublic 13.48.2
 aws.bedrock.customModel.kmsKey 13.10.0
@@ -1675,7 +1652,6 @@ aws.bedrock.prompts 13.31.2
 aws.bedrock.provisionedModelThroughput 13.10.0
 aws.bedrock.provisionedModelThroughput.commitmentDuration 13.10.0
 aws.bedrock.provisionedModelThroughput.foundationModel 13.12.1
-aws.bedrock.provisionedModelThroughput.foundationModelArn 13.10.0
 aws.bedrock.provisionedModelThroughput.modelArn 13.10.0
 aws.bedrock.provisionedModelThroughput.modelUnits 13.10.0
 aws.bedrock.provisionedModelThroughput.provisionedModelArn 13.10.0
@@ -1730,7 +1706,6 @@ aws.cloudformation.stack.resource.resourceType 13.35.2
 aws.cloudformation.stack.resource.status 13.35.2
 aws.cloudformation.stack.resource.statusReason 13.35.2
 aws.cloudformation.stack.resources 13.35.2
-aws.cloudformation.stack.roleArn 13.26.3
 aws.cloudformation.stack.rootStack 13.38.2
 aws.cloudformation.stack.stackId 13.1.1
 aws.cloudformation.stack.status 13.1.1
@@ -1959,7 +1934,6 @@ aws.cloudhsm.clusters 13.28.1
 aws.cloudhsm.hsm 13.28.1
 aws.cloudhsm.hsm.availabilityZone 13.28.1
 aws.cloudhsm.hsm.clusterId 13.28.1
-aws.cloudhsm.hsm.eniId 13.28.1
 aws.cloudhsm.hsm.eniIp 13.28.1
 aws.cloudhsm.hsm.hsmId 13.28.1
 aws.cloudhsm.hsm.hsmType 13.28.1
@@ -2011,9 +1985,7 @@ aws.cloudtrail.trail.advancedEventSelector.name 13.12.1
 aws.cloudtrail.trail.advancedEventSelectors 13.12.1
 aws.cloudtrail.trail.arn 11.15.2
 aws.cloudtrail.trail.capturesAllManagementEvents 13.34.1
-aws.cloudtrail.trail.cloudWatchLogsLogGroupArn 11.15.2
 aws.cloudtrail.trail.cloudWatchLogsRole 13.12.1
-aws.cloudtrail.trail.cloudWatchLogsRoleArn 11.15.2
 aws.cloudtrail.trail.cloudformationStack 13.39.2
 aws.cloudtrail.trail.eventSelector 13.12.1
 aws.cloudtrail.trail.eventSelector.dataResource 13.12.1
@@ -2024,30 +1996,24 @@ aws.cloudtrail.trail.eventSelector.excludeManagementEventSources 13.12.1
 aws.cloudtrail.trail.eventSelector.includeManagementEvents 13.12.1
 aws.cloudtrail.trail.eventSelector.readWriteType 13.12.1
 aws.cloudtrail.trail.eventSelectorEntries 13.12.1
-aws.cloudtrail.trail.eventSelectors 11.15.2
 aws.cloudtrail.trail.hasCustomEventSelectors 11.15.2
 aws.cloudtrail.trail.hasInsightSelectors 11.15.2
 aws.cloudtrail.trail.includeGlobalServiceEvents 11.15.2
 aws.cloudtrail.trail.insightSelector 13.12.1
 aws.cloudtrail.trail.insightSelector.insightType 13.12.1
 aws.cloudtrail.trail.insightSelectorEntries 13.12.1
-aws.cloudtrail.trail.insightSelectors 13.6.3
 aws.cloudtrail.trail.isLogging 13.2.7
 aws.cloudtrail.trail.isMultiRegionTrail 11.15.2
 aws.cloudtrail.trail.isOrganizationTrail 11.15.2
 aws.cloudtrail.trail.kmsKey 11.15.2
 aws.cloudtrail.trail.latestCloudWatchLogsDeliveredAt 13.12.1
-aws.cloudtrail.trail.latestCloudWatchLogsDeliveryTime 13.12.1
 aws.cloudtrail.trail.latestDeliveredAt 13.12.1
 aws.cloudtrail.trail.latestDeliveryAttemptSucceededAt 13.12.1
 aws.cloudtrail.trail.latestDeliveryAttemptedAt 13.12.1
 aws.cloudtrail.trail.latestDeliveryError 13.12.1
-aws.cloudtrail.trail.latestDeliveryTime 13.12.1
 aws.cloudtrail.trail.latestDigestDeliveredAt 13.12.1
-aws.cloudtrail.trail.latestDigestDeliveryTime 13.12.1
 aws.cloudtrail.trail.latestNotificationAttemptSucceededAt 13.12.1
 aws.cloudtrail.trail.latestNotificationAttemptedAt 13.12.1
-aws.cloudtrail.trail.latestNotificationTime 13.12.1
 aws.cloudtrail.trail.latestNotifiedAt 13.12.1
 aws.cloudtrail.trail.logFileValidationEnabled 11.15.2
 aws.cloudtrail.trail.logGroup 11.15.2
@@ -2056,9 +2022,7 @@ aws.cloudtrail.trail.name 11.15.2
 aws.cloudtrail.trail.region 11.15.2
 aws.cloudtrail.trail.s3bucket 11.15.2
 aws.cloudtrail.trail.snsTopic 13.12.1
-aws.cloudtrail.trail.snsTopicARN 11.15.2
 aws.cloudtrail.trail.startLoggingAt 13.39.2
-aws.cloudtrail.trail.status 11.15.2
 aws.cloudtrail.trail.stoppedLoggingAt 13.39.2
 aws.cloudtrail.trail.tags 13.12.1
 aws.cloudtrail.trails 11.15.2
@@ -2094,7 +2058,6 @@ aws.cloudwatch.logDestination.createdAt 13.6.3
 aws.cloudwatch.logDestination.iamRole 13.12.1
 aws.cloudwatch.logDestination.name 13.6.3
 aws.cloudwatch.logDestination.region 13.6.3
-aws.cloudwatch.logDestination.roleArn 13.6.3
 aws.cloudwatch.logDestination.targetArn 13.6.3
 aws.cloudwatch.logDestinations 13.6.3
 aws.cloudwatch.logGroups 11.15.2
@@ -2158,7 +2121,6 @@ aws.cloudwatch.loggroup.subscriptionfilter.id 13.6.3
 aws.cloudwatch.loggroup.subscriptionfilter.kinesisStream 13.39.2
 aws.cloudwatch.loggroup.subscriptionfilter.lambdaFunction 13.39.2
 aws.cloudwatch.loggroup.subscriptionfilter.region 13.6.3
-aws.cloudwatch.loggroup.subscriptionfilter.roleArn 13.6.3
 aws.cloudwatch.loggroup.tags 11.15.2
 aws.cloudwatch.metric 11.15.2
 aws.cloudwatch.metric.alarms 11.15.2
@@ -2234,7 +2196,6 @@ aws.codeartifact.domain.policy 13.26.3
 aws.codeartifact.domain.region 13.26.3
 aws.codeartifact.domain.repositoryCount 13.26.3
 aws.codeartifact.domain.s3Bucket 13.41.1
-aws.codeartifact.domain.s3BucketArn 13.26.3
 aws.codeartifact.domain.status 13.26.3
 aws.codeartifact.domain.tags 13.26.3
 aws.codeartifact.domains 13.26.3
@@ -2363,7 +2324,6 @@ aws.codedeploy.applications 11.15.2
 aws.codedeploy.deployment 11.15.2
 aws.codedeploy.deployment.applicationName 11.15.2
 aws.codedeploy.deployment.arn 11.15.2
-aws.codedeploy.deployment.compleatedAt 11.15.2
 aws.codedeploy.deployment.completedAt 11.16.1
 aws.codedeploy.deployment.createdAt 11.15.2
 aws.codedeploy.deployment.creator 11.15.2
@@ -2397,7 +2357,6 @@ aws.codedeploy.deploymentGroup.loadBalancerInfo 11.15.2
 aws.codedeploy.deploymentGroup.onPremisesInstanceTagFilters 11.15.2
 aws.codedeploy.deploymentGroup.region 11.15.2
 aws.codedeploy.deploymentGroup.serviceRole 13.12.1
-aws.codedeploy.deploymentGroup.serviceRoleArn 11.15.2
 aws.codedeploy.deploymentGroup.tags 11.15.2
 aws.codedeploy.deploymentGroup.targetRevision 11.15.2
 aws.codepipeline 13.26.3
@@ -2411,7 +2370,6 @@ aws.codepipeline.pipeline.name 13.26.3
 aws.codepipeline.pipeline.pipelineType 13.26.3
 aws.codepipeline.pipeline.region 13.26.3
 aws.codepipeline.pipeline.role 13.26.3
-aws.codepipeline.pipeline.roleArn 13.26.3
 aws.codepipeline.pipeline.stages 13.26.3
 aws.codepipeline.pipeline.tags 13.26.3
 aws.codepipeline.pipeline.triggers 13.26.3
@@ -2568,7 +2526,6 @@ aws.config.deliverychannel.region 11.15.2
 aws.config.deliverychannel.s3BucketName 11.15.2
 aws.config.deliverychannel.s3KeyPrefix 11.15.2
 aws.config.deliverychannel.snsTopic 13.12.1
-aws.config.deliverychannel.snsTopicARN 11.15.2
 aws.config.recorder 11.15.2
 aws.config.recorder.allSupported 11.15.2
 aws.config.recorder.exclusionByResourceTypes 13.12.1
@@ -2580,7 +2537,6 @@ aws.config.recorder.recording 11.15.2
 aws.config.recorder.recordingStrategy 13.12.1
 aws.config.recorder.region 11.15.2
 aws.config.recorder.resourceTypes 11.15.2
-aws.config.recorder.roleArn 11.15.2
 aws.config.recorders 11.15.2
 aws.config.rule 11.15.2
 aws.config.rule.arn 11.15.2
@@ -2761,11 +2717,8 @@ aws.directoryservice.connectSettings.availabilityZones 11.15.6
 aws.directoryservice.connectSettings.connectIps 11.15.6
 aws.directoryservice.connectSettings.customerUserName 11.15.6
 aws.directoryservice.connectSettings.securityGroup 13.12.1
-aws.directoryservice.connectSettings.securityGroupId 11.15.6
-aws.directoryservice.connectSettings.subnetIds 11.15.6
 aws.directoryservice.connectSettings.subnets 13.12.1
 aws.directoryservice.connectSettings.vpc 13.12.1
-aws.directoryservice.connectSettings.vpcId 11.15.6
 aws.directoryservice.directories 11.15.6
 aws.directoryservice.directory 11.15.6
 aws.directoryservice.directory.accessUrl 11.15.6
@@ -2807,11 +2760,8 @@ aws.directoryservice.radiusSettings.useSameUsername 11.15.6
 aws.directoryservice.vpcSettings 11.15.6
 aws.directoryservice.vpcSettings.availabilityZones 11.15.6
 aws.directoryservice.vpcSettings.securityGroup 13.12.1
-aws.directoryservice.vpcSettings.securityGroupId 11.15.6
-aws.directoryservice.vpcSettings.subnetIds 11.15.6
 aws.directoryservice.vpcSettings.subnets 13.12.1
 aws.directoryservice.vpcSettings.vpc 13.12.1
-aws.directoryservice.vpcSettings.vpcId 11.15.6
 aws.dms 11.15.2
 aws.dms.endpoint 13.21.4
 aws.dms.endpoint.arn 13.21.4
@@ -3028,7 +2978,6 @@ aws.documentdb.instance.copyTagsToSnapshot 13.19.1
 aws.documentdb.instance.createdAt 11.16.1
 aws.documentdb.instance.dbiResourceId 13.19.1
 aws.documentdb.instance.enabledCloudwatchLogsExports 11.16.1
-aws.documentdb.instance.endpoint 11.16.1
 aws.documentdb.instance.endpointAddress 13.19.1
 aws.documentdb.instance.endpointHostedZoneId 13.19.1
 aws.documentdb.instance.endpointPort 13.19.1
@@ -3141,13 +3090,11 @@ aws.drs.replicationConfiguration.createPublicIP 13.9.0
 aws.drs.replicationConfiguration.dataPlaneRouting 13.9.0
 aws.drs.replicationConfiguration.ebsEncryption 11.15.2
 aws.drs.replicationConfiguration.ebsEncryptionKey 13.12.1
-aws.drs.replicationConfiguration.ebsEncryptionKeyArn 11.15.2
 aws.drs.replicationConfiguration.internetProtocol 13.9.0
 aws.drs.replicationConfiguration.replicatedDisks 11.15.2
 aws.drs.replicationConfiguration.replicationServerInstanceType 11.15.2
 aws.drs.replicationConfiguration.sourceServerID 11.15.2
 aws.drs.replicationConfiguration.stagingAreaSubnet 13.41.1
-aws.drs.replicationConfiguration.stagingAreaSubnetId 11.15.2
 aws.drs.replicationConfiguration.stagingAreaTags 11.15.2
 aws.drs.replicationConfiguration.useDedicatedReplicationServer 11.15.2
 aws.drs.replicationConfigurationTemplate 13.21.4
@@ -3190,7 +3137,6 @@ aws.drs.sourceServer.lifeCycleFirstByteAt 13.21.4
 aws.drs.sourceServer.lifeCycleLastLaunchStatus 13.21.4
 aws.drs.sourceServer.lifeCycleLastSeenAt 13.21.4
 aws.drs.sourceServer.recoveryInstance 13.21.4
-aws.drs.sourceServer.recoveryInstanceId 13.21.4
 aws.drs.sourceServer.replicationConfiguration 11.15.2
 aws.drs.sourceServer.replicationDirection 11.15.2
 aws.drs.sourceServer.reversedDirectionSourceServer 13.21.4
@@ -3392,7 +3338,6 @@ aws.ec2.clientVpnEndpoint.region 13.6.3
 aws.ec2.clientVpnEndpoint.securityGroups 13.6.3
 aws.ec2.clientVpnEndpoint.selfServicePortalUrl 13.6.3
 aws.ec2.clientVpnEndpoint.serverCertificate 13.41.1
-aws.ec2.clientVpnEndpoint.serverCertificateArn 13.6.3
 aws.ec2.clientVpnEndpoint.sessionTimeoutHours 13.6.3
 aws.ec2.clientVpnEndpoint.splitTunnel 13.6.3
 aws.ec2.clientVpnEndpoint.status 13.6.3
@@ -3409,7 +3354,6 @@ aws.ec2.customerGateway.arn 13.6.3
 aws.ec2.customerGateway.bgpAsn 13.6.3
 aws.ec2.customerGateway.bgpAsnExtended 13.6.3
 aws.ec2.customerGateway.certificate 13.41.1
-aws.ec2.customerGateway.certificateArn 13.6.3
 aws.ec2.customerGateway.deviceName 13.6.3
 aws.ec2.customerGateway.id 13.6.3
 aws.ec2.customerGateway.ipAddress 13.6.3
@@ -3448,7 +3392,6 @@ aws.ec2.eip.tags 11.15.2
 aws.ec2.eips 11.15.2
 aws.ec2.image 11.15.2
 aws.ec2.image.architecture 11.15.2
-aws.ec2.image.arn 11.15.2
 aws.ec2.image.blockDeviceMapping 11.15.2
 aws.ec2.image.blockDeviceMapping.deviceName 11.15.2
 aws.ec2.image.blockDeviceMapping.ebs 11.15.2
@@ -3465,7 +3408,6 @@ aws.ec2.image.ebsBlockDevice.deleteOnTermination 11.15.2
 aws.ec2.image.ebsBlockDevice.encrypted 11.15.2
 aws.ec2.image.ebsBlockDevice.iops 11.15.2
 aws.ec2.image.ebsBlockDevice.kmsKey 11.16.1
-aws.ec2.image.ebsBlockDevice.kmsKeyId 11.15.2
 aws.ec2.image.ebsBlockDevice.snapshot 13.38.2
 aws.ec2.image.ebsBlockDevice.snapshotId 11.15.2
 aws.ec2.image.ebsBlockDevice.throughput 11.15.2
@@ -3529,7 +3471,6 @@ aws.ec2.instance.device.deleteOnTermination 11.15.2
 aws.ec2.instance.device.deviceName 11.15.2
 aws.ec2.instance.device.status 11.15.2
 aws.ec2.instance.device.volume 13.41.1
-aws.ec2.instance.device.volumeId 11.15.2
 aws.ec2.instance.deviceMappings 11.15.2
 aws.ec2.instance.disableApiTermination 11.15.2
 aws.ec2.instance.ebsOptimized 11.15.2
@@ -3558,7 +3499,6 @@ aws.ec2.instance.instanceType 11.15.2
 aws.ec2.instance.instanceTypeHypervisor 13.43.1
 aws.ec2.instance.ipv6Address 11.15.2
 aws.ec2.instance.keypair 11.15.2
-aws.ec2.instance.launchTime 11.15.2
 aws.ec2.instance.launchedAt 11.15.2
 aws.ec2.instance.loadBalancers 13.37.1
 aws.ec2.instance.maintenanceAutoRecovery 11.15.3
@@ -3600,7 +3540,6 @@ aws.ec2.instance.userData 13.52.2
 aws.ec2.instance.userDataPresent 13.52.2
 aws.ec2.instance.virtualizationType 11.15.3
 aws.ec2.instance.vpc 11.15.2
-aws.ec2.instance.vpcArn 11.15.2
 aws.ec2.instanceConnectEndpoint 13.6.3
 aws.ec2.instanceConnectEndpoint.arn 13.6.3
 aws.ec2.instanceConnectEndpoint.createdAt 13.6.3
@@ -3609,14 +3548,11 @@ aws.ec2.instanceConnectEndpoint.fipsDnsName 13.6.3
 aws.ec2.instanceConnectEndpoint.id 13.6.3
 aws.ec2.instanceConnectEndpoint.preserveClientIp 13.6.3
 aws.ec2.instanceConnectEndpoint.region 13.6.3
-aws.ec2.instanceConnectEndpoint.securityGroupIds 13.6.3
 aws.ec2.instanceConnectEndpoint.securityGroups 13.12.1
 aws.ec2.instanceConnectEndpoint.state 13.6.3
 aws.ec2.instanceConnectEndpoint.subnet 13.12.1
-aws.ec2.instanceConnectEndpoint.subnetId 13.6.3
 aws.ec2.instanceConnectEndpoint.tags 13.6.3
 aws.ec2.instanceConnectEndpoint.vpc 13.12.1
-aws.ec2.instanceConnectEndpoint.vpcId 13.6.3
 aws.ec2.instanceConnectEndpoints 13.6.3
 aws.ec2.instanceMetadataDefault 13.52.2
 aws.ec2.instanceMetadataDefault.httpEndpoint 13.52.2
@@ -3729,14 +3665,12 @@ aws.ec2.launchconfiguration.ebsBlockDevice.deleteOnTermination 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.encrypted 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.iops 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.snapshot 13.41.1
-aws.ec2.launchconfiguration.ebsBlockDevice.snapshotId 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.throughput 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.volumeType 13.6.0
 aws.ec2.launchconfiguration.ebsOptimized 13.6.0
 aws.ec2.launchconfiguration.iamInstanceProfile 13.6.0
 aws.ec2.launchconfiguration.image 13.41.1
-aws.ec2.launchconfiguration.imageId 13.6.0
 aws.ec2.launchconfiguration.instanceType 13.6.0
 aws.ec2.launchconfiguration.keyName 13.6.0
 aws.ec2.launchconfiguration.metadataOptions 13.6.0
@@ -3788,7 +3722,6 @@ aws.ec2.networkacl.association 11.15.2
 aws.ec2.networkacl.association.associationId 11.15.2
 aws.ec2.networkacl.association.networkAclId 11.15.2
 aws.ec2.networkacl.association.subnet 13.6.3
-aws.ec2.networkacl.association.subnetId 11.15.2
 aws.ec2.networkacl.associations 11.15.2
 aws.ec2.networkacl.entries 11.15.2
 aws.ec2.networkacl.entry 11.15.2
@@ -4228,9 +4161,7 @@ aws.ecs.container.repositoryCredentialsSecret 13.39.2
 aws.ecs.container.runtimeId 11.15.2
 aws.ecs.container.status 11.15.2
 aws.ecs.container.task 13.12.1
-aws.ecs.container.taskArn 11.15.2
 aws.ecs.container.taskDefinition 13.12.1
-aws.ecs.container.taskDefinitionArn 11.15.2
 aws.ecs.container.user 13.2.7
 aws.ecs.containerInstances 11.15.2
 aws.ecs.containers 11.15.2
@@ -4258,7 +4189,6 @@ aws.ecs.service.arn 11.15.2
 aws.ecs.service.availabilityZoneRebalancing 13.29.1
 aws.ecs.service.capacityProviderStrategy 13.29.1
 aws.ecs.service.cluster 13.12.1
-aws.ecs.service.clusterArn 11.15.2
 aws.ecs.service.createdAt 11.15.2
 aws.ecs.service.createdBy 11.15.2
 aws.ecs.service.deploymentConfiguration 11.15.2
@@ -4411,7 +4341,6 @@ aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.accessPointId 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.iam 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystem 13.41.1
-aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.rootDirectory 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryption 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryptionPort 11.15.2
@@ -4428,7 +4357,6 @@ aws.ecs.taskDefinitions 11.15.2
 aws.ecs.taskSet 11.15.2
 aws.ecs.taskSet.arn 11.15.2
 aws.ecs.taskSet.cluster 13.12.1
-aws.ecs.taskSet.clusterArn 11.15.2
 aws.ecs.taskSet.computedDesiredCount 11.15.2
 aws.ecs.taskSet.createdAt 11.15.2
 aws.ecs.taskSet.externalId 11.15.2
@@ -4443,7 +4371,6 @@ aws.ecs.taskSet.platformFamily 11.15.2
 aws.ecs.taskSet.platformVersion 11.15.2
 aws.ecs.taskSet.runningCount 11.15.2
 aws.ecs.taskSet.service 13.12.1
-aws.ecs.taskSet.serviceArn 11.15.2
 aws.ecs.taskSet.stabilityStatus 11.15.2
 aws.ecs.taskSet.startedBy 11.15.2
 aws.ecs.taskSet.status 11.15.2
@@ -4455,7 +4382,6 @@ aws.efs.accessPoint 11.15.2
 aws.efs.accessPoint.accessPointId 11.15.2
 aws.efs.accessPoint.arn 11.15.2
 aws.efs.accessPoint.fileSystem 13.41.1
-aws.efs.accessPoint.fileSystemId 11.15.2
 aws.efs.accessPoint.lifecycleState 11.15.2
 aws.efs.accessPoint.name 11.15.2
 aws.efs.accessPoint.posixUser 11.15.2
@@ -4494,14 +4420,11 @@ aws.efs.filesystem.replicationConfiguration 13.12.1
 aws.efs.filesystem.replicationConfiguration.creationTime 13.12.1
 aws.efs.filesystem.replicationConfiguration.destinations 13.12.1
 aws.efs.filesystem.replicationConfiguration.originalSourceFileSystem 13.41.1
-aws.efs.filesystem.replicationConfiguration.originalSourceFileSystemArn 13.12.1
 aws.efs.filesystem.replicationConfiguration.sourceFileSystem 13.41.1
-aws.efs.filesystem.replicationConfiguration.sourceFileSystemArn 13.12.1
 aws.efs.filesystem.replicationConfiguration.sourceFileSystemId 13.12.1
 aws.efs.filesystem.replicationConfiguration.sourceFileSystemRegion 13.12.1
 aws.efs.filesystem.replicationDestination 13.12.1
 aws.efs.filesystem.replicationDestination.fileSystem 13.41.1
-aws.efs.filesystem.replicationDestination.fileSystemId 13.12.1
 aws.efs.filesystem.replicationDestination.lastReplicatedTimestamp 13.12.1
 aws.efs.filesystem.replicationDestination.region 13.12.1
 aws.efs.filesystem.replicationDestination.status 13.12.1
@@ -4512,16 +4435,13 @@ aws.efs.filesystems 11.15.2
 aws.efs.mountTarget 11.15.2
 aws.efs.mountTarget.availabilityZone 11.15.2
 aws.efs.mountTarget.fileSystem 13.41.1
-aws.efs.mountTarget.fileSystemId 11.15.2
 aws.efs.mountTarget.ipAddress 11.15.2
 aws.efs.mountTarget.lifecycleState 11.15.2
 aws.efs.mountTarget.mountTargetId 11.15.2
 aws.efs.mountTarget.networkInterface 13.41.1
-aws.efs.mountTarget.networkInterfaceId 11.15.2
 aws.efs.mountTarget.region 11.15.2
 aws.efs.mountTarget.securityGroups 11.15.2
 aws.efs.mountTarget.subnet 13.32.2
-aws.efs.mountTarget.subnetId 11.15.2
 aws.eks 11.15.2
 aws.eks.accessEntry 13.6.3
 aws.eks.accessEntry.accessPolicies 13.12.1
@@ -4578,7 +4498,6 @@ aws.eks.cluster.computeConfig 13.12.1
 aws.eks.cluster.controlPlaneEgressMode 13.37.1
 aws.eks.cluster.createdAt 11.15.2
 aws.eks.cluster.deletionProtection 11.15.2
-aws.eks.cluster.encryptionConfig 11.15.2
 aws.eks.cluster.encryptionKmsKey 13.12.1
 aws.eks.cluster.encryptionResources 13.12.1
 aws.eks.cluster.endpoint 11.15.2
@@ -4600,7 +4519,6 @@ aws.eks.cluster.podIdentityAssociations 13.6.3
 aws.eks.cluster.publicAccessCidrs 11.15.2
 aws.eks.cluster.region 11.15.2
 aws.eks.cluster.remoteNetworkConfig 13.12.1
-aws.eks.cluster.resourcesVpcConfig 11.15.2
 aws.eks.cluster.status 11.15.2
 aws.eks.cluster.storageConfig 13.12.1
 aws.eks.cluster.supportType 11.15.2
@@ -4617,11 +4535,9 @@ aws.eks.fargateProfile.createdAt 13.6.3
 aws.eks.fargateProfile.fargateSubnets 13.12.1
 aws.eks.fargateProfile.name 13.6.3
 aws.eks.fargateProfile.podExecutionRole 13.12.1
-aws.eks.fargateProfile.podExecutionRoleArn 13.6.3
 aws.eks.fargateProfile.region 13.6.3
 aws.eks.fargateProfile.selectors 13.6.3
 aws.eks.fargateProfile.status 13.6.3
-aws.eks.fargateProfile.subnets 13.6.3
 aws.eks.fargateProfile.tags 13.6.3
 aws.eks.identityProviderConfig 13.6.3
 aws.eks.identityProviderConfig.clientId 13.6.3
@@ -4689,7 +4605,6 @@ aws.eks.podIdentityAssociation.modifiedAt 13.12.1
 aws.eks.podIdentityAssociation.namespace 13.6.3
 aws.eks.podIdentityAssociation.ownerArn 13.12.1
 aws.eks.podIdentityAssociation.region 13.6.3
-aws.eks.podIdentityAssociation.roleArn 13.6.3
 aws.eks.podIdentityAssociation.serviceAccount 13.6.3
 aws.elasticache 11.15.2
 aws.elasticache.cacheClusters 11.15.2
@@ -4793,7 +4708,6 @@ aws.elasticache.serverlessCache.engine 11.15.2
 aws.elasticache.serverlessCache.engineVersion 11.15.2
 aws.elasticache.serverlessCache.exposure 13.40.2
 aws.elasticache.serverlessCache.kmsKey 11.16.1
-aws.elasticache.serverlessCache.kmsKeyId 11.15.2
 aws.elasticache.serverlessCache.majorEngineVersion 11.15.2
 aws.elasticache.serverlessCache.name 11.15.2
 aws.elasticache.serverlessCache.region 11.15.2
@@ -4934,7 +4848,6 @@ aws.elb.listener.certificates 11.15.2
 aws.elb.listener.defaultActions 11.15.2
 aws.elb.listener.forwardTargetGroups 13.43.1
 aws.elb.listener.loadBalancer 13.12.1
-aws.elb.listener.loadBalancerArn 11.15.2
 aws.elb.listener.mutualAuthentication 13.49.1
 aws.elb.listener.port 11.15.2
 aws.elb.listener.protocol 11.15.2
@@ -5183,13 +5096,11 @@ aws.es.domain.cloudformationStack 13.39.2
 aws.es.domain.cognitoEnabled 13.21.4
 aws.es.domain.cognitoIdentityPoolId 13.21.4
 aws.es.domain.cognitoRole 13.41.1
-aws.es.domain.cognitoRoleArn 13.21.4
 aws.es.domain.cognitoUserPoolId 13.21.4
 aws.es.domain.coldStorageEnabled 13.21.4
 aws.es.domain.created 13.21.4
 aws.es.domain.customEndpoint 13.21.4
 aws.es.domain.customEndpointCertificate 13.41.1
-aws.es.domain.customEndpointCertificateArn 13.21.4
 aws.es.domain.customEndpointEnabled 13.21.4
 aws.es.domain.dedicatedMasterCount 13.21.4
 aws.es.domain.dedicatedMasterEnabled 13.21.4
@@ -5305,7 +5216,6 @@ aws.eventbridge.endpoint.iamRole 13.26.3
 aws.eventbridge.endpoint.lastModifiedTime 13.26.3
 aws.eventbridge.endpoint.name 13.26.3
 aws.eventbridge.endpoint.replicationConfig 13.26.3
-aws.eventbridge.endpoint.roleArn 13.26.3
 aws.eventbridge.endpoint.routingConfig 13.26.3
 aws.eventbridge.endpoint.state 13.26.3
 aws.eventbridge.endpoint.stateReason 13.26.3
@@ -5517,7 +5427,6 @@ aws.eventbridge.rule.eventTargets 13.39.2
 aws.eventbridge.rule.iamRole 13.0.2
 aws.eventbridge.rule.name 11.16.1
 aws.eventbridge.rule.region 11.16.1
-aws.eventbridge.rule.roleArn 11.16.1
 aws.eventbridge.rule.scheduleExpression 11.16.1
 aws.eventbridge.rule.state 11.16.1
 aws.eventbridge.rule.tags 11.16.1
@@ -5531,7 +5440,6 @@ aws.eventbridge.rule.target.inputPath 13.39.2
 aws.eventbridge.rule.target.inputTransformer 13.39.2
 aws.eventbridge.rule.target.retryMaxAttempts 13.39.2
 aws.eventbridge.rule.target.retryMaxEventAgeSeconds 13.39.2
-aws.eventbridge.rule.targets 11.16.1
 aws.eventbridge.rules 11.16.1
 aws.eventbridge.schedule 13.1.1
 aws.eventbridge.schedule.actionAfterCompletion 13.19.2
@@ -5571,9 +5479,7 @@ aws.eventbridge.schedule.target.ecsParameters.placementStrategy 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.platformVersion 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.propagateTags 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.referenceId 13.19.2
-aws.eventbridge.schedule.target.ecsParameters.securityGroupIds 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.securityGroups 13.19.2
-aws.eventbridge.schedule.target.ecsParameters.subnetIds 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.subnets 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.tags 13.19.2
 aws.eventbridge.schedule.target.ecsParameters.taskCount 13.19.2
@@ -5586,7 +5492,6 @@ aws.eventbridge.schedule.target.iamRole 13.32.2
 aws.eventbridge.schedule.target.input 13.19.2
 aws.eventbridge.schedule.target.kinesisParameters 13.19.2
 aws.eventbridge.schedule.target.kinesisParameters.partitionKey 13.19.2
-aws.eventbridge.schedule.target.roleArn 13.19.2
 aws.eventbridge.schedule.target.sagemakerParameters 13.19.2
 aws.eventbridge.schedule.target.sagemakerParameters.pipelineParameters 13.19.2
 aws.eventbridge.schedule.target.sqsParameters 13.19.2
@@ -5668,10 +5573,8 @@ aws.fsx.backup.arn 11.15.2
 aws.fsx.backup.backupId 11.15.2
 aws.fsx.backup.createdAt 11.15.2
 aws.fsx.backup.fileSystem 13.41.1
-aws.fsx.backup.fileSystemId 11.15.2
 aws.fsx.backup.fileSystemType 11.15.2
 aws.fsx.backup.kmsKey 11.16.1
-aws.fsx.backup.kmsKeyId 11.15.2
 aws.fsx.backup.lifecycle 11.15.2
 aws.fsx.backup.region 11.15.2
 aws.fsx.backup.tags 11.15.2
@@ -5686,10 +5589,8 @@ aws.fsx.cache.lifecycle 11.15.2
 aws.fsx.cache.lustreConfiguration 11.15.2
 aws.fsx.cache.region 11.15.2
 aws.fsx.cache.storageCapacity 11.15.2
-aws.fsx.cache.subnetIds 11.15.2
 aws.fsx.cache.subnets 13.12.1
 aws.fsx.cache.vpc 11.16.1
-aws.fsx.cache.vpcId 11.15.2
 aws.fsx.caches 11.15.2
 aws.fsx.fileSystems 11.15.2
 aws.fsx.filesystem 11.15.2
@@ -5698,22 +5599,18 @@ aws.fsx.filesystem.createdAt 11.15.2
 aws.fsx.filesystem.encrypted 11.15.2
 aws.fsx.filesystem.id 11.15.2
 aws.fsx.filesystem.kmsKey 11.16.1
-aws.fsx.filesystem.kmsKeyId 11.15.2
 aws.fsx.filesystem.lifecycle 11.15.2
 aws.fsx.filesystem.region 11.15.2
 aws.fsx.filesystem.storageCapacity 11.15.2
 aws.fsx.filesystem.storageType 11.15.2
-aws.fsx.filesystem.subnetIds 11.15.2
 aws.fsx.filesystem.subnets 13.12.1
 aws.fsx.filesystem.tags 11.15.2
 aws.fsx.filesystem.type 11.15.2
 aws.fsx.filesystem.vpc 11.16.1
-aws.fsx.filesystem.vpcId 11.15.2
 aws.fsx.volume 11.15.2
 aws.fsx.volume.arn 11.15.2
 aws.fsx.volume.createdAt 11.15.2
 aws.fsx.volume.fileSystem 13.41.1
-aws.fsx.volume.fileSystemId 11.15.2
 aws.fsx.volume.id 11.15.2
 aws.fsx.volume.lifecycle 11.15.2
 aws.fsx.volume.name 11.15.2
@@ -5958,7 +5855,6 @@ aws.guardduty.detector.feature.name 13.12.1
 aws.guardduty.detector.feature.status 13.12.1
 aws.guardduty.detector.feature.updatedAt 13.12.1
 aws.guardduty.detector.featureConfigurations 13.12.1
-aws.guardduty.detector.features 11.15.2
 aws.guardduty.detector.filter 13.12.1
 aws.guardduty.detector.filter.action 13.12.1
 aws.guardduty.detector.filter.description 13.12.1
@@ -6059,7 +5955,6 @@ aws.iam.accessAnalyzer.finding.unusedServiceNamespace 13.52.2
 aws.iam.accessAnalyzer.finding.updatedAt 13.29.1
 aws.iam.accessAnalyzer.findings 11.15.2
 aws.iam.accountAlias 13.6.3
-aws.iam.accountPasswordPolicy 11.15.2
 aws.iam.accountSummary 11.15.2
 aws.iam.attachedPolicies 11.15.2
 aws.iam.credentialReport 11.15.2
@@ -6174,7 +6069,6 @@ aws.iam.role.maxSessionDuration 11.15.2
 aws.iam.role.name 11.15.2
 aws.iam.role.path 11.15.2
 aws.iam.role.permissionsBoundary 13.12.1
-aws.iam.role.permissionsBoundaryArn 11.15.2
 aws.iam.role.tags 11.15.2
 aws.iam.role.usedByInstances 13.37.1
 aws.iam.roles 11.15.2
@@ -6204,7 +6098,6 @@ aws.iam.user.accessKey.lastUsedService 13.32.2
 aws.iam.user.accessKey.status 13.32.2
 aws.iam.user.accessKey.username 13.32.2
 aws.iam.user.accessKeyDetails 13.32.2
-aws.iam.user.accessKeys 11.15.2
 aws.iam.user.arn 11.15.2
 aws.iam.user.attachedPolicies 11.15.2
 aws.iam.user.createdAt 11.15.2
@@ -6260,7 +6153,6 @@ aws.identitycenter.accountAssignment 13.6.3
 aws.identitycenter.accountAssignment.accountId 13.6.3
 aws.identitycenter.accountAssignment.id 13.6.3
 aws.identitycenter.accountAssignment.permissionSet 13.12.1
-aws.identitycenter.accountAssignment.permissionSetArn 13.6.3
 aws.identitycenter.accountAssignment.principalId 13.6.3
 aws.identitycenter.accountAssignment.principalType 13.6.3
 aws.identitycenter.application 13.20.1
@@ -6543,7 +6435,6 @@ aws.kinesis.firehoseDeliveryStream.destination.redshift.username 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.region 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3.bucket 13.41.1
-aws.kinesis.firehoseDeliveryStream.destination.s3.bucketArn 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3.bufferingIntervalInSeconds 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3.bufferingSizeInMBs 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3.cloudWatchLogging 13.0.2
@@ -6581,7 +6472,6 @@ aws.kinesis.firehoseDeliveryStream.lastUpdatedAt 13.19.2
 aws.kinesis.firehoseDeliveryStream.name 11.16.1
 aws.kinesis.firehoseDeliveryStream.region 11.16.1
 aws.kinesis.firehoseDeliveryStream.serverSideEncryption 13.19.2
-aws.kinesis.firehoseDeliveryStream.source 11.16.1
 aws.kinesis.firehoseDeliveryStream.status 11.16.1
 aws.kinesis.firehoseDeliveryStream.tags 11.16.1
 aws.kinesis.firehoseDeliveryStreams 11.16.1
@@ -6592,7 +6482,6 @@ aws.kinesis.stream.consumers 11.16.1
 aws.kinesis.stream.createdAt 11.16.1
 aws.kinesis.stream.encryptionType 11.16.1
 aws.kinesis.stream.enhancedMonitoring 11.16.1
-aws.kinesis.stream.keyId 11.16.1
 aws.kinesis.stream.kmsKey 13.3.1
 aws.kinesis.stream.name 11.16.1
 aws.kinesis.stream.openShardCount 11.16.1
@@ -6643,7 +6532,6 @@ aws.kms.grant.grantId 11.15.2
 aws.kms.grant.granteePrincipal 11.15.2
 aws.kms.grant.issuingAccount 11.15.2
 aws.kms.grant.key 13.12.1
-aws.kms.grant.keyArn 11.15.2
 aws.kms.grant.name 13.26.3
 aws.kms.grant.operations 11.15.2
 aws.kms.grant.retiringPrincipal 11.15.2
@@ -6743,7 +6631,6 @@ aws.lambda.eventSourceMapping.bisectBatchOnFunctionError 11.15.2
 aws.lambda.eventSourceMapping.eventSourceArn 11.15.2
 aws.lambda.eventSourceMapping.filterCriteria 11.15.2
 aws.lambda.eventSourceMapping.function 13.12.1
-aws.lambda.eventSourceMapping.functionArn 11.15.2
 aws.lambda.eventSourceMapping.lastModified 11.15.2
 aws.lambda.eventSourceMapping.lastProcessingResult 11.15.2
 aws.lambda.eventSourceMapping.maximumBatchingWindowInSeconds 11.15.2
@@ -6793,7 +6680,6 @@ aws.lambda.function.handler 11.15.2
 aws.lambda.function.imageUri 13.26.2
 aws.lambda.function.isPublic 13.37.1
 aws.lambda.function.kmsKey 11.16.1
-aws.lambda.function.kmsKeyArn 11.15.2
 aws.lambda.function.lastModifiedAt 11.15.2
 aws.lambda.function.lastUpdateStatus 11.15.2
 aws.lambda.function.lastUpdateStatusReason 11.16.1
@@ -6870,7 +6756,6 @@ aws.lambda.function.version.timeout 13.12.1
 aws.lambda.function.version.version 13.12.1
 aws.lambda.function.versions 13.12.1
 aws.lambda.function.vpc 13.2.7
-aws.lambda.function.vpcConfig 11.15.2
 aws.lambda.functions 11.15.2
 aws.lambda.layer 11.15.2
 aws.lambda.layer.arn 11.15.2
@@ -6986,7 +6871,6 @@ aws.lightsail.instance.blueprintName 13.1.1
 aws.lightsail.instance.bundleId 13.1.1
 aws.lightsail.instance.cpuCount 13.1.1
 aws.lightsail.instance.createdAt 13.1.1
-aws.lightsail.instance.firewallRules 13.1.1
 aws.lightsail.instance.inboundRule 13.33.2
 aws.lightsail.instance.inboundRule.cidrs 13.33.2
 aws.lightsail.instance.inboundRule.fromPort 13.33.2
@@ -7456,9 +7340,7 @@ aws.msk.cluster.serverlessConfig 13.14.2
 aws.msk.cluster.serverlessConfig.iamEnabled 13.14.2
 aws.msk.cluster.serverlessConfig.networkType 13.14.2
 aws.msk.cluster.serverlessConfig.vpcConfig 13.14.2
-aws.msk.cluster.serverlessConfig.vpcConfig.securityGroupIds 13.14.2
 aws.msk.cluster.serverlessConfig.vpcConfig.securityGroups 13.14.2
-aws.msk.cluster.serverlessConfig.vpcConfig.subnetIds 13.14.2
 aws.msk.cluster.serverlessConfig.vpcConfig.subnets 13.14.2
 aws.msk.cluster.serverlessConfig.vpcConfigs 13.14.2
 aws.msk.cluster.state 11.16.1
@@ -7509,9 +7391,7 @@ aws.msk.replicator.kafkaCluster.kafkaClusterAlias 13.14.2
 aws.msk.replicator.kafkaCluster.rootCaCertificate 13.17.1
 aws.msk.replicator.kafkaCluster.saslScramMechanism 13.17.1
 aws.msk.replicator.kafkaCluster.saslScramSecret 13.17.1
-aws.msk.replicator.kafkaCluster.securityGroupIds 13.14.2
 aws.msk.replicator.kafkaCluster.securityGroups 13.14.2
-aws.msk.replicator.kafkaCluster.subnetIds 13.14.2
 aws.msk.replicator.kafkaCluster.subnets 13.14.2
 aws.msk.replicator.kafkaClusters 13.14.2
 aws.msk.replicator.logDelivery 13.17.1
@@ -7574,7 +7454,6 @@ aws.neptune.cluster.globalClusterIdentifier 11.15.2
 aws.neptune.cluster.iamDatabaseAuthenticationEnabled 11.15.2
 aws.neptune.cluster.iamRoles 13.39.2
 aws.neptune.cluster.kmsKey 11.16.1
-aws.neptune.cluster.kmsKeyId 11.15.2
 aws.neptune.cluster.latestRestorableTime 11.15.2
 aws.neptune.cluster.managedBy 13.39.2
 aws.neptune.cluster.masterUsername 11.15.2
@@ -7612,12 +7491,10 @@ aws.neptune.instance.exposure 13.37.1
 aws.neptune.instance.iamDatabaseAuthenticationEnabled 11.15.2
 aws.neptune.instance.instanceClass 11.15.2
 aws.neptune.instance.kmsKey 11.16.1
-aws.neptune.instance.kmsKeyId 11.15.2
 aws.neptune.instance.latestRestorableTime 11.15.2
 aws.neptune.instance.masterUsername 11.15.2
 aws.neptune.instance.monitoringInterval 11.15.2
 aws.neptune.instance.monitoringRole 13.12.1
-aws.neptune.instance.monitoringRoleArn 11.15.2
 aws.neptune.instance.multiAZ 11.15.2
 aws.neptune.instance.name 11.15.2
 aws.neptune.instance.networkType 13.35.2
@@ -7691,7 +7568,6 @@ aws.networkfirewall.firewall.arn 11.16.1
 aws.networkfirewall.firewall.configurationSyncStateSummary 13.21.4
 aws.networkfirewall.firewall.deleteProtection 11.16.1
 aws.networkfirewall.firewall.description 11.16.1
-aws.networkfirewall.firewall.encryptionConfiguration 11.16.1
 aws.networkfirewall.firewall.encryptionType 13.21.4
 aws.networkfirewall.firewall.firewallPolicyArn 11.16.1
 aws.networkfirewall.firewall.firewallPolicyChangeProtection 11.16.1
@@ -7812,7 +7688,6 @@ aws.opensearch.domain.ebsVolumeSize 11.15.2
 aws.opensearch.domain.ebsVolumeType 11.15.2
 aws.opensearch.domain.encryptionAtRestEnabled 11.15.2
 aws.opensearch.domain.encryptionAtRestKmsKey 11.16.1
-aws.opensearch.domain.encryptionAtRestKmsKeyId 11.15.2
 aws.opensearch.domain.endpoint 11.15.2
 aws.opensearch.domain.enforceHTTPS 11.15.2
 aws.opensearch.domain.engineVersion 11.15.2
@@ -7847,7 +7722,6 @@ aws.opensearch.domain.tlsSecurityPolicy 11.15.2
 aws.opensearch.domain.upgradeProcessing 11.15.2
 aws.opensearch.domain.vpc 11.16.1
 aws.opensearch.domain.vpcEgressEnabled 13.21.4
-aws.opensearch.domain.vpcId 11.15.2
 aws.opensearch.domain.warmCount 11.15.2
 aws.opensearch.domain.warmEnabled 11.15.2
 aws.opensearch.domain.warmType 11.15.2
@@ -8192,7 +8066,6 @@ aws.rds.dbinstance.arn 11.15.2
 aws.rds.dbinstance.associatedRole 13.14.2
 aws.rds.dbinstance.associatedRole.featureName 13.14.2
 aws.rds.dbinstance.associatedRole.iamRole 13.14.2
-aws.rds.dbinstance.associatedRole.roleArn 13.14.2
 aws.rds.dbinstance.associatedRole.status 13.14.2
 aws.rds.dbinstance.associatedRoles 13.14.2
 aws.rds.dbinstance.autoMinorVersionUpgrade 11.15.2
@@ -8276,7 +8149,6 @@ aws.rds.eventSubscription.eventCategories 13.6.3
 aws.rds.eventSubscription.name 13.6.3
 aws.rds.eventSubscription.region 13.6.3
 aws.rds.eventSubscription.snsTopic 13.12.1
-aws.rds.eventSubscription.snsTopicArn 13.6.3
 aws.rds.eventSubscription.sourceIds 13.6.3
 aws.rds.eventSubscription.sourceType 13.6.3
 aws.rds.eventSubscription.status 13.6.3
@@ -8452,7 +8324,6 @@ aws.redshift.cluster.expectedNextSnapshotScheduleStatus 13.39.2
 aws.redshift.cluster.exposure 13.40.2
 aws.redshift.cluster.hsmStatus 11.16.1
 aws.redshift.cluster.iamRoles 13.39.2
-aws.redshift.cluster.internetReachable 13.37.1
 aws.redshift.cluster.ipAddressType 11.15.2
 aws.redshift.cluster.kmsKey 11.16.1
 aws.redshift.cluster.logging 11.15.2
@@ -8486,7 +8357,6 @@ aws.redshift.cluster.snapshots 11.15.2
 aws.redshift.cluster.tags 11.15.2
 aws.redshift.cluster.totalStorageCapacityInMegaBytes 11.15.2
 aws.redshift.cluster.vpc 11.16.1
-aws.redshift.cluster.vpcId 11.15.2
 aws.redshift.clusters 11.15.2
 aws.redshift.eventSubscription 13.12.1
 aws.redshift.eventSubscription.arn 13.44.1
@@ -8497,7 +8367,6 @@ aws.redshift.eventSubscription.name 13.12.1
 aws.redshift.eventSubscription.region 13.12.1
 aws.redshift.eventSubscription.severity 13.12.1
 aws.redshift.eventSubscription.snsTopic 13.12.1
-aws.redshift.eventSubscription.snsTopicArn 13.12.1
 aws.redshift.eventSubscription.sourceIds 13.12.1
 aws.redshift.eventSubscription.sourceType 13.12.1
 aws.redshift.eventSubscription.status 13.12.1
@@ -8619,7 +8488,6 @@ aws.route53.hostedZone.dnssec 13.26.3
 aws.route53.hostedZone.dnssec.keySigningKeys 13.26.3
 aws.route53.hostedZone.dnssec.status 13.26.3
 aws.route53.hostedZone.dnssec.statusMessage 13.26.3
-aws.route53.hostedZone.dnssecStatus 11.15.3
 aws.route53.hostedZone.id 11.15.3
 aws.route53.hostedZone.isPrivate 11.15.3
 aws.route53.hostedZone.keySigningKeys 11.15.3
@@ -8644,7 +8512,6 @@ aws.route53.keySigningKey.flag 11.15.3
 aws.route53.keySigningKey.hostedZone 11.15.3
 aws.route53.keySigningKey.hostedZoneId 11.15.3
 aws.route53.keySigningKey.keyTag 11.15.3
-aws.route53.keySigningKey.kmsArn 11.15.3
 aws.route53.keySigningKey.kmsKey 11.15.3
 aws.route53.keySigningKey.lastModifiedDate 11.15.3
 aws.route53.keySigningKey.name 11.15.3
@@ -8654,7 +8521,6 @@ aws.route53.keySigningKey.signingAlgorithmType 11.15.3
 aws.route53.keySigningKey.status 11.15.3
 aws.route53.keySigningKey.statusMessage 11.15.3
 aws.route53.queryLoggingConfig 11.15.3
-aws.route53.queryLoggingConfig.cloudWatchLogsLogGroupArn 11.15.3
 aws.route53.queryLoggingConfig.hostedZone 11.15.3
 aws.route53.queryLoggingConfig.hostedZoneId 11.15.3
 aws.route53.queryLoggingConfig.id 11.15.3
@@ -8674,7 +8540,6 @@ aws.route53.record.geoProximityLocation 11.15.3
 aws.route53.record.healthCheck 11.15.3
 aws.route53.record.healthCheckId 11.15.3
 aws.route53.record.hostedZone 13.41.1
-aws.route53.record.hostedZoneId 11.15.3
 aws.route53.record.isAlias 11.15.3
 aws.route53.record.multiValueAnswer 11.15.3
 aws.route53.record.name 11.15.3
@@ -8758,7 +8623,6 @@ aws.route53.resolver.firewallRuleGroup.name 13.26.3
 aws.route53.resolver.firewallRuleGroup.ownerId 13.26.3
 aws.route53.resolver.firewallRuleGroup.region 13.26.3
 aws.route53.resolver.firewallRuleGroup.ruleCount 13.26.3
-aws.route53.resolver.firewallRuleGroup.rules 13.26.3
 aws.route53.resolver.firewallRuleGroup.shareStatus 13.26.3
 aws.route53.resolver.firewallRuleGroup.status 13.26.3
 aws.route53.resolver.firewallRuleGroup.statusMessage 13.26.3
@@ -8778,7 +8642,6 @@ aws.route53.resolver.firewallRuleGroupAssociation.region 13.26.3
 aws.route53.resolver.firewallRuleGroupAssociation.status 13.26.3
 aws.route53.resolver.firewallRuleGroupAssociation.statusMessage 13.26.3
 aws.route53.resolver.firewallRuleGroupAssociation.vpc 13.26.3
-aws.route53.resolver.firewallRuleGroupAssociation.vpcId 13.26.3
 aws.route53.resolver.firewallRuleGroupAssociations 13.26.3
 aws.route53.resolver.firewallRuleGroups 13.26.3
 aws.route53.resolver.queryLogConfig 13.26.3
@@ -8834,7 +8697,6 @@ aws.route53.resolver.ruleAssociation.resolverRuleId 13.26.3
 aws.route53.resolver.ruleAssociation.status 13.26.3
 aws.route53.resolver.ruleAssociation.statusMessage 13.26.3
 aws.route53.resolver.ruleAssociation.vpc 13.26.3
-aws.route53.resolver.ruleAssociation.vpcId 13.26.3
 aws.route53.resolver.ruleAssociations 13.26.3
 aws.route53.resolver.rules 13.26.3
 aws.route53.trafficPolicies 13.26.3
@@ -8889,7 +8751,6 @@ aws.s3.bucket.corsrule.name 11.15.2
 aws.s3.bucket.createdAt 11.15.2
 aws.s3.bucket.defaultLock 11.15.2
 aws.s3.bucket.encrypted 13.40.2
-aws.s3.bucket.encryption 11.15.2
 aws.s3.bucket.encryptionRule 11.15.2
 aws.s3.bucket.encryptionRule.bucketKeyEnabled 11.15.2
 aws.s3.bucket.encryptionRule.id 11.15.2
@@ -8924,7 +8785,6 @@ aws.s3.bucket.lifecycleRule.filter 13.6.3
 aws.s3.bucket.lifecycleRule.id 13.6.3
 aws.s3.bucket.lifecycleRule.noncurrentVersionExpiration 13.6.3
 aws.s3.bucket.lifecycleRule.noncurrentVersionTransitions 13.6.3
-aws.s3.bucket.lifecycleRule.prefix 13.6.3
 aws.s3.bucket.lifecycleRule.resourceId 13.6.3
 aws.s3.bucket.lifecycleRule.status 13.6.3
 aws.s3.bucket.lifecycleRule.transitions 13.6.3
@@ -8946,7 +8806,6 @@ aws.s3.bucket.policy 11.15.2
 aws.s3.bucket.policy.bucketName 11.15.2
 aws.s3.bucket.policy.document 11.15.2
 aws.s3.bucket.policy.name 11.15.2
-aws.s3.bucket.policy.statements 11.15.2
 aws.s3.bucket.policy.version 11.15.2
 aws.s3.bucket.policyStatements 13.32.2
 aws.s3.bucket.public 11.15.2
@@ -8958,14 +8817,12 @@ aws.s3.bucket.replicationRule.destinationAccount 11.15.2
 aws.s3.bucket.replicationRule.destinationBucket 11.15.2
 aws.s3.bucket.replicationRule.destinationStorageClass 11.15.2
 aws.s3.bucket.replicationRule.id 11.15.2
-aws.s3.bucket.replicationRule.prefix 11.15.2
 aws.s3.bucket.replicationRule.priority 11.15.2
 aws.s3.bucket.replicationRule.resourceId 11.15.2
 aws.s3.bucket.replicationRule.status 11.15.2
 aws.s3.bucket.replicationRules 11.15.2
 aws.s3.bucket.requestPayment 13.29.1
 aws.s3.bucket.restrictPublicBuckets 13.32.2
-aws.s3.bucket.staticWebsiteHosting 11.15.2
 aws.s3.bucket.tags 11.15.2
 aws.s3.bucket.transferAcceleration 13.29.1
 aws.s3.bucket.versioning 11.15.2
@@ -9268,7 +9125,6 @@ aws.sagemaker.domain.vpc 13.0.2
 aws.sagemaker.domains 13.0.2
 aws.sagemaker.endpoint 11.15.2
 aws.sagemaker.endpoint.arn 11.15.2
-aws.sagemaker.endpoint.config 11.15.2
 aws.sagemaker.endpoint.createdAt 11.16.1
 aws.sagemaker.endpoint.dataCaptureConfig 13.13.4
 aws.sagemaker.endpoint.dataCaptureConfig.captureOptions 13.13.4
@@ -9567,13 +9423,11 @@ aws.sagemaker.model.enableNetworkIsolation 13.0.2
 aws.sagemaker.model.iamRole 13.0.2
 aws.sagemaker.model.inferenceExecutionConfig 13.13.4
 aws.sagemaker.model.name 13.0.2
-aws.sagemaker.model.primaryContainer 13.0.2
 aws.sagemaker.model.primaryContainerRef 13.48.2
 aws.sagemaker.model.region 13.0.2
 aws.sagemaker.model.securityGroups 13.48.2
 aws.sagemaker.model.tags 13.0.2
 aws.sagemaker.model.vpc 13.12.0
-aws.sagemaker.model.vpcConfig 13.0.2
 aws.sagemaker.modelBiasJobDefinition 13.13.4
 aws.sagemaker.modelBiasJobDefinition.appSpecification 13.13.4
 aws.sagemaker.modelBiasJobDefinition.arn 13.13.4
@@ -9799,7 +9653,6 @@ aws.sagemaker.processingjob.status 13.0.2
 aws.sagemaker.processingjob.tags 13.0.2
 aws.sagemaker.processingjob.trainingJob 13.39.2
 aws.sagemaker.processingjob.vpc 13.12.0
-aws.sagemaker.processingjob.vpcConfig 13.0.2
 aws.sagemaker.project 13.13.4
 aws.sagemaker.project.arn 13.13.4
 aws.sagemaker.project.createdAt 13.13.4
@@ -9903,7 +9756,6 @@ aws.sagemaker.trainingjob.trainingEndTime 13.0.2
 aws.sagemaker.trainingjob.trainingStartTime 13.39.2
 aws.sagemaker.trainingjob.tuningJobArn 13.39.2
 aws.sagemaker.trainingjob.vpc 13.12.0
-aws.sagemaker.trainingjob.vpcConfig 13.0.2
 aws.sagemaker.trainingjob.wallClockTimeInSeconds 13.13.4
 aws.sagemaker.transformJob 13.13.4
 aws.sagemaker.transformJob.arn 13.13.4
@@ -10042,7 +9894,6 @@ aws.secretsmanager.secret.region 13.53.1
 aws.secretsmanager.secret.replicaRegion 13.6.3
 aws.secretsmanager.secret.replicaRegion.id 13.6.3
 aws.secretsmanager.secret.replicaRegion.kmsKey 13.12.1
-aws.secretsmanager.secret.replicaRegion.kmsKeyId 13.6.3
 aws.secretsmanager.secret.replicaRegion.lastAccessedDate 13.6.3
 aws.secretsmanager.secret.replicaRegion.region 13.6.3
 aws.secretsmanager.secret.replicaRegion.status 13.6.3
@@ -10101,7 +9952,6 @@ aws.securityhub.finding.resourceId 13.12.1
 aws.securityhub.finding.resourceRegion 13.12.1
 aws.securityhub.finding.resourceType 13.12.1
 aws.securityhub.finding.severity 13.12.1
-aws.securityhub.finding.severityNormalized 13.12.1
 aws.securityhub.finding.title 13.12.1
 aws.securityhub.finding.types 13.12.1
 aws.securityhub.finding.updatedAt 13.12.1
@@ -10110,7 +9960,6 @@ aws.securityhub.hub 11.15.2
 aws.securityhub.hub.arn 11.15.2
 aws.securityhub.hub.automationRules 13.12.1
 aws.securityhub.hub.enabledProducts 13.12.1
-aws.securityhub.hub.enabledStandards 13.6.3
 aws.securityhub.hub.findings 13.12.1
 aws.securityhub.hub.insights 13.12.1
 aws.securityhub.hub.members 13.12.1
@@ -10162,15 +10011,12 @@ aws.securitylake.dataLake.lifecycleConfiguration 13.10.0
 aws.securitylake.dataLake.region 13.10.0
 aws.securitylake.dataLake.replicationConfiguration 13.10.0
 aws.securitylake.dataLake.s3Bucket 13.12.1
-aws.securitylake.dataLake.s3BucketArn 13.10.0
 aws.securitylake.dataLakes 13.10.0
 aws.securitylake.subscriber 13.10.0
 aws.securitylake.subscriber.accessTypes 13.10.0
 aws.securitylake.subscriber.createdAt 13.10.0
 aws.securitylake.subscriber.iamRole 13.12.1
-aws.securitylake.subscriber.roleArn 13.10.0
 aws.securitylake.subscriber.s3Bucket 13.12.1
-aws.securitylake.subscriber.s3BucketArn 13.10.0
 aws.securitylake.subscriber.sources 13.10.0
 aws.securitylake.subscriber.subscriberArn 13.10.0
 aws.securitylake.subscriber.subscriberId 13.10.0
@@ -10225,14 +10071,12 @@ aws.sfn.stateMachine.arn 13.6.3
 aws.sfn.stateMachine.createdAt 13.6.3
 aws.sfn.stateMachine.definition 13.6.3
 aws.sfn.stateMachine.description 13.21.4
-aws.sfn.stateMachine.encryptionConfiguration 13.6.3
 aws.sfn.stateMachine.encryptionKmsDataKeyReusePeriodSeconds 13.21.4
 aws.sfn.stateMachine.encryptionKmsKeyId 13.21.4
 aws.sfn.stateMachine.encryptionType 13.21.4
 aws.sfn.stateMachine.iamRole 13.6.3
 aws.sfn.stateMachine.kmsKey 13.21.4
 aws.sfn.stateMachine.label 13.21.4
-aws.sfn.stateMachine.loggingConfiguration 13.6.3
 aws.sfn.stateMachine.loggingDestinations 13.21.4
 aws.sfn.stateMachine.loggingIncludeExecutionData 13.21.4
 aws.sfn.stateMachine.loggingLevel 13.21.4
@@ -10261,7 +10105,6 @@ aws.shield.emergencyContact.phoneNumber 13.0.2
 aws.shield.emergencyContacts 13.0.2
 aws.shield.protection 11.16.1
 aws.shield.protection.applicationLayerAutomaticResponseAction 13.21.4
-aws.shield.protection.applicationLayerAutomaticResponseConfiguration 11.16.1
 aws.shield.protection.applicationLayerAutomaticResponseEnabled 13.21.4
 aws.shield.protection.arn 11.16.1
 aws.shield.protection.healthCheckIds 11.16.1
@@ -10279,17 +10122,14 @@ aws.shield.protectionGroups 11.16.1
 aws.shield.protections 11.16.1
 aws.shield.subscription 11.16.1
 aws.shield.subscription.arn 11.16.1
-aws.shield.subscription.autoRenew 11.16.1
 aws.shield.subscription.autoRenewEnabled 13.21.4
 aws.shield.subscription.endTime 11.16.1
 aws.shield.subscription.lengthInSeconds 13.21.4
-aws.shield.subscription.limits 11.16.1
 aws.shield.subscription.maxArbitraryPatternMembers 13.21.4
 aws.shield.subscription.maxProtectionGroups 13.21.4
 aws.shield.subscription.proactiveEngagementStatus 11.16.1
 aws.shield.subscription.protectedResourceTypeLimits 13.21.4
 aws.shield.subscription.startTime 11.16.1
-aws.shield.subscription.timeCommitmentInDays 11.16.1
 aws.shield.subscriptionState 11.16.1
 aws.signer 13.35.2
 aws.signer.signingProfile 13.35.2
@@ -10303,7 +10143,6 @@ aws.signer.signingProfile.region 13.35.2
 aws.signer.signingProfile.signatureValidityType 13.35.2
 aws.signer.signingProfile.signatureValidityValue 13.35.2
 aws.signer.signingProfile.signingMaterialCertificate 13.41.1
-aws.signer.signingProfile.signingMaterialCertificateArn 13.35.2
 aws.signer.signingProfile.signingParameters 13.35.2
 aws.signer.signingProfile.status 13.35.2
 aws.signer.signingProfile.tags 13.35.2
@@ -10703,7 +10542,6 @@ aws.timestream.liveanalytics.database 11.15.2
 aws.timestream.liveanalytics.database.arn 11.15.2
 aws.timestream.liveanalytics.database.createdAt 11.15.2
 aws.timestream.liveanalytics.database.kmsKey 11.16.1
-aws.timestream.liveanalytics.database.kmsKeyId 11.15.2
 aws.timestream.liveanalytics.database.name 11.15.2
 aws.timestream.liveanalytics.database.region 11.15.2
 aws.timestream.liveanalytics.database.tableCount 11.15.2
@@ -10776,7 +10614,6 @@ aws.verifiedaccess.endpoint 13.10.0
 aws.verifiedaccess.endpoint.applicationDomain 13.10.0
 aws.verifiedaccess.endpoint.attachmentType 13.10.0
 aws.verifiedaccess.endpoint.domainCertificate 13.41.1
-aws.verifiedaccess.endpoint.domainCertificateArn 13.10.0
 aws.verifiedaccess.endpoint.endpointDomain 13.10.0
 aws.verifiedaccess.endpoint.endpointType 13.10.0
 aws.verifiedaccess.endpoint.region 13.10.0
@@ -10902,7 +10739,6 @@ aws.vpc.natgateway.address 11.15.2
 aws.vpc.natgateway.address.allocationId 11.15.2
 aws.vpc.natgateway.address.isPrimary 11.15.2
 aws.vpc.natgateway.address.networkInterface 13.41.1
-aws.vpc.natgateway.address.networkInterfaceId 11.15.2
 aws.vpc.natgateway.address.privateIp 11.15.2
 aws.vpc.natgateway.address.publicIp 11.15.2
 aws.vpc.natgateway.addresses 11.15.2
@@ -10929,7 +10765,6 @@ aws.vpc.peeringConnection.peeringVpc.ipv6CiderBlocks 11.15.2
 aws.vpc.peeringConnection.peeringVpc.ownerID 11.15.2
 aws.vpc.peeringConnection.peeringVpc.region 11.15.2
 aws.vpc.peeringConnection.peeringVpc.vpc 11.15.2
-aws.vpc.peeringConnection.peeringVpc.vpcId 11.15.2
 aws.vpc.peeringConnection.requesterAccountId 13.6.3
 aws.vpc.peeringConnection.requestorVpc 11.15.2
 aws.vpc.peeringConnection.status 11.15.2
@@ -10954,30 +10789,22 @@ aws.vpc.routetable.route.carrierGatewayId 11.15.2
 aws.vpc.routetable.route.coreNetworkArn 11.15.2
 aws.vpc.routetable.route.destinationCidrBlock 11.15.2
 aws.vpc.routetable.route.destinationIpv6CidrBlock 11.15.2
-aws.vpc.routetable.route.destinationPrefixListId 11.15.2
 aws.vpc.routetable.route.egressOnlyInternetGateway 13.43.1
-aws.vpc.routetable.route.egressOnlyInternetGatewayId 11.15.2
 aws.vpc.routetable.route.gatewayId 11.15.2
 aws.vpc.routetable.route.id 11.15.2
 aws.vpc.routetable.route.instance 13.41.1
-aws.vpc.routetable.route.instanceId 11.15.2
 aws.vpc.routetable.route.instanceOwnerId 11.15.2
 aws.vpc.routetable.route.internetGateway 13.43.1
 aws.vpc.routetable.route.localGatewayId 11.15.2
 aws.vpc.routetable.route.managedPrefixList 13.41.1
 aws.vpc.routetable.route.natGateway 13.41.1
-aws.vpc.routetable.route.natGatewayId 11.15.2
 aws.vpc.routetable.route.networkInterface 13.41.1
-aws.vpc.routetable.route.networkInterfaceId 11.15.2
 aws.vpc.routetable.route.origin 11.15.2
 aws.vpc.routetable.route.peeringConnection 13.43.1
 aws.vpc.routetable.route.state 11.15.2
 aws.vpc.routetable.route.transitGateway 13.43.1
-aws.vpc.routetable.route.transitGatewayId 11.15.2
-aws.vpc.routetable.route.vpcPeeringConnectionId 11.15.2
 aws.vpc.routetable.route.vpnGateway 13.43.1
 aws.vpc.routetable.routeEntries 11.15.2
-aws.vpc.routetable.routes 11.15.2
 aws.vpc.routetable.tags 11.15.2
 aws.vpc.securityGroups 11.15.2
 aws.vpc.serviceEndpoint 11.15.2
@@ -11409,7 +11236,6 @@ aws.workspaces.directory.ipGroupIds 11.16.1
 aws.workspaces.directory.region 11.16.1
 aws.workspaces.directory.selfservicePermissions 11.16.1
 aws.workspaces.directory.state 11.16.1
-aws.workspaces.directory.subnetIds 11.16.1
 aws.workspaces.directory.subnets 13.32.2
 aws.workspaces.directory.tags 11.16.1
 aws.workspaces.directory.workspaceAccessProperties 11.16.1
@@ -11448,7 +11274,6 @@ aws.workspaces.workspace.rootVolumeEncryptionEnabled 11.16.1
 aws.workspaces.workspace.securityGroups 11.16.1
 aws.workspaces.workspace.state 11.16.1
 aws.workspaces.workspace.subnet 13.32.2
-aws.workspaces.workspace.subnetId 11.16.1
 aws.workspaces.workspace.tags 11.16.1
 aws.workspaces.workspace.userName 11.16.1
 aws.workspaces.workspace.userVolumeEncryptionEnabled 11.16.1
@@ -11475,7 +11300,6 @@ aws.workspacesweb.portal.dataProtectionSettingsArn 11.16.1
 aws.workspacesweb.portal.displayName 11.16.1
 aws.workspacesweb.portal.instanceType 11.16.1
 aws.workspacesweb.portal.ipAccessSettings 13.20.1
-aws.workspacesweb.portal.ipAccessSettingsArn 11.16.1
 aws.workspacesweb.portal.maxConcurrentSessions 11.16.1
 aws.workspacesweb.portal.networkSettingsArn 11.16.1
 aws.workspacesweb.portal.portalArn 11.16.1
@@ -11487,11 +11311,8 @@ aws.workspacesweb.portal.rendererType 11.16.1
 aws.workspacesweb.portal.sessionLoggerArn 13.20.1
 aws.workspacesweb.portal.statusReason 13.20.1
 aws.workspacesweb.portal.trustStore 13.20.1
-aws.workspacesweb.portal.trustStoreArn 11.16.1
 aws.workspacesweb.portal.userAccessLoggingSetting 13.20.1
-aws.workspacesweb.portal.userAccessLoggingSettingsArn 11.16.1
 aws.workspacesweb.portal.userSettings 13.20.1
-aws.workspacesweb.portal.userSettingsArn 11.16.1
 aws.workspacesweb.portals 11.16.1
 aws.workspacesweb.trustStore 13.20.1
 aws.workspacesweb.trustStore.associatedPortals 13.20.1
@@ -11500,7 +11321,6 @@ aws.workspacesweb.trustStore.trustStoreArn 13.20.1
 aws.workspacesweb.trustStores 13.20.1
 aws.workspacesweb.userAccessLoggingSetting 11.16.1
 aws.workspacesweb.userAccessLoggingSetting.kinesisStream 13.12.1
-aws.workspacesweb.userAccessLoggingSetting.kinesisStreamArn 11.16.1
 aws.workspacesweb.userAccessLoggingSetting.region 11.16.1
 aws.workspacesweb.userAccessLoggingSetting.userAccessLoggingSettingsArn 11.16.1
 aws.workspacesweb.userAccessLoggingSettings 11.16.1

@@ -1895,9 +1895,7 @@ func (a *mqlAwsMskCluster) serverlessConfig() (*mqlAwsMskClusterServerlessConfig
 		}
 		vcRes, err := CreateResource(a.MqlRuntime, "aws.msk.cluster.serverlessConfig.vpcConfig",
 			map[string]*llx.RawData{
-				"__id":             llx.StringData(a.Arn.Data + "/serverless/vpc/" + idHash),
-				"subnetIds":        llx.ArrayData(subnetIds, types.String),
-				"securityGroupIds": llx.ArrayData(sgIds, types.String),
+				"__id": llx.StringData(a.Arn.Data + "/serverless/vpc/" + idHash),
 			})
 		if err != nil {
 			return nil, err
@@ -2250,8 +2248,6 @@ func (a *mqlAwsMskReplicator) kafkaClusters() ([]any, error) {
 				"__id":                        llx.StringData(a.Arn.Data + "/cluster/" + alias),
 				"amazonMskClusterArn":         llx.StringData(mskArn),
 				"kafkaClusterAlias":           llx.StringData(alias),
-				"subnetIds":                   llx.ArrayData(subnetIds, types.String),
-				"securityGroupIds":            llx.ArrayData(sgIds, types.String),
 				"apacheKafkaBootstrapBrokers": llx.StringData(bootstrapBrokers),
 				"authenticationType":          llx.StringData(authType),
 				"saslScramMechanism":          llx.StringData(saslMechanism),

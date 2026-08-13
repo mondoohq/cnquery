@@ -235,13 +235,6 @@ func (a *mqlAwsKinesisStream) encryptionType() (string, error) {
 	return a.cachedEncType, nil
 }
 
-func (a *mqlAwsKinesisStream) keyId() (string, error) {
-	if err := a.fetchStreamDetails(); err != nil {
-		return "", err
-	}
-	return a.cachedKeyId, nil
-}
-
 func (a *mqlAwsKinesisStream) kmsKey() (*mqlAwsKmsKey, error) {
 	if err := a.fetchStreamDetails(); err != nil {
 		return nil, err
@@ -713,11 +706,6 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 		return nil, err
 	}
 
-	source, err := convert.JsonToDict(stream.Source)
-	if err != nil {
-		return nil, err
-	}
-
 	kinesisStreamArn := ""
 	if stream.Source != nil && stream.Source.KinesisStreamSourceDescription != nil &&
 		stream.Source.KinesisStreamSourceDescription.KinesisStreamARN != nil {
@@ -732,7 +720,6 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 			"status":             llx.StringData(string(stream.DeliveryStreamStatus)),
 			"deliveryStreamType": llx.StringData(string(stream.DeliveryStreamType)),
 			"encryption":         llx.DictData(encryption),
-			"source":             llx.DictData(source),
 			"createdAt":          llx.TimeDataPtr(stream.CreateTimestamp),
 			"lastUpdatedAt":      llx.TimeDataPtr(stream.LastUpdateTimestamp),
 			"region":             llx.StringData(region),
@@ -937,7 +924,6 @@ func (a *mqlAwsKinesisFirehoseDeliveryStreamDestination) s3() (*mqlAwsKinesisFir
 	mqlS3, err := CreateResource(a.MqlRuntime, "aws.kinesis.firehoseDeliveryStream.destination.s3",
 		map[string]*llx.RawData{
 			"__id":                       llx.StringData(s3Id),
-			"bucketArn":                  llx.StringDataPtr(s.BucketARN),
 			"compressionFormat":          llx.StringData(string(s.CompressionFormat)),
 			"prefix":                     llx.StringDataPtr(s.Prefix),
 			"errorOutputPrefix":          llx.StringDataPtr(s.ErrorOutputPrefix),
@@ -954,13 +940,15 @@ func (a *mqlAwsKinesisFirehoseDeliveryStreamDestination) s3() (*mqlAwsKinesisFir
 	if err != nil {
 		return nil, err
 	}
+	mqlS3.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3).cacheBucketArn = convert.ToValue(s.BucketARN)
 	mqlS3Res := mqlS3.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3)
 	mqlS3Res.cacheRoleArn = s.RoleARN
 	return mqlS3Res, nil
 }
 
 type mqlAwsKinesisFirehoseDeliveryStreamDestinationS3Internal struct {
-	cacheRoleArn *string
+	cacheBucketArn string
+	cacheRoleArn   *string
 }
 
 func (a *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) iamRole() (*mqlAwsIamRole, error) {
@@ -977,11 +965,11 @@ func (a *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) iamRole() (*mqlAwsIam
 }
 
 func (a *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) id() (string, error) {
-	return a.BucketArn.Data + "/" + a.Region.Data, nil
+	return a.cacheBucketArn + "/" + a.Region.Data, nil
 }
 
 func (a *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) bucket() (*mqlAwsS3Bucket, error) {
-	arnVal := a.BucketArn.Data
+	arnVal := a.cacheBucketArn
 	if arnVal == "" {
 		a.Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

@@ -374,13 +374,13 @@ func (a *mqlAwsRoute53Resolver) ruleAssociationTasks(conn *connection.AwsConnect
 						"name":           llx.StringData(convert.ToValue(assoc.Name)),
 						"region":         llx.StringData(region),
 						"resolverRuleId": llx.StringData(convert.ToValue(assoc.ResolverRuleId)),
-						"vpcId":          llx.StringData(convert.ToValue(assoc.VPCId)),
 						"status":         llx.StringData(string(assoc.Status)),
 						"statusMessage":  llx.StringData(convert.ToValue(assoc.StatusMessage)),
 					})
 					if err != nil {
 						return nil, err
 					}
+					resource.(*mqlAwsRoute53ResolverRuleAssociation).cacheVpcId = convert.ToValue(assoc.VPCId)
 					res = append(res, resource)
 				}
 			}
@@ -407,7 +407,7 @@ func (a *mqlAwsRoute53ResolverRuleAssociation) resolverRule() (*mqlAwsRoute53Res
 }
 
 func (a *mqlAwsRoute53ResolverRuleAssociation) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -801,51 +801,6 @@ func newMqlAwsRoute53ResolverFirewallRuleGroup(runtime *plugin.Runtime, region s
 	return mqlGroup, nil
 }
 
-func (a *mqlAwsRoute53ResolverFirewallRuleGroup) rules() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Route53Resolver(a.region)
-	ctx := context.Background()
-	id := a.Id.Data
-
-	res := []any{}
-	paginator := route53resolver.NewListFirewallRulesPaginator(svc, &route53resolver.ListFirewallRulesInput{
-		FirewallRuleGroupId: &id,
-	})
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return res, nil
-			}
-			return nil, err
-		}
-		for _, rule := range page.FirewallRules {
-			entry := map[string]any{
-				"name":                            convert.ToValue(rule.Name),
-				"action":                          string(rule.Action),
-				"blockResponse":                   string(rule.BlockResponse),
-				"blockOverrideDomain":             convert.ToValue(rule.BlockOverrideDomain),
-				"blockOverrideDnsType":            string(rule.BlockOverrideDnsType),
-				"firewallDomainListId":            convert.ToValue(rule.FirewallDomainListId),
-				"firewallRuleGroupId":             convert.ToValue(rule.FirewallRuleGroupId),
-				"firewallDomainRedirectionAction": string(rule.FirewallDomainRedirectionAction),
-				"qtype":                           convert.ToValue(rule.Qtype),
-				"creationTime":                    convert.ToValue(rule.CreationTime),
-				"modificationTime":                convert.ToValue(rule.ModificationTime),
-				"creatorRequestId":                convert.ToValue(rule.CreatorRequestId),
-			}
-			if rule.Priority != nil {
-				entry["priority"] = int64(*rule.Priority)
-			}
-			if rule.BlockOverrideTtl != nil {
-				entry["blockOverrideTtl"] = int64(*rule.BlockOverrideTtl)
-			}
-			res = append(res, entry)
-		}
-	}
-	return res, nil
-}
-
 type mqlAwsRoute53ResolverFirewallRuleInternal struct {
 	region string
 }
@@ -1014,7 +969,6 @@ func (a *mqlAwsRoute53Resolver) firewallRuleGroupAssociationTasks(conn *connecti
 						"name":                llx.StringData(convert.ToValue(assoc.Name)),
 						"region":              llx.StringData(region),
 						"firewallRuleGroupId": llx.StringData(convert.ToValue(assoc.FirewallRuleGroupId)),
-						"vpcId":               llx.StringData(convert.ToValue(assoc.VpcId)),
 						"priority":            llx.IntData(priority),
 						"mutationProtection":  llx.StringData(string(assoc.MutationProtection)),
 						"managedOwnerName":    llx.StringData(convert.ToValue(assoc.ManagedOwnerName)),
@@ -1027,6 +981,7 @@ func (a *mqlAwsRoute53Resolver) firewallRuleGroupAssociationTasks(conn *connecti
 					if err != nil {
 						return nil, err
 					}
+					resource.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).cacheVpcId = convert.ToValue(assoc.VpcId)
 					res = append(res, resource)
 				}
 			}
@@ -1053,7 +1008,7 @@ func (a *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) firewallRuleGroup() 
 }
 
 func (a *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -1426,4 +1381,12 @@ func initAwsRoute53ResolverFirewallRuleGroup(runtime *plugin.Runtime, args map[s
 		}
 	}
 	return nil, nil, fmt.Errorf("aws route53 resolver firewall rule group not found: %s", idVal)
+}
+
+type mqlAwsRoute53ResolverRuleAssociationInternal struct {
+	cacheVpcId string
+}
+
+type mqlAwsRoute53ResolverFirewallRuleGroupAssociationInternal struct {
+	cacheVpcId string
 }

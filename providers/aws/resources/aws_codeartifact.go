@@ -157,7 +157,6 @@ func newMqlAwsCodeartifactDomain(runtime *plugin.Runtime, region, name, owner st
 		"encryptionKey":   llx.StringDataPtr(d.EncryptionKey),
 		"repositoryCount": llx.IntData(int64(d.RepositoryCount)),
 		"assetSizeBytes":  llx.IntData(d.AssetSizeBytes),
-		"s3BucketArn":     llx.StringDataPtr(d.S3BucketArn),
 		"tags":            llx.MapData(tags, types.String),
 	}
 
@@ -165,6 +164,7 @@ func newMqlAwsCodeartifactDomain(runtime *plugin.Runtime, region, name, owner st
 	if err != nil {
 		return nil, err
 	}
+	obj.(*mqlAwsCodeartifactDomain).cacheS3BucketArn = convert.ToValue(d.S3BucketArn)
 	mqlDomain := obj.(*mqlAwsCodeartifactDomain)
 	mqlDomain.cacheKmsKeyArn = d.EncryptionKey
 	mqlDomain.cacheDomainName = name
@@ -174,7 +174,7 @@ func newMqlAwsCodeartifactDomain(runtime *plugin.Runtime, region, name, owner st
 }
 
 func (a *mqlAwsCodeartifactDomain) s3Bucket() (*mqlAwsS3Bucket, error) {
-	arnVal := a.S3BucketArn.Data
+	arnVal := a.cacheS3BucketArn
 	if arnVal == "" {
 		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -213,6 +213,7 @@ func initAwsCodeartifactDomain(runtime *plugin.Runtime, args map[string]*llx.Raw
 }
 
 type mqlAwsCodeartifactDomainInternal struct {
+	cacheS3BucketArn string
 	cacheKmsKeyArn   *string
 	cacheDomainName  string
 	cacheDomainOwner string

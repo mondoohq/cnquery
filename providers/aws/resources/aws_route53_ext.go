@@ -386,27 +386,6 @@ func fetchCidrBlocks(ctx context.Context, svc *route53.Client, collectionId, loc
 
 // ----- DNSSEC per-zone view -----
 
-func (a *mqlAwsRoute53HostedZone) dnssecStatus() (any, error) {
-	if a.IsPrivate.Data {
-		return map[string]any{"serveSignature": "NOT_SIGNING", "statusMessage": "DNSSEC is not supported for private hosted zones"}, nil
-	}
-
-	resp, err := a.getDNSSEC()
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
-
-	result := map[string]any{}
-	if resp.Status != nil {
-		result["serveSignature"] = convert.ToValue(resp.Status.ServeSignature)
-		result["statusMessage"] = convert.ToValue(resp.Status.StatusMessage)
-	}
-	return result, nil
-}
-
 func (a *mqlAwsRoute53HostedZone) dnssec() (*mqlAwsRoute53HostedZoneDnssec, error) {
 	hostedZoneId := a.Id.Data
 

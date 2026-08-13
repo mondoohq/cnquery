@@ -153,7 +153,6 @@ func newMqlAwsAppstreamFleet(runtime *plugin.Runtime, region string, fleet appst
 			"maxConcurrentSessions":          llx.IntDataDefault(fleet.MaxConcurrentSessions, 0),
 			"maxSessionsPerInstance":         llx.IntDataDefault(fleet.MaxSessionsPerInstance, 0),
 			"vpcConfig":                      llx.MapData(vpcConfig, types.Any),
-			"iamRoleArn":                     llx.StringDataPtr(fleet.IamRoleArn),
 			"imageName":                      llx.StringDataPtr(fleet.ImageName),
 			"imageArn":                       llx.StringDataPtr(fleet.ImageArn),
 			"platform":                       llx.StringData(string(fleet.Platform)),
@@ -168,6 +167,7 @@ func newMqlAwsAppstreamFleet(runtime *plugin.Runtime, region string, fleet appst
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsAppstreamFleet).cacheIamRoleArn = convert.ToValue(fleet.IamRoleArn)
 	mqlFleet := resource.(*mqlAwsAppstreamFleet)
 	mqlFleet.cacheComputeCapacityStatus = fleet.ComputeCapacityStatus
 	mqlFleet.region = region
@@ -187,6 +187,7 @@ func newMqlAwsAppstreamFleet(runtime *plugin.Runtime, region string, fleet appst
 }
 
 type mqlAwsAppstreamFleetInternal struct {
+	cacheIamRoleArn string
 	securityGroupIdHandler
 	cacheComputeCapacityStatus *appstreamtypes.ComputeCapacityStatus
 	cacheSubnetIds             []string
@@ -243,7 +244,7 @@ func initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData
 }
 
 func (a *mqlAwsAppstreamFleet) iamRole() (*mqlAwsIamRole, error) {
-	arnVal := a.IamRoleArn.Data
+	arnVal := a.cacheIamRoleArn
 	if arnVal == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -669,7 +670,6 @@ func newMqlAwsAppstreamImageBuilder(runtime *plugin.Runtime, region string, ib a
 			"disableIMDSV1":               llx.BoolDataPtr(ib.DisableIMDSV1),
 			"domainJoinInfo":              llx.MapData(domainJoinInfo, types.Any),
 			"vpcConfig":                   llx.MapData(vpcConfig, types.Any),
-			"iamRoleArn":                  llx.StringDataPtr(ib.IamRoleArn),
 			"networkAccessConfiguration":  llx.MapData(networkAccessConfig, types.Any),
 			"createdAt":                   llx.TimeDataPtr(ib.CreatedTime),
 			"region":                      llx.StringData(region),
@@ -677,6 +677,7 @@ func newMqlAwsAppstreamImageBuilder(runtime *plugin.Runtime, region string, ib a
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsAppstreamImageBuilder).cacheIamRoleArn = convert.ToValue(ib.IamRoleArn)
 	return resource.(*mqlAwsAppstreamImageBuilder), nil
 }
 
@@ -685,7 +686,7 @@ func (a *mqlAwsAppstreamImageBuilder) id() (string, error) {
 }
 
 func (a *mqlAwsAppstreamImageBuilder) iamRole() (*mqlAwsIamRole, error) {
-	arnVal := a.IamRoleArn.Data
+	arnVal := a.cacheIamRoleArn
 	if arnVal == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1249,13 +1250,13 @@ func (a *mqlAwsAppstreamFleet) sessions() ([]any, error) {
 						"instanceId":          llx.StringDataPtr(s.InstanceId),
 						"startTime":           llx.TimeDataPtr(s.StartTime),
 						"maxExpirationTime":   llx.TimeDataPtr(s.MaxExpirationTime),
-						"eniId":               llx.StringData(eniId),
 						"eniPrivateIpAddress": llx.StringData(eniIp),
 						"region":              llx.StringData(a.Region.Data),
 					})
 				if err != nil {
 					return nil, err
 				}
+				resource.(*mqlAwsAppstreamSession).cacheEniId = eniId
 				res = append(res, resource)
 			}
 			if sresp.NextToken == nil {
@@ -1295,7 +1296,7 @@ func (a *mqlAwsAppstreamSession) stack() (*mqlAwsAppstreamStack, error) {
 }
 
 func (a *mqlAwsAppstreamSession) networkInterface() (*mqlAwsEc2Networkinterface, error) {
-	eniId := a.EniId.Data
+	eniId := a.cacheEniId
 	if eniId == "" {
 		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1306,4 +1307,12 @@ func (a *mqlAwsAppstreamSession) networkInterface() (*mqlAwsEc2Networkinterface,
 		return nil, err
 	}
 	return res.(*mqlAwsEc2Networkinterface), nil
+}
+
+type mqlAwsAppstreamImageBuilderInternal struct {
+	cacheIamRoleArn string
+}
+
+type mqlAwsAppstreamSessionInternal struct {
+	cacheEniId string
 }

@@ -216,12 +216,12 @@ func (a *mqlAwsBedrock) getCustomModels(conn *connection.AwsConnection) []*jobpo
 							"modelArn":          llx.StringDataPtr(cm.ModelArn),
 							"modelName":         llx.StringDataPtr(cm.ModelName),
 							"region":            llx.StringData(region),
-							"baseModelArn":      llx.StringDataPtr(cm.BaseModelArn),
 							"customizationType": llx.StringData(string(cm.CustomizationType)),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlCM.(*mqlAwsBedrockCustomModel).cacheBaseModelArn = convert.ToValue(cm.BaseModelArn)
 					mqlCMRes := mqlCM.(*mqlAwsBedrockCustomModel)
 					mqlCMRes.cacheRegion = region
 					res = append(res, mqlCM)
@@ -235,11 +235,12 @@ func (a *mqlAwsBedrock) getCustomModels(conn *connection.AwsConnection) []*jobpo
 }
 
 type mqlAwsBedrockCustomModelInternal struct {
-	cacheRegion   string
-	cacheKmsKeyId *string
-	fetched       bool
-	lock          sync.Mutex
-	detail        *bedrock.GetCustomModelOutput
+	cacheBaseModelArn string
+	cacheRegion       string
+	cacheKmsKeyId     *string
+	fetched           bool
+	lock              sync.Mutex
+	detail            *bedrock.GetCustomModelOutput
 }
 
 // initAwsBedrockCustomModel resolves a custom model from its ARN so the typed
@@ -338,7 +339,7 @@ func (a *mqlAwsBedrockCustomModel) fetchDetail() (*bedrock.GetCustomModelOutput,
 }
 
 func (a *mqlAwsBedrockCustomModel) baseModel() (*mqlAwsBedrockFoundationModel, error) {
-	arnVal := a.BaseModelArn.Data
+	arnVal := a.cacheBaseModelArn
 	if arnVal == "" {
 		a.BaseModel.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -790,7 +791,6 @@ func (a *mqlAwsBedrock) getProvisionedModelThroughputs(conn *connection.AwsConne
 							"provisionedModelName": llx.StringDataPtr(pt.ProvisionedModelName),
 							"region":               llx.StringData(region),
 							"modelArn":             llx.StringDataPtr(pt.ModelArn),
-							"foundationModelArn":   llx.StringDataPtr(pt.FoundationModelArn),
 							"modelUnits":           llx.IntData(int64(convert.ToValue(pt.DesiredModelUnits))),
 							"status":               llx.StringData(string(pt.Status)),
 							"commitmentDuration":   llx.StringData(string(pt.CommitmentDuration)),
@@ -798,6 +798,7 @@ func (a *mqlAwsBedrock) getProvisionedModelThroughputs(conn *connection.AwsConne
 					if err != nil {
 						return nil, err
 					}
+					mqlPT.(*mqlAwsBedrockProvisionedModelThroughput).cacheFoundationModelArn = convert.ToValue(pt.FoundationModelArn)
 					res = append(res, mqlPT)
 				}
 			}
@@ -813,7 +814,7 @@ func (a *mqlAwsBedrockProvisionedModelThroughput) id() (string, error) {
 }
 
 func (a *mqlAwsBedrockProvisionedModelThroughput) foundationModel() (*mqlAwsBedrockFoundationModel, error) {
-	arnVal := a.FoundationModelArn.Data
+	arnVal := a.cacheFoundationModelArn
 	if arnVal == "" {
 		a.FoundationModel.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2101,7 +2102,6 @@ func (a *mqlAwsBedrock) getBatchInferenceJobs(conn *connection.AwsConnection) []
 							"status":                 llx.StringData(string(j.Status)),
 							"inputDataConfig":        llx.DictData(inputCfg),
 							"outputDataConfig":       llx.DictData(outputCfg),
-							"roleArn":                llx.StringDataPtr(j.RoleArn),
 							"submitTime":             llx.TimeDataPtr(j.SubmitTime),
 							"lastModifiedTime":       llx.TimeDataPtr(j.LastModifiedTime),
 							"endTime":                llx.TimeDataPtr(j.EndTime),
@@ -2111,6 +2111,7 @@ func (a *mqlAwsBedrock) getBatchInferenceJobs(conn *connection.AwsConnection) []
 					if err != nil {
 						return nil, err
 					}
+					mqlJob.(*mqlAwsBedrockBatchInferenceJob).cacheRoleArn = convert.ToValue(j.RoleArn)
 					res = append(res, mqlJob)
 				}
 			}
@@ -2126,7 +2127,7 @@ func (a *mqlAwsBedrockBatchInferenceJob) id() (string, error) {
 }
 
 func (a *mqlAwsBedrockBatchInferenceJob) iamRole() (*mqlAwsIamRole, error) {
-	roleArn := a.RoleArn.Data
+	roleArn := a.cacheRoleArn
 	if roleArn == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2224,4 +2225,12 @@ func (a *mqlAwsBedrockInferenceProfile) policyStatements() ([]any, error) {
 
 func (a *mqlAwsBedrockInferenceProfile) isPublic() (bool, error) {
 	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+type mqlAwsBedrockProvisionedModelThroughputInternal struct {
+	cacheFoundationModelArn string
+}
+
+type mqlAwsBedrockBatchInferenceJobInternal struct {
+	cacheRoleArn string
 }

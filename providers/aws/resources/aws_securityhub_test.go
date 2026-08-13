@@ -84,34 +84,6 @@ func TestSecurityHubEnabledStandardsUsesCache(t *testing.T) {
 	assert.Equal(t, cached, got)
 }
 
-// TestSecurityHubEnabledStandardsToDicts asserts that enabledStandards
-// converts the cached standards into the dict shape expected by MQL,
-// preserving the keys callers query by.
-func TestSecurityHubEnabledStandardsToDicts(t *testing.T) {
-	hub := &mqlAwsSecurityhubHub{
-		mqlAwsSecurityhubHubInternal: mqlAwsSecurityhubHubInternal{
-			standardsFetched: true,
-			standards: []types.StandardsSubscription{
-				{
-					StandardsArn:             aws.String("arn:aws:securityhub:::ruleset/cis"),
-					StandardsSubscriptionArn: aws.String("arn:aws:securityhub:us-east-1:123:subscription/cis"),
-					StandardsStatus:          types.StandardsStatusReady,
-				},
-			},
-		},
-	}
-
-	out, err := hub.enabledStandards()
-	assert.NoError(t, err)
-	assert.Len(t, out, 1)
-
-	row, ok := out[0].(map[string]any)
-	assert.True(t, ok, "expected dict, got %T", out[0])
-	assert.Equal(t, "arn:aws:securityhub:::ruleset/cis", row["StandardsArn"])
-	assert.Equal(t, "arn:aws:securityhub:us-east-1:123:subscription/cis", row["StandardsSubscriptionArn"])
-	assert.Equal(t, string(types.StandardsStatusReady), row["StandardsStatus"])
-}
-
 // TestSecurityHubStandardsCacheConcurrentHits exercises the double-check
 // pattern: many concurrent callers on a cache-populated hub all read the
 // same slice with no data race (meaningful under `go test -race`).

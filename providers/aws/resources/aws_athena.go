@@ -276,13 +276,6 @@ func (a *mqlAwsAthenaWorkgroup) engineVersion() (any, error) {
 	return a.cachedEngineVer, nil
 }
 
-func (a *mqlAwsAthenaWorkgroup) resultConfiguration() (any, error) {
-	if err := a.fetchConfig(); err != nil {
-		return nil, err
-	}
-	return a.cachedResultCfg, nil
-}
-
 func (a *mqlAwsAthenaWorkgroup) resultOutputLocation() (string, error) {
 	if err := a.fetchConfig(); err != nil {
 		return "", err
@@ -673,17 +666,17 @@ func newMqlAwsAthenaNamedQuery(runtime *plugin.Runtime, region string, nq athena
 			"database":    llx.StringDataPtr(nq.Database),
 			"queryString": llx.StringDataPtr(nq.QueryString),
 			"description": llx.StringDataPtr(nq.Description),
-			"workGroup":   llx.StringDataPtr(nq.WorkGroup),
 			"region":      llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsAthenaNamedQuery).cacheWorkGroup = convert.ToValue(nq.WorkGroup)
 	return resource.(*mqlAwsAthenaNamedQuery), nil
 }
 
 func (a *mqlAwsAthenaNamedQuery) queryWorkgroup() (*mqlAwsAthenaWorkgroup, error) {
-	name := a.WorkGroup.Data
+	name := a.cacheWorkGroup
 	if name == "" {
 		a.QueryWorkgroup.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -929,4 +922,8 @@ func athenaColumnsToDict(cols []athena_types.Column) []any {
 		})
 	}
 	return res
+}
+
+type mqlAwsAthenaNamedQueryInternal struct {
+	cacheWorkGroup string
 }

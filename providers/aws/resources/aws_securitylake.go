@@ -105,18 +105,19 @@ func newMqlSecuritylakeDataLake(runtime *plugin.Runtime, dl sltypes.DataLakeReso
 			"createStatus":             llx.StringData(string(dl.CreateStatus)),
 			"lifecycleConfiguration":   llx.DictData(lifecycleConfig),
 			"replicationConfiguration": llx.DictData(replicationConfig),
-			"s3BucketArn":              llx.StringDataPtr(dl.S3BucketArn),
 		})
 	if err != nil {
 		return nil, err
 	}
+	res.(*mqlAwsSecuritylakeDataLake).cacheS3BucketArn = convert.ToValue(dl.S3BucketArn)
 	mqlDL := res.(*mqlAwsSecuritylakeDataLake)
 	mqlDL.cacheKmsKeyId = kmsKeyId
 	return mqlDL, nil
 }
 
 type mqlAwsSecuritylakeDataLakeInternal struct {
-	cacheKmsKeyId *string
+	cacheS3BucketArn string
+	cacheKmsKeyId    *string
 }
 
 func (a *mqlAwsSecuritylakeDataLake) id() (string, error) {
@@ -144,7 +145,7 @@ func (a *mqlAwsSecuritylakeDataLake) encryptionKmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsSecuritylakeDataLake) s3Bucket() (*mqlAwsS3Bucket, error) {
-	arn := a.S3BucketArn.Data
+	arn := a.cacheS3BucketArn
 	if arn == "" {
 		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -239,13 +240,13 @@ func newMqlSecuritylakeSubscriber(runtime *plugin.Runtime, sub sltypes.Subscribe
 			"sources":            llx.ArrayData(sources, types.Dict),
 			"accessTypes":        llx.ArrayData(enumSliceToAny(sub.AccessTypes), types.String),
 			"subscriberStatus":   llx.StringData(string(sub.SubscriberStatus)),
-			"roleArn":            llx.StringDataPtr(sub.RoleArn),
-			"s3BucketArn":        llx.StringDataPtr(sub.S3BucketArn),
 			"createdAt":          llx.TimeDataPtr(sub.CreatedAt),
 		})
 	if err != nil {
 		return nil, err
 	}
+	res.(*mqlAwsSecuritylakeSubscriber).cacheRoleArn = convert.ToValue(sub.RoleArn)
+	res.(*mqlAwsSecuritylakeSubscriber).cacheS3BucketArn = convert.ToValue(sub.S3BucketArn)
 	return res.(*mqlAwsSecuritylakeSubscriber), nil
 }
 
@@ -254,7 +255,7 @@ func (a *mqlAwsSecuritylakeSubscriber) id() (string, error) {
 }
 
 func (a *mqlAwsSecuritylakeSubscriber) iamRole() (*mqlAwsIamRole, error) {
-	arn := a.RoleArn.Data
+	arn := a.cacheRoleArn
 	if arn == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -268,7 +269,7 @@ func (a *mqlAwsSecuritylakeSubscriber) iamRole() (*mqlAwsIamRole, error) {
 }
 
 func (a *mqlAwsSecuritylakeSubscriber) s3Bucket() (*mqlAwsS3Bucket, error) {
-	arn := a.S3BucketArn.Data
+	arn := a.cacheS3BucketArn
 	if arn == "" {
 		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -279,4 +280,9 @@ func (a *mqlAwsSecuritylakeSubscriber) s3Bucket() (*mqlAwsS3Bucket, error) {
 		return nil, err
 	}
 	return mqlBucket.(*mqlAwsS3Bucket), nil
+}
+
+type mqlAwsSecuritylakeSubscriberInternal struct {
+	cacheRoleArn     string
+	cacheS3BucketArn string
 }

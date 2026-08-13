@@ -146,7 +146,6 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 				mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.config.recorder",
 					map[string]*llx.RawData{
 						"name":                       llx.StringDataPtr(r.Name),
-						"roleArn":                    llx.StringDataPtr(r.RoleARN),
 						"allSupported":               llx.BoolData(allSupported),
 						"includeGlobalResourceTypes": llx.BoolData(includeGlobalResourceTypes),
 						"resourceTypes":              llx.ArrayData(resourceTypesInterface, types.String),
@@ -234,12 +233,12 @@ func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jo
 						"name":         llx.StringDataPtr(channel.Name),
 						"s3BucketName": llx.StringDataPtr(channel.S3BucketName),
 						"s3KeyPrefix":  llx.StringDataPtr(channel.S3KeyPrefix),
-						"snsTopicARN":  llx.StringDataPtr(channel.SnsTopicARN),
 						"region":       llx.StringData(region),
 					})
 				if err != nil {
 					return nil, err
 				}
+				mqlDeliveryChannel.(*mqlAwsConfigDeliverychannel).cacheSnsTopicARN = convert.ToValue(channel.SnsTopicARN)
 				mqlChRes := mqlDeliveryChannel.(*mqlAwsConfigDeliverychannel)
 				if channel.ConfigSnapshotDeliveryProperties != nil {
 					mqlChRes.cacheDeliveryFrequency = string(channel.ConfigSnapshotDeliveryProperties.DeliveryFrequency)
@@ -649,6 +648,7 @@ func (a *mqlAwsConfigDeliverychannel) lastDeliveryStatus() (string, error) {
 }
 
 type mqlAwsConfigDeliverychannelInternal struct {
+	cacheSnsTopicARN       string
 	cachedDeliveryStatus   *cstypes.DeliveryChannelStatus
 	cacheDeliveryFrequency string
 	deliveryStatusFetched  bool
@@ -656,7 +656,7 @@ type mqlAwsConfigDeliverychannelInternal struct {
 }
 
 func (a *mqlAwsConfigDeliverychannel) snsTopic() (*mqlAwsSnsTopic, error) {
-	arnVal := a.SnsTopicARN.Data
+	arnVal := a.cacheSnsTopicARN
 	if arnVal == "" {
 		a.SnsTopic.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

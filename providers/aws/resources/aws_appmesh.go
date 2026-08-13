@@ -830,17 +830,6 @@ func (a *mqlAwsAppmeshVirtualNode) status() (string, error) {
 	return string(resp.VirtualNode.Status.Status), nil
 }
 
-func (a *mqlAwsAppmeshVirtualNode) backends() (int64, error) {
-	resp, err := a.fetchDetail()
-	if err != nil {
-		return 0, err
-	}
-	if resp.VirtualNode == nil || resp.VirtualNode.Spec == nil {
-		return 0, nil
-	}
-	return int64(len(resp.VirtualNode.Spec.Backends)), nil
-}
-
 func (a *mqlAwsAppmeshVirtualNode) backendServices() ([]any, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
@@ -1004,30 +993,6 @@ func (a *mqlAwsAppmeshVirtualNode) serviceDiscoveryCloudMapIpPreference() (strin
 		return string(cm.Value.IpPreference), nil
 	}
 	return "", nil
-}
-
-func (a *mqlAwsAppmeshVirtualNode) serviceDiscovery() (map[string]any, error) {
-	resp, err := a.fetchDetail()
-	if err != nil {
-		return nil, err
-	}
-	if resp.VirtualNode == nil || resp.VirtualNode.Spec == nil || resp.VirtualNode.Spec.ServiceDiscovery == nil {
-		return map[string]any{}, nil
-	}
-	sd := resp.VirtualNode.Spec.ServiceDiscovery
-	result := map[string]any{}
-	switch s := sd.(type) {
-	case *appmesh_types.ServiceDiscoveryMemberDns:
-		result["type"] = "dns"
-		result["hostname"] = convert.ToValue(s.Value.Hostname)
-		result["responseType"] = string(s.Value.ResponseType)
-		result["ipPreference"] = string(s.Value.IpPreference)
-	case *appmesh_types.ServiceDiscoveryMemberAwsCloudMap:
-		result["type"] = "awsCloudMap"
-		result["namespaceName"] = convert.ToValue(s.Value.NamespaceName)
-		result["serviceName"] = convert.ToValue(s.Value.ServiceName)
-	}
-	return result, nil
 }
 
 func (a *mqlAwsAppmeshVirtualNode) loggingAccessLogPath() (string, error) {
