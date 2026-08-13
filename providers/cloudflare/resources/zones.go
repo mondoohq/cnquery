@@ -59,10 +59,3 @@ func (c *mqlCloudflareZoneOwner) id() (string, error) {
 	}
 	return c.Id.Data, nil
 }
-
-func (c *mqlCloudflareZonePlan) id() (string, error) {
-	if c.Id.Error != nil {
-		return "", c.Id.Error
-	}
-	return c.Id.Data, nil
-}

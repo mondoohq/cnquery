@@ -388,10 +388,8 @@ cloudflare.workers.worker.size 11.0.0
 cloudflare.workers.workers 11.0.0
 cloudflare.zone 11.0.0
 cloudflare.zone.account 11.0.0
-cloudflare.zone.account.email 11.0.0
 cloudflare.zone.account.id 11.0.0
 cloudflare.zone.account.name 11.0.0
-cloudflare.zone.account.type 11.0.0
 cloudflare.zone.aiAudit 13.7.2
 cloudflare.zone.aiAudit.robotsStatus 13.7.2
 cloudflare.zone.aiAudit.sitemaps 13.7.2
@@ -538,17 +536,6 @@ cloudflare.zone.emailRouting.mxConfigured 13.1.1
 cloudflare.zone.emailRouting.name 13.1.1
 cloudflare.zone.emailRouting.spfConfigured 13.1.1
 cloudflare.zone.emailRouting.status 13.1.1
-cloudflare.zone.firewallRule 13.1.0
-cloudflare.zone.firewallRule.action 13.1.0
-cloudflare.zone.firewallRule.createdAt 13.1.0
-cloudflare.zone.firewallRule.description 13.1.0
-cloudflare.zone.firewallRule.filterExpression 13.1.0
-cloudflare.zone.firewallRule.id 13.1.0
-cloudflare.zone.firewallRule.paused 13.1.0
-cloudflare.zone.firewallRule.products 13.1.0
-cloudflare.zone.firewallRule.ref 13.1.0
-cloudflare.zone.firewallRule.updatedAt 13.1.0
-cloudflare.zone.firewallRules 13.1.0
 cloudflare.zone.id 11.0.0
 cloudflare.zone.leakedCredentialChecks 13.6.8
 cloudflare.zone.leakedCredentialChecks.detection 13.6.8
@@ -557,7 +544,6 @@ cloudflare.zone.leakedCredentialChecks.detection.password 13.6.8
 cloudflare.zone.leakedCredentialChecks.detection.username 13.6.8
 cloudflare.zone.leakedCredentialChecks.detections 13.6.8
 cloudflare.zone.leakedCredentialChecks.enabled 13.6.8
-cloudflare.zone.liveInputs 11.0.0
 cloudflare.zone.loadBalancer 13.3.6
 cloudflare.zone.loadBalancer.countryPools 13.3.6
 cloudflare.zone.loadBalancer.createdOn 13.3.6
@@ -594,7 +580,6 @@ cloudflare.zone.modifiedOn 11.0.0
 cloudflare.zone.mtlsCertificates 13.1.0
 cloudflare.zone.name 11.0.0
 cloudflare.zone.nameServers 11.0.0
-cloudflare.zone.one 11.0.0
 cloudflare.zone.originCACertificate 13.1.0
 cloudflare.zone.originCACertificate.expiresAt 13.1.0
 cloudflare.zone.originCACertificate.hostnames 13.1.0
@@ -605,7 +590,6 @@ cloudflare.zone.originCACertificate.revokedAt 13.1.0
 cloudflare.zone.originCACertificates 13.1.0
 cloudflare.zone.originalNameServers 11.0.0
 cloudflare.zone.owner 11.1.0
-cloudflare.zone.owner.email 11.1.0
 cloudflare.zone.owner.id 11.1.0
 cloudflare.zone.owner.name 11.1.0
 cloudflare.zone.owner.ownerType 11.1.0
@@ -617,14 +601,6 @@ cloudflare.zone.pageRule.status 13.1.0
 cloudflare.zone.pageRule.updatedAt 13.1.0
 cloudflare.zone.pageRules 13.1.0
 cloudflare.zone.paused 11.0.0
-cloudflare.zone.plan 11.1.0
-cloudflare.zone.plan.currency 11.1.0
-cloudflare.zone.plan.frequency 11.1.0
-cloudflare.zone.plan.id 11.1.0
-cloudflare.zone.plan.isSubscribed 11.1.0
-cloudflare.zone.plan.name 11.1.0
-cloudflare.zone.plan.price 11.1.0
-cloudflare.zone.r2 11.0.0
 cloudflare.zone.rateLimitRule 13.1.1
 cloudflare.zone.rateLimitRule.action 13.1.1
 cloudflare.zone.rateLimitRule.description 13.1.1
@@ -681,11 +657,7 @@ cloudflare.zone.settings.waf 11.1.0
 cloudflare.zone.settings.websockets 13.3.6
 cloudflare.zone.settings.zeroRtt 13.3.6
 cloudflare.zone.status 11.0.0
-cloudflare.zone.tunnelRoutes 13.1.0
-cloudflare.zone.tunnelVirtualNetworks 13.1.0
-cloudflare.zone.tunnels 13.1.0
 cloudflare.zone.type 11.0.0
-cloudflare.zone.videos 11.0.0
 cloudflare.zone.wafRule 13.1.1
 cloudflare.zone.wafRule.action 13.1.1
 cloudflare.zone.wafRule.description 13.1.1
@@ -701,5 +673,4 @@ cloudflare.zone.wafRule.rulesetPhase 13.1.1
 cloudflare.zone.wafRule.scoreThreshold 13.1.1
 cloudflare.zone.wafRule.version 13.1.1
 cloudflare.zone.wafRules 13.1.1
-cloudflare.zone.workers 11.0.0
 cloudflare.zones 11.0.0
