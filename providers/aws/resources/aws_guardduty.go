@@ -120,7 +120,6 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	// default set values
 	a.Status = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.FindingPublishingFrequency = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
-	a.Features = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.Tags = plugin.TValue[map[string]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.CreatedAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.UpdatedAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
@@ -151,8 +150,6 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 
 	a.Status = plugin.TValue[string]{Data: string(detector.Status), State: plugin.StateIsSet}
 	a.FindingPublishingFrequency = plugin.TValue[string]{Data: string(detector.FindingPublishingFrequency), State: plugin.StateIsSet}
-	features, _ := convert.JsonToDictSlice(detector.Features)
-	a.Features = plugin.TValue[[]any]{Data: features, State: plugin.StateIsSet}
 	a.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(detector.Tags), State: plugin.StateIsSet}
 
 	if detector.CreatedAt != nil {
@@ -171,10 +168,6 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 
 func (a *mqlAwsGuarddutyDetector) status() (string, error) {
 	return "", a.populateData()
-}
-
-func (a *mqlAwsGuarddutyDetector) features() ([]any, error) {
-	return nil, a.populateData()
 }
 
 func (a *mqlAwsGuarddutyDetector) tags() (map[string]any, error) {

@@ -288,9 +288,6 @@ func (a *mqlAwsEc2) getInstanceConnectEndpoints(conn *connection.AwsConnection) 
 							"arn":              llx.StringDataPtr(ep.InstanceConnectEndpointArn),
 							"region":           llx.StringData(region),
 							"state":            llx.StringData(string(ep.State)),
-							"subnetId":         llx.StringDataPtr(ep.SubnetId),
-							"vpcId":            llx.StringDataPtr(ep.VpcId),
-							"securityGroupIds": llx.ArrayData(sgIds, types.String),
 							"preserveClientIp": llx.BoolData(convert.ToValue(ep.PreserveClientIp)),
 							"dnsName":          llx.StringDataPtr(ep.DnsName),
 							"fipsDnsName":      llx.StringDataPtr(ep.FipsDnsName),
@@ -300,6 +297,9 @@ func (a *mqlAwsEc2) getInstanceConnectEndpoints(conn *connection.AwsConnection) 
 					if err != nil {
 						return nil, err
 					}
+					mqlEp.(*mqlAwsEc2InstanceConnectEndpoint).cacheSubnetId = convert.ToValue(ep.SubnetId)
+					mqlEp.(*mqlAwsEc2InstanceConnectEndpoint).cacheVpcId = convert.ToValue(ep.VpcId)
+					mqlEp.(*mqlAwsEc2InstanceConnectEndpoint).cacheSecurityGroupIds = sgIds
 					res = append(res, mqlEp)
 				}
 			}
@@ -315,7 +315,7 @@ func (a *mqlAwsEc2InstanceConnectEndpoint) id() (string, error) {
 }
 
 func (a *mqlAwsEc2InstanceConnectEndpoint) subnet() (*mqlAwsVpcSubnet, error) {
-	subnetId := a.SubnetId.Data
+	subnetId := a.cacheSubnetId
 	if subnetId == "" {
 		a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -331,7 +331,7 @@ func (a *mqlAwsEc2InstanceConnectEndpoint) subnet() (*mqlAwsVpcSubnet, error) {
 }
 
 func (a *mqlAwsEc2InstanceConnectEndpoint) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -347,7 +347,7 @@ func (a *mqlAwsEc2InstanceConnectEndpoint) vpc() (*mqlAwsVpc, error) {
 }
 
 func (a *mqlAwsEc2InstanceConnectEndpoint) securityGroups() ([]any, error) {
-	sgIds := a.SecurityGroupIds.Data
+	sgIds := a.cacheSecurityGroupIds
 	if len(sgIds) == 0 {
 		return nil, nil
 	}
@@ -367,4 +367,10 @@ func (a *mqlAwsEc2InstanceConnectEndpoint) securityGroups() ([]any, error) {
 		res = append(res, mqlSg)
 	}
 	return res, nil
+}
+
+type mqlAwsEc2InstanceConnectEndpointInternal struct {
+	cacheSubnetId         string
+	cacheVpcId            string
+	cacheSecurityGroupIds []any
 }

@@ -93,6 +93,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 }
 
 type mqlAwsNeptuneClusterInternal struct {
+	cacheKmsKeyId string
 	securityGroupIdHandler
 	cacheRoleArns []string
 }
@@ -107,7 +108,6 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID s
 			"globalClusterIdentifier":          llx.StringDataPtr(cluster.GlobalClusterIdentifier),
 			"engine":                           llx.StringDataPtr(cluster.Engine),
 			"engineVersion":                    llx.StringDataPtr(cluster.EngineVersion),
-			"kmsKeyId":                         llx.StringDataPtr(cluster.KmsKeyId),
 			"region":                           llx.StringData(region),
 			"automaticRestartTime":             llx.TimeDataPtr(cluster.AutomaticRestartTime),
 			"availabilityZones":                llx.ArrayData(convert.SliceAnyToInterface(cluster.AvailabilityZones), types.String),
@@ -137,6 +137,7 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID s
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsNeptuneCluster).cacheKmsKeyId = convert.ToValue(cluster.KmsKeyId)
 	sgsArn := []string{}
 	for _, sg := range cluster.VpcSecurityGroups {
 		if sg.VpcSecurityGroupId != nil {
@@ -312,7 +313,6 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"clusterIdentifier":                llx.StringDataPtr(instance.DBClusterIdentifier),
 			"engine":                           llx.StringDataPtr(instance.Engine),
 			"engineVersion":                    llx.StringDataPtr(instance.EngineVersion),
-			"kmsKeyId":                         llx.StringDataPtr(instance.KmsKeyId),
 			"region":                           llx.StringData(region),
 			"autoMinorVersionUpgrade":          llx.BoolDataPtr(instance.AutoMinorVersionUpgrade),
 			"availabilityZone":                 llx.StringDataPtr(instance.AvailabilityZone),
@@ -321,7 +321,6 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"instanceClass":                    llx.StringDataPtr(instance.DBInstanceClass),
 			"deletionProtection":               llx.BoolDataPtr(instance.DeletionProtection),
 			"monitoringInterval":               llx.IntDataPtr(instance.MonitoringInterval),
-			"monitoringRoleArn":                llx.StringDataPtr(instance.MonitoringRoleArn),
 			"latestRestorableTime":             llx.TimeDataPtr(instance.LatestRestorableTime),
 			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
 			"enhancedMonitoringResourceArn":    llx.StringDataPtr(instance.EnhancedMonitoringResourceArn),
@@ -344,17 +343,19 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsNeptuneInstance).cacheKmsKeyId = convert.ToValue(instance.KmsKeyId)
+	resource.(*mqlAwsNeptuneInstance).cacheMonitoringRoleArn = convert.ToValue(instance.MonitoringRoleArn)
 	return resource.(*mqlAwsNeptuneInstance), nil
 }
 
 func (a *mqlAwsNeptuneCluster) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.KmsKeyId.Data == "" {
+	if a.cacheKmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringData(a.KmsKeyId.Data),
+			"arn": llx.StringData(a.cacheKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -363,13 +364,13 @@ func (a *mqlAwsNeptuneCluster) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsNeptuneInstance) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.KmsKeyId.Data == "" {
+	if a.cacheKmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringData(a.KmsKeyId.Data),
+			"arn": llx.StringData(a.cacheKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -378,7 +379,7 @@ func (a *mqlAwsNeptuneInstance) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsNeptuneInstance) monitoringRole() (*mqlAwsIamRole, error) {
-	arnVal := a.MonitoringRoleArn.Data
+	arnVal := a.cacheMonitoringRoleArn
 	if arnVal == "" {
 		a.MonitoringRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

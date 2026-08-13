@@ -65,13 +65,13 @@ func (a *mqlAwsCloudwatch) getLogDestinations(conn *connection.AwsConnection) []
 							"arn":          llx.StringDataPtr(dest.Arn),
 							"region":       llx.StringData(region),
 							"targetArn":    llx.StringDataPtr(dest.TargetArn),
-							"roleArn":      llx.StringDataPtr(dest.RoleArn),
 							"accessPolicy": llx.StringDataPtr(dest.AccessPolicy),
 							"createdAt":    llx.TimeDataPtr(int64MillisToTime(dest.CreationTime)),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlDest.(*mqlAwsCloudwatchLogDestination).cacheRoleArn = convert.ToValue(dest.RoleArn)
 					res = append(res, mqlDest)
 				}
 			}
@@ -87,7 +87,7 @@ func (a *mqlAwsCloudwatchLogDestination) id() (string, error) {
 }
 
 func (a *mqlAwsCloudwatchLogDestination) iamRole() (*mqlAwsIamRole, error) {
-	arn := a.RoleArn.Data
+	arn := a.cacheRoleArn
 	if arn == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -444,4 +444,8 @@ func (a *mqlAwsCloudwatchLogAnomalyDetector) id() (string, error) {
 func (a *mqlAwsCloudwatchLogAnomalyDetector) kmsKey() (*mqlAwsKmsKey, error) {
 	a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil
+}
+
+type mqlAwsCloudwatchLogDestinationInternal struct {
+	cacheRoleArn string
 }

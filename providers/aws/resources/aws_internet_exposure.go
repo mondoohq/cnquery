@@ -8,19 +8,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-// internetReachable reports whether a Redshift cluster is reachable from the
-// internet. Redshift does not expose its VPC security groups as a queryable
-// field, so reachability follows the public-access toggle alone: a publicly
-// accessible cluster is assigned a publicly resolvable endpoint reachable from
-// outside its VPC.
-func (a *mqlAwsRedshiftCluster) internetReachable() (bool, error) {
-	publiclyAccessible := a.GetPubliclyAccessible()
-	if publiclyAccessible.Error != nil {
-		return false, publiclyAccessible.Error
-	}
-	return publiclyAccessible.Data, nil
-}
-
 // exposure builds the shared network-exposure breakdown for a Neptune instance.
 // The public-access flag lives on the instance, while the VPC security groups
 // live on its parent cluster, so the open ingress rules are sourced from the
@@ -120,4 +107,9 @@ func (a *mqlAwsEsDomain) isPublic() (bool, error) {
 	// access policy grants a wildcard principal. esDomainIsPublic encodes the full
 	// rule and is covered directly by unit tests.
 	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+type mqlAwsNeptuneInstanceInternal struct {
+	cacheKmsKeyId          string
+	cacheMonitoringRoleArn string
 }

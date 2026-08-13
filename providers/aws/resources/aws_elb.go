@@ -617,7 +617,7 @@ func (a *mqlAwsElbListener) id() (string, error) {
 }
 
 func (a *mqlAwsElbListener) loadBalancer() (*mqlAwsElbLoadbalancer, error) {
-	arnVal := a.LoadBalancerArn.Data
+	arnVal := a.cacheLoadBalancerArn
 	if arnVal == "" {
 		a.LoadBalancer.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -676,7 +676,6 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 			args := map[string]*llx.RawData{
 				"__id":                 llx.StringDataPtr(l.ListenerArn),
 				"arn":                  llx.StringDataPtr(l.ListenerArn),
-				"loadBalancerArn":      llx.StringDataPtr(l.LoadBalancerArn),
 				"port":                 llx.IntDataPtr(l.Port),
 				"protocol":             llx.StringData(string(l.Protocol)),
 				"sslPolicy":            llx.StringDataPtr(l.SslPolicy),
@@ -690,6 +689,7 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlListener.(*mqlAwsElbListener).cacheLoadBalancerArn = convert.ToValue(l.LoadBalancerArn)
 			mqlListener.(*mqlAwsElbListener).defaultActionsCache = l.DefaultActions
 			mqlListener.(*mqlAwsElbListener).mutualAuthTrustStoreArn = mutualAuthTrustStoreArn
 			res = append(res, mqlListener)
@@ -700,6 +700,7 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 
 type mqlAwsElbListenerInternal struct {
 	lazyTags
+	cacheLoadBalancerArn    string
 	defaultActionsCache     []elbtypes.Action
 	mutualAuthTrustStoreArn string
 }

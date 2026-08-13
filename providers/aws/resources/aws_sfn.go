@@ -237,28 +237,6 @@ func (a *mqlAwsSfnStateMachine) loggingDestinations() ([]any, error) {
 	return out, nil
 }
 
-func (a *mqlAwsSfnStateMachine) loggingConfiguration() (map[string]any, error) {
-	resp, err := a.fetchDetail()
-	if err != nil {
-		return nil, err
-	}
-	if resp.LoggingConfiguration == nil {
-		return map[string]any{}, nil
-	}
-	cfg := resp.LoggingConfiguration
-	destinations := make([]any, 0, len(cfg.Destinations))
-	for _, d := range cfg.Destinations {
-		if d.CloudWatchLogsLogGroup != nil {
-			destinations = append(destinations, convert.ToValue(d.CloudWatchLogsLogGroup.LogGroupArn))
-		}
-	}
-	return map[string]any{
-		"level":                string(cfg.Level),
-		"includeExecutionData": cfg.IncludeExecutionData,
-		"destinations":         destinations,
-	}, nil
-}
-
 func (a *mqlAwsSfnStateMachine) tracingEnabled() (bool, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
@@ -340,27 +318,6 @@ func (a *mqlAwsSfnStateMachine) encryptionKmsDataKeyReusePeriodSeconds() (int64,
 		return 0, nil
 	}
 	return int64(*resp.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds), nil
-}
-
-func (a *mqlAwsSfnStateMachine) encryptionConfiguration() (map[string]any, error) {
-	resp, err := a.fetchDetail()
-	if err != nil {
-		return nil, err
-	}
-	if resp.EncryptionConfiguration == nil {
-		return map[string]any{}, nil
-	}
-	cfg := resp.EncryptionConfiguration
-	result := map[string]any{
-		"type": string(cfg.Type),
-	}
-	if cfg.KmsKeyId != nil {
-		result["kmsKeyId"] = *cfg.KmsKeyId
-	}
-	if cfg.KmsDataKeyReusePeriodSeconds != nil && *cfg.KmsDataKeyReusePeriodSeconds > 0 {
-		result["kmsDataKeyReusePeriodSeconds"] = *cfg.KmsDataKeyReusePeriodSeconds
-	}
-	return result, nil
 }
 
 func (a *mqlAwsSfnStateMachine) versions() ([]any, error) {

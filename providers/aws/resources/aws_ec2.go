@@ -295,7 +295,6 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 								"__id":          llx.StringData("aws.ec2.networkacl.association/" + convert.ToValue(association.NetworkAclAssociationId)),
 								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
 								"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
-								"subnetId":      llx.StringDataPtr(association.SubnetId),
 							})
 						if err == nil {
 							assocRes := mqlNetworkAclAssoc.(*mqlAwsEc2NetworkaclAssociation)
@@ -878,11 +877,11 @@ func (a *mqlAwsEc2) images() ([]any, error) {
 }
 
 // createBlockDeviceMappings converts the AWS BlockDeviceMapping slice to MQL resources
-func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mappings []ec2types.BlockDeviceMapping) ([]any, error) {
+func createBlockDeviceMappings(runtime *plugin.Runtime, imageKey string, mappings []ec2types.BlockDeviceMapping) ([]any, error) {
 	result := make([]any, 0, len(mappings))
 	for _, mapping := range mappings {
 		deviceName := convert.ToValue(mapping.DeviceName)
-		mappingID := fmt.Sprintf("%s/device/%s", imageArn, deviceName)
+		mappingID := fmt.Sprintf("%s/device/%s", imageKey, deviceName)
 
 		args := map[string]*llx.RawData{
 			"__id":        llx.StringData(mappingID),
@@ -901,7 +900,6 @@ func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mapping
 					"snapshotId":          llx.StringDataPtr(mapping.Ebs.SnapshotId),
 					"volumeSize":          llx.IntDataDefault(mapping.Ebs.VolumeSize, 0),
 					"volumeType":          llx.StringData(string(mapping.Ebs.VolumeType)),
-					"kmsKeyId":            llx.StringDataPtr(mapping.Ebs.KmsKeyId),
 					"iops":                llx.IntDataDefault(mapping.Ebs.Iops, 0),
 					"throughput":          llx.IntDataDefault(mapping.Ebs.Throughput, 0),
 					"deleteOnTermination": llx.BoolDataPtr(mapping.Ebs.DeleteOnTermination),
@@ -909,6 +907,7 @@ func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mapping
 			if err != nil {
 				return nil, err
 			}
+			mqlEbs.(*mqlAwsEc2ImageEbsBlockDevice).cacheKmsKeyId = convert.ToValue(mapping.Ebs.KmsKeyId)
 			args["ebs"] = llx.ResourceData(mqlEbs, mqlEbs.MqlName())
 		} else {
 			args["ebs"] = llx.NilData
@@ -924,13 +923,13 @@ func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mapping
 }
 
 // createImageWatermarks converts the AWS ImageWatermark slice to MQL resources
-func createImageWatermarks(runtime *plugin.Runtime, imageArn string, watermarks []ec2types.ImageWatermark) ([]any, error) {
+func createImageWatermarks(runtime *plugin.Runtime, imageKey string, watermarks []ec2types.ImageWatermark) ([]any, error) {
 	result := make([]any, 0, len(watermarks))
 	for _, watermark := range watermarks {
 		watermarkKey := convert.ToValue(watermark.WatermarkKey)
 		mqlWatermark, err := CreateResource(runtime, ResourceAwsEc2ImageWatermark,
 			map[string]*llx.RawData{
-				"__id":                 llx.StringData(fmt.Sprintf("%s/watermark/%s", imageArn, watermarkKey)),
+				"__id":                 llx.StringData(fmt.Sprintf("%s/watermark/%s", imageKey, watermarkKey)),
 				"watermarkKey":         llx.StringDataPtr(watermark.WatermarkKey),
 				"createdAt":            llx.TimeDataPtr(watermark.WatermarkCreationTime),
 				"sourceImageId":        llx.StringDataPtr(watermark.SourceImageId),
@@ -976,20 +975,20 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 				}
 
 				for _, image := range images.Images {
+					imageKey := region + "/" + convert.ToValue(image.ImageId)
 					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(image.Tags)) {
 						log.Debug().Interface("image", image.ImageId).Msg("excluding image due to filters")
 						continue
 					}
 
 					// Create block device mapping MQL resources
-					imageArn := fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))
-					blockDeviceMappings, err := createBlockDeviceMappings(a.MqlRuntime, imageArn, image.BlockDeviceMappings)
+					blockDeviceMappings, err := createBlockDeviceMappings(a.MqlRuntime, imageKey, image.BlockDeviceMappings)
 					if err != nil {
 						return nil, err
 					}
 
 					// Create watermark MQL resources
-					watermarks, err := createImageWatermarks(a.MqlRuntime, imageArn, image.ImageWatermarks)
+					watermarks, err := createImageWatermarks(a.MqlRuntime, imageKey, image.ImageWatermarks)
 					if err != nil {
 						return nil, err
 					}
@@ -1033,7 +1032,6 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 					}
 					mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
 						map[string]*llx.RawData{
-							"arn":                      llx.StringData(imageArn),
 							"id":                       llx.StringDataPtr(image.ImageId),
 							"name":                     llx.StringDataPtr(image.Name),
 							"architecture":             llx.StringData(string(image.Architecture)),
@@ -1353,12 +1351,12 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 				map[string]*llx.RawData{
 					"deleteOnTermination": llx.BoolData(convert.ToValue(device.Ebs.DeleteOnTermination)),
 					"status":              llx.StringData(string(device.Ebs.Status)),
-					"volumeId":            llx.StringData(convert.ToValue(device.Ebs.VolumeId)),
 					"deviceName":          llx.StringData(convert.ToValue(device.DeviceName)),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlInstanceDevice.(*mqlAwsEc2InstanceDevice).cacheVolumeId = convert.ToValue(device.Ebs.VolumeId)
 			mqlInstanceDevice.(*mqlAwsEc2InstanceDevice).region = regionVal
 			mqlDevices = append(mqlDevices, mqlInstanceDevice)
 		}
@@ -1398,7 +1396,6 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"instanceId":         llx.StringDataPtr(instance.InstanceId),
 			"instanceLifecycle":  llx.StringData(string(instance.InstanceLifecycle)),
 			"instanceType":       llx.StringData(string(instance.InstanceType)),
-			"launchTime":         llx.TimeDataPtr(instance.LaunchTime),
 			"launchedAt":         llx.TimeDataPtr(instance.LaunchTime),
 			"platformDetails":    llx.StringDataPtr(instance.PlatformDetails),
 			"privateDnsName":     llx.StringDataPtr(instance.PrivateDnsName),
@@ -1498,17 +1495,17 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			args["imdsv2Required"] = llx.BoolData(false)
 		}
 		// add vpc if there is one
+		var vpcArn string
 		if instance.VpcId != nil {
-			arn := fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.VpcId))
-			args["vpcArn"] = llx.StringData(arn)
-		} else {
-			args["vpcArn"] = llx.NilData
+			vpcArn = fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.VpcId))
 		}
 
 		mqlEc2Instance, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Instance, args)
 		if err != nil {
 			return nil, err
 		}
+		mqlEc2Instance.(*mqlAwsEc2Instance).cacheLaunchTime = instance.LaunchTime
+		mqlEc2Instance.(*mqlAwsEc2Instance).cacheVpcArn = vpcArn
 		mqlEc2Instance.(*mqlAwsEc2Instance).instanceCache = instance
 		res = append(res, mqlEc2Instance)
 	}
@@ -1516,7 +1513,9 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 }
 
 type mqlAwsEc2InstanceInternal struct {
-	instanceCache ec2types.Instance
+	cacheLaunchTime *time.Time
+	cacheVpcArn     string
+	instanceCache   ec2types.Instance
 }
 
 func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
@@ -1863,10 +1862,11 @@ func (i *mqlAwsEc2Instance) securityGroups() ([]any, error) {
 
 func (i *mqlAwsEc2Instance) image() (*mqlAwsEc2Image, error) {
 	if i.instanceCache.ImageId != nil {
-		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
-
 		mqlImage, err := NewResource(i.MqlRuntime, ResourceAwsEc2Image,
-			map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, i.Region.Data, conn.AccountId(), convert.ToValue(i.instanceCache.ImageId)))})
+			map[string]*llx.RawData{
+				"id":     llx.StringDataPtr(i.instanceCache.ImageId),
+				"region": llx.StringData(i.Region.Data),
+			})
 		if err == nil {
 			return mqlImage.(*mqlAwsEc2Image), nil
 		}
@@ -1891,7 +1891,7 @@ func (i *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
 }
 
 func (i *mqlAwsEc2Image) id() (string, error) {
-	return i.Arn.Data, nil
+	return i.Region.Data + "/" + i.Id.Data, nil
 }
 
 func (i *mqlAwsEc2Image) launchPermissions() ([]any, error) {
@@ -1910,22 +1910,22 @@ func (i *mqlAwsEc2Image) launchPermissions() ([]any, error) {
 		return nil, err
 	}
 
-	imageArn := i.Arn.Data
+	imageKey := i.Region.Data + "/" + i.Id.Data
 	permissions := make([]any, 0, len(result.LaunchPermissions))
 	for _, perm := range result.LaunchPermissions {
 		// Build unique ID based on which field is set
 		var permId string
 		switch {
 		case perm.UserId != nil:
-			permId = fmt.Sprintf("%s/user/%s", imageArn, *perm.UserId)
+			permId = fmt.Sprintf("%s/user/%s", imageKey, *perm.UserId)
 		case perm.Group != "":
-			permId = fmt.Sprintf("%s/group/%s", imageArn, string(perm.Group))
+			permId = fmt.Sprintf("%s/group/%s", imageKey, string(perm.Group))
 		case perm.OrganizationArn != nil:
-			permId = fmt.Sprintf("%s/org/%s", imageArn, *perm.OrganizationArn)
+			permId = fmt.Sprintf("%s/org/%s", imageKey, *perm.OrganizationArn)
 		case perm.OrganizationalUnitArn != nil:
-			permId = fmt.Sprintf("%s/ou/%s", imageArn, *perm.OrganizationalUnitArn)
+			permId = fmt.Sprintf("%s/ou/%s", imageKey, *perm.OrganizationalUnitArn)
 		default:
-			permId = fmt.Sprintf("%s/unknown", imageArn)
+			permId = fmt.Sprintf("%s/unknown", imageKey)
 		}
 
 		mqlPermission, err := CreateResource(i.MqlRuntime, ResourceAwsEc2ImageLaunchPermission,
@@ -1946,13 +1946,13 @@ func (i *mqlAwsEc2Image) launchPermissions() ([]any, error) {
 }
 
 func (a *mqlAwsEc2ImageEbsBlockDevice) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.KmsKeyId.Data == "" {
+	if a.cacheKmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringData(a.KmsKeyId.Data),
+			"arn": llx.StringData(a.cacheKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -1984,14 +1984,15 @@ func (i *mqlAwsEc2Image) sourceImage() (*mqlAwsEc2Image, error) {
 		i.SourceImage.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 	region := i.SourceImageRegion.Data
 	if region == "" {
 		region = i.Region.Data
 	}
-	arn := fmt.Sprintf(imageArnPattern, region, conn.AccountId(), i.SourceImageId.Data)
 	mqlImage, err := NewResource(i.MqlRuntime, ResourceAwsEc2Image,
-		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+		map[string]*llx.RawData{
+			"id":     llx.StringData(i.SourceImageId.Data),
+			"region": llx.StringData(region),
+		})
 	if err != nil {
 		i.SourceImage.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2024,26 +2025,21 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws ec2 image")
+	if args["id"] == nil || args["region"] == nil {
+		return nil, nil, errors.New("id and region required to fetch aws ec2 image")
 	}
 
-	arnVal := args["arn"].Value.(string)
-	arn, err := arn.Parse(arnVal)
-	if err != nil {
-		return nil, nil, err
-	}
-	resource := strings.Split(arn.Resource, "/")
-	if len(resource) < 2 {
-		return nil, nil, fmt.Errorf("not a valid ec2 image arn %q", arnVal)
+	imageId, _ := args["id"].Value.(string)
+	region, _ := args["region"].Value.(string)
+	if imageId == "" || region == "" {
+		return nil, nil, errors.New("id and region required to fetch aws ec2 image")
 	}
 	conn := runtime.Connection.(*connection.AwsConnection)
-	svc := conn.Ec2(arn.Region)
+	svc := conn.Ec2(region)
 	ctx := context.Background()
-	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{resource[1]}})
+	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{imageId}})
 	if err != nil {
-		args["arn"] = llx.StringData(arnVal)
-		args["id"] = llx.StringData(resource[1])
+		args["id"] = llx.StringData(imageId)
 		args["name"] = llx.StringData("not found")
 		args["architecture"] = llx.NilData
 		args["ownerId"] = llx.NilData
@@ -2059,7 +2055,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["virtualizationType"] = llx.NilData
 		args["blockDeviceMappings"] = llx.NilData
 		args["tags"] = llx.NilData
-		args["region"] = llx.StringData(arn.Region)
+		args["region"] = llx.StringData(region)
 		args["description"] = llx.NilData
 		args["imageType"] = llx.NilData
 		args["freeTierEligible"] = llx.NilData
@@ -2079,21 +2075,21 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 	if len(images.Images) > 0 {
 		image := images.Images[0]
+		imageKey := region + "/" + imageId
 
 		// Create block device mapping MQL resources
-		blockDeviceMappings, err := createBlockDeviceMappings(runtime, arnVal, image.BlockDeviceMappings)
+		blockDeviceMappings, err := createBlockDeviceMappings(runtime, imageKey, image.BlockDeviceMappings)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		// Create watermark MQL resources
-		watermarks, err := createImageWatermarks(runtime, arnVal, image.ImageWatermarks)
+		watermarks, err := createImageWatermarks(runtime, imageKey, image.ImageWatermarks)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		args["arn"] = llx.StringData(arnVal)
-		args["id"] = llx.StringData(resource[1])
+		args["id"] = llx.StringData(imageId)
 		args["name"] = llx.StringDataPtr(image.Name)
 		args["architecture"] = llx.StringData(string(image.Architecture))
 		args["ownerId"] = llx.StringDataPtr(image.OwnerId)
@@ -2107,7 +2103,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["virtualizationType"] = llx.StringData(string(image.VirtualizationType))
 		args["blockDeviceMappings"] = llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping))
 		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String)
-		args["region"] = llx.StringData(arn.Region)
+		args["region"] = llx.StringData(region)
 		args["description"] = llx.StringDataPtr(image.Description)
 		args["imageType"] = llx.StringData(string(image.ImageType))
 		args["freeTierEligible"] = llx.BoolDataPtr(image.FreeTierEligible)
@@ -2354,15 +2350,16 @@ func anyStringEquals(list []any, target string) bool {
 }
 
 type mqlAwsEc2InstanceDeviceInternal struct {
-	region string
+	cacheVolumeId string
+	region        string
 }
 
 func (a *mqlAwsEc2InstanceDevice) id() (string, error) {
-	return a.VolumeId.Data, nil
+	return a.cacheVolumeId, nil
 }
 
 func (a *mqlAwsEc2InstanceDevice) volume() (*mqlAwsEc2Volume, error) {
-	volumeID := a.VolumeId.Data
+	volumeID := a.cacheVolumeId
 	if volumeID == "" {
 		a.Volume.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2382,26 +2379,20 @@ func (a *mqlAwsEc2Instance) id() (string, error) {
 }
 
 func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
-	vpcArn := a.VpcArn
-	if vpcArn.Error != nil {
-		return nil, vpcArn.Error
-	}
-	// RawToTValue stamps a nil value as StateIsNull|StateIsSet, so the old
-	// `State == plugin.StateIsNull` comparison could never match. Instances
-	// without a VPC (terminated instances drop VpcId) therefore fell through
-	// with arn:"" and triggered an account-wide VPC scan that ended in a
-	// misleading "vpc does not exist" error. A missing VPC is a null field.
-	if !vpcArn.IsSet() || vpcArn.IsNull() || vpcArn.Data == "" {
+	// Instances without a VPC (terminated instances drop VpcId) have no ARN to
+	// resolve; treat that as a null field rather than falling through with an
+	// empty arn, which would trigger an account-wide VPC scan that ends in a
+	// misleading "vpc does not exist" error.
+	vpcArn := a.cacheVpcArn
+	if vpcArn == "" {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	{
-		res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn.Data)})
-		if err != nil {
-			return nil, err
-		}
-		return res.(*mqlAwsVpc), nil
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
 	}
+	return res.(*mqlAwsVpc), nil
 }
 
 func (a *mqlAwsEc2Instance) ssm() (any, error) {
@@ -3730,7 +3721,7 @@ func (a *mqlAwsEc2CustomerGateway) id() (string, error) {
 }
 
 func (a *mqlAwsEc2CustomerGateway) certificate() (*mqlAwsAcmCertificate, error) {
-	arnVal := a.CertificateArn.Data
+	arnVal := a.cacheCertificateArn
 	if arnVal == "" {
 		a.Certificate.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -3839,13 +3830,13 @@ func (a *mqlAwsEc2) getCustomerGateways(conn *connection.AwsConnection) []*jobpo
 						"bgpAsn":         llx.StringData(convert.ToValue(cgw.BgpAsn)),
 						"bgpAsnExtended": llx.StringDataPtr(cgw.BgpAsnExtended),
 						"ipAddress":      llx.StringData(convert.ToValue(cgw.IpAddress)),
-						"certificateArn": llx.StringData(convert.ToValue(cgw.CertificateArn)),
 						"deviceName":     llx.StringData(convert.ToValue(cgw.DeviceName)),
 						"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(cgw.Tags)), types.String),
 					})
 				if err != nil {
 					return nil, err
 				}
+				mqlCgw.(*mqlAwsEc2CustomerGateway).cacheCertificateArn = convert.ToValue(cgw.CertificateArn)
 				res = append(res, mqlCgw)
 			}
 			return jobpool.JobResult(res), nil
@@ -4890,4 +4881,12 @@ func (a *mqlAwsEc2Snapshot) sharedExternally() (bool, error) {
 		return false, accounts.Error
 	}
 	return len(accounts.Data) > 0, nil
+}
+
+type mqlAwsEc2ImageEbsBlockDeviceInternal struct {
+	cacheKmsKeyId string
+}
+
+type mqlAwsEc2CustomerGatewayInternal struct {
+	cacheCertificateArn string
 }

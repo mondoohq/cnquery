@@ -166,26 +166,6 @@ func (a *mqlAwsIam) credentialReport() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIam) accountPasswordPolicy() (map[string]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Iam("")
-	ctx := context.Background()
-
-	resp, err := svc.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
-	var notFoundErr *iamtypes.NoSuchEntityException
-	if err != nil {
-		if errors.As(err, &notFoundErr) {
-			return nil, nil
-		}
-		return nil, errors.Wrap(err, "could not gather aws iam account-password-policy")
-	}
-
-	res := ParsePasswordPolicy(resp.PasswordPolicy)
-
-	return res, nil
-}
-
 func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]any {
 	res := map[string]any{}
 
@@ -724,11 +704,6 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 		for _, role := range rolesResp.Roles {
 			policyDocumentMap := decodeIamPolicyDocument(role.AssumeRolePolicyDocument)
 
-			var permBoundaryArn string
-			if role.PermissionsBoundary != nil {
-				permBoundaryArn = convert.ToValue(role.PermissionsBoundary.PermissionsBoundaryArn)
-			}
-
 			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, ResourceAwsIamRole,
 				map[string]*llx.RawData{
 					"arn":                      llx.StringDataPtr(role.Arn),
@@ -738,7 +713,6 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"createdAt":                llx.TimeDataPtr(role.CreateDate),
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
 					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
-					"permissionsBoundaryArn":   llx.StringData(permBoundaryArn),
 					"path":                     llx.StringDataPtr(role.Path),
 					"isServiceLinked":          llx.BoolData(isServiceLinkedRolePath(convert.ToValue(role.Path))),
 				})
@@ -1210,21 +1184,6 @@ func (a *mqlAwsIamUser) listAccessKeyMetadata() ([]iamtypes.AccessKeyMetadata, e
 	a.accessKeyMetaCache = res
 	a.accessKeyMetaFetched.Store(true)
 	return res, nil
-}
-
-func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
-	metadata, err := a.listAccessKeyMetadata()
-	if err != nil {
-		return nil, err
-	}
-	// JsonToDictSlice already returns a []any of per-key dicts; return it
-	// directly. (The pre-refactor code wrapped it in another slice, yielding
-	// [[dict, …]] instead of [dict, …] — a latent bug, now fixed.)
-	dicts, err := convert.JsonToDictSlice(metadata)
-	if err != nil {
-		return nil, err
-	}
-	return dicts, nil
 }
 
 func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
@@ -1824,12 +1783,7 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
 		args["createdAt"] = llx.TimeDataPtr(role.CreateDate)
 		args["assumeRolePolicyDocument"] = llx.MapData(policyDocumentMap, types.Any)
-		var permBoundaryArn string
-		if role.PermissionsBoundary != nil {
-			permBoundaryArn = convert.ToValue(role.PermissionsBoundary.PermissionsBoundaryArn)
-		}
 		args["maxSessionDuration"] = llx.IntDataDefault(role.MaxSessionDuration, 3600)
-		args["permissionsBoundaryArn"] = llx.StringData(permBoundaryArn)
 		args["path"] = llx.StringDataPtr(role.Path)
 		// Leaving this unset reported null for every role reached through the
 		// init, and because the resource the init builds is cached under the
@@ -1867,7 +1821,6 @@ func (a *mqlAwsIamRole) permissionsBoundary() (*mqlAwsIamPolicy, error) {
 			a.permissionsBoundaryArn = convert.ToValue(resp.Role.PermissionsBoundary.PermissionsBoundaryArn)
 		}
 		a.permissionsBoundaryArnSet = true
-		a.PermissionsBoundaryArn = plugin.TValue[string]{Data: a.permissionsBoundaryArn, State: plugin.StateIsSet}
 	}
 	boundaryArn := a.permissionsBoundaryArn
 

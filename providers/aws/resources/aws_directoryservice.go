@@ -253,14 +253,14 @@ func (a *mqlAwsDirectoryserviceDirectory) vpcSettings() (*mqlAwsDirectoryservice
 	resource, err := CreateResource(a.MqlRuntime, "aws.directoryservice.vpcSettings",
 		map[string]*llx.RawData{
 			"__id":              llx.StringData("aws.directoryservice.vpcSettings/" + region + "/" + dirId),
-			"vpcId":             llx.StringDataPtr(vs.VpcId),
-			"securityGroupId":   llx.StringDataPtr(vs.SecurityGroupId),
-			"subnetIds":         llx.ArrayData(toInterfaceArr(vs.SubnetIds), types.String),
 			"availabilityZones": llx.ArrayData(toInterfaceArr(vs.AvailabilityZones), types.String),
 		})
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsDirectoryserviceVpcSettings).cacheVpcId = convert.ToValue(vs.VpcId)
+	resource.(*mqlAwsDirectoryserviceVpcSettings).cacheSecurityGroupId = convert.ToValue(vs.SecurityGroupId)
+	resource.(*mqlAwsDirectoryserviceVpcSettings).cacheSubnetIds = toInterfaceArr(vs.SubnetIds)
 	cast := resource.(*mqlAwsDirectoryserviceVpcSettings)
 	cast.cacheRegion = region
 	return cast, nil
@@ -271,11 +271,14 @@ func (a *mqlAwsDirectoryserviceVpcSettings) id() (string, error) {
 }
 
 type mqlAwsDirectoryserviceVpcSettingsInternal struct {
-	cacheRegion string
+	cacheVpcId           string
+	cacheSecurityGroupId string
+	cacheSubnetIds       []any
+	cacheRegion          string
 }
 
 func (a *mqlAwsDirectoryserviceVpcSettings) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -290,7 +293,7 @@ func (a *mqlAwsDirectoryserviceVpcSettings) vpc() (*mqlAwsVpc, error) {
 }
 
 func (a *mqlAwsDirectoryserviceVpcSettings) securityGroup() (*mqlAwsEc2Securitygroup, error) {
-	sgId := a.SecurityGroupId.Data
+	sgId := a.cacheSecurityGroupId
 	if sgId == "" {
 		a.SecurityGroup.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -305,7 +308,7 @@ func (a *mqlAwsDirectoryserviceVpcSettings) securityGroup() (*mqlAwsEc2Securityg
 }
 
 func (a *mqlAwsDirectoryserviceVpcSettings) subnets() ([]any, error) {
-	subnetIds := a.SubnetIds.Data
+	subnetIds := a.cacheSubnetIds
 	if len(subnetIds) == 0 {
 		return nil, nil
 	}
@@ -338,9 +341,6 @@ func (a *mqlAwsDirectoryserviceDirectory) connectSettings() (*mqlAwsDirectoryser
 	resource, err := CreateResource(a.MqlRuntime, "aws.directoryservice.connectSettings",
 		map[string]*llx.RawData{
 			"__id":              llx.StringData("aws.directoryservice.connectSettings/" + region + "/" + dirId),
-			"vpcId":             llx.StringDataPtr(cs.VpcId),
-			"securityGroupId":   llx.StringDataPtr(cs.SecurityGroupId),
-			"subnetIds":         llx.ArrayData(toInterfaceArr(cs.SubnetIds), types.String),
 			"availabilityZones": llx.ArrayData(toInterfaceArr(cs.AvailabilityZones), types.String),
 			"connectIps":        llx.ArrayData(toInterfaceArr(cs.ConnectIps), types.String),
 			"customerUserName":  llx.StringDataPtr(cs.CustomerUserName),
@@ -348,6 +348,9 @@ func (a *mqlAwsDirectoryserviceDirectory) connectSettings() (*mqlAwsDirectoryser
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsDirectoryserviceConnectSettings).cacheVpcId = convert.ToValue(cs.VpcId)
+	resource.(*mqlAwsDirectoryserviceConnectSettings).cacheSecurityGroupId = convert.ToValue(cs.SecurityGroupId)
+	resource.(*mqlAwsDirectoryserviceConnectSettings).cacheSubnetIds = toInterfaceArr(cs.SubnetIds)
 	csCast := resource.(*mqlAwsDirectoryserviceConnectSettings)
 	csCast.cacheRegion = region
 	return csCast, nil
@@ -358,11 +361,14 @@ func (a *mqlAwsDirectoryserviceConnectSettings) id() (string, error) {
 }
 
 type mqlAwsDirectoryserviceConnectSettingsInternal struct {
-	cacheRegion string
+	cacheVpcId           string
+	cacheSecurityGroupId string
+	cacheSubnetIds       []any
+	cacheRegion          string
 }
 
 func (a *mqlAwsDirectoryserviceConnectSettings) vpc() (*mqlAwsVpc, error) {
-	vpcId := a.VpcId.Data
+	vpcId := a.cacheVpcId
 	if vpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -377,7 +383,7 @@ func (a *mqlAwsDirectoryserviceConnectSettings) vpc() (*mqlAwsVpc, error) {
 }
 
 func (a *mqlAwsDirectoryserviceConnectSettings) securityGroup() (*mqlAwsEc2Securitygroup, error) {
-	sgId := a.SecurityGroupId.Data
+	sgId := a.cacheSecurityGroupId
 	if sgId == "" {
 		a.SecurityGroup.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -392,7 +398,7 @@ func (a *mqlAwsDirectoryserviceConnectSettings) securityGroup() (*mqlAwsEc2Secur
 }
 
 func (a *mqlAwsDirectoryserviceConnectSettings) subnets() ([]any, error) {
-	subnetIds := a.SubnetIds.Data
+	subnetIds := a.cacheSubnetIds
 	if len(subnetIds) == 0 {
 		return nil, nil
 	}

@@ -196,7 +196,6 @@ func newMqlAwsCodepipelinePipeline(runtime *plugin.Runtime, region, name string)
 		"updatedAt":      llx.TimeDataPtr(updatedAt),
 		"pipelineType":   llx.StringData(string(pipeline.PipelineType)),
 		"executionMode":  llx.StringData(string(pipeline.ExecutionMode)),
-		"roleArn":        llx.StringDataPtr(pipeline.RoleArn),
 		"artifactStore":  llx.MapData(artifactStoreDict, types.String),
 		"artifactStores": llx.MapData(artifactStoresMap, types.String),
 		"stages":         llx.ArrayData(stages, types.Dict),

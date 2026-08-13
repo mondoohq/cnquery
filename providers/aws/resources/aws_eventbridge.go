@@ -193,7 +193,6 @@ func (a *mqlAwsEventbridgeEventBus) rules() ([]any, error) {
 					"description":        llx.StringDataPtr(rule.Description),
 					"eventPattern":       llx.StringDataPtr(rule.EventPattern),
 					"scheduleExpression": llx.StringDataPtr(rule.ScheduleExpression),
-					"roleArn":            llx.StringDataPtr(rule.RoleArn),
 				})
 			if err != nil {
 				return nil, err
@@ -283,15 +282,6 @@ func (a *mqlAwsEventbridgeRule) listTargets() ([]eventbridge_types.Target, error
 		nextToken = resp.NextToken
 	}
 	return allTargets, nil
-}
-
-// Deprecated: use eventTargets(). Retained for backwards compatibility.
-func (a *mqlAwsEventbridgeRule) targets() ([]any, error) {
-	allTargets, err := a.listTargets()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDictSlice(allTargets)
 }
 
 func (a *mqlAwsEventbridgeRule) eventTargets() ([]any, error) {

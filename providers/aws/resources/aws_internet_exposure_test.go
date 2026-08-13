@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func TestNaclAllowsPublicIngress(t *testing.T) {
@@ -115,10 +114,6 @@ func TestRouteAuthIsPublic(t *testing.T) {
 	assert.False(t, routeAuthIsPublic("CUSTOM"))
 }
 
-func setBoolValue(v bool) plugin.TValue[bool] {
-	return plugin.TValue[bool]{Data: v, State: plugin.StateIsSet}
-}
-
 func TestEsDomainIsPublic(t *testing.T) {
 	tests := []struct {
 		name               string
@@ -134,27 +129,6 @@ func TestEsDomainIsPublic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, esDomainIsPublic(tt.inVPC, tt.policyAllowsPublic))
-		})
-	}
-}
-
-func TestRedshiftClusterInternetReachable(t *testing.T) {
-	tests := []struct {
-		name               string
-		publiclyAccessible bool
-		want               bool
-	}{
-		{"publicly accessible", true, true},
-		{"private", false, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cluster := &mqlAwsRedshiftCluster{
-				PubliclyAccessible: setBoolValue(tt.publiclyAccessible),
-			}
-			got, err := cluster.internetReachable()
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
 		})
 	}
 }

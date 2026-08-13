@@ -47,6 +47,8 @@ func chunkStrings(s []string, size int) [][]string {
 }
 
 type mqlAwsEsDomainInternal struct {
+	cacheCustomEndpointCertificateArn string
+	cacheCognitoRoleArn               string
 	securityGroupIdHandler
 	region    string
 	accountID string
@@ -348,7 +350,6 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"tlsSecurityPolicy":                  llx.StringData(tlsSecurityPolicy),
 		"customEndpointEnabled":              llx.BoolData(customEndpointEnabled),
 		"customEndpoint":                     llx.StringData(customEndpoint),
-		"customEndpointCertificateArn":       llx.StringData(customEndpointCertificateArn),
 		"availabilityZones":                  llx.ArrayData(toInterfaceArr(availabilityZones), types.String),
 		"instanceType":                       llx.StringData(instanceType),
 		"instanceCount":                      llx.IntData(instanceCount),
@@ -377,7 +378,6 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"cognitoEnabled":                     llx.BoolData(cognitoEnabled),
 		"cognitoUserPoolId":                  llx.StringData(cognitoUserPoolId),
 		"cognitoIdentityPoolId":              llx.StringData(cognitoIdentityPoolId),
-		"cognitoRoleArn":                     llx.StringData(cognitoRoleArn),
 		"autoTuneState":                      llx.StringData(autoTuneState),
 		"serviceSoftwareCurrentVersion":      llx.StringData(serviceSoftwareCurrentVersion),
 		"serviceSoftwareNewVersion":          llx.StringData(serviceSoftwareNewVersion),
@@ -400,6 +400,8 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsEsDomain).cacheCustomEndpointCertificateArn = customEndpointCertificateArn
+	resource.(*mqlAwsEsDomain).cacheCognitoRoleArn = cognitoRoleArn
 	mqlDomain := resource.(*mqlAwsEsDomain)
 	mqlDomain.region = region
 	mqlDomain.accountID = accountID
@@ -512,7 +514,7 @@ func (a *mqlAwsEsDomain) vpc() (*mqlAwsVpc, error) {
 }
 
 func (a *mqlAwsEsDomain) customEndpointCertificate() (*mqlAwsAcmCertificate, error) {
-	arnVal := a.CustomEndpointCertificateArn.Data
+	arnVal := a.cacheCustomEndpointCertificateArn
 	if arnVal == "" {
 		a.CustomEndpointCertificate.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -526,7 +528,7 @@ func (a *mqlAwsEsDomain) customEndpointCertificate() (*mqlAwsAcmCertificate, err
 }
 
 func (a *mqlAwsEsDomain) cognitoRole() (*mqlAwsIamRole, error) {
-	arnVal := a.CognitoRoleArn.Data
+	arnVal := a.cacheCognitoRoleArn
 	if arnVal == "" {
 		a.CognitoRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

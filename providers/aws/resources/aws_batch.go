@@ -213,19 +213,6 @@ func (a *mqlAwsBatchComputeEnvironment) securityGroups() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsBatchComputeEnvironment) iamRole() (*mqlAwsIamRole, error) {
-	if a.cacheServiceRoleArn == nil || *a.cacheServiceRoleArn == "" {
-		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
-		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheServiceRoleArn)})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlAwsIamRole), nil
-}
-
 func (a *mqlAwsBatchComputeEnvironment) serviceRole() (*mqlAwsIamRole, error) {
 	if a.cacheServiceRoleArn == nil || *a.cacheServiceRoleArn == "" {
 		a.ServiceRole.State = plugin.StateIsNull | plugin.StateIsSet
@@ -309,24 +296,17 @@ func (a *mqlAwsBatchComputeEnvironment) placementGroup() (string, error) {
 	return convert.ToValue(a.cacheComputeResources.PlacementGroup), nil
 }
 
-func (a *mqlAwsBatchComputeEnvironment) imageId() (string, error) {
-	if a.cacheComputeResources == nil {
-		return "", nil
-	}
-	return convert.ToValue(a.cacheComputeResources.ImageId), nil
-}
-
 func (a *mqlAwsBatchComputeEnvironment) image() (*mqlAwsEc2Image, error) {
 	cr := a.cacheComputeResources
 	if cr == nil || cr.ImageId == nil || *cr.ImageId == "" {
 		a.Image.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	// initAwsEc2Image requires an ARN; AMI ARN format is
-	// arn:aws:ec2:<region>::image/<imageId> (no account field).
-	amiArn := fmt.Sprintf("arn:aws:ec2:%s::image/%s", a.cacheRegion, *cr.ImageId)
 	res, err := NewResource(a.MqlRuntime, "aws.ec2.image",
-		map[string]*llx.RawData{"arn": llx.StringData(amiArn)})
+		map[string]*llx.RawData{
+			"id":     llx.StringData(*cr.ImageId),
+			"region": llx.StringData(a.cacheRegion),
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -535,10 +515,6 @@ func (a *mqlAwsBatchJobQueue) jobStateTimeLimitActions() ([]any, error) {
 		return []any{}, nil
 	}
 	return a.cacheJobStateTimeLimitActions, nil
-}
-
-func (a *mqlAwsBatchJobQueue) computeEnvironmentOrder() ([]any, error) {
-	return a.cacheComputeEnvironmentOrder, nil
 }
 
 func (a *mqlAwsBatchJobQueue) computeEnvironmentOrderTyped() ([]any, error) {
@@ -955,13 +931,6 @@ func parseImageReference(ref string) (registry, repository, tag, digest string) 
 	return registry, repository, tag, digest
 }
 
-func (a *mqlAwsBatchJobDefinition) containerProperties() (any, error) {
-	if a.cacheContainerProperties == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(a.cacheContainerProperties)
-}
-
 func (a *mqlAwsBatchJobDefinition) container() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
 	cp := a.cacheContainerProperties
 	if cp == nil {
@@ -986,27 +955,6 @@ func buildBatchContainerProperties(runtime *plugin.Runtime, id string, cp *batch
 		command[i] = c
 	}
 
-	env, err := convert.JsonToDictSlice(cp.Environment)
-	if err != nil {
-		return nil, err
-	}
-	resReqs, err := convert.JsonToDictSlice(cp.ResourceRequirements)
-	if err != nil {
-		return nil, err
-	}
-	logConfig, err := convert.JsonToDict(cp.LogConfiguration)
-	if err != nil {
-		return nil, err
-	}
-	linuxParams, err := convert.JsonToDict(cp.LinuxParameters)
-	if err != nil {
-		return nil, err
-	}
-	fargateConfig, err := convert.JsonToDict(cp.FargatePlatformConfiguration)
-	if err != nil {
-		return nil, err
-	}
-
 	privileged := false
 	if cp.Privileged != nil {
 		privileged = *cp.Privileged
@@ -1023,13 +971,8 @@ func buildBatchContainerProperties(runtime *plugin.Runtime, id string, cp *batch
 			"vcpus":                  llx.IntData(vcpus),
 			"memory":                 llx.IntData(memory),
 			"command":                llx.ArrayData(command, types.String),
-			"environment":            llx.ArrayData(env, types.Dict),
 			"privileged":             llx.BoolData(privileged),
 			"readonlyRootFilesystem": llx.BoolData(readonlyRoot),
-			"resourceRequirements":   llx.ArrayData(resReqs, types.Dict),
-			"logConfiguration":       llx.DictData(logConfig),
-			"linuxParameters":        llx.DictData(linuxParams),
-			"fargateConfig":          llx.DictData(fargateConfig),
 		})
 	if err != nil {
 		return nil, err
@@ -1243,24 +1186,6 @@ func (a *mqlAwsBatchJobDefinitionContainerProperties) executionRole() (*mqlAwsIa
 	return res.(*mqlAwsIamRole), nil
 }
 
-func (a *mqlAwsBatchJobDefinition) nodeProperties() (any, error) {
-	if a.cacheNodeProperties == nil {
-		return nil, nil
-	}
-	dict, err := convert.JsonToDict(a.cacheNodeProperties)
-	if err != nil {
-		return nil, err
-	}
-	return dict, nil
-}
-
-func (a *mqlAwsBatchJobDefinition) retryStrategy() (any, error) {
-	if a.cacheRetryStrategy == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(a.cacheRetryStrategy)
-}
-
 func (a *mqlAwsBatchJobDefinition) retry() (*mqlAwsBatchJobDefinitionRetryStrategy, error) {
 	rs := a.cacheRetryStrategy
 	if rs == nil {
@@ -1292,13 +1217,6 @@ func (a *mqlAwsBatchJobDefinition) retry() (*mqlAwsBatchJobDefinitionRetryStrate
 func (a *mqlAwsBatchJobDefinitionRetryStrategy) id() (string, error) {
 	// __id is set via CreateResource args
 	return a.__id, nil
-}
-
-func (a *mqlAwsBatchJobDefinition) timeout() (any, error) {
-	if a.cacheTimeout == nil {
-		return nil, nil
-	}
-	return convert.JsonToDict(a.cacheTimeout)
 }
 
 func (a *mqlAwsBatchJobDefinition) jobTimeout() (*mqlAwsBatchJobDefinitionTimeout, error) {

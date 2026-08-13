@@ -93,7 +93,7 @@ func TestNewMqlAwsRoute53Record(t *testing.T) {
 		assert.Equal(t, "example.com.", record.Name.Data)
 		assert.Equal(t, "A", record.Type.Data)
 		assert.Equal(t, int64(300), record.Ttl.Data)
-		assert.Equal(t, "/hostedzone/Z123", record.HostedZoneId.Data)
+		assert.Equal(t, "/hostedzone/Z123", record.cacheHostedZoneId)
 		assert.False(t, record.IsAlias.Data)
 		assert.Empty(t, record.AliasTargetDnsName.Data)
 		assert.Equal(t, []any{"192.0.2.1", "192.0.2.2"}, record.resourceRecordsCache)
