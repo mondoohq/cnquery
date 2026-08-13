@@ -132,7 +132,7 @@ jobs:
   go-test-providers:
     needs: detect-changed-providers
     runs-on:
-      group: Default
+      group: arc-runners
     timeout-minutes: 120
     steps:
       - name: Checkout code
