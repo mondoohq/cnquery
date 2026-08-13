@@ -51,8 +51,7 @@ jobs:
       # Add "id-token" for google-github-actions/auth
       id-token: "write"
 
-    runs-on:
-      group: Default
+    runs-on: mondoo-builder-8
     environment: prod
     timeout-minutes: 120
     steps:
