@@ -16,6 +16,7 @@ import (
 // ---- openstack.containerinfra.cluster ----
 
 type mqlOpenstackContainerinfraClusterInternal struct {
+	cacheProjectID         string
 	cacheClusterTemplateID string
 	cacheKeyPair           string
 	cacheFlavorID          string
@@ -101,7 +102,6 @@ func (o *mqlOpenstack) clusters() ([]any, error) {
 			"masterLbEnabled":   llx.BoolData(cl.MasterLBEnabled),
 			"discoveryUrl":      llx.StringData(cl.DiscoveryURL),
 			"labels":            stringMapData(cl.Labels),
-			"projectId":         llx.StringData(cl.ProjectID),
 			"createdAt":         llx.TimeDataPtr(timePtr(cl.CreatedAt)),
 			"updatedAt":         llx.TimeDataPtr(timePtr(cl.UpdatedAt)),
 		})
@@ -109,6 +109,7 @@ func (o *mqlOpenstack) clusters() ([]any, error) {
 			return nil, err
 		}
 		mqlCluster := res.(*mqlOpenstackContainerinfraCluster)
+		mqlCluster.cacheProjectID = cl.ProjectID
 		mqlCluster.cacheClusterTemplateID = cl.ClusterTemplateID
 		mqlCluster.cacheKeyPair = cl.KeyPair
 		mqlCluster.cacheFlavorID = cl.FlavorID
@@ -149,7 +150,7 @@ func (r *mqlOpenstackContainerinfraCluster) masterFlavor() (*mqlOpenstackCompute
 }
 
 func (r *mqlOpenstackContainerinfraCluster) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func (r *mqlOpenstackContainerinfraCluster) user() (*mqlOpenstackUser, error) {

@@ -1190,8 +1190,11 @@ func lookupSecurityGroupIDByName(runtime *plugin.Runtime, name string) (string, 
 
 // ---- openstack.network.quotaSet ----
 
-func (r *mqlOpenstackNetworkQuotaSet) id() (string, error) {
-	return "openstack.network.quotaSet/" + r.ProjectId.Data, nil
+// mqlOpenstackNetworkQuotaSetInternal holds the project id the quota applies
+// to, which project() resolves. The __id is supplied explicitly by the creator,
+// so this resource needs no id() function.
+type mqlOpenstackNetworkQuotaSetInternal struct {
+	cacheProjectID string
 }
 
 func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
@@ -1215,7 +1218,6 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 	}
 	res, err := CreateResource(o.MqlRuntime, "openstack.network.quotaSet", map[string]*llx.RawData{
 		"__id":              llx.StringData("openstack.network.quotaSet/" + projectId),
-		"projectId":         llx.StringData(projectId),
 		"network":           llx.IntData(int64(q.Network)),
 		"subnet":            llx.IntData(int64(q.Subnet)),
 		"port":              llx.IntData(int64(q.Port)),
@@ -1230,9 +1232,11 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlOpenstackNetworkQuotaSet), nil
+	mqlQuota := res.(*mqlOpenstackNetworkQuotaSet)
+	mqlQuota.cacheProjectID = projectId
+	return mqlQuota, nil
 }
 
 func (r *mqlOpenstackNetworkQuotaSet) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }

@@ -658,7 +658,6 @@ func (o *mqlOpenstack) backups() ([]any, error) {
 			"failReason":          llx.StringData(b.FailReason),
 			"availabilityZone":    llx.StringData(az),
 			"metadata":            stringMapData(meta),
-			"projectId":           llx.StringData(b.ProjectID),
 			"dataTimestamp":       llx.TimeDataPtr(timePtr(b.DataTimestamp)),
 			"createdAt":           llx.TimeDataPtr(timePtr(b.CreatedAt)),
 			"updatedAt":           llx.TimeDataPtr(timePtr(b.UpdatedAt)),
@@ -719,8 +718,11 @@ func (r *mqlOpenstackBlockstorageBackup) project() (*mqlOpenstackProject, error)
 
 // ---- openstack.blockstorage.quotaSet ----
 
-func (r *mqlOpenstackBlockstorageQuotaSet) id() (string, error) {
-	return "openstack.blockstorage.quotaSet/" + r.ProjectId.Data, nil
+// mqlOpenstackBlockstorageQuotaSetInternal holds the project id the quota
+// applies to, which project() resolves. The __id is supplied explicitly by the
+// creator, so this resource needs no id() function.
+type mqlOpenstackBlockstorageQuotaSetInternal struct {
+	cacheProjectID string
 }
 
 func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet, error) {
@@ -744,7 +746,6 @@ func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet
 	}
 	res, err := CreateResource(o.MqlRuntime, "openstack.blockstorage.quotaSet", map[string]*llx.RawData{
 		"__id":               llx.StringData("openstack.blockstorage.quotaSet/" + projectId),
-		"projectId":          llx.StringData(projectId),
 		"volumes":            llx.IntData(int64(q.Volumes)),
 		"snapshots":          llx.IntData(int64(q.Snapshots)),
 		"gigabytes":          llx.IntData(int64(q.Gigabytes)),
@@ -756,9 +757,11 @@ func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlOpenstackBlockstorageQuotaSet), nil
+	mqlQuota := res.(*mqlOpenstackBlockstorageQuotaSet)
+	mqlQuota.cacheProjectID = projectId
+	return mqlQuota, nil
 }
 
 func (r *mqlOpenstackBlockstorageQuotaSet) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
