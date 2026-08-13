@@ -133,6 +133,16 @@ var serviceRules = map[string][]dispositionRule{
 			code:        "ResourceNotFoundException",
 			disposition: dispositionEmpty,
 		},
+		// The automated-discovery read has a shape of its own that never names
+		// Macie: AccessDeniedException "Account Id: [...] has not been
+		// onboarded". Onboarding state is not a permission gap, and no IAM
+		// denial is phrased this way, so matching it does not reintroduce the
+		// swallowing this table exists to prevent.
+		{
+			code:        "AccessDeniedException",
+			messageAny:  []string{"has not been onboarded"},
+			disposition: dispositionEmpty,
+		},
 	},
 	"securitylake": {
 		{

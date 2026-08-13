@@ -120,6 +120,18 @@ func TestClassifyMacieListDoesNotSwallowBareNotFound(t *testing.T) {
 	require.Equal(t, dispositionFail, classifyError("macie2", err))
 }
 
+// An account that never onboarded to Macie answers the automated-discovery
+// read with an access denial that never names Macie. That is an absent feature,
+// not a permission gap, so it reads as empty rather than as a coverage gap.
+func TestClassifyMacieConfigScopeTreatsNotOnboardedAsEmpty(t *testing.T) {
+	err := apiErr("AccessDeniedException", "Account Id: [123456789012] has not been onboarded")
+	require.Equal(t, dispositionEmpty, classifyError("macie2/config", err))
+
+	// The list endpoints never see this wording, and must keep reporting a
+	// denial as unreadable.
+	require.Equal(t, dispositionUnreadable, classifyError("macie2", err))
+}
+
 // A scope still inherits the not-enabled rules from its bare service, so the
 // narrow key only has to state where it differs.
 func TestClassifyScopeInheritsServiceRules(t *testing.T) {
