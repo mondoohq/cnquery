@@ -2,7 +2,21 @@ name: Code Test
 
 ## Only trigger tests if source is changing
 on:
+  # Run on PRs so the expensive arc-runner test jobs can be skipped while the PR
+  # is a draft (see the per-job `if` guards). `ready_for_review` re-triggers them.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "**.go"
+      - "**.mod"
+      - "go.sum"
+      - "Makefile"
+      - ".github/workflows/pr-test-lint.yml"
+      - ".github/workflows/reusable-lint-providers.yml"
+      - "**.toml" # run tests when any recording changed
+  # Still validate merges to main.
   push:
+    branches: [main]
     paths:
       - "**.go"
       - "**.mod"
@@ -34,7 +48,7 @@ jobs:
       - name: Determine changed providers
         id: changed
         env:
-          # Empty on push events (this workflow only triggers on push);
+          # Set on pull_request events; empty on push to main, where
           # scripts/changed-providers.sh falls back to merge-base with origin/main.
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bash scripts/changed-providers.sh
@@ -100,6 +114,7 @@ jobs:
   # separate go-test-providers job. This always runs: the core scope can be
   # affected by any change, and go-auto-approve depends on it.
   go-test:
+    if: ${{ !github.event.pull_request.draft }} # skip on draft PRs (runs on ready_for_review / push to main)
     runs-on:
       group: arc-runners
     timeout-minutes: 120
@@ -131,6 +146,7 @@ jobs:
   # changed list is empty (e.g. pushes to main), every provider is tested.
   go-test-providers:
     needs: detect-changed-providers
+    if: ${{ !github.event.pull_request.draft }} # skip on draft PRs (runs on ready_for_review / push to main)
     runs-on:
       group: arc-runners
     timeout-minutes: 120
@@ -188,6 +204,7 @@ jobs:
           path: "report_*.xml"
 
   go-test-integration:
+    if: ${{ !github.event.pull_request.draft }} # skip on draft PRs (runs on ready_for_review / push to main)
     runs-on:
       group: arc-runners
     timeout-minutes: 120
@@ -249,7 +266,9 @@ jobs:
     # github.event.commits[0].author.username (the git commit author) because git commit
     # metadata is user-controlled and can be spoofed by anyone via git config.
     # github.actor is set by GitHub's authentication layer and is tamper-proof.
-    if: ${{ (startsWith(github.ref, 'refs/heads/version/providers_update_') || startsWith(github.ref, 'refs/heads/version/deps_update_')) && github.actor == 'mondoo-tools' }}
+    # Triggers on both pull_request (github.head_ref = the PR's source branch) and
+    # push to main (github.head_ref is empty there, so fall back to github.ref_name).
+    if: ${{ (startsWith(github.head_ref || github.ref_name, 'version/providers_update_') || startsWith(github.head_ref || github.ref_name, 'version/deps_update_')) && github.actor == 'mondoo-tools' }}
     permissions:
       contents: write
       pull-requests: write
