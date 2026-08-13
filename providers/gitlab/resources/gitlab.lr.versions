@@ -61,7 +61,6 @@ gitlab.group.deployToken.scopes 11.1.138
 gitlab.group.deployToken.username 11.1.138
 gitlab.group.deployTokens 11.1.138
 gitlab.group.description 9.0.0
-gitlab.group.emailsDisabled 9.0.1
 gitlab.group.emailsEnabled 13.3.9
 gitlab.group.enterpriseAccessToken 13.5.6
 gitlab.group.enterpriseAccessToken.active 13.5.6
@@ -92,7 +91,6 @@ gitlab.group.label 11.1.129
 gitlab.group.label.closedIssuesCount 11.1.129
 gitlab.group.label.color 11.1.129
 gitlab.group.label.description 11.1.129
-gitlab.group.label.descriptionHtml 11.1.129
 gitlab.group.label.id 11.1.129
 gitlab.group.label.isProjectLabel 11.1.129
 gitlab.group.label.name 11.1.129
@@ -392,7 +390,6 @@ gitlab.project.containerExpirationPolicy.nameRegexKeep 13.3.1
 gitlab.project.containerExpirationPolicy.nextRunAt 13.3.1
 gitlab.project.containerExpirationPolicy.olderThan 13.3.1
 gitlab.project.containerRegistryAccessLevel 13.3.9
-gitlab.project.containerRegistryEnabled 9.0.1
 gitlab.project.containerRegistryProtectionRule 13.3.1
 gitlab.project.containerRegistryProtectionRule.id 13.3.1
 gitlab.project.containerRegistryProtectionRule.minimumAccessLevelForDelete 13.3.1
@@ -444,7 +441,6 @@ gitlab.project.deployToken.scopes 11.1.138
 gitlab.project.deployToken.username 11.1.138
 gitlab.project.deployTokens 11.1.138
 gitlab.project.description 9.0.0
-gitlab.project.emailsDisabled 9.0.1
 gitlab.project.emailsEnabled 13.3.9
 gitlab.project.emptyRepo 11.1.36
 gitlab.project.file 11.1.13
@@ -502,17 +498,14 @@ gitlab.project.issue.updatedAt 11.1.129
 gitlab.project.issue.webURL 11.1.129
 gitlab.project.issues 11.1.129
 gitlab.project.issuesAccessLevel 13.3.9
-gitlab.project.issuesEnabled 9.0.1
 gitlab.project.jobTokenScope 13.3.9
 gitlab.project.jobTokenScope.allowlistGroups 13.3.9
 gitlab.project.jobTokenScope.inboundAllowlistProjects 13.3.9
 gitlab.project.jobTokenScope.inboundEnabled 13.3.9
-gitlab.project.jobsEnabled 11.1.36
 gitlab.project.label 11.1.129
 gitlab.project.label.closedIssuesCount 11.1.129
 gitlab.project.label.color 11.1.129
 gitlab.project.label.description 11.1.129
-gitlab.project.label.descriptionHtml 11.1.129
 gitlab.project.label.id 11.1.129
 gitlab.project.label.isProjectLabel 11.1.129
 gitlab.project.label.name 11.1.129
@@ -561,7 +554,6 @@ gitlab.project.mergeRequest.upvotes 13.3.9
 gitlab.project.mergeRequest.webURL 11.1.129
 gitlab.project.mergeRequests 11.1.129
 gitlab.project.mergeRequestsAccessLevel 13.3.9
-gitlab.project.mergeRequestsEnabled 9.0.1
 gitlab.project.milestone 11.1.129
 gitlab.project.milestone.createdAt 11.1.129
 gitlab.project.milestone.description 11.1.129
@@ -780,7 +772,6 @@ gitlab.project.serviceDeskEnabled 9.0.1
 gitlab.project.sharedRunnersEnabled 11.1.36
 gitlab.project.sharedWithGroups 13.3.9
 gitlab.project.snippetsAccessLevel 13.3.9
-gitlab.project.snippetsEnabled 9.0.1
 gitlab.project.starCount 11.1.129
 gitlab.project.variable 11.1.129
 gitlab.project.variable.description 11.1.129
@@ -857,7 +848,6 @@ gitlab.project.webhook.vulnerabilityEvents 13.0.8
 gitlab.project.webhook.wikiPageEvents 13.0.8
 gitlab.project.webhooks 11.1.13
 gitlab.project.wikiAccessLevel 13.3.9
-gitlab.project.wikiEnabled 9.0.1
 gitlab.protectedBranch.accessLevel 13.3.9
 gitlab.protectedBranch.accessLevel.accessLevel 13.3.9
 gitlab.protectedBranch.accessLevel.accessLevelDescription 13.3.9
