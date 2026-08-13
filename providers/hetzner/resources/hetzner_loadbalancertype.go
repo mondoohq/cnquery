@@ -5,7 +5,6 @@ package resources
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
@@ -36,14 +35,6 @@ func (h *mqlHetzner) loadBalancerTypes() ([]any, error) {
 }
 
 func newMqlHetznerLoadBalancerType(runtime *plugin.Runtime, t *hcloud.LoadBalancerType) (*mqlHetznerLoadBalancerType, error) {
-	// The legacy Deprecated string is populated by the SDK from the announcement
-	// date, so `deprecated` is read straight from the structured Deprecation
-	// info. That preserves the field's meaning while dropping the round-trip
-	// through an RFC3339 string that the API no longer returns.
-	var announced *time.Time
-	if t.Deprecation != nil {
-		announced = timePtr(t.Deprecation.Announced)
-	}
 	res, err := CreateResource(runtime, "hetzner.loadBalancerType", map[string]*llx.RawData{
 		"__id":                    llx.StringData(fmt.Sprintf("hetzner.loadBalancerType/%d", t.ID)),
 		"id":                      llx.IntData(t.ID),
@@ -53,7 +44,6 @@ func newMqlHetznerLoadBalancerType(runtime *plugin.Runtime, t *hcloud.LoadBalanc
 		"maxServices":             llx.IntData(int64(t.MaxServices)),
 		"maxTargets":              llx.IntData(int64(t.MaxTargets)),
 		"maxAssignedCertificates": llx.IntData(int64(t.MaxAssignedCertificates)),
-		"deprecated":              llx.TimeDataPtr(announced),
 		"deprecation":             llx.DictData(deprecationDict(t.Deprecation)),
 	})
 	if err != nil {
