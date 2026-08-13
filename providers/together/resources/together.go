@@ -232,9 +232,6 @@ func (r *mqlTogether) clusters() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		cluster := mqlCluster.(*mqlTogetherCluster)
-		cluster.clusterId = c.ClusterID
-		cluster.projectId = c.ProjectID
 		res = append(res, mqlCluster)
 	}
 
@@ -282,30 +279,14 @@ func (r *mqlTogether) secrets() ([]interface{}, error) {
 
 func (r *mqlTogether) clusterStorageVolumes() ([]interface{}, error) {
 	conn := togetherConn(r.MqlRuntime)
-	return listClusterStorageVolumes(r.MqlRuntime, conn.Client(), conn.Project(), "")
-}
-
-type mqlTogetherClusterInternal struct {
-	clusterId string
-	projectId string
-}
-
-// storageVolumes is deprecated in favor of the top-level
-// together.clusterStorageVolumes. The Together storage API is project-scoped
-// and returns no cluster association, so this lists the cluster's project-wide
-// volumes rather than volumes owned by this specific cluster. Retained for
-// backward compatibility with its original project filter and __id.
-func (r *mqlTogetherCluster) storageVolumes() ([]interface{}, error) {
-	conn := togetherConn(r.MqlRuntime)
-	return listClusterStorageVolumes(r.MqlRuntime, conn.Client(), r.projectId, r.clusterId+"/")
+	return listClusterStorageVolumes(r.MqlRuntime, conn.Client(), conn.Project())
 }
 
 // listClusterStorageVolumes lists project-scoped cluster storage volumes. The
 // list endpoint accepts only a project filter and the returned volumes carry no
 // cluster reference, so they belong to the account's project and are shared
-// across its clusters. idPrefix is prepended to each volume's __id to preserve
-// the deprecated per-cluster accessor's cache keys.
-func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client, project, idPrefix string) ([]interface{}, error) {
+// across its clusters.
+func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client, project string) ([]interface{}, error) {
 	params := together.BetaClusterStorageListParams{}
 	if project != "" {
 		params.ProjectID = together.Opt(project)
@@ -325,7 +306,7 @@ func listClusterStorageVolumes(runtime *plugin.Runtime, client *together.Client,
 	res := make([]interface{}, 0, len(resp.Volumes))
 	for _, v := range resp.Volumes {
 		mqlVol, err := CreateResource(runtime, "together.clusterStorageVolume", map[string]*llx.RawData{
-			"__id":       llx.StringData(idPrefix + v.VolumeID),
+			"__id":       llx.StringData(v.VolumeID),
 			"volumeId":   llx.StringData(v.VolumeID),
 			"volumeName": llx.StringData(v.VolumeName),
 			"sizeTib":    llx.IntData(v.SizeTib),
