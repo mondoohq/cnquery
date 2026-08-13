@@ -124,7 +124,7 @@ type mqlAwsSsmParameterInternal struct {
 // resource id and type rather than an ARN, and for a parameter the id is the
 // parameter name, including its leading path for a hierarchical parameter.
 func (a *mqlAwsSsmParameter) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		name := a.Name.Data
 
@@ -135,7 +135,7 @@ func (a *mqlAwsSsmParameter) tags() (map[string]any, error) {
 		})
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return nil, nil
+				return nil, errTagsUnreadable
 			}
 			return nil, err
 		}

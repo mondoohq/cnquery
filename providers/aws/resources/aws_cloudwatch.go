@@ -960,7 +960,7 @@ func (a *mqlAwsCloudwatchMetricsalarm) id() (string, error) {
 }
 
 func (a *mqlAwsCloudwatchMetricsalarm) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		alarmArn := a.Arn.Data
 

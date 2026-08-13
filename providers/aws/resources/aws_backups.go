@@ -70,32 +70,19 @@ func backupManagedArn(resourceArn string) (region string, ok bool) {
 
 // backupResolveTags resolves and caches a Backup resource's tags, marking the
 // field null when Backup cannot read them.
-//
-// The null case sets the field's state directly instead of returning a value:
-// GetOrCompute honors a state the accessor set itself, so the field surfaces as
-// null rather than as an empty map that would read as "this resource has no
-// tags". It takes the field pointer because only the caller knows which field
-// to mark.
 func backupResolveTags(runtime *plugin.Runtime, cache *lazyTags, field *plugin.TValue[map[string]any], region, resourceArn string) (map[string]any, error) {
-	return cache.resolveTags(func() (map[string]any, error) {
-		tags, ok, err := backupTagsForArn(runtime, region, resourceArn)
-		if err != nil {
-			return nil, err
-		}
-		if !ok {
-			field.State = plugin.StateIsSet | plugin.StateIsNull
-			return nil, nil
-		}
-		return tags, nil
+	return cache.resolveTags(field, func() (map[string]any, error) {
+		return backupTagsForArn(runtime, region, resourceArn)
 	})
 }
 
-// backupTagsForArn reads the tags of a Backup-managed resource. The bool
-// reports whether the tags could be read at all; see backupManagedArn.
-func backupTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, bool, error) {
+// backupTagsForArn reads the tags of a Backup-managed resource, reporting
+// errTagsUnreadable for a resource Backup does not manage (see
+// backupManagedArn) or when the call is denied.
+func backupTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, error) {
 	arnRegion, ok := backupManagedArn(resourceArn)
 	if !ok {
-		return nil, false, nil
+		return nil, errTagsUnreadable
 	}
 	if region == "" {
 		region = arnRegion
@@ -114,9 +101,9 @@ func backupTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[
 		})
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return nil, false, nil
+				return nil, errTagsUnreadable
 			}
-			return nil, false, err
+			return nil, err
 		}
 		for k, v := range resp.Tags {
 			tags[k] = v
@@ -126,7 +113,7 @@ func backupTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[
 		}
 		nextToken = resp.NextToken
 	}
-	return tags, true, nil
+	return tags, nil
 }
 
 func (a *mqlAwsBackup) vaults() ([]any, error) {

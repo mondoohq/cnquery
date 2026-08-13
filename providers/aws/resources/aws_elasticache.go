@@ -224,9 +224,6 @@ func elasticacheTagsToMap(tags []elasticache_types.Tag) map[string]any {
 
 // elasticacheTagsForArn reads the tags of any ElastiCache resource. None of the
 // describe responses carry tags, so every resource resolves them here.
-//
-// An access-denied response yields no tags rather than an empty set: a tag set
-// that could not be read must not be published as an authoritative "no tags".
 func elasticacheTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[string]any, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Elasticache(region)
@@ -235,7 +232,7 @@ func elasticacheTagsForArn(runtime *plugin.Runtime, region, resourceArn string) 
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return nil, errTagsUnreadable
 		}
 		return nil, err
 	}
@@ -420,7 +417,7 @@ type mqlAwsElasticacheReplicationGroupInternal struct {
 }
 
 func (a *mqlAwsElasticacheReplicationGroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -611,7 +608,7 @@ type mqlAwsElasticacheServerlessCacheInternal struct {
 }
 
 func (a *mqlAwsElasticacheServerlessCache) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -797,7 +794,7 @@ func (a *mqlAwsElasticacheParameterGroup) id() (string, error) {
 }
 
 func (a *mqlAwsElasticacheParameterGroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -880,7 +877,7 @@ type mqlAwsElasticacheSubnetGroupInternal struct {
 }
 
 func (a *mqlAwsElasticacheSubnetGroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -987,7 +984,7 @@ func (a *mqlAwsElasticacheUser) id() (string, error) {
 }
 
 func (a *mqlAwsElasticacheUser) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -1128,7 +1125,7 @@ type mqlAwsElasticacheSnapshotInternal struct {
 }
 
 func (a *mqlAwsElasticacheSnapshot) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elasticacheTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }

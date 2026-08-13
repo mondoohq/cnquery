@@ -47,7 +47,7 @@ func configTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[
 		})
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return nil, nil
+				return nil, errTagsUnreadable
 			}
 			return nil, err
 		}
@@ -63,19 +63,19 @@ func configTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[
 }
 
 func (a *mqlAwsConfigRule) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return configTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
 
 func (a *mqlAwsConfigConformancePack) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return configTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
 
 func (a *mqlAwsConfigAggregator) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return configTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }

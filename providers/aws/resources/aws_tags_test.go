@@ -5,10 +5,13 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	astypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -197,6 +200,7 @@ func TestBackupManagedArn(t *testing.T) {
 func TestLazyTagsResolveTags(t *testing.T) {
 	t.Run("fetches once and caches the result", func(t *testing.T) {
 		var h lazyTags
+		var field plugin.TValue[map[string]any]
 		calls := 0
 		fetch := func() (map[string]any, error) {
 			calls++
@@ -204,7 +208,7 @@ func TestLazyTagsResolveTags(t *testing.T) {
 		}
 
 		for i := 0; i < 3; i++ {
-			got, err := h.resolveTags(fetch)
+			got, err := h.resolveTags(&field, fetch)
 			require.NoError(t, err)
 			assert.Equal(t, map[string]any{"env": "prod"}, got)
 		}
@@ -213,6 +217,7 @@ func TestLazyTagsResolveTags(t *testing.T) {
 
 	t.Run("caches an empty tag set so an untagged resource costs one call", func(t *testing.T) {
 		var h lazyTags
+		var field plugin.TValue[map[string]any]
 		calls := 0
 		fetch := func() (map[string]any, error) {
 			calls++
@@ -220,23 +225,68 @@ func TestLazyTagsResolveTags(t *testing.T) {
 		}
 
 		for i := 0; i < 3; i++ {
-			got, err := h.resolveTags(fetch)
+			got, err := h.resolveTags(&field, fetch)
 			require.NoError(t, err)
 			assert.Empty(t, got)
 		}
 		assert.Equal(t, 1, calls)
+		assert.Zero(t, field.State, "an untagged resource is not null")
 	})
 
 	t.Run("normalizes a nil map to empty", func(t *testing.T) {
 		var h lazyTags
-		got, err := h.resolveTags(func() (map[string]any, error) { return nil, nil })
+		var field plugin.TValue[map[string]any]
+		got, err := h.resolveTags(&field, func() (map[string]any, error) { return nil, nil })
 		require.NoError(t, err)
 		require.NotNil(t, got)
 		assert.Empty(t, got)
 	})
 
-	t.Run("does not cache an error", func(t *testing.T) {
+	// An unreadable tag set must surface as null, never as an empty map. An
+	// empty map asserts "this resource has no tags", so a scan role missing the
+	// tag permission would otherwise make every tag-based audit pass vacuously.
+	t.Run("errTagsUnreadable marks the field null instead of empty", func(t *testing.T) {
 		var h lazyTags
+		var field plugin.TValue[map[string]any]
+		got, err := h.resolveTags(&field, func() (map[string]any, error) {
+			return nil, errTagsUnreadable
+		})
+		require.NoError(t, err, "an unreadable tag set is not a query error")
+		assert.Nil(t, got)
+		assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, field.State)
+	})
+
+	t.Run("a wrapped errTagsUnreadable is still recognized", func(t *testing.T) {
+		var h lazyTags
+		var field plugin.TValue[map[string]any]
+		_, err := h.resolveTags(&field, func() (map[string]any, error) {
+			return nil, fmt.Errorf("listing tags: %w", errTagsUnreadable)
+		})
+		require.NoError(t, err)
+		assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, field.State)
+	})
+
+	t.Run("caches the unreadable result rather than re-asking", func(t *testing.T) {
+		var h lazyTags
+		var field plugin.TValue[map[string]any]
+		calls := 0
+		fetch := func() (map[string]any, error) {
+			calls++
+			return nil, errTagsUnreadable
+		}
+
+		for i := 0; i < 3; i++ {
+			_, err := h.resolveTags(&field, fetch)
+			require.NoError(t, err)
+		}
+		// A missing permission does not change mid-scan, so re-asking would
+		// only spend a denied call per read.
+		assert.Equal(t, 1, calls)
+	})
+
+	t.Run("does not cache an ordinary error", func(t *testing.T) {
+		var h lazyTags
+		var field plugin.TValue[map[string]any]
 		calls := 0
 		fetch := func() (map[string]any, error) {
 			calls++
@@ -246,19 +296,57 @@ func TestLazyTagsResolveTags(t *testing.T) {
 			return map[string]any{"env": "prod"}, nil
 		}
 
-		_, err := h.resolveTags(fetch)
+		_, err := h.resolveTags(&field, fetch)
 		require.Error(t, err)
 
-		// A throttled or briefly denied call must be retried rather than
-		// remembered as an empty tag set.
-		got, err := h.resolveTags(fetch)
+		// A throttled call must be retried rather than remembered as an empty
+		// tag set.
+		got, err := h.resolveTags(&field, fetch)
 		require.NoError(t, err)
 		assert.Equal(t, map[string]any{"env": "prod"}, got)
 		assert.Equal(t, 2, calls)
 	})
 
+	// The generated accessor reaches tags() through plugin.GetOrCompute, so the
+	// null state resolveTags sets is only useful if GetOrCompute honors a state
+	// the compute function set itself. This pins that interaction: without it
+	// the field would surface as an empty map and the nullness would be lost
+	// between resolveTags and the query result.
+	t.Run("GetOrCompute surfaces the null rather than an empty map", func(t *testing.T) {
+		var h lazyTags
+		var field plugin.TValue[map[string]any]
+
+		got := plugin.GetOrCompute(&field, func() (map[string]any, error) {
+			return h.resolveTags(&field, func() (map[string]any, error) {
+				return nil, errTagsUnreadable
+			})
+		})
+
+		assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, got.State)
+		assert.Nil(t, got.Data)
+		assert.NoError(t, got.Error)
+	})
+
+	// The same path for a resource that really has no tags must NOT be null,
+	// or "no tags" becomes indistinguishable from "tags unreadable".
+	t.Run("GetOrCompute surfaces an untagged resource as an empty map", func(t *testing.T) {
+		var h lazyTags
+		var field plugin.TValue[map[string]any]
+
+		got := plugin.GetOrCompute(&field, func() (map[string]any, error) {
+			return h.resolveTags(&field, func() (map[string]any, error) {
+				return map[string]any{}, nil
+			})
+		})
+
+		assert.Equal(t, plugin.StateIsSet, got.State)
+		assert.NotNil(t, got.Data)
+		assert.Empty(t, got.Data)
+	})
+
 	t.Run("concurrent readers fetch once", func(t *testing.T) {
 		var h lazyTags
+		var field plugin.TValue[map[string]any]
 		var calls atomic.Int64
 		fetch := func() (map[string]any, error) {
 			calls.Add(1)
@@ -271,7 +359,7 @@ func TestLazyTagsResolveTags(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				got, err := h.resolveTags(fetch)
+				got, err := h.resolveTags(&field, fetch)
 				assert.NoError(t, err)
 				assert.Equal(t, map[string]any{"env": "prod"}, got)
 			}()

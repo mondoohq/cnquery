@@ -99,7 +99,7 @@ type mqlAwsSecurityhubHubInternal struct {
 }
 
 func (a *mqlAwsSecurityhubHub) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		hubArn := a.Arn.Data
 
@@ -109,7 +109,7 @@ func (a *mqlAwsSecurityhubHub) tags() (map[string]any, error) {
 		})
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return nil, nil
+				return nil, errTagsUnreadable
 			}
 			return nil, err
 		}

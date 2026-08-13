@@ -715,19 +715,19 @@ type mqlAwsElbTruststoreInternal struct {
 }
 
 func (a *mqlAwsElbListener) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
 	})
 }
 
 func (a *mqlAwsElbListenerRule) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
 	})
 }
 
 func (a *mqlAwsElbTruststore) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
 	})
 }
@@ -1138,6 +1138,9 @@ func elbv2TagsForArn(runtime *plugin.Runtime, resourceArn string) (map[string]an
 		ResourceArns: []string{resourceArn},
 	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, errTagsUnreadable
+		}
 		return nil, err
 	}
 
@@ -1154,7 +1157,7 @@ func (a *mqlAwsElbTargetgroup) id() (string, error) {
 }
 
 func (a *mqlAwsElbTargetgroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return elbv2TagsForArn(a.MqlRuntime, a.Arn.Data)
 	})
 }

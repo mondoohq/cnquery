@@ -154,7 +154,7 @@ func (a *mqlAwsRdsEventSubscription) id() (string, error) {
 }
 
 func (a *mqlAwsRdsEventSubscription) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -251,7 +251,7 @@ type mqlAwsRdsClusterParameterGroupInternal struct {
 }
 
 func (a *mqlAwsRdsClusterParameterGroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -261,7 +261,7 @@ type mqlAwsRdsParameterGroupInternal struct {
 }
 
 func (a *mqlAwsRdsParameterGroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -1993,7 +1993,12 @@ func (a *mqlAwsRdsProxy) id() (string, error) {
 }
 
 func (a *mqlAwsRdsProxy) tags() (map[string]any, error) {
-	return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	tags, err := rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
+	if errors.Is(err, errTagsUnreadable) {
+		a.Tags.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return tags, err
 }
 
 // rdsTagsForArn reads the tags of any RDS resource. RDS leaves tags out of most
@@ -2007,7 +2012,7 @@ func rdsTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[str
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return map[string]any{}, nil
+			return nil, errTagsUnreadable
 		}
 		return nil, err
 	}
@@ -2072,7 +2077,7 @@ type mqlAwsRdsOptionGroupInternal struct {
 }
 
 func (a *mqlAwsRdsOptionGroup) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return rdsTagsForArn(a.MqlRuntime, a.Region.Data, a.Arn.Data)
 	})
 }
@@ -2236,7 +2241,7 @@ type mqlAwsRdsGlobalClusterInternal struct {
 }
 
 func (a *mqlAwsRdsGlobalCluster) tags() (map[string]any, error) {
-	return a.resolveTags(func() (map[string]any, error) {
+	return a.resolveTags(&a.Tags, func() (map[string]any, error) {
 		return rdsTagsForArn(a.MqlRuntime, a.region, a.Arn.Data)
 	})
 }
