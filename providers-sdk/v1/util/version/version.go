@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"go.mondoo.com/mql/v13/utils/stringx"
 
@@ -414,8 +415,17 @@ func (confs updateConfs) titles() []string {
 	return titles
 }
 
+// maxTitleLen is GitHub's maximum length (in characters) for a PR/issue title.
+const maxTitleLen = 256
+
 func (confs updateConfs) commitTitle() string {
-	return "🎉 " + strings.Join(confs.titles(), ", ")
+	title := titlePrefix + strings.Join(confs.titles(), ", ")
+	if utf8.RuneCountInString(title) <= maxTitleLen {
+		return title
+	}
+	// Too many providers to enumerate within GitHub's title limit; fall back to
+	// a count summary. The full per-provider list is in the PR body.
+	return fmt.Sprintf("%sRelease %d providers", titlePrefix, len(confs))
 }
 
 func (confs updateConfs) commitBody() string {
