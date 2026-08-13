@@ -10694,6 +10694,14 @@ windows.printerDriver @defaults("name version manufacturer") {
   // identify a driver: "PCL 6 Driver" and "PostScript3 Driver" name page
   // description languages that every printer vendor ships a driver for.
   purl string
+  // Identifier the vendor declares in the driver INF
+  //
+  // For example "RICOHPCL6DriveforUP".
+  // Unlike name this does not change between releases: Windows uses it to rank
+  // and upgrade drivers, so a vendor that changed it would break updates for
+  // every existing installation. It is what purl is keyed on. Empty for some
+  // drivers, in which case purl falls back to the name.
+  hardwareId string
   // Vendor driver version in dotted form, for example "3.0.0.0"
   //
   // Windows stores this packed into a single 64-bit integer holding four

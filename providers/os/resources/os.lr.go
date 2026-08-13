@@ -11136,6 +11136,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.printerDriver.purl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDriver).GetPurl()).ToDataRes(types.String)
 	},
+	"windows.printerDriver.hardwareId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPrinterDriver).GetHardwareId()).ToDataRes(types.String)
+	},
 	"windows.printerDriver.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDriver).GetVersion()).ToDataRes(types.String)
 	},
@@ -26692,6 +26695,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.printerDriver.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsPrinterDriver).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.printerDriver.hardwareId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPrinterDriver).HardwareId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.printerDriver.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70579,6 +70586,7 @@ type mqlWindowsPrinterDriver struct {
 	// optional: if you define mqlWindowsPrinterDriverInternal it will be used here
 	Name           plugin.TValue[string]
 	Purl           plugin.TValue[string]
+	HardwareId     plugin.TValue[string]
 	Version        plugin.TValue[string]
 	ModelVersion   plugin.TValue[int64]
 	Manufacturer   plugin.TValue[string]
@@ -70633,6 +70641,10 @@ func (c *mqlWindowsPrinterDriver) GetName() *plugin.TValue[string] {
 
 func (c *mqlWindowsPrinterDriver) GetPurl() *plugin.TValue[string] {
 	return &c.Purl
+}
+
+func (c *mqlWindowsPrinterDriver) GetHardwareId() *plugin.TValue[string] {
+	return &c.HardwareId
 }
 
 func (c *mqlWindowsPrinterDriver) GetVersion() *plugin.TValue[string] {
