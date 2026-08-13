@@ -88,11 +88,10 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 
 				autoRenewal, renewalInterval := extractCertificateRenewal(c.CertificateRules)
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.certificates.certificate", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.certificates.certificate", stringValue(c.CompartmentId), map[string]*llx.RawData{
 					"id":                 llx.StringDataPtr(c.Id),
 					"name":               llx.StringDataPtr(c.Name),
 					"description":        llx.StringDataPtr(c.Description),
-					"compartmentID":      llx.StringDataPtr(c.CompartmentId),
 					"configType":         llx.StringData(string(c.ConfigType)),
 					"subject":            llx.StringData(subject),
 					"sans":               llx.ArrayData(sans, types.String),
@@ -121,6 +120,7 @@ func (o *mqlOciCertificates) certificates() ([]any, error) {
 }
 
 type mqlOciCertificatesCertificateInternal struct {
+	ociCompartmentRef
 	cacheIssuerCaID string
 }
 
@@ -254,11 +254,10 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 
 				kind := caKindFromConfigType(string(ca.ConfigType))
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.certificates.certificateAuthority", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.certificates.certificateAuthority", stringValue(ca.CompartmentId), map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(ca.Id),
 					"name":              llx.StringDataPtr(ca.Name),
 					"description":       llx.StringDataPtr(ca.Description),
-					"compartmentID":     llx.StringDataPtr(ca.CompartmentId),
 					"kind":              llx.StringData(kind),
 					"configType":        llx.StringData(string(ca.ConfigType)),
 					"subject":           llx.StringData(subject),
@@ -283,6 +282,7 @@ func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 }
 
 type mqlOciCertificatesCertificateAuthorityInternal struct {
+	ociCompartmentRef
 	cacheIssuerCaID string
 	cacheKmsKeyID   string
 }
@@ -390,15 +390,14 @@ func (o *mqlOciCertificates) caBundles() ([]any, error) {
 					created = &b.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.certificates.caBundle", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(b.Id),
-					"name":          llx.StringDataPtr(b.Name),
-					"description":   llx.StringDataPtr(b.Description),
-					"compartmentID": llx.StringDataPtr(b.CompartmentId),
-					"state":         llx.StringData(string(b.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(b.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(b.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.certificates.caBundle", stringValue(b.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(b.Id),
+					"name":         llx.StringDataPtr(b.Name),
+					"description":  llx.StringDataPtr(b.Description),
+					"state":        llx.StringData(string(b.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(b.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(b.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -455,4 +454,8 @@ func sanSliceToAny(sans []certificatesmanagement.CertificateSubjectAlternativeNa
 		out = append(out, string(sans[i].Type)+":"+stringValue(sans[i].Value))
 	}
 	return out
+}
+
+type mqlOciCertificatesCaBundleInternal struct {
+	ociCompartmentRef
 }

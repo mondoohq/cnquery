@@ -53,13 +53,11 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 					created = &vcn.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.vcn", stringValue(vcn.CompartmentId), map[string]*llx.RawData{
 					"id":                    llx.StringDataPtr(vcn.Id),
 					"name":                  llx.StringDataPtr(vcn.DisplayName),
 					"created":               llx.TimeDataPtr(created),
 					"state":                 llx.StringData(string(vcn.LifecycleState)),
-					"compartmentID":         llx.StringDataPtr(vcn.CompartmentId),
-					"cidrBlock":             llx.StringDataPtr(vcn.CidrBlock),
 					"cidrBlocks":            llx.ArrayData(convert.SliceAnyToInterface(vcn.CidrBlocks), types.String),
 					"vcnDomainName":         llx.StringDataPtr(vcn.VcnDomainName),
 					"defaultDhcpOptionsId":  llx.StringDataPtr(vcn.DefaultDhcpOptionsId),
@@ -221,17 +219,15 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					return nil, err
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.securityList", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.securityList", stringValue(securityList.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(securityList.Id),
 					"name":                 llx.StringDataPtr(securityList.DisplayName),
 					"created":              llx.TimeDataPtr(created),
 					"state":                llx.StringData(string(securityList.LifecycleState)),
-					"compartmentID":        llx.StringDataPtr(securityList.CompartmentId),
 					"egressSecurityRules":  llx.ArrayData(egress, types.Dict),
 					"ingressSecurityRules": llx.ArrayData(ingress, types.Dict),
 					"egressRules":          llx.ArrayData(egressRules, types.Resource("oci.network.securityRule")),
 					"ingressRules":         llx.ArrayData(ingressRules, types.Resource("oci.network.securityRule")),
-					"vcnId":                llx.StringDataPtr(securityList.VcnId),
 					"freeformTags":         llx.MapData(strMapToAny(securityList.FreeformTags), types.String),
 					"definedTags":          llx.MapData(definedTagsToAny(securityList.DefinedTags), types.Any),
 				})
@@ -311,6 +307,7 @@ type ingressSecurityRule struct {
 }
 
 type mqlOciNetworkSecurityListInternal struct {
+	ociCompartmentRef
 	cacheVcnID string
 	// cacheRegion is the region key (e.g. "IAD") discovered when the security
 	// list was enumerated. Used by discovery to emit per-region platform IDs
@@ -376,7 +373,7 @@ func (o *mqlOciNetworkSecurityList) vcn() (*mqlOciNetworkVcn, error) {
 }
 
 func (o *mqlOciNetworkSecurityList) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkSecurityList) hasStatelessRules() (bool, error) {
@@ -445,10 +442,9 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 					created = &subnet.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.subnet", stringValue(subnet.CompartmentId), map[string]*llx.RawData{
 					"id":                      llx.StringDataPtr(subnet.Id),
 					"name":                    llx.StringDataPtr(subnet.DisplayName),
-					"compartmentID":           llx.StringDataPtr(subnet.CompartmentId),
 					"availabilityDomain":      llx.StringDataPtr(subnet.AvailabilityDomain),
 					"cidrBlock":               llx.StringDataPtr(subnet.CidrBlock),
 					"state":                   llx.StringData(string(subnet.LifecycleState)),
@@ -475,6 +471,7 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 }
 
 type mqlOciNetworkSubnetInternal struct {
+	ociCompartmentRef
 	cacheVcnID           string
 	cacheRouteTableID    string
 	cacheSecurityListIDs []string
@@ -560,14 +557,13 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 					created = &nsg.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(nsg.Id),
-					"name":          llx.StringDataPtr(nsg.DisplayName),
-					"compartmentID": llx.StringDataPtr(nsg.CompartmentId),
-					"state":         llx.StringData(string(nsg.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.networkSecurityGroup", stringValue(nsg.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(nsg.Id),
+					"name":         llx.StringDataPtr(nsg.DisplayName),
+					"state":        llx.StringData(string(nsg.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -603,6 +599,7 @@ func (o *mqlOciNetwork) getNSGsForRegion(ctx context.Context, networkClient *cor
 }
 
 type mqlOciNetworkNetworkSecurityGroupInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 	cacheVcnID  string
 	rules       ociOnce
@@ -662,14 +659,13 @@ func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string
 		created = &nsg.TimeCreated.Time
 	}
 
-	mqlInstance, err := CreateResource(runtime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
-		"id":            llx.StringDataPtr(nsg.Id),
-		"name":          llx.StringDataPtr(nsg.DisplayName),
-		"compartmentID": llx.StringDataPtr(nsg.CompartmentId),
-		"state":         llx.StringData(string(nsg.LifecycleState)),
-		"created":       llx.TimeDataPtr(created),
-		"freeformTags":  llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
-		"definedTags":   llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
+	mqlInstance, err := createOciResourceInCompartment(runtime, "oci.network.networkSecurityGroup", stringValue(nsg.CompartmentId), map[string]*llx.RawData{
+		"id":           llx.StringDataPtr(nsg.Id),
+		"name":         llx.StringDataPtr(nsg.DisplayName),
+		"state":        llx.StringData(string(nsg.LifecycleState)),
+		"created":      llx.TimeDataPtr(created),
+		"freeformTags": llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
+		"definedTags":  llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -834,7 +830,7 @@ func (o *mqlOciNetworkNetworkSecurityGroup) egressSecurityRules() ([]any, error)
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkNetworkSecurityGroup) hasStatelessRules() (bool, error) {
@@ -897,17 +893,15 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 		created = &vnic.TimeCreated.Time
 	}
 
-	res, err := CreateResource(runtime, "oci.compute.vnic", map[string]*llx.RawData{
+	res, err := createOciResourceInCompartment(runtime, "oci.compute.vnic", stringValue(vnic.CompartmentId), map[string]*llx.RawData{
 		"id":                  llx.StringDataPtr(vnic.Id),
 		"name":                llx.StringDataPtr(vnic.DisplayName),
-		"compartmentID":       llx.StringDataPtr(vnic.CompartmentId),
 		"isPrimary":           llx.BoolDataPtr(vnic.IsPrimary),
 		"privateIp":           llx.StringDataPtr(vnic.PrivateIp),
 		"publicIp":            llx.StringDataPtr(vnic.PublicIp),
 		"ipv6Addresses":       llx.ArrayData(stringsToAny(vnic.Ipv6Addresses), types.String),
 		"macAddress":          llx.StringDataPtr(vnic.MacAddress),
 		"hostnameLabel":       llx.StringDataPtr(vnic.HostnameLabel),
-		"nsgIds":              llx.ArrayData(convert.SliceAnyToInterface(vnic.NsgIds), types.String),
 		"skipSourceDestCheck": llx.BoolDataPtr(vnic.SkipSourceDestCheck),
 		"state":               llx.StringData(string(vnic.LifecycleState)),
 		"created":             llx.TimeDataPtr(created),
@@ -919,6 +913,7 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 	}
 	mqlVnic := res.(*mqlOciComputeVnic)
 	mqlVnic.cacheSubnetID = stringValue(vnic.SubnetId)
+	mqlVnic.cacheNsgIDs = convert.SliceAnyToInterface(vnic.NsgIds)
 	return mqlVnic, nil
 }
 
@@ -959,15 +954,14 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 					created = &igw.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.internetGateway", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(igw.Id),
-					"name":          llx.StringDataPtr(igw.DisplayName),
-					"compartmentID": llx.StringDataPtr(igw.CompartmentId),
-					"isEnabled":     llx.BoolDataPtr(igw.IsEnabled),
-					"state":         llx.StringData(string(igw.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(igw.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(igw.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.internetGateway", stringValue(igw.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(igw.Id),
+					"name":         llx.StringDataPtr(igw.DisplayName),
+					"isEnabled":    llx.BoolDataPtr(igw.IsEnabled),
+					"state":        llx.StringData(string(igw.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(igw.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(igw.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -982,6 +976,7 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 }
 
 type mqlOciNetworkInternetGatewayInternal struct {
+	ociCompartmentRef
 	cacheVcnID string
 }
 
@@ -1040,16 +1035,15 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 					created = &ngw.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.natGateway", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(ngw.Id),
-					"name":          llx.StringDataPtr(ngw.DisplayName),
-					"compartmentID": llx.StringDataPtr(ngw.CompartmentId),
-					"blockTraffic":  llx.BoolDataPtr(ngw.BlockTraffic),
-					"natIp":         llx.StringDataPtr(ngw.NatIp),
-					"state":         llx.StringData(string(ngw.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(ngw.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(ngw.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.natGateway", stringValue(ngw.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(ngw.Id),
+					"name":         llx.StringDataPtr(ngw.DisplayName),
+					"blockTraffic": llx.BoolDataPtr(ngw.BlockTraffic),
+					"natIp":        llx.StringDataPtr(ngw.NatIp),
+					"state":        llx.StringData(string(ngw.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(ngw.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(ngw.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -1064,6 +1058,7 @@ func (o *mqlOciNetwork) natGateways() ([]any, error) {
 }
 
 type mqlOciNetworkNatGatewayInternal struct {
+	ociCompartmentRef
 	cacheVcnID string
 }
 
@@ -1157,15 +1152,14 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 					return nil, err
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.routeTable", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(rt.Id),
-					"name":          llx.StringDataPtr(rt.DisplayName),
-					"compartmentID": llx.StringDataPtr(rt.CompartmentId),
-					"routeRules":    llx.ArrayData(routeRules, types.Dict),
-					"state":         llx.StringData(string(rt.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(rt.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(rt.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.routeTable", stringValue(rt.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(rt.Id),
+					"name":         llx.StringDataPtr(rt.DisplayName),
+					"routeRules":   llx.ArrayData(routeRules, types.Dict),
+					"state":        llx.StringData(string(rt.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(rt.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(rt.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -1180,6 +1174,7 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 }
 
 type mqlOciNetworkRouteTableInternal struct {
+	ociCompartmentRef
 	cacheVcnID string
 }
 
@@ -1296,11 +1291,10 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 					created = &publicIp.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.publicIp", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.publicIp", stringValue(publicIp.CompartmentId), map[string]*llx.RawData{
 					"id":                 llx.StringDataPtr(publicIp.Id),
 					"ipAddress":          llx.StringDataPtr(publicIp.IpAddress),
 					"name":               llx.StringDataPtr(publicIp.DisplayName),
-					"compartmentID":      llx.StringDataPtr(publicIp.CompartmentId),
 					"lifetime":           llx.StringData(string(publicIp.Lifetime)),
 					"scope":              llx.StringData(string(publicIp.Scope)),
 					"assignedEntityType": llx.StringData(string(publicIp.AssignedEntityType)),
@@ -1323,4 +1317,8 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 
 func (o *mqlOciNetworkPublicIp) id() (string, error) {
 	return "oci.network.publicIp/" + o.Id.Data, nil
+}
+
+type mqlOciNetworkPublicIpInternal struct {
+	ociCompartmentRef
 }

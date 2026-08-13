@@ -122,7 +122,6 @@ func (o *mqlOciDataSafe) configurations() ([]any, error) {
 				"region":              llx.StringData(regionId),
 				"isEnabled":           llx.BoolData(boolValue(cfg.IsEnabled)),
 				"url":                 llx.StringData(stringValue(cfg.Url)),
-				"compartmentId":       llx.StringData(stringValue(cfg.CompartmentId)),
 				"lifecycleState":      llx.StringData(string(cfg.LifecycleState)),
 				"natGatewayIpAddress": llx.StringData(stringValue(cfg.DataSafeNatGatewayIpAddress)),
 				"globalSettings":      llx.DictData(globalSettingsDict),
@@ -135,7 +134,7 @@ func (o *mqlOciDataSafe) configurations() ([]any, error) {
 				args["enabledAt"] = llx.NilData
 			}
 
-			mqlCfg, err := CreateResource(o.MqlRuntime, "oci.dataSafe.configuration", args)
+			mqlCfg, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.configuration", stringValue(cfg.CompartmentId), args)
 			if err != nil {
 				return nil, err
 			}
@@ -187,7 +186,6 @@ func (o *mqlOciDataSafe) targetDatabases() ([]any, error) {
 				t := items[i]
 				args := map[string]*llx.RawData{
 					"id":                    llx.StringDataPtr(t.Id),
-					"compartmentId":         llx.StringDataPtr(t.CompartmentId),
 					"region":                llx.StringData(regionId),
 					"displayName":           llx.StringDataPtr(t.DisplayName),
 					"description":           llx.StringData(stringValue(t.Description)),
@@ -201,7 +199,7 @@ func (o *mqlOciDataSafe) targetDatabases() ([]any, error) {
 					"definedTags":           llx.MapData(definedTagsToAny(t.DefinedTags), types.Any),
 					"systemTags":            llx.MapData(definedTagsToAny(t.SystemTags), types.Dict),
 				}
-				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.targetDatabase", args)
+				mql, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.targetDatabase", stringValue(t.CompartmentId), args)
 				if err != nil {
 					return nil, err
 				}
@@ -255,7 +253,6 @@ func (o *mqlOciDataSafe) securityAssessments() ([]any, error) {
 				a := items[i]
 				args := map[string]*llx.RawData{
 					"id":                     llx.StringDataPtr(a.Id),
-					"compartmentId":          llx.StringDataPtr(a.CompartmentId),
 					"region":                 llx.StringData(regionId),
 					"displayName":            llx.StringDataPtr(a.DisplayName),
 					"lifecycleState":         llx.StringData(string(a.LifecycleState)),
@@ -268,7 +265,7 @@ func (o *mqlOciDataSafe) securityAssessments() ([]any, error) {
 					"freeformTags":           llx.MapData(strMapToAny(a.FreeformTags), types.String),
 					"definedTags":            llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
 				}
-				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.securityAssessment", args)
+				mql, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.securityAssessment", stringValue(a.CompartmentId), args)
 				if err != nil {
 					return nil, err
 				}
@@ -322,7 +319,6 @@ func (o *mqlOciDataSafe) userAssessments() ([]any, error) {
 				a := items[i]
 				args := map[string]*llx.RawData{
 					"id":                     llx.StringDataPtr(a.Id),
-					"compartmentId":          llx.StringDataPtr(a.CompartmentId),
 					"region":                 llx.StringData(regionId),
 					"displayName":            llx.StringDataPtr(a.DisplayName),
 					"lifecycleState":         llx.StringData(string(a.LifecycleState)),
@@ -335,7 +331,7 @@ func (o *mqlOciDataSafe) userAssessments() ([]any, error) {
 					"freeformTags":           llx.MapData(strMapToAny(a.FreeformTags), types.String),
 					"definedTags":            llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
 				}
-				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.userAssessment", args)
+				mql, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.userAssessment", stringValue(a.CompartmentId), args)
 				if err != nil {
 					return nil, err
 				}
@@ -389,7 +385,6 @@ func (o *mqlOciDataSafe) sensitiveDataModels() ([]any, error) {
 				m := items[i]
 				args := map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(m.Id),
-					"compartmentId":  llx.StringDataPtr(m.CompartmentId),
 					"region":         llx.StringData(regionId),
 					"displayName":    llx.StringDataPtr(m.DisplayName),
 					"description":    llx.StringData(stringValue(m.Description)),
@@ -401,7 +396,7 @@ func (o *mqlOciDataSafe) sensitiveDataModels() ([]any, error) {
 					"freeformTags":   llx.MapData(strMapToAny(m.FreeformTags), types.String),
 					"definedTags":    llx.MapData(definedTagsToAny(m.DefinedTags), types.Any),
 				}
-				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.sensitiveDataModel", args)
+				mql, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.sensitiveDataModel", stringValue(m.CompartmentId), args)
 				if err != nil {
 					return nil, err
 				}
@@ -455,7 +450,6 @@ func (o *mqlOciDataSafe) sensitiveTypes() ([]any, error) {
 				t := items[i]
 				args := map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(t.Id),
-					"compartmentId":  llx.StringDataPtr(t.CompartmentId),
 					"region":         llx.StringData(regionId),
 					"displayName":    llx.StringDataPtr(t.DisplayName),
 					"shortName":      llx.StringData(stringValue(t.ShortName)),
@@ -467,7 +461,7 @@ func (o *mqlOciDataSafe) sensitiveTypes() ([]any, error) {
 					"freeformTags":   llx.MapData(strMapToAny(t.FreeformTags), types.String),
 					"definedTags":    llx.MapData(definedTagsToAny(t.DefinedTags), types.Any),
 				}
-				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.sensitiveType", args)
+				mql, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.sensitiveType", stringValue(t.CompartmentId), args)
 				if err != nil {
 					return nil, err
 				}
@@ -525,7 +519,6 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 				}
 				args := map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(p.Id),
-					"compartmentId":  llx.StringDataPtr(p.CompartmentId),
 					"region":         llx.StringData(regionId),
 					"displayName":    llx.StringDataPtr(p.DisplayName),
 					"description":    llx.StringData(stringValue(p.Description)),
@@ -536,7 +529,7 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 					"freeformTags":   llx.MapData(strMapToAny(p.FreeformTags), types.String),
 					"definedTags":    llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
 				}
-				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.maskingPolicy", args)
+				mql, err := createOciResourceInCompartment(o.MqlRuntime, "oci.dataSafe.maskingPolicy", stringValue(p.CompartmentId), args)
 				if err != nil {
 					return nil, err
 				}
@@ -547,4 +540,32 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return o.gatherResults(tasks, nil)
+}
+
+type mqlOciDataSafeConfigurationInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciDataSafeMaskingPolicyInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciDataSafeSecurityAssessmentInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciDataSafeSensitiveDataModelInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciDataSafeSensitiveTypeInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciDataSafeTargetDatabaseInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciDataSafeUserAssessmentInternal struct {
+	ociCompartmentRef
 }
