@@ -11,7 +11,6 @@ import (
 	iaas "github.com/stackitcloud/stackit-sdk-go/services/iaas/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 )
 
 // ------------------------- servers -------------------------
@@ -41,6 +40,16 @@ func (r *mqlStackit) servers() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// mqlStackitServerInternal caches data the server GET returns inline that is no
+// longer exposed as schema fields: the service-account mail addresses that
+// serviceAccounts() resolves into typed references, and the per-interface
+// summaries that securityGroups() and exposure() read. Keeping the summaries
+// here avoids a ListServerNICs call per server just to answer those two.
+type mqlStackitServerInternal struct {
+	cacheServiceAccountMails []string
+	cacheNics                []any
 }
 
 func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, error) {
@@ -79,29 +88,34 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 	const vtpmEnabled = false
 
 	args := map[string]*llx.RawData{
-		"id":                  llx.StringData(s.GetId()),
-		"name":                llx.StringData(s.GetName()),
-		"status":              llx.StringData(s.GetStatus()),
-		"powerStatus":         llx.StringData(s.GetPowerStatus()),
-		"machineType":         llx.StringData(s.GetMachineType()),
-		"availabilityZone":    llx.StringData(s.GetAvailabilityZone()),
-		"createdAt":           llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
-		"launchedAt":          llx.TimeDataPtr(timeOrNil(launchedAt, ok2)),
-		"updatedAt":           llx.TimeDataPtr(timeOrNil(updatedAt, ok3)),
-		"errorMessage":        llx.StringData(s.GetErrorMessage()),
-		"configDrive":         llx.BoolData(s.GetConfigDrive()),
-		"vtpmEnabled":         llx.BoolData(vtpmEnabled),
-		"keypairName":         llx.StringData(s.GetKeypairName()),
-		"imageId":             llx.StringData(s.GetImageId()),
-		"volumeIds":           strSliceData(s.GetVolumes()),
-		"securityGroupIds":    strSliceData(s.GetSecurityGroups()),
-		"serviceAccountMails": strSliceData(s.GetServiceAccountMails()),
-		"nics":                llx.ArrayData(nics, types.Dict),
-		"userData":            llx.StringData(string(s.GetUserData())),
-		"labels":              labelData(s.GetLabels()),
-		"metadata":            metadataData(s.GetMetadata()),
+		"id":               llx.StringData(s.GetId()),
+		"name":             llx.StringData(s.GetName()),
+		"status":           llx.StringData(s.GetStatus()),
+		"powerStatus":      llx.StringData(s.GetPowerStatus()),
+		"machineType":      llx.StringData(s.GetMachineType()),
+		"availabilityZone": llx.StringData(s.GetAvailabilityZone()),
+		"createdAt":        llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
+		"launchedAt":       llx.TimeDataPtr(timeOrNil(launchedAt, ok2)),
+		"updatedAt":        llx.TimeDataPtr(timeOrNil(updatedAt, ok3)),
+		"errorMessage":     llx.StringData(s.GetErrorMessage()),
+		"configDrive":      llx.BoolData(s.GetConfigDrive()),
+		"vtpmEnabled":      llx.BoolData(vtpmEnabled),
+		"keypairName":      llx.StringData(s.GetKeypairName()),
+		"imageId":          llx.StringData(s.GetImageId()),
+		"volumeIds":        strSliceData(s.GetVolumes()),
+		"securityGroupIds": strSliceData(s.GetSecurityGroups()),
+		"userData":         llx.StringData(string(s.GetUserData())),
+		"labels":           labelData(s.GetLabels()),
+		"metadata":         metadataData(s.GetMetadata()),
 	}
-	return CreateResource(runtime, "stackit.server", args)
+	res, err := CreateResource(runtime, "stackit.server", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlServer := res.(*mqlStackitServer)
+	mqlServer.cacheServiceAccountMails = s.GetServiceAccountMails()
+	mqlServer.cacheNics = nics
+	return res, nil
 }
 
 func (r *mqlStackitServer) id() (string, error) {
@@ -197,21 +211,18 @@ func (r *mqlStackitServer) securityGroups() ([]any, error) {
 			add(id)
 		}
 	}
-	nics := r.GetNics()
-	if nics.Error == nil {
-		for _, raw := range nics.Data {
-			nic, ok := raw.(map[string]any)
-			if !ok {
-				continue
-			}
-			sgs, ok := nic["securityGroups"].([]any)
-			if !ok {
-				continue
-			}
-			for _, s := range sgs {
-				if id, ok := s.(string); ok {
-					add(id)
-				}
+	for _, raw := range r.cacheNics {
+		nic, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		sgs, ok := nic["securityGroups"].([]any)
+		if !ok {
+			continue
+		}
+		for _, s := range sgs {
+			if id, ok := s.(string); ok {
+				add(id)
 			}
 		}
 	}
@@ -232,10 +243,9 @@ func (r *mqlStackitServer) securityGroups() ([]any, error) {
 // serviceAccounts resolves the service accounts attached to the server from
 // the mail addresses carried on the server object.
 func (r *mqlStackitServer) serviceAccounts() ([]any, error) {
-	out := make([]any, 0, len(r.ServiceAccountMails.Data))
-	for _, raw := range r.ServiceAccountMails.Data {
-		mail, ok := raw.(string)
-		if !ok || mail == "" {
+	out := make([]any, 0, len(r.cacheServiceAccountMails))
+	for _, mail := range r.cacheServiceAccountMails {
+		if mail == "" {
 			continue
 		}
 		sa, err := NewResource(r.MqlRuntime, "stackit.serviceAccount", map[string]*llx.RawData{
