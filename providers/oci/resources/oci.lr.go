@@ -1523,9 +1523,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.identity.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityUser).GetId()).ToDataRes(types.String)
 	},
-	"oci.identity.user.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityUser).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.identity.user.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityUser).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -1658,9 +1655,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.identity.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityGroup).GetId()).ToDataRes(types.String)
 	},
-	"oci.identity.group.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityGroup).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.identity.group.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityGroup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -1687,9 +1681,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityPolicy).GetId()).ToDataRes(types.String)
-	},
-	"oci.identity.policy.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityPolicy).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.identity.policy.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -1799,9 +1790,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.identity.oauth2ClientCredential.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityOauth2ClientCredential).GetDescription()).ToDataRes(types.String)
 	},
-	"oci.identity.oauth2ClientCredential.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityOauth2ClientCredential).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.identity.oauth2ClientCredential.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityOauth2ClientCredential).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -1819,9 +1807,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.dynamicGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDynamicGroup).GetId()).ToDataRes(types.String)
-	},
-	"oci.identity.dynamicGroup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityDynamicGroup).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.identity.dynamicGroup.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDynamicGroup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -1849,9 +1834,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.identityProvider.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityIdentityProvider).GetId()).ToDataRes(types.String)
-	},
-	"oci.identity.identityProvider.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityIdentityProvider).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.identity.identityProvider.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityIdentityProvider).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -1891,9 +1873,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.networkSource.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityNetworkSource).GetId()).ToDataRes(types.String)
-	},
-	"oci.identity.networkSource.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciIdentityNetworkSource).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.identity.networkSource.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityNetworkSource).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -2006,9 +1985,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.instance.faultDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetFaultDomain()).ToDataRes(types.String)
 	},
-	"oci.compute.instance.imageId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetImageId()).ToDataRes(types.String)
-	},
 	"oci.compute.instance.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetImage()).ToDataRes(types.Resource("oci.compute.image"))
 	},
@@ -2090,9 +2066,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.vnic.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetName()).ToDataRes(types.String)
 	},
-	"oci.compute.vnic.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeVnic).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.compute.vnic.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2116,9 +2089,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.vnic.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
-	},
-	"oci.compute.vnic.nsgIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeVnic).GetNsgIds()).ToDataRes(types.Array(types.String))
 	},
 	"oci.compute.vnic.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
@@ -2180,9 +2150,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.blockVolume.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeBlockVolume).GetName()).ToDataRes(types.String)
 	},
-	"oci.compute.blockVolume.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeBlockVolume).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.compute.blockVolume.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeBlockVolume).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2231,9 +2198,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.bootVolume.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeBootVolume).GetName()).ToDataRes(types.String)
 	},
-	"oci.compute.bootVolume.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeBootVolume).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.compute.bootVolume.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeBootVolume).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2242,9 +2206,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.bootVolume.sizeInGBs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeBootVolume).GetSizeInGBs()).ToDataRes(types.Int)
-	},
-	"oci.compute.bootVolume.imageId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeBootVolume).GetImageId()).ToDataRes(types.String)
 	},
 	"oci.compute.bootVolume.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeBootVolume).GetImage()).ToDataRes(types.Resource("oci.compute.image"))
@@ -2327,9 +2288,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.publicIp.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkPublicIp).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.publicIp.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkPublicIp).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.publicIp.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkPublicIp).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2363,9 +2321,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.vcn.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetId()).ToDataRes(types.String)
 	},
-	"oci.network.vcn.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkVcn).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.vcn.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2377,9 +2332,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.vcn.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetState()).ToDataRes(types.String)
-	},
-	"oci.network.vcn.cidrBlock": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkVcn).GetCidrBlock()).ToDataRes(types.String)
 	},
 	"oci.network.vcn.cidrBlocks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetCidrBlocks()).ToDataRes(types.Array(types.String))
@@ -2438,9 +2390,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.subnet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSubnet).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.subnet.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkSubnet).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.subnet.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSubnet).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2489,9 +2438,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.securityList.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetId()).ToDataRes(types.String)
 	},
-	"oci.network.securityList.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkSecurityList).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.securityList.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2519,9 +2465,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.securityList.hasStatelessRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetHasStatelessRules()).ToDataRes(types.Bool)
 	},
-	"oci.network.securityList.vcnId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkSecurityList).GetVcnId()).ToDataRes(types.String)
-	},
 	"oci.network.securityList.vcn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetVcn()).ToDataRes(types.Resource("oci.network.vcn"))
 	},
@@ -2536,9 +2479,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.networkSecurityGroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.networkSecurityGroup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.networkSecurityGroup.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -2624,9 +2564,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.internetGateway.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkInternetGateway).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.internetGateway.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkInternetGateway).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.internetGateway.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkInternetGateway).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2653,9 +2590,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.natGateway.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNatGateway).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.natGateway.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkNatGateway).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.natGateway.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNatGateway).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -2686,9 +2620,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.routeTable.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkRouteTable).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.routeTable.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkRouteTable).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.routeTable.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkRouteTable).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -2753,9 +2684,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.drg.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkDrg).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.drg.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkDrg).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.drg.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkDrg).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2782,9 +2710,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.drgAttachment.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkDrgAttachment).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.drgAttachment.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkDrgAttachment).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.drgAttachment.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkDrgAttachment).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -2828,9 +2753,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.localPeeringGateway.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLocalPeeringGateway).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.localPeeringGateway.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLocalPeeringGateway).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.localPeeringGateway.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLocalPeeringGateway).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2870,9 +2792,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.remotePeeringConnection.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkRemotePeeringConnection).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.remotePeeringConnection.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkRemotePeeringConnection).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.remotePeeringConnection.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkRemotePeeringConnection).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2908,9 +2827,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.serviceGateway.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkServiceGateway).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.serviceGateway.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkServiceGateway).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.serviceGateway.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkServiceGateway).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -2957,9 +2873,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.cpe.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkCpe).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.cpe.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkCpe).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.cpe.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkCpe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -2986,9 +2899,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.ipsecConnection.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkIpsecConnection).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.ipsecConnection.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkIpsecConnection).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.ipsecConnection.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkIpsecConnection).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3031,9 +2941,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.ipsecConnectionTunnel.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetName()).ToDataRes(types.String)
-	},
-	"oci.network.ipsecConnectionTunnel.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.network.ipsecConnectionTunnel.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3134,9 +3041,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.virtualCircuit.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVirtualCircuit).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.virtualCircuit.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkVirtualCircuit).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.virtualCircuit.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVirtualCircuit).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -3191,9 +3095,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.crossConnect.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkCrossConnect).GetName()).ToDataRes(types.String)
 	},
-	"oci.network.crossConnect.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkCrossConnect).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.network.crossConnect.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkCrossConnect).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -3232,9 +3133,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.logging.logGroup.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoggingLogGroup).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.logging.logGroup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoggingLogGroup).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.logging.logGroup.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoggingLogGroup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3314,9 +3212,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.kms.vault.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsVault).GetName()).ToDataRes(types.String)
 	},
-	"oci.kms.vault.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciKmsVault).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.kms.vault.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsVault).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -3347,14 +3242,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.kms.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKey).GetName()).ToDataRes(types.String)
 	},
-	"oci.kms.key.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciKmsKey).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.kms.key.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKey).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
-	},
-	"oci.kms.key.vaultId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciKmsKey).GetVaultId()).ToDataRes(types.String)
 	},
 	"oci.kms.key.vault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKey).GetVault()).ToDataRes(types.Resource("oci.kms.vault"))
@@ -3395,14 +3284,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.kms.keyVersion.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKeyVersion).GetKeyId()).ToDataRes(types.String)
 	},
-	"oci.kms.keyVersion.vaultId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciKmsKeyVersion).GetVaultId()).ToDataRes(types.String)
-	},
 	"oci.kms.keyVersion.vault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKeyVersion).GetVault()).ToDataRes(types.Resource("oci.kms.vault"))
-	},
-	"oci.kms.keyVersion.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciKmsKeyVersion).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.kms.keyVersion.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKeyVersion).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3433,9 +3316,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.objectStorage.bucket.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetName()).ToDataRes(types.String)
-	},
-	"oci.objectStorage.bucket.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciObjectStorageBucket).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.objectStorage.bucket.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3469,9 +3349,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.objectStorage.bucket.replicationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetReplicationEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.objectStorage.bucket.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciObjectStorageBucket).GetId()).ToDataRes(types.String)
 	},
 	"oci.objectStorage.bucket.ocid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetOcid()).ToDataRes(types.String)
@@ -3557,9 +3434,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.fileStorage.fileSystem.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetName()).ToDataRes(types.String)
 	},
-	"oci.fileStorage.fileSystem.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFileStorageFileSystem).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.fileStorage.fileSystem.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -3604,9 +3478,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.events.rule.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciEventsRule).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.events.rule.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciEventsRule).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.events.rule.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciEventsRule).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3665,9 +3536,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.cloudGuard.target.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardTarget).GetName()).ToDataRes(types.String)
 	},
-	"oci.cloudGuard.target.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuardTarget).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.cloudGuard.target.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardTarget).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -3703,9 +3571,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.cloudGuard.detectorRecipe.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardDetectorRecipe).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.cloudGuard.detectorRecipe.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuardDetectorRecipe).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.cloudGuard.detectorRecipe.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardDetectorRecipe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3848,9 +3713,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.cloudGuard.securityZone.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardSecurityZone).GetDescription()).ToDataRes(types.String)
 	},
-	"oci.cloudGuard.securityZone.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuardSecurityZone).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.cloudGuard.securityZone.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardSecurityZone).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -3883,9 +3745,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.cloudGuard.securityZoneRecipe.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardSecurityZoneRecipe).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.cloudGuard.securityZoneRecipe.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuardSecurityZoneRecipe).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.cloudGuard.securityZoneRecipe.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardSecurityZoneRecipe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3922,9 +3781,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.cloudGuard.securityPolicy.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardSecurityPolicy).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.cloudGuard.securityPolicy.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuardSecurityPolicy).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.cloudGuard.securityPolicy.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardSecurityPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3964,9 +3820,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.ons.topic.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOnsTopic).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.ons.topic.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOnsTopic).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.ons.topic.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOnsTopic).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -4181,9 +4034,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.bastion.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciBastionInstance).GetName()).ToDataRes(types.String)
 	},
-	"oci.bastion.instance.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciBastionInstance).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.bastion.instance.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciBastionInstance).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -4241,9 +4091,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.monitoring.alarm.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMonitoringAlarm).GetName()).ToDataRes(types.String)
 	},
-	"oci.monitoring.alarm.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciMonitoringAlarm).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.monitoring.alarm.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMonitoringAlarm).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -4258,9 +4105,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.monitoring.alarm.severity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMonitoringAlarm).GetSeverity()).ToDataRes(types.String)
-	},
-	"oci.monitoring.alarm.destinations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciMonitoringAlarm).GetDestinations()).ToDataRes(types.Array(types.String))
 	},
 	"oci.monitoring.alarm.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciMonitoringAlarm).GetTopics()).ToDataRes(types.Array(types.Resource("oci.ons.topic")))
@@ -4285,9 +4129,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.vault.secret.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVaultSecret).GetName()).ToDataRes(types.String)
-	},
-	"oci.vault.secret.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciVaultSecret).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.vault.secret.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVaultSecret).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -4376,9 +4217,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.loadBalancer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetName()).ToDataRes(types.String)
 	},
-	"oci.loadBalancer.loadBalancer.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerLoadBalancer).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.loadBalancer.loadBalancer.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -4402,9 +4240,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.loadBalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetListeners()).ToDataRes(types.Array(types.Resource("oci.loadBalancer.listener")))
-	},
-	"oci.loadBalancer.loadBalancer.nsgIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerLoadBalancer).GetNsgIds()).ToDataRes(types.Array(types.String))
 	},
 	"oci.loadBalancer.loadBalancer.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
@@ -5387,9 +5222,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.networkFirewall.firewall.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallFirewall).GetName()).ToDataRes(types.String)
 	},
-	"oci.networkFirewall.firewall.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkFirewallFirewall).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.networkFirewall.firewall.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallFirewall).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -5437,9 +5269,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.networkFirewall.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallPolicy).GetName()).ToDataRes(types.String)
-	},
-	"oci.networkFirewall.policy.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkFirewallPolicy).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.networkFirewall.policy.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -5552,9 +5381,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.oke.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeCluster).GetName()).ToDataRes(types.String)
 	},
-	"oci.oke.cluster.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOkeCluster).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.oke.cluster.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeCluster).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -5615,9 +5441,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.oke.nodePool.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetName()).ToDataRes(types.String)
 	},
-	"oci.oke.nodePool.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOkeNodePool).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.oke.nodePool.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -5632,9 +5455,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.oke.nodePool.nodeShapeConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetNodeShapeConfig()).ToDataRes(types.Dict)
-	},
-	"oci.oke.nodePool.nodeImageName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciOkeNodePool).GetNodeImageName()).ToDataRes(types.String)
 	},
 	"oci.oke.nodePool.nodeImage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetNodeImage()).ToDataRes(types.Resource("oci.compute.image"))
@@ -5675,9 +5495,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.waf.firewall.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciWafFirewall).GetName()).ToDataRes(types.String)
 	},
-	"oci.waf.firewall.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciWafFirewall).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.waf.firewall.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciWafFirewall).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -5711,9 +5528,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.waf.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciWafPolicy).GetName()).ToDataRes(types.String)
 	},
-	"oci.waf.policy.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciWafPolicy).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.waf.policy.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciWafPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -5743,9 +5557,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.functions.application.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsApplication).GetName()).ToDataRes(types.String)
-	},
-	"oci.functions.application.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsApplication).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.functions.application.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsApplication).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -5794,9 +5605,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.functions.function.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsFunction).GetName()).ToDataRes(types.String)
-	},
-	"oci.functions.function.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFunctionsFunction).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.functions.function.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFunctionsFunction).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -5852,9 +5660,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.containerInstances.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesInstance).GetName()).ToDataRes(types.String)
 	},
-	"oci.containerInstances.instance.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesInstance).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.containerInstances.instance.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesInstance).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -5908,9 +5713,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.containerInstances.container.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesContainer).GetName()).ToDataRes(types.String)
-	},
-	"oci.containerInstances.container.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciContainerInstancesContainer).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.containerInstances.container.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciContainerInstancesContainer).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -5984,9 +5786,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.backup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseBackup).GetName()).ToDataRes(types.String)
 	},
-	"oci.database.backup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseBackup).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.database.backup.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseBackup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6047,9 +5846,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.autonomousDatabaseBackup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabaseBackup).GetName()).ToDataRes(types.String)
 	},
-	"oci.database.autonomousDatabaseBackup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseAutonomousDatabaseBackup).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.database.autonomousDatabaseBackup.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabaseBackup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6104,9 +5900,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.dbSystem.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetName()).ToDataRes(types.String)
 	},
-	"oci.database.dbSystem.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.database.dbSystem.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6158,14 +5951,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.dbSystem.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
 	},
-	"oci.database.dbSystem.nsgIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetNsgIds()).ToDataRes(types.Array(types.String))
-	},
 	"oci.database.dbSystem.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
-	},
-	"oci.database.dbSystem.backupNetworkNsgIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetBackupNetworkNsgIds()).ToDataRes(types.Array(types.String))
 	},
 	"oci.database.dbSystem.backupSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetBackupSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
@@ -6190,9 +5977,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.database.autonomousDatabase.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetName()).ToDataRes(types.String)
-	},
-	"oci.database.autonomousDatabase.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseAutonomousDatabase).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.database.autonomousDatabase.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6278,9 +6062,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.autonomousDatabase.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
 	},
-	"oci.database.autonomousDatabase.nsgIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseAutonomousDatabase).GetNsgIds()).ToDataRes(types.Array(types.String))
-	},
 	"oci.database.autonomousDatabase.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
 	},
@@ -6328,9 +6109,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.apigateway.gateway.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciApigatewayGateway).GetName()).ToDataRes(types.String)
-	},
-	"oci.apigateway.gateway.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciApigatewayGateway).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.apigateway.gateway.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciApigatewayGateway).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6385,9 +6163,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.apigateway.deployment.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciApigatewayDeployment).GetName()).ToDataRes(types.String)
-	},
-	"oci.apigateway.deployment.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciApigatewayDeployment).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.apigateway.deployment.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciApigatewayDeployment).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6458,9 +6233,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.apigateway.certificate.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciApigatewayCertificate).GetName()).ToDataRes(types.String)
 	},
-	"oci.apigateway.certificate.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciApigatewayCertificate).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.apigateway.certificate.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciApigatewayCertificate).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6505,9 +6277,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.certificates.certificate.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCertificatesCertificate).GetDescription()).ToDataRes(types.String)
-	},
-	"oci.certificates.certificate.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCertificatesCertificate).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.certificates.certificate.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCertificatesCertificate).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6569,9 +6338,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.certificates.certificateAuthority.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCertificatesCertificateAuthority).GetDescription()).ToDataRes(types.String)
 	},
-	"oci.certificates.certificateAuthority.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCertificatesCertificateAuthority).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.certificates.certificateAuthority.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCertificatesCertificateAuthority).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6620,9 +6386,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.certificates.caBundle.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCertificatesCaBundle).GetDescription()).ToDataRes(types.String)
 	},
-	"oci.certificates.caBundle.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCertificatesCaBundle).GetCompartmentID()).ToDataRes(types.String)
-	},
 	"oci.certificates.caBundle.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCertificatesCaBundle).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6646,9 +6409,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.redis.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciRedisCluster).GetName()).ToDataRes(types.String)
-	},
-	"oci.redis.cluster.compartmentID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciRedisCluster).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.redis.cluster.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciRedisCluster).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6740,9 +6500,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.dataSafe.configuration.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeConfiguration).GetUrl()).ToDataRes(types.String)
 	},
-	"oci.dataSafe.configuration.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeConfiguration).GetCompartmentId()).ToDataRes(types.String)
-	},
 	"oci.dataSafe.configuration.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeConfiguration).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6766,9 +6523,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.dataSafe.targetDatabase.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeTargetDatabase).GetId()).ToDataRes(types.String)
-	},
-	"oci.dataSafe.targetDatabase.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeTargetDatabase).GetCompartmentId()).ToDataRes(types.String)
 	},
 	"oci.dataSafe.targetDatabase.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeTargetDatabase).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6812,9 +6566,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.dataSafe.securityAssessment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeSecurityAssessment).GetId()).ToDataRes(types.String)
 	},
-	"oci.dataSafe.securityAssessment.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeSecurityAssessment).GetCompartmentId()).ToDataRes(types.String)
-	},
 	"oci.dataSafe.securityAssessment.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeSecurityAssessment).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6853,9 +6604,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.dataSafe.userAssessment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeUserAssessment).GetId()).ToDataRes(types.String)
-	},
-	"oci.dataSafe.userAssessment.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeUserAssessment).GetCompartmentId()).ToDataRes(types.String)
 	},
 	"oci.dataSafe.userAssessment.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeUserAssessment).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -6896,9 +6644,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.dataSafe.sensitiveDataModel.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeSensitiveDataModel).GetId()).ToDataRes(types.String)
 	},
-	"oci.dataSafe.sensitiveDataModel.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeSensitiveDataModel).GetCompartmentId()).ToDataRes(types.String)
-	},
 	"oci.dataSafe.sensitiveDataModel.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeSensitiveDataModel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6935,9 +6680,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.dataSafe.sensitiveType.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeSensitiveType).GetId()).ToDataRes(types.String)
 	},
-	"oci.dataSafe.sensitiveType.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeSensitiveType).GetCompartmentId()).ToDataRes(types.String)
-	},
 	"oci.dataSafe.sensitiveType.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeSensitiveType).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
 	},
@@ -6973,9 +6715,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.dataSafe.maskingPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeMaskingPolicy).GetId()).ToDataRes(types.String)
-	},
-	"oci.dataSafe.maskingPolicy.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDataSafeMaskingPolicy).GetCompartmentId()).ToDataRes(types.String)
 	},
 	"oci.dataSafe.maskingPolicy.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeMaskingPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -9154,10 +8893,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciIdentityUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.identity.user.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityUser).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.identity.user.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityUser).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -9354,10 +9089,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciIdentityGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.identity.group.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.identity.group.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityGroup).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -9396,10 +9127,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.identity.policy.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityPolicy).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.identity.policy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9562,10 +9289,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciIdentityOauth2ClientCredential).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.identity.oauth2ClientCredential.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityOauth2ClientCredential).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.identity.oauth2ClientCredential.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityOauth2ClientCredential).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -9592,10 +9315,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.dynamicGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityDynamicGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.identity.dynamicGroup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityDynamicGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.identity.dynamicGroup.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9636,10 +9355,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.identityProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityIdentityProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.identity.identityProvider.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityIdentityProvider).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.identity.identityProvider.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9696,10 +9411,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.networkSource.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityNetworkSource).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.identity.networkSource.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityNetworkSource).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.identity.networkSource.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9866,10 +9577,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeInstance).FaultDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.compute.instance.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.compute.instance.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).Image, ok = plugin.RawToTValue[*mqlOciComputeImage](v.Value, v.Error)
 		return
@@ -9982,10 +9689,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeVnic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.compute.vnic.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeVnic).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.compute.vnic.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeVnic).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10016,10 +9719,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.vnic.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeVnic).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
-		return
-	},
-	"oci.compute.vnic.nsgIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeVnic).NsgIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.compute.vnic.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10110,10 +9809,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeBlockVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.compute.blockVolume.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeBlockVolume).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.compute.blockVolume.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeBlockVolume).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10182,10 +9877,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeBootVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.compute.bootVolume.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeBootVolume).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.compute.bootVolume.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeBootVolume).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10196,10 +9887,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.bootVolume.sizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeBootVolume).SizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.bootVolume.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeBootVolume).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.compute.bootVolume.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10318,10 +10005,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkPublicIp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.publicIp.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkPublicIp).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.publicIp.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkPublicIp).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10370,10 +10053,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkVcn).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.vcn.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkVcn).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.vcn.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVcn).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10388,10 +10067,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.vcn.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVcn).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.vcn.cidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkVcn).CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.vcn.cidrBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10474,10 +10149,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSubnet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.subnet.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkSubnet).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.subnet.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSubnet).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10546,10 +10217,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSecurityList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.securityList.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkSecurityList).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.securityList.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSecurityList).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10586,10 +10253,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSecurityList).HasStatelessRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"oci.network.securityList.vcnId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkSecurityList).VcnId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.securityList.vcn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSecurityList).Vcn, ok = plugin.RawToTValue[*mqlOciNetworkVcn](v.Value, v.Error)
 		return
@@ -10612,10 +10275,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.networkSecurityGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkNetworkSecurityGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.networkSecurityGroup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkNetworkSecurityGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.networkSecurityGroup.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10738,10 +10397,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkInternetGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.internetGateway.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkInternetGateway).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.internetGateway.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkInternetGateway).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10780,10 +10435,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.natGateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkNatGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.natGateway.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkNatGateway).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.natGateway.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10828,10 +10479,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.routeTable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkRouteTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.routeTable.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkRouteTable).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.routeTable.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10926,10 +10573,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkDrg).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.drg.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkDrg).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.drg.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkDrg).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -10968,10 +10611,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.drgAttachment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkDrgAttachment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.drgAttachment.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkDrgAttachment).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.drgAttachment.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11034,10 +10673,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkLocalPeeringGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.localPeeringGateway.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLocalPeeringGateway).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.localPeeringGateway.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkLocalPeeringGateway).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11094,10 +10729,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkRemotePeeringConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.remotePeeringConnection.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkRemotePeeringConnection).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.remotePeeringConnection.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkRemotePeeringConnection).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11148,10 +10779,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.serviceGateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkServiceGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.serviceGateway.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkServiceGateway).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.serviceGateway.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11222,10 +10849,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkCpe).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.cpe.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkCpe).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.cpe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkCpe).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11264,10 +10887,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.ipsecConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkIpsecConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.ipsecConnection.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkIpsecConnection).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.ipsecConnection.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11328,10 +10947,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.ipsecConnectionTunnel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkIpsecConnectionTunnel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.network.ipsecConnectionTunnel.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkIpsecConnectionTunnel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.ipsecConnectionTunnel.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11470,10 +11085,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkVirtualCircuit).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.virtualCircuit.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkVirtualCircuit).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.virtualCircuit.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVirtualCircuit).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11550,10 +11161,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkCrossConnect).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.network.crossConnect.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkCrossConnect).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.network.crossConnect.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkCrossConnect).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11612,10 +11219,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.logging.logGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoggingLogGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.logging.logGroup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoggingLogGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.logging.logGroup.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11734,10 +11337,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciKmsVault).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.kms.vault.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciKmsVault).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.kms.vault.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciKmsVault).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11782,16 +11381,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciKmsKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.kms.key.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciKmsKey).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.kms.key.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciKmsKey).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
-		return
-	},
-	"oci.kms.key.vaultId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciKmsKey).VaultId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.kms.key.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11850,16 +11441,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciKmsKeyVersion).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.kms.keyVersion.vaultId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciKmsKeyVersion).VaultId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.kms.keyVersion.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciKmsKeyVersion).Vault, ok = plugin.RawToTValue[*mqlOciKmsVault](v.Value, v.Error)
-		return
-	},
-	"oci.kms.keyVersion.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciKmsKeyVersion).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.kms.keyVersion.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11910,10 +11493,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciObjectStorageBucket).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.objectStorage.bucket.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciObjectStorageBucket).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.objectStorage.bucket.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorageBucket).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -11956,10 +11535,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.objectStorage.bucket.replicationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorageBucket).ReplicationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.objectStorage.bucket.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciObjectStorageBucket).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.objectStorage.bucket.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12090,10 +11665,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciFileStorageFileSystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.fileStorage.fileSystem.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFileStorageFileSystem).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.fileStorage.fileSystem.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFileStorageFileSystem).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -12160,10 +11731,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.events.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciEventsRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.events.rule.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciEventsRule).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.events.rule.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12250,10 +11817,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCloudGuardTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.cloudGuard.target.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuardTarget).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.cloudGuard.target.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCloudGuardTarget).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -12304,10 +11867,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.cloudGuard.detectorRecipe.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCloudGuardDetectorRecipe).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.cloudGuard.detectorRecipe.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuardDetectorRecipe).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.cloudGuard.detectorRecipe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12510,10 +12069,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCloudGuardSecurityZone).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.cloudGuard.securityZone.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuardSecurityZone).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.cloudGuard.securityZone.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCloudGuardSecurityZone).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -12560,10 +12115,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.cloudGuard.securityZoneRecipe.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCloudGuardSecurityZoneRecipe).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.cloudGuard.securityZoneRecipe.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuardSecurityZoneRecipe).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.cloudGuard.securityZoneRecipe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12616,10 +12167,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.cloudGuard.securityPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCloudGuardSecurityPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.cloudGuard.securityPolicy.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuardSecurityPolicy).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.cloudGuard.securityPolicy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12680,10 +12227,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.ons.topic.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOnsTopic).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.ons.topic.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOnsTopic).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.ons.topic.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12998,10 +12541,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciBastionInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.bastion.instance.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciBastionInstance).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.bastion.instance.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciBastionInstance).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -13086,10 +12625,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciMonitoringAlarm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.monitoring.alarm.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciMonitoringAlarm).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.monitoring.alarm.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciMonitoringAlarm).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -13108,10 +12643,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.monitoring.alarm.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciMonitoringAlarm).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.monitoring.alarm.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciMonitoringAlarm).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.monitoring.alarm.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13152,10 +12683,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.vault.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciVaultSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.vault.secret.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciVaultSecret).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.vault.secret.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13286,10 +12813,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerLoadBalancer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.loadBalancer.loadBalancer.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerLoadBalancer).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.loadBalancer.loadBalancer.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerLoadBalancer).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -13320,10 +12843,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.loadBalancer.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerLoadBalancer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.loadBalancer.nsgIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerLoadBalancer).NsgIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.loadBalancer.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14766,10 +14285,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkFirewallFirewall).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.networkFirewall.firewall.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkFirewallFirewall).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.networkFirewall.firewall.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkFirewallFirewall).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -14836,10 +14351,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.networkFirewall.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkFirewallPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkFirewall.policy.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkFirewallPolicy).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.networkFirewall.policy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15010,10 +14521,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciOkeCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.oke.cluster.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOkeCluster).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.oke.cluster.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeCluster).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15098,10 +14605,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciOkeNodePool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.oke.nodePool.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOkeNodePool).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.oke.nodePool.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeNodePool).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15120,10 +14623,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.oke.nodePool.nodeShapeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeNodePool).NodeShapeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
-	"oci.oke.nodePool.nodeImageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciOkeNodePool).NodeImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.oke.nodePool.nodeImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15186,10 +14685,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciWafFirewall).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.waf.firewall.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciWafFirewall).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.waf.firewall.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciWafFirewall).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15238,10 +14733,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciWafPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.waf.policy.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciWafPolicy).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.waf.policy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciWafPolicy).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15288,10 +14779,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.functions.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFunctionsApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.functions.application.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsApplication).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.functions.application.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15360,10 +14847,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.functions.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFunctionsFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.functions.function.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFunctionsFunction).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.functions.function.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15446,10 +14929,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciContainerInstancesInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.containerInstances.instance.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesInstance).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.containerInstances.instance.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciContainerInstancesInstance).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15524,10 +15003,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.containerInstances.container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciContainerInstancesContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.containerInstances.container.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciContainerInstancesContainer).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.containerInstances.container.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15634,10 +15109,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.database.backup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseBackup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.database.backup.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseBackup).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15722,10 +15193,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseAutonomousDatabaseBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.database.autonomousDatabaseBackup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseAutonomousDatabaseBackup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.database.autonomousDatabaseBackup.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabaseBackup).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15802,10 +15269,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseDbSystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.database.dbSystem.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.database.dbSystem.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseDbSystem).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -15874,16 +15337,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseDbSystem).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
 		return
 	},
-	"oci.database.dbSystem.nsgIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).NsgIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"oci.database.dbSystem.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseDbSystem).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"oci.database.dbSystem.backupNetworkNsgIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).BackupNetworkNsgIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.database.dbSystem.backupSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15920,10 +15375,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.database.autonomousDatabase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.database.autonomousDatabase.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseAutonomousDatabase).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16038,10 +15489,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseAutonomousDatabase).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
 		return
 	},
-	"oci.database.autonomousDatabase.nsgIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseAutonomousDatabase).NsgIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"oci.database.autonomousDatabase.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -16112,10 +15559,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.apigateway.gateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciApigatewayGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.apigateway.gateway.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciApigatewayGateway).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.apigateway.gateway.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16192,10 +15635,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.apigateway.deployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciApigatewayDeployment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.apigateway.deployment.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciApigatewayDeployment).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.apigateway.deployment.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16294,10 +15733,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciApigatewayCertificate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.apigateway.certificate.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciApigatewayCertificate).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.apigateway.certificate.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciApigatewayCertificate).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -16364,10 +15799,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.certificates.certificate.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCertificatesCertificate).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.certificates.certificate.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCertificatesCertificate).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.certificates.certificate.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16454,10 +15885,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCertificatesCertificateAuthority).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.certificates.certificateAuthority.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCertificatesCertificateAuthority).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.certificates.certificateAuthority.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCertificatesCertificateAuthority).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -16526,10 +15953,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCertificatesCaBundle).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.certificates.caBundle.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCertificatesCaBundle).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.certificates.caBundle.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCertificatesCaBundle).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -16568,10 +15991,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.redis.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciRedisCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.redis.cluster.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciRedisCluster).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.redis.cluster.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16702,10 +16121,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDataSafeConfiguration).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.dataSafe.configuration.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeConfiguration).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.dataSafe.configuration.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeConfiguration).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -16740,10 +16155,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.dataSafe.targetDatabase.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeTargetDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.dataSafe.targetDatabase.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeTargetDatabase).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.dataSafe.targetDatabase.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16806,10 +16217,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDataSafeSecurityAssessment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.dataSafe.securityAssessment.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeSecurityAssessment).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.dataSafe.securityAssessment.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeSecurityAssessment).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -16864,10 +16271,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.dataSafe.userAssessment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeUserAssessment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.dataSafe.userAssessment.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeUserAssessment).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.dataSafe.userAssessment.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16926,10 +16329,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDataSafeSensitiveDataModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.dataSafe.sensitiveDataModel.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeSensitiveDataModel).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.dataSafe.sensitiveDataModel.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeSensitiveDataModel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -16982,10 +16381,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDataSafeSensitiveType).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.dataSafe.sensitiveType.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeSensitiveType).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.dataSafe.sensitiveType.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeSensitiveType).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
 		return
@@ -17036,10 +16431,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.dataSafe.maskingPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDataSafeMaskingPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.dataSafe.maskingPolicy.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDataSafeMaskingPolicy).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.dataSafe.maskingPolicy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20681,7 +20072,6 @@ type mqlOciIdentityUser struct {
 	__id       string
 	mqlOciIdentityUserInternal
 	Id                      plugin.TValue[string]
-	CompartmentID           plugin.TValue[string]
 	Compartment             plugin.TValue[*mqlOciCompartment]
 	Name                    plugin.TValue[string]
 	Description             plugin.TValue[string]
@@ -20746,10 +20136,6 @@ func (c *mqlOciIdentityUser) MqlID() string {
 
 func (c *mqlOciIdentityUser) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciIdentityUser) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciIdentityUser) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -21244,17 +20630,16 @@ func (c *mqlOciIdentityAuthToken) GetState() *plugin.TValue[string] {
 type mqlOciIdentityGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciIdentityGroupInternal it will be used here
-	Id            plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	State         plugin.TValue[string]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
-	Members       plugin.TValue[[]any]
+	mqlOciIdentityGroupInternal
+	Id           plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	State        plugin.TValue[string]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	Members      plugin.TValue[[]any]
 }
 
 // createOciIdentityGroup creates a new instance of this resource
@@ -21296,10 +20681,6 @@ func (c *mqlOciIdentityGroup) MqlID() string {
 
 func (c *mqlOciIdentityGroup) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciIdentityGroup) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciIdentityGroup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -21362,9 +20743,8 @@ func (c *mqlOciIdentityGroup) GetMembers() *plugin.TValue[[]any] {
 type mqlOciIdentityPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciIdentityPolicyInternal it will be used here
+	mqlOciIdentityPolicyInternal
 	Id               plugin.TValue[string]
-	CompartmentID    plugin.TValue[string]
 	Compartment      plugin.TValue[*mqlOciCompartment]
 	Name             plugin.TValue[string]
 	Description      plugin.TValue[string]
@@ -21416,10 +20796,6 @@ func (c *mqlOciIdentityPolicy) MqlID() string {
 
 func (c *mqlOciIdentityPolicy) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciIdentityPolicy) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciIdentityPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -21768,16 +21144,15 @@ func (c *mqlOciIdentitySmtpCredential) GetState() *plugin.TValue[string] {
 type mqlOciIdentityOauth2ClientCredential struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciIdentityOauth2ClientCredentialInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Scopes        plugin.TValue[[]any]
-	Created       plugin.TValue[*time.Time]
-	Expires       plugin.TValue[*time.Time]
-	State         plugin.TValue[string]
+	mqlOciIdentityOauth2ClientCredentialInternal
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Compartment plugin.TValue[*mqlOciCompartment]
+	Scopes      plugin.TValue[[]any]
+	Created     plugin.TValue[*time.Time]
+	Expires     plugin.TValue[*time.Time]
+	State       plugin.TValue[string]
 }
 
 // createOciIdentityOauth2ClientCredential creates a new instance of this resource
@@ -21829,10 +21204,6 @@ func (c *mqlOciIdentityOauth2ClientCredential) GetDescription() *plugin.TValue[s
 	return &c.Description
 }
 
-func (c *mqlOciIdentityOauth2ClientCredential) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciIdentityOauth2ClientCredential) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -21869,17 +21240,16 @@ func (c *mqlOciIdentityOauth2ClientCredential) GetState() *plugin.TValue[string]
 type mqlOciIdentityDynamicGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciIdentityDynamicGroupInternal it will be used here
-	Id            plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	MatchingRule  plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	State         plugin.TValue[string]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	mqlOciIdentityDynamicGroupInternal
+	Id           plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	MatchingRule plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	State        plugin.TValue[string]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciIdentityDynamicGroup creates a new instance of this resource
@@ -21921,10 +21291,6 @@ func (c *mqlOciIdentityDynamicGroup) MqlID() string {
 
 func (c *mqlOciIdentityDynamicGroup) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciIdentityDynamicGroup) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciIdentityDynamicGroup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -21975,9 +21341,8 @@ func (c *mqlOciIdentityDynamicGroup) GetDefinedTags() *plugin.TValue[map[string]
 type mqlOciIdentityIdentityProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciIdentityIdentityProviderInternal it will be used here
+	mqlOciIdentityIdentityProviderInternal
 	Id                 plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
 	Compartment        plugin.TValue[*mqlOciCompartment]
 	Name               plugin.TValue[string]
 	Description        plugin.TValue[string]
@@ -22031,10 +21396,6 @@ func (c *mqlOciIdentityIdentityProvider) MqlID() string {
 
 func (c *mqlOciIdentityIdentityProvider) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciIdentityIdentityProvider) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciIdentityIdentityProvider) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -22101,9 +21462,8 @@ func (c *mqlOciIdentityIdentityProvider) GetDefinedTags() *plugin.TValue[map[str
 type mqlOciIdentityNetworkSource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciIdentityNetworkSourceInternal it will be used here
+	mqlOciIdentityNetworkSourceInternal
 	Id                plugin.TValue[string]
-	CompartmentID     plugin.TValue[string]
 	Compartment       plugin.TValue[*mqlOciCompartment]
 	Name              plugin.TValue[string]
 	Description       plugin.TValue[string]
@@ -22155,10 +21515,6 @@ func (c *mqlOciIdentityNetworkSource) MqlID() string {
 
 func (c *mqlOciIdentityNetworkSource) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciIdentityNetworkSource) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciIdentityNetworkSource) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -22492,7 +21848,6 @@ type mqlOciComputeInstance struct {
 	AvailabilityDomain           plugin.TValue[string]
 	Compartment                  plugin.TValue[*mqlOciCompartment]
 	FaultDomain                  plugin.TValue[string]
-	ImageId                      plugin.TValue[string]
 	Image                        plugin.TValue[*mqlOciComputeImage]
 	DedicatedVmHostId            plugin.TValue[string]
 	PlatformConfig               plugin.TValue[any]
@@ -22591,10 +21946,6 @@ func (c *mqlOciComputeInstance) GetCompartment() *plugin.TValue[*mqlOciCompartme
 
 func (c *mqlOciComputeInstance) GetFaultDomain() *plugin.TValue[string] {
 	return &c.FaultDomain
-}
-
-func (c *mqlOciComputeInstance) GetImageId() *plugin.TValue[string] {
-	return &c.ImageId
 }
 
 func (c *mqlOciComputeInstance) GetImage() *plugin.TValue[*mqlOciComputeImage] {
@@ -22802,7 +22153,6 @@ type mqlOciComputeVnic struct {
 	mqlOciComputeVnicInternal
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
-	CompartmentID       plugin.TValue[string]
 	Compartment         plugin.TValue[*mqlOciCompartment]
 	IsPrimary           plugin.TValue[bool]
 	PrivateIp           plugin.TValue[string]
@@ -22811,7 +22161,6 @@ type mqlOciComputeVnic struct {
 	MacAddress          plugin.TValue[string]
 	HostnameLabel       plugin.TValue[string]
 	Subnet              plugin.TValue[*mqlOciNetworkSubnet]
-	NsgIds              plugin.TValue[[]any]
 	SecurityGroups      plugin.TValue[[]any]
 	SkipSourceDestCheck plugin.TValue[bool]
 	State               plugin.TValue[string]
@@ -22863,10 +22212,6 @@ func (c *mqlOciComputeVnic) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciComputeVnic) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciComputeVnic) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciComputeVnic) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -22923,10 +22268,6 @@ func (c *mqlOciComputeVnic) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
 
 		return c.subnet()
 	})
-}
-
-func (c *mqlOciComputeVnic) GetNsgIds() *plugin.TValue[[]any] {
-	return &c.NsgIds
 }
 
 func (c *mqlOciComputeVnic) GetSecurityGroups() *plugin.TValue[[]any] {
@@ -23088,7 +22429,6 @@ type mqlOciComputeBlockVolume struct {
 	mqlOciComputeBlockVolumeInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
-	CompartmentID        plugin.TValue[string]
 	Compartment          plugin.TValue[*mqlOciCompartment]
 	AvailabilityDomain   plugin.TValue[string]
 	SizeInGBs            plugin.TValue[int64]
@@ -23148,10 +22488,6 @@ func (c *mqlOciComputeBlockVolume) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciComputeBlockVolume) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciComputeBlockVolume) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciComputeBlockVolume) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -23253,11 +22589,9 @@ type mqlOciComputeBootVolume struct {
 	mqlOciComputeBootVolumeInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
-	CompartmentID            plugin.TValue[string]
 	Compartment              plugin.TValue[*mqlOciCompartment]
 	AvailabilityDomain       plugin.TValue[string]
 	SizeInGBs                plugin.TValue[int64]
-	ImageId                  plugin.TValue[string]
 	Image                    plugin.TValue[*mqlOciComputeImage]
 	SourceBootVolume         plugin.TValue[*mqlOciComputeBootVolume]
 	SourceBootVolumeBackupId plugin.TValue[string]
@@ -23314,10 +22648,6 @@ func (c *mqlOciComputeBootVolume) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciComputeBootVolume) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciComputeBootVolume) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -23340,10 +22670,6 @@ func (c *mqlOciComputeBootVolume) GetAvailabilityDomain() *plugin.TValue[string]
 
 func (c *mqlOciComputeBootVolume) GetSizeInGBs() *plugin.TValue[int64] {
 	return &c.SizeInGBs
-}
-
-func (c *mqlOciComputeBootVolume) GetImageId() *plugin.TValue[string] {
-	return &c.ImageId
 }
 
 func (c *mqlOciComputeBootVolume) GetImage() *plugin.TValue[*mqlOciComputeImage] {
@@ -23721,11 +23047,10 @@ func (c *mqlOciNetwork) GetCrossConnects() *plugin.TValue[[]any] {
 type mqlOciNetworkPublicIp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciNetworkPublicIpInternal it will be used here
+	mqlOciNetworkPublicIpInternal
 	Id                 plugin.TValue[string]
 	IpAddress          plugin.TValue[string]
 	Name               plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
 	Compartment        plugin.TValue[*mqlOciCompartment]
 	Lifetime           plugin.TValue[string]
 	Scope              plugin.TValue[string]
@@ -23787,10 +23112,6 @@ func (c *mqlOciNetworkPublicIp) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciNetworkPublicIp) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciNetworkPublicIp) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -23847,14 +23168,12 @@ func (c *mqlOciNetworkPublicIp) GetDefinedTags() *plugin.TValue[map[string]any] 
 type mqlOciNetworkVcn struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciNetworkVcnInternal it will be used here
+	mqlOciNetworkVcnInternal
 	Id                    plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	Name                  plugin.TValue[string]
 	Created               plugin.TValue[*time.Time]
 	State                 plugin.TValue[string]
-	CidrBlock             plugin.TValue[string]
 	CidrBlocks            plugin.TValue[[]any]
 	VcnDomainName         plugin.TValue[string]
 	DefaultDhcpOptionsId  plugin.TValue[string]
@@ -23915,10 +23234,6 @@ func (c *mqlOciNetworkVcn) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlOciNetworkVcn) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciNetworkVcn) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -23945,10 +23260,6 @@ func (c *mqlOciNetworkVcn) GetCreated() *plugin.TValue[*time.Time] {
 
 func (c *mqlOciNetworkVcn) GetState() *plugin.TValue[string] {
 	return &c.State
-}
-
-func (c *mqlOciNetworkVcn) GetCidrBlock() *plugin.TValue[string] {
-	return &c.CidrBlock
 }
 
 func (c *mqlOciNetworkVcn) GetCidrBlocks() *plugin.TValue[[]any] {
@@ -24134,7 +23445,6 @@ type mqlOciNetworkSubnet struct {
 	mqlOciNetworkSubnetInternal
 	Id                      plugin.TValue[string]
 	Name                    plugin.TValue[string]
-	CompartmentID           plugin.TValue[string]
 	Compartment             plugin.TValue[*mqlOciCompartment]
 	Vcn                     plugin.TValue[*mqlOciNetworkVcn]
 	AvailabilityDomain      plugin.TValue[string]
@@ -24195,10 +23505,6 @@ func (c *mqlOciNetworkSubnet) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkSubnet) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkSubnet) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkSubnet) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -24327,7 +23633,6 @@ type mqlOciNetworkSecurityList struct {
 	__id       string
 	mqlOciNetworkSecurityListInternal
 	Id                   plugin.TValue[string]
-	CompartmentID        plugin.TValue[string]
 	Compartment          plugin.TValue[*mqlOciCompartment]
 	Name                 plugin.TValue[string]
 	Created              plugin.TValue[*time.Time]
@@ -24337,7 +23642,6 @@ type mqlOciNetworkSecurityList struct {
 	IngressRules         plugin.TValue[[]any]
 	EgressRules          plugin.TValue[[]any]
 	HasStatelessRules    plugin.TValue[bool]
-	VcnId                plugin.TValue[string]
 	Vcn                  plugin.TValue[*mqlOciNetworkVcn]
 	FreeformTags         plugin.TValue[map[string]any]
 	DefinedTags          plugin.TValue[map[string]any]
@@ -24382,10 +23686,6 @@ func (c *mqlOciNetworkSecurityList) MqlID() string {
 
 func (c *mqlOciNetworkSecurityList) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciNetworkSecurityList) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkSecurityList) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -24438,10 +23738,6 @@ func (c *mqlOciNetworkSecurityList) GetHasStatelessRules() *plugin.TValue[bool] 
 	})
 }
 
-func (c *mqlOciNetworkSecurityList) GetVcnId() *plugin.TValue[string] {
-	return &c.VcnId
-}
-
 func (c *mqlOciNetworkSecurityList) GetVcn() *plugin.TValue[*mqlOciNetworkVcn] {
 	return plugin.GetOrCompute[*mqlOciNetworkVcn](&c.Vcn, func() (*mqlOciNetworkVcn, error) {
 		if c.MqlRuntime.HasRecording {
@@ -24473,7 +23769,6 @@ type mqlOciNetworkNetworkSecurityGroup struct {
 	mqlOciNetworkNetworkSecurityGroupInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
-	CompartmentID        plugin.TValue[string]
 	Compartment          plugin.TValue[*mqlOciCompartment]
 	Vcn                  plugin.TValue[*mqlOciNetworkVcn]
 	State                plugin.TValue[string]
@@ -24531,10 +23826,6 @@ func (c *mqlOciNetworkNetworkSecurityGroup) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkNetworkSecurityGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkNetworkSecurityGroup) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkNetworkSecurityGroup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -24765,16 +24056,15 @@ type mqlOciNetworkInternetGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciNetworkInternetGatewayInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Vcn           plugin.TValue[*mqlOciNetworkVcn]
-	IsEnabled     plugin.TValue[bool]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Vcn          plugin.TValue[*mqlOciNetworkVcn]
+	IsEnabled    plugin.TValue[bool]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciNetworkInternetGateway creates a new instance of this resource
@@ -24820,10 +24110,6 @@ func (c *mqlOciNetworkInternetGateway) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkInternetGateway) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkInternetGateway) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkInternetGateway) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -24883,17 +24169,16 @@ type mqlOciNetworkNatGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciNetworkNatGatewayInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Vcn           plugin.TValue[*mqlOciNetworkVcn]
-	BlockTraffic  plugin.TValue[bool]
-	NatIp         plugin.TValue[string]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Vcn          plugin.TValue[*mqlOciNetworkVcn]
+	BlockTraffic plugin.TValue[bool]
+	NatIp        plugin.TValue[string]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciNetworkNatGateway creates a new instance of this resource
@@ -24939,10 +24224,6 @@ func (c *mqlOciNetworkNatGateway) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkNatGateway) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkNatGateway) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkNatGateway) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -25006,17 +24287,16 @@ type mqlOciNetworkRouteTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciNetworkRouteTableInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Vcn           plugin.TValue[*mqlOciNetworkVcn]
-	RouteRules    plugin.TValue[[]any]
-	Routes        plugin.TValue[[]any]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Vcn          plugin.TValue[*mqlOciNetworkVcn]
+	RouteRules   plugin.TValue[[]any]
+	Routes       plugin.TValue[[]any]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciNetworkRouteTable creates a new instance of this resource
@@ -25062,10 +24342,6 @@ func (c *mqlOciNetworkRouteTable) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkRouteTable) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkRouteTable) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkRouteTable) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -25297,7 +24573,6 @@ type mqlOciNetworkDrg struct {
 	mqlOciNetworkDrgInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
-	CompartmentID            plugin.TValue[string]
 	Compartment              plugin.TValue[*mqlOciCompartment]
 	State                    plugin.TValue[string]
 	Created                  plugin.TValue[*time.Time]
@@ -25350,10 +24625,6 @@ func (c *mqlOciNetworkDrg) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkDrg) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkDrg) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkDrg) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -25427,7 +24698,6 @@ type mqlOciNetworkDrgAttachment struct {
 	mqlOciNetworkDrgAttachmentInternal
 	Id              plugin.TValue[string]
 	Name            plugin.TValue[string]
-	CompartmentID   plugin.TValue[string]
 	Compartment     plugin.TValue[*mqlOciCompartment]
 	Drg             plugin.TValue[*mqlOciNetworkDrg]
 	NetworkType     plugin.TValue[string]
@@ -25485,10 +24755,6 @@ func (c *mqlOciNetworkDrgAttachment) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkDrgAttachment) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkDrgAttachment) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkDrgAttachment) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -25606,7 +24872,6 @@ type mqlOciNetworkLocalPeeringGateway struct {
 	mqlOciNetworkLocalPeeringGatewayInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	Vcn                   plugin.TValue[*mqlOciNetworkVcn]
 	Peer                  plugin.TValue[*mqlOciNetworkLocalPeeringGateway]
@@ -25663,10 +24928,6 @@ func (c *mqlOciNetworkLocalPeeringGateway) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkLocalPeeringGateway) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkLocalPeeringGateway) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkLocalPeeringGateway) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -25768,7 +25029,6 @@ type mqlOciNetworkRemotePeeringConnection struct {
 	mqlOciNetworkRemotePeeringConnectionInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	Drg                   plugin.TValue[*mqlOciNetworkDrg]
 	IsCrossTenancyPeering plugin.TValue[bool]
@@ -25824,10 +25084,6 @@ func (c *mqlOciNetworkRemotePeeringConnection) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkRemotePeeringConnection) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkRemotePeeringConnection) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkRemotePeeringConnection) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -25899,18 +25155,17 @@ type mqlOciNetworkServiceGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciNetworkServiceGatewayInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Vcn           plugin.TValue[*mqlOciNetworkVcn]
-	RouteTable    plugin.TValue[*mqlOciNetworkRouteTable]
-	BlockTraffic  plugin.TValue[bool]
-	Services      plugin.TValue[[]any]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Vcn          plugin.TValue[*mqlOciNetworkVcn]
+	RouteTable   plugin.TValue[*mqlOciNetworkRouteTable]
+	BlockTraffic plugin.TValue[bool]
+	Services     plugin.TValue[[]any]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciNetworkServiceGateway creates a new instance of this resource
@@ -25956,10 +25211,6 @@ func (c *mqlOciNetworkServiceGateway) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkServiceGateway) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkServiceGateway) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkServiceGateway) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -26114,10 +25365,9 @@ func (c *mqlOciNetworkService) GetDescription() *plugin.TValue[string] {
 type mqlOciNetworkCpe struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciNetworkCpeInternal it will be used here
+	mqlOciNetworkCpeInternal
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
-	CompartmentID    plugin.TValue[string]
 	Compartment      plugin.TValue[*mqlOciCompartment]
 	IpAddress        plugin.TValue[string]
 	CpeDeviceShapeId plugin.TValue[string]
@@ -26172,10 +25422,6 @@ func (c *mqlOciNetworkCpe) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciNetworkCpe) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciNetworkCpe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -26223,7 +25469,6 @@ type mqlOciNetworkIpsecConnection struct {
 	mqlOciNetworkIpsecConnectionInternal
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
-	CompartmentID          plugin.TValue[string]
 	Compartment            plugin.TValue[*mqlOciCompartment]
 	Cpe                    plugin.TValue[*mqlOciNetworkCpe]
 	Drg                    plugin.TValue[*mqlOciNetworkDrg]
@@ -26281,10 +25526,6 @@ func (c *mqlOciNetworkIpsecConnection) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkIpsecConnection) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkIpsecConnection) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkIpsecConnection) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -26390,7 +25631,6 @@ type mqlOciNetworkIpsecConnectionTunnel struct {
 	mqlOciNetworkIpsecConnectionTunnelInternal
 	Id                                      plugin.TValue[string]
 	Name                                    plugin.TValue[string]
-	CompartmentID                           plugin.TValue[string]
 	Compartment                             plugin.TValue[*mqlOciCompartment]
 	Status                                  plugin.TValue[string]
 	IkeVersion                              plugin.TValue[string]
@@ -26467,10 +25707,6 @@ func (c *mqlOciNetworkIpsecConnectionTunnel) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkIpsecConnectionTunnel) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkIpsecConnectionTunnel) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkIpsecConnectionTunnel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -26654,7 +25890,6 @@ type mqlOciNetworkVirtualCircuit struct {
 	mqlOciNetworkVirtualCircuitInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
-	CompartmentID        plugin.TValue[string]
 	Compartment          plugin.TValue[*mqlOciCompartment]
 	Type                 plugin.TValue[string]
 	ServiceType          plugin.TValue[string]
@@ -26716,10 +25951,6 @@ func (c *mqlOciNetworkVirtualCircuit) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkVirtualCircuit) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkVirtualCircuit) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkVirtualCircuit) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -26814,10 +26045,9 @@ func (c *mqlOciNetworkVirtualCircuit) GetDefinedTags() *plugin.TValue[map[string
 type mqlOciNetworkCrossConnect struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciNetworkCrossConnectInternal it will be used here
+	mqlOciNetworkCrossConnectInternal
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
-	CompartmentID       plugin.TValue[string]
 	Compartment         plugin.TValue[*mqlOciCompartment]
 	LocationName        plugin.TValue[string]
 	PortName            plugin.TValue[string]
@@ -26872,10 +26102,6 @@ func (c *mqlOciNetworkCrossConnect) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkCrossConnect) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkCrossConnect) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkCrossConnect) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -26992,17 +26218,16 @@ type mqlOciLoggingLogGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciLoggingLogGroupInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	State         plugin.TValue[string]
-	Logs          plugin.TValue[[]any]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
-	SystemTags    plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	State        plugin.TValue[string]
+	Logs         plugin.TValue[[]any]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	SystemTags   plugin.TValue[map[string]any]
 }
 
 // createOciLoggingLogGroup creates a new instance of this resource
@@ -27052,10 +26277,6 @@ func (c *mqlOciLoggingLogGroup) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciLoggingLogGroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciLoggingLogGroup) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciLoggingLogGroup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -27314,7 +26535,6 @@ type mqlOciKmsVault struct {
 	mqlOciKmsVaultInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
 	Compartment        plugin.TValue[*mqlOciCompartment]
 	VaultType          plugin.TValue[string]
 	State              plugin.TValue[string]
@@ -27368,10 +26588,6 @@ func (c *mqlOciKmsVault) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciKmsVault) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciKmsVault) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciKmsVault) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -27437,9 +26653,7 @@ type mqlOciKmsKey struct {
 	mqlOciKmsKeyInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
-	VaultId               plugin.TValue[string]
 	Vault                 plugin.TValue[*mqlOciKmsVault]
 	Algorithm             plugin.TValue[string]
 	Length                plugin.TValue[int64]
@@ -27498,10 +26712,6 @@ func (c *mqlOciKmsKey) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciKmsKey) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciKmsKey) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -27516,10 +26726,6 @@ func (c *mqlOciKmsKey) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 
 		return c.compartment()
 	})
-}
-
-func (c *mqlOciKmsKey) GetVaultId() *plugin.TValue[string] {
-	return &c.VaultId
 }
 
 func (c *mqlOciKmsKey) GetVault() *plugin.TValue[*mqlOciKmsVault] {
@@ -27598,12 +26804,10 @@ func (c *mqlOciKmsKey) GetDefinedTags() *plugin.TValue[map[string]any] {
 type mqlOciKmsKeyVersion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciKmsKeyVersionInternal it will be used here
+	mqlOciKmsKeyVersionInternal
 	Id             plugin.TValue[string]
 	KeyId          plugin.TValue[string]
-	VaultId        plugin.TValue[string]
 	Vault          plugin.TValue[*mqlOciKmsVault]
-	CompartmentID  plugin.TValue[string]
 	Compartment    plugin.TValue[*mqlOciCompartment]
 	Origin         plugin.TValue[string]
 	State          plugin.TValue[string]
@@ -27657,10 +26861,6 @@ func (c *mqlOciKmsKeyVersion) GetKeyId() *plugin.TValue[string] {
 	return &c.KeyId
 }
 
-func (c *mqlOciKmsKeyVersion) GetVaultId() *plugin.TValue[string] {
-	return &c.VaultId
-}
-
 func (c *mqlOciKmsKeyVersion) GetVault() *plugin.TValue[*mqlOciKmsVault] {
 	return plugin.GetOrCompute[*mqlOciKmsVault](&c.Vault, func() (*mqlOciKmsVault, error) {
 		if c.MqlRuntime.HasRecording {
@@ -27675,10 +26875,6 @@ func (c *mqlOciKmsKeyVersion) GetVault() *plugin.TValue[*mqlOciKmsVault] {
 
 		return c.vault()
 	})
-}
-
-func (c *mqlOciKmsKeyVersion) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciKmsKeyVersion) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -27792,7 +26988,6 @@ type mqlOciObjectStorageBucket struct {
 	mqlOciObjectStorageBucketInternal
 	Namespace                 plugin.TValue[string]
 	Name                      plugin.TValue[string]
-	CompartmentID             plugin.TValue[string]
 	Compartment               plugin.TValue[*mqlOciCompartment]
 	Created                   plugin.TValue[*time.Time]
 	Region                    plugin.TValue[*mqlOciRegion]
@@ -27804,7 +26999,6 @@ type mqlOciObjectStorageBucket struct {
 	Versioning                plugin.TValue[string]
 	ObjectEventsEnabled       plugin.TValue[bool]
 	ReplicationEnabled        plugin.TValue[bool]
-	Id                        plugin.TValue[string]
 	Ocid                      plugin.TValue[string]
 	IsReadOnly                plugin.TValue[bool]
 	Etag                      plugin.TValue[string]
@@ -27856,10 +27050,6 @@ func (c *mqlOciObjectStorageBucket) GetNamespace() *plugin.TValue[string] {
 
 func (c *mqlOciObjectStorageBucket) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciObjectStorageBucket) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciObjectStorageBucket) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -27942,10 +27132,6 @@ func (c *mqlOciObjectStorageBucket) GetReplicationEnabled() *plugin.TValue[bool]
 	return plugin.GetOrCompute[bool](&c.ReplicationEnabled, func() (bool, error) {
 		return c.replicationEnabled()
 	})
-}
-
-func (c *mqlOciObjectStorageBucket) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlOciObjectStorageBucket) GetOcid() *plugin.TValue[string] {
@@ -28260,7 +27446,6 @@ type mqlOciFileStorageFileSystem struct {
 	mqlOciFileStorageFileSystemInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
 	Compartment        plugin.TValue[*mqlOciCompartment]
 	AvailabilityDomain plugin.TValue[string]
 	State              plugin.TValue[string]
@@ -28317,10 +27502,6 @@ func (c *mqlOciFileStorageFileSystem) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciFileStorageFileSystem) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciFileStorageFileSystem) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciFileStorageFileSystem) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -28469,18 +27650,17 @@ type mqlOciEventsRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciEventsRuleInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Condition     plugin.TValue[string]
-	IsEnabled     plugin.TValue[bool]
-	State         plugin.TValue[string]
-	Actions       plugin.TValue[[]any]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Condition    plugin.TValue[string]
+	IsEnabled    plugin.TValue[bool]
+	State        plugin.TValue[string]
+	Actions      plugin.TValue[[]any]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciEventsRule creates a new instance of this resource
@@ -28530,10 +27710,6 @@ func (c *mqlOciEventsRule) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciEventsRule) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciEventsRule) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciEventsRule) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -28753,10 +27929,9 @@ func (c *mqlOciCloudGuard) GetSecurityPolicies() *plugin.TValue[[]any] {
 type mqlOciCloudGuardTarget struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciCloudGuardTargetInternal it will be used here
+	mqlOciCloudGuardTargetInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
 	Compartment        plugin.TValue[*mqlOciCompartment]
 	TargetResourceId   plugin.TValue[string]
 	TargetResourceType plugin.TValue[string]
@@ -28813,10 +27988,6 @@ func (c *mqlOciCloudGuardTarget) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciCloudGuardTarget) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciCloudGuardTarget) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -28870,19 +28041,18 @@ type mqlOciCloudGuardDetectorRecipe struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciCloudGuardDetectorRecipeInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Owner         plugin.TValue[string]
-	DetectorType  plugin.TValue[string]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	Rules         plugin.TValue[[]any]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
-	SystemTags    plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Owner        plugin.TValue[string]
+	DetectorType plugin.TValue[string]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	Rules        plugin.TValue[[]any]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	SystemTags   plugin.TValue[map[string]any]
 }
 
 // createOciCloudGuardDetectorRecipe creates a new instance of this resource
@@ -28932,10 +28102,6 @@ func (c *mqlOciCloudGuardDetectorRecipe) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciCloudGuardDetectorRecipe) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCloudGuardDetectorRecipe) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCloudGuardDetectorRecipe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -29288,7 +28454,6 @@ type mqlOciCloudGuardSecurityZone struct {
 	Id                              plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Description                     plugin.TValue[string]
-	CompartmentID                   plugin.TValue[string]
 	Compartment                     plugin.TValue[*mqlOciCompartment]
 	SecurityZoneRecipe              plugin.TValue[*mqlOciCloudGuardSecurityZoneRecipe]
 	IsInheritanceAfterDeleteEnabled plugin.TValue[bool]
@@ -29346,10 +28511,6 @@ func (c *mqlOciCloudGuardSecurityZone) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciCloudGuardSecurityZone) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCloudGuardSecurityZone) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCloudGuardSecurityZone) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -29416,7 +28577,6 @@ type mqlOciCloudGuardSecurityZoneRecipe struct {
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
 	Description      plugin.TValue[string]
-	CompartmentID    plugin.TValue[string]
 	Compartment      plugin.TValue[*mqlOciCompartment]
 	Owner            plugin.TValue[string]
 	SecurityPolicies plugin.TValue[[]any]
@@ -29474,10 +28634,6 @@ func (c *mqlOciCloudGuardSecurityZoneRecipe) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciCloudGuardSecurityZoneRecipe) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCloudGuardSecurityZoneRecipe) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCloudGuardSecurityZoneRecipe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -29540,21 +28696,20 @@ func (c *mqlOciCloudGuardSecurityZoneRecipe) GetSystemTags() *plugin.TValue[map[
 type mqlOciCloudGuardSecurityPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciCloudGuardSecurityPolicyInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	FriendlyName  plugin.TValue[string]
-	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Owner         plugin.TValue[string]
-	Category      plugin.TValue[string]
-	Services      plugin.TValue[[]any]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
-	SystemTags    plugin.TValue[map[string]any]
+	mqlOciCloudGuardSecurityPolicyInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	FriendlyName plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Owner        plugin.TValue[string]
+	Category     plugin.TValue[string]
+	Services     plugin.TValue[[]any]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	SystemTags   plugin.TValue[map[string]any]
 }
 
 // createOciCloudGuardSecurityPolicy creates a new instance of this resource
@@ -29608,10 +28763,6 @@ func (c *mqlOciCloudGuardSecurityPolicy) GetFriendlyName() *plugin.TValue[string
 
 func (c *mqlOciCloudGuardSecurityPolicy) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCloudGuardSecurityPolicy) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCloudGuardSecurityPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -29731,7 +28882,6 @@ type mqlOciOnsTopic struct {
 	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
 	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
 	Compartment   plugin.TValue[*mqlOciCompartment]
 	State         plugin.TValue[string]
 	Created       plugin.TValue[*time.Time]
@@ -29787,10 +28937,6 @@ func (c *mqlOciOnsTopic) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciOnsTopic) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciOnsTopic) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciOnsTopic) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -30573,7 +29719,6 @@ type mqlOciBastionInstance struct {
 	mqlOciBastionInstanceInternal
 	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
-	CompartmentID             plugin.TValue[string]
 	Compartment               plugin.TValue[*mqlOciCompartment]
 	BastionType               plugin.TValue[string]
 	TargetVcn                 plugin.TValue[*mqlOciNetworkVcn]
@@ -30635,10 +29780,6 @@ func (c *mqlOciBastionInstance) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciBastionInstance) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciBastionInstance) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciBastionInstance) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -30816,16 +29957,14 @@ func (c *mqlOciMonitoring) GetAlarms() *plugin.TValue[[]any] {
 type mqlOciMonitoringAlarm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciMonitoringAlarmInternal it will be used here
+	mqlOciMonitoringAlarmInternal
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
-	CompartmentID       plugin.TValue[string]
 	Compartment         plugin.TValue[*mqlOciCompartment]
 	MetricCompartmentId plugin.TValue[string]
 	Namespace           plugin.TValue[string]
 	Query               plugin.TValue[string]
 	Severity            plugin.TValue[string]
-	Destinations        plugin.TValue[[]any]
 	Topics              plugin.TValue[[]any]
 	IsEnabled           plugin.TValue[bool]
 	State               plugin.TValue[string]
@@ -30878,10 +30017,6 @@ func (c *mqlOciMonitoringAlarm) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciMonitoringAlarm) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciMonitoringAlarm) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -30912,10 +30047,6 @@ func (c *mqlOciMonitoringAlarm) GetQuery() *plugin.TValue[string] {
 
 func (c *mqlOciMonitoringAlarm) GetSeverity() *plugin.TValue[string] {
 	return &c.Severity
-}
-
-func (c *mqlOciMonitoringAlarm) GetDestinations() *plugin.TValue[[]any] {
-	return &c.Destinations
 }
 
 func (c *mqlOciMonitoringAlarm) GetTopics() *plugin.TValue[[]any] {
@@ -31018,7 +30149,6 @@ type mqlOciVaultSecret struct {
 	mqlOciVaultSecretInternal
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
-	CompartmentID              plugin.TValue[string]
 	Compartment                plugin.TValue[*mqlOciCompartment]
 	KmsVault                   plugin.TValue[*mqlOciKmsVault]
 	KmsKey                     plugin.TValue[*mqlOciKmsKey]
@@ -31081,10 +30211,6 @@ func (c *mqlOciVaultSecret) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciVaultSecret) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciVaultSecret) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciVaultSecret) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -31366,7 +30492,6 @@ type mqlOciLoadBalancerLoadBalancer struct {
 	mqlOciLoadBalancerLoadBalancerInternal
 	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
-	CompartmentID             plugin.TValue[string]
 	Compartment               plugin.TValue[*mqlOciCompartment]
 	Shape                     plugin.TValue[string]
 	IsPrivate                 plugin.TValue[bool]
@@ -31375,7 +30500,6 @@ type mqlOciLoadBalancerLoadBalancer struct {
 	Subnets                   plugin.TValue[[]any]
 	State                     plugin.TValue[string]
 	Listeners                 plugin.TValue[[]any]
-	NsgIds                    plugin.TValue[[]any]
 	SecurityGroups            plugin.TValue[[]any]
 	Exposure                  plugin.TValue[*mqlOciNetworkExposure]
 	BackendSets               plugin.TValue[[]any]
@@ -31428,10 +30552,6 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciLoadBalancerLoadBalancer) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciLoadBalancerLoadBalancer) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciLoadBalancerLoadBalancer) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -31500,10 +30620,6 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetListeners() *plugin.TValue[[]any] {
 
 		return c.listeners()
 	})
-}
-
-func (c *mqlOciLoadBalancerLoadBalancer) GetNsgIds() *plugin.TValue[[]any] {
-	return &c.NsgIds
 }
 
 func (c *mqlOciLoadBalancerLoadBalancer) GetSecurityGroups() *plugin.TValue[[]any] {
@@ -35295,7 +34411,6 @@ type mqlOciNetworkFirewallFirewall struct {
 	mqlOciNetworkFirewallFirewallInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
 	Compartment        plugin.TValue[*mqlOciCompartment]
 	Subnet             plugin.TValue[*mqlOciNetworkSubnet]
 	Policy             plugin.TValue[*mqlOciNetworkFirewallPolicy]
@@ -35355,10 +34470,6 @@ func (c *mqlOciNetworkFirewallFirewall) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkFirewallFirewall) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkFirewallFirewall) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkFirewallFirewall) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -35462,7 +34573,6 @@ type mqlOciNetworkFirewallPolicy struct {
 	mqlOciNetworkFirewallPolicyInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	Description           plugin.TValue[string]
 	AttachedFirewallCount plugin.TValue[int64]
@@ -35519,10 +34629,6 @@ func (c *mqlOciNetworkFirewallPolicy) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkFirewallPolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciNetworkFirewallPolicy) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciNetworkFirewallPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -35921,7 +35027,6 @@ type mqlOciOkeCluster struct {
 	mqlOciOkeClusterInternal
 	Id                          plugin.TValue[string]
 	Name                        plugin.TValue[string]
-	CompartmentID               plugin.TValue[string]
 	Compartment                 plugin.TValue[*mqlOciCompartment]
 	KubernetesVersion           plugin.TValue[string]
 	Type                        plugin.TValue[string]
@@ -35985,10 +35090,6 @@ func (c *mqlOciOkeCluster) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciOkeCluster) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciOkeCluster) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciOkeCluster) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -36118,13 +35219,11 @@ type mqlOciOkeNodePool struct {
 	mqlOciOkeNodePoolInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	KubernetesVersion     plugin.TValue[string]
 	NodeShape             plugin.TValue[string]
 	Cluster               plugin.TValue[*mqlOciOkeCluster]
 	NodeShapeConfig       plugin.TValue[any]
-	NodeImageName         plugin.TValue[string]
 	NodeImage             plugin.TValue[*mqlOciComputeImage]
 	BootVolumeSizeInGBs   plugin.TValue[int64]
 	SshPublicKey          plugin.TValue[string]
@@ -36181,10 +35280,6 @@ func (c *mqlOciOkeNodePool) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOciOkeNodePool) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
-}
-
 func (c *mqlOciOkeNodePool) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -36227,10 +35322,6 @@ func (c *mqlOciOkeNodePool) GetCluster() *plugin.TValue[*mqlOciOkeCluster] {
 
 func (c *mqlOciOkeNodePool) GetNodeShapeConfig() *plugin.TValue[any] {
 	return &c.NodeShapeConfig
-}
-
-func (c *mqlOciOkeNodePool) GetNodeImageName() *plugin.TValue[string] {
-	return &c.NodeImageName
 }
 
 func (c *mqlOciOkeNodePool) GetNodeImage() *plugin.TValue[*mqlOciComputeImage] {
@@ -36388,18 +35479,17 @@ type mqlOciWafFirewall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciWafFirewallInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	Policy        plugin.TValue[*mqlOciWafPolicy]
-	LoadBalancer  plugin.TValue[*mqlOciLoadBalancerLoadBalancer]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	TimeUpdated   plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
-	SystemTags    plugin.TValue[map[string]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Policy       plugin.TValue[*mqlOciWafPolicy]
+	LoadBalancer plugin.TValue[*mqlOciLoadBalancerLoadBalancer]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	TimeUpdated  plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	SystemTags   plugin.TValue[map[string]any]
 }
 
 // createOciWafFirewall creates a new instance of this resource
@@ -36445,10 +35535,6 @@ func (c *mqlOciWafFirewall) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciWafFirewall) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciWafFirewall) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciWafFirewall) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -36527,17 +35613,16 @@ func (c *mqlOciWafFirewall) GetSystemTags() *plugin.TValue[map[string]any] {
 type mqlOciWafPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciWafPolicyInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	TimeUpdated   plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
-	SystemTags    plugin.TValue[map[string]any]
+	mqlOciWafPolicyInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	TimeUpdated  plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+	SystemTags   plugin.TValue[map[string]any]
 }
 
 // createOciWafPolicy creates a new instance of this resource
@@ -36583,10 +35668,6 @@ func (c *mqlOciWafPolicy) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciWafPolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciWafPolicy) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciWafPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -36697,7 +35778,6 @@ type mqlOciFunctionsApplication struct {
 	mqlOciFunctionsApplicationInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	State                 plugin.TValue[string]
 	Shape                 plugin.TValue[string]
@@ -36757,10 +35837,6 @@ func (c *mqlOciFunctionsApplication) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciFunctionsApplication) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciFunctionsApplication) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciFunctionsApplication) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -36878,7 +35954,6 @@ type mqlOciFunctionsFunction struct {
 	mqlOciFunctionsFunctionInternal
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
-	CompartmentID    plugin.TValue[string]
 	Compartment      plugin.TValue[*mqlOciCompartment]
 	ApplicationId    plugin.TValue[string]
 	State            plugin.TValue[string]
@@ -36939,10 +36014,6 @@ func (c *mqlOciFunctionsFunction) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciFunctionsFunction) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciFunctionsFunction) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciFunctionsFunction) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -37087,7 +36158,6 @@ type mqlOciContainerInstancesInstance struct {
 	mqlOciContainerInstancesInstanceInternal
 	Id                               plugin.TValue[string]
 	Name                             plugin.TValue[string]
-	CompartmentID                    plugin.TValue[string]
 	Compartment                      plugin.TValue[*mqlOciCompartment]
 	AvailabilityDomain               plugin.TValue[string]
 	State                            plugin.TValue[string]
@@ -37149,10 +36219,6 @@ func (c *mqlOciContainerInstancesInstance) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciContainerInstancesInstance) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciContainerInstancesInstance) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciContainerInstancesInstance) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -37247,10 +36313,9 @@ func (c *mqlOciContainerInstancesInstance) GetContainers() *plugin.TValue[[]any]
 type mqlOciContainerInstancesContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciContainerInstancesContainerInternal it will be used here
+	mqlOciContainerInstancesContainerInternal
 	Id                          plugin.TValue[string]
 	Name                        plugin.TValue[string]
-	CompartmentID               plugin.TValue[string]
 	Compartment                 plugin.TValue[*mqlOciCompartment]
 	AvailabilityDomain          plugin.TValue[string]
 	State                       plugin.TValue[string]
@@ -37314,10 +36379,6 @@ func (c *mqlOciContainerInstancesContainer) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciContainerInstancesContainer) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciContainerInstancesContainer) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciContainerInstancesContainer) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -37523,7 +36584,6 @@ type mqlOciDatabaseBackup struct {
 	mqlOciDatabaseBackupInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
-	CompartmentID            plugin.TValue[string]
 	Compartment              plugin.TValue[*mqlOciCompartment]
 	DatabaseId               plugin.TValue[string]
 	AvailabilityDomain       plugin.TValue[string]
@@ -37587,10 +36647,6 @@ func (c *mqlOciDatabaseBackup) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciDatabaseBackup) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciDatabaseBackup) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciDatabaseBackup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -37708,7 +36764,6 @@ type mqlOciDatabaseAutonomousDatabaseBackup struct {
 	mqlOciDatabaseAutonomousDatabaseBackupInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	AutonomousDatabase    plugin.TValue[*mqlOciDatabaseAutonomousDatabase]
 	Type                  plugin.TValue[string]
@@ -37770,10 +36825,6 @@ func (c *mqlOciDatabaseAutonomousDatabaseBackup) GetId() *plugin.TValue[string] 
 
 func (c *mqlOciDatabaseAutonomousDatabaseBackup) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciDatabaseAutonomousDatabaseBackup) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciDatabaseAutonomousDatabaseBackup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -37895,7 +36946,6 @@ type mqlOciDatabaseDbSystem struct {
 	mqlOciDatabaseDbSystemInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
-	CompartmentID        plugin.TValue[string]
 	Compartment          plugin.TValue[*mqlOciCompartment]
 	AvailabilityDomain   plugin.TValue[string]
 	Shape                plugin.TValue[string]
@@ -37913,9 +36963,7 @@ type mqlOciDatabaseDbSystem struct {
 	LicenseModel         plugin.TValue[string]
 	KmsKey               plugin.TValue[*mqlOciKmsKey]
 	Subnet               plugin.TValue[*mqlOciNetworkSubnet]
-	NsgIds               plugin.TValue[[]any]
 	SecurityGroups       plugin.TValue[[]any]
-	BackupNetworkNsgIds  plugin.TValue[[]any]
 	BackupSecurityGroups plugin.TValue[[]any]
 	State                plugin.TValue[string]
 	Created              plugin.TValue[*time.Time]
@@ -37967,10 +37015,6 @@ func (c *mqlOciDatabaseDbSystem) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciDatabaseDbSystem) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciDatabaseDbSystem) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciDatabaseDbSystem) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -38089,10 +37133,6 @@ func (c *mqlOciDatabaseDbSystem) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet
 	})
 }
 
-func (c *mqlOciDatabaseDbSystem) GetNsgIds() *plugin.TValue[[]any] {
-	return &c.NsgIds
-}
-
 func (c *mqlOciDatabaseDbSystem) GetSecurityGroups() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -38107,10 +37147,6 @@ func (c *mqlOciDatabaseDbSystem) GetSecurityGroups() *plugin.TValue[[]any] {
 
 		return c.securityGroups()
 	})
-}
-
-func (c *mqlOciDatabaseDbSystem) GetBackupNetworkNsgIds() *plugin.TValue[[]any] {
-	return &c.BackupNetworkNsgIds
 }
 
 func (c *mqlOciDatabaseDbSystem) GetBackupSecurityGroups() *plugin.TValue[[]any] {
@@ -38156,7 +37192,6 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	mqlOciDatabaseAutonomousDatabaseInternal
 	Id                          plugin.TValue[string]
 	Name                        plugin.TValue[string]
-	CompartmentID               plugin.TValue[string]
 	Compartment                 plugin.TValue[*mqlOciCompartment]
 	DbName                      plugin.TValue[string]
 	SourceDatabase              plugin.TValue[*mqlOciDatabaseAutonomousDatabase]
@@ -38185,7 +37220,6 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	KmsKey                      plugin.TValue[*mqlOciKmsKey]
 	KmsVault                    plugin.TValue[*mqlOciKmsVault]
 	Subnet                      plugin.TValue[*mqlOciNetworkSubnet]
-	NsgIds                      plugin.TValue[[]any]
 	SecurityGroups              plugin.TValue[[]any]
 	PrivateEndpointIp           plugin.TValue[string]
 	PrivateEndpointLabel        plugin.TValue[string]
@@ -38242,10 +37276,6 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciDatabaseAutonomousDatabase) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -38422,10 +37452,6 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetSubnet() *plugin.TValue[*mqlOciNet
 	})
 }
 
-func (c *mqlOciDatabaseAutonomousDatabase) GetNsgIds() *plugin.TValue[[]any] {
-	return &c.NsgIds
-}
-
 func (c *mqlOciDatabaseAutonomousDatabase) GetSecurityGroups() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -38596,7 +37622,6 @@ type mqlOciApigatewayGateway struct {
 	mqlOciApigatewayGatewayInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	EndpointType          plugin.TValue[string]
 	IpMode                plugin.TValue[string]
@@ -38658,10 +37683,6 @@ func (c *mqlOciApigatewayGateway) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciApigatewayGateway) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciApigatewayGateway) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciApigatewayGateway) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -38789,7 +37810,6 @@ type mqlOciApigatewayDeployment struct {
 	mqlOciApigatewayDeploymentInternal
 	Id                                plugin.TValue[string]
 	Name                              plugin.TValue[string]
-	CompartmentID                     plugin.TValue[string]
 	Compartment                       plugin.TValue[*mqlOciCompartment]
 	Gateway                           plugin.TValue[*mqlOciApigatewayGateway]
 	PathPrefix                        plugin.TValue[string]
@@ -38856,10 +37876,6 @@ func (c *mqlOciApigatewayDeployment) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciApigatewayDeployment) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciApigatewayDeployment) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciApigatewayDeployment) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -38996,10 +38012,9 @@ func (c *mqlOciApigatewayDeployment) GetSystemTags() *plugin.TValue[map[string]a
 type mqlOciApigatewayCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciApigatewayCertificateInternal it will be used here
+	mqlOciApigatewayCertificateInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
-	CompartmentID     plugin.TValue[string]
 	Compartment       plugin.TValue[*mqlOciCompartment]
 	SubjectNames      plugin.TValue[[]any]
 	TimeNotValidAfter plugin.TValue[*time.Time]
@@ -39054,10 +38069,6 @@ func (c *mqlOciApigatewayCertificate) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciApigatewayCertificate) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciApigatewayCertificate) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciApigatewayCertificate) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -39211,7 +38222,6 @@ type mqlOciCertificatesCertificate struct {
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
 	Description                plugin.TValue[string]
-	CompartmentID              plugin.TValue[string]
 	Compartment                plugin.TValue[*mqlOciCompartment]
 	ConfigType                 plugin.TValue[string]
 	IssuerCertificateAuthority plugin.TValue[*mqlOciCertificatesCertificateAuthority]
@@ -39278,10 +38288,6 @@ func (c *mqlOciCertificatesCertificate) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciCertificatesCertificate) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCertificatesCertificate) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCertificatesCertificate) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -39384,7 +38390,6 @@ type mqlOciCertificatesCertificateAuthority struct {
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
 	Description                plugin.TValue[string]
-	CompartmentID              plugin.TValue[string]
 	Compartment                plugin.TValue[*mqlOciCompartment]
 	Kind                       plugin.TValue[string]
 	ConfigType                 plugin.TValue[string]
@@ -39447,10 +38452,6 @@ func (c *mqlOciCertificatesCertificateAuthority) GetName() *plugin.TValue[string
 
 func (c *mqlOciCertificatesCertificateAuthority) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCertificatesCertificateAuthority) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCertificatesCertificateAuthority) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -39545,16 +38546,15 @@ func (c *mqlOciCertificatesCertificateAuthority) GetDefinedTags() *plugin.TValue
 type mqlOciCertificatesCaBundle struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciCertificatesCaBundleInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Compartment   plugin.TValue[*mqlOciCompartment]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	FreeformTags  plugin.TValue[map[string]any]
-	DefinedTags   plugin.TValue[map[string]any]
+	mqlOciCertificatesCaBundleInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
 }
 
 // createOciCertificatesCaBundle creates a new instance of this resource
@@ -39604,10 +38604,6 @@ func (c *mqlOciCertificatesCaBundle) GetName() *plugin.TValue[string] {
 
 func (c *mqlOciCertificatesCaBundle) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlOciCertificatesCaBundle) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciCertificatesCaBundle) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -39710,7 +38706,6 @@ type mqlOciRedisCluster struct {
 	mqlOciRedisClusterInternal
 	Id                         plugin.TValue[string]
 	Name                       plugin.TValue[string]
-	CompartmentID              plugin.TValue[string]
 	Compartment                plugin.TValue[*mqlOciCompartment]
 	SoftwareVersion            plugin.TValue[string]
 	ClusterMode                plugin.TValue[string]
@@ -39776,10 +38771,6 @@ func (c *mqlOciRedisCluster) GetId() *plugin.TValue[string] {
 
 func (c *mqlOciRedisCluster) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOciRedisCluster) GetCompartmentID() *plugin.TValue[string] {
-	return &c.CompartmentID
 }
 
 func (c *mqlOciRedisCluster) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -40065,11 +39056,10 @@ func (c *mqlOciDataSafe) GetMaskingPolicies() *plugin.TValue[[]any] {
 type mqlOciDataSafeConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeConfigurationInternal it will be used here
+	mqlOciDataSafeConfigurationInternal
 	Region              plugin.TValue[string]
 	IsEnabled           plugin.TValue[bool]
 	Url                 plugin.TValue[string]
-	CompartmentId       plugin.TValue[string]
 	Compartment         plugin.TValue[*mqlOciCompartment]
 	LifecycleState      plugin.TValue[string]
 	NatGatewayIpAddress plugin.TValue[string]
@@ -40128,10 +39118,6 @@ func (c *mqlOciDataSafeConfiguration) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-func (c *mqlOciDataSafeConfiguration) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
-}
-
 func (c *mqlOciDataSafeConfiguration) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
 	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
 		if c.MqlRuntime.HasRecording {
@@ -40176,9 +39162,8 @@ func (c *mqlOciDataSafeConfiguration) GetDefinedTags() *plugin.TValue[map[string
 type mqlOciDataSafeTargetDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeTargetDatabaseInternal it will be used here
+	mqlOciDataSafeTargetDatabaseInternal
 	Id                    plugin.TValue[string]
-	CompartmentId         plugin.TValue[string]
 	Compartment           plugin.TValue[*mqlOciCompartment]
 	Region                plugin.TValue[string]
 	DisplayName           plugin.TValue[string]
@@ -40233,10 +39218,6 @@ func (c *mqlOciDataSafeTargetDatabase) MqlID() string {
 
 func (c *mqlOciDataSafeTargetDatabase) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciDataSafeTargetDatabase) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
 }
 
 func (c *mqlOciDataSafeTargetDatabase) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -40307,9 +39288,8 @@ func (c *mqlOciDataSafeTargetDatabase) GetSystemTags() *plugin.TValue[map[string
 type mqlOciDataSafeSecurityAssessment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeSecurityAssessmentInternal it will be used here
+	mqlOciDataSafeSecurityAssessmentInternal
 	Id                     plugin.TValue[string]
-	CompartmentId          plugin.TValue[string]
 	Compartment            plugin.TValue[*mqlOciCompartment]
 	Region                 plugin.TValue[string]
 	DisplayName            plugin.TValue[string]
@@ -40363,10 +39343,6 @@ func (c *mqlOciDataSafeSecurityAssessment) MqlID() string {
 
 func (c *mqlOciDataSafeSecurityAssessment) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciDataSafeSecurityAssessment) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
 }
 
 func (c *mqlOciDataSafeSecurityAssessment) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -40433,9 +39409,8 @@ func (c *mqlOciDataSafeSecurityAssessment) GetDefinedTags() *plugin.TValue[map[s
 type mqlOciDataSafeUserAssessment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeUserAssessmentInternal it will be used here
+	mqlOciDataSafeUserAssessmentInternal
 	Id                     plugin.TValue[string]
-	CompartmentId          plugin.TValue[string]
 	Compartment            plugin.TValue[*mqlOciCompartment]
 	Region                 plugin.TValue[string]
 	DisplayName            plugin.TValue[string]
@@ -40489,10 +39464,6 @@ func (c *mqlOciDataSafeUserAssessment) MqlID() string {
 
 func (c *mqlOciDataSafeUserAssessment) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciDataSafeUserAssessment) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
 }
 
 func (c *mqlOciDataSafeUserAssessment) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -40559,9 +39530,8 @@ func (c *mqlOciDataSafeUserAssessment) GetDefinedTags() *plugin.TValue[map[strin
 type mqlOciDataSafeSensitiveDataModel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeSensitiveDataModelInternal it will be used here
+	mqlOciDataSafeSensitiveDataModelInternal
 	Id             plugin.TValue[string]
-	CompartmentId  plugin.TValue[string]
 	Compartment    plugin.TValue[*mqlOciCompartment]
 	Region         plugin.TValue[string]
 	DisplayName    plugin.TValue[string]
@@ -40614,10 +39584,6 @@ func (c *mqlOciDataSafeSensitiveDataModel) MqlID() string {
 
 func (c *mqlOciDataSafeSensitiveDataModel) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciDataSafeSensitiveDataModel) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
 }
 
 func (c *mqlOciDataSafeSensitiveDataModel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -40680,9 +39646,8 @@ func (c *mqlOciDataSafeSensitiveDataModel) GetDefinedTags() *plugin.TValue[map[s
 type mqlOciDataSafeSensitiveType struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeSensitiveTypeInternal it will be used here
+	mqlOciDataSafeSensitiveTypeInternal
 	Id             plugin.TValue[string]
-	CompartmentId  plugin.TValue[string]
 	Compartment    plugin.TValue[*mqlOciCompartment]
 	Region         plugin.TValue[string]
 	DisplayName    plugin.TValue[string]
@@ -40735,10 +39700,6 @@ func (c *mqlOciDataSafeSensitiveType) MqlID() string {
 
 func (c *mqlOciDataSafeSensitiveType) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciDataSafeSensitiveType) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
 }
 
 func (c *mqlOciDataSafeSensitiveType) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -40801,9 +39762,8 @@ func (c *mqlOciDataSafeSensitiveType) GetDefinedTags() *plugin.TValue[map[string
 type mqlOciDataSafeMaskingPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciDataSafeMaskingPolicyInternal it will be used here
+	mqlOciDataSafeMaskingPolicyInternal
 	Id             plugin.TValue[string]
-	CompartmentId  plugin.TValue[string]
 	Compartment    plugin.TValue[*mqlOciCompartment]
 	Region         plugin.TValue[string]
 	DisplayName    plugin.TValue[string]
@@ -40855,10 +39815,6 @@ func (c *mqlOciDataSafeMaskingPolicy) MqlID() string {
 
 func (c *mqlOciDataSafeMaskingPolicy) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlOciDataSafeMaskingPolicy) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
 }
 
 func (c *mqlOciDataSafeMaskingPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {

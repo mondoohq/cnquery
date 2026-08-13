@@ -45,17 +45,16 @@ func (o *mqlOciEvents) rules() ([]any, error) {
 					created = &rule.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.events.rule", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(rule.Id),
-					"name":          llx.StringDataPtr(rule.DisplayName),
-					"description":   llx.StringDataPtr(rule.Description),
-					"compartmentID": llx.StringDataPtr(rule.CompartmentId),
-					"condition":     llx.StringDataPtr(rule.Condition),
-					"isEnabled":     llx.BoolDataPtr(rule.IsEnabled),
-					"state":         llx.StringData(string(rule.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(rule.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(rule.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.events.rule", stringValue(rule.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(rule.Id),
+					"name":         llx.StringDataPtr(rule.DisplayName),
+					"description":  llx.StringDataPtr(rule.Description),
+					"condition":    llx.StringDataPtr(rule.Condition),
+					"isEnabled":    llx.BoolDataPtr(rule.IsEnabled),
+					"state":        llx.StringData(string(rule.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(rule.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(rule.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -92,6 +91,7 @@ func (o *mqlOciEvents) getEventRulesForRegion(ctx context.Context, client *event
 }
 
 type mqlOciEventsRuleInternal struct {
+	ociCompartmentRef
 	rule        ociRetryLazy[*events.Rule]
 	cacheRegion string
 }

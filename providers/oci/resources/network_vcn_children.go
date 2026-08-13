@@ -112,3 +112,7 @@ func (o *mqlOciNetworkVcn) defaultSecurityList() (*mqlOciNetworkSecurityList, er
 	}
 	return res.(*mqlOciNetworkSecurityList), nil
 }
+
+type mqlOciNetworkVcnInternal struct {
+	ociCompartmentRef
+}

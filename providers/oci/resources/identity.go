@@ -107,14 +107,13 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 				capabilities["canUseOAuth2ClientCredentials"] = boolValue(user.Capabilities.CanUseOAuth2ClientCredentials)
 			}
 
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
+			mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.user", stringValue(user.CompartmentId), map[string]*llx.RawData{
 				"id":                 llx.StringDataPtr(user.Id),
 				"name":               llx.StringDataPtr(user.Name),
 				"description":        llx.StringDataPtr(user.Description),
 				"created":            llx.TimeDataPtr(created),
 				"state":              llx.StringData(string(user.LifecycleState)),
 				"mfaActivated":       llx.BoolData(boolValue(user.IsMfaActivated)),
-				"compartmentID":      llx.StringDataPtr(user.CompartmentId),
 				"email":              llx.StringDataPtr(user.Email),
 				"emailVerified":      llx.BoolData(boolValue(user.EmailVerified)),
 				"externalIdentifier": llx.StringDataPtr(user.ExternalIdentifier),
@@ -137,6 +136,7 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 }
 
 type mqlOciIdentityUserInternal struct {
+	ociCompartmentRef
 	cacheIdentityProviderID string
 }
 
@@ -348,7 +348,7 @@ func (o *mqlOciIdentityUser) groups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	userId := o.Id.Data
-	compartmentID := o.CompartmentID.Data
+	compartmentID := o.cacheCompartmentID
 
 	client, err := conn.IdentityClient()
 	if err != nil {
@@ -455,15 +455,14 @@ func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Jo
 				created = &grp.TimeCreated.Time
 			}
 
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.group", map[string]*llx.RawData{
-				"id":            llx.StringDataPtr(grp.Id),
-				"name":          llx.StringDataPtr(grp.Name),
-				"description":   llx.StringDataPtr(grp.Description),
-				"created":       llx.TimeDataPtr(created),
-				"state":         llx.StringData(string(grp.LifecycleState)),
-				"compartmentID": llx.StringDataPtr(grp.CompartmentId),
-				"freeformTags":  llx.MapData(strMapToAny(grp.FreeformTags), types.String),
-				"definedTags":   llx.MapData(definedTagsToAny(grp.DefinedTags), types.Any),
+			mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.group", stringValue(grp.CompartmentId), map[string]*llx.RawData{
+				"id":           llx.StringDataPtr(grp.Id),
+				"name":         llx.StringDataPtr(grp.Name),
+				"description":  llx.StringDataPtr(grp.Description),
+				"created":      llx.TimeDataPtr(created),
+				"state":        llx.StringData(string(grp.LifecycleState)),
+				"freeformTags": llx.MapData(strMapToAny(grp.FreeformTags), types.String),
+				"definedTags":  llx.MapData(definedTagsToAny(grp.DefinedTags), types.Any),
 			})
 			if err != nil {
 				return nil, err
@@ -538,17 +537,16 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 				versionDate = &policy.VersionDate.Date
 			}
 
-			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.policy", map[string]*llx.RawData{
-				"id":            llx.StringDataPtr(policy.Id),
-				"name":          llx.StringDataPtr(policy.Name),
-				"description":   llx.StringDataPtr(policy.Description),
-				"created":       llx.TimeDataPtr(created),
-				"state":         llx.StringData(string(policy.LifecycleState)),
-				"compartmentID": llx.StringDataPtr(policy.CompartmentId),
-				"statements":    llx.ArrayData(convert.SliceAnyToInterface(policy.Statements), types.String),
-				"versionDate":   llx.TimeDataPtr(versionDate),
-				"freeformTags":  llx.MapData(strMapToAny(policy.FreeformTags), types.String),
-				"definedTags":   llx.MapData(definedTagsToAny(policy.DefinedTags), types.Any),
+			mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.policy", stringValue(policy.CompartmentId), map[string]*llx.RawData{
+				"id":           llx.StringDataPtr(policy.Id),
+				"name":         llx.StringDataPtr(policy.Name),
+				"description":  llx.StringDataPtr(policy.Description),
+				"created":      llx.TimeDataPtr(created),
+				"state":        llx.StringData(string(policy.LifecycleState)),
+				"statements":   llx.ArrayData(convert.SliceAnyToInterface(policy.Statements), types.String),
+				"versionDate":  llx.TimeDataPtr(versionDate),
+				"freeformTags": llx.MapData(strMapToAny(policy.FreeformTags), types.String),
+				"definedTags":  llx.MapData(definedTagsToAny(policy.DefinedTags), types.Any),
 			})
 			if err != nil {
 				return nil, err
@@ -674,7 +672,7 @@ func (o *mqlOciIdentityGroup) members() ([]any, error) {
 	userMember := map[string]bool{}
 	memberships, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]identity.UserGroupMembership, *string, error) {
 		response, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
-			CompartmentId: common.String(o.CompartmentID.Data),
+			CompartmentId: common.String(o.cacheCompartmentID),
 			GroupId:       common.String(o.Id.Data),
 			Page:          page,
 		})
@@ -848,15 +846,14 @@ func (o *mqlOciIdentityUser) oauth2ClientCredentials() ([]any, error) {
 			return nil, err
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.oauth2ClientCredential", map[string]*llx.RawData{
-			"id":            llx.StringDataPtr(cred.Id),
-			"name":          llx.StringDataPtr(cred.Name),
-			"description":   llx.StringDataPtr(cred.Description),
-			"compartmentID": llx.StringDataPtr(cred.CompartmentId),
-			"scopes":        llx.ArrayData(scopesDict, types.Dict),
-			"created":       sdkTimeData(cred.TimeCreated),
-			"expires":       sdkTimeData(cred.ExpiresOn),
-			"state":         llx.StringData(string(cred.LifecycleState)),
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.oauth2ClientCredential", stringValue(cred.CompartmentId), map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(cred.Id),
+			"name":        llx.StringDataPtr(cred.Name),
+			"description": llx.StringDataPtr(cred.Description),
+			"scopes":      llx.ArrayData(scopesDict, types.Dict),
+			"created":     sdkTimeData(cred.TimeCreated),
+			"expires":     sdkTimeData(cred.ExpiresOn),
+			"state":       llx.StringData(string(cred.LifecycleState)),
 		})
 		if err != nil {
 			return nil, err
@@ -865,6 +862,10 @@ func (o *mqlOciIdentityUser) oauth2ClientCredentials() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+type mqlOciIdentityOauth2ClientCredentialInternal struct {
+	ociCompartmentRef
 }
 
 func (o *mqlOciIdentityOauth2ClientCredential) id() (string, error) {
@@ -898,16 +899,15 @@ func (o *mqlOciIdentity) dynamicGroups() ([]any, error) {
 	for i := range groups {
 		dg := groups[i]
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dynamicGroup", map[string]*llx.RawData{
-			"id":            llx.StringDataPtr(dg.Id),
-			"compartmentID": llx.StringDataPtr(dg.CompartmentId),
-			"name":          llx.StringDataPtr(dg.Name),
-			"description":   llx.StringDataPtr(dg.Description),
-			"matchingRule":  llx.StringDataPtr(dg.MatchingRule),
-			"created":       sdkTimeData(dg.TimeCreated),
-			"state":         llx.StringData(string(dg.LifecycleState)),
-			"freeformTags":  llx.MapData(strMapToAny(dg.FreeformTags), types.String),
-			"definedTags":   llx.MapData(definedTagsToAny(dg.DefinedTags), types.Any),
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.dynamicGroup", stringValue(dg.CompartmentId), map[string]*llx.RawData{
+			"id":           llx.StringDataPtr(dg.Id),
+			"name":         llx.StringDataPtr(dg.Name),
+			"description":  llx.StringDataPtr(dg.Description),
+			"matchingRule": llx.StringDataPtr(dg.MatchingRule),
+			"created":      sdkTimeData(dg.TimeCreated),
+			"state":        llx.StringData(string(dg.LifecycleState)),
+			"freeformTags": llx.MapData(strMapToAny(dg.FreeformTags), types.String),
+			"definedTags":  llx.MapData(definedTagsToAny(dg.DefinedTags), types.Any),
 		})
 		if err != nil {
 			return nil, err
@@ -953,7 +953,6 @@ func (o *mqlOciIdentity) identityProviders() ([]any, error) {
 
 		args := map[string]*llx.RawData{
 			"id":                 llx.StringDataPtr(idp.GetId()),
-			"compartmentID":      llx.StringDataPtr(idp.GetCompartmentId()),
 			"name":               llx.StringDataPtr(idp.GetName()),
 			"description":        llx.StringDataPtr(idp.GetDescription()),
 			"productType":        llx.StringDataPtr(idp.GetProductType()),
@@ -978,7 +977,7 @@ func (o *mqlOciIdentity) identityProviders() ([]any, error) {
 				Msgf("oci.identity.identityProvider: unexpected provider type %T, SAML2-specific fields left empty", idp)
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.identityProvider", args)
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.identityProvider", stringValue(idp.GetCompartmentId()), args)
 		if err != nil {
 			return nil, err
 		}
@@ -1039,9 +1038,8 @@ func (o *mqlOciIdentity) networkSources() ([]any, error) {
 			return nil, err
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.networkSource", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.identity.networkSource", stringValue(ns.CompartmentId), map[string]*llx.RawData{
 			"id":                llx.StringDataPtr(ns.Id),
-			"compartmentID":     llx.StringDataPtr(ns.CompartmentId),
 			"name":              llx.StringDataPtr(ns.Name),
 			"description":       llx.StringDataPtr(ns.Description),
 			"publicSourceList":  llx.ArrayData(stringsToAny(ns.PublicSourceList), types.String),
@@ -1150,4 +1148,20 @@ func initOciIdentityAuthenticationPolicy(runtime *plugin.Runtime, args map[strin
 
 func (o *mqlOciIdentityAuthenticationPolicy) id() (string, error) {
 	return "oci.identity.authenticationPolicy/" + o.CompartmentID.Data, nil
+}
+
+type mqlOciIdentityDynamicGroupInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciIdentityGroupInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciIdentityIdentityProviderInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciIdentityNetworkSourceInternal struct {
+	ociCompartmentRef
 }

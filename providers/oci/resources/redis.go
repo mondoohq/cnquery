@@ -64,10 +64,9 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 					nodeMemory = float64(*c.NodeMemoryInGBs)
 				}
 
-				mqlCluster, err := CreateResource(o.MqlRuntime, "oci.redis.cluster", map[string]*llx.RawData{
+				mqlCluster, err := createOciResourceInCompartment(o.MqlRuntime, "oci.redis.cluster", stringValue(c.CompartmentId), map[string]*llx.RawData{
 					"id":                         llx.StringDataPtr(c.Id),
 					"name":                       llx.StringDataPtr(c.DisplayName),
-					"compartmentID":              llx.StringDataPtr(c.CompartmentId),
 					"softwareVersion":            llx.StringData(string(c.SoftwareVersion)),
 					"clusterMode":                llx.StringData(string(c.ClusterMode)),
 					"nodeCount":                  llx.IntDataPtr(c.NodeCount),
@@ -101,6 +100,7 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 }
 
 type mqlOciRedisClusterInternal struct {
+	ociCompartmentRef
 	cacheSubnetID string
 	cacheNsgIDs   []string
 	cacheRegion   string

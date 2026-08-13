@@ -229,10 +229,9 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			created = &target.TimeCreated.Time
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.target", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.cloudGuard.target", stringValue(target.CompartmentId), map[string]*llx.RawData{
 			"id":                 llx.StringDataPtr(target.Id),
 			"name":               llx.StringDataPtr(target.DisplayName),
-			"compartmentID":      llx.StringDataPtr(target.CompartmentId),
 			"targetResourceId":   llx.StringDataPtr(target.TargetResourceId),
 			"targetResourceType": llx.StringData(string(target.TargetResourceType)),
 			"state":              llx.StringData(string(target.LifecycleState)),
@@ -411,10 +410,9 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 	rules, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]cloudguard.DetectorRecipeDetectorRuleSummary, *string, error) {
 		response, err := client.ListDetectorRecipeDetectorRules(ctx, cloudguard.ListDetectorRecipeDetectorRulesRequest{
 			DetectorRecipeId: common.String(o.Id.Data),
-			// Read from the cached value rather than the public compartmentID
-			// field, which is marked deprecated in favour of compartment().
-			// Removing that field in a later major version would otherwise
-			// quietly scope this listing to the empty string.
+			// The compartment OCID is no longer a schema field, so it comes
+			// from the value recorded when the recipe was listed. An empty
+			// value here would quietly scope this listing to nothing.
 			CompartmentId: common.String(o.cacheCompartmentID),
 			Page:          page,
 		})
@@ -547,18 +545,17 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 			created = &recipe.TimeCreated.Time
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.detectorRecipe", map[string]*llx.RawData{
-			"id":            llx.StringDataPtr(recipe.Id),
-			"name":          llx.StringDataPtr(recipe.DisplayName),
-			"description":   llx.StringDataPtr(recipe.Description),
-			"compartmentID": llx.StringDataPtr(recipe.CompartmentId),
-			"owner":         llx.StringData(string(recipe.Owner)),
-			"detectorType":  llx.StringData(string(recipe.Detector)),
-			"state":         llx.StringData(string(recipe.LifecycleState)),
-			"created":       llx.TimeDataPtr(created),
-			"freeformTags":  llx.MapData(strMapToAny(recipe.FreeformTags), types.String),
-			"definedTags":   llx.MapData(definedTagsToAny(recipe.DefinedTags), types.Any),
-			"systemTags":    llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.cloudGuard.detectorRecipe", stringValue(recipe.CompartmentId), map[string]*llx.RawData{
+			"id":           llx.StringDataPtr(recipe.Id),
+			"name":         llx.StringDataPtr(recipe.DisplayName),
+			"description":  llx.StringDataPtr(recipe.Description),
+			"owner":        llx.StringData(string(recipe.Owner)),
+			"detectorType": llx.StringData(string(recipe.Detector)),
+			"state":        llx.StringData(string(recipe.LifecycleState)),
+			"created":      llx.TimeDataPtr(created),
+			"freeformTags": llx.MapData(strMapToAny(recipe.FreeformTags), types.String),
+			"definedTags":  llx.MapData(definedTagsToAny(recipe.DefinedTags), types.Any),
+			"systemTags":   llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -616,11 +613,10 @@ func (o *mqlOciCloudGuard) securityZones() ([]any, error) {
 			created = &zone.TimeCreated.Time
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.securityZone", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.cloudGuard.securityZone", stringValue(zone.CompartmentId), map[string]*llx.RawData{
 			"id":                              llx.StringDataPtr(zone.Id),
 			"name":                            llx.StringDataPtr(zone.DisplayName),
 			"description":                     llx.StringDataPtr(zone.Description),
-			"compartmentID":                   llx.StringDataPtr(zone.CompartmentId),
 			"isInheritanceAfterDeleteEnabled": llx.BoolDataPtr(zone.IsInheritanceAfterDeleteEnabled),
 			"state":                           llx.StringData(string(zone.LifecycleState)),
 			"created":                         llx.TimeDataPtr(created),
@@ -676,17 +672,16 @@ func (o *mqlOciCloudGuard) securityZoneRecipes() ([]any, error) {
 			created = &recipe.TimeCreated.Time
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.securityZoneRecipe", map[string]*llx.RawData{
-			"id":            llx.StringDataPtr(recipe.Id),
-			"name":          llx.StringDataPtr(recipe.DisplayName),
-			"description":   llx.StringDataPtr(recipe.Description),
-			"compartmentID": llx.StringDataPtr(recipe.CompartmentId),
-			"owner":         llx.StringData(string(recipe.Owner)),
-			"state":         llx.StringData(string(recipe.LifecycleState)),
-			"created":       llx.TimeDataPtr(created),
-			"freeformTags":  llx.MapData(strMapToAny(recipe.FreeformTags), types.String),
-			"definedTags":   llx.MapData(definedTagsToAny(recipe.DefinedTags), types.Any),
-			"systemTags":    llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.cloudGuard.securityZoneRecipe", stringValue(recipe.CompartmentId), map[string]*llx.RawData{
+			"id":           llx.StringDataPtr(recipe.Id),
+			"name":         llx.StringDataPtr(recipe.DisplayName),
+			"description":  llx.StringDataPtr(recipe.Description),
+			"owner":        llx.StringData(string(recipe.Owner)),
+			"state":        llx.StringData(string(recipe.LifecycleState)),
+			"created":      llx.TimeDataPtr(created),
+			"freeformTags": llx.MapData(strMapToAny(recipe.FreeformTags), types.String),
+			"definedTags":  llx.MapData(definedTagsToAny(recipe.DefinedTags), types.Any),
+			"systemTags":   llx.MapData(definedTagsToAny(recipe.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -741,20 +736,19 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 			services = append(services, s)
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.securityPolicy", map[string]*llx.RawData{
-			"id":            llx.StringDataPtr(policy.Id),
-			"name":          llx.StringDataPtr(policy.DisplayName),
-			"friendlyName":  llx.StringDataPtr(policy.FriendlyName),
-			"description":   llx.StringDataPtr(policy.Description),
-			"compartmentID": llx.StringDataPtr(policy.CompartmentId),
-			"owner":         llx.StringData(string(policy.Owner)),
-			"category":      llx.StringDataPtr(policy.Category),
-			"services":      llx.ArrayData(services, types.String),
-			"state":         llx.StringData(string(policy.LifecycleState)),
-			"created":       llx.TimeDataPtr(created),
-			"freeformTags":  llx.MapData(strMapToAny(policy.FreeformTags), types.String),
-			"definedTags":   llx.MapData(definedTagsToAny(policy.DefinedTags), types.Any),
-			"systemTags":    llx.MapData(definedTagsToAny(policy.SystemTags), types.Dict),
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.cloudGuard.securityPolicy", stringValue(policy.CompartmentId), map[string]*llx.RawData{
+			"id":           llx.StringDataPtr(policy.Id),
+			"name":         llx.StringDataPtr(policy.DisplayName),
+			"friendlyName": llx.StringDataPtr(policy.FriendlyName),
+			"description":  llx.StringDataPtr(policy.Description),
+			"owner":        llx.StringData(string(policy.Owner)),
+			"category":     llx.StringDataPtr(policy.Category),
+			"services":     llx.ArrayData(services, types.String),
+			"state":        llx.StringData(string(policy.LifecycleState)),
+			"created":      llx.TimeDataPtr(created),
+			"freeformTags": llx.MapData(strMapToAny(policy.FreeformTags), types.String),
+			"definedTags":  llx.MapData(definedTagsToAny(policy.DefinedTags), types.Any),
+			"systemTags":   llx.MapData(definedTagsToAny(policy.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -766,10 +760,12 @@ func (o *mqlOciCloudGuard) securityPolicies() ([]any, error) {
 }
 
 type mqlOciCloudGuardSecurityZoneInternal struct {
+	ociCompartmentRef
 	cacheRecipeID string
 }
 
 type mqlOciCloudGuardSecurityZoneRecipeInternal struct {
+	ociCompartmentRef
 	cachePolicyIDs []string
 }
 
@@ -850,4 +846,12 @@ func (o *mqlOciCloudGuardSecurityZoneRecipe) securityPolicies() ([]any, error) {
 
 func (o *mqlOciCloudGuardSecurityPolicy) id() (string, error) {
 	return "oci.cloudGuard.securityPolicy/" + o.Id.Data, nil
+}
+
+type mqlOciCloudGuardSecurityPolicyInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciCloudGuardTargetInternal struct {
+	ociCompartmentRef
 }

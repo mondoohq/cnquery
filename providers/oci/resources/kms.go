@@ -53,10 +53,9 @@ func (o *mqlOciKms) vaults() ([]any, error) {
 					created = &vault.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.kms.vault", stringValue(vault.CompartmentId), map[string]*llx.RawData{
 					"id":                 llx.StringDataPtr(vault.Id),
 					"name":               llx.StringDataPtr(vault.DisplayName),
-					"compartmentID":      llx.StringDataPtr(vault.CompartmentId),
 					"vaultType":          llx.StringData(string(vault.VaultType)),
 					"state":              llx.StringData(string(vault.LifecycleState)),
 					"managementEndpoint": llx.StringDataPtr(vault.ManagementEndpoint),
@@ -96,6 +95,7 @@ func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagemen
 }
 
 type mqlOciKmsVaultInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 }
 
@@ -148,7 +148,7 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 		return nil, err
 	}
 
-	keys, err := o.getKeysForVault(ctx, svc, o.CompartmentID.Data)
+	keys, err := o.getKeysForVault(ctx, svc, o.cacheCompartmentID)
 	if err != nil {
 		return nil, err
 	}
@@ -164,11 +164,9 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 
 		algorithm := string(key.Algorithm)
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.kms.key", stringValue(key.CompartmentId), map[string]*llx.RawData{
 			"id":                    llx.StringDataPtr(key.Id),
 			"name":                  llx.StringDataPtr(key.DisplayName),
-			"compartmentID":         llx.StringDataPtr(key.CompartmentId),
-			"vaultId":               llx.StringDataPtr(key.VaultId),
 			"algorithm":             llx.StringData(algorithm),
 			"protectionMode":        llx.StringData(string(key.ProtectionMode)),
 			"state":                 llx.StringData(string(key.LifecycleState)),
@@ -182,6 +180,7 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 		}
 		mqlKey := mqlInstance.(*mqlOciKmsKey)
 		mqlKey.cacheManagementEndpoint = managementEndpoint
+		mqlKey.cacheVaultID = stringValue(key.VaultId)
 		res = append(res, mqlKey)
 	}
 
@@ -247,6 +246,8 @@ func initOciKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 }
 
 type mqlOciKmsKeyInternal struct {
+	ociCompartmentRef
+	cacheVaultID            string
 	cacheManagementEndpoint string
 
 	keyShapeOnce sync.Once
@@ -347,11 +348,9 @@ func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
 			timeOfDeletion = &v.TimeOfDeletion.Time
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.kms.keyVersion", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.kms.keyVersion", stringValue(v.CompartmentId), map[string]*llx.RawData{
 			"id":             llx.StringDataPtr(v.Id),
 			"keyId":          llx.StringDataPtr(v.KeyId),
-			"vaultId":        llx.StringDataPtr(v.VaultId),
-			"compartmentID":  llx.StringDataPtr(v.CompartmentId),
 			"origin":         llx.StringData(string(v.Origin)),
 			"state":          llx.StringData(string(v.LifecycleState)),
 			"isAutoRotated":  llx.BoolDataPtr(v.IsAutoRotated),
@@ -361,6 +360,7 @@ func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlInstance.(*mqlOciKmsKeyVersion).cacheVaultID = stringValue(v.VaultId)
 		res = append(res, mqlInstance)
 	}
 

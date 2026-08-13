@@ -55,10 +55,9 @@ func (o *mqlOciNetwork) cpes() ([]any, error) {
 					created = &cpe.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.cpe", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.cpe", stringValue(cpe.CompartmentId), map[string]*llx.RawData{
 					"id":               llx.StringDataPtr(cpe.Id),
 					"name":             llx.StringDataPtr(cpe.DisplayName),
-					"compartmentID":    llx.StringDataPtr(cpe.CompartmentId),
 					"ipAddress":        llx.StringDataPtr(cpe.IpAddress),
 					"cpeDeviceShapeId": llx.StringDataPtr(cpe.CpeDeviceShapeId),
 					"isPrivate":        llx.BoolDataPtr(cpe.IsPrivate),
@@ -109,12 +108,13 @@ func (o *mqlOciNetworkCpe) id() (string, error) {
 }
 
 func (o *mqlOciNetworkCpe) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 // IPSec connections
 
 type mqlOciNetworkIpsecConnectionInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 	cacheCpeID  string
 	cacheDrgID  string
@@ -155,10 +155,9 @@ func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
 					created = &ipsc.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.ipsecConnection", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.ipsecConnection", stringValue(ipsc.CompartmentId), map[string]*llx.RawData{
 					"id":                     llx.StringDataPtr(ipsc.Id),
 					"name":                   llx.StringDataPtr(ipsc.DisplayName),
-					"compartmentID":          llx.StringDataPtr(ipsc.CompartmentId),
 					"staticRoutes":           llx.ArrayData(stringsToAny(ipsc.StaticRoutes), types.String),
 					"cpeLocalIdentifier":     llx.StringDataPtr(ipsc.CpeLocalIdentifier),
 					"cpeLocalIdentifierType": llx.StringData(string(ipsc.CpeLocalIdentifierType)),
@@ -215,7 +214,7 @@ func (o *mqlOciNetworkIpsecConnection) id() (string, error) {
 }
 
 func (o *mqlOciNetworkIpsecConnection) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkIpsecConnection) cpe() (*mqlOciNetworkCpe, error) {
@@ -286,10 +285,9 @@ func (o *mqlOciNetworkIpsecConnection) tunnels() ([]any, error) {
 			bgpState = string(tunnel.BgpSessionInfo.BgpState)
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.ipsecConnectionTunnel", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.ipsecConnectionTunnel", stringValue(tunnel.CompartmentId), map[string]*llx.RawData{
 			"id":                    llx.StringDataPtr(tunnel.Id),
 			"name":                  llx.StringDataPtr(tunnel.DisplayName),
-			"compartmentID":         llx.StringDataPtr(tunnel.CompartmentId),
 			"status":                llx.StringData(string(tunnel.Status)),
 			"ikeVersion":            llx.StringData(string(tunnel.IkeVersion)),
 			"routing":               llx.StringData(string(tunnel.Routing)),
@@ -318,6 +316,7 @@ func (o *mqlOciNetworkIpsecConnectionTunnel) id() (string, error) {
 }
 
 type mqlOciNetworkIpsecConnectionTunnelInternal struct {
+	ociCompartmentRef
 	cacheIpscID string
 	cacheRegion string
 	details     ociOnce
@@ -599,12 +598,13 @@ func ociTunnelLifetime(field *plugin.TValue[int64], v *int64) (int64, error) {
 }
 
 func (o *mqlOciNetworkIpsecConnectionTunnel) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 // FastConnect virtual circuits
 
 type mqlOciNetworkVirtualCircuitInternal struct {
+	ociCompartmentRef
 	cacheDrgID string
 }
 
@@ -671,10 +671,9 @@ func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 					return nil, err
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.virtualCircuit", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.virtualCircuit", stringValue(vc.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(vc.Id),
 					"name":                 llx.StringDataPtr(vc.DisplayName),
-					"compartmentID":        llx.StringDataPtr(vc.CompartmentId),
 					"type":                 llx.StringData(string(vc.Type)),
 					"serviceType":          llx.StringData(string(vc.ServiceType)),
 					"bandwidthShapeName":   llx.StringDataPtr(vc.BandwidthShapeName),
@@ -737,7 +736,7 @@ func (o *mqlOciNetworkVirtualCircuit) id() (string, error) {
 }
 
 func (o *mqlOciNetworkVirtualCircuit) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkVirtualCircuit) drg() (*mqlOciNetworkDrg, error) {
@@ -791,10 +790,9 @@ func (o *mqlOciNetwork) crossConnects() ([]any, error) {
 					created = &xc.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.crossConnect", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.crossConnect", stringValue(xc.CompartmentId), map[string]*llx.RawData{
 					"id":                  llx.StringDataPtr(xc.Id),
 					"name":                llx.StringDataPtr(xc.DisplayName),
-					"compartmentID":       llx.StringDataPtr(xc.CompartmentId),
 					"locationName":        llx.StringDataPtr(xc.LocationName),
 					"portName":            llx.StringDataPtr(xc.PortName),
 					"portSpeedShapeName":  llx.StringDataPtr(xc.PortSpeedShapeName),
@@ -819,5 +817,13 @@ func (o *mqlOciNetworkCrossConnect) id() (string, error) {
 }
 
 func (o *mqlOciNetworkCrossConnect) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
+}
+
+type mqlOciNetworkCpeInternal struct {
+	ociCompartmentRef
+}
+
+type mqlOciNetworkCrossConnectInternal struct {
+	ociCompartmentRef
 }

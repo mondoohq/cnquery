@@ -21,6 +21,7 @@ import (
 // Dynamic Routing Gateways
 
 type mqlOciNetworkDrgInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 }
 
@@ -59,14 +60,13 @@ func (o *mqlOciNetwork) drgs() ([]any, error) {
 					created = &drg.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.drg", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(drg.Id),
-					"name":          llx.StringDataPtr(drg.DisplayName),
-					"compartmentID": llx.StringDataPtr(drg.CompartmentId),
-					"state":         llx.StringData(string(drg.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(drg.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(drg.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.drg", stringValue(drg.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(drg.Id),
+					"name":         llx.StringDataPtr(drg.DisplayName),
+					"state":        llx.StringData(string(drg.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(drg.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(drg.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -113,7 +113,7 @@ func (o *mqlOciNetworkDrg) id() (string, error) {
 }
 
 func (o *mqlOciNetworkDrg) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkDrg) drgRegion() string {
@@ -197,10 +197,9 @@ func (o *mqlOciNetworkDrg) newDrgAttachment(att core.DrgAttachment) (*mqlOciNetw
 		networkType = "VCN"
 	}
 
-	mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.drgAttachment", map[string]*llx.RawData{
+	mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.drgAttachment", stringValue(att.CompartmentId), map[string]*llx.RawData{
 		"id":             llx.StringDataPtr(att.Id),
 		"name":           llx.StringDataPtr(att.DisplayName),
-		"compartmentID":  llx.StringDataPtr(att.CompartmentId),
 		"networkType":    llx.StringData(networkType),
 		"networkId":      llx.StringData(networkID),
 		"isCrossTenancy": llx.BoolDataPtr(att.IsCrossTenancy),
@@ -254,10 +253,9 @@ func (o *mqlOciNetworkDrg) remotePeeringConnections() ([]any, error) {
 			created = &rpc.TimeCreated.Time
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.remotePeeringConnection", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.remotePeeringConnection", stringValue(rpc.CompartmentId), map[string]*llx.RawData{
 			"id":                    llx.StringDataPtr(rpc.Id),
 			"name":                  llx.StringDataPtr(rpc.DisplayName),
-			"compartmentID":         llx.StringDataPtr(rpc.CompartmentId),
 			"isCrossTenancyPeering": llx.BoolDataPtr(rpc.IsCrossTenancyPeering),
 			"peeringStatus":         llx.StringData(string(rpc.PeeringStatus)),
 			"peerId":                llx.StringDataPtr(rpc.PeerId),
@@ -280,6 +278,7 @@ func (o *mqlOciNetworkDrg) remotePeeringConnections() ([]any, error) {
 // DRG attachments
 
 type mqlOciNetworkDrgAttachmentInternal struct {
+	ociCompartmentRef
 	cacheDrgID             string
 	cacheVcnID             string
 	cacheIpsecConnectionID string
@@ -291,7 +290,7 @@ func (o *mqlOciNetworkDrgAttachment) id() (string, error) {
 }
 
 func (o *mqlOciNetworkDrgAttachment) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkDrgAttachment) drg() (*mqlOciNetworkDrg, error) {
@@ -353,6 +352,7 @@ func (o *mqlOciNetworkDrgAttachment) virtualCircuit() (*mqlOciNetworkVirtualCirc
 // Remote peering connections
 
 type mqlOciNetworkRemotePeeringConnectionInternal struct {
+	ociCompartmentRef
 	cacheDrgID string
 }
 
@@ -361,7 +361,7 @@ func (o *mqlOciNetworkRemotePeeringConnection) id() (string, error) {
 }
 
 func (o *mqlOciNetworkRemotePeeringConnection) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkRemotePeeringConnection) drg() (*mqlOciNetworkDrg, error) {
@@ -381,6 +381,7 @@ func (o *mqlOciNetworkRemotePeeringConnection) drg() (*mqlOciNetworkDrg, error) 
 // Local peering gateways
 
 type mqlOciNetworkLocalPeeringGatewayInternal struct {
+	ociCompartmentRef
 	cacheVcnID        string
 	cachePeerID       string
 	cacheRouteTableID string
@@ -421,10 +422,9 @@ func (o *mqlOciNetwork) localPeeringGateways() ([]any, error) {
 					created = &lpg.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.localPeeringGateway", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.localPeeringGateway", stringValue(lpg.CompartmentId), map[string]*llx.RawData{
 					"id":                    llx.StringDataPtr(lpg.Id),
 					"name":                  llx.StringDataPtr(lpg.DisplayName),
-					"compartmentID":         llx.StringDataPtr(lpg.CompartmentId),
 					"isCrossTenancyPeering": llx.BoolDataPtr(lpg.IsCrossTenancyPeering),
 					"peeringStatus":         llx.StringData(string(lpg.PeeringStatus)),
 					"peerAdvertisedCidr":    llx.StringDataPtr(lpg.PeerAdvertisedCidr),
@@ -480,7 +480,7 @@ func (o *mqlOciNetworkLocalPeeringGateway) id() (string, error) {
 }
 
 func (o *mqlOciNetworkLocalPeeringGateway) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkLocalPeeringGateway) vcn() (*mqlOciNetworkVcn, error) {
@@ -529,6 +529,7 @@ func (o *mqlOciNetworkLocalPeeringGateway) routeTable() (*mqlOciNetworkRouteTabl
 // Service gateways
 
 type mqlOciNetworkServiceGatewayInternal struct {
+	ociCompartmentRef
 	cacheRegion       string
 	cacheVcnID        string
 	cacheRouteTableID string
@@ -575,15 +576,14 @@ func (o *mqlOciNetwork) serviceGateways() ([]any, error) {
 					serviceIDs = append(serviceIDs, stringValue(sgw.Services[j].ServiceId))
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.serviceGateway", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(sgw.Id),
-					"name":          llx.StringDataPtr(sgw.DisplayName),
-					"compartmentID": llx.StringDataPtr(sgw.CompartmentId),
-					"blockTraffic":  llx.BoolDataPtr(sgw.BlockTraffic),
-					"state":         llx.StringData(string(sgw.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(sgw.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(sgw.DefinedTags), types.Any),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.network.serviceGateway", stringValue(sgw.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(sgw.Id),
+					"name":         llx.StringDataPtr(sgw.DisplayName),
+					"blockTraffic": llx.BoolDataPtr(sgw.BlockTraffic),
+					"state":        llx.StringData(string(sgw.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(sgw.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(sgw.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -633,7 +633,7 @@ func (o *mqlOciNetworkServiceGateway) id() (string, error) {
 }
 
 func (o *mqlOciNetworkServiceGateway) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
 }
 
 func (o *mqlOciNetworkServiceGateway) vcn() (*mqlOciNetworkVcn, error) {

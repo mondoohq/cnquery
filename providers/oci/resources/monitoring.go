@@ -56,15 +56,13 @@ func (o *mqlOciMonitoring) alarms() ([]any, error) {
 					destinations = append(destinations, d)
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.monitoring.alarm", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.monitoring.alarm", stringValue(alarm.CompartmentId), map[string]*llx.RawData{
 					"id":                  llx.StringDataPtr(alarm.Id),
 					"name":                llx.StringDataPtr(alarm.DisplayName),
-					"compartmentID":       llx.StringDataPtr(alarm.CompartmentId),
 					"metricCompartmentId": llx.StringDataPtr(alarm.MetricCompartmentId),
 					"namespace":           llx.StringDataPtr(alarm.Namespace),
 					"query":               llx.StringDataPtr(alarm.Query),
 					"severity":            llx.StringData(string(alarm.Severity)),
-					"destinations":        llx.ArrayData(destinations, types.String),
 					"isEnabled":           llx.BoolDataPtr(alarm.IsEnabled),
 					"state":               llx.StringData(string(alarm.LifecycleState)),
 					"freeformTags":        llx.MapData(strMapToAny(alarm.FreeformTags), types.String),
@@ -73,6 +71,7 @@ func (o *mqlOciMonitoring) alarms() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				mqlInstance.(*mqlOciMonitoringAlarm).cacheDestinations = destinations
 				res = append(res, mqlInstance)
 			}
 

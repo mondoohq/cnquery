@@ -79,14 +79,12 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					ipAddresses = append(ipAddresses, entry)
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.loadBalancer.loadBalancer", stringValue(lb.CompartmentId), map[string]*llx.RawData{
 					"id":                        llx.StringDataPtr(lb.Id),
 					"name":                      llx.StringDataPtr(lb.DisplayName),
-					"compartmentID":             llx.StringDataPtr(lb.CompartmentId),
 					"shape":                     llx.StringDataPtr(lb.ShapeName),
 					"isPrivate":                 llx.BoolDataPtr(lb.IsPrivate),
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
-					"nsgIds":                    llx.ArrayData(convert.SliceAnyToInterface(lb.NetworkSecurityGroupIds), types.String),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),
@@ -98,6 +96,7 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					return nil, err
 				}
 				mqlLb := mqlInstance.(*mqlOciLoadBalancerLoadBalancer)
+				mqlLb.cacheNsgIDs = convert.SliceAnyToInterface(lb.NetworkSecurityGroupIds)
 				mqlLb.cacheListeners = lb.Listeners
 				mqlLb.cacheBackendSets = lb.BackendSets
 				mqlLb.cacheRegion = region
@@ -110,6 +109,8 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 }
 
 type mqlOciLoadBalancerLoadBalancerInternal struct {
+	ociCompartmentRef
+	cacheNsgIDs      []any
 	cacheListeners   map[string]loadbalancer.Listener
 	cacheBackendSets map[string]loadbalancer.BackendSet
 	cacheRegion      string
