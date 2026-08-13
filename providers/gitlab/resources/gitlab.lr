@@ -504,6 +504,15 @@ gitlab.group @defaults("name visibility webURL") {
   samlGroupLinks() []gitlab.group.samlGroupLink
   // Audit events for the group (Premium/Ultimate)
   auditEvents() []gitlab.group.auditEvent
+  // Whether the group streams audit events to an external destination
+  //
+  // True when at least one audit-event streaming destination (for example an
+  // HTTP endpoint, Google Cloud Logging, or Amazon S3) is configured on the
+  // group, so audit records are preserved off the GitLab instance for
+  // detection and investigation. Audit event streaming is a GitLab Ultimate
+  // feature; on lower tiers, or with a token that cannot read the
+  // configuration, this reports false.
+  auditEventStreamingEnabled() bool
   // Confirmed vulnerabilities across all projects in the group and its subgroups (Ultimate)
   vulnerabilities() []gitlab.project.vulnerability
   // Container registry repositories across all projects in the group and its subgroups

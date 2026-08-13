@@ -661,6 +661,66 @@ func (p *mqlGitlabProject) vulnerabilities() ([]any, error) {
 	return vulnsToMqlResources(p.MqlRuntime, nodes)
 }
 
+// gqlGroupAuditDestResponse decodes the audit-event streaming-destination
+// count for a group. The two candidate GraphQL fields cover GitLab's schema
+// rename: externalAuditEventStreamingDestinations is the consolidated field
+// on newer instances (16.11+), externalAuditEventDestinations the long-standing
+// HTTP-destination field on older ones. Only one exists on a given instance,
+// so we probe the new name first and fall back on a schema error.
+type gqlGroupAuditDestResponse struct {
+	Data struct {
+		Group *struct {
+			Destinations struct {
+				Nodes []struct {
+					ID string `json:"id"`
+				} `json:"nodes"`
+			} `json:"destinations"`
+		} `json:"group"`
+	} `json:"data"`
+	Errors []gqlGraphQLError `json:"errors"`
+}
+
+// auditEventStreamingEnabled reports whether the group has at least one
+// audit-event streaming destination configured. Audit event streaming is a
+// GitLab Ultimate feature; on lower tiers, or with a token that cannot read
+// the configuration, this degrades to false so a missing capability fails an
+// A09 assertion rather than silently passing it.
+func (g *mqlGitlabGroup) auditEventStreamingEnabled() (bool, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+	fullPath := g.FullPath.Data
+	if fullPath == "" {
+		return false, nil
+	}
+
+	// Aliasing each candidate to `destinations` keeps one response shape for
+	// both schema versions.
+	candidates := []string{
+		"externalAuditEventStreamingDestinations",
+		"externalAuditEventDestinations",
+	}
+	for _, field := range candidates {
+		query := fmt.Sprintf(`query { group(fullPath: %s) { destinations: %s { nodes { id } } } }`,
+			strconv.Quote(fullPath), field)
+		var resp gqlGroupAuditDestResponse
+		if _, err := conn.Client().GraphQL.Do(gitlab.GraphQLQuery{Query: query}, &resp); err != nil {
+			return false, err
+		}
+		// A schema/permission/tier gate on this field: try the next candidate,
+		// and if none resolve, report false (feature not observable).
+		if len(resp.Errors) > 0 {
+			if isVulnerabilitiesUnavailable(resp.Errors) {
+				continue
+			}
+			return false, fmt.Errorf("gitlab audit-event destinations query failed: %s", resp.Errors[0].Message)
+		}
+		if resp.Data.Group == nil {
+			continue
+		}
+		return len(resp.Data.Group.Destinations.Nodes) > 0, nil
+	}
+	return false, nil
+}
+
 // vulnerabilities fetches confirmed vulnerabilities across all projects in
 // the group and its subgroups. Requires GitLab Ultimate; lower tiers degrade
 // to an empty list.

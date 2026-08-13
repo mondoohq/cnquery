@@ -46,6 +46,7 @@ gitlab.group.auditEvent.id 13.0.8
 gitlab.group.auditEvent.ipAddress 13.0.8
 gitlab.group.auditEvent.targetDetails 13.0.8
 gitlab.group.auditEvent.targetType 13.0.8
+gitlab.group.auditEventStreamingEnabled 13.6.2
 gitlab.group.auditEvents 13.0.8
 gitlab.group.autoDevopsEnabled 13.3.9
 gitlab.group.containerRegistryRepositories 13.3.1

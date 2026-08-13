@@ -988,6 +988,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.auditEvents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetAuditEvents()).ToDataRes(types.Array(types.Resource("gitlab.group.auditEvent")))
 	},
+	"gitlab.group.auditEventStreamingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetAuditEventStreamingEnabled()).ToDataRes(types.Bool)
+	},
 	"gitlab.group.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetVulnerabilities()).ToDataRes(types.Array(types.Resource("gitlab.project.vulnerability")))
 	},
@@ -3917,6 +3920,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.auditEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).AuditEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.auditEventStreamingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).AuditEventStreamingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8313,6 +8320,7 @@ type mqlGitlabGroup struct {
 	ProtectedBranches              plugin.TValue[[]any]
 	SamlGroupLinks                 plugin.TValue[[]any]
 	AuditEvents                    plugin.TValue[[]any]
+	AuditEventStreamingEnabled     plugin.TValue[bool]
 	Vulnerabilities                plugin.TValue[[]any]
 	ContainerRegistryRepositories  plugin.TValue[[]any]
 	Packages                       plugin.TValue[[]any]
@@ -8681,6 +8689,12 @@ func (c *mqlGitlabGroup) GetAuditEvents() *plugin.TValue[[]any] {
 		}
 
 		return c.auditEvents()
+	})
+}
+
+func (c *mqlGitlabGroup) GetAuditEventStreamingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuditEventStreamingEnabled, func() (bool, error) {
+		return c.auditEventStreamingEnabled()
 	})
 }
 
