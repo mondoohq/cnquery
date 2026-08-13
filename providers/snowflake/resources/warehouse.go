@@ -137,7 +137,6 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 		"comment":                         llx.StringData(warehouse.Comment),
 		"enableQueryAcceleration":         llx.BoolData(warehouse.EnableQueryAcceleration),
 		"queryAccelerationMaxScaleFactor": llx.IntData(warehouse.QueryAccelerationMaxScaleFactor),
-		"resourceMonitor":                 llx.StringData(warehouse.ResourceMonitor.Name()),
 		"scalingPolicy":                   llx.StringData(string(warehouse.ScalingPolicy)),
 		"createdAt":                       llx.TimeData(warehouse.CreatedOn),
 		"resumedAt":                       llx.TimeData(warehouse.ResumedOn),
@@ -147,9 +146,16 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 		return nil, err
 	}
 	mqlResource := r.(*mqlSnowflakeWarehouse)
+	mqlResource.cacheResourceMonitor = warehouse.ResourceMonitor.Name()
 	return mqlResource, nil
 }
 
+// mqlSnowflakeWarehouseInternal holds the governing resource-monitor name that
+// resourceMonitorRef() resolves.
+type mqlSnowflakeWarehouseInternal struct {
+	cacheResourceMonitor string
+}
+
 func (r *mqlSnowflakeWarehouse) resourceMonitorRef() (*mqlSnowflakeResourceMonitor, error) {
-	return snowflakeResourceMonitorByName(r.MqlRuntime, r.ResourceMonitor.Data, &r.ResourceMonitorRef)
+	return snowflakeResourceMonitorByName(r.MqlRuntime, r.cacheResourceMonitor, &r.ResourceMonitorRef)
 }

@@ -62,7 +62,6 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 		"frequency":        llx.StringData(string(monitor.Frequency)),
 		"startTime":        llx.StringData(monitor.StartTime),
 		"endTime":          llx.StringData(monitor.EndTime),
-		"owner":            llx.StringData(monitor.Owner),
 		"comment":          llx.StringData(monitor.Comment),
 		"notifyAt":         llx.ArrayData(notifyAt, types.Int),
 		"notifyUsers":      llx.ArrayData(notifyUsers, types.String),
@@ -74,6 +73,7 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 		return nil, err
 	}
 	mqlMonitor := res.(*mqlSnowflakeResourceMonitor)
+	mqlMonitor.cacheOwner = monitor.Owner
 
 	// suspendAt and suspendImmediateAt are computed methods (nullable int) — set
 	// the TValue directly so the stub accessors don't trigger a recomputation.
@@ -154,6 +154,12 @@ func snowflakeResourceMonitorByName(runtime *plugin.Runtime, name string, field 
 	return res.(*mqlSnowflakeResourceMonitor), nil
 }
 
+// mqlSnowflakeResourceMonitorInternal holds the owning role name that
+// ownerRole() resolves.
+type mqlSnowflakeResourceMonitorInternal struct {
+	cacheOwner string
+}
+
 func (r *mqlSnowflakeResourceMonitor) ownerRole() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheOwner, &r.OwnerRole)
 }
