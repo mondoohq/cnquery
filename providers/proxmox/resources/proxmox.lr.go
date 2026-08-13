@@ -1587,9 +1587,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.user.lastname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetLastname()).ToDataRes(types.String)
 	},
-	"proxmox.user.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxUser).GetGroups()).ToDataRes(types.Array(types.String))
-	},
 	"proxmox.user.groupRefs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetGroupRefs()).ToDataRes(types.Array(types.Resource("proxmox.group")))
 	},
@@ -4332,10 +4329,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.user.lastname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxUser).Lastname, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"proxmox.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"proxmox.user.groupRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10321,7 +10314,6 @@ type mqlProxmoxUser struct {
 	Expire         plugin.TValue[int64]
 	Firstname      plugin.TValue[string]
 	Lastname       plugin.TValue[string]
-	Groups         plugin.TValue[[]any]
 	GroupRefs      plugin.TValue[[]any]
 	Realm          plugin.TValue[string]
 	RealmType      plugin.TValue[string]
@@ -10389,10 +10381,6 @@ func (c *mqlProxmoxUser) GetFirstname() *plugin.TValue[string] {
 
 func (c *mqlProxmoxUser) GetLastname() *plugin.TValue[string] {
 	return &c.Lastname
-}
-
-func (c *mqlProxmoxUser) GetGroups() *plugin.TValue[[]any] {
-	return &c.Groups
 }
 
 func (c *mqlProxmoxUser) GetGroupRefs() *plugin.TValue[[]any] {

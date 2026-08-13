@@ -690,7 +690,6 @@ proxmox.user.enable 0.1.1
 proxmox.user.expire 0.1.1
 proxmox.user.firstname 0.1.1
 proxmox.user.groupRefs 0.1.9
-proxmox.user.groups 0.1.1
 proxmox.user.id 0.1.1
 proxmox.user.lastname 0.1.1
 proxmox.user.realm 0.1.1

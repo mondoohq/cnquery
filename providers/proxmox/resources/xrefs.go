@@ -150,10 +150,9 @@ func (r *mqlProxmoxToken) owner() (*mqlProxmoxUser, error) {
 // ---------------------------------------------------------------------------
 
 func (r *mqlProxmoxUser) groupRefs() ([]any, error) {
-	out := make([]any, 0, len(r.Groups.Data))
-	for _, raw := range r.Groups.Data {
-		g, ok := raw.(string)
-		if !ok || g == "" {
+	out := make([]any, 0, len(r.cachedGroups))
+	for _, g := range r.cachedGroups {
+		if g == "" {
 			continue
 		}
 		res, err := NewResource(r.MqlRuntime, "proxmox.group", map[string]*llx.RawData{
