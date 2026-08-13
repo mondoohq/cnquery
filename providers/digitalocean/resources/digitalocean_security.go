@@ -464,7 +464,7 @@ func (r *mqlDigitalocean) firewallsCovering(dropletID int64, dropletTags []any) 
 		byTag := map[string][]*mqlDigitaloceanFirewall{}
 		for _, f := range fws.Data {
 			fw := f.(*mqlDigitaloceanFirewall)
-			for _, id := range fw.DropletIds.Data {
+			for _, id := range fw.cacheDropletIDs {
 				if i, ok := id.(int64); ok {
 					byDroplet[i] = append(byDroplet[i], fw)
 				}
@@ -577,7 +577,7 @@ func dropletRef(runtime *plugin.Runtime, dropletID int64, target *plugin.TValue[
 // --- Droplet typed refs / computed fields ---
 
 func (r *mqlDigitaloceanDroplet) vpc() (*mqlDigitaloceanVpc, error) {
-	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVPCUUID)
 }
 
 // baseImage resolves the droplet's image to a typed digitalocean.image. The
@@ -628,7 +628,7 @@ func (r *mqlDigitaloceanFirewall) droplets() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	direct, err := parent.dropletByIDs(r.DropletIds.Data)
+	direct, err := parent.dropletByIDs(r.cacheDropletIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -717,7 +717,7 @@ func (r *mqlDigitaloceanDatabase) sqlMode() (string, error) {
 // --- LoadBalancer typed refs ---
 
 func (r *mqlDigitaloceanLoadBalancer) vpc() (*mqlDigitaloceanVpc, error) {
-	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVPCUUID)
 }
 
 func (r *mqlDigitaloceanLoadBalancer) droplets() ([]any, error) {
@@ -725,7 +725,7 @@ func (r *mqlDigitaloceanLoadBalancer) droplets() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parent.dropletByIDs(r.DropletIds.Data)
+	return parent.dropletByIDs(r.cacheDropletIDs)
 }
 
 // --- Volume typed refs ---
@@ -735,11 +735,11 @@ func (r *mqlDigitaloceanVolume) droplets() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parent.dropletByIDs(r.DropletIds.Data)
+	return parent.dropletByIDs(r.cacheDropletIDs)
 }
 
 // --- Kubernetes typed refs ---
 
 func (r *mqlDigitaloceanKubernetesCluster) vpc() (*mqlDigitaloceanVpc, error) {
-	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVPCUUID)
 }
