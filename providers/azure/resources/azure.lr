@@ -12772,9 +12772,17 @@ private azure.subscription.recoveryServicesService.vault.backupPolicy @defaults(
   // Backup policy name
   name string
   // Backup policy location
+  //
+  // Azure Resource Manager does not carry a location on a backup policy, so
+  // this reports the region of the vault the policy belongs to.
   location string
   // Backup policy tags
-  tags map[string]string
+  //
+  // Deprecated in favor of the vault's tags. Azure Resource Manager does not
+  // support tags on a backup policy: a tag written against the policy resource
+  // ID is stored on the vault instead, and a create that sets tags has them
+  // stripped, so this field is always null.
+  tags @maturity("deprecated") map[string]string
   // Resource type
   type string
   // Backup policy properties
@@ -12794,9 +12802,17 @@ private azure.subscription.recoveryServicesService.vault.protectedItem @defaults
   // Protected item name
   name string
   // Protected item location
+  //
+  // Azure Resource Manager does not carry a location on a protected item, so
+  // this reports the region of the vault the item belongs to.
   location string
   // Protected item tags
-  tags map[string]string
+  //
+  // Deprecated in favor of the vault's tags, or the tags of the protected
+  // resource itself. Azure Resource Manager does not support tags on a
+  // protected item: a tag written against the item resource ID is stored on
+  // the vault instead, so this field is always null.
+  tags @maturity("deprecated") map[string]string
   // Resource type
   type string
   // Protected item properties

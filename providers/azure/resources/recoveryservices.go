@@ -729,6 +729,37 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) id() (str
 	return a.Id.Data, nil
 }
 
+// vaultChildLocationAndTags answers the location and tags for a child of a
+// recovery services vault.
+//
+// Backup policies and protected items are ARM proxy resources: the API omits
+// location and tags from both the list and the get response, and a PUT that
+// sets either has them stripped from the stored resource. Azure applies a tag
+// written against a policy's resource ID to the vault instead.
+//
+// The child still lives in the vault's region, so fall back to that rather
+// than reporting an unknown location. Tags stay null: an empty map asserts the
+// resource carries no tags, and that is a claim the API never made, so a
+// policy requiring a tag would fail on every policy in the tenant while a
+// policy exempting by tag would exempt none of them.
+func vaultChildLocationAndTags(vaultLocation *plugin.TValue[string], location *string, tags map[string]*string) (*llx.RawData, *llx.RawData) {
+	locationData := llx.NilData
+	switch {
+	case location != nil && *location != "":
+		locationData = llx.StringDataPtr(location)
+	case vaultLocation != nil && vaultLocation.Error == nil &&
+		vaultLocation.State&plugin.StateIsNull == 0 && vaultLocation.Data != "":
+		locationData = llx.StringData(vaultLocation.Data)
+	}
+
+	tagsData := llx.NilData
+	if len(tags) > 0 {
+		tagsData = llx.MapData(convert.PtrMapStrToInterface(tags), types.String)
+	}
+
+	return locationData, tagsData
+}
+
 // backupPolicies fetches all backup policies in the vault.
 func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) backupPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
@@ -769,12 +800,14 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) backupPolicies() ([]a
 				return nil, err
 			}
 
+			location, tags := vaultChildLocationAndTags(a.GetLocation(), policy.Location, policy.Tags)
+
 			mqlPolicy, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy,
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(policy.ID),
 					"name":       llx.StringDataPtr(policy.Name),
-					"location":   llx.StringDataPtr(policy.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(policy.Tags), types.String),
+					"location":   location,
+					"tags":       tags,
 					"type":       llx.StringDataPtr(policy.Type),
 					"properties": llx.DictData(properties),
 				})
@@ -831,12 +864,14 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) protectedItems() ([]a
 				return nil, err
 			}
 
+			location, tags := vaultChildLocationAndTags(a.GetLocation(), item.Location, item.Tags)
+
 			mqlItem, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem,
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(item.ID),
 					"name":       llx.StringDataPtr(item.Name),
-					"location":   llx.StringDataPtr(item.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(item.Tags), types.String),
+					"location":   location,
+					"tags":       tags,
 					"type":       llx.StringDataPtr(item.Type),
 					"properties": llx.DictData(properties),
 				})
