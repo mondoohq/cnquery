@@ -8,7 +8,11 @@ import (
 )
 
 const (
-	// DiscoveryAuto is the default discovery target; it behaves like DiscoveryAll.
+	// DiscoveryAuto is the default discovery target. It returns the server
+	// alone, because that is the asset the benchmarks and most policies apply
+	// to. Per-database assets are opt-in through DiscoveryAll or
+	// DiscoveryDatabases: emitting them by default turned a clean scan into one
+	// scored asset and N "asset doesn't support any policies" errors.
 	DiscoveryAuto = "auto"
 	// DiscoveryAll discovers the server plus every database as its own asset.
 	DiscoveryAll = "all"

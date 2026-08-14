@@ -26,7 +26,7 @@ func (s *Service) discover(conn *connection.MssqlConnection) (*inventory.Invento
 	}
 
 	if !stringx.ContainsAnyOf(conf.Discover.Targets,
-		connection.DiscoveryAll, connection.DiscoveryAuto, connection.DiscoveryDatabases) {
+		connection.DiscoveryAll, connection.DiscoveryDatabases) {
 		return nil, nil
 	}
 

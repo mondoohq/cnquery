@@ -23,7 +23,7 @@ func (s *Service) discover(conn *connection.PostgresdbConnection) (*inventory.In
 		return nil, nil
 	}
 	if !stringx.ContainsAnyOf(conf.Discover.Targets,
-		connection.DiscoveryAll, connection.DiscoveryAuto, connection.DiscoveryDatabases) {
+		connection.DiscoveryAll, connection.DiscoveryDatabases) {
 		return nil, nil
 	}
 
