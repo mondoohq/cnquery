@@ -162,6 +162,15 @@ func initAzureSubscriptionNetworkServiceIpAddress(runtime *plugin.Runtime, args 
 	if err != nil {
 		return nil, nil, err
 	}
+	// The subscription's list already holds this public IP, and holds it for every
+	// other reference to it too. Only pay for a Get when the list cannot
+	// answer -- a reference into another subscription, or one since deleted.
+	if ip := lookupInServiceList(runtime, ResourceAzureSubscriptionNetworkService,
+		func(s *mqlAzureSubscriptionNetworkService) *plugin.TValue[[]any] { return s.GetPublicIpAddresses() },
+		id); ip != nil {
+		return args, ip, nil
+	}
+
 	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})

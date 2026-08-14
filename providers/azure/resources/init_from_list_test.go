@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/azure/connection"
 )
 
 const testVMID = "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-1"
@@ -20,8 +21,9 @@ const testVMID = "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Com
 func computeServiceWithVMs(t *testing.T, runtime *plugin.Runtime, ids ...string) []any {
 	t.Helper()
 
+	conn := runtime.Connection.(*connection.AzureConnection)
 	svcRes, err := NewResource(runtime, ResourceAzureSubscriptionComputeService, map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(""),
+		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	require.NoError(t, err)
 	svc := svcRes.(*mqlAzureSubscriptionComputeService)
@@ -161,4 +163,57 @@ func TestInitFromServiceList_StillDistinguishesDifferentResources(t *testing.T) 
 
 	require.Error(t, err)
 	assert.Nil(t, res)
+}
+
+// lookupInServiceList backs typed references rather than assets, so its
+// contract differs from initFromServiceList's: a miss returns nil and the
+// caller falls back to its own fetch, because a reference may legitimately
+// point at something outside this scope.
+func TestLookupInServiceList(t *testing.T) {
+	computeSvcList := func(s *mqlAzureSubscriptionComputeService) *plugin.TValue[[]any] { return s.GetVms() }
+
+	t.Run("hit returns the listed instance", func(t *testing.T) {
+		runtime := runtimeForAsset(t, nil)
+		vms := computeServiceWithVMs(t, runtime, testVMID)
+
+		got := lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, testVMID)
+		assert.Same(t, vms[0], got)
+	})
+
+	t.Run("miss returns nil rather than an error", func(t *testing.T) {
+		runtime := runtimeForAsset(t, nil)
+		computeServiceWithVMs(t, runtime, testVMID)
+
+		gone := "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/gone"
+		assert.Nil(t, lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, gone))
+	})
+
+	t.Run("casing only differences still match", func(t *testing.T) {
+		listed := "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/virtualmachines/vm-1"
+		runtime := runtimeForAsset(t, nil)
+		vms := computeServiceWithVMs(t, runtime, listed)
+
+		got := lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, testVMID)
+		assert.Same(t, vms[0], got)
+	})
+
+	// The list only covers the connection's own subscription. Reporting a
+	// cross-subscription reference as absent would send the caller down its
+	// fallback anyway, but consulting the list first wastes the walk -- and if
+	// two subscriptions ever held the same resource name, would match wrongly.
+	t.Run("reference into another subscription is not looked up", func(t *testing.T) {
+		runtime := runtimeForAsset(t, nil)
+		computeServiceWithVMs(t, runtime, testVMID)
+
+		elsewhere := "/subscriptions/sub-2/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-1"
+		assert.Nil(t, lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, elsewhere))
+	})
+
+	t.Run("empty id and unparseable id are misses", func(t *testing.T) {
+		runtime := runtimeForAsset(t, nil)
+		computeServiceWithVMs(t, runtime, testVMID)
+
+		assert.Nil(t, lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, ""))
+		assert.Nil(t, lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, "not-an-arm-id"))
+	})
 }

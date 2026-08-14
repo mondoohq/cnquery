@@ -204,6 +204,15 @@ func initAzureSubscriptionMonitorServiceWorkspace(runtime *plugin.Runtime, args 
 	}
 
 	ctx := context.Background()
+	// The subscription's list already holds this workspace, and holds it for every
+	// other reference to it too. Only pay for a Get when the list cannot
+	// answer -- a reference into another subscription, or one since deleted.
+	if ws := lookupInServiceList(runtime, ResourceAzureSubscriptionMonitorService,
+		func(s *mqlAzureSubscriptionMonitorService) *plugin.TValue[[]any] { return s.GetWorkspaces() },
+		id); ws != nil {
+		return args, ws, nil
+	}
+
 	client, err := armoperationalinsights.NewWorkspacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})

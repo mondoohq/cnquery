@@ -465,6 +465,17 @@ func initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[stri
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
+	// The subscription's list already holds this managed identity, and holds it for every
+	// other reference to it too. Only pay for a Get when the list cannot
+	// answer -- a reference into another subscription, or one since deleted.
+	if mi := lookupInServiceList(runtime, ResourceAzureSubscriptionAuthorizationService,
+		func(s *mqlAzureSubscriptionAuthorizationService) *plugin.TValue[[]any] {
+			return s.GetManagedIdentities()
+		},
+		id); mi != nil {
+		return args, mi, nil
+	}
+
 	client, err := armmsi.NewUserAssignedIdentitiesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})

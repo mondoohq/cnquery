@@ -2171,6 +2171,17 @@ func initAzureSubscriptionNetworkServiceInterface(runtime *plugin.Runtime, args 
 	if err != nil {
 		return args, nil, nil
 	}
+
+	// The subscription's interface list already holds this one, and holds it
+	// for every other reference to it too. Only pay for a Get when the list
+	// cannot answer -- an interface in another subscription, or one since
+	// deleted.
+	if iface := lookupInServiceList(runtime, ResourceAzureSubscriptionNetworkService,
+		func(s *mqlAzureSubscriptionNetworkService) *plugin.TValue[[]any] { return s.GetInterfaces() },
+		id); iface != nil {
+		return args, iface, nil
+	}
+
 	client, err := network.NewInterfacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
