@@ -39,7 +39,7 @@ func (n *mqlNeon) organizations() ([]any, error) {
 		// through the user endpoint, so fall back to the one it is scoped to.
 		if connection.IsForbidden(err) {
 			if orgID := c.OrganizationFilter(); orgID != "" {
-				org, err := n.organizationByID(orgID)
+				org, err := n.fetchOrganization(orgID)
 				if err != nil {
 					return nil, err
 				}
@@ -70,9 +70,9 @@ func (n *mqlNeon) organizations() ([]any, error) {
 	return res, nil
 }
 
-// organizationByID reads a single organization directly, which is the only path
-// available to a key that cannot enumerate them.
-func (n *mqlNeon) organizationByID(orgID string) (*mqlNeonOrganization, error) {
+// fetchOrganization reads a single organization directly, which is the only
+// path available to a key that cannot enumerate them.
+func (n *mqlNeon) fetchOrganization(orgID string) (*mqlNeonOrganization, error) {
 	c := neonConn(n.MqlRuntime)
 
 	var rec organizationRecord

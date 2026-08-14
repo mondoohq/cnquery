@@ -113,9 +113,35 @@ func getNeon(runtime *plugin.Runtime) (*mqlNeon, error) {
 	return res.(*mqlNeon), nil
 }
 
+// cachedResource returns a resource the runtime already holds under the given
+// name and identifier. NewResource runs a resource's init before it consults
+// this cache, so a lookup that falls back to it would re-read the API once per
+// caller without this check.
+func cachedResource[T plugin.Resource](runtime *plugin.Runtime, name, id string) (T, bool) {
+	var empty T
+	if id == "" {
+		return empty, false
+	}
+	res, ok := runtime.Resources.Get(name + "\x00" + id)
+	if !ok {
+		return empty, false
+	}
+	typed, ok := res.(T)
+	if !ok {
+		return empty, false
+	}
+	return typed, true
+}
+
 // projectByID resolves a project from the root resource's project list. Going
 // through the cached list keeps a query that walks from many children back to
 // their project down to the one call the list already made.
+//
+// That list only holds the projects of the organizations the API key can
+// enumerate. A project outside it, either a personal project that belongs to no
+// organization or one in an organization the key can read but not list, is read
+// from the project endpoint instead, so a child still reaches its project
+// rather than reporting none.
 func projectByID(runtime *plugin.Runtime, projectID string) (*mqlNeonProject, error) {
 	if projectID == "" {
 		return nil, nil
@@ -135,6 +161,54 @@ func projectByID(runtime *plugin.Runtime, projectID string) (*mqlNeonProject, er
 		if ok && project.Id.Data == projectID {
 			return project, nil
 		}
+	}
+
+	if project, ok := cachedResource[*mqlNeonProject](runtime, "neon.project", projectID); ok {
+		return project, nil
+	}
+
+	res, err := NewResource(runtime, "neon.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectID),
+	})
+	if err != nil {
+		// A project the key cannot read is reported as absent rather than
+		// failing the query that reached it.
+		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res.(*mqlNeonProject), nil
+}
+
+// organizationByID resolves an organization from the root resource's
+// organization list. Reusing that list keeps a query that walks from many
+// projects to their organization down to the one call the list already made,
+// instead of a read per project.
+func organizationByID(runtime *plugin.Runtime, orgID string) (*mqlNeonOrganization, error) {
+	if orgID == "" {
+		return nil, nil
+	}
+
+	root, err := getNeon(runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	organizations := root.GetOrganizations()
+	// An organization list the key cannot read is not an answer about any one
+	// organization, so a caller is left to read it directly.
+	if organizations.Error == nil {
+		for _, it := range organizations.Data {
+			org, ok := it.(*mqlNeonOrganization)
+			if ok && org.Id.Data == orgID {
+				return org, nil
+			}
+		}
+	}
+
+	if org, ok := cachedResource[*mqlNeonOrganization](runtime, "neon.organization", orgID); ok {
+		return org, nil
 	}
 	return nil, nil
 }

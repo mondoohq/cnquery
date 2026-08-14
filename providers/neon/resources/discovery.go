@@ -82,9 +82,11 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 	}
 
 	if wantProjects {
-		// Projects are listed from the root rather than per organization so a
-		// personal API key, whose projects belong to no organization, still
-		// discovers them.
+		// The root collects projects per organization, because the list
+		// endpoint rejects a request that does not name one, so discovery emits
+		// assets for exactly the projects a plain query would see. A project
+		// that belongs to no organization is not among them and is reached by
+		// naming it instead, as neon.project(id: "...").
 		projects := root.GetProjects()
 		if projects.Error != nil {
 			return nil, projects.Error
