@@ -28850,6 +28850,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.workspace.bundleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetBundleId()).ToDataRes(types.String)
 	},
+	"aws.workspaces.workspace.bundle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetBundle()).ToDataRes(types.Resource("aws.workspaces.bundle"))
+	},
 	"aws.workspaces.workspace.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetSubnetId()).ToDataRes(types.String)
 	},
@@ -71700,6 +71703,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspaces.workspace.bundleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesWorkspace).BundleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.bundle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).Bundle, ok = plugin.RawToTValue[*mqlAwsWorkspacesBundle](v.Value, v.Error)
 		return
 	},
 	"aws.workspaces.workspace.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -173036,6 +173043,7 @@ type mqlAwsWorkspacesWorkspace struct {
 	IpAddress                        plugin.TValue[string]
 	ComputerName                     plugin.TValue[string]
 	BundleId                         plugin.TValue[string]
+	Bundle                           plugin.TValue[*mqlAwsWorkspacesBundle]
 	SubnetId                         plugin.TValue[string]
 	Subnet                           plugin.TValue[*mqlAwsVpcSubnet]
 	State                            plugin.TValue[string]
@@ -173117,6 +173125,22 @@ func (c *mqlAwsWorkspacesWorkspace) GetComputerName() *plugin.TValue[string] {
 
 func (c *mqlAwsWorkspacesWorkspace) GetBundleId() *plugin.TValue[string] {
 	return &c.BundleId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetBundle() *plugin.TValue[*mqlAwsWorkspacesBundle] {
+	return plugin.GetOrCompute[*mqlAwsWorkspacesBundle](&c.Bundle, func() (*mqlAwsWorkspacesBundle, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces.workspace", c.__id, "bundle")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkspacesBundle), nil
+			}
+		}
+
+		return c.bundle()
+	})
 }
 
 func (c *mqlAwsWorkspacesWorkspace) GetSubnetId() *plugin.TValue[string] {
