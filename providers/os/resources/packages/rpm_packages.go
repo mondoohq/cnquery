@@ -151,10 +151,20 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 	cpesWithoutEpochAndArch, _ := cpe.NewPackage2Cpe(vendor, name, version, "", "")
 	cpes = append(cpes, cpesWithoutEpoch...)
 	cpes = append(cpes, cpesWithoutEpochAndArch...)
-	qualifiers := map[string]string{}
-	if modularity != "" && modularity != "(none)" {
-		qualifiers["rpmmod"] = modularity
+	// Only packages from a module stream carry a qualifier. Allocating an empty
+	// map for every other package, and threading it through a WithQualifiers
+	// closure, was pure overhead: the purl renderer builds its own map when
+	// there is nothing to hand it.
+	purlModifiers := []purl.Modifier{
+		purl.WithArch(arch),
+		purl.WithEpoch(epoch),
 	}
+	if modularity != "" && modularity != "(none)" {
+		purlModifiers = append(purlModifiers, purl.WithQualifiers(map[string]string{
+			"rpmmod": modularity,
+		}))
+	}
+
 	pkg := Package{
 		Name:        name,
 		Version:     version,
@@ -165,11 +175,7 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 		CPEs:        cpes,
 		Vendor:      vendor,
 		License:     license,
-		PUrl: purl.NewPackageURL(pf, purl.TypeRPM, name, version,
-			purl.WithArch(arch),
-			purl.WithEpoch(epoch),
-			purl.WithQualifiers(qualifiers),
-		).String(),
+		PUrl:        purl.NewPackageURL(pf, purl.TypeRPM, name, version, purlModifiers...).String(),
 	}
 	if installTime > 0 {
 		pkg.InstallDate = time.Unix(installTime, 0).UTC()
