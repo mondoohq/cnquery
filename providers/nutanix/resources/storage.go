@@ -107,6 +107,9 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 	if c.OwnerExtId != nil {
 		mqlContainer.cacheOwnerId = *c.OwnerExtId
 	}
+	if c.AffinityHostExtId != nil {
+		mqlContainer.cacheAffinityHostId = *c.AffinityHostExtId
+	}
 	return mqlContainer, nil
 }
 
@@ -144,8 +147,9 @@ func (a *mqlNutanixCluster) storageContainers() ([]any, error) {
 }
 
 type mqlNutanixStorageContainerInternal struct {
-	cacheClusterId string
-	cacheOwnerId   string
+	cacheClusterId      string
+	cacheOwnerId        string
+	cacheAffinityHostId string
 }
 
 func (a *mqlNutanixStorageContainer) owner() (*mqlNutanixIamUser, error) {
@@ -174,6 +178,21 @@ func (a *mqlNutanixStorageContainer) cluster() (*mqlNutanixCluster, error) {
 	}
 	if res == nil {
 		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixStorageContainer) affinityHost() (*mqlNutanixHost, error) {
+	if a.cacheAffinityHostId == "" || a.cacheClusterId == "" {
+		a.AffinityHost.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := hostByID(a.MqlRuntime, a.cacheClusterId, a.cacheAffinityHostId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.AffinityHost.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return res, nil
 }
