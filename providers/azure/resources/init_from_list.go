@@ -116,3 +116,65 @@ func initFromServiceList[S azureListService](
 	// untyped null with nothing pointing at the cause.
 	return nil, nil, fmt.Errorf("%s with id %q not found", resourceName, id)
 }
+
+// lookupInServiceList finds a resource by ARM id in the list its parent service
+// has already fetched, and returns nil when it is not there.
+//
+// This is the half of the pattern for typed references rather than for assets.
+// A reference resolves through NewResource once per referring resource, and
+// because NewResource runs the init before it consults the cache, the same
+// target is re-fetched for every reference to it -- 30 network interfaces
+// referenced twice each cost 60 Gets, all of which the service's own list
+// already answered.
+//
+// Unlike initFromServiceList, a miss here is not an error. A typed reference
+// may legitimately point outside the current scope: at another subscription, or
+// at a resource since deleted, or at one the caller cannot read. Callers keep
+// their own fetch as the fallback and degrade the way they always did.
+func lookupInServiceList[S azureListService](
+	runtime *plugin.Runtime,
+	serviceName string,
+	entries func(S) *plugin.TValue[[]any],
+	id string,
+) plugin.Resource {
+	if id == "" {
+		return nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil
+	}
+
+	// Only this connection's own subscription has a list to consult. A
+	// reference into another subscription has to fall through to the caller's
+	// fetch, or we would report it missing when it is merely elsewhere.
+	resourceID, err := ParseResourceID(id)
+	if err != nil || !strings.EqualFold(resourceID.SubscriptionID, conn.SubId()) {
+		return nil
+	}
+
+	res, err := NewResource(runtime, serviceName, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil
+	}
+	svc, ok := res.(S)
+	if !ok {
+		return nil
+	}
+	list := entries(svc)
+	if list.Error != nil {
+		return nil
+	}
+	for i := range list.Data {
+		item, ok := list.Data[i].(azureListedResource)
+		if !ok {
+			continue
+		}
+		if strings.EqualFold(item.GetId().Data, id) {
+			return item
+		}
+	}
+	return nil
+}

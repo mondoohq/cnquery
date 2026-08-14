@@ -25,7 +25,7 @@ import (
 func runtimeForAsset(t *testing.T, platformIds []string) *plugin.Runtime {
 	t.Helper()
 	asset := &inventory.Asset{Name: "some asset", PlatformIds: platformIds}
-	conf := &inventory.Config{Options: map[string]string{"tenant-id": "tid", "client-id": "cid"}}
+	conf := &inventory.Config{Options: map[string]string{"tenant-id": "tid", "client-id": "cid", "subscription-id": "sub-1"}}
 	conn, err := connection.NewAzureConnection(1, asset, conf)
 	require.NoError(t, err)
 	return &plugin.Runtime{
