@@ -4589,7 +4589,8 @@ private ms365.sharepointonline.tenantConfig {
   //
   // Empty when every user may share externally. A non-empty list restricts
   // guest sharing to the members of those groups, which is what limiting
-  // external sharing by security group means.
+  // external sharing by security group means. Null, as distinct from empty,
+  // when the tenant does not report the setting.
   whoCanShareAuthenticatedGuestAllowList []string
 }
 

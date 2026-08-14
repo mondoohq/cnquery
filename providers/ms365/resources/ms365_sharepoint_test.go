@@ -9,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func TestSpoTenantConfigSharingFields(t *testing.T) {
@@ -62,6 +64,26 @@ func TestSpoTenantConfigSharingFields(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Empty(t, cfg.WhoCanShareAuthenticatedGuestAllowList)
+	})
+}
+
+func TestStringListData(t *testing.T) {
+	// the distinction that matters: a tenant that never reported the setting
+	// must not read as one that reported no groups
+	t.Run("nil is null", func(t *testing.T) {
+		assert.Equal(t, llx.NilData, stringListData(nil))
+	})
+
+	t.Run("empty is an empty array", func(t *testing.T) {
+		got := stringListData([]string{})
+		assert.Equal(t, types.Array(types.String), got.Type)
+		assert.Equal(t, []any{}, got.Value)
+	})
+
+	t.Run("values are preserved", func(t *testing.T) {
+		got := stringListData([]string{"group-a", "group-b"})
+		assert.Equal(t, types.Array(types.String), got.Type)
+		assert.Equal(t, []any{"group-a", "group-b"}, got.Value)
 	})
 }
 

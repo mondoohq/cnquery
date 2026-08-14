@@ -95,6 +95,18 @@ type SpoSite struct {
 	Status                   string `json:"Status"`
 }
 
+// stringListData keeps a nil slice null instead of turning it into an empty
+// array. convert.SliceAnyToInterface allocates for a nil input, so passing its
+// result straight to llx.ArrayData would report a setting the tenant never
+// returned as an empty list -- e.g. "no security group restricts guest
+// sharing", which is a security answer rather than a missing one.
+func stringListData(v []string) *llx.RawData {
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.ArrayData(convert.SliceAnyToInterface(v), types.String)
+}
+
 func (m *mqlMs365SharepointonlineSite) id() (string, error) {
 	return m.Url.Data, nil
 }
@@ -269,8 +281,8 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 				"disallowInfectedFileDownload":               llx.BoolData(tenantConfig.DisallowInfectedFileDownload),
 				"enableAzureADB2BIntegration":                llx.BoolDataPtr(tenantConfig.EnableAzureADB2BIntegration),
 				"oneDriveSharingCapability":                  llx.StringDataPtr(tenantConfig.OneDriveSharingCapability),
-				"whoCanShareAuthenticatedGuestAllowList": llx.ArrayData(
-					convert.SliceAnyToInterface(tenantConfig.WhoCanShareAuthenticatedGuestAllowList), types.String),
+				"whoCanShareAuthenticatedGuestAllowList": stringListData(
+					tenantConfig.WhoCanShareAuthenticatedGuestAllowList),
 			})
 		if mqlTenantConfigErr != nil {
 			r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}
