@@ -791,48 +791,10 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) remoteVirtu
 // init for firewall so virtualHub.azureFirewall() typed ref can resolve, and
 // so platform-discovered azure-firewall assets can be queried directly.
 func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
-			args["id"] = llx.StringData(ids.id)
-		}
-	}
-	if args["id"] == nil {
-		return nil, nil, missingResourceID("azure.subscription.networkService.firewall")
-	}
-	conn, ok := runtime.Connection.(*connection.AzureConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
-	}
-	id, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("id must be a non-nil string value")
-	}
-	azureId, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	name, err := azureId.Component("azureFirewalls")
-	if err != nil {
-		return nil, nil, err
-	}
-	client, err := network.NewAzureFirewallsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	mql, err := azureFirewallToMql(runtime, resp.AzureFirewall)
-	if err != nil {
-		return nil, nil, err
-	}
-	return args, mql, nil
+	return initFromServiceList(runtime, args,
+		ResourceAzureSubscriptionNetworkService,
+		func(s *mqlAzureSubscriptionNetworkService) *plugin.TValue[[]any] { return s.GetFirewalls() },
+		ResourceAzureSubscriptionNetworkServiceFirewall)
 }
 
 // initAzureSubscriptionNetworkServiceFirewallPolicy resolves a firewall policy

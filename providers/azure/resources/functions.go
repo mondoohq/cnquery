@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -58,57 +57,10 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionAppFunction) id() (string, 
 // directly without re-listing every Microsoft.Web/sites resource in the
 // subscription.
 func initAzureSubscriptionFunctionsServiceFunctionApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
-			args["id"] = llx.StringData(ids.id)
-		}
-	}
-
-	if args["id"] == nil {
-		return nil, nil, missingResourceID("azure.subscription.functionsService.functionApp")
-	}
-
-	conn, ok := runtime.Connection.(*connection.AzureConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
-	}
-	id, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("id must be a non-nil string value")
-	}
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	siteName, err := resourceID.Component("sites")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, siteName, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	site := &resp.Site
-	if site.Kind == nil || !strings.Contains(strings.ToLower(*site.Kind), "functionapp") {
-		return nil, nil, fmt.Errorf("azure resource %q is not a function app", id)
-	}
-
-	mql, err := functionAppSiteToMql(runtime, site)
-	if err != nil {
-		return nil, nil, err
-	}
-	return args, mql, nil
+	return initFromServiceList(runtime, args,
+		ResourceAzureSubscriptionFunctionsService,
+		func(s *mqlAzureSubscriptionFunctionsService) *plugin.TValue[[]any] { return s.GetFunctionApps() },
+		ResourceAzureSubscriptionFunctionsServiceFunctionApp)
 }
 
 func (a *mqlAzureSubscriptionFunctionsService) functionApps() ([]any, error) {

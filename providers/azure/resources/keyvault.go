@@ -173,7 +173,13 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	pager := client.NewListPager(&keyvault.VaultsClientListOptions{})
+	// ListBySubscription rather than List: List goes through the generic ARM
+	// resources endpoint and returns a TrackedResource, which carries no
+	// Properties, so every vault then needed its own Get to answer properties,
+	// networkAcls, accessPolicies or privateEndpointConnections.
+	// ListBySubscription returns the full Vault, so one call answers all of
+	// them for every vault in the subscription.
+	pager := client.NewListBySubscriptionPager(&keyvault.VaultsClientListBySubscriptionOptions{})
 	res := []any{}
 
 	for pager.More() {
@@ -185,26 +191,41 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]any, error) {
 			if entry == nil {
 				continue
 			}
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault",
-				map[string]*llx.RawData{
-					"id":        llx.StringDataPtr(entry.ID),
-					"vaultName": llx.StringDataPtr(entry.Name),
-					"location":  llx.StringDataPtr(entry.Location),
-					"type":      llx.StringDataPtr(entry.Type),
-					"tags":      llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-				})
+			mqlVault, err := vaultToMql(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err
 			}
-			sysData, err := convert.JsonToDict(entry.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlAzure.(*mqlAzureSubscriptionKeyVaultServiceVault).cacheSystemData = sysData
-			res = append(res, mqlAzure)
+			res = append(res, mqlVault)
 		}
 	}
 	return res, nil
+}
+
+// vaultToMql builds a vault resource from a full ARM Vault record and primes
+// the per-vault fetch with it, so the accessors that would otherwise each pay a
+// VaultsClient.Get read it straight from the listing.
+func vaultToMql(runtime *plugin.Runtime, entry *keyvault.Vault) (plugin.Resource, error) {
+	res, err := CreateResource(runtime, "azure.subscription.keyVaultService.vault",
+		map[string]*llx.RawData{
+			"id":        llx.StringDataPtr(entry.ID),
+			"vaultName": llx.StringDataPtr(entry.Name),
+			"location":  llx.StringDataPtr(entry.Location),
+			"type":      llx.StringDataPtr(entry.Type),
+			"tags":      llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(entry.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlVault := res.(*mqlAzureSubscriptionKeyVaultServiceVault)
+	mqlVault.cacheSystemData = sysData
+	mqlVault.fetchVaultOnce.Do(func() {
+		mqlVault.fetchVaultResp = &keyvault.VaultsClientGetResponse{Vault: *entry}
+	})
+	return mqlVault, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) vaultUri() (string, error) {
@@ -1782,74 +1803,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) previousVersion() (*mqlAzure
 }
 
 func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
-			args["id"] = llx.StringData(ids.id)
-		}
-	}
-
-	if args["id"] == nil {
-		return nil, nil, errors.New("id required to fetch azure key vault")
-	}
-
-	conn, ok := runtime.Connection.(*connection.AzureConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
-	}
-
-	id, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("id must be a non-nil string value")
-	}
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	vaultName, err := resourceID.Component("vaults")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	vault, err := client.Get(context.Background(), resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	res, err := CreateResource(runtime, "azure.subscription.keyVaultService.vault",
-		map[string]*llx.RawData{
-			"id":        llx.StringData(id),
-			"vaultName": llx.StringDataPtr(vault.Name),
-			"type":      llx.StringDataPtr(vault.Type),
-			"location":  llx.StringDataPtr(vault.Location),
-			"tags":      llx.MapData(convert.PtrMapStrToInterface(vault.Tags), types.String),
-		})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Prime the fetchVault cache so subsequent property/networkAcls/etc.
-	// accesses reuse the response we already have in hand.
-	mqlVault := res.(*mqlAzureSubscriptionKeyVaultServiceVault)
-	mqlVault.fetchVaultOnce.Do(func() {
-		mqlVault.fetchVaultResp = &vault
-	})
-	sysData, err := convert.JsonToDict(vault.SystemData)
-	if err != nil {
-		return nil, nil, err
-	}
-	mqlVault.cacheSystemData = sysData
-
-	return args, mqlVault, nil
+	return initFromServiceList(runtime, args,
+		ResourceAzureSubscriptionKeyVaultService,
+		func(s *mqlAzureSubscriptionKeyVaultService) *plugin.TValue[[]any] { return s.GetVaults() },
+		ResourceAzureSubscriptionKeyVaultServiceVault)
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) id() (string, error) {

@@ -1005,53 +1005,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 }
 
 func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
-			args["id"] = llx.StringData(ids.id)
-		}
-	}
-
-	if args["id"] == nil {
-		return nil, nil, errors.New("id required to fetch azure compute vm instance")
-	}
-	conn, ok := runtime.Connection.(*connection.AzureConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
-	}
-
-	id, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("id must be a non-nil string value")
-	}
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	vmName, err := resourceID.Component("virtualMachines")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	client, err := compute.NewVirtualMachinesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, vmName, &compute.VirtualMachinesClientGetOptions{})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	mqlVm, err := vmToMql(runtime, resp.VirtualMachine)
-	if err != nil {
-		return nil, nil, err
-	}
-	return args, mqlVm, nil
+	return initFromServiceList(runtime, args,
+		ResourceAzureSubscriptionComputeService,
+		func(s *mqlAzureSubscriptionComputeService) *plugin.TValue[[]any] { return s.GetVms() },
+		ResourceAzureSubscriptionComputeServiceVm)
 }
 
 // userData returns the VM's base64-encoded user data.

@@ -38,51 +38,10 @@ func initAzureSubscriptionCosmosDbService(runtime *plugin.Runtime, args map[stri
 }
 
 func initAzureSubscriptionCosmosDbServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
-			args["id"] = llx.StringData(ids.id)
-		}
-	}
-
-	if args["id"] == nil {
-		return nil, nil, errors.New("id required to fetch azure cosmosdb account")
-	}
-	conn, ok := runtime.Connection.(*connection.AzureConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
-	}
-	id, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("id must be a non-nil string value")
-	}
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	accountName, err := resourceID.Component("databaseAccounts")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	client, err := cosmosdb.NewDatabaseAccountsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, accountName, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	mqlAccount, err := cosmosAccountToMql(runtime, &resp.DatabaseAccountGetResults)
-	if err != nil {
-		return nil, nil, err
-	}
-	return args, mqlAccount, nil
+	return initFromServiceList(runtime, args,
+		ResourceAzureSubscriptionCosmosDbService,
+		func(s *mqlAzureSubscriptionCosmosDbService) *plugin.TValue[[]any] { return s.GetAccounts() },
+		ResourceAzureSubscriptionCosmosDbServiceAccount)
 }
 
 func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]any, error) {
