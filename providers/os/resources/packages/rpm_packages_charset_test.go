@@ -247,6 +247,23 @@ func TestParseRpmPackages_ArchAndSentinels(t *testing.T) {
 	})
 }
 
+// A line past the scanner's buffer ends the scan, so it does not drop one
+// package -- it drops that package and every package after it. The fields are
+// free-form text with no length bound, so the buffer has to be raised above
+// bufio's 64 KB default.
+func TestParseRpmPackages_LongLineDoesNotTruncateTheList(t *testing.T) {
+	longLicense := strings.Repeat("GPLv2+ and ", 10_000) // ~110 KB, past the 64 KB default
+	listing := `glibc 0:2.34-100.el8 x86_64__Red Hat, Inc.__libc__` + longLicense + `__1700000000__(none)
+bash 0:5.1.8-6.el9 x86_64__Red Hat, Inc.__shell__GPLv3+__1700000000__(none)
+`
+
+	pkgs := ParseRpmPackages(rpmCharsetPlatform, strings.NewReader(listing))
+	require.Len(t, pkgs, 2, "a long line must not end the scan and swallow the packages behind it")
+	assert.Equal(t, "glibc", pkgs[0].Name)
+	assert.Equal(t, longLicense, pkgs[0].License)
+	assert.Equal(t, "bash", pkgs[1].Name)
+}
+
 // Widening the field classes must not make the regex match arbitrary text.
 // rpm writes errors and warnings to the same stream in some configurations.
 func TestParseRpmPackages_RejectsNonPackageLines(t *testing.T) {
@@ -342,7 +359,15 @@ func TestRpmQueryFormatRoundTrip_RealisticFields(t *testing.T) {
 				assert.Equal(t, fields["ARCH"], p.Arch)
 				assert.Equal(t, fields["SUMMARY"], p.Description)
 				assert.Equal(t, fields["LICENSE"], p.License)
-				assert.Contains(t, p.Version, fields["VERSION"]+"-"+fields["RELEASE"])
+
+				// Assert the exact version, not just a substring: an epoch
+				// that leaks in as "0:" or ":" is the kind of drift that
+				// changes the purl and makes one package look like two.
+				wantVersion := fields["VERSION"] + "-" + fields["RELEASE"]
+				if e := normalizeRpmEpoch(fields["EPOCH"]); e != "" {
+					wantVersion = e + ":" + wantVersion
+				}
+				assert.Equal(t, wantVersion, p.Version)
 			}
 		})
 	}

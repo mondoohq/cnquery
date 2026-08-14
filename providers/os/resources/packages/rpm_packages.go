@@ -29,6 +29,11 @@ import (
 
 const (
 	RpmPkgFormat = "rpm"
+
+	// rpmMaxLineSize caps a single line of `rpm -qa` output. The fields are
+	// free-form text with no length bound of their own, so this only exists to
+	// keep a pathological line from growing the buffer without limit.
+	rpmMaxLineSize = 1024 * 1024
 )
 
 // RPM_REGEX splits one line of the queryFormat() output documented on
@@ -62,7 +67,13 @@ var RPM_REGEX = regexp.MustCompile(`^(\S+)\s(\d*|\(none\)):(\S+)\s(\S*?)__(.*?)_
 // rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
+	dropped := 0
 	scanner := bufio.NewScanner(input)
+	// A single package line is normally a few hundred bytes, but %{LICENSE} on
+	// packages like java-*-openjdk already runs past 250 characters and nothing
+	// bounds it. Past the scanner's default 64 KB the scan stops and the rest of
+	// the package list is lost, so give it room.
+	scanner.Buffer(make([]byte, 0, bufio.MaxScanTokenSize), rpmMaxLineSize)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := RPM_REGEX.FindStringSubmatch(line)
@@ -115,13 +126,22 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			// entirely, and an absent package is exactly what a vulnerability
 			// scan cannot detect. Log it so format drift is visible instead of
 			// showing up as a quietly shorter package list.
+			dropped++
 			log.Debug().Str("line", line).Msg("mql[rpm]> could not parse package line")
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		// A line longer than the scanner's buffer ends the scan early, which
+		// A line longer than the buffer above ends the scan early, which
 		// truncates the package list silently. Surface it for the same reason.
 		log.Warn().Err(err).Msg("mql[rpm]> package list was truncated while scanning")
+	}
+	if dropped > 0 {
+		// The per-line detail above is debug, which is off by default -- so on
+		// its own it would leave the exact failure this parser keeps hitting
+		// (a silently shorter package list) invisible to the person running the
+		// scan. Report the count where they will actually see it.
+		log.Warn().Int("dropped", dropped).Int("parsed", len(pkgs)).
+			Msg("mql[rpm]> some package lines could not be parsed, packages are missing from the inventory")
 	}
 	return pkgs
 }
