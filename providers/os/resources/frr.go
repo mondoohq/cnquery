@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -34,12 +35,16 @@ func (n *mqlFrr) version() (string, error) {
 	// It exists next to the daemons, on the host for a native install and
 	// inside the HBN container for a containerized one.
 	cmd, err := conn.RunCommand("vtysh --version")
-	if err == nil && cmd.ExitStatus == 0 {
+	if err != nil {
+		// The connection could not run the command at all, which is the
+		// normal case for an asset snapshot or a filesystem-only scan.
+		log.Debug().Err(err).Msg("could not run vtysh --version")
+	} else if cmd.ExitStatus == 0 {
 		data, rerr := io.ReadAll(cmd.Stdout)
-		if rerr == nil {
-			if m := reFrrVersion.FindSubmatch(data); m != nil {
-				return string(m[1]), nil
-			}
+		if rerr != nil {
+			log.Debug().Err(rerr).Msg("could not read vtysh --version output")
+		} else if m := reFrrVersion.FindSubmatch(data); m != nil {
+			return string(m[1]), nil
 		}
 	}
 
@@ -64,6 +69,9 @@ func (n *mqlFrr) version() (string, error) {
 type mqlFrrConfigInternal struct {
 	lock sync.Mutex
 	cfg  *frr.Config
+	// parseErr keeps the parse failure, so every accessor that runs after
+	// the first one reports the same error instead of an empty config.
+	parseErr error
 }
 
 // frrConfPaths lists where frr.conf is found, in the order the resource
@@ -163,7 +171,7 @@ func (s *mqlFrrConfig) parse(file *mqlFile) error {
 	defer s.lock.Unlock()
 
 	if s.cfg != nil {
-		return nil
+		return s.parseErr
 	}
 	if file == nil {
 		return errors.New("no frr config file to read")
@@ -172,6 +180,7 @@ func (s *mqlFrrConfig) parse(file *mqlFile) error {
 	cfg, err := parseFrrFile(s.MqlRuntime, file)
 	if err != nil {
 		s.cfg = &frr.Config{}
+		s.parseErr = err
 		s.markParseErrors(err)
 		return err
 	}
@@ -577,6 +586,8 @@ func (s *mqlFrrConfig) routeMaps(file *mqlFile) ([]any, error) {
 type mqlFrrVtyshConfigInternal struct {
 	lock sync.Mutex
 	cfg  *frr.Config
+	// parseErr keeps the parse failure, see mqlFrrConfigInternal.
+	parseErr error
 }
 
 func (s *mqlFrrVtyshConfig) id() (string, error) {
@@ -605,7 +616,7 @@ func (s *mqlFrrVtyshConfig) parse(file *mqlFile) error {
 	defer s.lock.Unlock()
 
 	if s.cfg != nil {
-		return nil
+		return s.parseErr
 	}
 	if file == nil {
 		return errors.New("no vtysh config file to read")
@@ -614,6 +625,7 @@ func (s *mqlFrrVtyshConfig) parse(file *mqlFile) error {
 	cfg, err := parseFrrFile(s.MqlRuntime, file)
 	if err != nil {
 		s.cfg = &frr.Config{}
+		s.parseErr = err
 		s.markParseErrors(err)
 		return err
 	}
