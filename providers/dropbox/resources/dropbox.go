@@ -6,6 +6,8 @@ package resources
 import (
 	dropboxsdk "github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team"
+	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team_policies"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/dropbox/connection"
@@ -30,7 +32,7 @@ func (r *mqlDropbox) conn() *connection.DropboxConnection {
 // singleton. There is exactly one team per connection, so it resolves entirely
 // from the connection and uses the team ID as its cache key.
 func initDropboxTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
@@ -42,28 +44,18 @@ func initDropboxTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, err
 	}
 
-	var externalSharingAllowed, publicSharingAllowed bool
-	var uploadRateLimit int64
-	if info.Policies != nil && info.Policies.Sharing != nil {
-		sharing := info.Policies.Sharing
-		if sharing.SharedFolderMemberPolicy != nil {
-			// "team" means only team members may join a shared folder; anything
-			// else (anyone, team_and_approved) admits members from outside the team.
-			externalSharingAllowed = sharing.SharedFolderMemberPolicy.Tag != "team"
-		}
-		if sharing.SharedLinkCreatePolicy != nil {
-			// "team_only" and "default_no_one" keep new shared links scoped to the
-			// team by default; the other tags (default_public, default_team_only)
-			// permit a publicly accessible link.
-			tag := sharing.SharedLinkCreatePolicy.Tag
-			publicSharingAllowed = tag != "team_only" && tag != "default_no_one"
-		}
-	}
+	externalSharingAllowed, publicSharingAllowed := deriveSharingPolicies(info.Policies)
 
+	var uploadRateLimit int64
 	features, err := client.FeaturesGetValues(&team.FeaturesGetValuesBatchArg{
 		Features: []*team.Feature{{Tagged: dropboxsdk.Tagged{Tag: team.FeatureUploadApiRateLimit}}},
 	})
-	if err == nil {
+	if err != nil {
+		// A missing scope or transient failure leaves uploadApiRateLimit at 0,
+		// which is indistinguishable from "unlimited"; log so operators can tell
+		// the difference when diagnosing a misconfigured token.
+		log.Warn().Err(err).Msg("dropbox: could not fetch team upload API rate limit")
+	} else {
 		for _, v := range features.Values {
 			if v.UploadApiRateLimit != nil && v.UploadApiRateLimit.Tag == team.UploadApiRateLimitValueLimit {
 				uploadRateLimit = int64(v.UploadApiRateLimit.Limit)
@@ -82,4 +74,28 @@ func initDropboxTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["uploadApiRateLimit"] = llx.IntData(uploadRateLimit)
 
 	return args, nil, nil
+}
+
+// deriveSharingPolicies maps a team's sharing policy tags to the two booleans
+// the team resource exposes. externalSharingAllowed is true when shared
+// folders may include members from outside the team; publicSharingAllowed is
+// true when team members are permitted to create shared links with a public
+// (non-team) audience.
+func deriveSharingPolicies(policies *team_policies.TeamMemberPolicies) (externalSharingAllowed, publicSharingAllowed bool) {
+	if policies == nil || policies.Sharing == nil {
+		return false, false
+	}
+	sharing := policies.Sharing
+	if sharing.SharedFolderMemberPolicy != nil {
+		// "team" means only team members may join a shared folder; anything
+		// else (anyone, team_and_approved) admits members from outside the team.
+		externalSharingAllowed = sharing.SharedFolderMemberPolicy.Tag != "team"
+	}
+	if sharing.SharedLinkCreatePolicy != nil {
+		// "team_only" and "default_no_one" bar members from creating a public
+		// link; the other tags (default_public, default_team_only) permit one.
+		tag := sharing.SharedLinkCreatePolicy.Tag
+		publicSharingAllowed = tag != "team_only" && tag != "default_no_one"
+	}
+	return externalSharingAllowed, publicSharingAllowed
 }

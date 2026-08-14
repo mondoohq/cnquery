@@ -30,8 +30,8 @@ dropbox @maturity("experimental") {
 // `team/get_info` and `team/features/get_values`. There is one `team`
 // per Dropbox Business account. `externalSharingAllowed` reports
 // whether shared folders may include members outside the team, and
-// `publicSharingAllowed` reports whether shared links may be created
-// with a public (non-team) audience by default.
+// `publicSharingAllowed` reports whether team members are permitted to
+// create shared links with a public (non-team) audience.
 private dropbox.team @defaults("name") @maturity("experimental") {
   // Team name
   name string
@@ -45,7 +45,7 @@ private dropbox.team @defaults("name") @maturity("experimental") {
   numUsedLicenses int
   // Whether shared folders may include members from outside the team
   externalSharingAllowed bool
-  // Whether shared links default to a publicly accessible audience
+  // Whether team members are permitted to create shared links with a publicly accessible audience
   publicSharingAllowed bool
   // Upload API rate limit in calls per month, 0 when unlimited or not configured
   uploadApiRateLimit int

@@ -44,7 +44,7 @@ func mqlDropboxDevicesForMember(runtime *plugin.Runtime, page *team.MemberDevice
 
 	for _, w := range page.WebSessions {
 		r, err := CreateResource(runtime, "dropbox.device", map[string]*llx.RawData{
-			"__id":                      llx.StringData(page.TeamMemberId + "/" + w.SessionId),
+			"__id":                      llx.StringData("dropbox.device/" + page.TeamMemberId + "/" + w.SessionId),
 			"id":                        llx.StringData(w.SessionId),
 			"memberId":                  llx.StringData(page.TeamMemberId),
 			"clientType":                llx.StringData("web"),
@@ -69,7 +69,7 @@ func mqlDropboxDevicesForMember(runtime *plugin.Runtime, page *team.MemberDevice
 			clientType = dsk.ClientType.Tag
 		}
 		r, err := CreateResource(runtime, "dropbox.device", map[string]*llx.RawData{
-			"__id":                      llx.StringData(page.TeamMemberId + "/" + dsk.SessionId),
+			"__id":                      llx.StringData("dropbox.device/" + page.TeamMemberId + "/" + dsk.SessionId),
 			"id":                        llx.StringData(dsk.SessionId),
 			"memberId":                  llx.StringData(page.TeamMemberId),
 			"clientType":                llx.StringData("desktop"),
@@ -94,7 +94,7 @@ func mqlDropboxDevicesForMember(runtime *plugin.Runtime, page *team.MemberDevice
 			clientType = mob.ClientType.Tag
 		}
 		r, err := CreateResource(runtime, "dropbox.device", map[string]*llx.RawData{
-			"__id":                      llx.StringData(page.TeamMemberId + "/" + mob.SessionId),
+			"__id":                      llx.StringData("dropbox.device/" + page.TeamMemberId + "/" + mob.SessionId),
 			"id":                        llx.StringData(mob.SessionId),
 			"memberId":                  llx.StringData(page.TeamMemberId),
 			"clientType":                llx.StringData("mobile"),

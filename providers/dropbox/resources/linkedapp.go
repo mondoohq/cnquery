@@ -45,7 +45,7 @@ func mqlDropboxLinkedAppsForMember(runtime *plugin.Runtime, page *team.MemberLin
 			continue
 		}
 		r, err := CreateResource(runtime, "dropbox.linkedApp", map[string]*llx.RawData{
-			"__id":          llx.StringData(page.TeamMemberId + "/" + app.AppId),
+			"__id":          llx.StringData("dropbox.linkedApp/" + page.TeamMemberId + "/" + app.AppId),
 			"appId":         llx.StringData(app.AppId),
 			"memberId":      llx.StringData(page.TeamMemberId),
 			"appName":       llx.StringData(app.AppName),

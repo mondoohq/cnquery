@@ -95,7 +95,7 @@ func newMqlDropboxMember(runtime *plugin.Runtime, m *team.TeamMemberInfoV2) (plu
 	}
 
 	res, err := CreateResource(runtime, "dropbox.member", map[string]*llx.RawData{
-		"__id":            llx.StringData(profile.TeamMemberId),
+		"__id":            llx.StringData("dropbox.member/" + profile.TeamMemberId),
 		"teamMemberId":    llx.StringData(profile.TeamMemberId),
 		"email":           llx.StringData(profile.Email),
 		"emailVerified":   llx.BoolData(profile.EmailVerified),
