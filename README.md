@@ -136,6 +136,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | HashiCorp Cloud Platform      | `hcp`                      | `mql shell hcp --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                                                             |
 | Hetzner Cloud projects        | `hetzner`                  | `mql shell hetzner --token API_TOKEN`                                                                                                           |
 | Hugging Face                  | `huggingface`              | `mql shell huggingface --token HF_TOKEN`                                                                                                        |
+| IBM Db2 database              | `db2`                      | `mql shell db2 db.contoso.com --database TESTDB --user auditor --ask-pass`                                                                      |
 | OPC UA IoT devices            | `opcua`                    | `mql shell opcua`                                                                                                                               |
 | IP address information        | `ipinfo`                   | `mql shell ipinfo`                                                                                                                              |
 | IPMI-enabled devices          | `ipmi`                     | `mql shell ipmi user@HOST`                                                                                                                      |

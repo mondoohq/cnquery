@@ -321,6 +321,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"db2": {
+		Provider: &plugin.Provider{
+			Name:            "db2",
+			ID:              "go.mondoo.com/mql-enterprise-providers/providers/db2",
+			ConnectionTypes: []string{"db2"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "db2",
+					Use:   "db2 [host]",
+					Short: "an IBM Db2 database",
+				},
+			},
+		},
+	},
+
 	"digitalocean": {
 		Provider: &plugin.Provider{
 			Name:            "digitalocean",
