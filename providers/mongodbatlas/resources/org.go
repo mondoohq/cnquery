@@ -205,15 +205,41 @@ func (r *mqlMongodbatlasOrgUser) projectRoles() ([]any, error) {
 	return out, nil
 }
 
-// project resolves the project the roles are granted on.
-func (r *mqlMongodbatlasOrgUserProjectRole) project() (*mqlMongodbatlasProject, error) {
-	proj, err := NewResource(r.MqlRuntime, "mongodbatlas.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheGroupID),
+// resolveProject returns the project with the given id, preferring the
+// organization's project listing so that a whole set of references costs one
+// API call. Hydrating each reference by id instead would run the project init,
+// and therefore a GetProject call, per reference. A project the organization
+// listing does not cover, such as one reached through a credential scoped
+// elsewhere, is fetched directly so it still resolves.
+func resolveProject(runtime *plugin.Runtime, id string) (*mqlMongodbatlasProject, error) {
+	root, err := rootMongodbatlas(runtime)
+	if err != nil {
+		return nil, err
+	}
+	projectsByID, err := root.orgProjectsByID()
+	if err != nil {
+		return nil, err
+	}
+	if p, ok := projectsByID[id]; ok {
+		return p, nil
+	}
+
+	res, err := NewResource(runtime, "mongodbatlas.project", map[string]*llx.RawData{
+		"id": llx.StringData(id),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return proj.(*mqlMongodbatlasProject), nil
+	proj, ok := res.(*mqlMongodbatlasProject)
+	if !ok || proj == nil {
+		return nil, fmt.Errorf("mongodbatlas.project with id %q could not be resolved", id)
+	}
+	return proj, nil
+}
+
+// project resolves the project the roles are granted on.
+func (r *mqlMongodbatlasOrgUserProjectRole) project() (*mqlMongodbatlasProject, error) {
+	return resolveProject(r.MqlRuntime, r.cacheGroupID)
 }
 
 // orgTeamsByID lists every team in the organization once and caches them by id
@@ -442,13 +468,7 @@ func (r *mqlMongodbatlasApiKeyRoleAssignment) project() (*mqlMongodbatlasProject
 		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	proj, err := NewResource(r.MqlRuntime, "mongodbatlas.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheGroupID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return proj.(*mqlMongodbatlasProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheGroupID)
 }
 
 func (r *mqlMongodbatlas) serviceAccounts() ([]any, error) {
