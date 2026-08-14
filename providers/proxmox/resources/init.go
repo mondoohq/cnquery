@@ -130,34 +130,31 @@ func initProxmoxStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
-	storages, err := conn.GetStorages()
+	s, found, err := conn.LookupStorage(storageID)
 	if err != nil {
 		return nil, nil, err
 	}
-	for _, s := range storages {
-		if s.Storage != storageID {
-			continue
-		}
-		var usagePct float64
-		if s.UsedFrac > 0 {
-			usagePct = s.UsedFrac * 100.0
-		} else if s.Total > 0 {
-			usagePct = float64(s.Used) / float64(s.Total) * 100.0
-		}
-		args["type"] = llx.StringData(s.Type)
-		args["content"] = llx.StringData(s.Content)
-		args["path"] = llx.StringData(s.Path)
-		args["nodes"] = llx.StringData(s.Nodes)
-		args["enabled"] = llx.BoolData(s.Enabled != 0)
-		args["shared"] = llx.BoolData(s.Shared != 0)
-		args["total"] = llx.IntData(s.Total)
-		args["used"] = llx.IntData(s.Used)
-		args["available"] = llx.IntData(s.Avail)
-		args["usagePercent"] = llx.FloatData(usagePct)
-		args["encrypted"] = llx.BoolData(s.EncryptionKey != "")
-		args["encryptionKey"] = llx.StringData(s.EncryptionKey)
+	if !found {
 		return args, nil, nil
 	}
+	var usagePct float64
+	if s.UsedFrac > 0 {
+		usagePct = s.UsedFrac * 100.0
+	} else if s.Total > 0 {
+		usagePct = float64(s.Used) / float64(s.Total) * 100.0
+	}
+	args["type"] = llx.StringData(s.Type)
+	args["content"] = llx.StringData(s.Content)
+	args["path"] = llx.StringData(s.Path)
+	args["nodes"] = llx.StringData(s.Nodes)
+	args["enabled"] = llx.BoolData(s.Enabled != 0)
+	args["shared"] = llx.BoolData(s.Shared != 0)
+	args["total"] = llx.IntData(s.Total)
+	args["used"] = llx.IntData(s.Used)
+	args["available"] = llx.IntData(s.Avail)
+	args["usagePercent"] = llx.FloatData(usagePct)
+	args["encrypted"] = llx.BoolData(s.EncryptionKey != "")
+	args["encryptionKey"] = llx.StringData(s.EncryptionKey)
 	return args, nil, nil
 }
 
@@ -203,25 +200,18 @@ func initProxmoxNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
-	nodes, err := conn.GetNodes()
+	n, found, err := conn.LookupNode(name)
 	if err != nil {
 		return nil, nil, err
 	}
-	for _, n := range nodes {
-		if n.Node != name {
-			continue
-		}
-		args["status"] = llx.StringData(n.Status)
-		// The IP lives in cluster status, not the nodes list. Fetch only
-		// when present; a single-node standalone host has no cluster row.
-		entries, _ := conn.GetClusterStatus()
-		for _, e := range entries {
-			if e.Type == "node" && e.Name == name {
-				args["ip"] = llx.StringData(e.IP)
-				break
-			}
-		}
+	if !found {
 		return args, nil, nil
+	}
+	args["status"] = llx.StringData(n.Status)
+	// The address comes from the cluster status, which a standalone host
+	// has no row in. The index leaves it empty in that case.
+	if n.IP != "" {
+		args["ip"] = llx.StringData(n.IP)
 	}
 	return args, nil, nil
 }

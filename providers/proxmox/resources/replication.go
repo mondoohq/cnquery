@@ -49,25 +49,11 @@ func (r *mqlProxmox) replicationJobs() ([]any, error) {
 }
 
 func (r *mqlProxmoxReplicationJob) sourceNode() (*mqlProxmoxNode, error) {
-	return replicationNodeRef(r.MqlRuntime, r.Source.Data, &r.SourceNode)
+	return resolveNodeRef(r.MqlRuntime, r.Source.Data, &r.SourceNode)
 }
 
 func (r *mqlProxmoxReplicationJob) targetNode() (*mqlProxmoxNode, error) {
-	return replicationNodeRef(r.MqlRuntime, r.Target.Data, &r.TargetNode)
-}
-
-func replicationNodeRef(runtime *plugin.Runtime, name string, slot *plugin.TValue[*mqlProxmoxNode]) (*mqlProxmoxNode, error) {
-	if name == "" {
-		slot.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(runtime, "proxmox.node", map[string]*llx.RawData{
-		"name": llx.StringData(name),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlProxmoxNode), nil
+	return resolveNodeRef(r.MqlRuntime, r.Target.Data, &r.TargetNode)
 }
 
 // ensureGuestKind reads /cluster/resources once to determine whether this

@@ -74,6 +74,7 @@ proxmox.ceph.manager.cephVersionShort 0.3.6
 proxmox.ceph.manager.directoryExists 0.3.6
 proxmox.ceph.manager.host 0.3.6
 proxmox.ceph.manager.name 0.3.6
+proxmox.ceph.manager.node 0.4.2
 proxmox.ceph.manager.service 0.3.6
 proxmox.ceph.manager.state 0.3.6
 proxmox.ceph.managers 0.3.6
@@ -86,6 +87,7 @@ proxmox.ceph.metadataServer.fileSystem 0.3.6
 proxmox.ceph.metadataServer.fsName 0.3.6
 proxmox.ceph.metadataServer.host 0.3.6
 proxmox.ceph.metadataServer.name 0.3.6
+proxmox.ceph.metadataServer.node 0.4.2
 proxmox.ceph.metadataServer.rank 0.3.6
 proxmox.ceph.metadataServer.service 0.3.6
 proxmox.ceph.metadataServer.standbyReplay 0.3.6
@@ -98,6 +100,7 @@ proxmox.ceph.monitor.cephVersionShort 0.3.6
 proxmox.ceph.monitor.directoryExists 0.3.6
 proxmox.ceph.monitor.host 0.3.6
 proxmox.ceph.monitor.name 0.3.6
+proxmox.ceph.monitor.node 0.4.2
 proxmox.ceph.monitor.quorum 0.3.6
 proxmox.ceph.monitor.rank 0.3.6
 proxmox.ceph.monitor.service 0.3.6
@@ -121,6 +124,7 @@ proxmox.ceph.osd.host 0.3.6
 proxmox.ceph.osd.id 0.3.6
 proxmox.ceph.osd.inCluster 0.3.6
 proxmox.ceph.osd.name 0.3.6
+proxmox.ceph.osd.node 0.4.2
 proxmox.ceph.osd.objectStore 0.3.6
 proxmox.ceph.osd.percentUsed 0.3.6
 proxmox.ceph.osd.reweight 0.3.6
@@ -242,6 +246,7 @@ proxmox.container.network.name 0.1.9
 proxmox.container.network.tag 0.1.9
 proxmox.container.networks 0.1.9
 proxmox.container.node 0.1.9
+proxmox.container.nodeRef 0.4.2
 proxmox.container.onboot 0.1.9
 proxmox.container.osType 0.1.9
 proxmox.container.passthroughDevice 0.1.9
@@ -650,11 +655,13 @@ proxmox.storage.volume.encrypted 0.3.6
 proxmox.storage.volume.encryptionFingerprint 0.3.6
 proxmox.storage.volume.format 0.3.6
 proxmox.storage.volume.node 0.3.6
+proxmox.storage.volume.nodeRef 0.4.2
 proxmox.storage.volume.notes 0.3.6
 proxmox.storage.volume.parent 0.3.6
 proxmox.storage.volume.protected 0.3.6
 proxmox.storage.volume.size 0.3.6
 proxmox.storage.volume.storage 0.3.6
+proxmox.storage.volume.storageRef 0.4.2
 proxmox.storage.volume.used 0.3.6
 proxmox.storage.volume.verification 0.3.6
 proxmox.storage.volume.vm 0.3.6
@@ -742,6 +749,7 @@ proxmox.vm.network.model 0.1.1
 proxmox.vm.network.tag 0.1.1
 proxmox.vm.networks 0.1.1
 proxmox.vm.node 0.1.1
+proxmox.vm.nodeRef 0.4.2
 proxmox.vm.osType 0.1.1
 proxmox.vm.pciDevice 0.1.9
 proxmox.vm.pciDevice.address 0.1.9

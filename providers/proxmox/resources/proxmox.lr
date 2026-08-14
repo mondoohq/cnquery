@@ -573,7 +573,10 @@ proxmox.cluster.haResource @defaults("id type status") {
   // Desired state (started, stopped, disabled)
   state string
   // HA group
-  group string
+  //
+  // Deprecated in favor of `groupRef`, which resolves the same group as
+  // an HA group resource.
+  group @maturity("deprecated") string
   // VM this resource refers to when `type` is `vm`; null otherwise
   vm() proxmox.vm
   // Container this resource refers to when `type` is `ct`; null otherwise
@@ -769,6 +772,12 @@ proxmox.vm @defaults("id name status") {
   name string
   // Node this VM is running on
   node string
+  // Host the VM runs on
+  //
+  // Resolves `node` against the cluster, giving access to the host's
+  // status, address, kernel, subscription level, and firewall from the
+  // VM itself. Null when the named node is no longer in the cluster.
+  nodeRef() proxmox.node
   // Current status (running, stopped, paused)
   status string
 
@@ -964,7 +973,10 @@ proxmox.vm.disk @defaults("id storage size") {
   // Disk ID (scsi0, virtio0, ide0, ...)
   id string
   // Storage pool name
-  storage string
+  //
+  // Deprecated in favor of `storageRef`, which resolves the same pool
+  // as a storage resource.
+  storage @maturity("deprecated") string
   // Disk size in bytes
   size int
   // Disk format (qcow2, raw, vmdk)
@@ -1091,12 +1103,24 @@ proxmox.storage.volume @defaults("volid contentType createdAt size") {
   volid string
   // Storage holding the volume
   storage string
+  // Storage pool the volume sits on
+  //
+  // Resolves `storage` against the cluster, so a volume can be audited
+  // against the pool's encryption setting, sharing, content classes,
+  // and capacity. Null when the named storage is no longer configured.
+  storageRef() proxmox.storage
   // Node the volume was listed from
   //
   // A shared storage reports one copy from a single node. A local
   // storage holds an independent copy on each node, so the same guest
   // can have separate volumes here per node.
   node string
+  // Host the volume was listed from
+  //
+  // Resolves `node` against the cluster. For a local storage this is
+  // the host that physically holds this copy. Null when the named node
+  // is no longer in the cluster.
+  nodeRef() proxmox.node
   // Content class of the volume
   //
   // One of `backup`, `iso`, `vztmpl`, `images`, `rootdir`, or
@@ -1474,7 +1498,10 @@ proxmox.group @defaults("id comment") {
   // Group comment/description
   comment string
   // User IDs that belong to this group
-  memberIds []string
+  //
+  // Deprecated in favor of `members`, which resolves the same accounts
+  // as user resources.
+  memberIds @maturity("deprecated") []string
   // Members of this group resolved as user resources
   members() []proxmox.user
 }
@@ -1498,7 +1525,10 @@ proxmox.acl @defaults("path type ugid roleId propagate") {
   // Identifier of the user, group, or token the grant applies to
   ugid string
   // Role ID granted at this path
-  roleId string
+  //
+  // Deprecated in favor of `role`, which resolves the same role as a
+  // role resource carrying its privilege list.
+  roleId @maturity("deprecated") string
   // Whether the grant propagates to child paths
   propagate bool
   // Resolved role
@@ -1647,6 +1677,13 @@ proxmox.container @defaults("id name status unprivileged") {
   name string
   // Node this container is running on
   node string
+  // Host the container runs on
+  //
+  // Resolves `node` against the cluster, giving access to the host's
+  // status, address, kernel, subscription level, and firewall from the
+  // container itself. Null when the named node is no longer in the
+  // cluster.
+  nodeRef() proxmox.node
   // Current status (running, stopped)
   status string
 
@@ -1815,7 +1852,10 @@ proxmox.container.mountPoint @defaults("id storage mountPath size") {
   // Mount point ID (rootfs, mp0, mp1, ...)
   id string
   // Backing storage name
-  storage string
+  //
+  // Deprecated in favor of `storageRef`, which resolves the same pool
+  // as a storage resource.
+  storage @maturity("deprecated") string
   // Size in bytes
   size int
   // Path inside the container
@@ -1852,7 +1892,10 @@ proxmox.backup.job @defaults("id schedule storage enabled") {
   // Schedule (systemd-calendar expression, e.g. `mon..fri 03:00`)
   schedule string
   // Storage name backups are written to
-  storage string
+  //
+  // Deprecated in favor of `targetStorage`, which resolves the same
+  // pool as a storage resource.
+  storage @maturity("deprecated") string
   // Dump mode (snapshot, suspend, stop)
   mode string
   // Job comment
@@ -2092,9 +2135,15 @@ proxmox.replication.job @defaults("id schedule source target disabled") {
   // Schedule expression (systemd-calendar)
   schedule string
   // Source node name
-  source string
+  //
+  // Deprecated in favor of `sourceNode`, which resolves the same host
+  // as a node resource.
+  source @maturity("deprecated") string
   // Target node name
-  target string
+  //
+  // Deprecated in favor of `targetNode`, which resolves the same host
+  // as a node resource.
+  target @maturity("deprecated") string
   // Job type (local for built-in storage replication)
   type string
   // Job comment
@@ -2158,7 +2207,10 @@ proxmox.sdn.vnet @defaults("vnet zone tag") {
   // VNet identifier
   vnet string
   // Parent zone identifier
-  zone string
+  //
+  // Deprecated in favor of `zoneRef`, which resolves the same zone as
+  // an SDN zone resource.
+  zone @maturity("deprecated") string
   // Friendly alias
   alias string
   // VLAN/VXLAN tag identifier
@@ -2192,7 +2244,10 @@ proxmox.sdn.subnet @defaults("id cidr gateway") {
   // DNS prefix appended to records created for this subnet
   dnsZonePrefix string
   // Parent vnet identifier
-  vnet string
+  //
+  // Deprecated in favor of `vnetRef`, which resolves the same vnet as
+  // an SDN vnet resource.
+  vnet @maturity("deprecated") string
   // Resolved parent vnet
   vnetRef() proxmox.sdn.vnet
 }
@@ -2446,6 +2501,12 @@ proxmox.ceph.monitor @defaults("name host quorum state") {
   name string
   // Node the monitor runs on
   host string
+  // Host the monitor runs on
+  //
+  // Resolves `host` against the cluster, so a monitor out of quorum can
+  // be checked against the state of the node running it. Null when the
+  // named host is no longer in the cluster.
+  node() proxmox.node
   // Address the monitor advertises, in Ceph format (usually `IP:PORT/NONCE`)
   addr string
   // Whether the monitor is part of the current quorum
@@ -2479,6 +2540,12 @@ proxmox.ceph.manager @defaults("name host state") {
   name string
   // Node the manager runs on
   host string
+  // Host the manager runs on
+  //
+  // Resolves `host` against the cluster, so a stopped manager can be
+  // checked against the state of the node running it. Null when the
+  // named host is no longer in the cluster.
+  node() proxmox.node
   // Address the manager advertises, in Ceph format
   addr string
   // Manager state
@@ -2510,6 +2577,12 @@ proxmox.ceph.metadataServer @defaults("name host state fsName") {
   name string
   // Node the metadata server runs on
   host string
+  // Host the metadata server runs on
+  //
+  // Resolves `host` against the cluster, so a file system left without
+  // an active daemon can be traced to the node running it. Null when
+  // the named host is no longer in the cluster.
+  node() proxmox.node
   // Address the metadata server advertises, in Ceph format
   addr string
   // Ceph-reported run state (e.g. `up:active`, `up:standby`, `up:standby-replay`)
@@ -2517,7 +2590,10 @@ proxmox.ceph.metadataServer @defaults("name host state fsName") {
   // Rank within the file system; -1 for standby daemons not bound to a rank
   rank int
   // Name of the CephFS this daemon is bound to; empty for unbound standbys
-  fsName string
+  //
+  // Deprecated in favor of `fileSystem`, which resolves the same file
+  // system as a CephFS resource.
+  fsName @maturity("deprecated") string
   // CephFS this daemon serves; null for unbound standbys
   fileSystem() proxmox.ceph.filesystem
   // Whether the standby is polling the active daemon for faster recovery
@@ -2548,6 +2624,12 @@ proxmox.ceph.osd @defaults("id host up inCluster deviceClass") {
   name string
   // Node the daemon runs on
   host string
+  // Host the daemon runs on
+  //
+  // Resolves `host` against the cluster, so a down or out OSD can be
+  // checked against the state of the node holding its backing device.
+  // Null when the named host is no longer in the cluster.
+  node() proxmox.node
   // Whether the daemon is running
   //
   // Null when the CRUSH tree reports no status for this OSD.
