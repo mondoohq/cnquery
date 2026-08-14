@@ -1,7 +1,7 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package container
+package runtime
 
 import (
 	stdtar "archive/tar"
@@ -39,6 +39,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/cli/tmp"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/container"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	tarconn "go.mondoo.com/mql/v13/providers/os/connection/tar"
 	"go.mondoo.com/mql/v13/providers/os/id/containerid"
@@ -149,7 +150,7 @@ func NewRuntimeImage(id uint32, conf *inventory.Config, asset *inventory.Asset) 
 	conf.Runtime = shared.Type_RuntimeImage.String()
 
 	var releaseOnce sync.Once
-	conn, err := NewImageConnectionWithCloseFn(id, conf, asset, img, nil, func() {
+	conn, err := container.NewImageConnectionWithCloseFn(id, conf, asset, img, nil, func() {
 		releaseOnce.Do(releaseImageSlot)
 	}, cleanupDirs...)
 	if err != nil {
