@@ -6,6 +6,7 @@ package discovery
 import (
 	"maps"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/cli/config"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers"
@@ -88,6 +89,30 @@ func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamCo
 	clonedAsset := proto.Clone(connAsset).(*inventory.Asset)
 
 	return &AssetWithRuntime{Asset: clonedAsset, Runtime: runtime}, nil
+}
+
+// restoreRequestedName puts an explicitly requested asset name back on an asset after
+// it has been connected.
+//
+// A name that arrives on the inventory asset was set deliberately by the caller:
+// cnspec's --asset-name, or a `name:` on an asset in an inventory file. Connecting can
+// throw it away, because a provider's detect step names the asset after whatever it
+// connected to and a fair number of providers do so unconditionally rather than only
+// filling in a name that is still empty. The caller's name is the more specific signal,
+// so it wins.
+//
+// This only applies to root assets. Assets found underneath a root are named by the
+// discovery that produced them, and that name describes the individual asset rather
+// than the scan the caller asked for.
+func restoreRequestedName(asset *inventory.Asset, requested string) {
+	if asset == nil || requested == "" || asset.GetName() == requested {
+		return
+	}
+	log.Debug().
+		Str("detected", asset.GetName()).
+		Str("requested", requested).
+		Msg("restoring the requested asset name")
+	asset.Name = requested
 }
 
 // prepareAsset prepares the asset for further processing by adding mondoo-specific labels and annotations

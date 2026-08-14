@@ -124,6 +124,8 @@ func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplo
 			return nil, err
 		}
 
+		requestedName := resolvedRootAsset.GetName()
+
 		awr, err := createRuntimeForAsset(resolvedRootAsset, cfg.Upstream, cfg.Recording, e.features)
 		if err != nil {
 			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
@@ -132,6 +134,7 @@ func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplo
 		}
 
 		resolvedRootAsset = awr.Asset
+		restoreRequestedName(resolvedRootAsset, requestedName)
 
 		tracked := &TrackedAsset{
 			Asset:   resolvedRootAsset,
