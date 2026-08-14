@@ -10,10 +10,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/endobit/oui"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/id/networki/oui"
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
