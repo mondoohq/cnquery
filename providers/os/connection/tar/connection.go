@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -149,6 +150,13 @@ func (c *Connection) Load(stream io.Reader) error {
 		}
 
 		path := Abs(h.Name)
+
+		// The map key holds the entry name with a leading separator, so the name is stored
+		// twice. Point the header name at the tail of the key when the bytes are the same.
+		// Both strings then share one backing array, and the header keeps its exact value.
+		if strings.HasSuffix(path, h.Name) {
+			h.Name = path[len(path)-len(h.Name):]
+		}
 		c.fs.FileMap[path] = h
 	}
 	log.Debug().Int("files", len(c.fs.FileMap)).Msg("tar> successfully loaded")
