@@ -11,13 +11,12 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/llx"
-	"go.mondoo.com/mql/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/providers/os/connection/shared"
-	"go.mondoo.com/mql/providers/os/resources/frr"
-	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/frr"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // ======================================================================
@@ -35,16 +34,12 @@ func (n *mqlFrr) version() (string, error) {
 	// It exists next to the daemons, on the host for a native install and
 	// inside the HBN container for a containerized one.
 	cmd, err := conn.RunCommand("vtysh --version")
-	if err != nil {
-		// The connection could not run the command at all, which is the
-		// normal case for an asset snapshot or a filesystem-only scan.
-		log.Debug().Err(err).Msg("could not run vtysh --version")
-	} else if cmd.ExitStatus == 0 {
+	if err == nil && cmd.ExitStatus == 0 {
 		data, rerr := io.ReadAll(cmd.Stdout)
-		if rerr != nil {
-			log.Debug().Err(rerr).Msg("could not read vtysh --version output")
-		} else if m := reFrrVersion.FindSubmatch(data); m != nil {
-			return string(m[1]), nil
+		if rerr == nil {
+			if m := reFrrVersion.FindSubmatch(data); m != nil {
+				return string(m[1]), nil
+			}
 		}
 	}
 
@@ -69,9 +64,6 @@ func (n *mqlFrr) version() (string, error) {
 type mqlFrrConfigInternal struct {
 	lock sync.Mutex
 	cfg  *frr.Config
-	// parseErr keeps the parse failure, so every accessor that runs after
-	// the first one reports the same error instead of an empty config.
-	parseErr error
 }
 
 // frrConfPaths lists where frr.conf is found, in the order the resource
@@ -171,7 +163,7 @@ func (s *mqlFrrConfig) parse(file *mqlFile) error {
 	defer s.lock.Unlock()
 
 	if s.cfg != nil {
-		return s.parseErr
+		return nil
 	}
 	if file == nil {
 		return errors.New("no frr config file to read")
@@ -180,7 +172,6 @@ func (s *mqlFrrConfig) parse(file *mqlFile) error {
 	cfg, err := parseFrrFile(s.MqlRuntime, file)
 	if err != nil {
 		s.cfg = &frr.Config{}
-		s.parseErr = err
 		s.markParseErrors(err)
 		return err
 	}
@@ -306,15 +297,7 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 	res := make([]any, 0, len(instances))
 	for i := range instances {
 		b := &instances[i]
-		// The id is built from what the instance is, not from where it
-		// sits, so reordering the blocks does not renumber the rest. An ASN
-		// and a VRF name identify an instance; FRR allows one instance per
-		// VRF, so an instance without a valid ASN is still told apart.
-		asn := ""
-		if b.ASN != nil {
-			asn = strconv.FormatInt(*b.ASN, 10)
-		}
-		id := fmt.Sprintf("%s#bgp/%s/%s", s.__id, asn, b.VRF)
+		id := fmt.Sprintf("%s#bgp/%d/%d/%s", s.__id, i, b.ASN, b.VRF)
 
 		neighbors, err := s.createNeighbors(id, b.Neighbors)
 		if err != nil {
@@ -325,16 +308,16 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 			return nil, err
 		}
 
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.router", map[string]*llx.RawData{
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp", map[string]*llx.RawData{
 			"__id":               llx.StringData(id),
-			"asn":                llx.IntDataPtr(b.ASN),
+			"asn":                llx.IntData(b.ASN),
 			"vrf":                llx.StringData(b.VRF),
 			"routerId":           llx.StringData(b.RouterID),
 			"clusterId":          llx.StringData(b.ClusterID),
 			"ebgpRequiresPolicy": llx.BoolData(b.EbgpRequiresPolicy),
 			"defaultIpv4Unicast": llx.BoolData(b.DefaultIPv4Unicast),
-			"neighbors":          llx.ArrayData(neighbors, types.Resource("frr.config.router.neighbor")),
-			"addressFamilies":    llx.ArrayData(families, types.Resource("frr.config.router.addressFamily")),
+			"neighbors":          llx.ArrayData(neighbors, types.Resource("frr.config.bgp.neighbor")),
+			"addressFamilies":    llx.ArrayData(families, types.Resource("frr.config.bgp.addressFamily")),
 			"params":             llx.MapData(stringMapToAny(b.Params), types.String),
 			"file":               llx.StringData(b.File),
 			"startLine":          llx.IntData(int64(b.StartLine)),
@@ -358,7 +341,7 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 		for j := range n.AddressFamilies {
 			naf := &n.AddressFamilies[j]
 			afID := fmt.Sprintf("%s#af/%s/%s", id, naf.AFI, naf.SAFI)
-			obj, err := CreateResource(s.MqlRuntime, "frr.config.router.neighbor.addressFamily", map[string]*llx.RawData{
+			obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp.neighbor.addressFamily", map[string]*llx.RawData{
 				"__id":                 llx.StringData(afID),
 				"afi":                  llx.StringData(naf.AFI),
 				"safi":                 llx.StringData(naf.SAFI),
@@ -383,15 +366,15 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 			families = append(families, obj)
 		}
 
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.router.neighbor", map[string]*llx.RawData{
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp.neighbor", map[string]*llx.RawData{
 			"__id":                     llx.StringData(id),
 			"name":                     llx.StringData(n.Name),
 			"isInterface":              llx.BoolData(n.Interface),
 			"isPeerGroup":              llx.BoolData(n.IsPeerGroup),
 			"peerGroup":                llx.StringData(n.PeerGroup),
 			"remoteAs":                 llx.StringData(n.RemoteAs),
-			"remoteAsn":                llx.IntDataPtr(n.RemoteASN),
-			"localAsn":                 llx.IntDataPtr(n.LocalASN),
+			"remoteAsn":                llx.IntData(n.RemoteASN),
+			"localAsn":                 llx.IntData(n.LocalASN),
 			"description":              llx.StringData(n.Description),
 			"updateSource":             llx.StringData(n.UpdateSource),
 			"listenRange":              llx.StringData(n.ListenRange),
@@ -401,7 +384,7 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 			"ttlSecurityHops":          llx.IntData(n.TTLSecurityHops),
 			"keepaliveTime":            llx.IntData(n.KeepaliveTime),
 			"holdTime":                 llx.IntData(n.HoldTime),
-			"addressFamilies":          llx.ArrayData(families, types.Resource("frr.config.router.neighbor.addressFamily")),
+			"addressFamilies":          llx.ArrayData(families, types.Resource("frr.config.bgp.neighbor.addressFamily")),
 			"activatedAddressFamilies": llx.ArrayData(stringSliceToAny(n.ActivatedAddressFamilies), types.String),
 			"routeMapsIn":              llx.ArrayData(stringSliceToAny(n.RouteMapsIn), types.String),
 			"routeMapsOut":             llx.ArrayData(stringSliceToAny(n.RouteMapsOut), types.String),
@@ -426,7 +409,7 @@ func (s *mqlFrrConfig) createAddressFamilies(prefix string, families []frr.Addre
 	for i := range families {
 		af := &families[i]
 		id := fmt.Sprintf("%s#af/%s/%s", prefix, af.AFI, af.SAFI)
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.router.addressFamily", map[string]*llx.RawData{
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp.addressFamily", map[string]*llx.RawData{
 			"__id":               llx.StringData(id),
 			"afi":                llx.StringData(af.AFI),
 			"safi":               llx.StringData(af.SAFI),
@@ -466,7 +449,7 @@ func (s *mqlFrrConfig) vrfs(file *mqlFile) ([]any, error) {
 			"name":               llx.StringData(v.Name),
 			"vni":                llx.IntData(v.VNI),
 			"staticRoutes":       llx.ArrayData(stringSliceToAny(v.StaticRoutes), types.String),
-			"routerAsn":          llx.IntDataPtr(v.RouterASN),
+			"routerAsn":          llx.IntData(v.RouterASN),
 			"routeTargetsImport": llx.ArrayData(stringSliceToAny(v.RouteTargetsImport), types.String),
 			"routeTargetsExport": llx.ArrayData(stringSliceToAny(v.RouteTargetsExport), types.String),
 			"importedVrfs":       llx.ArrayData(stringSliceToAny(v.ImportedVrfs), types.String),
@@ -493,7 +476,7 @@ func (s *mqlFrrConfig) interfaces(file *mqlFile) ([]any, error) {
 	for i := range ifaces {
 		iface := &ifaces[i]
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.interface", map[string]*llx.RawData{
-			"__id":          llx.StringData(s.__id + "#interface/" + iface.Name + "/" + iface.VRF),
+			"__id":          llx.StringData(s.__id + "#interface/" + iface.Name),
 			"name":          llx.StringData(iface.Name),
 			"vrf":           llx.StringData(iface.VRF),
 			"description":   llx.StringData(iface.Description),
@@ -594,8 +577,6 @@ func (s *mqlFrrConfig) routeMaps(file *mqlFile) ([]any, error) {
 type mqlFrrVtyshConfigInternal struct {
 	lock sync.Mutex
 	cfg  *frr.Config
-	// parseErr keeps the parse failure, see mqlFrrConfigInternal.
-	parseErr error
 }
 
 func (s *mqlFrrVtyshConfig) id() (string, error) {
@@ -624,7 +605,7 @@ func (s *mqlFrrVtyshConfig) parse(file *mqlFile) error {
 	defer s.lock.Unlock()
 
 	if s.cfg != nil {
-		return s.parseErr
+		return nil
 	}
 	if file == nil {
 		return errors.New("no vtysh config file to read")
@@ -633,7 +614,6 @@ func (s *mqlFrrVtyshConfig) parse(file *mqlFile) error {
 	cfg, err := parseFrrFile(s.MqlRuntime, file)
 	if err != nil {
 		s.cfg = &frr.Config{}
-		s.parseErr = err
 		s.markParseErrors(err)
 		return err
 	}
