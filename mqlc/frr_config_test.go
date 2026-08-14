@@ -67,3 +67,59 @@ func TestFrrConfigQueriesCompile(t *testing.T) {
 		})
 	}
 }
+
+// The runtime resources read the router as it is running, so a policy over
+// them tests the moment of the scan. These pin one read of every field plus
+// the questions the resources exist to answer.
+func TestFrrRuntimeQueriesCompile(t *testing.T) {
+	schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"}).
+		Add(testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"}))
+
+	queries := []string{
+		// the posture questions these resources exist to answer
+		`frr.bgpNeighbors.all(established)`,
+		`frr.bgpNeighbors.all(addressFamilies.all(prefixesFilteredKnown && prefixesFiltered == 0))`,
+		`frr.vrfs.all(inFrr && inKernel)`,
+		`frr.vrfs.where(name == /^t-/).all(up)`,
+		`frr.evpnVnis.where(type == "L3").all(state == "Up")`,
+		`frr.routingRules.where(l3mdev == false && tableId > 1000).length == 0`,
+		`frr.routeTable("t-blue").truncated == false`,
+		`frr.routeTable("t-blue").entries.where(protocol == "bgp").length > 0`,
+
+		// vrfs
+		`frr.vrfs { name id tableId tableName ifindex mtu operState up inFrr inKernel }`,
+		`frr.vrfs { rules { priority table } }`,
+		`frr.vrfs { bgpNeighbors { name state } }`,
+		`frr.vrfs { routes { vrf afi limit total truncated } }`,
+
+		// routes
+		`frr.routeTable { vrf afi limit total truncated }`,
+		`frr.routeTable("cluster", "ipv6") { total }`,
+		`frr.routeTable("cluster", "ipv4", 100) { total }`,
+		`frr.routeTable.entries { prefix prefixLength protocol vrf table selected installed distance metric uptime nexthops }`,
+
+		// bgp sessions
+		`frr.bgpNeighbors { name vrf remoteAsn localAsn hostname state established uptimeMsec }`,
+		`frr.bgpNeighbors { messagesReceived messagesSent connectionsEstablished connectionsDropped idType }`,
+		`frr.bgpNeighbors { addressFamilies { afi safi prefixesReceived prefixesSent prefixesAccepted } }`,
+		`frr.bgpNeighbors { addressFamilies { prefixesFiltered prefixesFilteredKnown routeMapIn routeMapOut prefixListIn prefixListOut details } }`,
+
+		// evpn
+		`frr.evpnVnis { vni type vrf vxlanInterface sviInterface routerMac state macCount arpNdCount remoteVtepCount remoteVteps details }`,
+
+		// policy routing
+		`frr.routingRules { priority source dest table tableId inputInterface outputInterface }`,
+		`frr.routingRules { l3mdev action protocol fwmark invert suppressPrefixLength }`,
+
+		// the kernel route view keeps its own resource, now with the fields
+		// that a VRF host needs
+		`network.routes.where(table == "main") { destination gateway protocol scope metric source type device }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}
