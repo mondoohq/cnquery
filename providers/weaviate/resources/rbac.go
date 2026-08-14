@@ -25,10 +25,12 @@ func (r *mqlWeaviateInstance) roles() ([]any, error) {
 	}
 
 	serverID := conn.ServerID()
-	list := []any{}
+	list := make([]any, 0, len(roles))
 	for i := range roles {
-		role := roles[i]
-		mqlRole, err := newWeaviateRole(r.MqlRuntime, serverID, &role)
+		// &roles[i], not the address of a loop copy: a Role carries twelve
+		// permission slices, and every one of them becomes a retained resource
+		// anyway, so copying each before taking its address buys nothing.
+		mqlRole, err := newWeaviateRole(r.MqlRuntime, serverID, &roles[i])
 		if err != nil {
 			return nil, err
 		}
