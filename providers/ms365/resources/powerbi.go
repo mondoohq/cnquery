@@ -10,10 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -24,69 +27,43 @@ import (
 
 const (
 	powerbiScope = "https://analysis.windows.net/powerbi/api/.default"
+
+	// powerBiApiBase is the Power BI REST API root. The admin endpoints below
+	// are the same ones the MicrosoftPowerBIMgmt module reaches through
+	// Invoke-PowerBIRestMethod, so the payloads are unchanged.
+	powerBiApiBase = "https://api.powerbi.com/v1.0/myorg/"
+
+	// fabricTenantSettingsUrl serves tenant settings. They live on the Fabric
+	// admin API rather than the Power BI REST API, but accept the same bearer
+	// token.
+	fabricTenantSettingsUrl = "https://api.fabric.microsoft.com/v1/admin/tenantsettings"
+
+	// powerBiWorkspacePageSize is the maximum page size the admin groups
+	// endpoint accepts.
+	powerBiWorkspacePageSize = 5000
+
+	// powerBiMaxPages bounds continuation following so a service that keeps
+	// handing back a link cannot spin forever.
+	powerBiMaxPages = 512
+
+	// powerBiHTTPTimeout bounds a single request. powerBiMaxPages caps how many
+	// requests a walk makes but says nothing about how long one may hang, and
+	// these requests do not go through an SDK pipeline that would impose a
+	// deadline of its own. Without it a stalled connection blocks the section
+	// forever, and the sections are collected concurrently, so one hung endpoint
+	// holds the whole report.
+	powerBiHTTPTimeout = 60 * time.Second
 )
 
-// powerbiReport connects to the Power BI service with the tenant credential and
-// dumps the admin endpoints we model as a single JSON document. Each section is
-// collected independently: the Power BI admin REST endpoints and the Fabric
-// admin API have separate authorization requirements, so a permission gap in
-// one section (for example tenant settings) must not blank the others. The
-// PowerShell module emits a connection banner before any output, so the Go side
-// strips everything up to the first '{'.
-var powerbiReport = `
-$ErrorActionPreference = "Stop"
-$pbiToken = '%s'
-
-if (-not (Get-Module -ListAvailable -Name MicrosoftPowerBIMgmt)) {
-  Install-Module -Name MicrosoftPowerBIMgmt -Scope CurrentUser -Force
-}
-Import-Module MicrosoftPowerBIMgmt
-
-Connect-PowerBIServiceAccount -Token $pbiToken | Out-Null
-
-# Tenant settings live on the Fabric admin API, not the Power BI REST API, but
-# accept the same Power BI bearer token.
-$fabricHeaders = @{ Authorization = "Bearer $pbiToken" }
-
-function Get-PbiSection([scriptblock]$call) {
-  try {
-    return [PSCustomObject]@{ data = (& $call); error = $null }
-  } catch {
-    return [PSCustomObject]@{ data = $null; error = $_.Exception.Message }
-  }
-}
-
-# Get-PbiWorkspaces pages the admin groups endpoint (max 5000 per page) so
-# tenants with more than 5000 workspaces are not silently truncated.
-function Get-PbiWorkspaces() {
-  $all = @()
-  $skip = 0
-  while ($true) {
-    $url = 'admin/groups?$top=5000&$expand=users&$skip=' + $skip
-    $page = @((Invoke-PowerBIRestMethod -Url $url -Method Get | ConvertFrom-Json).value)
-    if ($page.Count -eq 0) { break }
-    $all += $page
-    if ($page.Count -lt 5000) { break }
-    $skip += 5000
-  }
-  return $all
-}
-
-$report = [PSCustomObject]@{
-  TenantSettings            = (Get-PbiSection { (Invoke-RestMethod -Uri 'https://api.fabric.microsoft.com/v1/admin/tenantsettings' -Headers $fabricHeaders -Method Get).tenantSettings })
-  Workspaces                = (Get-PbiSection { Get-PbiWorkspaces })
-  Capacities                = (Get-PbiSection { (Invoke-PowerBIRestMethod -Url 'admin/capacities' -Method Get | ConvertFrom-Json).value })
-  PublishedToWeb            = (Get-PbiSection { (Invoke-PowerBIRestMethod -Url 'admin/widelySharedArtifacts/publishedToWeb' -Method Get | ConvertFrom-Json).ArtifactAccessEntities })
-  SharedToWholeOrganization = (Get-PbiSection { (Invoke-PowerBIRestMethod -Url 'admin/widelySharedArtifacts/linksSharedToWholeOrganization' -Method Get | ConvertFrom-Json).ArtifactAccessEntities })
-}
-
-Disconnect-PowerBIServiceAccount | Out-Null
-
-ConvertTo-Json -Depth 8 $report
-`
+// powerBiHTTPClient is shared by the admin API requests so they all get the
+// timeout. http.Client is safe for concurrent use.
+var powerBiHTTPClient = &http.Client{Timeout: powerBiHTTPTimeout}
 
 // powerBiSection is one report section: its payload as raw JSON plus any error
-// PowerShell captured while collecting it. A non-nil error is surfaced by the
+// captured while collecting it. Each section is collected independently: the
+// Power BI admin endpoints and the Fabric admin API have separate authorization
+// requirements, so a permission gap in one section (for example tenant
+// settings) must not blank the others. A non-nil error is surfaced by the
 // section's getter so callers see the real cause (for example missing admin API
 // access) instead of an empty result.
 type powerBiSection struct {
@@ -154,8 +131,9 @@ type powerBiArtifactAccess struct {
 }
 
 // unmarshalPowerBiSection returns the section error when present, otherwise
-// decodes the payload into a slice. PowerShell's ConvertTo-Json collapses a
-// single-element array into a bare object, so both forms are accepted.
+// decodes the payload into a slice. Both the array and the bare-object form are
+// accepted so an endpoint that returns a single object instead of a collection
+// still decodes.
 func unmarshalPowerBiSection[T any](s powerBiSection) ([]T, error) {
 	if s.Error != nil && *s.Error != "" {
 		return nil, errors.New(*s.Error)
@@ -214,42 +192,199 @@ func (r *mqlMicrosoftPowerbi) fetchReport() (*powerBiReportRaw, error) {
 	if err != nil {
 		return nil, err
 	}
+	token := pbiToken.Token
 
-	// The token is interpolated into a single-quoted PowerShell string; double
-	// any single quote so a token value can never break out of the quoting.
-	escapedToken := strings.ReplaceAll(pbiToken.Token, "'", "''")
-	script := fmt.Sprintf(powerbiReport, escapedToken)
-	res, err := conn.CheckAndRunPowershellScript(script)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.ExitStatus != 0 {
-		data, _ := io.ReadAll(res.Stderr)
-		str := strings.ToLower(string(data))
-		if strings.Contains(str, "access denied") || strings.Contains(str, "unauthorized") || strings.Contains(str, "powerbinotlicensed") {
-			return nil, errors.New("access denied; ensure the service principal is granted read-only admin API access in the Power BI tenant settings")
+	// collect runs one section and converts a failure into a section error, so
+	// a permission gap on one endpoint leaves the other sections intact.
+	collect := func(fetch func() (json.RawMessage, error)) powerBiSection {
+		data, err := fetch()
+		if err != nil {
+			msg := err.Error()
+			return powerBiSection{Error: &msg}
 		}
-		return nil, fmt.Errorf("failed to connect to Power BI (exit code %d): %s", res.ExitStatus, string(data))
+		return powerBiSection{Data: data}
+	}
+	get := func(url string, envelope ...string) func() (json.RawMessage, error) {
+		return func() (json.RawMessage, error) {
+			return powerBiGet(ctx, token, url, envelope...)
+		}
 	}
 
-	data, err := io.ReadAll(res.Stdout)
-	if err != nil {
-		return nil, err
+	raw := &powerBiReportRaw{
+		// the documented envelope is "value"; "tenantSettings" is accepted as a
+		// fallback because that is the name the previous collection looked for
+		TenantSettings: collect(get(fabricTenantSettingsUrl, "value", "tenantSettings")),
+		Workspaces: collect(func() (json.RawMessage, error) {
+			return fetchPowerBiWorkspaces(ctx, token)
+		}),
+		Capacities:     collect(get(powerBiApiBase+"admin/capacities", "value")),
+		PublishedToWeb: collect(get(powerBiApiBase+"admin/widelySharedArtifacts/publishedToWeb", "artifactAccessEntities")),
+		SharedToWholeOrganization: collect(get(powerBiApiBase+"admin/widelySharedArtifacts/linksSharedToWholeOrganization",
+			"artifactAccessEntities")),
 	}
-	str := string(data)
-	idx := strings.IndexByte(str, '{')
-	if idx == -1 {
-		return nil, errors.New("invalid JSON format in Power BI report")
-	}
-	jsonBytes := []byte(str[idx:])
-	logger.DebugDumpJSON("ms-powerbi-report", string(jsonBytes))
 
-	raw := &powerBiReportRaw{}
-	if err := json.Unmarshal(jsonBytes, raw); err != nil {
-		return nil, err
+	if dump, err := json.Marshal(raw); err == nil {
+		logger.DebugDumpJSON("ms-powerbi-report", string(dump))
 	}
 	return raw, nil
+}
+
+// powerBiGet issues an authenticated GET and returns the collection named by
+// envelope, following continuation links so a large collection is not
+// truncated at the service chunk size.
+func powerBiGet(ctx context.Context, token string, url string, envelope ...string) (json.RawMessage, error) {
+	all := []json.RawMessage{}
+	next := url
+	seen := map[string]struct{}{}
+
+	for page := 0; next != ""; page++ {
+		if page >= powerBiMaxPages {
+			return nil, fmt.Errorf("power bi request to %s returned more than %d pages", url, powerBiMaxPages)
+		}
+		// a service that echoes the same continuation would otherwise loop
+		if _, repeated := seen[next]; repeated {
+			return nil, fmt.Errorf("power bi request to %s repeated the same continuation link", url)
+		}
+		seen[next] = struct{}{}
+
+		body, err := powerBiRequest(ctx, token, next)
+		if err != nil {
+			return nil, err
+		}
+
+		raw, err := extractPowerBiEnvelope(body, envelope...)
+		if err != nil {
+			return nil, err
+		}
+		if len(raw) > 0 {
+			var chunk []json.RawMessage
+			if err := json.Unmarshal(raw, &chunk); err != nil {
+				// a single object rather than a collection ends the walk
+				if page == 0 {
+					return raw, nil
+				}
+				return nil, err
+			}
+			all = append(all, chunk...)
+		}
+
+		if next, err = powerBiContinuation(body); err != nil {
+			return nil, err
+		}
+	}
+
+	return json.Marshal(all)
+}
+
+func powerBiRequest(ctx context.Context, token string, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := powerBiHTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+			return nil, errors.New("access denied; ensure the service principal is granted read-only admin API access in the Power BI tenant settings")
+		}
+		return nil, fmt.Errorf("power bi request to %s failed with status %d: %s", url, resp.StatusCode, string(body))
+	}
+
+	return body, nil
+}
+
+// extractPowerBiEnvelope pulls the first of the named collections out of a
+// response body. Several names are accepted because the endpoints do not agree
+// on one: collections arrive under "value", "artifactAccessEntities" or
+// "tenantSettings" depending on the API.
+//
+// The match is case-insensitive. PowerShell property access was, so a name
+// whose casing differs from the response (the widely-shared-artifacts
+// endpoints answer with "artifactAccessEntities") must still resolve.
+//
+// A response that carries none of the names has nothing to report, which
+// yields a nil payload rather than an error.
+func extractPowerBiEnvelope(body []byte, envelope ...string) (json.RawMessage, error) {
+	var wrapper map[string]json.RawMessage
+	if err := json.Unmarshal(body, &wrapper); err != nil {
+		return nil, err
+	}
+
+	for _, name := range envelope {
+		if raw, ok := wrapper[name]; ok {
+			return raw, nil
+		}
+		for key, raw := range wrapper {
+			if strings.EqualFold(key, name) {
+				return raw, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+// powerBiContinuation returns the link to the next chunk, or an empty string
+// when the response is the last one. Both the Power BI admin endpoints and the
+// Fabric admin API chunk their results this way.
+func powerBiContinuation(body []byte) (string, error) {
+	var wrapper struct {
+		ContinuationUri   string `json:"continuationUri"`
+		ContinuationToken string `json:"continuationToken"`
+	}
+	if err := json.Unmarshal(body, &wrapper); err != nil {
+		return "", err
+	}
+	// the service hands back a ready-made uri; the token alone is ambiguous to
+	// re-encode, so it only signals that a uri was expected
+	if wrapper.ContinuationUri == "" && wrapper.ContinuationToken != "" {
+		log.Warn().Msg("power bi returned a continuation token without a uri, results may be incomplete")
+	}
+	return wrapper.ContinuationUri, nil
+}
+
+// fetchPowerBiWorkspaces pages the admin groups endpoint so tenants with more
+// than one page of workspaces are not silently truncated.
+func fetchPowerBiWorkspaces(ctx context.Context, token string) (json.RawMessage, error) {
+	return fetchPowerBiWorkspacePages(ctx, token, powerBiApiBase, powerBiWorkspacePageSize)
+}
+
+// fetchPowerBiWorkspacePages walks the admin groups endpoint until a short page
+// signals the end of the collection. The pages are concatenated into a single
+// array so the section decodes like any other.
+func fetchPowerBiWorkspacePages(ctx context.Context, token string, baseUrl string, pageSize int) (json.RawMessage, error) {
+	all := []json.RawMessage{}
+	for skip := 0; ; skip += pageSize {
+		url := fmt.Sprintf("%sadmin/groups?$top=%d&$expand=users&$skip=%d", baseUrl, pageSize, skip)
+		raw, err := powerBiGet(ctx, token, url, "value")
+		if err != nil {
+			return nil, err
+		}
+
+		var page []json.RawMessage
+		if len(raw) > 0 {
+			if err := json.Unmarshal(raw, &page); err != nil {
+				return nil, err
+			}
+		}
+		all = append(all, page...)
+
+		if len(page) < pageSize {
+			break
+		}
+	}
+	return json.Marshal(all)
 }
 
 func (r *mqlMicrosoftPowerbi) tenantSettings() ([]any, error) {
