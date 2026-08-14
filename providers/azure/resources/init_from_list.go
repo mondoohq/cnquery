@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -96,7 +97,15 @@ func initFromServiceList[S azureListService](
 		if !ok {
 			continue
 		}
-		if item.GetId().Data == id {
+		// Case-insensitively, because the two ids come from different ARM
+		// endpoints and ARM does not agree with itself on the casing of the
+		// type segment. A container app is
+		// ".../Microsoft.App/containerApps/..." in the generic resources
+		// listing an asset's platform id comes from, and
+		// ".../Microsoft.App/containerapps/..." in the service listing matched
+		// here. ARM treats ids as case-insensitive, so an exact comparison
+		// reports a resource that plainly exists as not found.
+		if strings.EqualFold(item.GetId().Data, id) {
 			return args, item, nil
 		}
 	}

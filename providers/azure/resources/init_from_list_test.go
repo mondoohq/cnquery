@@ -128,3 +128,37 @@ func TestInitFromServiceList_RejectsNonStringID(t *testing.T) {
 	assert.Nil(t, res)
 	assert.Contains(t, err.Error(), "id must be a non-nil string value")
 }
+
+// ARM does not agree with itself on the casing of the type segment: the generic
+// resources listing an asset's platform id comes from returns
+// ".../Microsoft.App/containerApps/...", while the service listing matched here
+// returns ".../Microsoft.App/containerapps/...". An exact comparison reports a
+// container app that plainly exists as not found, and its asset scans as empty.
+func TestInitFromServiceList_MatchesIDCaseInsensitively(t *testing.T) {
+	listed := "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/virtualmachines/vm-1"
+	asset := "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-1"
+
+	runtime := runtimeForAsset(t, nil)
+	vms := computeServiceWithVMs(t, runtime, listed)
+
+	_, res, err := initAzureSubscriptionComputeServiceVm(runtime,
+		map[string]*llx.RawData{"id": llx.StringData(asset)})
+
+	require.NoError(t, err, "casing must not decide whether a resource is found")
+	assert.Same(t, vms[0], res)
+}
+
+// Case-insensitivity must not turn into matching the wrong resource: only the
+// casing may differ, never the path itself.
+func TestInitFromServiceList_StillDistinguishesDifferentResources(t *testing.T) {
+	runtime := runtimeForAsset(t, nil)
+	computeServiceWithVMs(t, runtime,
+		"/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-1")
+
+	_, res, err := initAzureSubscriptionComputeServiceVm(runtime,
+		map[string]*llx.RawData{"id": llx.StringData(
+			"/subscriptions/sub-1/resourceGroups/other-rg/providers/Microsoft.Compute/virtualMachines/vm-1")})
+
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
