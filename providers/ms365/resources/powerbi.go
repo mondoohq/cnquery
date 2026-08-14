@@ -363,24 +363,34 @@ func fetchPowerBiWorkspaces(ctx context.Context, token string) (json.RawMessage,
 // fetchPowerBiWorkspacePages walks the admin groups endpoint until a short page
 // signals the end of the collection. The pages are concatenated into a single
 // array so the section decodes like any other.
+//
+// The walk is bounded by powerBiMaxPages for the same reason the continuation
+// walk is: the only termination signal is a page shorter than pageSize, so an
+// endpoint that ignores $skip answers every request with a full page and the
+// loop never ends, appending pageSize workspaces per iteration until the scan
+// is out of memory.
 func fetchPowerBiWorkspacePages(ctx context.Context, token string, baseUrl string, pageSize int) (json.RawMessage, error) {
 	all := []json.RawMessage{}
-	for skip := 0; ; skip += pageSize {
-		url := fmt.Sprintf("%sadmin/groups?$top=%d&$expand=users&$skip=%d", baseUrl, pageSize, skip)
+	for page := 0; ; page++ {
+		if page >= powerBiMaxPages {
+			return nil, fmt.Errorf("power bi admin/groups returned more than %d pages, the endpoint may be ignoring $skip", powerBiMaxPages)
+		}
+
+		url := fmt.Sprintf("%sadmin/groups?$top=%d&$expand=users&$skip=%d", baseUrl, pageSize, page*pageSize)
 		raw, err := powerBiGet(ctx, token, url, "value")
 		if err != nil {
 			return nil, err
 		}
 
-		var page []json.RawMessage
+		var chunk []json.RawMessage
 		if len(raw) > 0 {
-			if err := json.Unmarshal(raw, &page); err != nil {
+			if err := json.Unmarshal(raw, &chunk); err != nil {
 				return nil, err
 			}
 		}
-		all = append(all, page...)
+		all = append(all, chunk...)
 
-		if len(page) < pageSize {
+		if len(chunk) < pageSize {
 			break
 		}
 	}
