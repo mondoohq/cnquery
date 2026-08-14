@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "redfish",
 	ID:              "go.mondoo.com/mql/providers/redfish",
-	Version:         "13.0.6",
+	Version:         "13.1.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
