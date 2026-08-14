@@ -1356,6 +1356,13 @@ func initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[s
 		return nil, nil, err
 	}
 
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionComputeServiceDisk, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := compute.NewDisksClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -1397,6 +1404,13 @@ func initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtim
 	desName, err := resourceID.Component("diskEncryptionSets")
 	if err != nil {
 		return nil, nil, err
+	}
+
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionComputeServiceDiskEncryptionSet, id); cached != nil {
+		return args, cached, nil
 	}
 
 	client, err := compute.NewDiskEncryptionSetsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{

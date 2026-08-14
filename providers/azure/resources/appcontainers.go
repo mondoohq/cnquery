@@ -265,6 +265,13 @@ func initAzureSubscriptionContainerAppServiceManagedEnvironment(runtime *plugin.
 		return nil, nil, err
 	}
 
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionContainerAppServiceManagedEnvironment, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := apps.NewManagedEnvironmentsClient(resourceID.SubscriptionID, conn.Token(), acaClientOptions(conn))
 	if err != nil {
 		return nil, nil, err

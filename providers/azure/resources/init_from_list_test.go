@@ -217,3 +217,38 @@ func TestLookupInServiceList(t *testing.T) {
 		assert.Nil(t, lookupInServiceList(runtime, ResourceAzureSubscriptionComputeService, computeSvcList, "not-an-arm-id"))
 	})
 }
+
+const testSubnetID = "/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet-1/subnets/default"
+
+// The requirement: a referenced resource is fetched once for the scan, and
+// every consecutive reference is answered from the cache.
+//
+// NewResource consults the cache only after the init returns, so an init that
+// fetches unconditionally pays per reference and then has its result discarded.
+// Reaching the cached instance without building a client is what proves the
+// second reference is free -- the fake connection here has no usable
+// credential, so a fetch would fail rather than succeed quietly.
+func TestCachedResource_SecondReferenceIsFree(t *testing.T) {
+	runtime := runtimeForAsset(t, nil)
+
+	// stand in for what the first reference left behind
+	first, err := CreateResource(runtime, ResourceAzureSubscriptionNetworkServiceSubnet,
+		map[string]*llx.RawData{"id": llx.StringData(testSubnetID)})
+	require.NoError(t, err)
+
+	args, res, err := initAzureSubscriptionNetworkServiceSubnet(runtime,
+		map[string]*llx.RawData{"id": llx.StringData(testSubnetID)})
+
+	require.NoError(t, err)
+	require.NotNil(t, res, "the cached subnet must be returned, not refetched")
+	assert.Same(t, first, res)
+	assert.NotNil(t, args)
+}
+
+// A reference to something nothing has fetched yet must still fall through to
+// the fetch rather than reporting it absent.
+func TestCachedResource_MissFallsThrough(t *testing.T) {
+	runtime := runtimeForAsset(t, nil)
+	assert.Nil(t, cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceSubnet, testSubnetID))
+	assert.Nil(t, cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceSubnet, ""))
+}

@@ -117,6 +117,31 @@ func initFromServiceList[S azureListService](
 	return nil, nil, fmt.Errorf("%s with id %q not found", resourceName, id)
 }
 
+// cachedResource returns a resource already in this runtime's cache, or nil.
+//
+// NewResource consults the cache only *after* the init has returned, so an init
+// that fetches unconditionally pays for a resource the runtime is holding and
+// then has its result discarded in favour of the cached one. Calling this first
+// makes a reference cost one fetch for the whole scan rather than one per
+// reference.
+//
+// Reach for this when there is no list to resolve from -- otherwise prefer
+// lookupInServiceList, which answers for resources nothing has fetched yet as
+// well. The two compose: check the cache, then the list, then fetch.
+//
+// The lookup is exact, because that is how the runtime keys the cache. A
+// reference whose casing differs from the stored resource's own id misses and
+// falls through to the fetch, which is what happens today anyway.
+func cachedResource(runtime *plugin.Runtime, resourceName, id string) plugin.Resource {
+	if id == "" || runtime == nil || runtime.Resources == nil {
+		return nil
+	}
+	if res, ok := runtime.Resources.Get(resourceName + "\x00" + id); ok {
+		return res
+	}
+	return nil
+}
+
 // lookupInServiceList finds a resource by ARM id in the list its parent service
 // has already fetched, and returns nil when it is not there.
 //

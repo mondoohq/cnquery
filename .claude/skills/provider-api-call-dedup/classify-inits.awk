@@ -13,6 +13,15 @@
 #              migration -- costs one call per asset of that type.
 #   API+LIST   does both; read it by hand, it is usually a partial migration.
 #
+# BLIND SPOT: this reads init functions only. A typed-reference accessor that
+# builds a client and fetches inline never calls NewResource, never enters an
+# init, and so does not appear here at all -- in azure that is ~110 accessors
+# against 169 NewResource call sites. An audit that runs only this script will
+# look complete while missing that half. Count them separately:
+#
+#   rg -n "^func \(a \*mql\w+\) \w+\(\) \(\*mql\w+, error\) \{" -A 25 \
+#      providers/<name>/resources/*.go | rg -c "New\w+Client\("
+#
 # The buckets are a triage heuristic, not a verdict: confirm by reading the
 # function before migrating it. In particular, an API-CALL init that is not a
 # discovery target is reached through typed accessors rather than once per

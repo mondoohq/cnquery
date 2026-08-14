@@ -2225,6 +2225,13 @@ func initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime,
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServicePrivateEndpoint, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewPrivateEndpointsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -2537,6 +2544,13 @@ func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runti
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServicePrivateLinkService, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewPrivateLinkServicesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -4688,6 +4702,13 @@ func initAzureSubscriptionNetworkServiceNatGateway(runtime *plugin.Runtime, args
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceNatGateway, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -4758,6 +4779,13 @@ func initAzureSubscriptionNetworkServiceSubnet(runtime *plugin.Runtime, args map
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceSubnet, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewSubnetsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -6409,6 +6437,13 @@ func initAzureSubscriptionNetworkServiceLocalNetworkGateway(runtime *plugin.Runt
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewLocalNetworkGatewaysClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
