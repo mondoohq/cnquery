@@ -4,6 +4,8 @@
 package packages
 
 import (
+	"bytes"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -190,4 +192,82 @@ func TestApkUpdateParser(t *testing.T) {
 	assert.Equal(t, "ssl_client", update.Name, "pkg name detected")
 	assert.Equal(t, "1.28.4-r0", update.Version, "pkg version detected")
 	assert.Equal(t, "1.28.4-r1", update.Available, "pkg available version detected")
+}
+
+func TestApkField(t *testing.T) {
+	// The parser used the regexp `^([A-Za-z]):(.*)$` before.
+	tests := []struct {
+		line  string
+		key   byte
+		value string
+		ok    bool
+	}{
+		{"P:musl", 'P', "musl", true},
+		{"V:1.2.5-r0", 'V', "1.2.5-r0", true},
+		{"t:1234567890", 't', "1234567890", true},
+		{"L:MIT", 'L', "MIT", true},
+		// an empty value still matches, because the regexp used `.*`
+		{"T:", 'T', "", true},
+		// file lines are fields too, the parser just keeps none of them
+		{"R:libc.musl-x86_64.so.1", 'R', "libc.musl-x86_64.so.1", true},
+		// the key must be exactly one ASCII letter followed by a colon
+		{"PP:musl", 0, "", false},
+		{"1:musl", 0, "", false},
+		{":musl", 0, "", false},
+		{"P", 0, "", false},
+		{"", 0, "", false},
+		{" P:musl", 0, "", false},
+	}
+	for _, test := range tests {
+		key, value, ok := apkField([]byte(test.line))
+		assert.Equal(t, test.ok, ok, "match for %q", test.line)
+		assert.Equal(t, test.key, key, "key for %q", test.line)
+		assert.Equal(t, test.value, string(value), "value for %q", test.line)
+	}
+}
+
+// apkBenchDB builds a database in the shape of /lib/apk/db/installed. Most
+// lines of a real database list directories and files.
+func apkBenchDB(pkgCount int, filesPerPkg int) []byte {
+	var buf bytes.Buffer
+	for i := 0; i < pkgCount; i++ {
+		name := "package-" + strconv.Itoa(i)
+		buf.WriteString("C:Q1eVpkasdfjkl" + strconv.Itoa(i) + "=\n")
+		buf.WriteString("P:" + name + "\n")
+		buf.WriteString("V:1." + strconv.Itoa(i) + ".0-r0\n")
+		buf.WriteString("A:x86_64\n")
+		buf.WriteString("S:" + strconv.Itoa(10000+i) + "\n")
+		buf.WriteString("I:" + strconv.Itoa(40000+i) + "\n")
+		buf.WriteString("T:short description for " + name + "\n")
+		buf.WriteString("U:https://example.org/" + name + "\n")
+		buf.WriteString("L:MIT\n")
+		buf.WriteString("o:" + name + "\n")
+		buf.WriteString("m:Alpine Developers <foo@example.org>\n")
+		buf.WriteString("t:176000000" + strconv.Itoa(i%10) + "\n")
+		buf.WriteString("c:abcdef0123456789abcdef0123456789abcdef01\n")
+		buf.WriteString("D:so:libc.musl-x86_64.so.1 so:libz.so.1\n")
+		buf.WriteString("p:cmd:" + name + "=1.0.0-r0\n")
+		buf.WriteString("F:usr/lib/" + name + "\n")
+		for j := 0; j < filesPerPkg; j++ {
+			buf.WriteString("R:file-" + strconv.Itoa(j) + ".so\n")
+			buf.WriteString("Z:Q1abcdefghijklmnop" + strconv.Itoa(j) + "=\n")
+		}
+		buf.WriteString("\n")
+	}
+	return buf.Bytes()
+}
+
+func BenchmarkParseApkDbPackages(b *testing.B) {
+	data := apkBenchDB(60, 60)
+	pf := &inventory.Platform{Name: "alpine", Version: "3.21", Arch: "x86_64"}
+
+	b.ReportAllocs()
+	b.SetBytes(int64(len(data)))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		pkgs := ParseApkDbPackages(pf, bytes.NewReader(data))
+		if len(pkgs) != 60 {
+			b.Fatalf("expected 60 packages, got %d", len(pkgs))
+		}
+	}
 }

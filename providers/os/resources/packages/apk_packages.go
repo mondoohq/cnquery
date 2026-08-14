@@ -24,7 +24,21 @@ const (
 	ApkDbInstalledUsr = "/usr/lib/apk/db/installed"
 )
 
-var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
+// apkField splits a line of the apk database into its one letter field key and
+// its value. It returns the same key and value as the regexp
+// `^([A-Za-z]):(.*)$`, which the parser used before.
+//
+// The returned value aliases line, so the caller must copy what it keeps.
+func apkField(line []byte) (key byte, value []byte, ok bool) {
+	if len(line) < 2 || line[1] != ':' {
+		return 0, nil, false
+	}
+	c := line[0]
+	if (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') {
+		return 0, nil, false
+	}
+	return c, line[2:], true
+}
 
 // ParseApkDbPackages parses the database of the apk package manager located in
 // `/lib/apk/db/installed`
@@ -68,9 +82,11 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 
 	scanner := bufio.NewScanner(input)
 	pkg := Package{}
-	var key string
 	for scanner.Scan() {
-		line := scanner.Text()
+		// Bytes avoids one string allocation per line. Most lines of the apk
+		// database list files, and the parser keeps none of them. Every field
+		// it does keep is copied below.
+		line := scanner.Bytes()
 
 		// reset package definition once we reach a newline
 		if len(line) == 0 {
@@ -81,33 +97,28 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 			pkg = Package{}
 		}
 
-		m := APK_REGEX.FindStringSubmatch(line)
-		key = ""
-		if m != nil {
-			key = m[1]
-		}
-
-		// if we short line, we ignore it since this is not a valid line
-		if len(line) < 2 {
+		// a line we cannot split carries no field, so we ignore it
+		key, value, ok := apkField(line)
+		if !ok {
 			continue
 		}
 
 		// Parse the package name or version.
 		switch key {
-		case "P":
-			pkg.Name = m[2] // package name
-		case "V":
-			pkgVersion = m[2] // package version
-		case "A":
-			pkg.Arch = m[2] // architecture
-		case "t":
-			pkgEpoch = m[2] // epoch
-		case "o":
-			pkg.Origin = m[2] // origin
-		case "T":
-			pkg.Description = m[2] // description
-		case "L":
-			pkg.License = m[2] // license (SPDX expression)
+		case 'P':
+			pkg.Name = string(value) // package name
+		case 'V':
+			pkgVersion = string(value) // package version
+		case 'A':
+			pkg.Arch = string(value) // architecture
+		case 't':
+			pkgEpoch = string(value) // epoch
+		case 'o':
+			pkg.Origin = string(value) // origin
+		case 'T':
+			pkg.Description = string(value) // description
+		case 'L':
+			pkg.License = string(value) // license (SPDX expression)
 		}
 	}
 
