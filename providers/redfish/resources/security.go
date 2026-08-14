@@ -14,6 +14,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/stmcginnis/gofish/schemas"
@@ -209,6 +210,32 @@ func certificateSelfSigned(cert *certificateJSON, parsed *x509.Certificate) *boo
 	return &selfSigned
 }
 
+// redfishTimeLayouts lists the timestamp formats controllers return. The
+// Redfish specification mandates ISO 8601, but several controllers drop the
+// time zone or return a date alone.
+var redfishTimeLayouts = []string{
+	time.RFC3339,
+	"2006-01-02T15:04:05",
+	"2006-01-02",
+}
+
+// parseRedfishTime parses a Redfish timestamp. It returns nil when the
+// controller reports no timestamp or a format the provider cannot read, so a
+// date comparison resolves to null rather than to the zero time.
+func parseRedfishTime(value string) *time.Time {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+	for _, layout := range redfishTimeLayouts {
+		if parsed, err := time.Parse(layout, value); err == nil {
+			return &parsed
+		}
+	}
+	log.Debug().Str("value", value).Msg("redfish: could not parse timestamp")
+	return nil
+}
+
 // defaultVendorAccountNames holds the login names that management controllers
 // ship with from the factory. Names are compared without case, because vendors
 // differ in how they capitalize them.
@@ -398,8 +425,8 @@ func (r *mqlRedfish) certificates() ([]any, error) {
 				"issuerOrganization":       llx.StringData(cert.Issuer.Organization),
 				"subjectCommonName":        llx.StringData(cert.Subject.CommonName),
 				"subjectOrganization":      llx.StringData(cert.Subject.Organization),
-				"validNotBefore":           llx.StringData(cert.ValidNotBefore),
-				"validNotAfter":            llx.StringData(cert.ValidNotAfter),
+				"validNotBefore":           llx.TimeDataPtr(parseRedfishTime(cert.ValidNotBefore)),
+				"validNotAfter":            llx.TimeDataPtr(parseRedfishTime(cert.ValidNotAfter)),
 				"serialNumber":             llx.StringData(cert.SerialNumber),
 				"signatureAlgorithm":       llx.StringData(cert.SignatureAlgorithm),
 				"fingerprint":              llx.StringData(cert.Fingerprint),
@@ -419,8 +446,9 @@ func (r *mqlRedfish) certificates() ([]any, error) {
 	return res, nil
 }
 
-// mqlRedfishSessionServiceInternal caches the session service document, which
-// every field of the resource reads.
+// mqlRedfishSessionServiceInternal holds the session service document, which
+// every field of the resource reads. The document itself is cached on the
+// connection, because redfish.sessions reads it too.
 type mqlRedfishSessionServiceInternal struct {
 	once   sync.Once
 	loaded bool
@@ -436,7 +464,7 @@ func (r *mqlRedfishSessionService) id() (string, error) {
 // null instead of to a disabled service.
 func (r *mqlRedfishSessionService) load() {
 	r.once.Do(func() {
-		sessionService, err := redfishConn(r.MqlRuntime).Client().Service.SessionService()
+		sessionService, err := redfishConn(r.MqlRuntime).SessionService()
 		if err != nil {
 			log.Warn().Err(err).Msg("redfish: could not read the session service")
 			return
@@ -488,8 +516,7 @@ func (r *mqlRedfishSessionService) absoluteSessionTimeoutEnabled() (bool, error)
 // sessions returns the sessions that are currently open on the management
 // service.
 func (r *mqlRedfish) sessions() ([]any, error) {
-	svc := redfishConn(r.MqlRuntime).Client().Service
-	sessionService, err := svc.SessionService()
+	sessionService, err := redfishConn(r.MqlRuntime).SessionService()
 	if err != nil {
 		return nil, err
 	}
@@ -513,8 +540,8 @@ func (r *mqlRedfish) sessions() ([]any, error) {
 			"userName":              llx.StringData(s.UserName),
 			"clientOriginIPAddress": llx.StringData(s.ClientOriginIPAddress),
 			"sessionType":           llx.StringData(string(s.SessionType)),
-			"createdTime":           llx.StringData(s.CreatedTime),
-			"expirationTime":        llx.StringData(s.ExpirationTime),
+			"createdTime":           llx.TimeDataPtr(parseRedfishTime(s.CreatedTime)),
+			"expirationTime":        llx.TimeDataPtr(parseRedfishTime(s.ExpirationTime)),
 			"roles":                 llx.ArrayData(roles, types.String),
 		})
 		if err != nil {

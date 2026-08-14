@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -449,10 +450,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlRedfishCertificate).GetSubjectOrganization()).ToDataRes(types.String)
 	},
 	"redfish.certificate.validNotBefore": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlRedfishCertificate).GetValidNotBefore()).ToDataRes(types.String)
+		return (r.(*mqlRedfishCertificate).GetValidNotBefore()).ToDataRes(types.Time)
 	},
 	"redfish.certificate.validNotAfter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlRedfishCertificate).GetValidNotAfter()).ToDataRes(types.String)
+		return (r.(*mqlRedfishCertificate).GetValidNotAfter()).ToDataRes(types.Time)
 	},
 	"redfish.certificate.serialNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishCertificate).GetSerialNumber()).ToDataRes(types.String)
@@ -503,10 +504,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlRedfishSession).GetSessionType()).ToDataRes(types.String)
 	},
 	"redfish.session.createdTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlRedfishSession).GetCreatedTime()).ToDataRes(types.String)
+		return (r.(*mqlRedfishSession).GetCreatedTime()).ToDataRes(types.Time)
 	},
 	"redfish.session.expirationTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlRedfishSession).GetExpirationTime()).ToDataRes(types.String)
+		return (r.(*mqlRedfishSession).GetExpirationTime()).ToDataRes(types.Time)
 	},
 	"redfish.session.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishSession).GetRoles()).ToDataRes(types.Array(types.String))
@@ -974,11 +975,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"redfish.certificate.validNotBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlRedfishCertificate).ValidNotBefore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlRedfishCertificate).ValidNotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"redfish.certificate.validNotAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlRedfishCertificate).ValidNotAfter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlRedfishCertificate).ValidNotAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"redfish.certificate.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1054,11 +1055,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"redfish.session.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlRedfishSession).CreatedTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlRedfishSession).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"redfish.session.expirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlRedfishSession).ExpirationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlRedfishSession).ExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"redfish.session.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2104,8 +2105,8 @@ type mqlRedfishCertificate struct {
 	IssuerOrganization       plugin.TValue[string]
 	SubjectCommonName        plugin.TValue[string]
 	SubjectOrganization      plugin.TValue[string]
-	ValidNotBefore           plugin.TValue[string]
-	ValidNotAfter            plugin.TValue[string]
+	ValidNotBefore           plugin.TValue[*time.Time]
+	ValidNotAfter            plugin.TValue[*time.Time]
 	SerialNumber             plugin.TValue[string]
 	SignatureAlgorithm       plugin.TValue[string]
 	Fingerprint              plugin.TValue[string]
@@ -2165,11 +2166,11 @@ func (c *mqlRedfishCertificate) GetSubjectOrganization() *plugin.TValue[string] 
 	return &c.SubjectOrganization
 }
 
-func (c *mqlRedfishCertificate) GetValidNotBefore() *plugin.TValue[string] {
+func (c *mqlRedfishCertificate) GetValidNotBefore() *plugin.TValue[*time.Time] {
 	return &c.ValidNotBefore
 }
 
-func (c *mqlRedfishCertificate) GetValidNotAfter() *plugin.TValue[string] {
+func (c *mqlRedfishCertificate) GetValidNotAfter() *plugin.TValue[*time.Time] {
 	return &c.ValidNotAfter
 }
 
@@ -2289,8 +2290,8 @@ type mqlRedfishSession struct {
 	UserName              plugin.TValue[string]
 	ClientOriginIPAddress plugin.TValue[string]
 	SessionType           plugin.TValue[string]
-	CreatedTime           plugin.TValue[string]
-	ExpirationTime        plugin.TValue[string]
+	CreatedTime           plugin.TValue[*time.Time]
+	ExpirationTime        plugin.TValue[*time.Time]
 	Roles                 plugin.TValue[[]any]
 }
 
@@ -2338,11 +2339,11 @@ func (c *mqlRedfishSession) GetSessionType() *plugin.TValue[string] {
 	return &c.SessionType
 }
 
-func (c *mqlRedfishSession) GetCreatedTime() *plugin.TValue[string] {
+func (c *mqlRedfishSession) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
 }
 
-func (c *mqlRedfishSession) GetExpirationTime() *plugin.TValue[string] {
+func (c *mqlRedfishSession) GetExpirationTime() *plugin.TValue[*time.Time] {
 	return &c.ExpirationTime
 }
 

@@ -374,6 +374,41 @@ func TestCertificateSelfSigned(t *testing.T) {
 	})
 }
 
+func TestParseRedfishTime(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{name: "RFC 3339 in UTC", value: "2027-03-01T12:30:00Z", want: "2027-03-01T12:30:00Z"},
+		{name: "RFC 3339 with offset", value: "2027-03-01T13:30:00+01:00", want: "2027-03-01T12:30:00Z"},
+		{name: "without a time zone", value: "2027-03-01T12:30:00", want: "2027-03-01T12:30:00Z"},
+		{name: "date only", value: "2027-03-01", want: "2027-03-01T00:00:00Z"},
+		{name: "surrounding space", value: " 2027-03-01T12:30:00Z ", want: "2027-03-01T12:30:00Z"},
+		{name: "empty"},
+		{name: "not a timestamp", value: "N/A"},
+		{name: "US format", value: "03/01/2027"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseRedfishTime(tt.value)
+			if tt.want == "" {
+				if got != nil {
+					t.Errorf("got %v, want null", got)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatal("got null, want a timestamp")
+			}
+			if formatted := got.UTC().Format(time.RFC3339); formatted != tt.want {
+				t.Errorf("got %q, want %q", formatted, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsDefaultVendorAccountName(t *testing.T) {
 	tests := []struct {
 		userName string

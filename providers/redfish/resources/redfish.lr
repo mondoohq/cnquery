@@ -327,10 +327,16 @@ redfish.certificate @defaults("subjectCommonName validNotAfter") {
   subjectCommonName string
   // Organization of the subject
   subjectOrganization string
-  // Start of the validity period, in ISO 8601 format
-  validNotBefore string
-  // End of the validity period, in ISO 8601 format
-  validNotAfter string
+  // Start of the validity period
+  //
+  // Null when the controller reports no start date or a date the provider
+  // cannot parse, so an audit does not read a missing date as a valid one.
+  validNotBefore time
+  // End of the validity period
+  //
+  // Null when the controller reports no expiry date or a date the provider
+  // cannot parse, so an audit does not read a missing date as a valid one.
+  validNotAfter time
   // Serial number of the certificate
   serialNumber string
   // Object identifier of the signature algorithm, as defined by RFC 5280
@@ -390,10 +396,12 @@ redfish.session @defaults("userName clientOriginIPAddress") {
   clientOriginIPAddress string
   // Kind of session, such as Redfish, HostConsole, or IPMI
   sessionType string
-  // Time the session was created, in ISO 8601 format
-  createdTime string
-  // Time the session expires regardless of activity, in ISO 8601 format
-  expirationTime string
+  // Time the session was created
+  createdTime time
+  // Time the session expires regardless of activity
+  //
+  // Null when the session does not expire on an absolute time.
+  expirationTime time
   // Redfish roles that carry the privileges of the session
   roles []string
 }

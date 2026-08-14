@@ -42,6 +42,12 @@ type RedfishConnection struct {
 	managers     []*schemas.Manager
 	managersErr  error
 
+	// The session service backs both redfish.sessionService and
+	// redfish.sessions, so it is fetched once as well.
+	sessionServiceOnce sync.Once
+	sessionService     *schemas.SessionService
+	sessionServiceErr  error
+
 	idOnce sync.Once
 
 	// anonOnce guards the single unauthenticated service-root probe.
@@ -74,6 +80,20 @@ func (c *RedfishConnection) Managers() ([]*schemas.Manager, error) {
 		c.managers, c.managersErr = c.client.Service.Managers()
 	})
 	return c.managers, c.managersErr
+}
+
+// SessionService returns the session service of the management service,
+// fetched once and cached for the lifetime of the connection. It returns nil
+// without an error when the service root links no session service.
+func (c *RedfishConnection) SessionService() (*schemas.SessionService, error) {
+	c.sessionServiceOnce.Do(func() {
+		if c.client == nil || c.client.Service == nil {
+			c.sessionServiceErr = errors.New("no redfish service available")
+			return
+		}
+		c.sessionService, c.sessionServiceErr = c.client.Service.SessionService()
+	})
+	return c.sessionService, c.sessionServiceErr
 }
 
 func NewRedfishConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*RedfishConnection, error) {
