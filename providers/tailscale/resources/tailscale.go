@@ -19,10 +19,18 @@ import (
 // share the result of a single TailnetSettings API call. settingsFetched is
 // atomic because the accessors that read it are distinct MQL fields, which the
 // runtime may resolve concurrently.
+//
+// The three memos below back the cross-resource references. Each one is read
+// once per referring resource, so without memoization a tailnet of N devices
+// would issue N user lists. See identity.go.
 type mqlTailscaleInternal struct {
 	settingsLock    sync.Mutex
 	settingsFetched atomic.Bool
 	settings        *tsclient.TailnetSettings
+
+	userIndexMemo   memo[userIndex]
+	deviceListMemo  memo[[]any]
+	authKeyListMemo memo[[]any]
 }
 
 func (r *mqlTailscale) id() (string, error) {
