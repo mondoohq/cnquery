@@ -24,6 +24,23 @@ func NewSubscriptionsClient(token azcore.TokenCredential, clientOptions policy.C
 	}
 }
 
+// GetSubscription reads a single subscription by id. Staged discovery uses it
+// when it is already scoped to one subscription and needs a field the
+// connection options do not carry, such as the subscription's tags.
+func (client *subscriptionsClient) GetSubscription(subscriptionID string) (subscriptions.Subscription, error) {
+	subscriptionsC, err := subscriptions.NewClient(client.token, &arm.ClientOptions{
+		ClientOptions: client.clientOptions,
+	})
+	if err != nil {
+		return subscriptions.Subscription{}, err
+	}
+	resp, err := subscriptionsC.Get(context.Background(), subscriptionID, &subscriptions.ClientGetOptions{})
+	if err != nil {
+		return subscriptions.Subscription{}, err
+	}
+	return resp.Subscription, nil
+}
+
 func (client *subscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) ([]subscriptions.Subscription, error) {
 	subscriptionsC, err := subscriptions.NewClient(client.token, &arm.ClientOptions{
 		ClientOptions: client.clientOptions,
