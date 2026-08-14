@@ -5,8 +5,10 @@ package connection
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
@@ -159,6 +161,12 @@ func TestCompartmentByID(t *testing.T) {
 
 // sameMap reports whether two maps are the same underlying map, which is what
 // distinguishes a memoized index from one rebuilt on every lookup.
+//
+// It writes a probe key into a and looks for it in b, so a is mutated for the
+// duration of the call. The key is removed again before returning and is
+// chosen not to collide with an OCID, but a caller must not rely on a being
+// untouched while this runs - in particular it is not safe to call
+// concurrently with a read of either map.
 func sameMap(a, b map[string]identity.Compartment) bool {
 	if len(a) != len(b) {
 		return false
@@ -168,4 +176,79 @@ func sameMap(a, b map[string]identity.Compartment) bool {
 	_, ok := b[probe]
 	delete(a, probe)
 	return ok
+}
+
+func TestCompartmentFetchBlocked(t *testing.T) {
+	now := time.Date(2026, 8, 14, 12, 0, 0, 0, time.UTC)
+	failure := errors.New("throttled")
+
+	t.Run("nothing has failed yet, so nothing is held back", func(t *testing.T) {
+		conn := &OciConnection{}
+
+		assert.False(t, conn.compartmentFetchBlocked(now))
+	})
+
+	t.Run("a fresh failure is reused instead of retried", func(t *testing.T) {
+		// This is the case the window exists for: every resource that reports
+		// its compartment reaches GetCompartments, so retrying a throttled
+		// listing per resource is what turns one throttle into hundreds.
+		conn := &OciConnection{
+			compartmentFetchErr: failure,
+			compartmentFetchAt:  now.Add(-time.Second),
+		}
+
+		assert.True(t, conn.compartmentFetchBlocked(now))
+	})
+
+	t.Run("a failure past the window is retried", func(t *testing.T) {
+		// A throttle that has cleared must not decide the compartment of
+		// everything read for the rest of the scan.
+		conn := &OciConnection{
+			compartmentFetchErr: failure,
+			compartmentFetchAt:  now.Add(-compartmentFetchRetryAfter - time.Second),
+		}
+
+		assert.False(t, conn.compartmentFetchBlocked(now))
+	})
+
+	t.Run("the window boundary itself is retried", func(t *testing.T) {
+		conn := &OciConnection{
+			compartmentFetchErr: failure,
+			compartmentFetchAt:  now.Add(-compartmentFetchRetryAfter),
+		}
+
+		assert.False(t, conn.compartmentFetchBlocked(now))
+	})
+}
+
+func TestGetCompartmentsHoldsARecentFailure(t *testing.T) {
+	failure := errors.New("throttled listing")
+
+	t.Run("a held failure is returned without reaching the api", func(t *testing.T) {
+		// The connection has no configuration provider, so the OCI SDK panics
+		// if the fetch is attempted. Reaching the end of this test is the
+		// assertion that it was not.
+		conn := &OciConnection{
+			compartmentFetchErr: failure,
+			compartmentFetchAt:  time.Now(),
+		}
+
+		got, err := conn.GetCompartments(context.Background())
+
+		assert.Nil(t, got)
+		assert.ErrorIs(t, err, failure)
+	})
+
+	t.Run("a fetched tree answers even with a failure recorded", func(t *testing.T) {
+		// compartmentsDone wins over the retry window: once the tree is in
+		// hand an earlier failure is history, not an answer.
+		conn := seededConnection(testCompartment("ocid1.compartment.oc1..prod", "prod"))
+		conn.compartmentFetchErr = failure
+		conn.compartmentFetchAt = time.Now()
+
+		got, err := conn.GetCompartments(context.Background())
+
+		require.NoError(t, err)
+		assert.Len(t, got, 1)
+	})
 }

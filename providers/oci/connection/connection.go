@@ -6,6 +6,7 @@ package connection
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
@@ -31,10 +32,16 @@ type OciConnection struct {
 	// Nearly every resource in the provider reports the compartment it lives
 	// in, so the lookup runs once per resource rather than once per scan; a
 	// walk of the list per lookup would be O(resources x compartments).
-	compartmentLock  sync.Mutex
-	compartmentList  []identity.Compartment
-	compartmentIndex map[string]identity.Compartment
-	compartmentsDone bool
+	// compartmentFetchErr holds the last tree fetch failure, honoured for
+	// compartmentFetchRetryAfter so a throttled Identity API is retried a
+	// handful of times per scan rather than once per resource. See
+	// GetCompartments for why the failure is held briefly instead of forever.
+	compartmentLock     sync.Mutex
+	compartmentList     []identity.Compartment
+	compartmentIndex    map[string]identity.Compartment
+	compartmentsDone    bool
+	compartmentFetchErr error
+	compartmentFetchAt  time.Time
 
 	// Service clients, keyed by "<service>/<region-or-endpoint>". See
 	// cachedClient in clients.go for why they are shared rather than rebuilt.

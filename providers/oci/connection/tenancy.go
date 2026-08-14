@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
@@ -34,6 +35,14 @@ func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 	return &resp.Tenancy, nil
 }
 
+// compartmentFetchRetryAfter is how long a failed tenancy tree fetch is held
+// before the next caller tries again.
+//
+// Long enough that a throttled scan retries a handful of times rather than
+// once per resource, short enough that a transient failure early on does not
+// decide the compartment of everything read afterwards.
+const compartmentFetchRetryAfter = 30 * time.Second
+
 // GetCompartments returns the tenancy root plus every active compartment
 // beneath it.
 //
@@ -41,16 +50,51 @@ func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 // fan out over the compartment tree, and each one asking for it separately
 // meant walking the same paginated ListCompartments a dozen times per scan.
 //
-// A failure is not cached: an Identity call that fails on a throttle should be
-// retried by the next lister rather than turning one bad moment into a scan
-// with no compartments at all.
+// A failure is held only for compartmentFetchRetryAfter rather than for the
+// life of the connection: an Identity call that fails on a throttle should be
+// retried rather than turning one bad moment into a scan with no compartments
+// at all. But it is held, because the callers are no longer only the dozen
+// listers. Every resource that reports its compartment reaches this, so an
+// uncached failure would answer a throttle by walking the paginated listing
+// again for each of them - hundreds of retries of the call that was already
+// being rate limited, on top of the direct read each one then falls back to.
 func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compartment, error) {
 	c.compartmentLock.Lock()
 	defer c.compartmentLock.Unlock()
 	if c.compartmentsDone {
 		return c.compartmentList, nil
 	}
+	if c.compartmentFetchBlocked(time.Now()) {
+		return nil, c.compartmentFetchErr
+	}
 
+	compartments, err := c.fetchCompartments(ctx)
+	if err != nil {
+		c.compartmentFetchErr = err
+		c.compartmentFetchAt = time.Now()
+		return nil, err
+	}
+
+	c.compartmentFetchErr = nil
+	c.compartmentList = compartments
+	c.compartmentsDone = true
+	return compartments, nil
+}
+
+// compartmentFetchBlocked reports whether a recorded tree fetch failure is
+// recent enough to be reused instead of retried. The caller holds
+// compartmentLock.
+func (c *OciConnection) compartmentFetchBlocked(now time.Time) bool {
+	if c.compartmentFetchErr == nil {
+		return false
+	}
+	return now.Sub(c.compartmentFetchAt) < compartmentFetchRetryAfter
+}
+
+// fetchCompartments reads the tenancy root and walks the paginated listing of
+// every active compartment beneath it. Callers go through GetCompartments,
+// which owns the memoizing and the retry window.
+func (c *OciConnection) fetchCompartments(ctx context.Context) ([]identity.Compartment, error) {
 	oClient, err := c.IdentityClient()
 	if err != nil {
 		return nil, err
@@ -92,8 +136,6 @@ func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compart
 		}
 	}
 
-	c.compartmentList = compartments
-	c.compartmentsDone = true
 	return compartments, nil
 }
 
