@@ -47,6 +47,7 @@ tailscale.authKey.scopes 13.3.11
 tailscale.authKey.subject 13.3.11
 tailscale.authKey.tags 13.1.8
 tailscale.authKey.updated 13.3.11
+tailscale.authKey.user 13.3.12
 tailscale.authKey.userId 13.1.8
 tailscale.authKeys 13.1.8
 tailscale.device 11.0.0
@@ -76,6 +77,7 @@ tailscale.device.name 11.0.0
 tailscale.device.nodeId 13.3.11
 tailscale.device.nodeKey 11.0.0
 tailscale.device.os 11.0.0
+tailscale.device.owner 13.3.12
 tailscale.device.postureHardwareAddresses 13.3.11
 tailscale.device.postureIdentityDisabled 13.3.11
 tailscale.device.postureSerialNumbers 13.3.11
@@ -117,9 +119,11 @@ tailscale.service.tags 13.3.11
 tailscale.services 13.3.11
 tailscale.tailnet 11.0.0
 tailscale.user 11.0.0
+tailscale.user.authKeys 13.3.12
 tailscale.user.createdAt 11.0.0
 tailscale.user.currentlyConnected 13.0.7
 tailscale.user.deviceCount 11.0.0
+tailscale.user.devices 13.3.12
 tailscale.user.displayName 11.0.0
 tailscale.user.id 11.0.0
 tailscale.user.lastSeenAt 11.0.0
@@ -134,6 +138,7 @@ tailscale.users 11.0.0
 tailscale.usersRoleAllowedToJoinExternalTailnets 13.0.7
 tailscale.webhook 13.1.8
 tailscale.webhook.created 13.1.8
+tailscale.webhook.creator 13.3.12
 tailscale.webhook.creatorLoginName 13.1.8
 tailscale.webhook.endpointId 13.1.8
 tailscale.webhook.endpointUrl 13.1.8

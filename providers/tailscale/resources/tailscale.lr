@@ -97,8 +97,21 @@ tailscale.device @defaults("id hostname os") {
   os string
   // MagicDNS name of the device
   name string
-  // User who registered the device. For untagged devices this is also the device owner.
-  user string
+  // Login name of the user who registered the device
+  //
+  // Deprecated in favor of owner, whose loginName carries the same value
+  // and which resolves the account itself.
+  user @maturity("deprecated") string
+  // User account that registered the device
+  //
+  // The account the device is attributed to, which for an untagged device
+  // is also its owner. Resolving it turns a device inventory into an
+  // access review: the role, status, and lastSeenAt of the person behind
+  // each machine, so a suspended or long-idle account whose machines are
+  // still enrolled becomes a single query. Null for a tagged device and
+  // for a device shared in from another tailnet, neither of which is
+  // attributed to an account in this tailnet.
+  owner() tailscale.user
   // An identity for the device that is separate from human users (used as part of an ACL to restrict access)
   tags []string
   // List of Tailscale IP addresses for the device, including both IPv4 and IPv6 addresses
@@ -228,6 +241,23 @@ tailscale.user @defaults("id displayName type") {
   lastSeenAt time
   // Whether the user is currently connected to the tailnet
   currentlyConnected bool
+  // Devices the user registered
+  //
+  // The devices in the tailnet attributed to this account, which
+  // deviceCount reports only as a number. Reading the devices themselves
+  // is what turns an offboarding review into an answer: the machines a
+  // suspended account still has enrolled, whether any of them advertises
+  // a subnet route or an exit node, and when each was last seen. Empty
+  // for an account that registered nothing.
+  devices() []tailscale.device
+  // Tailnet keys the user owns
+  //
+  // Pre-auth keys, OAuth clients, and federated identities issued under
+  // this account. A credential outlives the session that created it, so
+  // an account that has left the tailnet can still own an unrevoked
+  // OAuth client with write scopes. Empty for an account that owns no
+  // credentials.
+  authKeys() []tailscale.authKey
 }
 
 // Tailscale tailnet ACL (access control list) policy
@@ -365,7 +395,18 @@ private tailscale.authKey @defaults("id keyType description expires revoked") {
   // Human-readable description set when the key was created
   description string
   // ID of the user that owns the key
-  userId string
+  //
+  // Deprecated in favor of user, whose id carries the same value and
+  // which resolves the account itself.
+  userId @maturity("deprecated") string
+  // User account that owns the key
+  //
+  // The account the credential was issued under. A long-lived credential
+  // outlives the session that created it, so pairing the key with its
+  // owner is what surfaces an OAuth client holding write scopes that
+  // belongs to a suspended or departed account. Null when the owning
+  // account is no longer present in the tailnet.
+  user() tailscale.user
   // API scopes granted to an OAuth client or federated identity
   //
   // For example `devices:core:read` or `all:write`. Empty for pre-auth
@@ -425,7 +466,19 @@ private tailscale.webhook @defaults("endpointId providerType endpointUrl") {
   // Receiver shape (`slack`, `mattermost`, `googlechat`, `discord`, or empty for the generic Tailscale format)
   providerType string
   // Login name of the user that registered the endpoint
+  //
+  // Retained alongside creator because Tailscale keeps reporting the
+  // login name after the account leaves the tailnet, at which point it is
+  // the only surviving record of who registered the endpoint.
   creatorLoginName string
+  // User account that registered the endpoint
+  //
+  // The account behind creatorLoginName, which is what tells an audit
+  // whether the person routing tailnet events off-platform is still an
+  // active member and what role they hold. Null when the creator has
+  // since left the tailnet, in which case creatorLoginName is the only
+  // remaining record.
+  creator() tailscale.user
   // Time the endpoint was registered
   created time
   // Time the endpoint subscription was last modified
