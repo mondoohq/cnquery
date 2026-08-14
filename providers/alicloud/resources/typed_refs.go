@@ -343,7 +343,10 @@ func resolveResourceGroup(runtime *plugin.Runtime, groupID string, field *plugin
 
 	rm, err := resourceManagerResource(runtime)
 	if err != nil {
-		return nil, err
+		log.Warn().Err(err).Str("resourceGroupId", groupID).
+			Msg("alicloud> unable to reach the resource manager")
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	group, err := rm.resourceGroupByID(groupID)
 	if err != nil {

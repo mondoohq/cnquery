@@ -12,6 +12,7 @@ import (
 
 	rmclient "github.com/alibabacloud-go/resourcemanager-20200331/v3/client"
 	tea "github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -491,7 +492,19 @@ func (r *mqlAlicloudResourceManager) loadResourceGroups() error {
 
 			items := resp.Body.ResourceGroups.ResourceGroup
 			for _, g := range items {
-				if g == nil || tea.StringValue(g.Id) == "" {
+				if g == nil {
+					continue
+				}
+				// Id is the rg- identifier that every other resource reports as
+				// its resourceGroupId, so it is the only usable key. Name is a
+				// separate account-unique label and cannot stand in for it. A
+				// group without an id can be neither keyed nor referenced, so
+				// it is dropped, but not silently: the resources that belong to
+				// it would otherwise report a null resource group with no
+				// explanation.
+				if tea.StringValue(g.Id) == "" {
+					log.Warn().Str("name", tea.StringValue(g.Name)).
+						Msg("alicloud> skipping resource group without an id")
 					continue
 				}
 				resource, err := newResourceManagerResourceGroup(r.MqlRuntime, g)
