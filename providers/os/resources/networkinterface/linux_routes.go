@@ -291,11 +291,19 @@ func (l *linuxRouteDetector) parseLinuxIPv6RoutesFromProc(output string) ([]Rout
 			continue
 		}
 
+		// The metric sits in the sixth column as a hex value.
+		var metric int64
+		if v, err := strconv.ParseInt(fields[5], 16, 64); err == nil {
+			metric = v
+		}
+
 		routes = append(routes, Route{
 			Destination: destStr,
 			Gateway:     gatewayStr,
 			Flags:       flags,
 			Interface:   device,
+			Table:       "main",
+			Metric:      metric,
 		})
 	}
 
