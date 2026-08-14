@@ -329,6 +329,7 @@ func (r *mqlAlicloudAlbLoadBalancer) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlListener.parentLoadBalancer = r
 			res = append(res, mqlListener)
 		}
 		if resp.Body.NextToken == nil || *resp.Body.NextToken == "" {
@@ -342,6 +343,12 @@ func (r *mqlAlicloudAlbLoadBalancer) listeners() ([]any, error) {
 // mqlAlicloudAlbListenerInternal caches the forward server-group ids and
 // memoizes the GetListenerAttribute detail (for certificates and mTLS state).
 type mqlAlicloudAlbListenerInternal struct {
+	// parentLoadBalancer is the load balancer the listener was listed from. A
+	// listener exists only as a child of its load balancer, so carrying the
+	// parent from the listing context resolves the reference without an API
+	// call.
+	parentLoadBalancer *mqlAlicloudAlbLoadBalancer
+
 	region              string
 	listenerId          string
 	cacheServerGroupIds []string
@@ -398,6 +405,14 @@ func newAlbListener(runtime *plugin.Runtime, region string, l *albclient.ListLis
 	mqlListener.listenerId = listenerID
 	mqlListener.cacheServerGroupIds = sgIds
 	return mqlListener, nil
+}
+
+func (r *mqlAlicloudAlbListener) loadBalancer() (*mqlAlicloudAlbLoadBalancer, error) {
+	if r.parentLoadBalancer == nil {
+		r.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return r.parentLoadBalancer, nil
 }
 
 func (r *mqlAlicloudAlbListener) id() (string, error) {

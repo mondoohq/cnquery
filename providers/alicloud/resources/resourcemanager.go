@@ -445,6 +445,24 @@ func initAlicloudResourceManagerFolder(runtime *plugin.Runtime, args map[string]
 	return nil, res, nil
 }
 
+// parentFolder resolves the folder that contains this folder. The root folder
+// has no parent and resolves to null; any other folder cannot outlive its
+// parent, so a failure to read it is a real error.
+func (r *mqlAlicloudResourceManagerFolder) parentFolder() (*mqlAlicloudResourceManagerFolder, error) {
+	parentID := r.ParentFolderId.Data
+	if parentID == "" {
+		r.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "alicloud.resourceManager.folder", map[string]*llx.RawData{
+		"folderId": llx.StringData(parentID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudResourceManagerFolder), nil
+}
+
 func (r *mqlAlicloudResourceManagerFolder) id() (string, error) {
 	return r.FolderId.Data, nil
 }

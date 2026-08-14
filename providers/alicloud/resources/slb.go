@@ -259,6 +259,7 @@ func (r *mqlAlicloudSlbLoadBalancer) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			listener.(*mqlAlicloudSlbListener).parentLoadBalancer = r
 			res = append(res, listener)
 		}
 
@@ -303,6 +304,22 @@ func (r *mqlAlicloudSlbLoadBalancer) backendServers() ([]any, error) {
 		})
 	}
 	return res, nil
+}
+
+// mqlAlicloudSlbListenerInternal holds the load balancer the listener was
+// listed from. A listener exists only as a child of its load balancer, so
+// carrying the parent from the listing context resolves the reference without
+// an API call and without a by-id lookup that the SLB resource does not have.
+type mqlAlicloudSlbListenerInternal struct {
+	parentLoadBalancer *mqlAlicloudSlbLoadBalancer
+}
+
+func (r *mqlAlicloudSlbListener) loadBalancer() (*mqlAlicloudSlbLoadBalancer, error) {
+	if r.parentLoadBalancer == nil {
+		r.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return r.parentLoadBalancer, nil
 }
 
 func (r *mqlAlicloudSlbListener) id() (string, error) {

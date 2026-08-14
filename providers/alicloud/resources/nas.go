@@ -254,6 +254,27 @@ func (r *mqlAlicloudNasMountTarget) vswitch() (*mqlAlicloudVpcVswitch, error) {
 	return resolveVpcVswitch(r.MqlRuntime, r.RegionId.Data, r.cacheVswitchId)
 }
 
+// fileSystem resolves the file system the mount target belongs to. A mount
+// target cannot outlive its file system, so a failure to read it is a real
+// error. The file system is already in the resource cache whenever the mount
+// target was reached through it, which the file system init consults before
+// calling the API.
+func (r *mqlAlicloudNasMountTarget) fileSystem() (*mqlAlicloudNasFileSystem, error) {
+	fsID := r.FileSystemId.Data
+	if fsID == "" {
+		r.FileSystem.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "alicloud.nas.fileSystem", map[string]*llx.RawData{
+		"fileSystemId": llx.StringData(fsID),
+		"regionId":     llx.StringData(r.RegionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudNasFileSystem), nil
+}
+
 func (r *mqlAlicloudNasMountTarget) accessGroup() (*mqlAlicloudNasAccessGroup, error) {
 	name := r.AccessGroupName.Data
 	if name == "" {

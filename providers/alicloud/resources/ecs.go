@@ -459,6 +459,27 @@ func (r *mqlAlicloudEcsInstance) image() (*mqlAlicloudEcsImage, error) {
 	return resolveEcsImage(r.MqlRuntime, r.cacheRegion, r.cacheImageID)
 }
 
+// keyPair resolves the SSH key pair the instance was launched with.
+//
+// A key pair can be deleted while the instances launched from it keep running
+// and keep reporting its name, so a name that no longer resolves is an expected
+// state rather than a failure, and yields null.
+func (r *mqlAlicloudEcsInstance) keyPair() (*mqlAlicloudEcsKeypair, error) {
+	name := r.KeyPairName.Data
+	if name == "" {
+		r.KeyPair.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	keyPair, err := resolveEcsKeypair(r.MqlRuntime, r.RegionId.Data, name)
+	if err != nil || keyPair == nil {
+		log.Debug().Err(err).Str("keyPair", name).Str("region", r.RegionId.Data).
+			Msg("alicloud> could not resolve instance key pair")
+		r.KeyPair.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return keyPair, nil
+}
+
 func (r *mqlAlicloudEcsInstance) id() (string, error) {
 	return r.RegionId.Data + "/" + r.InstanceId.Data, nil
 }
@@ -1043,6 +1064,17 @@ func newEcsSecuritygroup(runtime *plugin.Runtime, region string, sg *ecsclient.D
 		return nil, err
 	}
 	return resource.(*mqlAlicloudEcsSecuritygroup), nil
+}
+
+// vpc resolves the VPC the security group is scoped to. A classic-network
+// security group reports no VPC and resolves to null; a VPC-scoped group cannot
+// outlive its VPC, so a failure to read it is a real error.
+func (r *mqlAlicloudEcsSecuritygroup) vpc() (*mqlAlicloudVpcNetwork, error) {
+	if r.VpcId.Data == "" {
+		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return resolveVpcNetwork(r.MqlRuntime, r.RegionId.Data, r.VpcId.Data)
 }
 
 func (r *mqlAlicloudEcsSecuritygroup) id() (string, error) {

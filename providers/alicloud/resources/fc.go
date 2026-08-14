@@ -357,6 +357,26 @@ func newFcTrigger(runtime *plugin.Runtime, region, functionName string, t *fccli
 	return mqlTrigger, nil
 }
 
+// function resolves the function the trigger belongs to. A trigger cannot
+// outlive its function, so a failure to read it is a real error. The function is
+// already in the resource cache whenever the trigger was reached through it,
+// which the function init consults before calling the API.
+func (r *mqlAlicloudFcTrigger) function() (*mqlAlicloudFcFunction, error) {
+	name := r.FunctionName.Data
+	if name == "" {
+		r.Function.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "alicloud.fc.function", map[string]*llx.RawData{
+		"functionName": llx.StringData(name),
+		"regionId":     llx.StringData(r.RegionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudFcFunction), nil
+}
+
 func (r *mqlAlicloudFcTrigger) id() (string, error) {
 	return r.RegionId.Data + "/" + r.FunctionName.Data + "/" + r.TriggerName.Data, nil
 }

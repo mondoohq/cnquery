@@ -341,6 +341,20 @@ func initAlicloudLogLogstore(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return nil, res, nil
 }
 
+// project resolves the Log Service project that contains the logstore. A
+// logstore cannot outlive its project, so a failure to read it is a real error.
+func (r *mqlAlicloudLogLogstore) project() (*mqlAlicloudLogProject, error) {
+	project, err := resolveLogProject(r.MqlRuntime, r.RegionId.Data, r.ProjectName.Data)
+	if err != nil {
+		return nil, err
+	}
+	if project == nil {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
+}
+
 func (r *mqlAlicloudLogLogstore) id() (string, error) {
 	return r.region + "/" + r.projectName + "/" + r.name, nil
 }
