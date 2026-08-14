@@ -3786,7 +3786,7 @@ frr.config {
   // `service integrated-vtysh-config` is set, so vtysh writes one merged file
   integratedVtyshConfig(file) bool
   // BGP instances, one per `router bgp <asn> [vrf <name>]` block
-  bgp(file) []frr.config.bgp
+  bgp(file) []frr.config.router
   // VRF definitions, linked to the BGP instance that serves them
   vrfs(file) []frr.config.vrf
   // Interface blocks
@@ -3832,7 +3832,7 @@ private frr.config.block @defaults("type name") {
 // One `router bgp <asn> [vrf <name>]` block. A fabric node runs one
 // instance for the underlay plus one per VRF, so `vrf` tells tenant
 // instances apart from the underlay.
-private frr.config.bgp @defaults("asn vrf routerId") {
+private frr.config.router @defaults("asn vrf routerId") {
   // Local autonomous system number
   asn int
   // VRF this instance serves (empty for the default VRF / underlay)
@@ -3846,9 +3846,9 @@ private frr.config.bgp @defaults("asn vrf routerId") {
   // Neighbors activate IPv4 unicast automatically, false only with `no bgp default ipv4-unicast`
   defaultIpv4Unicast bool
   // Peers and peer groups of this instance
-  neighbors []frr.config.bgp.neighbor
+  neighbors []frr.config.router.neighbor
   // Address families of this instance
-  addressFamilies []frr.config.bgp.addressFamily
+  addressFamilies []frr.config.router.addressFamily
   // Flat directive map of the router block (name -> value)
   params map[string]string
   // Source file path
@@ -3864,7 +3864,7 @@ private frr.config.bgp @defaults("asn vrf routerId") {
 // One peer or peer group, merged from every `neighbor <name> ...` line in
 // the router block and in its address families. The rolled-up filter
 // lists answer whether a session accepts routes without a filter.
-private frr.config.bgp.neighbor @defaults("name remoteAs") {
+private frr.config.router.neighbor @defaults("name remoteAs") {
   // Peer address, interface name for an unnumbered peer, or peer group name
   name string
   // Peer is unnumbered, configured with `neighbor <if> interface remote-as`
@@ -3898,7 +3898,7 @@ private frr.config.bgp.neighbor @defaults("name remoteAs") {
   // Hold time seconds from `neighbor <n> timers <keepalive> <hold>`
   holdTime int
   // Per address family settings
-  addressFamilies []frr.config.bgp.neighbor.addressFamily
+  addressFamilies []frr.config.router.neighbor.addressFamily
   // Address families the neighbor is explicitly activated in (e.g. "ipv4 unicast")
   activatedAddressFamilies []string
   // Inbound route maps across every address family
@@ -3925,7 +3925,7 @@ private frr.config.bgp.neighbor @defaults("name remoteAs") {
 //
 // What one neighbor does inside one address family. The filters here
 // decide which routes the session accepts and announces.
-private frr.config.bgp.neighbor.addressFamily @defaults("afi safi activate") {
+private frr.config.router.neighbor.addressFamily @defaults("afi safi activate") {
   // Address family identifier (ipv4, ipv6, l2vpn)
   afi string
   // Subsequent address family identifier (unicast, multicast, evpn, vpn)
@@ -3965,7 +3965,7 @@ private frr.config.bgp.neighbor.addressFamily @defaults("afi safi activate") {
 // One `address-family <afi> <safi>` block of a router. The EVPN family
 // carries the route targets and the VRF imports that decide which VRF
 // sees which routes.
-private frr.config.bgp.addressFamily @defaults("afi safi") {
+private frr.config.router.addressFamily @defaults("afi safi") {
   // Address family identifier (ipv4, ipv6, l2vpn)
   afi string
   // Subsequent address family identifier (unicast, multicast, evpn, vpn)
