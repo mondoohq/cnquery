@@ -29,10 +29,29 @@ const (
 	PacmanLocalDB = "/var/lib/pacman/local"
 )
 
-var PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
+// PACMAN_REGEX splits one line of `pacman -Q`, which prints "<name> <version>".
+//
+// The name class used to be `[\w-]`, which is letters, digits, `_` and `-`.
+// pkgname also allows `.`, `+`, `@` -- so `db5.3`, `libstdc++` and `libc++`
+// did not match, and a line that does not match is appended nowhere. The
+// package left the inventory with no error and no count discrepancy, which is
+// the one outcome a vulnerability scan cannot recover from: an absent package
+// is an unreported CVE. On a stock `archlinux:base-devel` container that is 2
+// of 170 packages.
+//
+// The version is deliberately matched as a run of non-space rather than by
+// enumerating characters. It is `[epoch:]pkgver-pkgrel`, and pkgver alone can
+// carry `.` `_` `+` `~` and VCS suffixes (`0.3.2.r13.g553691a-1`); enumerating
+// that set is what broke the name in the first place. The name keeps a
+// character class because `pacman -Q` output has no other structure to anchor
+// on -- pacman prints its own diagnostics on the same stream ("warning:
+// database file for 'core' does not exist") and those must not parse as
+// packages. pkgname is a set makepkg actually enforces, unlike the version.
+var PACMAN_REGEX = regexp.MustCompile(`^([A-Za-z0-9@._+][A-Za-z0-9@._+-]*)\s(\S+)$`)
 
 func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
+	dropped := 0
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -47,9 +66,32 @@ func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 				FilesAvailable: PkgFilesAsync,
 				PUrl:           purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
 			})
+		} else if strings.TrimSpace(line) != "" && !isPacmanDiagnostic(line) {
+			// A line we cannot parse is a package we do not report. Count it,
+			// so the next drift in this format shows up as a warning instead of
+			// a quietly shorter package list.
+			dropped++
+			log.Debug().Str("line", line).Msg("mql[pacman]> could not parse package line")
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		log.Warn().Err(err).Msg("mql[pacman]> package list was truncated while scanning")
+	}
+	if dropped > 0 {
+		log.Warn().Int("dropped", dropped).Int("parsed", len(pkgs)).
+			Msg("mql[pacman]> some package lines could not be parsed, packages are missing from the inventory")
+	}
 	return pkgs
+}
+
+// isPacmanDiagnostic reports whether a line is pacman talking about itself
+// rather than a package. pacman emits these on hosts whose sync databases are
+// missing, and they turn up in the same stream we parse -- counting them as
+// lost packages would warn on every scan of a perfectly healthy host.
+func isPacmanDiagnostic(line string) bool {
+	return strings.HasPrefix(line, "warning:") ||
+		strings.HasPrefix(line, "error:") ||
+		strings.HasPrefix(line, "::")
 }
 
 // Arch, Manjaro
