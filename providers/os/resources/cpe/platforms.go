@@ -12,6 +12,10 @@ import (
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
+// amazonLinux1Regex matches the Amazon Linux 1 version scheme. The pattern is compiled
+// once here and not on every CPE build.
+var amazonLinux1Regex = regexp.MustCompile(`^(2017|2018)\.`)
+
 type platformCPEEntry struct {
 	Platform    string
 	CPEBuilder  func(platform, version string, workstation bool) (string, error)
@@ -36,10 +40,9 @@ var platformCPES = []platformCPEEntry{
 	{
 		Platform: "amazonlinux",
 		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
-			amzn1 := regexp.MustCompile(`^(2017|2018)\.`)
 			product := ""
 
-			if amzn1.MatchString(version) {
+			if amazonLinux1Regex.MatchString(version) {
 				product = "linux"
 			} else if version == "2" {
 				product = "linux_2"

@@ -11,6 +11,10 @@ import (
 	"github.com/facebookincubator/nvdtools/wfn"
 )
 
+// epochRegex matches a leading epoch such as "2:" in "2:4.17.12". NewPackage2Cpe runs once
+// per package, so the pattern is compiled once here and not on every call.
+var epochRegex = regexp.MustCompile(`^\d+:(.*)$`)
+
 func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, error) {
 	cpes := []string{}
 	vendor = strings.ToLower(vendor)
@@ -21,21 +25,25 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 
 	// Remove epoch when present; otherwise WFNize will only use the epoch as
 	// the version.
-	epochRegex := regexp.MustCompile(`^\d+:(.*)$`)
 	if matches := epochRegex.FindStringSubmatch(version); len(matches) > 1 {
 		version = matches[1]
 	}
 
 	var err error
-	for n, addr := range map[string]*string{
-		"vendor":  &vendor,
-		"name":    &name,
-		"version": &version,
-		"release": &release,
-		"arch":    &arch,
+	// A fixed array avoids building a map on every call, and it reports the same field
+	// first when more than one field fails.
+	for _, field := range [...]struct {
+		name string
+		addr *string
+	}{
+		{"vendor", &vendor},
+		{"name", &name},
+		{"version", &version},
+		{"release", &release},
+		{"arch", &arch},
 	} {
-		if *addr, err = wfn.WFNize(*addr); err != nil {
-			return cpes, fmt.Errorf("couldn't wfnize %s %q: %v", n, *addr, err)
+		if *field.addr, err = wfn.WFNize(*field.addr); err != nil {
+			return cpes, fmt.Errorf("couldn't wfnize %s %q: %v", field.name, *field.addr, err)
 		}
 	}
 
