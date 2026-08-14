@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v6/client"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -312,6 +313,50 @@ func scopedInitIDArgs(runtime *plugin.Runtime, args map[string]*llx.RawData, sco
 		return args
 	}
 	return map[string]*llx.RawData{idField: llx.StringData(id)}
+}
+
+// resourceManagerResource returns the shared alicloud.resourceManager instance.
+// It memoizes the account's resource group listing, so every resourceGroup
+// reference in a scan resolves against one ListResourceGroups call.
+func resourceManagerResource(runtime *plugin.Runtime) (*mqlAlicloudResourceManager, error) {
+	res, err := CreateResource(runtime, "alicloud.resourceManager", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudResourceManager), nil
+}
+
+// resolveResourceGroup returns the resource group that owns a resource, given
+// the resource's resource group id.
+//
+// A resource group that cannot be read resolves to null rather than failing the
+// caller: Resource Management is a separate service that an account may not
+// have permission for, and one unreadable group must not fail a query over
+// every instance in a region. The lookup is warned once per resource so the
+// null is attributable, and alicloud.resourceManager.resourceGroups still
+// surfaces the underlying error for anyone querying the groups directly.
+func resolveResourceGroup(runtime *plugin.Runtime, groupID string, field *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]) (*mqlAlicloudResourceManagerResourceGroup, error) {
+	if groupID == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	rm, err := resourceManagerResource(runtime)
+	if err != nil {
+		return nil, err
+	}
+	group, err := rm.resourceGroupByID(groupID)
+	if err != nil {
+		log.Warn().Err(err).Str("resourceGroupId", groupID).
+			Msg("alicloud> unable to resolve resource group")
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if group == nil {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return group, nil
 }
 
 // requiredStringArg reads a required non-empty string argument from an init

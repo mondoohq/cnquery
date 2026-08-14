@@ -16,7 +16,19 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/v13/types"
 )
+
+// rmPageDone reports whether a Resource Management listing has returned its
+// last page. A short page ends the walk; so does reaching the reported total,
+// which the API omits (as 0) on some listings. Both guards are needed: without
+// the short-page check a listing whose total is absent would page forever.
+func rmPageDone(itemCount int, pageNumber, pageSize, total int32) bool {
+	if itemCount < int(pageSize) {
+		return true
+	}
+	return total > 0 && pageNumber*pageSize >= total
+}
 
 // rmParseTime parses a Resource Management ISO-8601 timestamp, which may carry
 // fractional seconds. Returns nil on a nil or unparseable input.
@@ -33,11 +45,19 @@ func rmParseTime(s *string) *time.Time {
 }
 
 // mqlAlicloudResourceManagerInternal memoizes the resource directory detail
-// shared by the identity accessors.
+// shared by the identity accessors, and the account's resource groups, which
+// back the resourceGroup reference on every resource that carries a resource
+// group id.
 type mqlAlicloudResourceManagerInternal struct {
 	dirLock    sync.Mutex
 	dirFetched atomic.Bool
 	dir        *rmclient.GetResourceDirectoryResponseBodyResourceDirectory
+
+	groupsLock    sync.Mutex
+	groupsFetched atomic.Bool
+	groupsErr     error
+	groups        []any
+	groupsByID    map[string]*mqlAlicloudResourceManagerResourceGroup
 }
 
 func (r *mqlAlicloudResourceManager) id() (string, error) {
@@ -226,7 +246,7 @@ func (r *mqlAlicloudResourceManager) accounts() ([]any, error) {
 		}
 
 		total := tea.Int32Value(resp.Body.TotalCount)
-		if len(items) < int(pageSize) || (total > 0 && pageNumber*pageSize >= total) {
+		if rmPageDone(len(items), pageNumber, pageSize, total) {
 			break
 		}
 		pageNumber++
@@ -285,7 +305,7 @@ func (r *mqlAlicloudResourceManager) folders() ([]any, error) {
 				queue = append(queue, tea.StringValue(f.FolderId))
 			}
 			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) < int(pageSize) || (total > 0 && pageNumber*pageSize >= total) {
+			if rmPageDone(len(items), pageNumber, pageSize, total) {
 				break
 			}
 			pageNumber++
@@ -342,7 +362,7 @@ func (r *mqlAlicloudResourceManager) controlPolicies() ([]any, error) {
 				res = append(res, resource)
 			}
 			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) < int(pageSize) || (total > 0 && pageNumber*pageSize >= total) {
+			if rmPageDone(len(items), pageNumber, pageSize, total) {
 				break
 			}
 			pageNumber++
@@ -426,6 +446,162 @@ func initAlicloudResourceManagerFolder(runtime *plugin.Runtime, args map[string]
 
 func (r *mqlAlicloudResourceManagerFolder) id() (string, error) {
 	return r.FolderId.Data, nil
+}
+
+// loadResourceGroups lists every resource group in the account once and indexes
+// it by id.
+//
+// Unlike directory(), a failure is cached alongside the result. Resource groups
+// are resolved from the resourceGroup reference of every ECS instance, bucket,
+// cluster and load balancer in a scan, so an uncached error would turn one
+// denied ListResourceGroups call into one call per resource.
+func (r *mqlAlicloudResourceManager) loadResourceGroups() error {
+	if r.groupsFetched.Load() {
+		return r.groupsErr
+	}
+	r.groupsLock.Lock()
+	defer r.groupsLock.Unlock()
+	if r.groupsFetched.Load() {
+		return r.groupsErr
+	}
+
+	groups := []any{}
+	byID := map[string]*mqlAlicloudResourceManagerResourceGroup{}
+	err := func() error {
+		conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+		client, err := conn.ResourceManagerClient()
+		if err != nil {
+			return err
+		}
+
+		pageNumber := int32(1)
+		pageSize := int32(100)
+		for {
+			resp, err := client.ListResourceGroups(&rmclient.ListResourceGroupsRequest{
+				IncludeTags: tea.Bool(true),
+				PageNumber:  tea.Int32(pageNumber),
+				PageSize:    tea.Int32(pageSize),
+			})
+			if err != nil {
+				return err
+			}
+			if resp == nil || resp.Body == nil || resp.Body.ResourceGroups == nil {
+				break
+			}
+
+			items := resp.Body.ResourceGroups.ResourceGroup
+			for _, g := range items {
+				if g == nil || tea.StringValue(g.Id) == "" {
+					continue
+				}
+				resource, err := newResourceManagerResourceGroup(r.MqlRuntime, g)
+				if err != nil {
+					return err
+				}
+				groups = append(groups, resource)
+				byID[tea.StringValue(g.Id)] = resource
+			}
+
+			total := tea.Int32Value(resp.Body.TotalCount)
+			if rmPageDone(len(items), pageNumber, pageSize, total) {
+				break
+			}
+			pageNumber++
+		}
+		return nil
+	}()
+
+	if err != nil {
+		r.groupsErr = err
+	} else {
+		r.groups = groups
+		r.groupsByID = byID
+	}
+	r.groupsFetched.Store(true)
+	return r.groupsErr
+}
+
+func (r *mqlAlicloudResourceManager) resourceGroups() ([]any, error) {
+	if err := r.loadResourceGroups(); err != nil {
+		return nil, err
+	}
+	return r.groups, nil
+}
+
+// resourceGroupByID returns the resource group with the given id, or nil when
+// the account has no such group.
+func (r *mqlAlicloudResourceManager) resourceGroupByID(id string) (*mqlAlicloudResourceManagerResourceGroup, error) {
+	if err := r.loadResourceGroups(); err != nil {
+		return nil, err
+	}
+	return r.groupsByID[id], nil
+}
+
+// resourceGroupTagsToMap flattens the nested tag envelope ListResourceGroups
+// returns. A tag with no key is dropped rather than creating an empty-string
+// key, and a tag with no value maps to the empty string.
+func resourceGroupTagsToMap(tags *rmclient.ListResourceGroupsResponseBodyResourceGroupsResourceGroupTags) map[string]any {
+	res := map[string]any{}
+	if tags == nil {
+		return res
+	}
+	for _, t := range tags.Tag {
+		if t == nil || tea.StringValue(t.TagKey) == "" {
+			continue
+		}
+		res[tea.StringValue(t.TagKey)] = tea.StringValue(t.TagValue)
+	}
+	return res
+}
+
+// newResourceManagerResourceGroup builds a resource group resource from a
+// ListResourceGroups entry.
+func newResourceManagerResourceGroup(runtime *plugin.Runtime, g *rmclient.ListResourceGroupsResponseBodyResourceGroupsResourceGroup) (*mqlAlicloudResourceManagerResourceGroup, error) {
+	resource, err := CreateResource(runtime, "alicloud.resourceManager.resourceGroup", map[string]*llx.RawData{
+		"__id":            llx.StringDataPtr(g.Id),
+		"resourceGroupId": llx.StringDataPtr(g.Id),
+		"name":            llx.StringDataPtr(g.Name),
+		"displayName":     llx.StringDataPtr(g.DisplayName),
+		"accountId":       llx.StringDataPtr(g.AccountId),
+		"status":          llx.StringDataPtr(g.Status),
+		"createDate":      llx.TimeDataPtr(rmParseTime(g.CreateDate)),
+		"tags":            llx.MapData(resourceGroupTagsToMap(g.Tags), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAlicloudResourceManagerResourceGroup), nil
+}
+
+// initAlicloudResourceManagerResourceGroup resolves a resource group by id from
+// the account's group listing, which is fetched once and shared with every
+// resourceGroup reference in the scan.
+func initAlicloudResourceManagerResourceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	groupID, err := requiredStringArg(args, "resourceGroupId", "alicloud.resourceManager.resourceGroup")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rm, err := resourceManagerResource(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	group, err := rm.resourceGroupByID(groupID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if group == nil {
+		return nil, nil, fmt.Errorf("alicloud.resourceManager.resourceGroup %q not found", groupID)
+	}
+	return nil, group, nil
+}
+
+func (r *mqlAlicloudResourceManagerResourceGroup) id() (string, error) {
+	return r.ResourceGroupId.Data, nil
 }
 
 func (r *mqlAlicloudResourceManagerControlPolicy) id() (string, error) {

@@ -463,6 +463,8 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   localStorageCapacity int
   // Resource group ID the instance belongs to
   resourceGroupId string
+  // Resource group that contains the instance
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Network type of the instance
   //
   // One of classic or vpc.
@@ -664,6 +666,8 @@ alicloud.ecs.keypair @defaults("keyPairName") {
   creationTime time
   // Resource group ID the key pair belongs to
   resourceGroupId string
+  // Resource group that contains the key pair
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Region ID of the key pair
   regionId string
   // Tags on the key pair, as key-value pairs
@@ -694,6 +698,8 @@ alicloud.ecs.securitygroup @defaults("securityGroupId securityGroupName security
   regionId string
   // Resource group ID the security group belongs to
   resourceGroupId string
+  // Resource group that contains the security group
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Tags on the security group, as key-value pairs
   tags map[string]string
   // Inbound and outbound rules of the security group
@@ -837,6 +843,8 @@ alicloud.ess.scalingGroup @defaults("name scalingGroupId lifecycleState totalCap
   maxInstanceLifetime int
   // ID of the resource group the scaling group belongs to
   resourceGroupId string
+  // Resource group that contains the scaling group
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // ID of the launch template the group creates instances from
   //
   // Empty on a group that launches from a scaling configuration instead. When
@@ -1072,6 +1080,8 @@ alicloud.vpc.network {
   creationTime time
   // Resource group ID the VPC belongs to
   resourceGroupId string
+  // Resource group that contains the VPC
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // User CIDR blocks associated with the VPC
   userCidrs []string
   // vSwitches in the VPC
@@ -1153,6 +1163,8 @@ alicloud.vpc.vswitch {
   networkAcl() alicloud.vpc.networkAcl
   // Resource group ID the vSwitch belongs to
   resourceGroupId string
+  // Resource group that contains the vSwitch
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // vSwitch sharing status
   //
   // Empty for a regular vSwitch, Shared once the vSwitch is shared, or Sharing
@@ -1190,6 +1202,8 @@ alicloud.vpc.routeTable {
   creationTime time
   // Resource group ID the route table belongs to
   resourceGroupId string
+  // Resource group that contains the route table
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // vSwitches associated with the route table
   vswitches() []alicloud.vpc.vswitch
   // Gateway IDs associated with the route table
@@ -1287,6 +1301,8 @@ alicloud.vpc.natGateway {
   regionId string
   // Resource group ID the NAT gateway belongs to
   resourceGroupId string
+  // Resource group that contains the NAT gateway
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // SNAT table IDs of the NAT gateway
   snatTableIds []string
   // DNAT (forward) table IDs of the NAT gateway
@@ -1375,6 +1391,8 @@ alicloud.vpc.eipAddress {
   regionId string
   // Resource group ID the EIP belongs to
   resourceGroupId string
+  // Resource group that contains the elastic IP address
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // VPC the EIP is associated with
   vpc() alicloud.vpc.network
   // Zone the EIP belongs to
@@ -1492,6 +1510,8 @@ alicloud.oss.bucket {
   extranetEndpoint string
   // ID of the resource group the bucket belongs to
   resourceGroupId string
+  // Resource group that contains the bucket
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Access control list grant
   //
   // The canned ACL applied to the bucket. One of private, public-read, or
@@ -1661,6 +1681,8 @@ alicloud.slb.loadBalancer {
   modificationProtectionReason string
   // ID of the resource group that the CLB instance belongs to
   resourceGroupId string
+  // Resource group that contains the load balancer
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Tags attached to the CLB instance, as key-value pairs
   tags map[string]string
   // Listeners configured on the CLB instance
@@ -1839,6 +1861,8 @@ alicloud.rds.instance {
   masterInstance() alicloud.rds.instance
   // ID of the resource group the instance belongs to
   resourceGroupId string
+  // Resource group that contains the instance
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Storage capacity of the instance in GB
   dbInstanceStorage() int
   // Port on which the instance listens for connections
@@ -1961,6 +1985,8 @@ alicloud.redis.instance {
   editionType string
   // ID of the resource group the instance belongs to
   resourceGroupId string
+  // Resource group that contains the instance
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the instance was created
   createTime time
   // Time the subscription instance expires
@@ -2086,6 +2112,8 @@ alicloud.mongodb.instance {
   lockMode string
   // ID of the resource group the instance belongs to
   resourceGroupId string
+  // Resource group that contains the instance
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Tags attached to the instance, keyed by tag key
   tags map[string]string
   // VPC hosting the instance
@@ -2241,6 +2269,8 @@ alicloud.polardb.cluster {
   deletionLock int
   // ID of the resource group the cluster belongs to
   resourceGroupId string
+  // Resource group that contains the cluster
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Serverless cluster type, for example AgileServerless or SteadyServerless (empty for non-serverless clusters)
   serverlessType string
   // Network type
@@ -2343,6 +2373,8 @@ alicloud.vpc.flowLog {
   logStoreName string
   // ID of the resource group the flow log belongs to
   resourceGroupId string
+  // Resource group that contains the flow log
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the flow log was created
   creationTime time
   // Delivery state of the records to Log Service
@@ -2620,6 +2652,8 @@ alicloud.log.project {
   owner string
   // ID of the resource group the project belongs to
   resourceGroupId string
+  // Resource group that contains the project
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Data-redundancy type of the project storage, for example LRS or ZRS
   dataRedundancyType string
   // Whether the recycle bin is enabled for the project
@@ -2810,6 +2844,8 @@ alicloud.resourceManager {
   folders() []alicloud.resourceManager.folder
   // Control policies in the resource directory, both system and custom
   controlPolicies() []alicloud.resourceManager.controlPolicy
+  // Resource groups in the account
+  resourceGroups() []alicloud.resourceManager.resourceGroup
 }
 
 // Resource Directory account
@@ -2859,6 +2895,36 @@ alicloud.resourceManager.folder {
   parentFolderId string
   // Time the folder was created
   createTime time
+}
+
+// Resource group
+//
+// A single resource group in an Alibaba Cloud account, keyed by
+// resourceGroupId, for example
+// `alicloud.resourceManager.resourceGroups.where(name == "production")`. A
+// resource group is the ownership and billing boundary that most Alibaba Cloud
+// resources are placed into, and RAM policies are commonly scoped to one.
+// Exposes the group identifier, its display name, lifecycle status, owning
+// account, and tags. Resources across the provider reach their group through a
+// resourceGroup field, so an audit can select or exclude an environment by
+// group rather than by an opaque identifier.
+alicloud.resourceManager.resourceGroup @defaults("resourceGroupId name displayName status") {
+  // Resource group ID, used as the lookup key
+  resourceGroupId string
+  // Unique identifier of the resource group within the account
+  name string
+  // Display name of the resource group
+  displayName string
+  // ID of the account that owns the resource group
+  accountId string
+  // Lifecycle status
+  //
+  // One of Creating, OK, PendingDelete, or Deleting.
+  status string
+  // Time the resource group was created
+  createDate time
+  // Tags applied to the resource group
+  tags map[string]string
 }
 
 // Resource Directory control policy
@@ -2964,6 +3030,8 @@ alicloud.cs.cluster {
   size int
   // ID of the resource group the cluster belongs to
   resourceGroupId string
+  // Resource group that contains the cluster
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Zone ID the cluster's managed resources reside in
   zoneId string
   // Time zone configured for the cluster
@@ -3052,6 +3120,8 @@ alicloud.cs.nodePool {
   type string
   // ID of the resource group the node pool belongs to
   resourceGroupId string
+  // Resource group that contains the node pool
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Whether this is the cluster's default node pool
   isDefault bool
   // Time the node pool was created
@@ -3206,6 +3276,8 @@ alicloud.alb.loadBalancer {
   bandwidthPackageId string
   // ID of the resource group the load balancer belongs to
   resourceGroupId string
+  // Resource group that contains the load balancer
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the load balancer was created
   createTime time
   // Whether deletion protection is enabled
@@ -3307,6 +3379,8 @@ alicloud.alb.serverGroup {
   serverCount int
   // ID of the resource group the server group belongs to
   resourceGroupId string
+  // Resource group that contains the server group
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the server group was created
   createTime time
   // Whether cross-zone load balancing is enabled
@@ -3375,6 +3449,8 @@ alicloud.nlb.loadBalancer {
   dnsName string
   // ID of the resource group the load balancer belongs to
   resourceGroupId string
+  // Resource group that contains the load balancer
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the load balancer was created
   createTime time
   // ID of the bandwidth package bound to the load balancer, empty when none
@@ -3488,6 +3564,8 @@ alicloud.nlb.serverGroup {
   healthCheckConnectPort int
   // ID of the resource group the server group belongs to
   resourceGroupId string
+  // Resource group that contains the server group
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Tags applied to the server group
   tags map[string]string
   // VPC the server group belongs to
@@ -3559,6 +3637,8 @@ alicloud.fc.function {
   instanceConcurrency int
   // ID of the resource group the function belongs to
   resourceGroupId string
+  // Resource group that contains the function
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Environment variables configured on the function
   //
   // Audit these for plaintext secrets; values are returned as configured.
@@ -3700,6 +3780,8 @@ alicloud.nas.fileSystem {
   encrypted bool
   // ID of the resource group the file system belongs to
   resourceGroupId string
+  // Resource group that contains the file system
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the file system was created
   createTime time
   // Tags applied to the file system
@@ -4690,6 +4772,8 @@ alicloud.cen.instance @defaults("cenId name status protectionLevel") {
   ipv6Level string
   // Resource group ID the CEN belongs to
   resourceGroupId string
+  // Resource group that contains the CEN instance
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Time the CEN was created
   creationTime time
   // Tags on the CEN, as key-value pairs
@@ -4787,6 +4871,8 @@ alicloud.vpc.vpnGateway @defaults("vpnGatewayId name status internetIp") {
   endTime time
   // Resource group ID the gateway belongs to
   resourceGroupId string
+  // Resource group that contains the VPN gateway
+  resourceGroup() alicloud.resourceManager.resourceGroup
   // Tags on the gateway, as key-value pairs
   tags map[string]string
   // VPC the gateway is attached to

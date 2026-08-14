@@ -69,6 +69,7 @@ alicloud.alb.loadBalancer.loadBalancerId 13.0.1
 alicloud.alb.loadBalancer.modificationProtectionStatus 13.0.1
 alicloud.alb.loadBalancer.name 13.0.1
 alicloud.alb.loadBalancer.regionId 13.0.1
+alicloud.alb.loadBalancer.resourceGroup 13.3.2
 alicloud.alb.loadBalancer.resourceGroupId 13.0.1
 alicloud.alb.loadBalancer.securityGroups 13.0.1
 alicloud.alb.loadBalancer.status 13.0.1
@@ -85,6 +86,7 @@ alicloud.alb.serverGroup.healthCheckProtocol 13.0.1
 alicloud.alb.serverGroup.name 13.0.1
 alicloud.alb.serverGroup.protocol 13.0.1
 alicloud.alb.serverGroup.regionId 13.0.1
+alicloud.alb.serverGroup.resourceGroup 13.3.2
 alicloud.alb.serverGroup.resourceGroupId 13.0.1
 alicloud.alb.serverGroup.scheduler 13.0.1
 alicloud.alb.serverGroup.serverCount 13.0.1
@@ -150,6 +152,7 @@ alicloud.cen.instance.description 13.2.5
 alicloud.cen.instance.ipv6Level 13.2.5
 alicloud.cen.instance.name 13.2.5
 alicloud.cen.instance.protectionLevel 13.2.5
+alicloud.cen.instance.resourceGroup 13.3.2
 alicloud.cen.instance.resourceGroupId 13.2.5
 alicloud.cen.instance.status 13.2.5
 alicloud.cen.instance.tags 13.2.5
@@ -323,6 +326,7 @@ alicloud.cs.cluster.privateZone 13.0.1
 alicloud.cs.cluster.profile 13.0.1
 alicloud.cs.cluster.proxyMode 13.0.1
 alicloud.cs.cluster.regionId 13.0.1
+alicloud.cs.cluster.resourceGroup 13.3.2
 alicloud.cs.cluster.resourceGroupId 13.0.1
 alicloud.cs.cluster.rrsaEnabled 13.0.1
 alicloud.cs.cluster.securityGroup 13.0.1
@@ -370,6 +374,7 @@ alicloud.cs.nodePool.nodePoolId 13.0.1
 alicloud.cs.nodePool.nodePoolState 13.0.1
 alicloud.cs.nodePool.ramRole 13.0.1
 alicloud.cs.nodePool.regionId 13.0.1
+alicloud.cs.nodePool.resourceGroup 13.3.2
 alicloud.cs.nodePool.resourceGroupId 13.0.1
 alicloud.cs.nodePool.runtime 13.0.1
 alicloud.cs.nodePool.runtimeVersion 13.0.1
@@ -476,6 +481,7 @@ alicloud.ecs.instance.privateIpAddresses 13.0.0
 alicloud.ecs.instance.publicIpAddresses 13.0.0
 alicloud.ecs.instance.ramRole 13.2.5
 alicloud.ecs.instance.regionId 13.0.0
+alicloud.ecs.instance.resourceGroup 13.3.2
 alicloud.ecs.instance.resourceGroupId 13.0.0
 alicloud.ecs.instance.securityGroupIds 13.0.0
 alicloud.ecs.instance.securityGroups 13.0.0
@@ -498,6 +504,7 @@ alicloud.ecs.keypair.creationTime 13.0.0
 alicloud.ecs.keypair.keyPairFingerPrint 13.0.0
 alicloud.ecs.keypair.keyPairName 13.0.0
 alicloud.ecs.keypair.regionId 13.0.0
+alicloud.ecs.keypair.resourceGroup 13.3.2
 alicloud.ecs.keypair.resourceGroupId 13.0.0
 alicloud.ecs.keypair.tags 13.0.0
 alicloud.ecs.securityGroups 13.0.0
@@ -526,6 +533,7 @@ alicloud.ecs.securitygroup.permission.sourcePrefixListId 13.0.0
 alicloud.ecs.securitygroup.permission.sourceSecurityGroup 13.0.0
 alicloud.ecs.securitygroup.permissions 13.0.0
 alicloud.ecs.securitygroup.regionId 13.0.0
+alicloud.ecs.securitygroup.resourceGroup 13.3.2
 alicloud.ecs.securitygroup.resourceGroupId 13.0.0
 alicloud.ecs.securitygroup.securityGroupId 13.0.0
 alicloud.ecs.securitygroup.securityGroupName 13.0.0
@@ -582,6 +590,7 @@ alicloud.ess.scalingGroup.modificationTime 13.2.5
 alicloud.ess.scalingGroup.multiAZPolicy 13.2.5
 alicloud.ess.scalingGroup.name 13.2.5
 alicloud.ess.scalingGroup.regionId 13.2.5
+alicloud.ess.scalingGroup.resourceGroup 13.3.2
 alicloud.ess.scalingGroup.resourceGroupId 13.2.5
 alicloud.ess.scalingGroup.scalingConfigurations 13.2.5
 alicloud.ess.scalingGroup.scalingGroupId 13.2.5
@@ -614,6 +623,7 @@ alicloud.fc.function.logProject 13.0.1
 alicloud.fc.function.logStore 13.0.1
 alicloud.fc.function.memorySize 13.0.1
 alicloud.fc.function.regionId 13.0.1
+alicloud.fc.function.resourceGroup 13.3.2
 alicloud.fc.function.resourceGroupId 13.0.1
 alicloud.fc.function.runtime 13.0.1
 alicloud.fc.function.securityGroup 13.0.1
@@ -717,6 +727,7 @@ alicloud.log.project.name 13.0.1
 alicloud.log.project.owner 13.0.1
 alicloud.log.project.recycleBinEnabled 13.0.1
 alicloud.log.project.regionId 13.0.1
+alicloud.log.project.resourceGroup 13.3.2
 alicloud.log.project.resourceGroupId 13.0.1
 alicloud.log.project.status 13.0.1
 alicloud.log.projects 13.0.1
@@ -754,6 +765,7 @@ alicloud.mongodb.instance.regionId 13.0.0
 alicloud.mongodb.instance.releaseProtection 13.0.0
 alicloud.mongodb.instance.releaseTime 13.0.0
 alicloud.mongodb.instance.replicationFactor 13.0.0
+alicloud.mongodb.instance.resourceGroup 13.3.2
 alicloud.mongodb.instance.resourceGroupId 13.0.0
 alicloud.mongodb.instance.secondaryZoneId 13.0.0
 alicloud.mongodb.instance.securityGroupIds 13.0.0
@@ -806,6 +818,7 @@ alicloud.nas.fileSystem.mountTargets 13.0.1
 alicloud.nas.fileSystem.protocolType 13.0.1
 alicloud.nas.fileSystem.redundancyType 13.0.1
 alicloud.nas.fileSystem.regionId 13.0.1
+alicloud.nas.fileSystem.resourceGroup 13.3.2
 alicloud.nas.fileSystem.resourceGroupId 13.0.1
 alicloud.nas.fileSystem.status 13.0.1
 alicloud.nas.fileSystem.storageType 13.0.1
@@ -858,6 +871,7 @@ alicloud.nlb.loadBalancer.loadBalancerId 13.0.1
 alicloud.nlb.loadBalancer.modificationProtectionStatus 13.0.1
 alicloud.nlb.loadBalancer.name 13.0.1
 alicloud.nlb.loadBalancer.regionId 13.0.1
+alicloud.nlb.loadBalancer.resourceGroup 13.3.2
 alicloud.nlb.loadBalancer.resourceGroupId 13.0.1
 alicloud.nlb.loadBalancer.securityGroups 13.0.1
 alicloud.nlb.loadBalancer.status 13.0.1
@@ -876,6 +890,7 @@ alicloud.nlb.serverGroup.name 13.0.1
 alicloud.nlb.serverGroup.preserveClientIpEnabled 13.0.1
 alicloud.nlb.serverGroup.protocol 13.0.1
 alicloud.nlb.serverGroup.regionId 13.0.1
+alicloud.nlb.serverGroup.resourceGroup 13.3.2
 alicloud.nlb.serverGroup.resourceGroupId 13.0.1
 alicloud.nlb.serverGroup.scheduler 13.0.1
 alicloud.nlb.serverGroup.serverCount 13.0.1
@@ -904,6 +919,7 @@ alicloud.oss.bucket.name 13.0.0
 alicloud.oss.bucket.policy 13.0.0
 alicloud.oss.bucket.publicAccessBlock 13.0.0
 alicloud.oss.bucket.region 13.0.0
+alicloud.oss.bucket.resourceGroup 13.3.2
 alicloud.oss.bucket.resourceGroupId 13.0.0
 alicloud.oss.bucket.sseAlgorithm 13.0.0
 alicloud.oss.bucket.storageClass 13.0.0
@@ -937,6 +953,7 @@ alicloud.polardb.cluster.lockMode 13.0.0
 alicloud.polardb.cluster.memorySize 13.0.0
 alicloud.polardb.cluster.payType 13.0.0
 alicloud.polardb.cluster.regionId 13.0.0
+alicloud.polardb.cluster.resourceGroup 13.3.2
 alicloud.polardb.cluster.resourceGroupId 13.0.0
 alicloud.polardb.cluster.serverlessType 13.0.0
 alicloud.polardb.cluster.sslEnabled 13.0.0
@@ -1058,6 +1075,7 @@ alicloud.rds.instance.masterInstance 13.0.0
 alicloud.rds.instance.payType 13.0.0
 alicloud.rds.instance.port 13.0.0
 alicloud.rds.instance.regionId 13.0.0
+alicloud.rds.instance.resourceGroup 13.3.2
 alicloud.rds.instance.resourceGroupId 13.0.0
 alicloud.rds.instance.securityGroupIds 13.0.0
 alicloud.rds.instance.securityGroups 13.2.5
@@ -1095,6 +1113,7 @@ alicloud.redis.instance.port 13.0.0
 alicloud.redis.instance.privateIp 13.0.0
 alicloud.redis.instance.qps 13.0.0
 alicloud.redis.instance.regionId 13.0.0
+alicloud.redis.instance.resourceGroup 13.3.2
 alicloud.redis.instance.resourceGroupId 13.0.0
 alicloud.redis.instance.secondaryZoneId 13.0.0
 alicloud.redis.instance.securityGroupIds 13.0.0
@@ -1143,6 +1162,15 @@ alicloud.resourceManager.masterAccountId 13.0.1
 alicloud.resourceManager.masterAccountName 13.0.1
 alicloud.resourceManager.memberDeletionStatus 13.0.1
 alicloud.resourceManager.resourceDirectoryId 13.0.1
+alicloud.resourceManager.resourceGroup 13.3.2
+alicloud.resourceManager.resourceGroup.accountId 13.3.2
+alicloud.resourceManager.resourceGroup.createDate 13.3.2
+alicloud.resourceManager.resourceGroup.displayName 13.3.2
+alicloud.resourceManager.resourceGroup.name 13.3.2
+alicloud.resourceManager.resourceGroup.resourceGroupId 13.3.2
+alicloud.resourceManager.resourceGroup.status 13.3.2
+alicloud.resourceManager.resourceGroup.tags 13.3.2
+alicloud.resourceManager.resourceGroups 13.3.2
 alicloud.resourceManager.rootFolderId 13.0.1
 alicloud.sas 13.2.5
 alicloud.sas.alarmEvent 13.2.5
@@ -1277,6 +1305,7 @@ alicloud.slb.loadBalancer.modificationProtectionStatus 13.0.0
 alicloud.slb.loadBalancer.networkType 13.0.0
 alicloud.slb.loadBalancer.payType 13.0.0
 alicloud.slb.loadBalancer.regionId 13.0.0
+alicloud.slb.loadBalancer.resourceGroup 13.3.2
 alicloud.slb.loadBalancer.resourceGroupId 13.0.0
 alicloud.slb.loadBalancer.slaveZoneId 13.0.0
 alicloud.slb.loadBalancer.status 13.0.0
@@ -1313,6 +1342,7 @@ alicloud.vpc.eipAddress.netmode 13.0.0
 alicloud.vpc.eipAddress.privateIpAddress 13.0.0
 alicloud.vpc.eipAddress.publicIpAddressPoolId 13.0.0
 alicloud.vpc.eipAddress.regionId 13.0.0
+alicloud.vpc.eipAddress.resourceGroup 13.3.2
 alicloud.vpc.eipAddress.resourceGroupId 13.0.0
 alicloud.vpc.eipAddress.secondLimited 13.0.0
 alicloud.vpc.eipAddress.securityProtectionTypes 13.0.0
@@ -1338,6 +1368,7 @@ alicloud.vpc.flowLog.logstore 13.0.1
 alicloud.vpc.flowLog.network 13.0.1
 alicloud.vpc.flowLog.projectName 13.0.1
 alicloud.vpc.flowLog.regionId 13.0.1
+alicloud.vpc.flowLog.resourceGroup 13.3.2
 alicloud.vpc.flowLog.resourceGroupId 13.0.1
 alicloud.vpc.flowLog.resourceId 13.0.1
 alicloud.vpc.flowLog.resourceType 13.0.1
@@ -1372,6 +1403,7 @@ alicloud.vpc.natGateway.networkType 13.0.0
 alicloud.vpc.natGateway.privateLinkEnabled 13.0.0
 alicloud.vpc.natGateway.privateLinkMode 13.0.0
 alicloud.vpc.natGateway.regionId 13.0.0
+alicloud.vpc.natGateway.resourceGroup 13.3.2
 alicloud.vpc.natGateway.resourceGroupId 13.0.0
 alicloud.vpc.natGateway.securityProtectionEnabled 13.0.0
 alicloud.vpc.natGateway.snatTableIds 13.0.0
@@ -1397,6 +1429,7 @@ alicloud.vpc.network.isDefault 13.0.0
 alicloud.vpc.network.natGateways 13.0.0
 alicloud.vpc.network.ownerId 13.0.0
 alicloud.vpc.network.regionId 13.0.0
+alicloud.vpc.network.resourceGroup 13.3.2
 alicloud.vpc.network.resourceGroupId 13.0.0
 alicloud.vpc.network.routeTables 13.0.0
 alicloud.vpc.network.status 13.0.0
@@ -1428,6 +1461,7 @@ alicloud.vpc.routeTable.creationTime 13.0.0
 alicloud.vpc.routeTable.description 13.0.0
 alicloud.vpc.routeTable.gatewayIds 13.0.0
 alicloud.vpc.routeTable.ownerId 13.0.0
+alicloud.vpc.routeTable.resourceGroup 13.3.2
 alicloud.vpc.routeTable.resourceGroupId 13.0.0
 alicloud.vpc.routeTable.routeEntries 13.0.0
 alicloud.vpc.routeTable.routePropagationEnable 13.0.0
@@ -1485,6 +1519,7 @@ alicloud.vpc.vpnGateway.ipsecVpnEnabled 13.2.5
 alicloud.vpc.vpnGateway.name 13.2.5
 alicloud.vpc.vpnGateway.networkType 13.2.5
 alicloud.vpc.vpnGateway.regionId 13.2.5
+alicloud.vpc.vpnGateway.resourceGroup 13.3.2
 alicloud.vpc.vpnGateway.resourceGroupId 13.2.5
 alicloud.vpc.vpnGateway.spec 13.2.5
 alicloud.vpc.vpnGateway.sslMaxConnections 13.2.5
@@ -1507,6 +1542,7 @@ alicloud.vpc.vswitch.ipv6CidrBlock 13.0.0
 alicloud.vpc.vswitch.isDefault 13.0.0
 alicloud.vpc.vswitch.networkAcl 13.0.0
 alicloud.vpc.vswitch.ownerId 13.0.0
+alicloud.vpc.vswitch.resourceGroup 13.3.2
 alicloud.vpc.vswitch.resourceGroupId 13.0.0
 alicloud.vpc.vswitch.routeTable 13.0.0
 alicloud.vpc.vswitch.routeTableType 13.0.0
