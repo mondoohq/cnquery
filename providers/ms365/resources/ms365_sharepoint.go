@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/ms365/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 var sharepointReport = `
@@ -74,6 +75,11 @@ type SpoTenantConfig struct {
 	ConditionalAccessPolicy                    string `json:"ConditionalAccessPolicy"`
 	IsUnmanagedSyncClientForTenantRestricted   bool   `json:"IsUnmanagedSyncClientForTenantRestricted"`
 	DisallowInfectedFileDownload               bool   `json:"DisallowInfectedFileDownload"`
+	// pointers so that a tenant which does not report the setting yields null
+	// rather than a zero value that reads as "disabled"
+	EnableAzureADB2BIntegration            *bool    `json:"EnableAzureADB2BIntegration"`
+	OneDriveSharingCapability              *string  `json:"OneDriveSharingCapability"`
+	WhoCanShareAuthenticatedGuestAllowList []string `json:"WhoCanShareAuthenticatedGuestAllowList"`
 }
 
 type SpoSite struct {
@@ -261,6 +267,10 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 				"conditionalAccessPolicy":                    llx.StringData(tenantConfig.ConditionalAccessPolicy),
 				"isUnmanagedSyncClientForTenantRestricted":   llx.BoolData(tenantConfig.IsUnmanagedSyncClientForTenantRestricted),
 				"disallowInfectedFileDownload":               llx.BoolData(tenantConfig.DisallowInfectedFileDownload),
+				"enableAzureADB2BIntegration":                llx.BoolDataPtr(tenantConfig.EnableAzureADB2BIntegration),
+				"oneDriveSharingCapability":                  llx.StringDataPtr(tenantConfig.OneDriveSharingCapability),
+				"whoCanShareAuthenticatedGuestAllowList": llx.ArrayData(
+					convert.SliceAnyToInterface(tenantConfig.WhoCanShareAuthenticatedGuestAllowList), types.String),
 			})
 		if mqlTenantConfigErr != nil {
 			r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}

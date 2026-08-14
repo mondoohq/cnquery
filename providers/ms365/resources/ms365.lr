@@ -4570,6 +4570,27 @@ private ms365.sharepointonline.tenantConfig {
   isUnmanagedSyncClientForTenantRestricted bool
   // Whether downloading files detected as infected is blocked
   disallowInfectedFileDownload bool
+  // Whether SharePoint and OneDrive use Microsoft Entra B2B for guest sharing
+  //
+  // When true, guests are invited through Entra B2B and are subject to its
+  // authentication and lifecycle controls, instead of the one-time-passcode
+  // flow SharePoint uses on its own. Null when the tenant does not report
+  // the setting.
+  enableAzureADB2BIntegration bool
+  // External sharing capability for OneDrive
+  //
+  // One of Disabled, ExistingExternalUserSharingOnly,
+  // ExternalUserSharingOnly, or ExternalUserAndGuestSharing, capping how
+  // broadly OneDrive content can be shared independently of
+  // `sharingCapability`, which caps SharePoint. Null when the tenant does
+  // not report the setting.
+  oneDriveSharingCapability string
+  // Object IDs of the security groups whose members may share with authenticated guests
+  //
+  // Empty when every user may share externally. A non-empty list restricts
+  // guest sharing to the members of those groups, which is what limiting
+  // external sharing by security group means.
+  whoCanShareAuthenticatedGuestAllowList []string
 }
 
 // Microsoft 365 SharePoint Site

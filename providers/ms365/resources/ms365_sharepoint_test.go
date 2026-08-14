@@ -4,10 +4,66 @@
 package resources
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestSpoTenantConfigSharingFields(t *testing.T) {
+	t.Run("reported by the tenant", func(t *testing.T) {
+		cfg := &SpoTenantConfig{}
+		err := json.Unmarshal([]byte(`{
+			"EnableAzureADB2BIntegration": true,
+			"OneDriveSharingCapability": "Disabled",
+			"WhoCanShareAuthenticatedGuestAllowList": ["a1b2c3d4-0000-0000-0000-000000000001"]
+		}`), cfg)
+		require.NoError(t, err)
+
+		require.NotNil(t, cfg.EnableAzureADB2BIntegration)
+		assert.True(t, *cfg.EnableAzureADB2BIntegration)
+		require.NotNil(t, cfg.OneDriveSharingCapability)
+		assert.Equal(t, "Disabled", *cfg.OneDriveSharingCapability)
+		assert.Equal(t, []string{"a1b2c3d4-0000-0000-0000-000000000001"},
+			cfg.WhoCanShareAuthenticatedGuestAllowList)
+	})
+
+	// a tenant that omits the properties must not read as "B2B off, OneDrive
+	// unrestricted" -- the pointers stay nil so the fields resolve to null
+	t.Run("omitted by the tenant", func(t *testing.T) {
+		cfg := &SpoTenantConfig{}
+		err := json.Unmarshal([]byte(`{"SharingCapability": "Disabled"}`), cfg)
+		require.NoError(t, err)
+
+		assert.Nil(t, cfg.EnableAzureADB2BIntegration)
+		assert.Nil(t, cfg.OneDriveSharingCapability)
+		assert.Nil(t, cfg.WhoCanShareAuthenticatedGuestAllowList)
+	})
+
+	t.Run("reported as null", func(t *testing.T) {
+		cfg := &SpoTenantConfig{}
+		err := json.Unmarshal([]byte(`{
+			"EnableAzureADB2BIntegration": null,
+			"OneDriveSharingCapability": null,
+			"WhoCanShareAuthenticatedGuestAllowList": null
+		}`), cfg)
+		require.NoError(t, err)
+
+		assert.Nil(t, cfg.EnableAzureADB2BIntegration)
+		assert.Nil(t, cfg.OneDriveSharingCapability)
+		assert.Nil(t, cfg.WhoCanShareAuthenticatedGuestAllowList)
+	})
+
+	// no security group restricts guest sharing
+	t.Run("empty allow list", func(t *testing.T) {
+		cfg := &SpoTenantConfig{}
+		err := json.Unmarshal([]byte(`{"WhoCanShareAuthenticatedGuestAllowList": []}`), cfg)
+		require.NoError(t, err)
+
+		assert.Empty(t, cfg.WhoCanShareAuthenticatedGuestAllowList)
+	})
+}
 
 func TestExtractSharepointTenant(t *testing.T) {
 	tests := []struct {

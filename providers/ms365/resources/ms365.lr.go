@@ -4987,6 +4987,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.sharepointonline.tenantConfig.disallowInfectedFileDownload": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365SharepointonlineTenantConfig).GetDisallowInfectedFileDownload()).ToDataRes(types.Bool)
 	},
+	"ms365.sharepointonline.tenantConfig.enableAzureADB2BIntegration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetEnableAzureADB2BIntegration()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.oneDriveSharingCapability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetOneDriveSharingCapability()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.whoCanShareAuthenticatedGuestAllowList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetWhoCanShareAuthenticatedGuestAllowList()).ToDataRes(types.Array(types.String))
+	},
 	"ms365.sharepointonline.site.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365SharepointonlineSite).GetUrl()).ToDataRes(types.String)
 	},
@@ -11754,6 +11763,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.sharepointonline.tenantConfig.disallowInfectedFileDownload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365SharepointonlineTenantConfig).DisallowInfectedFileDownload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.enableAzureADB2BIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).EnableAzureADB2BIntegration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.oneDriveSharingCapability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).OneDriveSharingCapability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.whoCanShareAuthenticatedGuestAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).WhoCanShareAuthenticatedGuestAllowList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ms365.sharepointonline.site.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28112,6 +28133,9 @@ type mqlMs365SharepointonlineTenantConfig struct {
 	ConditionalAccessPolicy                    plugin.TValue[string]
 	IsUnmanagedSyncClientForTenantRestricted   plugin.TValue[bool]
 	DisallowInfectedFileDownload               plugin.TValue[bool]
+	EnableAzureADB2BIntegration                plugin.TValue[bool]
+	OneDriveSharingCapability                  plugin.TValue[string]
+	WhoCanShareAuthenticatedGuestAllowList     plugin.TValue[[]any]
 }
 
 // createMs365SharepointonlineTenantConfig creates a new instance of this resource
@@ -28228,6 +28252,18 @@ func (c *mqlMs365SharepointonlineTenantConfig) GetIsUnmanagedSyncClientForTenant
 
 func (c *mqlMs365SharepointonlineTenantConfig) GetDisallowInfectedFileDownload() *plugin.TValue[bool] {
 	return &c.DisallowInfectedFileDownload
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetEnableAzureADB2BIntegration() *plugin.TValue[bool] {
+	return &c.EnableAzureADB2BIntegration
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetOneDriveSharingCapability() *plugin.TValue[string] {
+	return &c.OneDriveSharingCapability
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetWhoCanShareAuthenticatedGuestAllowList() *plugin.TValue[[]any] {
+	return &c.WhoCanShareAuthenticatedGuestAllowList
 }
 
 // mqlMs365SharepointonlineSite for the ms365.sharepointonline.site resource

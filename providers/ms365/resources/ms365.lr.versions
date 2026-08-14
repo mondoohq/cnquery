@@ -1630,11 +1630,13 @@ ms365.sharepointonline.tenantConfig.defaultSharingLinkType 13.2.2
 ms365.sharepointonline.tenantConfig.disallowInfectedFileDownload 13.2.2
 ms365.sharepointonline.tenantConfig.emailAttestationReAuthDays 13.2.2
 ms365.sharepointonline.tenantConfig.emailAttestationRequired 13.2.2
+ms365.sharepointonline.tenantConfig.enableAzureADB2BIntegration 13.10.4
 ms365.sharepointonline.tenantConfig.externalUserExpirationRequired 13.2.2
 ms365.sharepointonline.tenantConfig.externalUserExpireInDays 13.2.2
 ms365.sharepointonline.tenantConfig.isUnmanagedSyncClientForTenantRestricted 13.2.2
 ms365.sharepointonline.tenantConfig.legacyAuthProtocolsEnabled 13.2.2
 ms365.sharepointonline.tenantConfig.notifyOwnersWhenItemsReshared 13.2.2
+ms365.sharepointonline.tenantConfig.oneDriveSharingCapability 13.10.4
 ms365.sharepointonline.tenantConfig.preventExternalUsersFromResharing 13.2.2
 ms365.sharepointonline.tenantConfig.requireAcceptingAccountMatchInvitedAccount 13.2.2
 ms365.sharepointonline.tenantConfig.requireAnonymousLinksExpireInDays 13.2.2
@@ -1645,6 +1647,7 @@ ms365.sharepointonline.tenantConfig.sharingDomainRestrictionMode 13.2.2
 ms365.sharepointonline.tenantConfig.showAllUsersClaim 13.2.2
 ms365.sharepointonline.tenantConfig.showEveryoneClaim 13.2.2
 ms365.sharepointonline.tenantConfig.showEveryoneExceptExternalUsersClaim 13.2.2
+ms365.sharepointonline.tenantConfig.whoCanShareAuthenticatedGuestAllowList 13.10.4
 ms365.sharepointonline.tenantConfiguration 13.2.2
 ms365.teams 9.0.0
 ms365.teams.channel 13.3.1
