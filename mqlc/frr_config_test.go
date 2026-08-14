@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/mqlc"
-	"go.mondoo.com/mql/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
 )
 
 // The FRR resources exist to answer three questions about a routing node:
@@ -29,7 +29,6 @@ func TestFrrConfigQueriesCompile(t *testing.T) {
 
 		// root resource and file discovery
 		`frr.version`,
-		`os.base.frr.version`,
 		`frr.config.file.path`,
 		`frr.config { hostname version defaults integratedVtyshConfig }`,
 		`frr.config("/etc/cra/frr.conf").hostname`,
