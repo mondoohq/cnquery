@@ -86,6 +86,34 @@ type mqlDigitaloceanInternal struct {
 	backupPolicyIndexOnce sync.Once
 	backupPolicyIndex     map[int64]dropletBackupPolicy
 	backupPolicyIndexErr  error
+
+	// The vpc*Index maps invert the forward VPC reference each child
+	// carries, so digitalocean.vpc can report what sits on it. Each is
+	// keyed by VPC id and built once from the collection the child comes
+	// from. See digitalocean_vpc_members.go.
+	vpcDropletIndexOnce sync.Once
+	vpcDropletIndex     map[string][]any
+	vpcDropletIndexErr  error
+
+	vpcDatabaseIndexOnce sync.Once
+	vpcDatabaseIndex     map[string][]any
+	vpcDatabaseIndexErr  error
+
+	vpcLoadBalancerIndexOnce sync.Once
+	vpcLoadBalancerIndex     map[string][]any
+	vpcLoadBalancerIndexErr  error
+
+	vpcK8sClusterIndexOnce sync.Once
+	vpcK8sClusterIndex     map[string][]any
+	vpcK8sClusterIndexErr  error
+
+	vpcNfsShareIndexOnce sync.Once
+	vpcNfsShareIndex     map[string][]any
+	vpcNfsShareIndexErr  error
+
+	vpcNatGatewayIndexOnce sync.Once
+	vpcNatGatewayIndex     map[string][]any
+	vpcNatGatewayIndexErr  error
 }
 
 // partnerAttachmentByID resolves a partner attachment by its ID from the

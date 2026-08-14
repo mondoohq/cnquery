@@ -1466,6 +1466,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.vpc.urn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpc).GetUrn()).ToDataRes(types.String)
 	},
+	"digitalocean.vpc.droplets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetDroplets()).ToDataRes(types.Array(types.Resource("digitalocean.droplet")))
+	},
+	"digitalocean.vpc.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetDatabases()).ToDataRes(types.Array(types.Resource("digitalocean.database")))
+	},
+	"digitalocean.vpc.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer")))
+	},
+	"digitalocean.vpc.kubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetKubernetesClusters()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.cluster")))
+	},
+	"digitalocean.vpc.nfsShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetNfsShares()).ToDataRes(types.Array(types.Resource("digitalocean.nfs")))
+	},
+	"digitalocean.vpc.natGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetNatGateways()).ToDataRes(types.Array(types.Resource("digitalocean.vpcNatGateway")))
+	},
 	"digitalocean.vpcPeering.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcPeering).GetId()).ToDataRes(types.String)
 	},
@@ -4944,6 +4962,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.vpc.urn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanVpc).Urn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.droplets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).Droplets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.kubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).KubernetesClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.nfsShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).NfsShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.natGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).NatGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.vpcPeering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11512,14 +11554,20 @@ type mqlDigitaloceanVpc struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanVpcInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	IpRange     plugin.TValue[string]
-	Region      plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
-	Default     plugin.TValue[bool]
-	Urn         plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	IpRange            plugin.TValue[string]
+	Region             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	Default            plugin.TValue[bool]
+	Urn                plugin.TValue[string]
+	Droplets           plugin.TValue[[]any]
+	Databases          plugin.TValue[[]any]
+	LoadBalancers      plugin.TValue[[]any]
+	KubernetesClusters plugin.TValue[[]any]
+	NfsShares          plugin.TValue[[]any]
+	NatGateways        plugin.TValue[[]any]
 }
 
 // createDigitaloceanVpc creates a new instance of this resource
@@ -11589,6 +11637,102 @@ func (c *mqlDigitaloceanVpc) GetDefault() *plugin.TValue[bool] {
 
 func (c *mqlDigitaloceanVpc) GetUrn() *plugin.TValue[string] {
 	return &c.Urn
+}
+
+func (c *mqlDigitaloceanVpc) GetDroplets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Droplets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "droplets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.droplets()
+	})
+}
+
+func (c *mqlDigitaloceanVpc) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlDigitaloceanVpc) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
+func (c *mqlDigitaloceanVpc) GetKubernetesClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KubernetesClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "kubernetesClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kubernetesClusters()
+	})
+}
+
+func (c *mqlDigitaloceanVpc) GetNfsShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NfsShares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "nfsShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nfsShares()
+	})
+}
+
+func (c *mqlDigitaloceanVpc) GetNatGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NatGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "natGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.natGateways()
+	})
 }
 
 // mqlDigitaloceanVpcPeering for the digitalocean.vpcPeering resource

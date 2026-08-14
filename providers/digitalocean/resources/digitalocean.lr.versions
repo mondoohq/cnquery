@@ -1069,11 +1069,17 @@ digitalocean.volume.tags 13.0.1
 digitalocean.volumes 13.0.1
 digitalocean.vpc 13.0.1
 digitalocean.vpc.createdAt 13.0.1
+digitalocean.vpc.databases 13.15.3
 digitalocean.vpc.default 13.0.1
 digitalocean.vpc.description 13.0.1
+digitalocean.vpc.droplets 13.15.3
 digitalocean.vpc.id 13.0.1
 digitalocean.vpc.ipRange 13.0.1
+digitalocean.vpc.kubernetesClusters 13.15.3
+digitalocean.vpc.loadBalancers 13.15.3
 digitalocean.vpc.name 13.0.1
+digitalocean.vpc.natGateways 13.15.3
+digitalocean.vpc.nfsShares 13.15.3
 digitalocean.vpc.region 13.0.1
 digitalocean.vpc.urn 13.10.2
 digitalocean.vpcNatGateway 13.4.2

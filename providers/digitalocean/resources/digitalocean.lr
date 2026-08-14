@@ -481,12 +481,16 @@ digitalocean.database @defaults("id name engine") {
   // Time the resource was created
   createdAt time
   // ID of the project the cluster belongs to
-  projectId string
+  //
+  // Deprecated in favor of `project`.
+  projectId @maturity("deprecated") string
   // Project the cluster belongs to
   project() digitalocean.project
   // Private network UUID
-  privateNetworkUuid string
-  // VPC the cluster is attached to (resolved from privateNetworkUuid)
+  //
+  // Deprecated in favor of `vpc`.
+  privateNetworkUuid @maturity("deprecated") string
+  // VPC the cluster is attached to
   vpc() digitalocean.vpc
   // Tags
   tags []string
@@ -960,7 +964,9 @@ digitalocean.loadBalancer @defaults("id name status") {
   // Number of nodes the load balancer is sized to; zero when sized by slug
   sizeUnit int
   // ID of the project the load balancer belongs to
-  projectId string
+  //
+  // Deprecated in favor of `project`.
+  projectId @maturity("deprecated") string
   // Project the load balancer belongs to
   project() digitalocean.project
   // Network visibility (EXTERNAL for internet-facing, INTERNAL for VPC-only)
@@ -1036,6 +1042,41 @@ digitalocean.vpc @defaults("id name region") {
   default bool
   // Uniform resource name (URN) identifying the VPC across DigitalOcean APIs
   urn string
+  // Droplets attached to the VPC
+  //
+  // Every droplet whose private interface sits on this network. Null when
+  // the account's droplet list could not be read, so an empty list always
+  // means the VPC genuinely holds no droplets.
+  droplets() []digitalocean.droplet
+  // Managed database clusters attached to the VPC
+  //
+  // Clusters whose private connection endpoint is served from this network.
+  // Null when the account's database list could not be read.
+  databases() []digitalocean.database
+  // Load balancers attached to the VPC
+  //
+  // Load balancers that forward to backends over this private network,
+  // including internal load balancers with no public address. Null when
+  // the account's load balancer list could not be read.
+  loadBalancers() []digitalocean.loadBalancer
+  // Kubernetes clusters attached to the VPC
+  //
+  // DOKS clusters whose worker nodes are placed on this network. Null when
+  // the account's cluster list could not be read.
+  kubernetesClusters() []digitalocean.kubernetes.cluster
+  // Managed NFS shares reachable from the VPC
+  //
+  // Shares that export a mount target into this network. A share can be
+  // reachable from several VPCs, so it may appear under more than one.
+  // Null when the account's NFS share list could not be read.
+  nfsShares() []digitalocean.nfs
+  // NAT gateways attached to the VPC
+  //
+  // Gateways that give this network outbound internet access without
+  // assigning public addresses to its members. A gateway can serve several
+  // VPCs, so it may appear under more than one. Null when the account's
+  // NAT gateway list could not be read.
+  natGateways() []digitalocean.vpcNatGateway
 }
 
 // DigitalOcean VPC peering
@@ -1181,7 +1222,9 @@ private digitalocean.kubernetes.nodePool @defaults("id name size") {
   // Node pool ID
   id string
   // Cluster ID (parent)
-  clusterId string
+  //
+  // Deprecated in favor of `cluster`.
+  clusterId @maturity("deprecated") string
   // Cluster this node pool belongs to
   cluster() digitalocean.kubernetes.cluster
   // Name
@@ -1488,13 +1531,17 @@ digitalocean.reservedIp @defaults("ip region") {
   // Region slug
   region string
   // Project ID
-  projectId string
+  //
+  // Deprecated in favor of `project`.
+  projectId @maturity("deprecated") string
   // Project the IP belongs to
   project() digitalocean.project
   // Whether the IP is locked
   locked bool
   // Droplet ID (0 if unassigned)
-  dropletId int
+  //
+  // Deprecated in favor of `droplet`.
+  dropletId @maturity("deprecated") int
   // Droplet the IP is routed to; null when unassigned
   droplet() digitalocean.droplet
 }
@@ -1832,7 +1879,9 @@ digitalocean.cdn @defaults("id origin") {
   // TTL in seconds
   ttl int
   // TLS certificate ID
-  certificateId string
+  //
+  // Deprecated in favor of `certificate`.
+  certificateId @maturity("deprecated") string
   // TLS certificate bound to the endpoint; null when none is configured
   certificate() digitalocean.certificate
   // Custom domain
@@ -2254,7 +2303,9 @@ digitalocean.vpcNatGateway @defaults("id name region state") {
   // TCP connection-tracking timeout, in seconds
   tcpTimeoutSeconds int
   // ID of the project the gateway belongs to
-  projectId string
+  //
+  // Deprecated in favor of `project`.
+  projectId @maturity("deprecated") string
   // Project the gateway belongs to
   project() digitalocean.project
   // Time the gateway was created
@@ -2323,7 +2374,9 @@ private digitalocean.nfs.snapshot @defaults("name status sizeGibibytes createdAt
   // Lifecycle status of the snapshot (CREATING, AVAILABLE, DELETING, or ERROR)
   status string
   // ID of the share the snapshot was taken from
-  shareId string
+  //
+  // Deprecated in favor of `share`.
+  shareId @maturity("deprecated") string
   // Share the snapshot was taken from
   share() digitalocean.nfs
   // Time the snapshot was created
@@ -2418,7 +2471,9 @@ digitalocean.reservedIpV6 @defaults("ip region") {
   // Time the address was reserved
   reservedAt time
   // Droplet ID the address is assigned to (0 if unassigned)
-  dropletId int
+  //
+  // Deprecated in favor of `droplet`.
+  dropletId @maturity("deprecated") int
   // Droplet the address is assigned to; null when unassigned
   droplet() digitalocean.droplet
 }
