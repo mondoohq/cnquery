@@ -97,6 +97,62 @@ func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compart
 	return compartments, nil
 }
 
+// CompartmentByID returns the compartment with the given OCID out of the
+// memoized tenancy tree, or nil when the tree does not contain it.
+//
+// Almost every resource in the provider reports the compartment it lives in,
+// and resolving that through the Identity API is one GetCompartment call per
+// resource: five hundred instances in five compartments cost five hundred
+// calls. The tree those five compartments come from is already fetched once per
+// connection, walks the whole subtree, and cannot change mid-scan, so the
+// answer is nearly always sitting in it.
+//
+// A nil result is not an error. An OCID outside this tenancy, or one belonging
+// to a compartment deleted since the listing, legitimately misses; the caller
+// falls back to the direct read for those.
+func (c *OciConnection) CompartmentByID(ctx context.Context, id string) (*identity.Compartment, error) {
+	if id == "" {
+		return nil, nil
+	}
+
+	// Taken before the lock: GetCompartments locks for itself, and it is a
+	// no-op once the tree has been fetched.
+	if _, err := c.GetCompartments(ctx); err != nil {
+		return nil, err
+	}
+
+	c.compartmentLock.Lock()
+	defer c.compartmentLock.Unlock()
+	if c.compartmentIndex == nil {
+		c.compartmentIndex = compartmentIndexByID(c.compartmentList)
+	}
+
+	compartment, ok := c.compartmentIndex[id]
+	if !ok {
+		return nil, nil
+	}
+	// A copy, so a caller cannot reach into the memoized tree.
+	return &compartment, nil
+}
+
+// compartmentIndexByID keys a compartment list by OCID, skipping entries
+// without one. The first entry wins, which matters only if the tenancy root
+// were to repeat in the listing.
+func compartmentIndexByID(compartments []identity.Compartment) map[string]identity.Compartment {
+	index := make(map[string]identity.Compartment, len(compartments))
+	for i := range compartments {
+		id := compartments[i].Id
+		if id == nil || *id == "" {
+			continue
+		}
+		if _, seen := index[*id]; seen {
+			continue
+		}
+		index[*id] = compartments[i]
+	}
+	return index
+}
+
 func (c *OciConnection) GetRegions(ctx context.Context) ([]identity.RegionSubscription, error) {
 	oClient, err := c.IdentityClient()
 	if err != nil {

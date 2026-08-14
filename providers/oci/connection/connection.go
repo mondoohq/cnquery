@@ -27,8 +27,13 @@ type OciConnection struct {
 	// ListCompartments for each one. The tree does not change mid-scan, and on
 	// a large tenancy those repeats are both slow and a good way to run into
 	// Identity rate limits.
+	// compartmentIndex is that same list keyed by OCID, built on first use.
+	// Nearly every resource in the provider reports the compartment it lives
+	// in, so the lookup runs once per resource rather than once per scan; a
+	// walk of the list per lookup would be O(resources x compartments).
 	compartmentLock  sync.Mutex
 	compartmentList  []identity.Compartment
+	compartmentIndex map[string]identity.Compartment
 	compartmentsDone bool
 
 	// Service clients, keyed by "<service>/<region-or-endpoint>". See

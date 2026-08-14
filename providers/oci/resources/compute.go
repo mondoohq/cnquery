@@ -135,14 +135,14 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					}
 				}
 
-				// NewResource, not CreateResource: oci.compartment has an
-				// Init that fills name/description/created/state. Skipping it
-				// caches an id-only husk under the compartment's real OCID,
-				// which a later oci.compartments query then receives instead of
-				// the populated resource.
-				compartment, err := NewResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
-					"id": llx.StringDataPtr(instance.CompartmentId),
-				})
+				// Never a bare CreateResource from the id alone:
+				// oci.compartment carries name/description/created/state, and
+				// caching an id-only husk under the compartment's real OCID
+				// hands that husk to a later oci.compartments query. The tree
+				// the connection already holds carries those fields, so this
+				// is populated without a per-instance GetCompartment call and
+				// falls back to the direct read for an OCID it lacks.
+				compartment, err := ociCompartmentRef(o.MqlRuntime, instance.CompartmentId)
 				if err != nil {
 					return nil, err
 				}
@@ -363,10 +363,7 @@ func (o *mqlOciCompute) images() ([]any, error) {
 					created = &image.TimeCreated.Time
 				}
 
-				// Create compartment resource reference
-				compartment, err := NewResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
-					"id": llx.StringDataPtr(image.CompartmentId),
-				})
+				compartment, err := ociCompartmentRef(o.MqlRuntime, image.CompartmentId)
 				if err != nil {
 					return nil, err
 				}

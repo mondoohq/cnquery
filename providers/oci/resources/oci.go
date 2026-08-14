@@ -130,7 +130,13 @@ func initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 
-	conn := runtime.Connection.(*connection.OciConnection)
+	// Checked rather than asserted: an init runs inside the executor's
+	// goroutines, where a failed bare assertion ends the scan instead of the
+	// field.
+	conn, ok := runtime.Connection.(*connection.OciConnection)
+	if !ok {
+		return nil, nil, errors.New("oci.compartment requires an oci connection")
+	}
 	client, err := conn.IdentityClient()
 	if err != nil {
 		return nil, nil, err
