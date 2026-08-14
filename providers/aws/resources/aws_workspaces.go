@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -664,6 +665,78 @@ func (a *mqlAwsWorkspacesBundle) id() (string, error) {
 	return "aws.workspaces.bundle/" + a.Region.Data + "/" + a.BundleId.Data, nil
 }
 
+// errWorkspacesBundleUnresolved marks a bundle reference that names no readable
+// bundle. Returning it beats handing back a half-populated resource: a resource
+// built from the reference args alone leaves every other field *unset*, and an
+// unset field encodes to a primitive with no type, which llx logs as malformed
+// before coercing it to null (see plugin.TValue.ToDataRes and
+// llx.Primitive.RawData). Callers that would rather have a null bundle than an
+// error convert it back at the accessor.
+var errWorkspacesBundleUnresolved = errors.New("aws workspaces bundle unresolved")
+
+// parseWorkspacesBundleRef reads the region and bundle ID a bundle reference was
+// created with. Both are required: DescribeWorkspaceBundles with neither a
+// bundle ID nor an owner answers with every bundle the account owns, so falling
+// through on a partial reference would bind an arbitrary bundle.
+func parseWorkspacesBundleRef(args map[string]*llx.RawData) (string, string, error) {
+	var region, bundleId string
+	if r := args["region"]; r != nil {
+		if s, ok := r.Value.(string); ok {
+			region = s
+		}
+	}
+	if b := args["bundleId"]; b != nil {
+		if s, ok := b.Value.(string); ok {
+			bundleId = s
+		}
+	}
+	if region == "" || bundleId == "" {
+		return "", "", errors.New("bundleId + region required to fetch aws workspaces bundle")
+	}
+	return region, bundleId, nil
+}
+
+// initAwsWorkspacesBundle fetches a single bundle by ID.
+//
+// Filtering by bundle ID reaches AMAZON-provided bundles as well as
+// account-owned ones, which an unfiltered DescribeWorkspaceBundles does not:
+// AWS answers that with the caller's own bundles unless an owner is named.
+func initAwsWorkspacesBundle(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	region, bundleId, err := parseWorkspacesBundleRef(args)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Workspaces(region)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	resp, err := svc.DescribeWorkspaceBundles(ctx, &workspaces.DescribeWorkspaceBundlesInput{
+		BundleIds: []string{bundleId},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			log.Debug().Str("region", region).Msg("error accessing region for AWS WorkSpaces bundles API")
+			return nil, nil, fmt.Errorf("%w: %q in %s is not readable", errWorkspacesBundleUnresolved, bundleId, region)
+		}
+		return nil, nil, err
+	}
+	// a bundle deleted after the WorkSpace was built no longer resolves
+	if len(resp.Bundles) == 0 {
+		return nil, nil, fmt.Errorf("%w: %q not found in %s", errWorkspacesBundleUnresolved, bundleId, region)
+	}
+
+	mqlBundle, err := newMqlAwsWorkspacesBundle(runtime, region, resp.Bundles[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlBundle, nil
+}
+
 // ---- IP Groups ----
 
 func (a *mqlAwsWorkspaces) ipGroups() ([]any, error) {
@@ -786,6 +859,30 @@ func (a *mqlAwsWorkspacesDirectory) subnets() ([]any, error) {
 		res = append(res, mqlSubnet)
 	}
 	return res, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) bundle() (*mqlAwsWorkspacesBundle, error) {
+	bundleId := a.BundleId.Data
+	if bundleId == "" {
+		a.Bundle.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.workspaces.bundle", map[string]*llx.RawData{
+		"bundleId": llx.StringData(bundleId),
+		"region":   llx.StringData(a.Region.Data),
+	})
+	if err != nil {
+		// a bundle that names nothing readable is this WorkSpace having no
+		// bundle to report, not a failure: one deleted or unreadable bundle
+		// must not take down a fleet-wide query
+		if errors.Is(err, errWorkspacesBundleUnresolved) {
+			log.Debug().Str("bundleId", bundleId).Str("region", a.Region.Data).Msg("workspaces>bundle>unresolved")
+			a.Bundle.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspacesBundle), nil
 }
 
 func (a *mqlAwsWorkspacesWorkspace) subnet() (*mqlAwsVpcSubnet, error) {

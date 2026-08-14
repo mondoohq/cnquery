@@ -23190,7 +23190,12 @@ aws.workspaces @defaults("directories") {
   ipGroups() []aws.workspaces.ipGroup
   // List of workspace images across all enabled regions
   images() []aws.workspaces.image
-  // List of workspace bundles across all enabled regions
+  // List of account-owned workspace bundles across all enabled regions
+  //
+  // AWS answers DescribeWorkspaceBundles with the caller's own bundles unless
+  // an owner is named, so the public AMAZON bundles are absent from this list.
+  // To reach the bundle behind a specific WorkSpace whatever its owner, use
+  // `aws.workspaces.workspace.bundle`.
   bundles() []aws.workspaces.bundle
 }
 
@@ -23467,6 +23472,12 @@ private aws.workspaces.workspace @defaults("workspaceId userName state region") 
   computerName string
   // Bundle ID used to create the workspace
   bundleId string
+  // Bundle the WorkSpace was created from
+  //
+  // Resolved by ID, so it is answered for AMAZON-provided bundles as well as
+  // account-owned ones. Use `bundle.owner` to tell the two apart; the
+  // account-wide `aws.workspaces.bundles` list holds only the latter.
+  bundle() aws.workspaces.bundle
   // Subnet ID
   //
   // Deprecated in favor of `subnet`.

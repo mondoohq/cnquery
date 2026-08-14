@@ -11434,6 +11434,7 @@ aws.workspaces.ipGroup.userRules 11.16.1
 aws.workspaces.ipGroups 11.16.1
 aws.workspaces.workspace 11.16.1
 aws.workspaces.workspace.arn 13.44.1
+aws.workspaces.workspace.bundle 13.53.2
 aws.workspaces.workspace.bundleId 11.16.1
 aws.workspaces.workspace.computerName 11.16.1
 aws.workspaces.workspace.connectionState 11.16.1
