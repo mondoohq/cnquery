@@ -4,8 +4,10 @@
 package connection
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,4 +70,25 @@ func TestFetchAccountInfo(t *testing.T) {
 			assert.Equal(t, tc.wantName, info.OrgName)
 		})
 	}
+}
+
+// /v1/me is undocumented, so its response size is not a contract we control.
+// A body past the cap must stop the read rather than let connect-time org
+// detection allocate whatever the endpoint sends.
+func TestFetchAccountInfoCapsTheBody(t *testing.T) {
+	padding := strings.Repeat("x", maxAccountInfoBody)
+	body := `{"orgs":{"data":[{"id":"org-abc","name":"` + padding + `","is_default":true}]}}`
+	require.Greater(t, len(body), maxAccountInfoBody, "the test body has to exceed the cap to exercise it")
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, body)
+	}))
+	defer srv.Close()
+
+	info, err := fetchAccountInfo(srv.URL, "sk-test")
+	require.Error(t, err, "the read stopped at the cap")
+	assert.Contains(t, err.Error(), "exceeded the 1048576 byte limit",
+		"a capped read has to name itself: the truncated JSON would otherwise fail with a generic syntax error that reads like a malformed response")
+	assert.Nil(t, info)
 }

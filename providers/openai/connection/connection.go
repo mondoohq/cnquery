@@ -27,6 +27,8 @@ const (
 	BaseURLOption      = "base-url"
 
 	PlatformIdPrefix = "//platformid.api.mondoo.app/runtime/openai"
+
+	maxAccountInfoBody = 1 << 20
 )
 
 type OpenaiConnection struct {
@@ -159,9 +161,18 @@ func fetchAccountInfo(baseURL string, token string) (*accountInfo, error) {
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	// /v1/me is undocumented and answers with a short account record. Cap the
+	// read so a wrong or misbehaving endpoint cannot make connect-time org
+	// detection allocate without limit.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxAccountInfoBody))
 	if err != nil {
 		return nil, err
+	}
+	// A capped read hands json.Unmarshal a truncated document, which fails with
+	// a generic syntax error that reads like the endpoint returned garbage. Say
+	// which of the two actually happened.
+	if len(body) >= maxAccountInfoBody {
+		return nil, fmt.Errorf("/v1/me response exceeded the %d byte limit", maxAccountInfoBody)
 	}
 
 	var result struct {
