@@ -59,6 +59,13 @@ type PveConnection struct {
 	backups backupIndex
 	// corosync memoizes the join configuration, which several fields read.
 	corosync corosyncCache
+	// nodes memoizes the node listing so that resolving the node behind a
+	// guest, a Ceph daemon, or a volume costs one sweep for the whole
+	// cluster rather than one per item.
+	nodes nodeIndex
+	// storages memoizes the storage listing for the same reason, on behalf
+	// of the disks, mount points, and volumes that name their pool.
+	storages storageIndex
 }
 
 // ID and ParentID implement the plugin.Connection interface.

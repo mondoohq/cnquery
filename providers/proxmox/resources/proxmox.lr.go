@@ -1068,6 +1068,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.vm.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetNode()).ToDataRes(types.String)
 	},
+	"proxmox.vm.nodeRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetNodeRef()).ToDataRes(types.Resource("proxmox.node"))
+	},
 	"proxmox.vm.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetStatus()).ToDataRes(types.String)
 	},
@@ -1329,8 +1332,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.storage.volume.storage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxStorageVolume).GetStorage()).ToDataRes(types.String)
 	},
+	"proxmox.storage.volume.storageRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetStorageRef()).ToDataRes(types.Resource("proxmox.storage"))
+	},
 	"proxmox.storage.volume.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxStorageVolume).GetNode()).ToDataRes(types.String)
+	},
+	"proxmox.storage.volume.nodeRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorageVolume).GetNodeRef()).ToDataRes(types.Resource("proxmox.node"))
 	},
 	"proxmox.storage.volume.contentType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxStorageVolume).GetContentType()).ToDataRes(types.String)
@@ -1760,6 +1769,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.container.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetNode()).ToDataRes(types.String)
+	},
+	"proxmox.container.nodeRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetNodeRef()).ToDataRes(types.Resource("proxmox.node"))
 	},
 	"proxmox.container.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetStatus()).ToDataRes(types.String)
@@ -2439,6 +2451,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.ceph.monitor.host": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephMonitor).GetHost()).ToDataRes(types.String)
 	},
+	"proxmox.ceph.monitor.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMonitor).GetNode()).ToDataRes(types.Resource("proxmox.node"))
+	},
 	"proxmox.ceph.monitor.addr": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephMonitor).GetAddr()).ToDataRes(types.String)
 	},
@@ -2469,6 +2484,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.ceph.manager.host": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephManager).GetHost()).ToDataRes(types.String)
 	},
+	"proxmox.ceph.manager.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephManager).GetNode()).ToDataRes(types.Resource("proxmox.node"))
+	},
 	"proxmox.ceph.manager.addr": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephManager).GetAddr()).ToDataRes(types.String)
 	},
@@ -2492,6 +2510,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.ceph.metadataServer.host": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephMetadataServer).GetHost()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.metadataServer.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephMetadataServer).GetNode()).ToDataRes(types.Resource("proxmox.node"))
 	},
 	"proxmox.ceph.metadataServer.addr": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephMetadataServer).GetAddr()).ToDataRes(types.String)
@@ -2531,6 +2552,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.ceph.osd.host": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephOsd).GetHost()).ToDataRes(types.String)
+	},
+	"proxmox.ceph.osd.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCephOsd).GetNode()).ToDataRes(types.Resource("proxmox.node"))
 	},
 	"proxmox.ceph.osd.up": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCephOsd).GetUp()).ToDataRes(types.Bool)
@@ -3558,6 +3582,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxVm).Node, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.vm.nodeRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).NodeRef, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
+		return
+	},
 	"proxmox.vm.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVm).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3930,8 +3958,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxStorageVolume).Storage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.storage.volume.storageRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).StorageRef, ok = plugin.RawToTValue[*mqlProxmoxStorage](v.Value, v.Error)
+		return
+	},
 	"proxmox.storage.volume.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxStorageVolume).Node, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.volume.nodeRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorageVolume).NodeRef, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
 		return
 	},
 	"proxmox.storage.volume.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4580,6 +4616,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.container.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxContainer).Node, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.nodeRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).NodeRef, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
 		return
 	},
 	"proxmox.container.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5574,6 +5614,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxCephMonitor).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.ceph.monitor.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMonitor).Node, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
+		return
+	},
 	"proxmox.ceph.monitor.addr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxCephMonitor).Addr, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5618,6 +5662,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxCephManager).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.ceph.manager.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephManager).Node, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
+		return
+	},
 	"proxmox.ceph.manager.addr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxCephManager).Addr, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5652,6 +5700,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.ceph.metadataServer.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxCephMetadataServer).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.metadataServer.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephMetadataServer).Node, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
 		return
 	},
 	"proxmox.ceph.metadataServer.addr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5708,6 +5760,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.ceph.osd.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxCephOsd).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.ceph.osd.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCephOsd).Node, ok = plugin.RawToTValue[*mqlProxmoxNode](v.Value, v.Error)
 		return
 	},
 	"proxmox.ceph.osd.up": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8499,6 +8555,7 @@ type mqlProxmoxVm struct {
 	Id              plugin.TValue[int64]
 	Name            plugin.TValue[string]
 	Node            plugin.TValue[string]
+	NodeRef         plugin.TValue[*mqlProxmoxNode]
 	Status          plugin.TValue[string]
 	Cpu             plugin.TValue[float64]
 	Maxcpu          plugin.TValue[int64]
@@ -8594,6 +8651,22 @@ func (c *mqlProxmoxVm) GetName() *plugin.TValue[string] {
 
 func (c *mqlProxmoxVm) GetNode() *plugin.TValue[string] {
 	return &c.Node
+}
+
+func (c *mqlProxmoxVm) GetNodeRef() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.NodeRef, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm", c.__id, "nodeRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.nodeRef()
+	})
 }
 
 func (c *mqlProxmoxVm) GetStatus() *plugin.TValue[string] {
@@ -9414,7 +9487,9 @@ type mqlProxmoxStorageVolume struct {
 	mqlProxmoxStorageVolumeInternal
 	Volid                 plugin.TValue[string]
 	Storage               plugin.TValue[string]
+	StorageRef            plugin.TValue[*mqlProxmoxStorage]
 	Node                  plugin.TValue[string]
+	NodeRef               plugin.TValue[*mqlProxmoxNode]
 	ContentType           plugin.TValue[string]
 	Format                plugin.TValue[string]
 	Size                  plugin.TValue[int64]
@@ -9471,8 +9546,40 @@ func (c *mqlProxmoxStorageVolume) GetStorage() *plugin.TValue[string] {
 	return &c.Storage
 }
 
+func (c *mqlProxmoxStorageVolume) GetStorageRef() *plugin.TValue[*mqlProxmoxStorage] {
+	return plugin.GetOrCompute[*mqlProxmoxStorage](&c.StorageRef, func() (*mqlProxmoxStorage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage.volume", c.__id, "storageRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxStorage), nil
+			}
+		}
+
+		return c.storageRef()
+	})
+}
+
 func (c *mqlProxmoxStorageVolume) GetNode() *plugin.TValue[string] {
 	return &c.Node
+}
+
+func (c *mqlProxmoxStorageVolume) GetNodeRef() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.NodeRef, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.storage.volume", c.__id, "nodeRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.nodeRef()
+	})
 }
 
 func (c *mqlProxmoxStorageVolume) GetContentType() *plugin.TValue[string] {
@@ -11063,6 +11170,7 @@ type mqlProxmoxContainer struct {
 	Id                 plugin.TValue[int64]
 	Name               plugin.TValue[string]
 	Node               plugin.TValue[string]
+	NodeRef            plugin.TValue[*mqlProxmoxNode]
 	Status             plugin.TValue[string]
 	Cpu                plugin.TValue[float64]
 	Maxcpu             plugin.TValue[int64]
@@ -11152,6 +11260,22 @@ func (c *mqlProxmoxContainer) GetName() *plugin.TValue[string] {
 
 func (c *mqlProxmoxContainer) GetNode() *plugin.TValue[string] {
 	return &c.Node
+}
+
+func (c *mqlProxmoxContainer) GetNodeRef() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.NodeRef, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.container", c.__id, "nodeRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.nodeRef()
+	})
 }
 
 func (c *mqlProxmoxContainer) GetStatus() *plugin.TValue[string] {
@@ -13516,6 +13640,7 @@ type mqlProxmoxCephMonitor struct {
 	// optional: if you define mqlProxmoxCephMonitorInternal it will be used here
 	Name             plugin.TValue[string]
 	Host             plugin.TValue[string]
+	Node             plugin.TValue[*mqlProxmoxNode]
 	Addr             plugin.TValue[string]
 	Quorum           plugin.TValue[bool]
 	Rank             plugin.TValue[int64]
@@ -13566,6 +13691,22 @@ func (c *mqlProxmoxCephMonitor) GetHost() *plugin.TValue[string] {
 	return &c.Host
 }
 
+func (c *mqlProxmoxCephMonitor) GetNode() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.Node, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph.monitor", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.node()
+	})
+}
+
 func (c *mqlProxmoxCephMonitor) GetAddr() *plugin.TValue[string] {
 	return &c.Addr
 }
@@ -13605,6 +13746,7 @@ type mqlProxmoxCephManager struct {
 	// optional: if you define mqlProxmoxCephManagerInternal it will be used here
 	Name             plugin.TValue[string]
 	Host             plugin.TValue[string]
+	Node             plugin.TValue[*mqlProxmoxNode]
 	Addr             plugin.TValue[string]
 	State            plugin.TValue[string]
 	Service          plugin.TValue[bool]
@@ -13653,6 +13795,22 @@ func (c *mqlProxmoxCephManager) GetHost() *plugin.TValue[string] {
 	return &c.Host
 }
 
+func (c *mqlProxmoxCephManager) GetNode() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.Node, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph.manager", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.node()
+	})
+}
+
 func (c *mqlProxmoxCephManager) GetAddr() *plugin.TValue[string] {
 	return &c.Addr
 }
@@ -13684,6 +13842,7 @@ type mqlProxmoxCephMetadataServer struct {
 	// optional: if you define mqlProxmoxCephMetadataServerInternal it will be used here
 	Name             plugin.TValue[string]
 	Host             plugin.TValue[string]
+	Node             plugin.TValue[*mqlProxmoxNode]
 	Addr             plugin.TValue[string]
 	State            plugin.TValue[string]
 	Rank             plugin.TValue[int64]
@@ -13734,6 +13893,22 @@ func (c *mqlProxmoxCephMetadataServer) GetName() *plugin.TValue[string] {
 
 func (c *mqlProxmoxCephMetadataServer) GetHost() *plugin.TValue[string] {
 	return &c.Host
+}
+
+func (c *mqlProxmoxCephMetadataServer) GetNode() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.Node, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph.metadataServer", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.node()
+	})
 }
 
 func (c *mqlProxmoxCephMetadataServer) GetAddr() *plugin.TValue[string] {
@@ -13796,6 +13971,7 @@ type mqlProxmoxCephOsd struct {
 	Id               plugin.TValue[int64]
 	Name             plugin.TValue[string]
 	Host             plugin.TValue[string]
+	Node             plugin.TValue[*mqlProxmoxNode]
 	Up               plugin.TValue[bool]
 	InCluster        plugin.TValue[bool]
 	Status           plugin.TValue[string]
@@ -13859,6 +14035,22 @@ func (c *mqlProxmoxCephOsd) GetName() *plugin.TValue[string] {
 
 func (c *mqlProxmoxCephOsd) GetHost() *plugin.TValue[string] {
 	return &c.Host
+}
+
+func (c *mqlProxmoxCephOsd) GetNode() *plugin.TValue[*mqlProxmoxNode] {
+	return plugin.GetOrCompute[*mqlProxmoxNode](&c.Node, func() (*mqlProxmoxNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.ceph.osd", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxNode), nil
+			}
+		}
+
+		return c.node()
+	})
 }
 
 func (c *mqlProxmoxCephOsd) GetUp() *plugin.TValue[bool] {
