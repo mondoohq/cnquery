@@ -203,6 +203,7 @@ PROVIDERS := \
 	alicloud \
 	ansible \
 	arista \
+	artifactory \
 	atlassian \
 	aws \
 	azure \
@@ -312,6 +313,7 @@ providers/test:
 	@$(call testGoModProvider, providers/activedirectory)
 	@$(call testGoModProvider, providers/ansible)
 	@$(call testGoModProvider, providers/arista)
+	@$(call testGoModProvider, providers/artifactory)
 	@$(call testGoModProvider, providers/atlassian)
 	@$(call testGoModProvider, providers/aws)
 	@$(call testGoModProvider, providers/azure)
