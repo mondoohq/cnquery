@@ -11,8 +11,7 @@ import (
 
 // BGP is one `router bgp <asn> [vrf <name>]` instance.
 type BGP struct {
-	// ASN is nil when the block names no valid AS number.
-	ASN       *int64
+	ASN       int64
 	VRF       string
 	RouterID  string
 	ClusterID string
@@ -44,11 +43,10 @@ type Neighbor struct {
 	// PeerGroup names the group this neighbor joins, if any.
 	PeerGroup string
 	// RemoteAs holds the raw value, which is a number or `internal` or
-	// `external`. RemoteASN and LocalASN are nil when there is no valid AS
-	// number.
+	// `external`.
 	RemoteAs  string
-	RemoteASN *int64
-	LocalASN  *int64
+	RemoteASN int64
+	LocalASN  int64
 
 	Description     string
 	UpdateSource    string
@@ -144,8 +142,7 @@ type VRF struct {
 	StartLine    int
 	Raw          string
 
-	// RouterASN is nil when no instance with a valid AS number serves the VRF.
-	RouterASN          *int64
+	RouterASN          int64
 	RouteTargetsImport []string
 	RouteTargetsExport []string
 	ImportedVrfs       []string
@@ -278,7 +275,9 @@ func buildBGP(blk *Block) BGP {
 		StartLine:          blk.StartLine,
 		Raw:                blk.Raw,
 	}
-	b.ASN = parseASN(blk.Name)
+	if blk.Name != "" {
+		b.ASN, _ = strconv.ParseInt(blk.Name, 10, 64)
+	}
 
 	neighbors := newNeighborSet()
 
@@ -299,13 +298,8 @@ func buildBGP(blk *Block) BGP {
 			case d.Args[0] == "default" && len(d.Args) > 1 && d.Args[1] == "ipv4-unicast":
 				b.DefaultIPv4Unicast = !d.Negated
 			case d.Args[0] == "listen" && len(d.Args) >= 4 && d.Args[1] == "range":
-				// `bgp listen range <prefix> peer-group <name>`. A line
-				// without the group names no peer, so it must not create
-				// one under an empty name.
+				// `bgp listen range <prefix> peer-group <name>`
 				group := argAfter(d.Args, "peer-group")
-				if group == "" {
-					break
-				}
 				n := neighbors.get(group, d)
 				n.ListenRange = d.Args[2]
 				n.IsPeerGroup = true
@@ -360,7 +354,6 @@ func (s *neighborSet) list() []Neighbor {
 	out := make([]Neighbor, 0, len(s.order))
 	for _, name := range s.order {
 		n := s.byName[name]
-		n.rollup()
 		sort.Strings(n.ActivatedAddressFamilies)
 		out = append(out, *n)
 	}
@@ -378,34 +371,20 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 
 	switch rest[0] {
 	case "interface":
-		n.Interface = !d.Negated
+		n.Interface = true
 		// `neighbor <if> interface remote-as <asn>` and
 		// `neighbor <if> interface peer-group <name>`.
 		if v := argAfter(rest, "remote-as"); v != "" {
-			if !d.Negated {
-				n.setRemoteAs(v)
-			}
+			n.setRemoteAs(v)
 		}
 		if v := argAfter(rest, "peer-group"); v != "" {
-			if d.Negated {
-				if n.PeerGroup == v {
-					n.PeerGroup = ""
-				}
-			} else {
-				n.PeerGroup = v
-			}
+			n.PeerGroup = v
 		}
 	case "peer-group":
 		if len(rest) == 1 {
-			n.IsPeerGroup = !d.Negated
+			n.IsPeerGroup = true
 		} else {
-			if d.Negated {
-				if n.PeerGroup == rest[1] {
-					n.PeerGroup = ""
-				}
-			} else {
-				n.PeerGroup = rest[1]
-			}
+			n.PeerGroup = rest[1]
 		}
 	case "remote-as":
 		if len(rest) > 1 {
@@ -413,7 +392,7 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 		}
 	case "local-as":
 		if len(rest) > 1 {
-			n.LocalASN = parseASN(rest[1])
+			n.LocalASN, _ = strconv.ParseInt(rest[1], 10, 64)
 		}
 	case "description":
 		n.Description = strings.Join(rest[1:], " ")
@@ -445,38 +424,7 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 
 func (n *Neighbor) setRemoteAs(v string) {
 	n.RemoteAs = v
-	n.RemoteASN = parseASN(v)
-}
-
-// parseASN reads an AS number in asplain (`65546`) or asdot (`1.10`)
-// notation, the two FRR accepts. It returns nil for anything else, including
-// `internal` and `external` and a number outside 1..4294967295, so a value
-// FRR would reject is not reported as a real ASN.
-func parseASN(s string) *int64 {
-	high, low, dotted := strings.Cut(s, ".")
-	var asn uint64
-	if dotted {
-		h, err := strconv.ParseUint(high, 10, 16)
-		if err != nil {
-			return nil
-		}
-		l, err := strconv.ParseUint(low, 10, 16)
-		if err != nil {
-			return nil
-		}
-		asn = h<<16 | l
-	} else {
-		v, err := strconv.ParseUint(s, 10, 32)
-		if err != nil {
-			return nil
-		}
-		asn = v
-	}
-	if asn == 0 {
-		return nil
-	}
-	res := int64(asn)
-	return &res
+	n.RemoteASN, _ = strconv.ParseInt(v, 10, 64)
 }
 
 func buildAddressFamily(blk *Block, neighbors *neighborSet) AddressFamily {
@@ -586,67 +534,29 @@ func applyNeighborAddressFamilyLine(set *neighborSet, afi, safi string, d *Direc
 		// `neighbor <n> route-map <name> in|out`
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				if d.Negated {
-					if naf.RouteMapIn == rest[1] {
-						naf.RouteMapIn = ""
-					}
-				} else {
-					naf.RouteMapIn = rest[1]
-				}
+				naf.RouteMapIn = rest[1]
 			} else {
-				if d.Negated {
-					if naf.RouteMapOut == rest[1] {
-						naf.RouteMapOut = ""
-					}
-				} else {
-					naf.RouteMapOut = rest[1]
-				}
+				naf.RouteMapOut = rest[1]
 			}
 		}
 	case "prefix-list":
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				if d.Negated {
-					if naf.PrefixListIn == rest[1] {
-						naf.PrefixListIn = ""
-					}
-				} else {
-					naf.PrefixListIn = rest[1]
-				}
+				naf.PrefixListIn = rest[1]
 			} else {
-				if d.Negated {
-					if naf.PrefixListOut == rest[1] {
-						naf.PrefixListOut = ""
-					}
-				} else {
-					naf.PrefixListOut = rest[1]
-				}
+				naf.PrefixListOut = rest[1]
 			}
 		}
 	case "filter-list":
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				if d.Negated {
-					if naf.FilterListIn == rest[1] {
-						naf.FilterListIn = ""
-					}
-				} else {
-					naf.FilterListIn = rest[1]
-				}
+				naf.FilterListIn = rest[1]
 			} else {
-				if d.Negated {
-					if naf.FilterListOut == rest[1] {
-						naf.FilterListOut = ""
-					}
-				} else {
-					naf.FilterListOut = rest[1]
-				}
+				naf.FilterListOut = rest[1]
 			}
 		}
 	case "maximum-prefix":
-		if d.Negated {
-			naf.MaximumPrefix = 0
-		} else if len(rest) > 1 {
+		if len(rest) > 1 {
 			naf.MaximumPrefix, _ = strconv.ParseInt(rest[1], 10, 64)
 		}
 	case "route-reflector-client":
@@ -664,6 +574,7 @@ func applyNeighborAddressFamilyLine(set *neighborSet, afi, safi string, d *Direc
 	}
 
 	n.Params[strings.Join(rest, " ")] = boolParam(!d.Negated)
+	n.rollup()
 }
 
 // addressFamily returns the per-family settings of a neighbor, creating them
