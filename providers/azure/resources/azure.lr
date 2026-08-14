@@ -14060,7 +14060,7 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
 }
 
 // Azure Front Door security policy associating a WAF policy with domains
-private azure.subscription.frontDoorService.profile.securityPolicy @defaults("id name policyType wafPolicyId") {
+private azure.subscription.frontDoorService.profile.securityPolicy @defaults("id name policyType provisioningState") {
   // Security policy resource ID
   id string
   // Security policy name
