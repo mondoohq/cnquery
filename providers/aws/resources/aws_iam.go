@@ -365,7 +365,7 @@ func (a *mqlAwsIamUser) tags() (map[string]any, error) {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return map[string]any{}, nil
+				return markTagsUnreadable(&a.Tags)
 			}
 			return nil, err
 		}
@@ -386,7 +386,7 @@ func (a *mqlAwsIamRole) tags() (map[string]any, error) {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return map[string]any{}, nil
+				return markTagsUnreadable(&a.Tags)
 			}
 			return nil, err
 		}
@@ -407,7 +407,7 @@ func (a *mqlAwsIamInstanceProfile) tags() (map[string]any, error) {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return map[string]any{}, nil
+				return markTagsUnreadable(&a.Tags)
 			}
 			return nil, err
 		}

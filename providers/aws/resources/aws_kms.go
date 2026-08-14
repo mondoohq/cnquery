@@ -492,7 +492,7 @@ func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 			// AWS-managed keys reject ListResourceTags with AccessDenied;
 			// treat that as no tags rather than failing managedBy/tags.
 			if Is400AccessDeniedError(err) {
-				return nil, nil
+				return markTagsUnreadable(&a.Tags)
 			}
 			return nil, err
 		}
