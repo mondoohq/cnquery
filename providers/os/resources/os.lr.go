@@ -161,10 +161,10 @@ const (
 	ResourceFrr                                           string = "frr"
 	ResourceFrrConfig                                     string = "frr.config"
 	ResourceFrrConfigBlock                                string = "frr.config.block"
-	ResourceFrrConfigBgp                                  string = "frr.config.bgp"
-	ResourceFrrConfigBgpNeighbor                          string = "frr.config.bgp.neighbor"
-	ResourceFrrConfigBgpNeighborAddressFamily             string = "frr.config.bgp.neighbor.addressFamily"
-	ResourceFrrConfigBgpAddressFamily                     string = "frr.config.bgp.addressFamily"
+	ResourceFrrConfigRouter                               string = "frr.config.router"
+	ResourceFrrConfigRouterNeighbor                       string = "frr.config.router.neighbor"
+	ResourceFrrConfigRouterNeighborAddressFamily          string = "frr.config.router.neighbor.addressFamily"
+	ResourceFrrConfigRouterAddressFamily                  string = "frr.config.router.addressFamily"
 	ResourceFrrConfigVrf                                  string = "frr.config.vrf"
 	ResourceFrrConfigInterface                            string = "frr.config.interface"
 	ResourceFrrConfigPrefixList                           string = "frr.config.prefixList"
@@ -1226,21 +1226,21 @@ func init() {
 			// to override args, implement: initFrrConfigBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFrrConfigBlock,
 		},
-		"frr.config.bgp": {
-			// to override args, implement: initFrrConfigBgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createFrrConfigBgp,
+		"frr.config.router": {
+			// to override args, implement: initFrrConfigRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigRouter,
 		},
-		"frr.config.bgp.neighbor": {
-			// to override args, implement: initFrrConfigBgpNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createFrrConfigBgpNeighbor,
+		"frr.config.router.neighbor": {
+			// to override args, implement: initFrrConfigRouterNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigRouterNeighbor,
 		},
-		"frr.config.bgp.neighbor.addressFamily": {
-			// to override args, implement: initFrrConfigBgpNeighborAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createFrrConfigBgpNeighborAddressFamily,
+		"frr.config.router.neighbor.addressFamily": {
+			// to override args, implement: initFrrConfigRouterNeighborAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigRouterNeighborAddressFamily,
 		},
-		"frr.config.bgp.addressFamily": {
-			// to override args, implement: initFrrConfigBgpAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createFrrConfigBgpAddressFamily,
+		"frr.config.router.addressFamily": {
+			// to override args, implement: initFrrConfigRouterAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigRouterAddressFamily,
 		},
 		"frr.config.vrf": {
 			// to override args, implement: initFrrConfigVrf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6133,7 +6133,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlFrrConfig).GetIntegratedVtyshConfig()).ToDataRes(types.Bool)
 	},
 	"frr.config.bgp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfig).GetBgp()).ToDataRes(types.Array(types.Resource("frr.config.bgp")))
+		return (r.(*mqlFrrConfig).GetBgp()).ToDataRes(types.Array(types.Resource("frr.config.router")))
 	},
 	"frr.config.vrfs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfig).GetVrfs()).ToDataRes(types.Array(types.Resource("frr.config.vrf")))
@@ -6180,215 +6180,215 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"frr.config.block.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfigBlock).GetRaw()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.asn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetAsn()).ToDataRes(types.Int)
+	"frr.config.router.asn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetAsn()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.vrf": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetVrf()).ToDataRes(types.String)
+	"frr.config.router.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetVrf()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.routerId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetRouterId()).ToDataRes(types.String)
+	"frr.config.router.routerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetRouterId()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.clusterId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetClusterId()).ToDataRes(types.String)
+	"frr.config.router.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetClusterId()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.ebgpRequiresPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetEbgpRequiresPolicy()).ToDataRes(types.Bool)
+	"frr.config.router.ebgpRequiresPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetEbgpRequiresPolicy()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.defaultIpv4Unicast": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetDefaultIpv4Unicast()).ToDataRes(types.Bool)
+	"frr.config.router.defaultIpv4Unicast": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetDefaultIpv4Unicast()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbors": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetNeighbors()).ToDataRes(types.Array(types.Resource("frr.config.bgp.neighbor")))
+	"frr.config.router.neighbors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetNeighbors()).ToDataRes(types.Array(types.Resource("frr.config.router.neighbor")))
 	},
-	"frr.config.bgp.addressFamilies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetAddressFamilies()).ToDataRes(types.Array(types.Resource("frr.config.bgp.addressFamily")))
+	"frr.config.router.addressFamilies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetAddressFamilies()).ToDataRes(types.Array(types.Resource("frr.config.router.addressFamily")))
 	},
-	"frr.config.bgp.params": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	"frr.config.router.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"frr.config.bgp.file": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetFile()).ToDataRes(types.String)
+	"frr.config.router.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetFile()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.startLine": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetStartLine()).ToDataRes(types.Int)
+	"frr.config.router.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetStartLine()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.raw": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgp).GetRaw()).ToDataRes(types.String)
+	"frr.config.router.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouter).GetRaw()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetName()).ToDataRes(types.String)
+	"frr.config.router.neighbor.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetName()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.isInterface": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetIsInterface()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.isInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetIsInterface()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.isPeerGroup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetIsPeerGroup()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.isPeerGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetIsPeerGroup()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.peerGroup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetPeerGroup()).ToDataRes(types.String)
+	"frr.config.router.neighbor.peerGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetPeerGroup()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.remoteAs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetRemoteAs()).ToDataRes(types.String)
+	"frr.config.router.neighbor.remoteAs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetRemoteAs()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.remoteAsn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetRemoteAsn()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.remoteAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetRemoteAsn()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.localAsn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetLocalAsn()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.localAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetLocalAsn()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetDescription()).ToDataRes(types.String)
+	"frr.config.router.neighbor.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetDescription()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.updateSource": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetUpdateSource()).ToDataRes(types.String)
+	"frr.config.router.neighbor.updateSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetUpdateSource()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.listenRange": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetListenRange()).ToDataRes(types.String)
+	"frr.config.router.neighbor.listenRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetListenRange()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.bfd": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetBfd()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.bfd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetBfd()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.shutdown": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetShutdown()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.shutdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetShutdown()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.passwordSet": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetPasswordSet()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.passwordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetPasswordSet()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.ttlSecurityHops": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetTtlSecurityHops()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.ttlSecurityHops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetTtlSecurityHops()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.keepaliveTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetKeepaliveTime()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.keepaliveTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetKeepaliveTime()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.holdTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetHoldTime()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.holdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetHoldTime()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.addressFamilies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetAddressFamilies()).ToDataRes(types.Array(types.Resource("frr.config.bgp.neighbor.addressFamily")))
+	"frr.config.router.neighbor.addressFamilies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetAddressFamilies()).ToDataRes(types.Array(types.Resource("frr.config.router.neighbor.addressFamily")))
 	},
-	"frr.config.bgp.neighbor.activatedAddressFamilies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetActivatedAddressFamilies()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.activatedAddressFamilies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetActivatedAddressFamilies()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.routeMapsIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetRouteMapsIn()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.routeMapsIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetRouteMapsIn()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.routeMapsOut": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetRouteMapsOut()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.routeMapsOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetRouteMapsOut()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.prefixListsIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetPrefixListsIn()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.prefixListsIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetPrefixListsIn()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.prefixListsOut": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetPrefixListsOut()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.prefixListsOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetPrefixListsOut()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.filterListsIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetFilterListsIn()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.filterListsIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetFilterListsIn()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.filterListsOut": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetFilterListsOut()).ToDataRes(types.Array(types.String))
+	"frr.config.router.neighbor.filterListsOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetFilterListsOut()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.neighbor.params": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	"frr.config.router.neighbor.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"frr.config.bgp.neighbor.file": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetFile()).ToDataRes(types.String)
+	"frr.config.router.neighbor.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetFile()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.line": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighbor).GetLine()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighbor).GetLine()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.addressFamily.afi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetAfi()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.afi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetAfi()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.safi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetSafi()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.safi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetSafi()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.activate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetActivate()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.activate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetActivate()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.addressFamily.routeMapIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetRouteMapIn()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.routeMapIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetRouteMapIn()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.routeMapOut": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetRouteMapOut()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.routeMapOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetRouteMapOut()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.prefixListIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetPrefixListIn()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.prefixListIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetPrefixListIn()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.prefixListOut": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetPrefixListOut()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.prefixListOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetPrefixListOut()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.filterListIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetFilterListIn()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.filterListIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetFilterListIn()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.filterListOut": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetFilterListOut()).ToDataRes(types.String)
+	"frr.config.router.neighbor.addressFamily.filterListOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetFilterListOut()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.neighbor.addressFamily.maximumPrefix": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetMaximumPrefix()).ToDataRes(types.Int)
+	"frr.config.router.neighbor.addressFamily.maximumPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetMaximumPrefix()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.neighbor.addressFamily.routeReflectorClient": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetRouteReflectorClient()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.routeReflectorClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetRouteReflectorClient()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.addressFamily.allowasIn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetAllowasIn()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.allowasIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetAllowasIn()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.addressFamily.nextHopSelf": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetNextHopSelf()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.nextHopSelf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetNextHopSelf()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.addressFamily.softReconfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetSoftReconfiguration()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.softReconfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetSoftReconfiguration()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.addressFamily.defaultOriginate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetDefaultOriginate()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.defaultOriginate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetDefaultOriginate()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.neighbor.addressFamily.removePrivateAs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpNeighborAddressFamily).GetRemovePrivateAs()).ToDataRes(types.Bool)
+	"frr.config.router.neighbor.addressFamily.removePrivateAs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterNeighborAddressFamily).GetRemovePrivateAs()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.addressFamily.afi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetAfi()).ToDataRes(types.String)
+	"frr.config.router.addressFamily.afi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetAfi()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.addressFamily.safi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetSafi()).ToDataRes(types.String)
+	"frr.config.router.addressFamily.safi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetSafi()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.addressFamily.networks": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetNetworks()).ToDataRes(types.Array(types.String))
+	"frr.config.router.addressFamily.networks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetNetworks()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.addressFamily.redistribute": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetRedistribute()).ToDataRes(types.Array(types.String))
+	"frr.config.router.addressFamily.redistribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetRedistribute()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.addressFamily.importVrfs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetImportVrfs()).ToDataRes(types.Array(types.String))
+	"frr.config.router.addressFamily.importVrfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetImportVrfs()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.addressFamily.importVrfRouteMap": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetImportVrfRouteMap()).ToDataRes(types.String)
+	"frr.config.router.addressFamily.importVrfRouteMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetImportVrfRouteMap()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.addressFamily.routeTargetsImport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetRouteTargetsImport()).ToDataRes(types.Array(types.String))
+	"frr.config.router.addressFamily.routeTargetsImport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetRouteTargetsImport()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.addressFamily.routeTargetsExport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetRouteTargetsExport()).ToDataRes(types.Array(types.String))
+	"frr.config.router.addressFamily.routeTargetsExport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetRouteTargetsExport()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.addressFamily.advertise": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetAdvertise()).ToDataRes(types.Array(types.String))
+	"frr.config.router.addressFamily.advertise": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetAdvertise()).ToDataRes(types.Array(types.String))
 	},
-	"frr.config.bgp.addressFamily.advertiseAllVni": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetAdvertiseAllVni()).ToDataRes(types.Bool)
+	"frr.config.router.addressFamily.advertiseAllVni": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetAdvertiseAllVni()).ToDataRes(types.Bool)
 	},
-	"frr.config.bgp.addressFamily.vnis": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetVnis()).ToDataRes(types.Array(types.Dict))
+	"frr.config.router.addressFamily.vnis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetVnis()).ToDataRes(types.Array(types.Dict))
 	},
-	"frr.config.bgp.addressFamily.params": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	"frr.config.router.addressFamily.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"frr.config.bgp.addressFamily.file": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetFile()).ToDataRes(types.String)
+	"frr.config.router.addressFamily.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetFile()).ToDataRes(types.String)
 	},
-	"frr.config.bgp.addressFamily.startLine": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetStartLine()).ToDataRes(types.Int)
+	"frr.config.router.addressFamily.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetStartLine()).ToDataRes(types.Int)
 	},
-	"frr.config.bgp.addressFamily.raw": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFrrConfigBgpAddressFamily).GetRaw()).ToDataRes(types.String)
+	"frr.config.router.addressFamily.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRouterAddressFamily).GetRaw()).ToDataRes(types.String)
 	},
 	"frr.config.vrf.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfigVrf).GetName()).ToDataRes(types.String)
@@ -21888,300 +21888,300 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFrrConfigBlock).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).__id, ok = v.Value.(string)
+	"frr.config.router.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).__id, ok = v.Value.(string)
 		return
 	},
-	"frr.config.bgp.asn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).Asn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.asn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).Asn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.routerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).RouterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.routerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).RouterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.ebgpRequiresPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).EbgpRequiresPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.ebgpRequiresPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).EbgpRequiresPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.defaultIpv4Unicast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).DefaultIpv4Unicast, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.defaultIpv4Unicast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).DefaultIpv4Unicast, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).Neighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).Neighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).AddressFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).AddressFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"frr.config.router.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgp).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouter).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).__id, ok = v.Value.(string)
+	"frr.config.router.neighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).__id, ok = v.Value.(string)
 		return
 	},
-	"frr.config.bgp.neighbor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.isInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).IsInterface, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.isInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).IsInterface, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.isPeerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).IsPeerGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.isPeerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).IsPeerGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.peerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).PeerGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.peerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).PeerGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.remoteAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).RemoteAs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.remoteAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).RemoteAs, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.remoteAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).RemoteAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.remoteAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).RemoteAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.localAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).LocalAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.localAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).LocalAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.updateSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).UpdateSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.updateSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).UpdateSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.listenRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).ListenRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.listenRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).ListenRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.bfd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).Bfd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.bfd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).Bfd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.shutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).Shutdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.shutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).Shutdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.passwordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).PasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.passwordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).PasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.ttlSecurityHops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).TtlSecurityHops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.ttlSecurityHops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).TtlSecurityHops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.keepaliveTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).KeepaliveTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.keepaliveTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).KeepaliveTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.holdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).HoldTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.holdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).HoldTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).AddressFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).AddressFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.activatedAddressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).ActivatedAddressFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.activatedAddressFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).ActivatedAddressFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.routeMapsIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).RouteMapsIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.routeMapsIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).RouteMapsIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.routeMapsOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).RouteMapsOut, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.routeMapsOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).RouteMapsOut, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.prefixListsIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).PrefixListsIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.prefixListsIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).PrefixListsIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.prefixListsOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).PrefixListsOut, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.prefixListsOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).PrefixListsOut, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.filterListsIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).FilterListsIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.filterListsIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).FilterListsIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.filterListsOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).FilterListsOut, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.neighbor.filterListsOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).FilterListsOut, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"frr.config.router.neighbor.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighbor).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighbor).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).__id, ok = v.Value.(string)
+	"frr.config.router.neighbor.addressFamily.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).__id, ok = v.Value.(string)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.afi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).Afi, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.afi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).Afi, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.safi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).Safi, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.safi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).Safi, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.activate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).Activate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.activate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).Activate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.routeMapIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).RouteMapIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.routeMapIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).RouteMapIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.routeMapOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).RouteMapOut, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.routeMapOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).RouteMapOut, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.prefixListIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).PrefixListIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.prefixListIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).PrefixListIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.prefixListOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).PrefixListOut, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.prefixListOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).PrefixListOut, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.filterListIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).FilterListIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.filterListIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).FilterListIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.filterListOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).FilterListOut, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.filterListOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).FilterListOut, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.maximumPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).MaximumPrefix, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.maximumPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).MaximumPrefix, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.routeReflectorClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).RouteReflectorClient, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.routeReflectorClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).RouteReflectorClient, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.allowasIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).AllowasIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.allowasIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).AllowasIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.nextHopSelf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).NextHopSelf, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.nextHopSelf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).NextHopSelf, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.softReconfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).SoftReconfiguration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.softReconfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).SoftReconfiguration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.defaultOriginate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).DefaultOriginate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.defaultOriginate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).DefaultOriginate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.neighbor.addressFamily.removePrivateAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpNeighborAddressFamily).RemovePrivateAs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.neighbor.addressFamily.removePrivateAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterNeighborAddressFamily).RemovePrivateAs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).__id, ok = v.Value.(string)
+	"frr.config.router.addressFamily.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).__id, ok = v.Value.(string)
 		return
 	},
-	"frr.config.bgp.addressFamily.afi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Afi, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.addressFamily.afi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Afi, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.safi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Safi, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.addressFamily.safi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Safi, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.redistribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Redistribute, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.redistribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Redistribute, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.importVrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).ImportVrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.importVrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).ImportVrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.importVrfRouteMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).ImportVrfRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.addressFamily.importVrfRouteMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).ImportVrfRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.routeTargetsImport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).RouteTargetsImport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.routeTargetsImport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).RouteTargetsImport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.routeTargetsExport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).RouteTargetsExport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.routeTargetsExport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).RouteTargetsExport, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.advertise": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Advertise, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.advertise": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Advertise, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.advertiseAllVni": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).AdvertiseAllVni, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"frr.config.router.addressFamily.advertiseAllVni": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).AdvertiseAllVni, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.vnis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Vnis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.vnis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Vnis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"frr.config.router.addressFamily.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.addressFamily.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"frr.config.router.addressFamily.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"frr.config.bgp.addressFamily.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFrrConfigBgpAddressFamily).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"frr.config.router.addressFamily.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRouterAddressFamily).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"frr.config.vrf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52115,11 +52115,11 @@ func (c *mqlFrrConfigBlock) GetRaw() *plugin.TValue[string] {
 	return &c.Raw
 }
 
-// mqlFrrConfigBgp for the frr.config.bgp resource
-type mqlFrrConfigBgp struct {
+// mqlFrrConfigRouter for the frr.config.router resource
+type mqlFrrConfigRouter struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFrrConfigBgpInternal it will be used here
+	// optional: if you define mqlFrrConfigRouterInternal it will be used here
 	Asn                plugin.TValue[int64]
 	Vrf                plugin.TValue[string]
 	RouterId           plugin.TValue[string]
@@ -52134,9 +52134,9 @@ type mqlFrrConfigBgp struct {
 	Raw                plugin.TValue[string]
 }
 
-// createFrrConfigBgp creates a new instance of this resource
-func createFrrConfigBgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFrrConfigBgp{
+// createFrrConfigRouter creates a new instance of this resource
+func createFrrConfigRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigRouter{
 		MqlRuntime: runtime,
 	}
 
@@ -52148,7 +52148,7 @@ func createFrrConfigBgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("frr.config.bgp", res.__id)
+		args, err = runtime.ResourceFromRecording("frr.config.router", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -52158,67 +52158,67 @@ func createFrrConfigBgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return res, nil
 }
 
-func (c *mqlFrrConfigBgp) MqlName() string {
-	return "frr.config.bgp"
+func (c *mqlFrrConfigRouter) MqlName() string {
+	return "frr.config.router"
 }
 
-func (c *mqlFrrConfigBgp) MqlID() string {
+func (c *mqlFrrConfigRouter) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFrrConfigBgp) GetAsn() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouter) GetAsn() *plugin.TValue[int64] {
 	return &c.Asn
 }
 
-func (c *mqlFrrConfigBgp) GetVrf() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouter) GetVrf() *plugin.TValue[string] {
 	return &c.Vrf
 }
 
-func (c *mqlFrrConfigBgp) GetRouterId() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouter) GetRouterId() *plugin.TValue[string] {
 	return &c.RouterId
 }
 
-func (c *mqlFrrConfigBgp) GetClusterId() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouter) GetClusterId() *plugin.TValue[string] {
 	return &c.ClusterId
 }
 
-func (c *mqlFrrConfigBgp) GetEbgpRequiresPolicy() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouter) GetEbgpRequiresPolicy() *plugin.TValue[bool] {
 	return &c.EbgpRequiresPolicy
 }
 
-func (c *mqlFrrConfigBgp) GetDefaultIpv4Unicast() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouter) GetDefaultIpv4Unicast() *plugin.TValue[bool] {
 	return &c.DefaultIpv4Unicast
 }
 
-func (c *mqlFrrConfigBgp) GetNeighbors() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouter) GetNeighbors() *plugin.TValue[[]any] {
 	return &c.Neighbors
 }
 
-func (c *mqlFrrConfigBgp) GetAddressFamilies() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouter) GetAddressFamilies() *plugin.TValue[[]any] {
 	return &c.AddressFamilies
 }
 
-func (c *mqlFrrConfigBgp) GetParams() *plugin.TValue[map[string]any] {
+func (c *mqlFrrConfigRouter) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
 }
 
-func (c *mqlFrrConfigBgp) GetFile() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouter) GetFile() *plugin.TValue[string] {
 	return &c.File
 }
 
-func (c *mqlFrrConfigBgp) GetStartLine() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouter) GetStartLine() *plugin.TValue[int64] {
 	return &c.StartLine
 }
 
-func (c *mqlFrrConfigBgp) GetRaw() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouter) GetRaw() *plugin.TValue[string] {
 	return &c.Raw
 }
 
-// mqlFrrConfigBgpNeighbor for the frr.config.bgp.neighbor resource
-type mqlFrrConfigBgpNeighbor struct {
+// mqlFrrConfigRouterNeighbor for the frr.config.router.neighbor resource
+type mqlFrrConfigRouterNeighbor struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFrrConfigBgpNeighborInternal it will be used here
+	// optional: if you define mqlFrrConfigRouterNeighborInternal it will be used here
 	Name                     plugin.TValue[string]
 	IsInterface              plugin.TValue[bool]
 	IsPeerGroup              plugin.TValue[bool]
@@ -52248,9 +52248,9 @@ type mqlFrrConfigBgpNeighbor struct {
 	Line                     plugin.TValue[int64]
 }
 
-// createFrrConfigBgpNeighbor creates a new instance of this resource
-func createFrrConfigBgpNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFrrConfigBgpNeighbor{
+// createFrrConfigRouterNeighbor creates a new instance of this resource
+func createFrrConfigRouterNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigRouterNeighbor{
 		MqlRuntime: runtime,
 	}
 
@@ -52262,7 +52262,7 @@ func createFrrConfigBgpNeighbor(runtime *plugin.Runtime, args map[string]*llx.Ra
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("frr.config.bgp.neighbor", res.__id)
+		args, err = runtime.ResourceFromRecording("frr.config.router.neighbor", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -52272,127 +52272,127 @@ func createFrrConfigBgpNeighbor(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return res, nil
 }
 
-func (c *mqlFrrConfigBgpNeighbor) MqlName() string {
-	return "frr.config.bgp.neighbor"
+func (c *mqlFrrConfigRouterNeighbor) MqlName() string {
+	return "frr.config.router.neighbor"
 }
 
-func (c *mqlFrrConfigBgpNeighbor) MqlID() string {
+func (c *mqlFrrConfigRouterNeighbor) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetName() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetIsInterface() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighbor) GetIsInterface() *plugin.TValue[bool] {
 	return &c.IsInterface
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetIsPeerGroup() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighbor) GetIsPeerGroup() *plugin.TValue[bool] {
 	return &c.IsPeerGroup
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetPeerGroup() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetPeerGroup() *plugin.TValue[string] {
 	return &c.PeerGroup
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetRemoteAs() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetRemoteAs() *plugin.TValue[string] {
 	return &c.RemoteAs
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetRemoteAsn() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighbor) GetRemoteAsn() *plugin.TValue[int64] {
 	return &c.RemoteAsn
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetLocalAsn() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighbor) GetLocalAsn() *plugin.TValue[int64] {
 	return &c.LocalAsn
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetDescription() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetUpdateSource() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetUpdateSource() *plugin.TValue[string] {
 	return &c.UpdateSource
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetListenRange() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetListenRange() *plugin.TValue[string] {
 	return &c.ListenRange
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetBfd() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighbor) GetBfd() *plugin.TValue[bool] {
 	return &c.Bfd
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetShutdown() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighbor) GetShutdown() *plugin.TValue[bool] {
 	return &c.Shutdown
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetPasswordSet() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighbor) GetPasswordSet() *plugin.TValue[bool] {
 	return &c.PasswordSet
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetTtlSecurityHops() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighbor) GetTtlSecurityHops() *plugin.TValue[int64] {
 	return &c.TtlSecurityHops
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetKeepaliveTime() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighbor) GetKeepaliveTime() *plugin.TValue[int64] {
 	return &c.KeepaliveTime
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetHoldTime() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighbor) GetHoldTime() *plugin.TValue[int64] {
 	return &c.HoldTime
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetAddressFamilies() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetAddressFamilies() *plugin.TValue[[]any] {
 	return &c.AddressFamilies
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetActivatedAddressFamilies() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetActivatedAddressFamilies() *plugin.TValue[[]any] {
 	return &c.ActivatedAddressFamilies
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetRouteMapsIn() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetRouteMapsIn() *plugin.TValue[[]any] {
 	return &c.RouteMapsIn
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetRouteMapsOut() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetRouteMapsOut() *plugin.TValue[[]any] {
 	return &c.RouteMapsOut
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetPrefixListsIn() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetPrefixListsIn() *plugin.TValue[[]any] {
 	return &c.PrefixListsIn
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetPrefixListsOut() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetPrefixListsOut() *plugin.TValue[[]any] {
 	return &c.PrefixListsOut
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetFilterListsIn() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetFilterListsIn() *plugin.TValue[[]any] {
 	return &c.FilterListsIn
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetFilterListsOut() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetFilterListsOut() *plugin.TValue[[]any] {
 	return &c.FilterListsOut
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetParams() *plugin.TValue[map[string]any] {
+func (c *mqlFrrConfigRouterNeighbor) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetFile() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighbor) GetFile() *plugin.TValue[string] {
 	return &c.File
 }
 
-func (c *mqlFrrConfigBgpNeighbor) GetLine() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighbor) GetLine() *plugin.TValue[int64] {
 	return &c.Line
 }
 
-// mqlFrrConfigBgpNeighborAddressFamily for the frr.config.bgp.neighbor.addressFamily resource
-type mqlFrrConfigBgpNeighborAddressFamily struct {
+// mqlFrrConfigRouterNeighborAddressFamily for the frr.config.router.neighbor.addressFamily resource
+type mqlFrrConfigRouterNeighborAddressFamily struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFrrConfigBgpNeighborAddressFamilyInternal it will be used here
+	// optional: if you define mqlFrrConfigRouterNeighborAddressFamilyInternal it will be used here
 	Afi                  plugin.TValue[string]
 	Safi                 plugin.TValue[string]
 	Activate             plugin.TValue[bool]
@@ -52411,9 +52411,9 @@ type mqlFrrConfigBgpNeighborAddressFamily struct {
 	RemovePrivateAs      plugin.TValue[bool]
 }
 
-// createFrrConfigBgpNeighborAddressFamily creates a new instance of this resource
-func createFrrConfigBgpNeighborAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFrrConfigBgpNeighborAddressFamily{
+// createFrrConfigRouterNeighborAddressFamily creates a new instance of this resource
+func createFrrConfigRouterNeighborAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigRouterNeighborAddressFamily{
 		MqlRuntime: runtime,
 	}
 
@@ -52425,7 +52425,7 @@ func createFrrConfigBgpNeighborAddressFamily(runtime *plugin.Runtime, args map[s
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("frr.config.bgp.neighbor.addressFamily", res.__id)
+		args, err = runtime.ResourceFromRecording("frr.config.router.neighbor.addressFamily", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -52435,83 +52435,83 @@ func createFrrConfigBgpNeighborAddressFamily(runtime *plugin.Runtime, args map[s
 	return res, nil
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) MqlName() string {
-	return "frr.config.bgp.neighbor.addressFamily"
+func (c *mqlFrrConfigRouterNeighborAddressFamily) MqlName() string {
+	return "frr.config.router.neighbor.addressFamily"
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) MqlID() string {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetAfi() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetAfi() *plugin.TValue[string] {
 	return &c.Afi
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetSafi() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetSafi() *plugin.TValue[string] {
 	return &c.Safi
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetActivate() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetActivate() *plugin.TValue[bool] {
 	return &c.Activate
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetRouteMapIn() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetRouteMapIn() *plugin.TValue[string] {
 	return &c.RouteMapIn
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetRouteMapOut() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetRouteMapOut() *plugin.TValue[string] {
 	return &c.RouteMapOut
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetPrefixListIn() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetPrefixListIn() *plugin.TValue[string] {
 	return &c.PrefixListIn
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetPrefixListOut() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetPrefixListOut() *plugin.TValue[string] {
 	return &c.PrefixListOut
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetFilterListIn() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetFilterListIn() *plugin.TValue[string] {
 	return &c.FilterListIn
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetFilterListOut() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetFilterListOut() *plugin.TValue[string] {
 	return &c.FilterListOut
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetMaximumPrefix() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetMaximumPrefix() *plugin.TValue[int64] {
 	return &c.MaximumPrefix
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetRouteReflectorClient() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetRouteReflectorClient() *plugin.TValue[bool] {
 	return &c.RouteReflectorClient
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetAllowasIn() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetAllowasIn() *plugin.TValue[bool] {
 	return &c.AllowasIn
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetNextHopSelf() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetNextHopSelf() *plugin.TValue[bool] {
 	return &c.NextHopSelf
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetSoftReconfiguration() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetSoftReconfiguration() *plugin.TValue[bool] {
 	return &c.SoftReconfiguration
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetDefaultOriginate() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetDefaultOriginate() *plugin.TValue[bool] {
 	return &c.DefaultOriginate
 }
 
-func (c *mqlFrrConfigBgpNeighborAddressFamily) GetRemovePrivateAs() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterNeighborAddressFamily) GetRemovePrivateAs() *plugin.TValue[bool] {
 	return &c.RemovePrivateAs
 }
 
-// mqlFrrConfigBgpAddressFamily for the frr.config.bgp.addressFamily resource
-type mqlFrrConfigBgpAddressFamily struct {
+// mqlFrrConfigRouterAddressFamily for the frr.config.router.addressFamily resource
+type mqlFrrConfigRouterAddressFamily struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFrrConfigBgpAddressFamilyInternal it will be used here
+	// optional: if you define mqlFrrConfigRouterAddressFamilyInternal it will be used here
 	Afi                plugin.TValue[string]
 	Safi               plugin.TValue[string]
 	Networks           plugin.TValue[[]any]
@@ -52529,9 +52529,9 @@ type mqlFrrConfigBgpAddressFamily struct {
 	Raw                plugin.TValue[string]
 }
 
-// createFrrConfigBgpAddressFamily creates a new instance of this resource
-func createFrrConfigBgpAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFrrConfigBgpAddressFamily{
+// createFrrConfigRouterAddressFamily creates a new instance of this resource
+func createFrrConfigRouterAddressFamily(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigRouterAddressFamily{
 		MqlRuntime: runtime,
 	}
 
@@ -52543,7 +52543,7 @@ func createFrrConfigBgpAddressFamily(runtime *plugin.Runtime, args map[string]*l
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("frr.config.bgp.addressFamily", res.__id)
+		args, err = runtime.ResourceFromRecording("frr.config.router.addressFamily", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -52553,71 +52553,71 @@ func createFrrConfigBgpAddressFamily(runtime *plugin.Runtime, args map[string]*l
 	return res, nil
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) MqlName() string {
-	return "frr.config.bgp.addressFamily"
+func (c *mqlFrrConfigRouterAddressFamily) MqlName() string {
+	return "frr.config.router.addressFamily"
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) MqlID() string {
+func (c *mqlFrrConfigRouterAddressFamily) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetAfi() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterAddressFamily) GetAfi() *plugin.TValue[string] {
 	return &c.Afi
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetSafi() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterAddressFamily) GetSafi() *plugin.TValue[string] {
 	return &c.Safi
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetNetworks() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetNetworks() *plugin.TValue[[]any] {
 	return &c.Networks
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetRedistribute() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetRedistribute() *plugin.TValue[[]any] {
 	return &c.Redistribute
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetImportVrfs() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetImportVrfs() *plugin.TValue[[]any] {
 	return &c.ImportVrfs
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetImportVrfRouteMap() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterAddressFamily) GetImportVrfRouteMap() *plugin.TValue[string] {
 	return &c.ImportVrfRouteMap
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetRouteTargetsImport() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetRouteTargetsImport() *plugin.TValue[[]any] {
 	return &c.RouteTargetsImport
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetRouteTargetsExport() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetRouteTargetsExport() *plugin.TValue[[]any] {
 	return &c.RouteTargetsExport
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetAdvertise() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetAdvertise() *plugin.TValue[[]any] {
 	return &c.Advertise
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetAdvertiseAllVni() *plugin.TValue[bool] {
+func (c *mqlFrrConfigRouterAddressFamily) GetAdvertiseAllVni() *plugin.TValue[bool] {
 	return &c.AdvertiseAllVni
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetVnis() *plugin.TValue[[]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetVnis() *plugin.TValue[[]any] {
 	return &c.Vnis
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetParams() *plugin.TValue[map[string]any] {
+func (c *mqlFrrConfigRouterAddressFamily) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetFile() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterAddressFamily) GetFile() *plugin.TValue[string] {
 	return &c.File
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetStartLine() *plugin.TValue[int64] {
+func (c *mqlFrrConfigRouterAddressFamily) GetStartLine() *plugin.TValue[int64] {
 	return &c.StartLine
 }
 
-func (c *mqlFrrConfigBgpAddressFamily) GetRaw() *plugin.TValue[string] {
+func (c *mqlFrrConfigRouterAddressFamily) GetRaw() *plugin.TValue[string] {
 	return &c.Raw
 }
 

@@ -317,7 +317,7 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 			return nil, err
 		}
 
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp", map[string]*llx.RawData{
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.router", map[string]*llx.RawData{
 			"__id":               llx.StringData(id),
 			"asn":                llx.IntData(b.ASN),
 			"vrf":                llx.StringData(b.VRF),
@@ -325,8 +325,8 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 			"clusterId":          llx.StringData(b.ClusterID),
 			"ebgpRequiresPolicy": llx.BoolData(b.EbgpRequiresPolicy),
 			"defaultIpv4Unicast": llx.BoolData(b.DefaultIPv4Unicast),
-			"neighbors":          llx.ArrayData(neighbors, types.Resource("frr.config.bgp.neighbor")),
-			"addressFamilies":    llx.ArrayData(families, types.Resource("frr.config.bgp.addressFamily")),
+			"neighbors":          llx.ArrayData(neighbors, types.Resource("frr.config.router.neighbor")),
+			"addressFamilies":    llx.ArrayData(families, types.Resource("frr.config.router.addressFamily")),
 			"params":             llx.MapData(stringMapToAny(b.Params), types.String),
 			"file":               llx.StringData(b.File),
 			"startLine":          llx.IntData(int64(b.StartLine)),
@@ -350,7 +350,7 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 		for j := range n.AddressFamilies {
 			naf := &n.AddressFamilies[j]
 			afID := fmt.Sprintf("%s#af/%s/%s", id, naf.AFI, naf.SAFI)
-			obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp.neighbor.addressFamily", map[string]*llx.RawData{
+			obj, err := CreateResource(s.MqlRuntime, "frr.config.router.neighbor.addressFamily", map[string]*llx.RawData{
 				"__id":                 llx.StringData(afID),
 				"afi":                  llx.StringData(naf.AFI),
 				"safi":                 llx.StringData(naf.SAFI),
@@ -375,7 +375,7 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 			families = append(families, obj)
 		}
 
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp.neighbor", map[string]*llx.RawData{
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.router.neighbor", map[string]*llx.RawData{
 			"__id":                     llx.StringData(id),
 			"name":                     llx.StringData(n.Name),
 			"isInterface":              llx.BoolData(n.Interface),
@@ -393,7 +393,7 @@ func (s *mqlFrrConfig) createNeighbors(prefix string, neighbors []frr.Neighbor) 
 			"ttlSecurityHops":          llx.IntData(n.TTLSecurityHops),
 			"keepaliveTime":            llx.IntData(n.KeepaliveTime),
 			"holdTime":                 llx.IntData(n.HoldTime),
-			"addressFamilies":          llx.ArrayData(families, types.Resource("frr.config.bgp.neighbor.addressFamily")),
+			"addressFamilies":          llx.ArrayData(families, types.Resource("frr.config.router.neighbor.addressFamily")),
 			"activatedAddressFamilies": llx.ArrayData(stringSliceToAny(n.ActivatedAddressFamilies), types.String),
 			"routeMapsIn":              llx.ArrayData(stringSliceToAny(n.RouteMapsIn), types.String),
 			"routeMapsOut":             llx.ArrayData(stringSliceToAny(n.RouteMapsOut), types.String),
@@ -418,7 +418,7 @@ func (s *mqlFrrConfig) createAddressFamilies(prefix string, families []frr.Addre
 	for i := range families {
 		af := &families[i]
 		id := fmt.Sprintf("%s#af/%s/%s", prefix, af.AFI, af.SAFI)
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.bgp.addressFamily", map[string]*llx.RawData{
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.router.addressFamily", map[string]*llx.RawData{
 			"__id":               llx.StringData(id),
 			"afi":                llx.StringData(af.AFI),
 			"safi":               llx.StringData(af.SAFI),
