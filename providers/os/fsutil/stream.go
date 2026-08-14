@@ -49,10 +49,20 @@ func StreamFileAsTar(
 	}
 }
 
+// maxTarEntryPrealloc caps the buffer that ExtractFileFromTarStream allocates from the
+// declared entry size. A container image can come from an untrusted registry, and a
+// malformed header can declare a size that its data does not match. Entries above the cap
+// use incremental growth instead, so the header alone cannot drive a huge allocation.
+const maxTarEntryPrealloc = 64 << 20
+
 // ExtractFileFromTarStream returns the content of path inside the tar stream.
-// The tar header states the exact entry size, so the content goes into a slice
-// of that size. This avoids the repeated buffer growth of bytes.Buffer, which
-// allocates about twice the entry size for large files.
+//
+// The tar header states the entry size, so the content goes into a slice of that size.
+// This avoids the repeated growth of a bytes.Buffer, which allocates about twice the entry
+// size. The size is only trusted up to maxTarEntryPrealloc.
+//
+// The loop reads the whole stream and concatenates every entry that carries the path. That
+// keeps the behaviour of the earlier implementation for a tar that repeats a name.
 func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, error) {
 	log.Debug().Str("path", path).Msg("fsutil> extract file from tar")
 	var content []byte
@@ -70,11 +80,8 @@ func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, erro
 		// log.Debug().Msgf("File %s, Size: %d", h.Name, h.Size)
 		if h.Name == path {
 			log.Debug().Str("path", path).Msg("fsutil> found file")
-			if h.Size <= 0 {
-				continue
-			}
-			chunk := make([]byte, h.Size)
-			if _, err := io.ReadFull(tr, chunk); err != nil {
+			chunk, err := readTarEntry(tr, h.Size)
+			if err != nil {
 				return nil, err
 			}
 			if content == nil {
@@ -86,4 +93,27 @@ func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, erro
 	}
 
 	return bytes.NewReader(content), nil
+}
+
+// readTarEntry reads size bytes of the current tar entry. It allocates the exact size when
+// the entry fits the prealloc cap. A larger entry grows a bytes.Buffer instead, so only the
+// data that the reader really delivers is allocated.
+func readTarEntry(tr *tar.Reader, size int64) ([]byte, error) {
+	if size <= 0 {
+		return nil, nil
+	}
+	if size <= maxTarEntryPrealloc {
+		chunk := make([]byte, size)
+		if _, err := io.ReadFull(tr, chunk); err != nil {
+			return nil, err
+		}
+		return chunk, nil
+	}
+
+	var buf bytes.Buffer
+	buf.Grow(maxTarEntryPrealloc)
+	if _, err := io.CopyN(&buf, tr, size); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

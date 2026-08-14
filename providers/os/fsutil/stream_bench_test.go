@@ -57,6 +57,12 @@ func BenchmarkExtractFileFromTarStream16MB(b *testing.B) {
 	benchmarkExtractFileFromTarStream(b, 500, 16<<20)
 }
 
+// 64 MiB is the largest entry that still uses the exact prealloc path.
+func BenchmarkExtractFileFromTarStream64MB(b *testing.B) {
+	benchmarkExtractFileFromTarStream(b, 200, 64<<20)
+}
+
+// 128 MiB is above maxTarEntryPrealloc, so this uses the incremental growth path.
 func BenchmarkExtractFileFromTarStream128MB(b *testing.B) {
 	benchmarkExtractFileFromTarStream(b, 200, 128<<20)
 }
