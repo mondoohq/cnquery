@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -374,4 +375,49 @@ func TestApplySubscriptionTags_FromListedSubscription(t *testing.T) {
 	require.Equal(t, "dev", assets[1].Labels["env"])     // asset value wins on collision
 	require.Equal(t, "alice", assets[1].Labels["owner"]) // still filled
 	require.NotContains(t, assets[2].Labels, "owner")    // sub-2 has no tags
+}
+
+// getDiscoveryTargets used to strip "auto" out of the caller's own slice:
+// slices.DeleteFunc edits the backing array in place, leaving
+// config.Discover.Targets holding [""]. That was invisible while the targets
+// were read once per scan. Staged discovery reads them at the tenant level and
+// then clones the same config for every subscription, so every subscription
+// inherited [""] , matched no target, and discovered nothing -- a tenant scan
+// found its subscriptions and not a single resource beneath them.
+func TestGetDiscoveryTargetsDoesNotMutateConfig(t *testing.T) {
+	tests := [][]string{
+		{DiscoveryAuto},
+		{DiscoveryAuto, DiscoveryInstancesApi},
+		{DiscoveryAll},
+		{DiscoveryKeyVaults},
+		{},
+	}
+
+	for _, targets := range tests {
+		t.Run(strings.Join(targets, ","), func(t *testing.T) {
+			cfg := &inventory.Config{Discover: &inventory.Discovery{Targets: slices.Clone(targets)}}
+
+			first := getDiscoveryTargets(cfg)
+			require.Equal(t, targets, cfg.Discover.Targets,
+				"the caller's config must come back untouched")
+
+			// The second read is what a subscription's stage-2 connection does
+			// after stage 1 cloned this config for it.
+			second := getDiscoveryTargets(cfg)
+			require.Equal(t, first, second, "repeated reads must agree")
+		})
+	}
+}
+
+// The clone stage 1 hands each subscription has to resolve to the same targets
+// the tenant did, or stage 2 discovers nothing.
+func TestGetDiscoveryTargetsSurvivesCloning(t *testing.T) {
+	root := &inventory.Config{Discover: &inventory.Discovery{Targets: []string{DiscoveryAuto}}}
+	rootTargets := getDiscoveryTargets(root)
+
+	child := root.Clone()
+	require.Equal(t, rootTargets, getDiscoveryTargets(child),
+		"a subscription must resolve the same targets as the tenant it came from")
+	require.Contains(t, getDiscoveryTargets(child), DiscoveryKeyVaults,
+		"auto must still expand to the API resource targets after cloning")
 }
