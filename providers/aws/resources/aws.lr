@@ -9102,7 +9102,7 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
 // registrations, capacity provider strategy, and placement constraints and
 // strategy. Whether ECS Exec is permitted on the tasks is reported by
 // enableExecuteCommand.
-private aws.ecs.service @defaults("arn name clusterArn status") {
+private aws.ecs.service @defaults("arn name launchType status") {
   // ARN of the ECS service
   arn string
   // Name of the ECS service
