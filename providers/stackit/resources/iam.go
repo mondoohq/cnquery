@@ -4,12 +4,85 @@
 package resources
 
 import (
+	"errors"
+	"sync"
+
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 // Authorization API works against any STACKIT resource by type/id. For
 // the stackit provider we scope it to the configured project.
 const authResourceTypeProject = "project"
+
+// mqlStackitIamInternal memoizes the project role catalog indexed by name.
+// stackit.iam.role has no init and no by-name lookup: roles exist only as the
+// result of ListRoles. One such call covers the whole project, so it is made
+// once and every member binding resolves its role against the shared index
+// rather than issuing a lookup of its own.
+type mqlStackitIamInternal struct {
+	roleIndexLock  sync.Mutex
+	roleIndexBuilt bool
+	roleIndex      map[string]*mqlStackitIamRole
+	roleIndexErr   error
+}
+
+// iamResource returns the stackit.iam singleton for this project. Its id is
+// constant per project, so CreateResource hands back the one cached instance
+// and with it the shared role index.
+func iamResource(runtime *plugin.Runtime) (*mqlStackitIam, error) {
+	res, err := CreateResource(runtime, "stackit.iam", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	i, ok := res.(*mqlStackitIam)
+	if !ok {
+		return nil, errors.New("stackit: unexpected type for the stackit.iam resource")
+	}
+	return i, nil
+}
+
+// roleIndexByName builds (once) and returns the project's roles indexed by
+// name. The failure is memoized alongside the value so a broken catalog read is
+// not retried once per member binding.
+func (r *mqlStackitIam) roleIndexByName() (map[string]*mqlStackitIamRole, error) {
+	r.roleIndexLock.Lock()
+	defer r.roleIndexLock.Unlock()
+	if r.roleIndexBuilt {
+		return r.roleIndex, r.roleIndexErr
+	}
+	r.roleIndexBuilt = true
+
+	roles := r.GetRoles()
+	if roles.Error != nil {
+		r.roleIndexErr = roles.Error
+		return nil, r.roleIndexErr
+	}
+	r.roleIndex = indexIamRolesByName(roles.Data)
+	return r.roleIndex, nil
+}
+
+// indexIamRolesByName indexes role resources by their name, which is unique
+// within a project. Entries that are not roles, and roles without a name, are
+// skipped; the first role wins on a duplicate name.
+func indexIamRolesByName(items []any) map[string]*mqlStackitIamRole {
+	idx := make(map[string]*mqlStackitIamRole, len(items))
+	for _, item := range items {
+		role, ok := item.(*mqlStackitIamRole)
+		if !ok || role == nil {
+			continue
+		}
+		name := role.Name.Data
+		if name == "" {
+			continue
+		}
+		if _, seen := idx[name]; seen {
+			continue
+		}
+		idx[name] = role
+	}
+	return idx
+}
 
 func (r *mqlStackitIam) members() ([]any, error) {
 	c := conn(r.MqlRuntime)
@@ -39,6 +112,12 @@ func (r *mqlStackitIam) members() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// roleDetails resolves the binding's role name against the project role
+// catalog, turning a member binding into the permissions it actually grants.
+func (r *mqlStackitIamMember) roleDetails() (*mqlStackitIamRole, error) {
+	return iamRoleRef(r.MqlRuntime, r.Role.Data, &r.RoleDetails)
 }
 
 func (r *mqlStackitIamMember) id() (string, error) {
