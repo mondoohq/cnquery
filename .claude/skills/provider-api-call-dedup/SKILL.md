@@ -181,20 +181,31 @@ client and fetches inline is invisible to it.** Such an accessor never calls
 `NewResource`, never enters an init, and therefore cannot be fixed by anything
 in Phase 4 — while an audit that only ran the classifier will read as complete.
 
-This is not a rare shape. In azure it is roughly **110 singular accessors that
-fetch inline** against 169 `NewResource` call sites, so the init-level work
-reaches a bit over half the surface.
+Enumerate them properly rather than grepping for client construction in a
+window — that over-counts badly. In azure a real enumeration gives **43** inline
+accessors against 126 that go through `NewResource`.
 
 ```bash
-# accessors returning a single resource, that build a client themselves
-rg -n "^func \(a \*mql\w+\) \w+\(\) \(\*mql\w+, error\) \{" -A 25 \
-   providers/<name>/resources/*.go | rg -c "New\w+Client\("
+awk -f .claude/skills/provider-api-call-dedup/classify-accessors.awk \
+    providers/<name>/resources/*.go | cut -f1 | sort | uniq -c
 ```
 
-Treat that count as a separate backlog and **say so in the writeup**, or the
-audit overstates its own coverage. Sizing it properly is its own exercise: an
-inline accessor caches through `GetOrCompute` on its referring instance, so it
-repeats per referrer, not per read.
+**Then split them by fan-in, because most are not worth touching.** An inline
+accessor falls into one of two kinds:
+
+| Kind | Shape | Worth fixing |
+|---|---|---|
+| **Owned sub-object** | A config child belonging to exactly one parent — a database's audit policy, a storage account's management policy, a site's auth settings | **No.** One fetch per parent is the floor, and `GetOrCompute` already memoizes it on that parent. Nothing repeats |
+| **Shared resource** | A subnet, a public IP, a firewall policy, a disk — something several resources point at | **Yes.** Fan-in means repeats, and nothing dedupes them |
+
+In azure that split is roughly 30 owned sub-objects (all the SQL policies,
+storage config, web auth settings, Defender plans) against ~12 shared targets.
+So the backlog is small and specific, not half the provider. Measure fan-in per
+target before proposing anything:
+
+```bash
+rg -c "\"<target.mql.name>\"" providers/<name>/resources/*.go | grep -v _test | wc -l
+```
 
 ## Phase 3 — Scope the resource cache
 
