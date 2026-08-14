@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "netlify",
 	ID:              "go.mondoo.com/mql/providers/netlify",
-	Version:         "13.0.0",
+	Version:         "13.1.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
