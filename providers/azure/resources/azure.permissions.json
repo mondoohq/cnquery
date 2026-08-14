@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.34.1",
-  "generated_at": "2026-08-14T09:05:05+02:00",
+  "generated_at": "2026-08-14T16:33:12+03:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -398,7 +398,7 @@
     {
       "permission": "Microsoft.App/containerApps/read",
       "service": "Microsoft.App",
-      "action": "Get",
+      "action": "NewListBySubscriptionPager",
       "source_file": "appcontainers.go"
     },
     {
@@ -656,7 +656,7 @@
     {
       "permission": "Microsoft.Cognitiveservices/accounts/read",
       "service": "Microsoft.Cognitiveservices",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "cognitiveservices.go"
     },
     {
@@ -1028,7 +1028,7 @@
     {
       "permission": "Microsoft.DocumentDB/databaseAccounts/read",
       "service": "Microsoft.DocumentDB",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "cosmosdb.go"
     },
     {
@@ -1384,12 +1384,6 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network.go"
-    },
-    {
-      "permission": "Microsoft.Network/azureFirewalls/read",
-      "service": "Microsoft.Network",
-      "action": "Get",
-      "source_file": "network_expansion.go"
     },
     {
       "permission": "Microsoft.Network/bastionHosts/read",
@@ -2384,7 +2378,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "Get",
+      "action": "NewListFunctionsPager",
       "source_file": "functions.go"
     },
     {

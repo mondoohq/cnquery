@@ -64,68 +64,10 @@ func initAzureSubscriptionCacheService(runtime *plugin.Runtime, args map[string]
 }
 
 func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.id != "" {
-			args["id"] = llx.StringData(ids.id)
-		}
-	}
-
-	if args["id"] == nil {
-		return nil, nil, errors.New("id required to fetch azure cache redis instance")
-	}
-	conn, ok := runtime.Connection.(*connection.AzureConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
-	}
-	id, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("id must be a non-nil string value")
-	}
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	cacheName, err := resourceID.Component("Redis")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	clientFactory, err := armredis.NewClientFactory(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	resp, err := clientFactory.NewClient().Get(context.Background(), resourceID.ResourceGroup, cacheName, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rawData, err := createRedisInstanceRawData(runtime, &resp.ResourceInfo)
-	if err != nil {
-		return nil, nil, err
-	}
-	res, err := CreateResource(runtime, "azure.subscription.cacheService.redisInstance", rawData)
-	if err != nil {
-		return nil, nil, err
-	}
-	mqlRedis := res.(*mqlAzureSubscriptionCacheServiceRedisInstance)
-	if resp.Properties != nil {
-		mqlRedis.cachePrivateEndpointConnections = resp.Properties.PrivateEndpointConnections
-	}
-	if resp.Identity != nil {
-		mqlRedis.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(resp.Identity.UserAssignedIdentities)
-	}
-	sysData, err := convert.JsonToDict(resp.ResourceInfo.SystemData)
-	if err != nil {
-		return nil, nil, err
-	}
-	mqlRedis.cacheSystemData = sysData
-	return args, mqlRedis, nil
+	return initFromServiceList(runtime, args,
+		ResourceAzureSubscriptionCacheService,
+		func(s *mqlAzureSubscriptionCacheService) *plugin.TValue[[]any] { return s.GetRedis() },
+		ResourceAzureSubscriptionCacheServiceRedisInstance)
 }
 
 func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {

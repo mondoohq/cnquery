@@ -11,19 +11,27 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
+	"go.mondoo.com/mql/v13/utils/syncx"
 )
 
 // runtimeForAsset builds a runtime whose connection reports the given asset.
 // Nothing here reaches the network: the inits under test bail out before they
 // build a client, and constructing an Azure credential only assembles the
 // sign-in chain.
+//
+// The resource cache is real because the inits resolve their resource out of
+// the parent service's list, so they reach NewResource before they reach
+// anything that would talk to Azure.
 func runtimeForAsset(t *testing.T, platformIds []string) *plugin.Runtime {
 	t.Helper()
 	asset := &inventory.Asset{Name: "some asset", PlatformIds: platformIds}
 	conf := &inventory.Config{Options: map[string]string{"tenant-id": "tid", "client-id": "cid"}}
 	conn, err := connection.NewAzureConnection(1, asset, conf)
 	require.NoError(t, err)
-	return &plugin.Runtime{Connection: conn}
+	return &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
 }
 
 // A resource queried bare -- no id, and a scanned asset that is not itself that
@@ -44,6 +52,11 @@ func TestInitsReportAMissingID(t *testing.T) {
 		{"azure.subscription.networkService.applicationGateway", initAzureSubscriptionNetworkServiceApplicationGateway},
 		{"azure.subscription.containerAppService.containerApp", initAzureSubscriptionContainerAppServiceContainerApp},
 		{"azure.subscription.functionsService.functionApp", initAzureSubscriptionFunctionsServiceFunctionApp},
+		{"azure.subscription.computeService.vm", initAzureSubscriptionComputeServiceVm},
+		{"azure.subscription.keyVaultService.vault", initAzureSubscriptionKeyVaultServiceVault},
+		{"azure.subscription.cosmosDbService.account", initAzureSubscriptionCosmosDbServiceAccount},
+		{"azure.subscription.cacheService.redisInstance", initAzureSubscriptionCacheServiceRedisInstance},
+		{"azure.subscription.cognitiveServicesService.account", initAzureSubscriptionCognitiveServicesServiceAccount},
 	}
 
 	subscriptionAsset := []string{"//platformid.api.mondoo.app/runtime/azure/subscriptions/sub-1"}
