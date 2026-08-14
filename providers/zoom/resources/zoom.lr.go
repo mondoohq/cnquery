@@ -1061,7 +1061,7 @@ func (c *mqlZoomRole) GetMembers() *plugin.TValue[[]any] {
 type mqlZoomGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlZoomGroupInternal it will be used here
+	mqlZoomGroupInternal
 	Id                                    plugin.TValue[string]
 	Name                                  plugin.TValue[string]
 	TotalMembers                          plugin.TValue[int64]
@@ -1138,17 +1138,25 @@ func (c *mqlZoomGroup) GetMembers() *plugin.TValue[[]any] {
 }
 
 func (c *mqlZoomGroup) GetSettingsWaitingRoomEnabled() *plugin.TValue[bool] {
-	return &c.SettingsWaitingRoomEnabled
+	return plugin.GetOrCompute[bool](&c.SettingsWaitingRoomEnabled, func() (bool, error) {
+		return c.settingsWaitingRoomEnabled()
+	})
 }
 
 func (c *mqlZoomGroup) GetSettingsMeetingPasscodeRequired() *plugin.TValue[bool] {
-	return &c.SettingsMeetingPasscodeRequired
+	return plugin.GetOrCompute[bool](&c.SettingsMeetingPasscodeRequired, func() (bool, error) {
+		return c.settingsMeetingPasscodeRequired()
+	})
 }
 
 func (c *mqlZoomGroup) GetSettingsE2eeAvailable() *plugin.TValue[bool] {
-	return &c.SettingsE2eeAvailable
+	return plugin.GetOrCompute[bool](&c.SettingsE2eeAvailable, func() (bool, error) {
+		return c.settingsE2eeAvailable()
+	})
 }
 
 func (c *mqlZoomGroup) GetSettingsOnlyAuthenticatedUsersCanJoin() *plugin.TValue[bool] {
-	return &c.SettingsOnlyAuthenticatedUsersCanJoin
+	return plugin.GetOrCompute[bool](&c.SettingsOnlyAuthenticatedUsersCanJoin, func() (bool, error) {
+		return c.settingsOnlyAuthenticatedUsersCanJoin()
+	})
 }

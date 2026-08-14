@@ -181,11 +181,11 @@ zoom.group @defaults("id name") @maturity("experimental") {
   // Users in the group
   members() []zoom.user
   // Whether the waiting room is enabled by default for the group's meetings
-  settingsWaitingRoomEnabled bool
+  settingsWaitingRoomEnabled() bool
   // Whether a passcode is required to join the group's meetings
-  settingsMeetingPasscodeRequired bool
+  settingsMeetingPasscodeRequired() bool
   // Whether end-to-end encryption (E2EE) is available to the group's hosts
-  settingsE2eeAvailable bool
+  settingsE2eeAvailable() bool
   // Whether the group's meetings are restricted to users signed in on this account
-  settingsOnlyAuthenticatedUsersCanJoin bool
+  settingsOnlyAuthenticatedUsersCanJoin() bool
 }

@@ -26,6 +26,58 @@ type mqlZoomUserInternal struct {
 
 const usersPageSize = 300
 
+// zoomSsoLoginType is the login_type Zoom reports for users who authenticate
+// through the account's SSO configuration.
+const zoomSsoLoginType = 100
+
+// userVerified reports whether the user's email address is verified. Zoom
+// encodes this as 0 (unverified) or 1 (verified).
+func userVerified(u *connection.User) bool {
+	return u.Verified != 0
+}
+
+// userSsoLinked reports whether the user signs in through the account's SSO
+// configuration, derived from the login_type Zoom assigns to SSO users.
+func userSsoLinked(u *connection.User) bool {
+	return u.LoginType == zoomSsoLoginType
+}
+
+// resolveZoomUsers turns a list of member IDs into typed zoom.user resources.
+// Each ID is resolved from the account's user index (fetched at most once per
+// connection), so a role or group with N members costs one paginated user list
+// rather than N per-member GetUser calls. IDs absent from the index (for
+// example inactive or pending users the active-user filter excludes) fall back
+// to a direct per-user lookup, and a stale or deleted ID is skipped rather than
+// failing the whole list.
+func resolveZoomUsers(runtime *plugin.Runtime, conn *connection.ZoomConnection, memberIds []string) ([]any, error) {
+	index, err := conn.UserIndex(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]any, 0, len(memberIds))
+	for _, id := range memberIds {
+		if u, ok := index[id]; ok {
+			res, err := newMqlZoomUser(runtime, u)
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+			continue
+		}
+
+		res, err := NewResource(runtime, "zoom.user", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			log.Debug().Err(err).Str("user", id).Msg("zoom> unable to resolve member")
+			continue
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
 // users lists every user provisioned on the account.
 func (r *mqlZoom) users() ([]any, error) {
 	conn := r.conn()
@@ -68,9 +120,9 @@ func newMqlZoomUser(runtime *plugin.Runtime, u *connection.User) (plugin.Resourc
 		"displayName":   llx.StringData(u.DisplayName),
 		"type":          llx.IntData(u.Type),
 		"status":        llx.StringData(u.Status),
-		"verified":      llx.BoolData(u.Verified != 0),
+		"verified":      llx.BoolData(userVerified(u)),
 		"loginType":     llx.IntData(u.LoginType),
-		"ssoLinked":     llx.BoolData(u.LoginType == 100),
+		"ssoLinked":     llx.BoolData(userSsoLinked(u)),
 		"lastLoginTime": llx.TimeDataPtr(u.LastLoginTime),
 		"createdAt":     llx.TimeDataPtr(u.CreatedAt),
 		"roleId":        llx.StringData(u.RoleID),

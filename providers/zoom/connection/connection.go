@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"net/url"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	"golang.org/x/oauth2"
@@ -14,6 +15,9 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// userIndexPageSize is the page size used when building the account user index.
+const userIndexPageSize = 300
 
 // zoomTokenURL is the Server-to-Server OAuth token endpoint.
 const zoomTokenURL = "https://zoom.us/oauth/token"
@@ -32,6 +36,9 @@ type ZoomConnection struct {
 	asset     *inventory.Asset
 	accountID string
 	client    *Client
+
+	userIndexLock sync.Mutex
+	userIndex     map[string]*User
 }
 
 func NewZoomConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ZoomConnection, error) {
@@ -87,6 +94,39 @@ func (c *ZoomConnection) AccountID() string {
 // Client returns the authenticated Zoom API client.
 func (c *ZoomConnection) Client() *Client {
 	return c.client
+}
+
+// UserIndex returns every active account user keyed by ID, fetching the full
+// list at most once per connection. Role and group membership are returned as
+// bare user IDs; resolving each through this index turns a role or group with
+// N members into a single paginated user list rather than N per-member GetUser
+// calls. On error the index is not cached, so a later call can retry.
+func (c *ZoomConnection) UserIndex(ctx context.Context) (map[string]*User, error) {
+	c.userIndexLock.Lock()
+	defer c.userIndexLock.Unlock()
+	if c.userIndex != nil {
+		return c.userIndex, nil
+	}
+
+	index := map[string]*User{}
+	nextPageToken := ""
+	for {
+		list, err := c.client.ListUsers(ctx, userIndexPageSize, nextPageToken)
+		if err != nil {
+			return nil, err
+		}
+		for i := range list.Users {
+			u := list.Users[i]
+			index[u.ID] = &u
+		}
+		if list.NextPageToken == "" {
+			break
+		}
+		nextPageToken = list.NextPageToken
+	}
+
+	c.userIndex = index
+	return c.userIndex, nil
 }
 
 // Verify validates the Server-to-Server OAuth credentials by issuing the

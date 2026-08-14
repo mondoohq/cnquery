@@ -82,14 +82,15 @@ func (c *Client) get(ctx context.Context, path string, query url.Values, out any
 
 // User is the subset of Zoom's user object this provider reads.
 type User struct {
-	ID            string     `json:"id"`
-	Email         string     `json:"email"`
-	FirstName     string     `json:"first_name"`
-	LastName      string     `json:"last_name"`
-	DisplayName   string     `json:"display_name"`
-	Type          int64      `json:"type"`
-	Status        string     `json:"status"`
-	Verified      int64      `json:"verified"`
+	ID          string `json:"id"`
+	Email       string `json:"email"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	DisplayName string `json:"display_name"`
+	Type        int64  `json:"type"`
+	Status      string `json:"status"`
+	// Verified is 0 or 1 (whether the user's email address is verified).
+	Verified      int        `json:"verified"`
 	LoginType     int64      `json:"login_type"`
 	RoleID        string     `json:"role_id"`
 	GroupIDs      []string   `json:"group_ids"`

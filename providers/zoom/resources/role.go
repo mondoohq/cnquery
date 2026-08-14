@@ -7,8 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog/log"
-
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/zoom/connection"
@@ -111,17 +109,5 @@ func (r *mqlZoomRole) members() ([]any, error) {
 		nextPageToken = list.NextPageToken
 	}
 
-	var all []any
-	for _, id := range memberIds {
-		res, err := NewResource(r.MqlRuntime, "zoom.user", map[string]*llx.RawData{
-			"id": llx.StringData(id),
-		})
-		if err != nil {
-			// A stale or deleted user ID should not fail the whole role.
-			log.Debug().Err(err).Str("user", id).Msg("zoom> unable to resolve role member")
-			continue
-		}
-		all = append(all, res)
-	}
-	return all, nil
+	return resolveZoomUsers(r.MqlRuntime, conn, memberIds)
 }
