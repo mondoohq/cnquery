@@ -4,6 +4,8 @@
 package packages
 
 import (
+	"bytes"
+	"strconv"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -214,4 +216,86 @@ See /usr/share/common-licenses/GPL-2 for the full license text.
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, "missing"))
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, ""))
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(nil, "bash"))
+}
+
+func TestDpkgControlField(t *testing.T) {
+	// The previous implementation used the regexp `^(.+):\s(.+)$`. The greedy
+	// first group binds it to the last colon that is followed by whitespace.
+	tests := []struct {
+		line  string
+		key   string
+		value string
+		ok    bool
+	}{
+		{"Package: bash", "Package", "bash", true},
+		// the epoch colon has no whitespace after it, so it is not a split point
+		{"Version: 2:5.2-2ubuntu1", "Version", "2:5.2-2ubuntu1", true},
+		{"Depends: libc6 (>= 2.34), libtinfo6", "Depends", "libc6 (>= 2.34), libtinfo6", true},
+		{"Description: the GNU shell: a thing", "Description: the GNU shell", "a thing", true},
+		{"Field:\tvalue", "Field", "value", true},
+		{"Field:  padded", "Field", " padded", true},
+		// no whitespace after the colon
+		{"a:b", "", "", false},
+		// nothing after the whitespace
+		{"a: ", "", "", false},
+		// nothing before the colon
+		{": b", "", "", false},
+		// continuation lines carry no field
+		{" /etc/bash.bashrc 1234", "", "", false},
+		{"Conffiles:", "", "", false},
+		{"", "", "", false},
+		// multi-byte runes around the split point
+		{"Maintainer: Ubuntu Developers <foo@example.org>", "Maintainer", "Ubuntu Developers <foo@example.org>", true},
+		{"Nameé: valué", "Nameé", "valué", true},
+	}
+	for _, test := range tests {
+		key, value, ok := dpkgControlField([]byte(test.line))
+		assert.Equal(t, test.ok, ok, "match for %q", test.line)
+		assert.Equal(t, test.key, string(key), "key for %q", test.line)
+		assert.Equal(t, test.value, string(value), "value for %q", test.line)
+	}
+}
+
+// dpkgBenchStatus builds a status stream in the shape of /var/lib/dpkg/status.
+func dpkgBenchStatus(pkgCount int) []byte {
+	var buf bytes.Buffer
+	for i := 0; i < pkgCount; i++ {
+		name := "package-" + strconv.Itoa(i)
+		buf.WriteString("Package: " + name + "\n")
+		buf.WriteString("Status: install ok installed\n")
+		buf.WriteString("Priority: optional\n")
+		buf.WriteString("Section: utils\n")
+		buf.WriteString("Installed-Size: " + strconv.Itoa(100+i) + "\n")
+		buf.WriteString("Maintainer: Ubuntu Developers <foo@example.org>\n")
+		buf.WriteString("Architecture: amd64\n")
+		buf.WriteString("Source: " + name + "-src\n")
+		buf.WriteString("Version: 1." + strconv.Itoa(i) + "-2ubuntu1\n")
+		buf.WriteString("Depends: libc6 (>= 2.34), libtinfo6 (>= 6), libselinux1 (>= 3.1)\n")
+		buf.WriteString("Description: short summary for " + name + "\n")
+		for j := 0; j < 6; j++ {
+			buf.WriteString(" continuation line " + strconv.Itoa(j) + " of the long description\n")
+		}
+		buf.WriteString("Original-Maintainer: Debian Developers <bar@example.org>\n")
+		buf.WriteString("Homepage: https://example.org/" + name + "\n")
+		buf.WriteString("\n")
+	}
+	return buf.Bytes()
+}
+
+func BenchmarkParseDpkgPackages(b *testing.B) {
+	data := dpkgBenchStatus(1600)
+	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
+
+	b.ReportAllocs()
+	b.SetBytes(int64(len(data)))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		pkgs, err := ParseDpkgPackages(pf, bytes.NewReader(data))
+		if err != nil {
+			b.Fatal(err)
+		}
+		if len(pkgs) != 1600 {
+			b.Fatalf("expected 1600 packages, got %d", len(pkgs))
+		}
+	}
 }
