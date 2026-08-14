@@ -3895,7 +3895,7 @@ func init() {
 			Create: createAwsWorkspacesImage,
 		},
 		"aws.workspaces.bundle": {
-			// to override args, implement: initAwsWorkspacesBundle(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsWorkspacesBundle,
 			Create: createAwsWorkspacesBundle,
 		},
 		"aws.workspaces.ipGroup": {
