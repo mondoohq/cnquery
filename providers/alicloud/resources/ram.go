@@ -708,6 +708,23 @@ func (r *mqlAlicloudRamUser) loginProfile() (any, error) {
 	return out, nil
 }
 
+// user resolves the RAM user that owns the access key. A key cannot outlive its
+// user, so a failure to read the user is a real error.
+func (r *mqlAlicloudRamAccessKey) user() (*mqlAlicloudRamUser, error) {
+	userName := r.UserName.Data
+	if userName == "" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "alicloud.ram.user", map[string]*llx.RawData{
+		"userName": llx.StringData(userName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudRamUser), nil
+}
+
 func (r *mqlAlicloudRamAccessKey) id() (string, error) {
 	return r.UserName.Data + "/" + r.AccessKeyId.Data, nil
 }

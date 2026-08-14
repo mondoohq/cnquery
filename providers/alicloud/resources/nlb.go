@@ -266,6 +266,7 @@ func (r *mqlAlicloudNlbLoadBalancer) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlListener.parentLoadBalancer = r
 			res = append(res, mqlListener)
 		}
 		if resp.Body.NextToken == nil || *resp.Body.NextToken == "" {
@@ -279,9 +280,23 @@ func (r *mqlAlicloudNlbLoadBalancer) listeners() ([]any, error) {
 // mqlAlicloudNlbListenerInternal caches the region and forward server-group id
 // for the typed serverGroup() reference.
 type mqlAlicloudNlbListenerInternal struct {
+	// parentLoadBalancer is the load balancer the listener was listed from. A
+	// listener exists only as a child of its load balancer, so carrying the
+	// parent from the listing context resolves the reference without an API
+	// call.
+	parentLoadBalancer *mqlAlicloudNlbLoadBalancer
+
 	region             string
 	listenerId         string
 	cacheServerGroupId string
+}
+
+func (r *mqlAlicloudNlbListener) loadBalancer() (*mqlAlicloudNlbLoadBalancer, error) {
+	if r.parentLoadBalancer == nil {
+		r.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return r.parentLoadBalancer, nil
 }
 
 func newNlbListener(runtime *plugin.Runtime, region string, l *nlbclient.ListListenersResponseBodyListeners) (*mqlAlicloudNlbListener, error) {

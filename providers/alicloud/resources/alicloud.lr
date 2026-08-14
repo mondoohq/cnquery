@@ -121,6 +121,8 @@ alicloud.ram.user {
 alicloud.ram.accessKey {
   // User name that owns the access key
   userName string
+  // RAM user that owns the access key
+  user() alicloud.ram.user
   // Access key ID
   accessKeyId string
   // Key status
@@ -443,6 +445,11 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   deploymentSetId string
   // Name of the SSH key pair used by the instance
   keyPairName string
+  // SSH key pair used by the instance
+  //
+  // Null on an instance launched without a key pair, and on one whose key pair
+  // has since been deleted.
+  keyPair() alicloud.ecs.keypair
   // Whether release protection is enabled
   deletionProtection bool
   // Whether the instance is I/O optimized
@@ -687,7 +694,13 @@ alicloud.ecs.securitygroup @defaults("securityGroupId securityGroupName security
   // Security group description
   description string
   // VPC ID the security group belongs to
-  vpcId string
+  //
+  // Deprecated in favor of vpc.
+  vpcId @maturity("deprecated") string
+  // VPC the security group belongs to
+  //
+  // Null on a classic-network security group, which is not in a VPC.
+  vpc() alicloud.vpc.network
   // Security group type
   //
   // One of normal or enterprise.
@@ -1709,7 +1722,12 @@ alicloud.slb.loadBalancer {
 // available through config.
 alicloud.slb.listener {
   // ID of the CLB instance that the listener belongs to
+  //
+  // Not deprecated alongside the ALB and NLB equivalents: a CLB listener has no
+  // id of its own and is keyed by this id together with its protocol and port.
   loadBalancerId string
+  // CLB instance that the listener belongs to
+  loadBalancer() alicloud.slb.loadBalancer
   // Protocol used by the listener
   //
   // One of http, https, tcp, or udp.
@@ -2369,6 +2387,11 @@ alicloud.vpc.flowLog {
   aggregationInterval int
   // Name of the Log Service project that receives the records
   projectName string
+  // Log Service project that receives the records
+  //
+  // Null when the flow log names no project, and when the project lives in
+  // another account that the scan cannot read.
+  project() alicloud.log.project
   // Name of the Log Service logstore that receives the records
   logStoreName string
   // ID of the resource group the flow log belongs to
@@ -2682,6 +2705,8 @@ alicloud.log.logstore {
   regionId string
   // Name of the project that contains the logstore
   projectName string
+  // Project that contains the logstore
+  project() alicloud.log.project
   // Logstore name, used with the project name as the lookup key
   name string
   // Number of days ingested logs are retained; 3650 means permanent retention
@@ -2892,7 +2917,13 @@ alicloud.resourceManager.folder {
   // Folder name
   folderName string
   // ID of the parent folder, empty for the root folder
-  parentFolderId string
+  //
+  // Deprecated in favor of parentFolder.
+  parentFolderId @maturity("deprecated") string
+  // Parent folder in the resource directory hierarchy
+  //
+  // Null on the root folder, which has no parent.
+  parentFolder() alicloud.resourceManager.folder
   // Time the folder was created
   createTime time
 }
@@ -3111,7 +3142,12 @@ alicloud.cs.nodePool {
   // Region ID the node pool resides in
   regionId string
   // ID of the cluster the node pool belongs to
+  //
+  // Not deprecated alongside the other duplicated identifiers: a node pool id is
+  // unique only within its cluster, so the node pool is keyed by both.
   clusterId string
+  // Cluster the node pool belongs to
+  cluster() alicloud.cs.cluster
   // Node pool ID, used as the lookup key
   nodePoolId string
   // Node pool name
@@ -3144,6 +3180,11 @@ alicloud.cs.nodePool {
   imageType string
   // ID of the image used for nodes
   imageId string
+  // Image the node pool launches nodes from
+  //
+  // Null on a node pool that names no image, and on one whose image is not
+  // visible to the account, for example a public image that has been retired.
+  image() alicloud.ecs.image
   // Node billing method
   //
   // Either PrePaid (subscription) or PostPaid (pay-as-you-go).
@@ -3322,7 +3363,11 @@ alicloud.alb.listener {
   // Listener ID, used as the lookup key
   listenerId string
   // ID of the load balancer the listener belongs to
-  loadBalancerId string
+  //
+  // Deprecated in favor of loadBalancer.
+  loadBalancerId @maturity("deprecated") string
+  // Load balancer the listener belongs to
+  loadBalancer() alicloud.alb.loadBalancer
   // Listener protocol, one of HTTP, HTTPS, or QUIC
   protocol string
   // Port the listener serves on
@@ -3494,7 +3539,11 @@ alicloud.nlb.listener {
   // Listener ID, used as the lookup key
   listenerId string
   // ID of the load balancer the listener belongs to
-  loadBalancerId string
+  //
+  // Deprecated in favor of loadBalancer.
+  loadBalancerId @maturity("deprecated") string
+  // Load balancer the listener belongs to
+  loadBalancer() alicloud.nlb.loadBalancer
   // Listener protocol, one of TCP, UDP, or TCPSSL
   protocol string
   // Port the listener serves on
@@ -3678,6 +3727,8 @@ alicloud.fc.trigger {
   regionId string
   // Name of the function the trigger belongs to
   functionName string
+  // Function the trigger belongs to
+  function() alicloud.fc.function
   // Trigger name, used with the function name as the lookup key
   triggerName string
   // System-generated trigger ID
@@ -3806,7 +3857,11 @@ alicloud.nas.mountTarget {
   // Region ID the mount target resides in
   regionId string
   // ID of the file system the mount target belongs to
-  fileSystemId string
+  //
+  // Deprecated in favor of fileSystem.
+  fileSystemId @maturity("deprecated") string
+  // File system the mount target belongs to
+  fileSystem() alicloud.nas.fileSystem
   // Mount target domain (the mount address), used as the lookup key
   mountTargetDomain string
   // Mount target status, for example Active or Inactive

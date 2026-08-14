@@ -682,6 +682,46 @@ func (r *mqlAlicloudCsNodePool) id() (string, error) {
 	return r.ClusterId.Data + "/" + r.NodePoolId.Data, nil
 }
 
+// cluster resolves the ACK cluster the node pool belongs to. A node pool cannot
+// outlive its cluster, so a failure to read it is a real error. The cluster is
+// already in the resource cache whenever the node pool was reached through it,
+// which the cluster init consults before calling the API.
+func (r *mqlAlicloudCsNodePool) cluster() (*mqlAlicloudCsCluster, error) {
+	if r.ClusterId.Data == "" {
+		r.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "alicloud.cs.cluster", map[string]*llx.RawData{
+		"clusterId": llx.StringData(r.ClusterId.Data),
+		"regionId":  llx.StringData(r.RegionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudCsCluster), nil
+}
+
+// image resolves the image the node pool launches nodes from.
+//
+// A node pool can name an image the account can no longer read, for example a
+// retired public image or one shared from another account, so an image that
+// does not resolve yields null rather than failing the node pool.
+func (r *mqlAlicloudCsNodePool) image() (*mqlAlicloudEcsImage, error) {
+	imageID := r.ImageId.Data
+	if imageID == "" {
+		r.Image.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	image, err := resolveEcsImage(r.MqlRuntime, r.region, imageID)
+	if err != nil || image == nil {
+		log.Debug().Err(err).Str("image", imageID).Str("region", r.region).
+			Msg("alicloud> could not resolve node pool image")
+		r.Image.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return image, nil
+}
+
 func (r *mqlAlicloudCsNodePool) systemDiskKmsKey() (*mqlAlicloudKmsKey, error) {
 	if r.cacheSystemDiskKmsKeyId == "" {
 		r.SystemDiskKmsKey.State = plugin.StateIsSet | plugin.StateIsNull

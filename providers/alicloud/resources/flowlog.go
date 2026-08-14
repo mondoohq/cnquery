@@ -191,6 +191,18 @@ func (r *mqlAlicloudVpcFlowLog) logstore() (*mqlAlicloudLogLogstore, error) {
 	return store, nil
 }
 
+// project resolves the Log Service project the flow log delivers to. The flow
+// log outlives its delivery target, so a project that no longer exists (or that
+// lives in another account) yields null rather than failing the flow log.
+func (r *mqlAlicloudVpcFlowLog) project() (*mqlAlicloudLogProject, error) {
+	project, err := resolveLogProject(r.MqlRuntime, r.RegionId.Data, r.ProjectName.Data)
+	if err != nil || project == nil {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
+}
+
 func (r *mqlAlicloudVpcFlowLog) network() (*mqlAlicloudVpcNetwork, error) {
 	if !strings.EqualFold(r.ResourceType.Data, "VPC") {
 		r.Network.State = plugin.StateIsSet | plugin.StateIsNull

@@ -39,6 +39,7 @@ alicloud.alb.listener.gzipEnabled 13.0.1
 alicloud.alb.listener.http2Enabled 13.0.1
 alicloud.alb.listener.idleTimeout 13.0.1
 alicloud.alb.listener.listenerId 13.0.1
+alicloud.alb.listener.loadBalancer 13.3.2
 alicloud.alb.listener.loadBalancerId 13.0.1
 alicloud.alb.listener.mutualTlsEnabled 13.0.1
 alicloud.alb.listener.port 13.0.1
@@ -349,6 +350,7 @@ alicloud.cs.nodePool.autoScalingType 13.0.1
 alicloud.cs.nodePool.autoUpgrade 13.0.1
 alicloud.cs.nodePool.autoVulFix 13.0.1
 alicloud.cs.nodePool.cisEnabled 13.0.1
+alicloud.cs.nodePool.cluster 13.3.2
 alicloud.cs.nodePool.clusterId 13.0.1
 alicloud.cs.nodePool.cmsEnabled 13.0.1
 alicloud.cs.nodePool.cpuPolicy 13.0.1
@@ -357,6 +359,7 @@ alicloud.cs.nodePool.dataDisks 13.0.1
 alicloud.cs.nodePool.desiredSize 13.0.1
 alicloud.cs.nodePool.failedNodes 13.0.1
 alicloud.cs.nodePool.healthyNodes 13.0.1
+alicloud.cs.nodePool.image 13.3.2
 alicloud.cs.nodePool.imageId 13.0.1
 alicloud.cs.nodePool.imageType 13.0.1
 alicloud.cs.nodePool.instanceChargeType 13.0.1
@@ -466,6 +469,7 @@ alicloud.ecs.instance.internetExposed 13.0.0
 alicloud.ecs.instance.internetMaxBandwidthIn 13.0.0
 alicloud.ecs.instance.internetMaxBandwidthOut 13.0.0
 alicloud.ecs.instance.ioOptimized 13.0.0
+alicloud.ecs.instance.keyPair 13.3.2
 alicloud.ecs.instance.keyPairName 13.0.0
 alicloud.ecs.instance.localStorageAmount 13.0.0
 alicloud.ecs.instance.localStorageCapacity 13.0.0
@@ -539,6 +543,7 @@ alicloud.ecs.securitygroup.securityGroupId 13.0.0
 alicloud.ecs.securitygroup.securityGroupName 13.0.0
 alicloud.ecs.securitygroup.securityGroupType 13.0.0
 alicloud.ecs.securitygroup.tags 13.0.0
+alicloud.ecs.securitygroup.vpc 13.3.2
 alicloud.ecs.securitygroup.vpcId 13.0.0
 alicloud.ess 13.2.5
 alicloud.ess.scalingConfiguration 13.2.5
@@ -638,6 +643,7 @@ alicloud.fc.functions 13.0.1
 alicloud.fc.trigger 13.0.1
 alicloud.fc.trigger.createdTime 13.0.1
 alicloud.fc.trigger.description 13.0.1
+alicloud.fc.trigger.function 13.3.2
 alicloud.fc.trigger.functionName 13.0.1
 alicloud.fc.trigger.httpUrlInternet 13.0.1
 alicloud.fc.trigger.httpUrlIntranet 13.0.1
@@ -710,6 +716,7 @@ alicloud.log.logstore.lastModifyTime 13.0.1
 alicloud.log.logstore.maxSplitShard 13.0.1
 alicloud.log.logstore.mode 13.0.1
 alicloud.log.logstore.name 13.0.1
+alicloud.log.logstore.project 13.3.2
 alicloud.log.logstore.projectName 13.0.1
 alicloud.log.logstore.regionId 13.0.1
 alicloud.log.logstore.shardCount 13.0.1
@@ -828,6 +835,7 @@ alicloud.nas.fileSystems 13.0.1
 alicloud.nas.mountTarget 13.0.1
 alicloud.nas.mountTarget.accessGroup 13.0.1
 alicloud.nas.mountTarget.accessGroupName 13.0.1
+alicloud.nas.mountTarget.fileSystem 13.3.2
 alicloud.nas.mountTarget.fileSystemId 13.0.1
 alicloud.nas.mountTarget.mountTargetDomain 13.0.1
 alicloud.nas.mountTarget.networkType 13.0.1
@@ -846,6 +854,7 @@ alicloud.nlb.listener.cps 13.0.1
 alicloud.nlb.listener.description 13.0.1
 alicloud.nlb.listener.idleTimeout 13.0.1
 alicloud.nlb.listener.listenerId 13.0.1
+alicloud.nlb.listener.loadBalancer 13.3.2
 alicloud.nlb.listener.loadBalancerId 13.0.1
 alicloud.nlb.listener.port 13.0.1
 alicloud.nlb.listener.protocol 13.0.1
@@ -975,6 +984,7 @@ alicloud.ram.accessKey 13.0.0
 alicloud.ram.accessKey.accessKeyId 13.0.0
 alicloud.ram.accessKey.createDate 13.0.0
 alicloud.ram.accessKey.status 13.0.0
+alicloud.ram.accessKey.user 13.3.2
 alicloud.ram.accessKey.userName 13.0.0
 alicloud.ram.group 13.0.0
 alicloud.ram.group.attachedPolicies 13.2.5
@@ -1156,6 +1166,7 @@ alicloud.resourceManager.folder 13.0.1
 alicloud.resourceManager.folder.createTime 13.0.1
 alicloud.resourceManager.folder.folderId 13.0.1
 alicloud.resourceManager.folder.folderName 13.0.1
+alicloud.resourceManager.folder.parentFolder 13.3.2
 alicloud.resourceManager.folder.parentFolderId 13.0.1
 alicloud.resourceManager.folders 13.0.1
 alicloud.resourceManager.masterAccountId 13.0.1
@@ -1277,6 +1288,7 @@ alicloud.slb.listener.config 13.0.0
 alicloud.slb.listener.description 13.0.0
 alicloud.slb.listener.enableHttp2 13.0.0
 alicloud.slb.listener.listenerPort 13.0.0
+alicloud.slb.listener.loadBalancer 13.3.2
 alicloud.slb.listener.loadBalancerId 13.0.0
 alicloud.slb.listener.protocol 13.0.0
 alicloud.slb.listener.scheduler 13.0.0
@@ -1366,6 +1378,7 @@ alicloud.vpc.flowLog.ipVersion 13.0.1
 alicloud.vpc.flowLog.logStoreName 13.0.1
 alicloud.vpc.flowLog.logstore 13.0.1
 alicloud.vpc.flowLog.network 13.0.1
+alicloud.vpc.flowLog.project 13.3.2
 alicloud.vpc.flowLog.projectName 13.0.1
 alicloud.vpc.flowLog.regionId 13.0.1
 alicloud.vpc.flowLog.resourceGroup 13.3.2
