@@ -41,7 +41,18 @@ type envVarValueData struct {
 }
 
 func (a *mqlNetlifyAccount) environmentVariables() ([]any, error) {
-	return fetchEnvVars(a.MqlRuntime, a.Id.Data, "", nil)
+	res, err := fetchEnvVars(a.MqlRuntime, a.Id.Data, "", nil)
+	if err != nil {
+		// A member without administrative rights cannot read the account's
+		// variables. Reporting them as null keeps that apart from an account
+		// that has none, which an empty list would read as.
+		if connection.IsForbidden(err) {
+			a.EnvironmentVariables = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res, nil
 }
 
 // fetchEnvVars reads the environment variables of an account, optionally

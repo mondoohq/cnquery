@@ -209,10 +209,23 @@ func (s *mqlNetlifySite) id() (string, error) {
 }
 
 // account resolves the account the site is billed to and administered from.
+//
+// The match runs against the account list the root resource has already
+// fetched, so a query over many sites does not walk the accounts endpoint per
+// site. An account outside the scope the connection is narrowed to is absent
+// from that list, so a miss falls back to the direct lookup.
 func (s *mqlNetlifySite) account() (*mqlNetlifyAccount, error) {
 	if s.cacheAccountID == "" {
 		s.Account.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+
+	root, err := getNetlify(s.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if account, ok := findCachedResource(root.GetAccounts(), netlifyAccountID, s.cacheAccountID); ok {
+		return account, nil
 	}
 
 	res, err := NewResource(s.MqlRuntime, "netlify.account", map[string]*llx.RawData{
@@ -233,10 +246,23 @@ func (s *mqlNetlifySite) account() (*mqlNetlifyAccount, error) {
 
 // deployKey resolves the key the build clones the repository with. A site
 // building from a public repository or from manual uploads has none.
+//
+// The match runs against the deploy keys the root resource has already
+// fetched, so a query over many sites does not read one key per site. A key
+// registered by another account member is not in that list, so a miss falls
+// back to the direct lookup.
 func (s *mqlNetlifySite) deployKey() (*mqlNetlifyDeployKey, error) {
 	if s.cacheDeployKeyID == "" {
 		s.DeployKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+
+	root, err := getNetlify(s.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if key, ok := findCachedResource(root.GetDeployKeys(), netlifyDeployKeyID, s.cacheDeployKeyID); ok {
+		return key, nil
 	}
 
 	res, err := NewResource(s.MqlRuntime, "netlify.deployKey", map[string]*llx.RawData{
@@ -262,7 +288,19 @@ func (s *mqlNetlifySite) environmentVariables() ([]any, error) {
 
 	query := url.Values{}
 	query.Set("site_id", s.Id.Data)
-	return fetchEnvVars(s.MqlRuntime, s.cacheAccountID, s.Id.Data, query)
+
+	res, err := fetchEnvVars(s.MqlRuntime, s.cacheAccountID, s.Id.Data, query)
+	if err != nil {
+		// The variable endpoint is keyed on the account, so a token that can
+		// read the site without administering its account cannot read them.
+		// Reporting them as null keeps that apart from a site that has none.
+		if connection.IsForbidden(err) {
+			s.EnvironmentVariables = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res, nil
 }
 
 // --- build hooks ----------------------------------------------------------

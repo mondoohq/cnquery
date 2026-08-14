@@ -108,6 +108,34 @@ func getNetlify(runtime *plugin.Runtime) (*mqlNetlify, error) {
 	return res.(*mqlNetlify), nil
 }
 
+// findCachedResource looks for the entry identified by want in a list the root
+// resource has already fetched, so that resolving a reference on many records
+// costs one call for the whole scan rather than one call per record.
+//
+// A miss is reported rather than treated as an absence: the root lists are
+// narrowed by the account and site the connection is scoped to, so a record can
+// name something that is reachable but outside that scope. Callers fall back to
+// a direct lookup on a miss, which keeps the scoped-out case behaving as it did
+// before the list was consulted at all. An unreadable list is a miss for the
+// same reason.
+func findCachedResource[T any](list *plugin.TValue[[]any], id func(T) string, want string) (T, bool) {
+	var zero T
+	if want == "" || list.Error != nil || list.State&plugin.StateIsNull != 0 {
+		return zero, false
+	}
+	for _, it := range list.Data {
+		entry, ok := it.(T)
+		if ok && id(entry) == want {
+			return entry, true
+		}
+	}
+	return zero, false
+}
+
+func netlifyAccountID(a *mqlNetlifyAccount) string     { return a.Id.Data }
+func netlifySiteID(s *mqlNetlifySite) string           { return s.Id.Data }
+func netlifyDeployKeyID(k *mqlNetlifyDeployKey) string { return k.Id.Data }
+
 // --- root resource --------------------------------------------------------
 
 type userRecord struct {
@@ -161,15 +189,17 @@ func (n *mqlNetlifyUser) id() (string, error) {
 	return n.Id.Data, n.Id.Error
 }
 
-// sites flattens every site of every account in scope.
+// sites flattens every site of every account in scope. The account list is
+// read through its cached field so that querying accounts and sites together
+// walks the accounts endpoint once rather than once per field.
 func (n *mqlNetlify) sites() ([]any, error) {
-	accounts, err := n.accounts()
-	if err != nil {
-		return nil, err
+	accounts := n.GetAccounts()
+	if accounts.Error != nil {
+		return nil, accounts.Error
 	}
 
 	var res []any
-	for _, it := range accounts {
+	for _, it := range accounts.Data {
 		account := it.(*mqlNetlifyAccount)
 		sites := account.GetSites()
 		if sites.Error != nil {
