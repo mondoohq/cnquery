@@ -87,6 +87,8 @@ func TestFetchAccountInfoCapsTheBody(t *testing.T) {
 	defer srv.Close()
 
 	info, err := fetchAccountInfo(srv.URL, "sk-test")
-	assert.Error(t, err, "the read stopped at the cap, so the truncated JSON must not parse")
+	require.Error(t, err, "the read stopped at the cap")
+	assert.Contains(t, err.Error(), "exceeded the 1048576 byte limit",
+		"a capped read has to name itself: the truncated JSON would otherwise fail with a generic syntax error that reads like a malformed response")
 	assert.Nil(t, info)
 }

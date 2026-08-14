@@ -168,6 +168,12 @@ func fetchAccountInfo(baseURL string, token string) (*accountInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	// A capped read hands json.Unmarshal a truncated document, which fails with
+	// a generic syntax error that reads like the endpoint returned garbage. Say
+	// which of the two actually happened.
+	if len(body) >= maxAccountInfoBody {
+		return nil, fmt.Errorf("/v1/me response exceeded the %d byte limit", maxAccountInfoBody)
+	}
 
 	var result struct {
 		Orgs struct {
