@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	workspacestypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
@@ -125,4 +127,16 @@ func TestParseWorkspacesBundleRefIncomplete(t *testing.T) {
 		"region": llx.StringData("us-east-1"),
 	})
 	require.Error(t, err)
+}
+
+// ===== unresolvable bundles =====
+
+// A bundle that cannot be named — deleted after the WorkSpace was built, or in a
+// region the caller cannot read — is reported as a null bundle. Any other
+// failure is a real error and must not be swallowed into a null.
+func TestWorkspacesBundleUnresolvedClassification(t *testing.T) {
+	notFound := fmt.Errorf("%w: id %q in %s", errWorkspacesBundleUnresolved, "wsb-ccc333fff", "us-east-1")
+	assert.True(t, errors.Is(notFound, errWorkspacesBundleUnresolved))
+
+	assert.False(t, errors.Is(errors.New("connection reset by peer"), errWorkspacesBundleUnresolved))
 }

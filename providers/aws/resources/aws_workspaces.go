@@ -665,6 +665,15 @@ func (a *mqlAwsWorkspacesBundle) id() (string, error) {
 	return "aws.workspaces.bundle/" + a.Region.Data + "/" + a.BundleId.Data, nil
 }
 
+// errWorkspacesBundleUnresolved marks a bundle reference that names no readable
+// bundle. Returning it beats handing back a half-populated resource: a resource
+// built from the reference args alone leaves every other field *unset*, and an
+// unset field encodes to a primitive with no type, which llx logs as malformed
+// before coercing it to null (see plugin.TValue.ToDataRes and
+// llx.Primitive.RawData). Callers that would rather have a null bundle than an
+// error convert it back at the accessor.
+var errWorkspacesBundleUnresolved = errors.New("aws workspaces bundle unresolved")
+
 // parseWorkspacesBundleRef reads the region and bundle ID a bundle reference was
 // created with. Both are required: DescribeWorkspaceBundles with neither a
 // bundle ID nor an owner answers with every bundle the account owns, so falling
@@ -712,13 +721,13 @@ func initAwsWorkspacesBundle(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if err != nil {
 		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 			log.Debug().Str("region", region).Msg("error accessing region for AWS WorkSpaces bundles API")
-			return args, nil, nil
+			return nil, nil, fmt.Errorf("%w: %q in %s is not readable", errWorkspacesBundleUnresolved, bundleId, region)
 		}
 		return nil, nil, err
 	}
 	// a bundle deleted after the WorkSpace was built no longer resolves
 	if len(resp.Bundles) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("%w: %q not found in %s", errWorkspacesBundleUnresolved, bundleId, region)
 	}
 
 	mqlBundle, err := newMqlAwsWorkspacesBundle(runtime, region, resp.Bundles[0])
@@ -863,6 +872,14 @@ func (a *mqlAwsWorkspacesWorkspace) bundle() (*mqlAwsWorkspacesBundle, error) {
 		"region":   llx.StringData(a.Region.Data),
 	})
 	if err != nil {
+		// a bundle that names nothing readable is this WorkSpace having no
+		// bundle to report, not a failure: one deleted or unreadable bundle
+		// must not take down a fleet-wide query
+		if errors.Is(err, errWorkspacesBundleUnresolved) {
+			log.Debug().Str("bundleId", bundleId).Str("region", a.Region.Data).Msg("workspaces>bundle>unresolved")
+			a.Bundle.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.(*mqlAwsWorkspacesBundle), nil
