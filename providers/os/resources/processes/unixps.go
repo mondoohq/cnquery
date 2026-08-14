@@ -61,11 +61,19 @@ func (p ProcessEntry) ToOSProcess() *OSProcess {
 		executablePath = args[0]
 	}
 
-	executablePathParts := strings.Split(executablePath, "/")
+	// Take the last path segment without splitting the whole path first, which
+	// allocated a slice of every segment per process just to read one of them.
+	// Deliberately not path.Base: it maps "" to "." and "/usr/bin/" to "bin",
+	// where this reports "" for both.
+	executable := executablePath
+	if i := strings.LastIndexByte(executablePath, '/'); i >= 0 {
+		executable = executablePath[i+1:]
+	}
+
 	return &OSProcess{
 		Pid:        p.Pid,
 		Command:    p.Command,
-		Executable: executablePathParts[len(executablePathParts)-1],
+		Executable: executable,
 		State:      "",
 	}
 }
