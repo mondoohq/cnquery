@@ -60,10 +60,17 @@ func initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 // resolveSchemaRef returns the typed schema a database/name pair refers to, or a
 // null resource when either coordinate is empty. Shared by the row-access-policy
 // and network-rule resources.
+//
+// The account's schema index answers this without a statement. Anything the
+// index cannot answer, including an index that could not be read at all, falls
+// through to the per-name lookup in initSnowflakeSchema.
 func resolveSchemaRef(runtime *plugin.Runtime, databaseName, schemaName string, field *plugin.TValue[*mqlSnowflakeSchema]) (*mqlSnowflakeSchema, error) {
 	if databaseName == "" || schemaName == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+	if schema, ok := indexedSchema(runtime, databaseName, schemaName); ok {
+		return newMqlSnowflakeSchema(runtime, schema)
 	}
 	res, err := NewResource(runtime, "snowflake.schema", map[string]*llx.RawData{
 		"databaseName": llx.StringData(databaseName),

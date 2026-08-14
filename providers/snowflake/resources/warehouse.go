@@ -54,9 +54,17 @@ func initSnowflakeWarehouse(runtime *plugin.Runtime, args map[string]*llx.RawDat
 // error) when no such warehouse is listable (dropped, or not visible to the
 // caller). Callers treat a nil result as a null typed reference rather than
 // failing the query.
+//
+// The account's warehouse index answers this without a statement. Anything the
+// index cannot answer, including an index that could not be read at all, falls
+// through to the SHOW WAREHOUSES LIKE below, so a name the index misses is
+// still confirmed against Snowflake before it is reported as absent.
 func snowflakeWarehouseByName(runtime *plugin.Runtime, name string) (*mqlSnowflakeWarehouse, error) {
 	if name == "" {
 		return nil, nil
+	}
+	if warehouse, ok := indexedWarehouse(runtime, name); ok {
+		return newMqlSnowflakeWarehouse(runtime, warehouse)
 	}
 	conn := runtime.Connection.(*connection.SnowflakeConnection)
 	warehouses, err := conn.Client().Warehouses.Show(context.Background(), &sdk.ShowWarehouseOptions{Like: &sdk.Like{Pattern: sdk.String(name)}})
