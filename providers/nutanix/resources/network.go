@@ -85,11 +85,32 @@ func newMqlVpc(runtime *plugin.Runtime, v *netconfig.Vpc) (*mqlNutanixNetworkVpc
 	}
 	mqlVpc := res.(*mqlNutanixNetworkVpc)
 	mqlVpc.cacheOwnerId = ownerId
+	for i := range v.ExternalSubnets {
+		if ref := v.ExternalSubnets[i].SubnetReference; ref != nil && *ref != "" {
+			mqlVpc.cacheExternalSubnetIds = append(mqlVpc.cacheExternalSubnetIds, *ref)
+		}
+	}
 	return mqlVpc, nil
 }
 
 type mqlNutanixNetworkVpcInternal struct {
-	cacheOwnerId string
+	cacheOwnerId           string
+	cacheExternalSubnetIds []string
+}
+
+func (a *mqlNutanixNetworkVpc) externalSubnets() ([]any, error) {
+	res := []any{}
+	for _, subnetID := range a.cacheExternalSubnetIds {
+		subnet, err := subnetByID(a.MqlRuntime, subnetID)
+		if err != nil {
+			return nil, err
+		}
+		if subnet == nil {
+			continue
+		}
+		res = append(res, subnet)
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixNetworkVpc) owner() (*mqlNutanixIamUser, error) {

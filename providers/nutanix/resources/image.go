@@ -33,7 +33,50 @@ func newMqlImage(runtime *plugin.Runtime, img *vmmcontent.Image) (*mqlNutanixIma
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlNutanixImage), nil
+	mqlImage := res.(*mqlNutanixImage)
+	mqlImage.cacheClusterIds = img.ClusterLocationExtIds
+	if img.OwnerExtId != nil {
+		mqlImage.cacheOwnerId = *img.OwnerExtId
+	}
+	return mqlImage, nil
+}
+
+type mqlNutanixImageInternal struct {
+	cacheClusterIds []string
+	cacheOwnerId    string
+}
+
+func (a *mqlNutanixImage) clusters() ([]any, error) {
+	res := []any{}
+	for _, clusterID := range a.cacheClusterIds {
+		if clusterID == "" {
+			continue
+		}
+		cluster, err := clusterByID(a.MqlRuntime, clusterID)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			continue
+		}
+		res = append(res, cluster)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixImage) owner() (*mqlNutanixIamUser, error) {
+	if a.cacheOwnerId == "" {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := userByID(a.MqlRuntime, a.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func listImages(conn *connection.NutanixConnection) ([]vmmcontent.Image, error) {

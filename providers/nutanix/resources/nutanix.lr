@@ -405,6 +405,14 @@ private nutanix.image @defaults("id name type") {
   sizeBytes int
   // When the image was created
   createTime time
+  // Clusters the image is placed on
+  //
+  // Clusters that hold a copy of the image. An image with no cluster
+  // placements is registered in Prism Central but cannot back a disk on any
+  // cluster, so the list is empty for such images.
+  clusters() []nutanix.cluster
+  // Owner of the image
+  owner() nutanix.iam.user
 }
 
 // Nutanix virtual machine
@@ -912,6 +920,13 @@ private nutanix.network.vpc @defaults("name vpcType") {
   projectName string
   // Owner of the VPC
   owner() nutanix.iam.user
+  // External subnets the VPC is attached to
+  //
+  // Subnets that carry traffic between the VPC and networks outside it. Their
+  // isNatEnabled field tells you whether that egress is source-NATed or
+  // routed with the VPC's own addresses, so a VPC attached to an external
+  // subnet with NAT disabled exposes its internal prefixes directly.
+  externalSubnets() []nutanix.network.subnet
 }
 
 // Nutanix subnet
@@ -1069,6 +1084,12 @@ private nutanix.storage.container @defaults("name replicationFactor isEncrypted"
   cluster() nutanix.cluster
   // Owner of the storage container
   owner() nutanix.iam.user
+  // Host the container is pinned to
+  //
+  // Host that holds the single copy of the container's data when the
+  // replication factor is 1. Null for containers with a replication factor
+  // above 1, which are not pinned to a host.
+  affinityHost() nutanix.host
 }
 
 // Nutanix volume group

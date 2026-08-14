@@ -651,28 +651,40 @@ func (a *mqlNutanixClusterNode) host() (*mqlNutanixHost, error) {
 		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	if h, ok := cachedResource[*mqlNutanixHost](a.MqlRuntime, "nutanix.host", a.cacheNodeUuid); ok {
+	res, err := hostByID(a.MqlRuntime, a.cacheClusterId, a.cacheNodeUuid)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
+}
+
+// hostByID resolves a host by the pair of identifiers the clustermgmt API
+// needs, the external UUID of the owning cluster and the external UUID of the
+// host itself, returning the cached resource when it was already created
+// during this scan. A nil result means the host could not be found.
+func hostByID(runtime *plugin.Runtime, clusterID, hostID string) (*mqlNutanixHost, error) {
+	if h, ok := cachedResource[*mqlNutanixHost](runtime, "nutanix.host", hostID); ok {
 		return h, nil
 	}
-	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
-	clusterID, nodeUUID := a.cacheClusterId, a.cacheNodeUuid
+	conn := runtime.Connection.(*connection.NutanixConnection)
 	resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.GetHostApiResponse, error) {
-		return conn.ClustersApi().GetHostById(&clusterID, &nodeUUID)
+		return conn.ClustersApi().GetHostById(&clusterID, &hostID)
 	})
 	if err != nil {
 		return nil, err
 	}
 	data := resp.GetData()
 	if data == nil {
-		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	host, ok := data.(clustermgmtconfig.Host)
 	if !ok {
-		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return newMqlHost(a.MqlRuntime, &host)
+	return newMqlHost(runtime, &host)
 }
 
 func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanixHost, error) {
@@ -1452,28 +1464,14 @@ func (a *mqlNutanixVm) host() (*mqlNutanixHost, error) {
 		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	if h, ok := cachedResource[*mqlNutanixHost](a.MqlRuntime, "nutanix.host", a.hostExtId); ok {
-		return h, nil
-	}
-	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
-	clusterID, hostID := a.clusterExtId, a.hostExtId
-	resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.GetHostApiResponse, error) {
-		return conn.ClustersApi().GetHostById(&clusterID, &hostID)
-	})
+	res, err := hostByID(a.MqlRuntime, a.clusterExtId, a.hostExtId)
 	if err != nil {
 		return nil, err
 	}
-	data := resp.GetData()
-	if data == nil {
+	if res == nil {
 		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
 	}
-	host, ok := data.(clustermgmtconfig.Host)
-	if !ok {
-		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return newMqlHost(a.MqlRuntime, &host)
+	return res, nil
 }
 
 func clusterByID(runtime *plugin.Runtime, clusterID string) (*mqlNutanixCluster, error) {
