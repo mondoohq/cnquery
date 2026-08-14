@@ -34,6 +34,45 @@ func TestDefaultEndpointSpecsCoverSourceBackedRoutes(t *testing.T) {
 	}
 }
 
+var specSink []EndpointSpec
+
+// The spec table is looked up once per endpoint resource, so rebuilding it per
+// call is 39 structs of garbage each time. Guard the sharing rather than the
+// wording of the implementation.
+func TestDefaultEndpointSpecsDoesNotAllocate(t *testing.T) {
+	allocs := testing.AllocsPerRun(100, func() {
+		specSink = DefaultEndpointSpecs()
+	})
+	if allocs != 0 {
+		t.Fatalf("DefaultEndpointSpecs allocates %.0f times per call, want 0 (the table must be shared, not rebuilt)", allocs)
+	}
+}
+
+// ProbeEndpoint uppercases the method on its own copy. If it ever took a
+// pointer, or a caller sorted the returned slice, every later lookup would see
+// the mutation because the table is now shared.
+func TestProbeEndpointDoesNotMutateSharedTable(t *testing.T) {
+	specs := DefaultEndpointSpecs()
+	idx := slices.IndexFunc(specs, func(s EndpointSpec) bool { return s.Path == "/v1/models" })
+	if idx < 0 {
+		t.Fatal("expected /v1/models in the default specs")
+	}
+	before := specs[idx]
+
+	lower := before
+	lower.Method = "get"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+	conn := &VllmConnection{client: srv.Client(), baseURL: srv.URL}
+	conn.ProbeEndpoint(context.Background(), lower)
+
+	if got := DefaultEndpointSpecs()[idx]; got != before {
+		t.Fatalf("shared spec table was mutated: %+v, want %+v", got, before)
+	}
+}
+
 func TestObservationClassification(t *testing.T) {
 	tests := []struct {
 		name              string
