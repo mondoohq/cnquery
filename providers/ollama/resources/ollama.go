@@ -205,6 +205,17 @@ func modelRef(name string) (registry, namespace, repository, tag string) {
 	return ref.Host, ref.Namespace, ref.Model, ref.Tag
 }
 
+// errModelNotFound reports that the Ollama instance does not list the
+// requested model. Callers that can legitimately reference a model which is
+// not installed use errors.Is to tell absence apart from a transport failure.
+var errModelNotFound = errors.New("ollama model not found")
+
+// modelNotFoundError names the missing model while keeping errModelNotFound in
+// the chain, so the message stays useful without forcing callers to match on it.
+func modelNotFoundError(name string) error {
+	return fmt.Errorf("%w: %q", errModelNotFound, name)
+}
+
 // initOllamaModel resolves an installed model from just its name, so a
 // cross-reference like ollama.runningModel.model returns full, real metadata
 // (size, modifiedAt, digest, ...) rather than placeholder values. Models
@@ -239,7 +250,7 @@ func initOllamaModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		}
 	}
 
-	return nil, nil, fmt.Errorf("ollama model %q not found", name)
+	return nil, nil, modelNotFoundError(name)
 }
 
 func (r *mqlOllama) runningModels() ([]interface{}, error) {
@@ -490,6 +501,13 @@ func (r *mqlOllamaRunningModel) model() (*mqlOllamaModel, error) {
 		"name": llx.StringData(r.GetName().Data),
 	})
 	if err != nil {
+		// /api/ps can report a model that /api/tags does not list: one that was
+		// loaded and then deleted, or a cloud-resident model. That is a real
+		// absence, not a failure to read. Any other error still propagates.
+		if errors.Is(err, errModelNotFound) {
+			r.Model.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.(*mqlOllamaModel), nil
