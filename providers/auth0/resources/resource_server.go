@@ -51,7 +51,11 @@ func newMqlAuth0ResourceServer(runtime *plugin.Runtime, rs *management.ResourceS
 	scopes := map[string]any{}
 	if rs.Scopes != nil {
 		for _, s := range *rs.Scopes {
-			scopes[auth0.StringValue(s.Value)] = auth0.StringValue(s.Description)
+			key := auth0.StringValue(s.Value)
+			if key == "" {
+				continue
+			}
+			scopes[key] = auth0.StringValue(s.Description)
 		}
 	}
 

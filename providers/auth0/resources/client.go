@@ -61,6 +61,9 @@ func newMqlAuth0Client(runtime *plugin.Runtime, c *management.Client) (plugin.Re
 	meta := map[string]any{}
 	if c.ClientMetadata != nil {
 		for k, v := range *c.ClientMetadata {
+			if v == nil {
+				continue
+			}
 			meta[k] = fmt.Sprintf("%v", v)
 		}
 	}
