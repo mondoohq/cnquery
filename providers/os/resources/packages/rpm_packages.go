@@ -29,16 +29,51 @@ import (
 
 const (
 	RpmPkgFormat = "rpm"
+
+	// rpmMaxLineSize caps a single line of `rpm -qa` output. The fields are
+	// free-form text with no length bound of their own, so this only exists to
+	// keep a pathological line from growing the buffer without limit.
+	rpmMaxLineSize = 1024 * 1024
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)__(.*?)__(\d+|\(none\))(?:__(.+))?$`)
+// RPM_REGEX splits one line of the queryFormat() output documented on
+// ParseRpmPackages below.
+//
+// NAME, EPOCH:VERSION-RELEASE and ARCH are space-separated and none of them
+// can contain whitespace, so they are matched as runs of non-space rather than
+// by enumerating the characters they may contain. Enumerating is what broke
+// here before: the name class was `[\w-+]`, which has no dot, so every package
+// whose name contains one — java-1.8.0-openjdk, python3.11, dotnet-sdk-8.0,
+// libstdc++ via the missing `+` in other positions — failed to match and was
+// silently dropped from the inventory.
+//
+// For reference, rpm itself places almost no restriction on these fields:
+// names and version/release strings may contain letters, digits and any of
+// `. _ + - ~ ^` (`~` since rpm 4.10, `^` since 4.15), and vendor/summary/
+// license are free-form text. The only structural invariants are that the
+// first three fields contain no whitespace and that the remaining fields are
+// delimited by `__`.
+//
+// Arch is matched non-greedily on purpose. Arch itself contains underscores
+// (x86_64), so a greedy run of word characters happily spans the `__`
+// separator: on `x86_64__Microsoft__dotnet sdk__MIT__1704067200__(none)` it
+// takes `x86_64__Microsoft` as the arch and every later field shifts by one,
+// yielding a license of `1704067200`. Non-greedy stops arch at the first
+// separator, which is the only correct reading.
+var RPM_REGEX = regexp.MustCompile(`^(\S+)\s(\d*|\(none\)):(\S+)\s(\S*?)__(.*?)__(.*?)__(.*?)__(\d+|\(none\))(?:__(.*))?$`)
 
 // ParseRpmPackages parses output from:
 // %{MODULARITYLABEL} is only added on supported systems
 // rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
+	dropped := 0
 	scanner := bufio.NewScanner(input)
+	// A single package line is normally a few hundred bytes, but %{LICENSE} on
+	// packages like java-*-openjdk already runs past 250 characters and nothing
+	// bounds it. Past the scanner's default 64 KB the scan stops and the rest of
+	// the package list is lost, so give it room.
+	scanner.Buffer(make([]byte, 0, bufio.MaxScanTokenSize), rpmMaxLineSize)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := RPM_REGEX.FindStringSubmatch(line)
@@ -86,7 +121,27 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
+		} else if strings.TrimSpace(line) != "" {
+			// A package that does not match is dropped from the inventory
+			// entirely, and an absent package is exactly what a vulnerability
+			// scan cannot detect. Log it so format drift is visible instead of
+			// showing up as a quietly shorter package list.
+			dropped++
+			log.Debug().Str("line", line).Msg("mql[rpm]> could not parse package line")
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		// A line longer than the buffer above ends the scan early, which
+		// truncates the package list silently. Surface it for the same reason.
+		log.Warn().Err(err).Msg("mql[rpm]> package list was truncated while scanning")
+	}
+	if dropped > 0 {
+		// The per-line detail above is debug, which is off by default -- so on
+		// its own it would leave the exact failure this parser keeps hitting
+		// (a silently shorter package list) invisible to the person running the
+		// scan. Report the count where they will actually see it.
+		log.Warn().Int("dropped", dropped).Int("parsed", len(pkgs)).
+			Msg("mql[rpm]> some package lines could not be parsed, packages are missing from the inventory")
 	}
 	return pkgs
 }
