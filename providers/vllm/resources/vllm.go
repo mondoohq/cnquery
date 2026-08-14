@@ -42,12 +42,11 @@ func (r *mqlVllm) endpoints() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	specs := connection.DefaultEndpointSpecs()
-	res := make([]any, 0, len(specs))
 	observations, err := conn.EndpointObservations(context.Background())
 	if err != nil {
 		return nil, err
 	}
+	res := make([]any, 0, len(observations))
 	for _, obs := range observations {
 		endpoint, err := CreateResource(r.MqlRuntime, "vllm.endpoint", map[string]*llx.RawData{
 			"path":   llx.StringData(obs.Spec.Path),
