@@ -231,11 +231,20 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 		return All
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		// remove the auto keyword (DeleteFunc handles every occurrence; mutating
-		// the slice inside a range loop would skip elements after a deletion)
-		targets = slices.DeleteFunc(targets, func(s string) bool { return s == DiscoveryAuto })
+		// Cloned first: DeleteFunc edits the backing array in place, so
+		// operating on config.Discover.Targets directly rewrites the caller's
+		// config. That was invisible while this was read once per scan, but
+		// staged discovery reads it at the tenant level and then clones the
+		// same config for every subscription, so the damage propagated: the
+		// root's targets came back as [""], every subscription inherited that,
+		// and stage 2 matched no target and discovered nothing. A tenant scan
+		// found its subscriptions and not one resource under them.
+		//
+		// (DeleteFunc handles every occurrence; mutating the slice inside a
+		// range loop would skip elements after a deletion.)
+		rest := slices.DeleteFunc(slices.Clone(targets), func(s string) bool { return s == DiscoveryAuto })
 		// add in the required discovery targets
-		return append(targets, Auto...)
+		return append(rest, Auto...)
 	}
 	// random assortment of targets
 	return targets
