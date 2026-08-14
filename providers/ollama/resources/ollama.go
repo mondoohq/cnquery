@@ -351,7 +351,10 @@ func (r *mqlOllamaModel) adapters() ([]interface{}, error) {
 func modelfileAdapters(modelfile string) []string {
 	var res []string
 
-	for _, line := range strings.Split(modelfile, "\n") {
+	// SplitSeq walks the same substrings without materializing a header for
+	// every line, which matters because a Modelfile is mostly PARAMETER lines
+	// this never looks at.
+	for line := range strings.SplitSeq(modelfile, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
