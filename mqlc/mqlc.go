@@ -1608,17 +1608,24 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	}
 
 	if operand.Block != nil {
-		// for starters, we need the primitive to exist on the stack,
-		// so add it if it's missing
-		if x := c.tailRef(); (x & 0xFFFFFFFF) == 0 {
-			val, err := c.compileValue(operand.Value)
-			if err != nil {
-				return nil, err
-			}
+		// The block binds to this operand's value, so that value has to exist as a
+		// chunk on the stack. ref is still 0 when the value compiled to a bare
+		// primitive that nothing pushed (i.e. no calls followed it).
+		//
+		// This has to test the operand's own ref, not whether the stack is empty.
+		// An array literal whose elements are resources compiles those elements
+		// into chunks, so the stack is non-empty while the array itself was never
+		// pushed. Binding the block to a chunk that is not on the stack made
+		// checksumming panic ("doesn't seem to reference a function on the stack"),
+		// which Compile only recovers in order to re-panic -- taking the caller
+		// down. A scalar array pushes nothing, so it kept working.
+		if ref == 0 && res != nil {
+			// res is the already-compiled primitive for this value. Recompiling it
+			// here would emit a second copy of every chunk its elements produced.
 			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_PRIMITIVE,
 				// no ID for standalone
-				Primitive: val,
+				Primitive: res,
 			})
 			ref = c.tailRef()
 		}
