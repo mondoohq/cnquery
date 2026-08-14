@@ -151,7 +151,7 @@ func parseFamily(id string) string {
 	if !ok {
 		return ""
 	}
-	for _, seg := range strings.Split(rest, "-") {
+	for seg := range strings.SplitSeq(rest, "-") {
 		if seg == "" || (seg[0] >= '0' && seg[0] <= '9') {
 			continue
 		}
