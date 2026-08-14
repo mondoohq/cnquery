@@ -87,7 +87,11 @@ ollama.model @defaults("name family parameterSize") {
   // Model name (e.g., "llama3.1:latest")
   name string
   // Canonical model identifier
-  model string
+  //
+  // Deprecated in favor of name, which always carries the same value. The
+  // Ollama server assigns both from the model's shortest display name, so
+  // the two fields never differ.
+  model @maturity("deprecated") string
   // Last modification time
   modifiedAt time
   // Total size in bytes

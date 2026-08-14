@@ -4,10 +4,23 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestModelNotFoundError(t *testing.T) {
+	err := modelNotFoundError("llama3.1:latest")
+
+	assert.True(t, errors.Is(err, errModelNotFound),
+		"a missing model must stay classifiable, so ollama.runningModel.model reports null instead of failing")
+	assert.Contains(t, err.Error(), `"llama3.1:latest"`, "the message still names the model")
+
+	assert.False(t, errors.Is(fmt.Errorf("dial tcp 127.0.0.1:11434: connect: connection refused"), errModelNotFound),
+		"a transport failure must never be degraded to a missing model")
+}
 
 func TestModelRef(t *testing.T) {
 	t.Run("short name inherits the ollama defaults", func(t *testing.T) {
