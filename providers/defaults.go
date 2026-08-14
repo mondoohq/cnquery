@@ -606,6 +606,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"keycloak": {
+		Provider: &plugin.Provider{
+			Name:            "keycloak",
+			ID:              "go.mondoo.com/mql/providers/keycloak",
+			ConnectionTypes: []string{"keycloak"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "keycloak",
+					Use:   "keycloak",
+					Short: "a Keycloak server",
+				},
+			},
+		},
+	},
+
 	"kustomize": {
 		Provider: &plugin.Provider{
 			Name:            "kustomize",

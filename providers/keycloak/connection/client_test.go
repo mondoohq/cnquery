@@ -1,0 +1,428 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package connection
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+)
+
+func TestNormalizeBaseURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		raw      string
+		wantBase string
+		wantHost string
+		wantErr  bool
+	}{
+		{name: "plain host", raw: "https://keycloak.example.com", wantBase: "https://keycloak.example.com", wantHost: "keycloak.example.com"},
+		{name: "trailing slash", raw: "https://keycloak.example.com/", wantBase: "https://keycloak.example.com", wantHost: "keycloak.example.com"},
+		{name: "context path", raw: "https://keycloak.example.com/auth/", wantBase: "https://keycloak.example.com/auth", wantHost: "keycloak.example.com"},
+		{name: "port", raw: "http://localhost:8080", wantBase: "http://localhost:8080", wantHost: "localhost:8080"},
+		{name: "surrounding space", raw: "  https://kc.example.com  ", wantBase: "https://kc.example.com", wantHost: "kc.example.com"},
+		{name: "no scheme", raw: "keycloak.example.com", wantErr: true},
+		{name: "wrong scheme", raw: "ldap://keycloak.example.com", wantErr: true},
+		{name: "empty", raw: "   ", wantErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			base, host, err := NormalizeBaseURL(tc.raw)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantBase, base)
+			assert.Equal(t, tc.wantHost, host)
+		})
+	}
+}
+
+func TestGrantForm(t *testing.T) {
+	t.Run("password grant defaults to admin-cli", func(t *testing.T) {
+		form, err := grantForm("", "", "admin", "secret")
+		require.NoError(t, err)
+		assert.Equal(t, "password", form.Get("grant_type"))
+		assert.Equal(t, "admin-cli", form.Get("client_id"))
+		assert.Equal(t, "admin", form.Get("username"))
+		assert.Equal(t, "secret", form.Get("password"))
+		assert.Empty(t, form.Get("client_secret"))
+	})
+
+	t.Run("password grant keeps a confidential client secret", func(t *testing.T) {
+		form, err := grantForm("scanner", "topsecret", "admin", "pw")
+		require.NoError(t, err)
+		assert.Equal(t, "password", form.Get("grant_type"))
+		assert.Equal(t, "scanner", form.Get("client_id"))
+		assert.Equal(t, "topsecret", form.Get("client_secret"))
+	})
+
+	t.Run("client credentials grant", func(t *testing.T) {
+		form, err := grantForm("scanner", "topsecret", "", "")
+		require.NoError(t, err)
+		assert.Equal(t, "client_credentials", form.Get("grant_type"))
+		assert.Equal(t, "scanner", form.Get("client_id"))
+		assert.Empty(t, form.Get("username"))
+	})
+
+	t.Run("a user without a password is rejected", func(t *testing.T) {
+		_, err := grantForm("", "", "admin", "")
+		require.Error(t, err)
+	})
+
+	t.Run("a client secret without a client id is rejected", func(t *testing.T) {
+		_, err := grantForm("", "topsecret", "", "")
+		require.Error(t, err)
+	})
+
+	t.Run("no credentials at all is rejected", func(t *testing.T) {
+		_, err := grantForm("", "", "", "")
+		require.Error(t, err)
+	})
+}
+
+func TestDefaultAuthRealmFor(t *testing.T) {
+	assert.Equal(t, "master", defaultAuthRealmFor("password", "production"))
+	assert.Equal(t, "master", defaultAuthRealmFor("client_credentials", ""))
+	assert.Equal(t, "production", defaultAuthRealmFor("client_credentials", "production"))
+}
+
+func TestAdminPath(t *testing.T) {
+	assert.Equal(t, "/admin/realms/master", AdminPath("master"))
+	assert.Equal(t, "/admin/realms/master/clients", AdminPath("master", "clients"))
+	// A realm or an alias can carry a character that would otherwise be read
+	// as path structure, so every segment is escaped.
+	assert.Equal(t, "/admin/realms/my%2Frealm/groups/a%20b", AdminPath("my/realm", "groups", "a b"))
+}
+
+func TestErrorClassifiers(t *testing.T) {
+	assert.True(t, IsForbidden(&APIError{StatusCode: http.StatusForbidden}))
+	assert.True(t, IsForbidden(&APIError{StatusCode: http.StatusUnauthorized}))
+	assert.False(t, IsForbidden(&APIError{StatusCode: http.StatusNotFound}))
+	assert.False(t, IsForbidden(&APIError{StatusCode: http.StatusInternalServerError}))
+	// A transport failure must not be read as a permission problem, otherwise
+	// a network blip degrades a field to null and an audit passes on data that
+	// was never read.
+	assert.False(t, IsForbidden(errors.New("connection refused")))
+
+	assert.True(t, IsNotFound(&APIError{StatusCode: http.StatusNotFound}))
+	assert.False(t, IsNotFound(&APIError{StatusCode: http.StatusForbidden}))
+	assert.False(t, IsNotFound(errors.New("connection refused")))
+
+	// The classifiers must see through a wrapped error.
+	wrapped := fmt.Errorf("reading clients: %w", &APIError{StatusCode: http.StatusForbidden})
+	assert.True(t, IsForbidden(wrapped))
+}
+
+func TestAPIErrorMessage(t *testing.T) {
+	withMessage := &APIError{StatusCode: 403, Path: "/admin/realms", Message: "forbidden"}
+	assert.Equal(t, "keycloak API /admin/realms: 403 (forbidden)", withMessage.Error())
+
+	bare := &APIError{StatusCode: 500, Path: "/admin/realms"}
+	assert.Equal(t, "keycloak API /admin/realms: 500", bare.Error())
+}
+
+func TestNewAPIError(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want string
+	}{
+		{name: "errorMessage wins", body: `{"errorMessage":"unknown_error","error":"generic"}`, want: "unknown_error"},
+		{name: "error_description", body: `{"error_description":"missing scope"}`, want: "missing scope"},
+		{name: "bare error", body: `{"error":"HTTP 403 Forbidden"}`, want: "HTTP 403 Forbidden"},
+		{name: "html body", body: `<html>gateway</html>`, want: ""},
+		{name: "empty body", body: ``, want: ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := newAPIError("/admin/realms", 403, []byte(tc.body))
+			assert.Equal(t, 403, err.StatusCode)
+			assert.Equal(t, tc.want, err.Message)
+		})
+	}
+}
+
+// testConnection builds a connection against a test server, with a token
+// source that already holds a token so the tests drive only the admin API.
+func testConnection(t *testing.T, srv *httptest.Server) *KeycloakConnection {
+	t.Helper()
+
+	conf := &inventory.Config{
+		Type:    "keycloak",
+		Options: map[string]string{"url": srv.URL, "username": "admin"},
+		Credentials: []*vault.Credential{
+			vault.NewPasswordCredential("admin", "pw"),
+		},
+	}
+
+	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+	conn.client = srv.Client()
+	conn.tokens.client = srv.Client()
+	return conn
+}
+
+func TestGetPagedWalksEveryPage(t *testing.T) {
+	type record struct {
+		ID string `json:"id"`
+	}
+
+	var requested []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			writeToken(t, w, "token-1", 300, "", 0)
+			return
+		}
+
+		requested = append(requested, r.URL.Query().Get("first"))
+		first, _ := strconv.Atoi(r.URL.Query().Get("first"))
+
+		// Two full pages, then a short one that ends the walk.
+		batch := []record{}
+		switch first {
+		case 0, 100:
+			for i := 0; i < pageSize; i++ {
+				batch = append(batch, record{ID: strconv.Itoa(first + i)})
+			}
+		case 200:
+			batch = append(batch, record{ID: "200"})
+		}
+		require.NoError(t, json.NewEncoder(w).Encode(batch))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	records, err := GetPaged[record](context.Background(), conn, "/admin/realms/master/users", nil)
+	require.NoError(t, err)
+	assert.Len(t, records, 201)
+	assert.Equal(t, []string{"0", "100", "200"}, requested)
+	assert.Equal(t, "200", records[200].ID)
+}
+
+func TestGetPagedStopsOnARepeatedPage(t *testing.T) {
+	type record struct {
+		ID string `json:"id"`
+	}
+
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			writeToken(t, w, "token-1", 300, "", 0)
+			return
+		}
+
+		calls++
+		// An endpoint that ignores first answers every request with page one.
+		batch := make([]record, 0, pageSize)
+		for i := 0; i < pageSize; i++ {
+			batch = append(batch, record{ID: strconv.Itoa(i)})
+		}
+		require.NoError(t, json.NewEncoder(w).Encode(batch))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	records, err := GetPaged[record](context.Background(), conn, "/admin/realms/master/users", nil)
+	require.NoError(t, err)
+	// The duplicate page is dropped, so the records are not multiplied by the
+	// page cap.
+	assert.Len(t, records, pageSize)
+	assert.Equal(t, 2, calls)
+}
+
+func TestGetPagedKeepsCallerQuery(t *testing.T) {
+	type record struct {
+		ID string `json:"id"`
+	}
+
+	var seen url.Values
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			writeToken(t, w, "token-1", 300, "", 0)
+			return
+		}
+		seen = r.URL.Query()
+		require.NoError(t, json.NewEncoder(w).Encode([]record{}))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	query := url.Values{"briefRepresentation": []string{"false"}}
+	_, err := GetPaged[record](context.Background(), conn, "/admin/realms/master/clients", query)
+	require.NoError(t, err)
+
+	assert.Equal(t, "false", seen.Get("briefRepresentation"))
+	assert.Equal(t, strconv.Itoa(pageSize), seen.Get("max"))
+	// The caller's values must not be mutated, since the same map is reused
+	// across calls.
+	assert.Empty(t, query.Get("max"))
+	assert.Empty(t, query.Get("first"))
+}
+
+func TestGetRetriesOnceAfterAnExpiredToken(t *testing.T) {
+	tokens := 0
+	attempts := 0
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			tokens++
+			writeToken(t, w, "token-"+strconv.Itoa(tokens), 300, "", 0)
+			return
+		}
+
+		attempts++
+		// The server rejects the first token, as it does after a session is
+		// revoked while the cache still holds the token.
+		if r.Header.Get("Authorization") == "Bearer token-1" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]string{"realm": "master"}))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	var out map[string]string
+	require.NoError(t, conn.Get(context.Background(), "/admin/realms/master", nil, &out))
+	assert.Equal(t, "master", out["realm"])
+	assert.Equal(t, 2, attempts)
+	assert.Equal(t, 2, tokens)
+}
+
+func TestGetReportsAPersistent401(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			writeToken(t, w, "token", 300, "", 0)
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"HTTP 401 Unauthorized"}`))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	err := conn.Get(context.Background(), "/admin/realms/master", nil, nil)
+	require.Error(t, err)
+	assert.True(t, IsForbidden(err))
+}
+
+func TestGetReportsAForbiddenResponse(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			writeToken(t, w, "token", 300, "", 0)
+			return
+		}
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"error":"unknown_error"}`))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	err := conn.Get(context.Background(), "/admin/realms/master/users", nil, nil)
+	require.Error(t, err)
+	assert.True(t, IsForbidden(err))
+
+	var apiErr *APIError
+	require.True(t, errors.As(err, &apiErr))
+	assert.Equal(t, "unknown_error", apiErr.Message)
+}
+
+func TestRealmFilterPrefersTheDiscoveredRealm(t *testing.T) {
+	conn := &KeycloakConnection{Conf: &inventory.Config{Options: map[string]string{
+		"realm":     "flag-realm",
+		"realmName": "discovered-realm",
+	}}}
+	assert.Equal(t, "discovered-realm", conn.RealmFilter())
+
+	conn = &KeycloakConnection{Conf: &inventory.Config{Options: map[string]string{"realm": "flag-realm"}}}
+	assert.Equal(t, "flag-realm", conn.RealmFilter())
+
+	conn = &KeycloakConnection{Conf: &inventory.Config{}}
+	assert.Empty(t, conn.RealmFilter())
+}
+
+func TestNewKeycloakConnectionRequiresAUrl(t *testing.T) {
+	t.Setenv("KEYCLOAK_URL", "")
+	_, err := NewKeycloakConnection(1, &inventory.Asset{}, &inventory.Config{Type: "keycloak"})
+	require.Error(t, err)
+}
+
+func TestNewKeycloakConnectionSeparatesTheCredentials(t *testing.T) {
+	t.Setenv("KEYCLOAK_PASSWORD", "")
+	t.Setenv("KEYCLOAK_CLIENT_SECRET", "")
+
+	conf := &inventory.Config{
+		Type:    "keycloak",
+		Options: map[string]string{"url": "https://kc.example.com", "client-id": "scanner"},
+		Credentials: []*vault.Credential{
+			// A credential with a user name is the admin password, one
+			// without is the client secret.
+			vault.NewPasswordCredential("admin", "user-password"),
+			vault.NewPasswordCredential("", "client-secret"),
+		},
+	}
+
+	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+	assert.Equal(t, "password", conn.tokens.grant.Get("grant_type"))
+	assert.Equal(t, "admin", conn.tokens.grant.Get("username"))
+	assert.Equal(t, "user-password", conn.tokens.grant.Get("password"))
+	assert.Equal(t, "client-secret", conn.tokens.grant.Get("client_secret"))
+	assert.Equal(t, "https://kc.example.com/realms/master/protocol/openid-connect/token", conn.tokens.tokenURL)
+}
+
+func TestNewKeycloakConnectionUsesTheScannedRealmForAServiceAccount(t *testing.T) {
+	t.Setenv("KEYCLOAK_PASSWORD", "")
+
+	conf := &inventory.Config{
+		Type:    "keycloak",
+		Options: map[string]string{"url": "https://kc.example.com", "client-id": "scanner", "realm": "production"},
+		Credentials: []*vault.Credential{
+			vault.NewPasswordCredential("", "client-secret"),
+		},
+	}
+
+	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+	assert.Equal(t, "client_credentials", conn.tokens.grant.Get("grant_type"))
+	assert.Equal(t, "https://kc.example.com/realms/production/protocol/openid-connect/token", conn.tokens.tokenURL)
+}
+
+func TestNewKeycloakConnectionHonorsTheAuthRealm(t *testing.T) {
+	t.Setenv("KEYCLOAK_PASSWORD", "")
+
+	conf := &inventory.Config{
+		Type: "keycloak",
+		Options: map[string]string{
+			"url": "https://kc.example.com", "client-id": "scanner",
+			"realm": "production", "auth-realm": "master",
+		},
+		Credentials: []*vault.Credential{vault.NewPasswordCredential("", "client-secret")},
+	}
+
+	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+	assert.Equal(t, "https://kc.example.com/realms/master/protocol/openid-connect/token", conn.tokens.tokenURL)
+}

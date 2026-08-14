@@ -228,6 +228,7 @@ use (
    ./mql/providers/ipmi
    ./mql/providers/iru
    ./mql/providers/k8s
+   ./mql/providers/keycloak
    ./mql/providers/mikrotik
    ./mql/providers/mistral
    ./mql/providers/mondoo

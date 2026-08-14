@@ -1,0 +1,203 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package connection
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strconv"
+)
+
+// APIError captures a non-2xx response from the Keycloak admin API.
+type APIError struct {
+	StatusCode int
+	Message    string
+	Path       string
+}
+
+func (e *APIError) Error() string {
+	if e.Message != "" {
+		return fmt.Sprintf("keycloak API %s: %d (%s)", e.Path, e.StatusCode, e.Message)
+	}
+	return fmt.Sprintf("keycloak API %s: %d", e.Path, e.StatusCode)
+}
+
+// IsForbidden reports whether err is a 401 or 403 response. Callers degrade
+// such a field to null rather than failing the scan, since an admin role can
+// grant view-realm without view-users and a service account is often scoped to
+// a single realm.
+func IsForbidden(err error) bool {
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
+	}
+	return false
+}
+
+// IsNotFound reports whether err is a 404 response.
+func IsNotFound(err error) bool {
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode == http.StatusNotFound
+	}
+	return false
+}
+
+// AdminPath builds a path under the admin API for the given realm. Each segment
+// is escaped, since a realm, a group name or a flow alias can carry characters
+// that are otherwise read as path structure.
+func AdminPath(realm string, segments ...string) string {
+	path := "/admin/realms/" + url.PathEscape(realm)
+	for _, s := range segments {
+		path += "/" + url.PathEscape(s)
+	}
+	return path
+}
+
+// Get performs a GET against the admin API and decodes the JSON body into out.
+func (c *KeycloakConnection) Get(ctx context.Context, path string, query url.Values, out any) error {
+	body, err := c.do(ctx, path, query)
+	if err != nil {
+		return err
+	}
+	if out == nil {
+		return nil
+	}
+	if err := json.Unmarshal(body, out); err != nil {
+		return fmt.Errorf("keycloak API %s: decode response: %w", path, err)
+	}
+	return nil
+}
+
+func (c *KeycloakConnection) do(ctx context.Context, path string, query url.Values) ([]byte, error) {
+	body, status, err := c.request(ctx, path, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// A token the cache still holds can be rejected after a session is revoked
+	// or after the server restarts. Mint a new one and try once more before
+	// reporting the failure, so a scan is not lost to a single stale token.
+	if status == http.StatusUnauthorized {
+		c.tokens.Invalidate()
+		body, status, err = c.request(ctx, path, query)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if status < 200 || status >= 300 {
+		return nil, newAPIError(path, status, body)
+	}
+	return body, nil
+}
+
+func newAPIError(path string, status int, body []byte) *APIError {
+	apiErr := &APIError{StatusCode: status, Path: path}
+	var envelope struct {
+		Error            string `json:"error"`
+		ErrorMessage     string `json:"errorMessage"`
+		ErrorDescription string `json:"error_description"`
+	}
+	if json.Unmarshal(body, &envelope) == nil {
+		for _, candidate := range []string{envelope.ErrorMessage, envelope.ErrorDescription, envelope.Error} {
+			if candidate != "" {
+				apiErr.Message = candidate
+				break
+			}
+		}
+	}
+	return apiErr
+}
+
+func (c *KeycloakConnection) request(ctx context.Context, path string, query url.Values) ([]byte, int, error) {
+	token, err := c.tokens.Token(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	u := c.baseURL + path
+	if len(query) > 0 {
+		u += "?" + query.Encode()
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, 0, fmt.Errorf("keycloak API %s: %w", path, err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, 0, fmt.Errorf("keycloak API %s: read response: %w", path, err)
+	}
+	return body, resp.StatusCode, nil
+}
+
+// pageSize is how many records are requested per page. Keycloak caps several
+// list endpoints well below this, and answering a short page ends the walk, so
+// a server-side cap costs an extra request rather than losing records.
+const pageSize = 100
+
+// maxPages bounds a paginated walk. An endpoint that ignores the first
+// parameter answers every request with the same page, which would otherwise
+// loop until the realm's user count is multiplied by the cap.
+const maxPages = 500
+
+// GetPaged walks the first and max pagination the admin API list endpoints use
+// and returns every record. Endpoints that ignore paging return their single
+// response unchanged.
+func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, query url.Values) ([]T, error) {
+	page := url.Values{}
+	for k, v := range query {
+		page[k] = v
+	}
+	page.Set("max", strconv.Itoa(pageSize))
+
+	var results []T
+	var previous []byte
+	for i := 0; i < maxPages; i++ {
+		page.Set("first", strconv.Itoa(i*pageSize))
+
+		body, err := c.do(ctx, path, page)
+		if err != nil {
+			return nil, err
+		}
+
+		// An endpoint that ignores first answers every request with the same
+		// page. Detect that by the response repeating verbatim and stop,
+		// instead of appending the same records until the page cap is reached.
+		if previous != nil && bytes.Equal(previous, body) {
+			break
+		}
+		previous = body
+
+		var batch []T
+		if err := json.Unmarshal(body, &batch); err != nil {
+			return nil, fmt.Errorf("keycloak API %s: decode response: %w", path, err)
+		}
+
+		results = append(results, batch...)
+
+		// A short page is the last page.
+		if len(batch) < pageSize {
+			break
+		}
+	}
+
+	return results, nil
+}
