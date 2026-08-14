@@ -13,6 +13,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Compiled once: the header pattern is matched against every line of ipconfig
+// output, and the suffix pattern against every address it reports.
+var (
+	interfaceHeaderRegex = regexp.MustCompile(`^(Ethernet|Wireless|Bluetooth|VPN|Local Area Connection|Wi-Fi|Cellular|Tunnel) adapter (.+):$`)
+	ipSuffixRegex        = regexp.MustCompile(`\(.*?\)$`)
+)
+
 // detectWindowsInterfaces detects network interfaces on Windows.
 func (n *neti) detectWindowsInterfaces() ([]Interface, error) {
 	var errs []error
@@ -164,10 +171,9 @@ func (n *neti) getWindowsIpconfigCmdInterfaces() (interfaces []Interface, err er
 	}
 
 	var (
-		ips                  []IPAddress
-		gateways             []string
-		currentInterface     *Interface
-		interfaceHeaderRegex = regexp.MustCompile(`^(Ethernet|Wireless|Bluetooth|VPN|Local Area Connection|Wi-Fi|Cellular|Tunnel) adapter (.+):$`)
+		ips              []IPAddress
+		gateways         []string
+		currentInterface *Interface
 	)
 
 	scanner := bufio.NewScanner(strings.NewReader(string(output)))
@@ -238,8 +244,7 @@ func lastField(fields []string) string {
 }
 
 func cleanIPString(ip string) string {
-	re := regexp.MustCompile(`\(.*?\)$`)
-	return strings.TrimSpace(re.ReplaceAllString(ip, ""))
+	return strings.TrimSpace(ipSuffixRegex.ReplaceAllString(ip, ""))
 }
 
 func updateWindowsNetInterface(currentInterface *Interface, ips []IPAddress, gateways []string) {

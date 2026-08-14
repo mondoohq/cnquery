@@ -11,6 +11,9 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
+// Compiled once: applied to each eviction threshold flag.
+var evictionRegex = regexp.MustCompile(`^(.+)[<>=]+([\d]+[A-Za-z%]*)$`)
+
 // mergeFlagsIntoConfig adds flags to the kubelet config
 // It does not take care of deprecated flags
 // The flags are not just kubelet specific, but can also be global flags
@@ -86,8 +89,6 @@ func parseKeyValueListFlag(s string) map[string]string {
 // The list of flags is taken from
 // https://github.com/kubernetes/kubernetes/blob/release-1.25/cmd/kubelet/app/options/options.go
 func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[string]any) error {
-	evictionRegex := regexp.MustCompile(`^(.+)[<>=]+([\d]+[A-Za-z%]*)$`)
-
 	if _, ok := flags["enable-server"]; ok {
 		kubeletConfig["enableServer"] = flags["enable-server"]
 	}

@@ -17,6 +17,14 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Compiled once: these are matched against every line of `ip addr` output.
+var (
+	interfaceRegex = regexp.MustCompile(`^\d+: ([^:]+): <([^>]+)> mtu (\d+)`)
+	macRegex       = regexp.MustCompile(`link/ether ([0-9a-fA-F:]+) `)
+	ipRegex        = regexp.MustCompile(`inet ([0-9\.]+)/([0-9]+)`)
+	ip6Regex       = regexp.MustCompile(`inet6 ([0-9a-fA-F:]+)/([0-9]+) scope (global|link|host)`)
+)
+
 // detectLinuxInterfaces detects network interfaces on Linux.
 func (n *neti) detectLinuxInterfaces() ([]Interface, error) {
 	var errs []error
@@ -246,12 +254,8 @@ func (n *neti) getLinuxCmdInterfaces() ([]Interface, error) {
 	}
 
 	var (
-		interfaces     = []Interface{}
-		scanner        = bufio.NewScanner(strings.NewReader(string(output)))
-		interfaceRegex = regexp.MustCompile(`^\d+: ([^:]+): <([^>]+)> mtu (\d+)`)
-		macRegex       = regexp.MustCompile(`link/ether ([0-9a-fA-F:]+) `)
-		ipRegex        = regexp.MustCompile(`inet ([0-9\.]+)/([0-9]+)`)
-		ip6Regex       = regexp.MustCompile(`inet6 ([0-9a-fA-F:]+)/([0-9]+) scope (global|link|host)`)
+		interfaces = []Interface{}
+		scanner    = bufio.NewScanner(strings.NewReader(string(output)))
 		// TODO @afiune we could add additional information to the interface struct like
 		//  * `altname` (alternative name)
 		//  * `metric` (priority or cost of a network interface)

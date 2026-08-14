@@ -13,15 +13,21 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Compiled once: each of these is matched against every line of its command's
+// output.
+var (
+	linuxMountEntry     = regexp.MustCompile(`^(\S+)\son\s(\S+)\stype\s(\S+)\s\((\S+)\)$`)
+	unixMountEntry      = regexp.MustCompile(`^(\S+)\son\s(\S+)\s\((.*)\)$`)
+	linuxProcMountEntry = regexp.MustCompile(`^(\S+)\s(\S+)\s(\S+)\s(\S+)\s0\s0$`)
+)
+
 func ParseLinuxMountCmd(r io.Reader) []MountPoint {
 	res := []MountPoint{}
-
-	mountEntry := regexp.MustCompile(`^(\S+)\son\s(\S+)\stype\s(\S+)\s\((\S+)\)$`)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		m := mountEntry.FindStringSubmatch(line)
+		m := linuxMountEntry.FindStringSubmatch(line)
 		if len(m) == 5 {
 			res = append(res, MountPoint{
 				Device:     strings.TrimSpace(m[1]),
@@ -38,12 +44,10 @@ func ParseLinuxMountCmd(r io.Reader) []MountPoint {
 // NOTE: we do not handle `map auto_home` on macos
 func ParseUnixMountCmd(r io.Reader) []MountPoint {
 	res := []MountPoint{}
-	mountEntry := regexp.MustCompile(`^(\S+)\son\s(\S+)\s\((.*)\)$`)
-
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		m := mountEntry.FindStringSubmatch(line)
+		m := unixMountEntry.FindStringSubmatch(line)
 		if len(m) == 4 {
 			opts := strings.TrimSpace(m[3])
 			fstype := ""
@@ -68,12 +72,10 @@ func ParseUnixMountCmd(r io.Reader) []MountPoint {
 func ParseLinuxProcMount(r io.Reader) []MountPoint {
 	res := []MountPoint{}
 
-	procMountEntry := regexp.MustCompile(`^(\S+)\s(\S+)\s(\S+)\s(\S+)\s0\s0$`)
-
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		m := procMountEntry.FindStringSubmatch(line)
+		m := linuxProcMountEntry.FindStringSubmatch(line)
 		if len(m) == 5 {
 			res = append(res, MountPoint{
 				Device:     strings.TrimSpace(m[1]),

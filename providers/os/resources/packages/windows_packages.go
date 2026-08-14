@@ -28,6 +28,9 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/purl"
 )
 
+// Compiled once: reused for each root the appx search walks.
+var appxManifestPattern = regexp.MustCompile(".*/[Aa]ppx[Mm]anifest.xml")
+
 // ProcessorArchitecture Enum
 // https://learn.microsoft.com/en-us/uwp/api/windows.system.processorarchitecture
 // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.processorarchitecture?redirectedfrom=MSDN&view=netframework-4.8
@@ -602,7 +605,7 @@ func (w *WinPkgManager) getFsAppxPackages() ([]Package, error) {
 	}
 	appxPaths := map[string]struct{}{}
 	for p, depth := range paths {
-		res, err := fsSearch.Find(p, regexp.MustCompile(".*/[Aa]ppx[Mm]anifest.xml"), "f", nil, &depth)
+		res, err := fsSearch.Find(p, appxManifestPattern, "f", nil, &depth)
 		if err != nil {
 			continue
 		}

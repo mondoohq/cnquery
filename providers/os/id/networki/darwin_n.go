@@ -17,6 +17,9 @@ import (
 	"howett.net/plist"
 )
 
+// Compiled once: this is matched against every line of ifconfig output.
+var darwinFlagsRegex = regexp.MustCompile(`flags=([0-9]+)<([^>]+)>`)
+
 // detectDarwinInterfaces detects network interfaces on Darwin.
 func (n *neti) detectDarwinInterfaces() ([]Interface, error) {
 	detectors := []func() ([]Interface, error){
@@ -252,7 +255,7 @@ func (n *neti) getMacIfconfigInterfaces() (interfaces []Interface, err error) {
 
 			// Match flags
 			if strings.Contains(line, "flags=") {
-				flagsMatch := regexp.MustCompile(`flags=([0-9]+)<([^>]+)>`).FindStringSubmatch(line)
+				flagsMatch := darwinFlagsRegex.FindStringSubmatch(line)
 				if len(flagsMatch) > 2 {
 					currentInterface.Flags = strings.Split(flagsMatch[2], ",")
 				}

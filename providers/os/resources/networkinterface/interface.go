@@ -22,6 +22,9 @@ import (
 
 var errNoSuchInterface = errors.New("no such network interface")
 
+// Compiled once: matched against every line of `ip addr` output.
+var ipaddrParse = regexp.MustCompile(`^(\d+):\s([\w\d\./\:]+)\s*(inet|inet6)\s([\w\d\./\:]+)\s(.*)$`)
+
 // mimics https://go.dev/src/net/interface.go to provide a similar api
 type Interface struct {
 	Index          int              // positive integer that starts at one, zero is never used
@@ -150,7 +153,6 @@ func (i *LinuxInterfaceHandler) ParseIpAddr(r io.Reader) ([]Interface, error) {
 	interfaces := map[string]Interface{}
 
 	scanner := bufio.NewScanner(r)
-	ipaddrParse := regexp.MustCompile(`^(\d+):\s([\w\d\./\:]+)\s*(inet|inet6)\s([\w\d\./\:]+)\s(.*)$`)
 
 	for scanner.Scan() {
 		line := scanner.Text()

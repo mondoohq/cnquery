@@ -16,6 +16,9 @@ import (
 	"go.mondoo.com/mql/v13/sbom"
 )
 
+// Compiled once: applied to every opam file parsed.
+var dependsHeader = regexp.MustCompile(`(?m)^depends:`)
+
 var (
 	_ languages.Extractor = (*Extractor)(nil)
 	_ languages.Bom       = (*opamFile)(nil)
@@ -87,7 +90,7 @@ func parseOpam(content string) *opamFile {
 // counting skips over quoted strings so a `[` or `]` byte inside a string
 // literal does not throw off the depth.
 func dependsBlock(content string) (string, bool) {
-	idx := regexp.MustCompile(`(?m)^depends:`).FindStringIndex(content)
+	idx := dependsHeader.FindStringIndex(content)
 	if idx == nil {
 		return "", false
 	}

@@ -10,11 +10,12 @@ import (
 	"strings"
 )
 
+// ignore line if it starts with a comment, allow trailing comments though.
+// Compiled once: matched against every line of login.defs.
+var logindefEntry = regexp.MustCompile(`^\s*([^#]\S+)\s+(\S+)\s*(?:#.*)?$`)
+
 func Parse(r io.Reader) map[string]string {
 	res := map[string]string{}
-
-	// ignore line if it starts with a comment, allow trailing comments though
-	logindefEntry := regexp.MustCompile(`^\s*([^#]\S+)\s+(\S+)\s*(?:#.*)?$`)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
