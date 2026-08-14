@@ -3899,7 +3899,7 @@ private frr.config.bgp.neighbor @defaults("name remoteAs") {
   holdTime int
   // Per address family settings
   addressFamilies []frr.config.bgp.neighbor.addressFamily
-  // Address families the neighbor is activated in (e.g. "ipv4 unicast")
+  // Address families the neighbor is explicitly activated in (e.g. "ipv4 unicast")
   activatedAddressFamilies []string
   // Inbound route maps across every address family
   routeMapsIn []string
@@ -3930,7 +3930,7 @@ private frr.config.bgp.neighbor.addressFamily @defaults("afi safi activate") {
   afi string
   // Subsequent address family identifier (unicast, multicast, evpn, vpn)
   safi string
-  // Neighbor is activated in this family
+  // Neighbor is explicitly activated in this family, which does not cover the implicit activation of `bgp default ipv4-unicast`
   activate bool
   // Inbound route map
   routeMapIn string
