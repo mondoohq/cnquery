@@ -330,8 +330,13 @@ func (o *mqlOktaResourceSetBinding) groups() ([]any, error) {
 
 // --- shared typed-reference resolvers ---
 
-// Every resolver below reads the reference back through NewResource, which runs
-// the target's init and therefore issues a fetch. A reference can outlive the
+// Every resolver below first looks the reference up in the collection the root
+// resource holds, and only falls back to NewResource when the collection does
+// not carry it. See referenceCache.go for why a miss is a fallback rather than
+// an answer.
+//
+// The fallback reads the reference back through NewResource, which runs the
+// target's init and therefore issues a fetch. A reference can outlive the
 // object it names (a deleted user), point at something Okta does not serve from
 // the collection endpoint (an internal application), or carry a principal id
 // that is not the kind being resolved at all -- `createdBy` on an Okta-managed
@@ -343,6 +348,9 @@ func resolveOktaUserRef(runtime *plugin.Runtime, id string, field *plugin.TValue
 	if id == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+	if user, ok := findCachedOktaResource(cachedOktaUsers(runtime), oktaUserID, id); ok {
+		return user, nil
 	}
 	r, err := NewResource(runtime, "okta.user", map[string]*llx.RawData{
 		"id": llx.StringData(id),
@@ -362,6 +370,9 @@ func resolveOktaGroupRef(runtime *plugin.Runtime, id string, field *plugin.TValu
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	if group, ok := findCachedOktaResource(cachedOktaGroups(runtime), oktaGroupID, id); ok {
+		return group, nil
+	}
 	r, err := NewResource(runtime, "okta.group", map[string]*llx.RawData{
 		"id": llx.StringData(id),
 	})
@@ -379,6 +390,9 @@ func resolveOktaApplicationRef(runtime *plugin.Runtime, id string, field *plugin
 	if id == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+	if app, ok := findCachedOktaResource(cachedOktaApplications(runtime), oktaApplicationID, id); ok {
+		return app, nil
 	}
 	r, err := NewResource(runtime, "okta.application", map[string]*llx.RawData{
 		"id": llx.StringData(id),
@@ -398,6 +412,9 @@ func resolveOktaCustomRoleRef(runtime *plugin.Runtime, id string, field *plugin.
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	if role, ok := findCachedOktaResource(cachedOktaCustomRoles(runtime), oktaCustomRoleID, id); ok {
+		return role, nil
+	}
 	r, err := NewResource(runtime, "okta.customRole", map[string]*llx.RawData{
 		"id": llx.StringData(id),
 	})
@@ -415,6 +432,9 @@ func resolveOktaUserTypeRef(runtime *plugin.Runtime, id string, field *plugin.TV
 	if id == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+	if userType, ok := findCachedOktaResource(cachedOktaUserTypes(runtime), oktaUserTypeID, id); ok {
+		return userType, nil
 	}
 	r, err := NewResource(runtime, "okta.userType", map[string]*llx.RawData{
 		"id": llx.StringData(id),
@@ -434,6 +454,9 @@ func resolveOktaRealmRef(runtime *plugin.Runtime, id string, field *plugin.TValu
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	if realm, ok := findCachedOktaResource(cachedOktaRealms(runtime), oktaRealmID, id); ok {
+		return realm, nil
+	}
 	r, err := NewResource(runtime, "okta.realm", map[string]*llx.RawData{
 		"id": llx.StringData(id),
 	})
@@ -450,10 +473,22 @@ func resolveOktaRealmRef(runtime *plugin.Runtime, id string, field *plugin.TValu
 // The plural resolvers drop members the org no longer has rather than failing
 // the list, so one stale member id does not hide every other member alongside
 // it.
+//
+// They are also where the per-reference fetch hurt most: a binding that names
+// 200 members used to cost 200 calls to the endpoint the whole membership is
+// listed by. Keying the collection once and reading the ids out of it keeps a
+// membership of any size to the pages of that one list, and every id the
+// collection does not carry still goes the long way round.
 
 func resolveOktaUserRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	cached := indexCachedOktaResources(cachedOktaUsers(runtime), oktaUserID, ids)
+
 	list := make([]any, 0, len(ids))
 	for _, id := range ids {
+		if user, ok := cached[id]; ok {
+			list = append(list, user)
+			continue
+		}
 		r, err := NewResource(runtime, "okta.user", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
@@ -469,8 +504,14 @@ func resolveOktaUserRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
 }
 
 func resolveOktaGroupRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	cached := indexCachedOktaResources(cachedOktaGroups(runtime), oktaGroupID, ids)
+
 	list := make([]any, 0, len(ids))
 	for _, id := range ids {
+		if group, ok := cached[id]; ok {
+			list = append(list, group)
+			continue
+		}
 		r, err := NewResource(runtime, "okta.group", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
