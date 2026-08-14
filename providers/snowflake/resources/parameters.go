@@ -21,6 +21,8 @@ import (
 //
 // SHOW PARAMETERS backs parameters and networkPolicy. The grant cache and the
 // role and user name indexes back the role hierarchy walks; see role_graph.go.
+// The database, schema, and warehouse indexes back the references other
+// resources hold to those objects; see object_index.go.
 type mqlSnowflakeAccountInternal struct {
 	parametersOnce      sync.Once
 	cachedParameters    []*sdk.Parameter
@@ -36,6 +38,10 @@ type mqlSnowflakeAccountInternal struct {
 	userIndexOnce      sync.Once
 	cachedUserIndex    map[string]sdk.User
 	cachedUserIndexErr error
+
+	cachedDatabaseIndex  memoIndex[sdk.Database]
+	cachedSchemaIndex    memoIndex[sdk.Schema]
+	cachedWarehouseIndex memoIndex[sdk.Warehouse]
 }
 
 // showAccountParameters fetches the account-level parameters from Snowflake,

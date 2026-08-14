@@ -63,10 +63,17 @@ func initSnowflakeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData
 // resolveDatabaseRef returns the typed database a name refers to, or a null
 // resource when the name is empty. Shared by the schema, row-access-policy, and
 // network-rule resources.
+//
+// The account's database index answers this without a statement. Anything the
+// index cannot answer, including an index that could not be read at all, falls
+// through to the per-name lookup in initSnowflakeDatabase.
 func resolveDatabaseRef(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlSnowflakeDatabase]) (*mqlSnowflakeDatabase, error) {
 	if name == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+	if database, ok := indexedDatabase(runtime, name); ok {
+		return newMqlSnowflakeDatabase(runtime, database)
 	}
 	res, err := NewResource(runtime, "snowflake.database", map[string]*llx.RawData{
 		"name": llx.StringData(name),
