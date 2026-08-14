@@ -129,7 +129,7 @@ type MQLExecutorV2 struct {
 	blockExecutors []*blockExecutor
 	unregistered   bool
 
-	blockPointsLock sync.Mutex
+	blockPointsLock sync.RWMutex
 	blockPoints     map[uint64]*blockPoints
 }
 
@@ -226,15 +226,19 @@ type blockPoints struct {
 // runs one block executor per element, so a query over a large array asked for
 // the same two tables thousands of times. The tables are equal for every
 // executor of the same block, so they are built once and shared.
+// The lock only covers the map lookup and the map write. The tables are built
+// outside it. Two executors that reach a block at the same time may both build
+// the tables, and the first result stored wins. The tables are equal either
+// way, because they derive from the same immutable code.
 func (c *MQLExecutorV2) pointsForBlock(blockRef uint64, block *Block) (*blockPoints, error) {
-	c.blockPointsLock.Lock()
-	defer c.blockPointsLock.Unlock()
-
-	if points, ok := c.blockPoints[blockRef]; ok {
+	c.blockPointsLock.RLock()
+	points, ok := c.blockPoints[blockRef]
+	c.blockPointsLock.RUnlock()
+	if ok {
 		return points, nil
 	}
 
-	points := &blockPoints{
+	points = &blockPoints{
 		entrypoints:    make(map[uint64]struct{}, len(block.Entrypoints)),
 		callbackPoints: make(map[uint64]string, len(block.Entrypoints)+len(block.Datapoints)),
 	}
@@ -266,6 +270,12 @@ func (c *MQLExecutorV2) pointsForBlock(blockRef uint64, block *Block) (*blockPoi
 		panic("no callback points")
 	}
 
+	c.blockPointsLock.Lock()
+	defer c.blockPointsLock.Unlock()
+
+	if existing, ok := c.blockPoints[blockRef]; ok {
+		return existing, nil
+	}
 	c.blockPoints[blockRef] = points
 	return points, nil
 }
