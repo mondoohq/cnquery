@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.34.2",
-  "generated_at": "2026-08-14T17:27:51+03:00",
+  "generated_at": "2026-08-14T18:25:29+03:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -1594,12 +1594,6 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network.go"
-    },
-    {
-      "permission": "Microsoft.Network/publicIPAddresses/read",
-      "service": "Microsoft.Network",
-      "action": "Get",
-      "source_file": "apimanagement.go"
     },
     {
       "permission": "Microsoft.Network/publicIPAddresses/read",
