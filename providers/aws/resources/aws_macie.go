@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"slices"
 	"strings"
 	"sync"
@@ -17,7 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	mqlTypes "go.mondoo.com/mql/v13/types"
 )
@@ -29,280 +27,144 @@ func (a *mqlAwsMacie) id() (string, error) {
 func (a *mqlAwsMacie) sessions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getSessions(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "macie2/config", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		session, err := svc.GetMacieSession(ctx, &macie2.GetMacieSessionInput{})
+		if err != nil {
+			return nil, err
 		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getSessions(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-
-			session, err := svc.GetMacieSession(ctx, &macie2.GetMacieSessionInput{})
-			if err != nil {
-				if IsMacieNotEnabledError(err) {
-					log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-					return res, nil
-				}
-				var notFoundErr *types.ResourceNotFoundException
-				if errors.As(err, &notFoundErr) {
-					return res, nil
-				}
-				return nil, err
-			}
-
-			// Get bucket statistics for S3 bucket count
-			bucketStats, err := svc.GetBucketStatistics(ctx, &macie2.GetBucketStatisticsInput{})
-			var s3BucketCount int
-			if err == nil && bucketStats.BucketCount != nil {
-				s3BucketCount = int(*bucketStats.BucketCount)
-			}
-
-			mqlSession, err := CreateResource(a.MqlRuntime, ResourceAwsMacieSession,
-				map[string]*llx.RawData{
-					"arn":                        llx.StringData(generateMacieSessionArn(conn.AccountId(), region)),
-					"region":                     llx.StringData(region),
-					"status":                     llx.StringData(string(session.Status)),
-					"createdAt":                  llx.TimeDataPtr(session.CreatedAt),
-					"updatedAt":                  llx.TimeDataPtr(session.UpdatedAt),
-					"findingPublishingFrequency": llx.StringData(string(session.FindingPublishingFrequency)),
-					"serviceRole":                llx.StringDataPtr(session.ServiceRole),
-					"s3BucketCount":              llx.IntData(int64(s3BucketCount)),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlSession)
-			return jobpool.JobResult(res), nil
+		// Get bucket statistics for S3 bucket count
+		bucketStats, err := svc.GetBucketStatistics(ctx, &macie2.GetBucketStatisticsInput{})
+		var s3BucketCount int
+		if err == nil && bucketStats.BucketCount != nil {
+			s3BucketCount = int(*bucketStats.BucketCount)
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+
+		mqlSession, err := CreateResource(a.MqlRuntime, ResourceAwsMacieSession,
+			map[string]*llx.RawData{
+				"arn":                        llx.StringData(generateMacieSessionArn(conn.AccountId(), region)),
+				"region":                     llx.StringData(region),
+				"status":                     llx.StringData(string(session.Status)),
+				"createdAt":                  llx.TimeDataPtr(session.CreatedAt),
+				"updatedAt":                  llx.TimeDataPtr(session.UpdatedAt),
+				"findingPublishingFrequency": llx.StringData(string(session.FindingPublishingFrequency)),
+				"serviceRole":                llx.StringDataPtr(session.ServiceRole),
+				"s3BucketCount":              llx.IntData(int64(s3BucketCount)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSession)
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacie) classificationJobs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getClassificationJobs(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
+		params := &macie2.ListClassificationJobsInput{}
+		paginator := macie2.NewListClassificationJobsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			jobs, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-func (a *mqlAwsMacie) getClassificationJobs(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-
-			params := &macie2.ListClassificationJobsInput{}
-			paginator := macie2.NewListClassificationJobsPaginator(svc, params)
-			for paginator.HasMorePages() {
-				jobs, err := paginator.NextPage(ctx)
+			for _, job := range jobs.Items {
+				jobId := ""
+				if job.JobId != nil {
+					jobId = *job.JobId
+				}
+				jobArn := generateClassificationJobArn(conn.AccountId(), region, jobId)
+				mqlJob, err := CreateResource(a.MqlRuntime, ResourceAwsMacieClassificationJob,
+					map[string]*llx.RawData{
+						"arn":       llx.StringData(jobArn),
+						"jobId":     llx.StringDataPtr(job.JobId),
+						"name":      llx.StringDataPtr(job.Name),
+						"region":    llx.StringData(region),
+						"status":    llx.StringData(string(job.JobStatus)),
+						"jobType":   llx.StringData(string(job.JobType)),
+						"createdAt": llx.TimeDataPtr(job.CreatedAt),
+					})
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-
-				for _, job := range jobs.Items {
-					jobId := ""
-					if job.JobId != nil {
-						jobId = *job.JobId
-					}
-					jobArn := generateClassificationJobArn(conn.AccountId(), region, jobId)
-					mqlJob, err := CreateResource(a.MqlRuntime, ResourceAwsMacieClassificationJob,
-						map[string]*llx.RawData{
-							"arn":       llx.StringData(jobArn),
-							"jobId":     llx.StringDataPtr(job.JobId),
-							"name":      llx.StringDataPtr(job.Name),
-							"region":    llx.StringData(region),
-							"status":    llx.StringData(string(job.JobStatus)),
-							"jobType":   llx.StringData(string(job.JobType)),
-							"createdAt": llx.TimeDataPtr(job.CreatedAt),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlJob.(*mqlAwsMacieClassificationJob).cacheJob = &job
-					res = append(res, mqlJob)
-				}
+				mqlJob.(*mqlAwsMacieClassificationJob).cacheJob = &job
+				res = append(res, mqlJob)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacie) findings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getFindings(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
+		params := &macie2.ListFindingsInput{}
+		paginator := macie2.NewListFindingsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			findings, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-func (a *mqlAwsMacie) getFindings(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-
-			params := &macie2.ListFindingsInput{}
-			paginator := macie2.NewListFindingsPaginator(svc, params)
-			for paginator.HasMorePages() {
-				findings, err := paginator.NextPage(ctx)
+			// Get finding details for all finding IDs
+			if len(findings.FindingIds) > 0 {
+				detailsRes, err := fetchMacieFindings(svc, region, findings.FindingIds, a.MqlRuntime)
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-
-				// Get finding details for all finding IDs
-				if len(findings.FindingIds) > 0 {
-					detailsRes, err := fetchMacieFindings(svc, region, findings.FindingIds, a.MqlRuntime)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, detailsRes...)
-				}
+				res = append(res, detailsRes...)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacie) customDataIdentifiers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getCustomDataIdentifiers(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
+		params := &macie2.ListCustomDataIdentifiersInput{}
+		paginator := macie2.NewListCustomDataIdentifiersPaginator(svc, params)
+		for paginator.HasMorePages() {
+			identifiers, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-func (a *mqlAwsMacie) getCustomDataIdentifiers(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-
-			params := &macie2.ListCustomDataIdentifiersInput{}
-			paginator := macie2.NewListCustomDataIdentifiersPaginator(svc, params)
-			for paginator.HasMorePages() {
-				identifiers, err := paginator.NextPage(ctx)
+			for _, identifier := range identifiers.Items {
+				mqlIdentifier, err := CreateResource(a.MqlRuntime, ResourceAwsMacieCustomDataIdentifier,
+					map[string]*llx.RawData{
+						"id":        llx.StringDataPtr(identifier.Id),
+						"arn":       llx.StringDataPtr(identifier.Arn),
+						"name":      llx.StringDataPtr(identifier.Name),
+						"createdAt": llx.TimeDataPtr(identifier.CreatedAt),
+					})
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-
-				for _, identifier := range identifiers.Items {
-					mqlIdentifier, err := CreateResource(a.MqlRuntime, ResourceAwsMacieCustomDataIdentifier,
-						map[string]*llx.RawData{
-							"id":        llx.StringDataPtr(identifier.Id),
-							"arn":       llx.StringDataPtr(identifier.Arn),
-							"name":      llx.StringDataPtr(identifier.Name),
-							"createdAt": llx.TimeDataPtr(identifier.CreatedAt),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlIdentifier.(*mqlAwsMacieCustomDataIdentifier).cacheIdentifier = &identifier
-					mqlIdentifier.(*mqlAwsMacieCustomDataIdentifier).cacheRegion = region
-					res = append(res, mqlIdentifier)
-				}
+				mqlIdentifier.(*mqlAwsMacieCustomDataIdentifier).cacheIdentifier = &identifier
+				mqlIdentifier.(*mqlAwsMacieCustomDataIdentifier).cacheRegion = region
+				res = append(res, mqlIdentifier)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 // Resource ID implementations
@@ -765,54 +627,26 @@ func describeMacieBucket(runtime *plugin.Runtime, conn *connection.AwsConnection
 
 func (a *mqlAwsMacie) buckets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getBuckets(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getBuckets(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			paginator := macie2.NewDescribeBucketsPaginator(svc, &macie2.DescribeBucketsInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		paginator := macie2.NewDescribeBucketsPaginator(svc, &macie2.DescribeBucketsInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, bm := range page.Buckets {
+				mqlBucket, err := newMqlMacieBucket(a.MqlRuntime, bm, region)
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, bm := range page.Buckets {
-					mqlBucket, err := newMqlMacieBucket(a.MqlRuntime, bm, region)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlBucket)
-				}
+				res = append(res, mqlBucket)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region string) (*mqlAwsMacieBucket, error) {
@@ -970,63 +804,35 @@ type mqlAwsMacieAllowListInternal struct {
 
 func (a *mqlAwsMacie) allowLists() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getAllowLists(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getAllowLists(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			paginator := macie2.NewListAllowListsPaginator(svc, &macie2.ListAllowListsInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		paginator := macie2.NewListAllowListsPaginator(svc, &macie2.ListAllowListsInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range page.AllowLists {
+				mqlList, err := CreateResource(a.MqlRuntime, ResourceAwsMacieAllowList,
+					map[string]*llx.RawData{
+						"id":        llx.StringDataPtr(item.Id),
+						"arn":       llx.StringDataPtr(item.Arn),
+						"region":    llx.StringData(region),
+						"name":      llx.StringDataPtr(item.Name),
+						"createdAt": llx.TimeDataPtr(item.CreatedAt),
+						"updatedAt": llx.TimeDataPtr(item.UpdatedAt),
+					})
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, item := range page.AllowLists {
-					mqlList, err := CreateResource(a.MqlRuntime, ResourceAwsMacieAllowList,
-						map[string]*llx.RawData{
-							"id":        llx.StringDataPtr(item.Id),
-							"arn":       llx.StringDataPtr(item.Arn),
-							"region":    llx.StringData(region),
-							"name":      llx.StringDataPtr(item.Name),
-							"createdAt": llx.TimeDataPtr(item.CreatedAt),
-							"updatedAt": llx.TimeDataPtr(item.UpdatedAt),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlList.(*mqlAwsMacieAllowList).cacheRegion = region
-					res = append(res, mqlList)
-				}
+				mqlList.(*mqlAwsMacieAllowList).cacheRegion = region
+				res = append(res, mqlList)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieAllowList) id() (string, error) {
@@ -1114,67 +920,39 @@ type mqlAwsMacieFindingsFilterInternal struct {
 
 func (a *mqlAwsMacie) findingsFilters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getFindingsFilters(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getFindingsFilters(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			paginator := macie2.NewListFindingsFiltersPaginator(svc, &macie2.ListFindingsFiltersInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		paginator := macie2.NewListFindingsFiltersPaginator(svc, &macie2.ListFindingsFiltersInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range page.FindingsFilterListItems {
+				var itemTags map[string]any
+				if item.Tags != nil {
+					itemTags = convert.MapToInterfaceMap(item.Tags)
+				}
+				mqlFilter, err := CreateResource(a.MqlRuntime, ResourceAwsMacieFindingsFilter,
+					map[string]*llx.RawData{
+						"id":     llx.StringDataPtr(item.Id),
+						"arn":    llx.StringDataPtr(item.Arn),
+						"region": llx.StringData(region),
+						"name":   llx.StringDataPtr(item.Name),
+						"action": llx.StringData(string(item.Action)),
+						"tags":   llx.MapData(itemTags, mqlTypes.String),
+					})
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, item := range page.FindingsFilterListItems {
-					var itemTags map[string]any
-					if item.Tags != nil {
-						itemTags = convert.MapToInterfaceMap(item.Tags)
-					}
-					mqlFilter, err := CreateResource(a.MqlRuntime, ResourceAwsMacieFindingsFilter,
-						map[string]*llx.RawData{
-							"id":     llx.StringDataPtr(item.Id),
-							"arn":    llx.StringDataPtr(item.Arn),
-							"region": llx.StringData(region),
-							"name":   llx.StringDataPtr(item.Name),
-							"action": llx.StringData(string(item.Action)),
-							"tags":   llx.MapData(itemTags, mqlTypes.String),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlFilter.(*mqlAwsMacieFindingsFilter).cacheRegion = region
-					res = append(res, mqlFilter)
-				}
+				mqlFilter.(*mqlAwsMacieFindingsFilter).cacheRegion = region
+				res = append(res, mqlFilter)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieFindingsFilter) id() (string, error) {
@@ -1237,82 +1015,54 @@ func (a *mqlAwsMacieFindingsFilter) findingCriteria() (any, error) {
 
 func (a *mqlAwsMacie) members() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getMembers(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getMembers(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	onlyAssociated := "false"
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			paginator := macie2.NewListMembersPaginator(svc, &macie2.ListMembersInput{
-				OnlyAssociated: &onlyAssociated,
-			})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		onlyAssociated := "false"
+		paginator := macie2.NewListMembersPaginator(svc, &macie2.ListMembersInput{
+			OnlyAssociated: &onlyAssociated,
+		})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, m := range page.Members {
+				memberAccountId := ""
+				if m.AccountId != nil {
+					memberAccountId = *m.AccountId
+				}
+				arn := ""
+				if m.Arn != nil {
+					arn = *m.Arn
+				} else {
+					arn = generateMacieMemberArn(conn.AccountId(), region, memberAccountId)
+				}
+				var memberTags map[string]any
+				if m.Tags != nil {
+					memberTags = convert.MapToInterfaceMap(m.Tags)
+				}
+				mqlMember, err := CreateResource(a.MqlRuntime, ResourceAwsMacieMember,
+					map[string]*llx.RawData{
+						"accountId":              llx.StringData(memberAccountId),
+						"arn":                    llx.StringData(arn),
+						"region":                 llx.StringData(region),
+						"administratorAccountId": llx.StringDataPtr(m.AdministratorAccountId),
+						"email":                  llx.StringDataPtr(m.Email),
+						"relationshipStatus":     llx.StringData(string(m.RelationshipStatus)),
+						"invitedAt":              llx.TimeDataPtr(m.InvitedAt),
+						"updatedAt":              llx.TimeDataPtr(m.UpdatedAt),
+						"tags":                   llx.MapData(memberTags, mqlTypes.String),
+					})
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, m := range page.Members {
-					memberAccountId := ""
-					if m.AccountId != nil {
-						memberAccountId = *m.AccountId
-					}
-					arn := ""
-					if m.Arn != nil {
-						arn = *m.Arn
-					} else {
-						arn = generateMacieMemberArn(conn.AccountId(), region, memberAccountId)
-					}
-					var memberTags map[string]any
-					if m.Tags != nil {
-						memberTags = convert.MapToInterfaceMap(m.Tags)
-					}
-					mqlMember, err := CreateResource(a.MqlRuntime, ResourceAwsMacieMember,
-						map[string]*llx.RawData{
-							"accountId":              llx.StringData(memberAccountId),
-							"arn":                    llx.StringData(arn),
-							"region":                 llx.StringData(region),
-							"administratorAccountId": llx.StringDataPtr(m.AdministratorAccountId),
-							"email":                  llx.StringDataPtr(m.Email),
-							"relationshipStatus":     llx.StringData(string(m.RelationshipStatus)),
-							"invitedAt":              llx.TimeDataPtr(m.InvitedAt),
-							"updatedAt":              llx.TimeDataPtr(m.UpdatedAt),
-							"tags":                   llx.MapData(memberTags, mqlTypes.String),
-						})
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlMember)
-				}
+				res = append(res, mqlMember)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieMember) id() (string, error) {
@@ -1325,61 +1075,33 @@ func (a *mqlAwsMacieMember) id() (string, error) {
 
 func (a *mqlAwsMacie) invitations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getInvitations(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getInvitations(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			paginator := macie2.NewListInvitationsPaginator(svc, &macie2.ListInvitationsInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		paginator := macie2.NewListInvitationsPaginator(svc, &macie2.ListInvitationsInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, inv := range page.Invitations {
+				mqlInv, err := CreateResource(a.MqlRuntime, ResourceAwsMacieInvitation,
+					map[string]*llx.RawData{
+						"invitationId":       llx.StringDataPtr(inv.InvitationId),
+						"accountId":          llx.StringDataPtr(inv.AccountId),
+						"region":             llx.StringData(region),
+						"relationshipStatus": llx.StringData(string(inv.RelationshipStatus)),
+						"invitedAt":          llx.TimeDataPtr(inv.InvitedAt),
+					})
 				if err != nil {
-					if IsMacieNotEnabledError(err) {
-						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, inv := range page.Invitations {
-					mqlInv, err := CreateResource(a.MqlRuntime, ResourceAwsMacieInvitation,
-						map[string]*llx.RawData{
-							"invitationId":       llx.StringDataPtr(inv.InvitationId),
-							"accountId":          llx.StringDataPtr(inv.AccountId),
-							"region":             llx.StringData(region),
-							"relationshipStatus": llx.StringData(string(inv.RelationshipStatus)),
-							"invitedAt":          llx.TimeDataPtr(inv.InvitedAt),
-						})
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlInv)
-				}
+				res = append(res, mqlInv)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieInvitation) id() (string, error) {
@@ -1393,63 +1115,32 @@ func (a *mqlAwsMacieInvitation) id() (string, error) {
 
 func (a *mqlAwsMacie) administrators() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getAdministrators(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getAdministrators(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			resp, err := svc.GetAdministratorAccount(ctx, &macie2.GetAdministratorAccountInput{})
-			if err != nil {
-				if IsMacieNotEnabledError(err) {
-					return res, nil
-				}
-				var notFoundErr *types.ResourceNotFoundException
-				if errors.As(err, &notFoundErr) {
-					return res, nil
-				}
-				return nil, err
-			}
-			if resp.Administrator == nil || resp.Administrator.AccountId == nil {
-				return res, nil
-			}
-			adm := resp.Administrator
-			mqlAdmin, err := CreateResource(a.MqlRuntime, ResourceAwsMacieAdministrator,
-				map[string]*llx.RawData{
-					"accountId":          llx.StringDataPtr(adm.AccountId),
-					"region":             llx.StringData(region),
-					"invitationId":       llx.StringDataPtr(adm.InvitationId),
-					"invitedAt":          llx.TimeDataPtr(adm.InvitedAt),
-					"relationshipStatus": llx.StringData(string(adm.RelationshipStatus)),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlAdmin)
-			return jobpool.JobResult(res), nil
+	return perRegion(conn, "macie2/config", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		resp, err := svc.GetAdministratorAccount(ctx, &macie2.GetAdministratorAccountInput{})
+		if err != nil {
+			return nil, err
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		if resp.Administrator == nil || resp.Administrator.AccountId == nil {
+			return res, nil
+		}
+		adm := resp.Administrator
+		mqlAdmin, err := CreateResource(a.MqlRuntime, ResourceAwsMacieAdministrator,
+			map[string]*llx.RawData{
+				"accountId":          llx.StringDataPtr(adm.AccountId),
+				"region":             llx.StringData(region),
+				"invitationId":       llx.StringDataPtr(adm.InvitationId),
+				"invitedAt":          llx.TimeDataPtr(adm.InvitedAt),
+				"relationshipStatus": llx.StringData(string(adm.RelationshipStatus)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAdmin)
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieAdministrator) id() (string, error) {
@@ -1463,70 +1154,39 @@ func (a *mqlAwsMacieAdministrator) id() (string, error) {
 
 func (a *mqlAwsMacie) automatedDiscoveryConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getAutomatedDiscoveryConfigurations(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getAutomatedDiscoveryConfigurations(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			resp, err := svc.GetAutomatedDiscoveryConfiguration(ctx, &macie2.GetAutomatedDiscoveryConfigurationInput{})
-			if err != nil {
-				if IsMacieNotEnabledError(err) {
-					return res, nil
-				}
-				var notFoundErr *types.ResourceNotFoundException
-				if errors.As(err, &notFoundErr) {
-					return res, nil
-				}
-				return nil, err
-			}
-			classificationScopeId := ""
-			if resp.ClassificationScopeId != nil {
-				classificationScopeId = *resp.ClassificationScopeId
-			}
-			sensitivityTemplateId := ""
-			if resp.SensitivityInspectionTemplateId != nil {
-				sensitivityTemplateId = *resp.SensitivityInspectionTemplateId
-			}
-			mqlConfig, err := CreateResource(a.MqlRuntime, ResourceAwsMacieAutomatedDiscoveryConfiguration,
-				map[string]*llx.RawData{
-					"region":                          llx.StringData(region),
-					"status":                          llx.StringData(string(resp.Status)),
-					"autoEnableOrganizationMembers":   llx.StringData(string(resp.AutoEnableOrganizationMembers)),
-					"classificationScopeId":           llx.StringData(classificationScopeId),
-					"sensitivityInspectionTemplateId": llx.StringData(sensitivityTemplateId),
-					"firstEnabledAt":                  llx.TimeDataPtr(resp.FirstEnabledAt),
-					"disabledAt":                      llx.TimeDataPtr(resp.DisabledAt),
-					"lastUpdatedAt":                   llx.TimeDataPtr(resp.LastUpdatedAt),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlConfig)
-			return jobpool.JobResult(res), nil
+	return perRegion(conn, "macie2/config", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		resp, err := svc.GetAutomatedDiscoveryConfiguration(ctx, &macie2.GetAutomatedDiscoveryConfigurationInput{})
+		if err != nil {
+			return nil, err
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		classificationScopeId := ""
+		if resp.ClassificationScopeId != nil {
+			classificationScopeId = *resp.ClassificationScopeId
+		}
+		sensitivityTemplateId := ""
+		if resp.SensitivityInspectionTemplateId != nil {
+			sensitivityTemplateId = *resp.SensitivityInspectionTemplateId
+		}
+		mqlConfig, err := CreateResource(a.MqlRuntime, ResourceAwsMacieAutomatedDiscoveryConfiguration,
+			map[string]*llx.RawData{
+				"region":                          llx.StringData(region),
+				"status":                          llx.StringData(string(resp.Status)),
+				"autoEnableOrganizationMembers":   llx.StringData(string(resp.AutoEnableOrganizationMembers)),
+				"classificationScopeId":           llx.StringData(classificationScopeId),
+				"sensitivityInspectionTemplateId": llx.StringData(sensitivityTemplateId),
+				"firstEnabledAt":                  llx.TimeDataPtr(resp.FirstEnabledAt),
+				"disabledAt":                      llx.TimeDataPtr(resp.DisabledAt),
+				"lastUpdatedAt":                   llx.TimeDataPtr(resp.LastUpdatedAt),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlConfig)
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieAutomatedDiscoveryConfiguration) id() (string, error) {
@@ -1540,75 +1200,48 @@ func (a *mqlAwsMacieAutomatedDiscoveryConfiguration) id() (string, error) {
 
 func (a *mqlAwsMacie) classificationExportConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getClassificationExportConfigurations(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
 
-func (a *mqlAwsMacie) getClassificationExportConfigurations(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Macie2(region)
-			ctx := context.Background()
-			res := []any{}
-			resp, err := svc.GetClassificationExportConfiguration(ctx, &macie2.GetClassificationExportConfigurationInput{})
-			if err != nil {
-				if IsMacieNotEnabledError(err) {
-					return res, nil
-				}
-				return nil, err
-			}
-			if resp.Configuration == nil || resp.Configuration.S3Destination == nil {
-				return res, nil
-			}
-			dest := resp.Configuration.S3Destination
-			bucketName := ""
-			if dest.BucketName != nil {
-				bucketName = *dest.BucketName
-			}
-			keyPrefix := ""
-			if dest.KeyPrefix != nil {
-				keyPrefix = *dest.KeyPrefix
-			}
-			expectedBucketOwner := ""
-			if dest.ExpectedBucketOwner != nil {
-				expectedBucketOwner = *dest.ExpectedBucketOwner
-			}
-			kmsKeyArn := ""
-			if dest.KmsKeyArn != nil {
-				kmsKeyArn = *dest.KmsKeyArn
-			}
-			mqlConfig, err := CreateResource(a.MqlRuntime, ResourceAwsMacieClassificationExportConfiguration,
-				map[string]*llx.RawData{
-					"region":              llx.StringData(region),
-					"s3BucketName":        llx.StringData(bucketName),
-					"s3KeyPrefix":         llx.StringData(keyPrefix),
-					"expectedBucketOwner": llx.StringData(expectedBucketOwner),
-					"kmsKeyArn":           llx.StringData(kmsKeyArn),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlConfig)
-			return jobpool.JobResult(res), nil
+	return perRegion(conn, "macie2", func(ctx context.Context, region string) ([]any, error) {
+		svc := conn.Macie2(region)
+		res := []any{}
+		resp, err := svc.GetClassificationExportConfiguration(ctx, &macie2.GetClassificationExportConfigurationInput{})
+		if err != nil {
+			return nil, err
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		if resp.Configuration == nil || resp.Configuration.S3Destination == nil {
+			return res, nil
+		}
+		dest := resp.Configuration.S3Destination
+		bucketName := ""
+		if dest.BucketName != nil {
+			bucketName = *dest.BucketName
+		}
+		keyPrefix := ""
+		if dest.KeyPrefix != nil {
+			keyPrefix = *dest.KeyPrefix
+		}
+		expectedBucketOwner := ""
+		if dest.ExpectedBucketOwner != nil {
+			expectedBucketOwner = *dest.ExpectedBucketOwner
+		}
+		kmsKeyArn := ""
+		if dest.KmsKeyArn != nil {
+			kmsKeyArn = *dest.KmsKeyArn
+		}
+		mqlConfig, err := CreateResource(a.MqlRuntime, ResourceAwsMacieClassificationExportConfiguration,
+			map[string]*llx.RawData{
+				"region":              llx.StringData(region),
+				"s3BucketName":        llx.StringData(bucketName),
+				"s3KeyPrefix":         llx.StringData(keyPrefix),
+				"expectedBucketOwner": llx.StringData(expectedBucketOwner),
+				"kmsKeyArn":           llx.StringData(kmsKeyArn),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlConfig)
+		return res, nil
+	})
 }
 
 func (a *mqlAwsMacieClassificationExportConfiguration) id() (string, error) {

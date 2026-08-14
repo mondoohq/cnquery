@@ -18,7 +18,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 
 	"go.mondoo.com/mql/v13/types"
@@ -31,67 +30,36 @@ func (a *mqlAwsEfsFilesystem) id() (string, error) {
 func (a *mqlAwsEfs) filesystems() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getFilesystems(conn), 5)
-	poolOfJobs.Run()
+	return perRegion(conn, "elasticfilesystem", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("efs>getFilesystems>calling aws with region %s", region)
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
+		svc := conn.Efs(region)
+		res := []any{}
 
-	return res, nil
-}
+		params := &efs.DescribeFileSystemsInput{}
+		paginator := efs.NewDescribeFileSystemsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			describeFileSystemsRes, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("efs>getFilesystems>calling aws with region %s", region)
+			for _, fs := range describeFileSystemsRes.FileSystems {
+				if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(efsTagsToMap(fs.Tags))) {
+					log.Debug().Interface("filesystem", fs.FileSystemArn).Msg("skipping efs filesystem due to filters")
+					continue
+				}
 
-			svc := conn.Efs(region)
-			ctx := context.Background()
-			res := []any{}
-
-			params := &efs.DescribeFileSystemsInput{}
-			paginator := efs.NewDescribeFileSystemsPaginator(svc, params)
-			for paginator.HasMorePages() {
-				describeFileSystemsRes, err := paginator.NextPage(ctx)
+				mqlFilesystem, err := buildEfsFilesystemResource(a.MqlRuntime, region, fs)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
 					return nil, err
 				}
 
-				for _, fs := range describeFileSystemsRes.FileSystems {
-					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(efsTagsToMap(fs.Tags))) {
-						log.Debug().Interface("filesystem", fs.FileSystemArn).Msg("skipping efs filesystem due to filters")
-						continue
-					}
-
-					mqlFilesystem, err := buildEfsFilesystemResource(a.MqlRuntime, region, fs)
-					if err != nil {
-						return nil, err
-					}
-
-					res = append(res, mqlFilesystem)
-				}
+				res = append(res, mqlFilesystem)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 type mqlAwsEfsFilesystemInternal struct {

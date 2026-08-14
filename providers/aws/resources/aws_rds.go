@@ -18,7 +18,6 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -34,115 +33,117 @@ func (a *mqlAwsRds) id() (string, error) {
 // instances returns all RDS instances
 func (a *mqlAwsRds) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getDbInstances(conn), 5)
-	poolOfJobs.Run()
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
 
-	return res, nil
+		res := []any{}
+		svc := conn.Rds(region)
+
+		params := &rds.DescribeDBInstancesInput{}
+		paginator := rds.NewDescribeDBInstancesPaginator(svc, params)
+		for paginator.HasMorePages() {
+			dbInstances, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, dbInstance := range dbInstances.DBInstances {
+				// we cannot filter it in the api call since the api does not support it negative filters
+				if dbInstance.Engine != nil && slices.Contains(nonRdsEngines, *dbInstance.Engine) {
+					log.Debug().Str("engine", *dbInstance.Engine).Msg("skipping non-RDS engine")
+					continue
+				}
+
+				if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(dbInstance.TagList))) {
+					log.Debug().Interface("dbInstance", dbInstance.DBInstanceArn).Msg("skipping rds db instance due to filters")
+					continue
+				}
+
+				mqlDBInstance, err := newMqlAwsRdsInstance(a.MqlRuntime, region, conn.AccountId(), dbInstance)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlDBInstance)
+			}
+		}
+		return res, nil
+	})
 }
 
 func (a *mqlAwsRds) clusterParameterGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getClusterParameterGroups(conn), 5)
-	poolOfJobs.Run()
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", region)
+		res := []any{}
+		svc := conn.Rds(region)
+
+		params := &rds.DescribeDBClusterParameterGroupsInput{}
+		paginator := rds.NewDescribeDBClusterParameterGroupsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			DBClusterParameterGroups, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, dbClusterParameterGroup := range DBClusterParameterGroups.DBClusterParameterGroups {
+				mqlParameterGroup, err := newMqlAwsRdsClusterParameterGroup(a.MqlRuntime, region, dbClusterParameterGroup)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlParameterGroup)
+			}
+		}
+		return res, nil
+	})
 }
 
 func (a *mqlAwsRds) eventSubscriptions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getEventSubscriptions(conn), 5)
-	poolOfJobs.Run()
 
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
-	return res, nil
-}
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getEventSubscriptions>calling aws with region %s", region)
+		res := []any{}
+		svc := conn.Rds(region)
 
-func (a *mqlAwsRds) getEventSubscriptions(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getEventSubscriptions>calling aws with region %s", region)
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
+		paginator := rds.NewDescribeEventSubscriptionsPaginator(svc, &rds.DescribeEventSubscriptionsInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, sub := range page.EventSubscriptionsList {
+				sourceIds := make([]any, 0, len(sub.SourceIdsList))
+				for _, id := range sub.SourceIdsList {
+					sourceIds = append(sourceIds, id)
+				}
+				eventCategories := make([]any, 0, len(sub.EventCategoriesList))
+				for _, cat := range sub.EventCategoriesList {
+					eventCategories = append(eventCategories, cat)
+				}
 
-			paginator := rds.NewDescribeEventSubscriptionsPaginator(svc, &rds.DescribeEventSubscriptionsInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+				mqlSub, err := CreateResource(a.MqlRuntime, "aws.rds.eventSubscription",
+					map[string]*llx.RawData{
+						"__id":                     llx.StringDataPtr(sub.EventSubscriptionArn),
+						"arn":                      llx.StringDataPtr(sub.EventSubscriptionArn),
+						"name":                     llx.StringDataPtr(sub.CustSubscriptionId),
+						"region":                   llx.StringData(region),
+						"status":                   llx.StringDataPtr(sub.Status),
+						"snsTopicArn":              llx.StringDataPtr(sub.SnsTopicArn),
+						"sourceType":               llx.StringDataPtr(sub.SourceType),
+						"sourceIds":                llx.ArrayData(sourceIds, types.String),
+						"enabled":                  llx.BoolData(convert.ToValue(sub.Enabled)),
+						"eventCategories":          llx.ArrayData(eventCategories, types.String),
+						"customerAwsId":            llx.StringDataPtr(sub.CustomerAwsId),
+						"subscriptionCreationTime": llx.StringDataPtr(sub.SubscriptionCreationTime),
+					})
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, sub := range page.EventSubscriptionsList {
-					sourceIds := make([]any, 0, len(sub.SourceIdsList))
-					for _, id := range sub.SourceIdsList {
-						sourceIds = append(sourceIds, id)
-					}
-					eventCategories := make([]any, 0, len(sub.EventCategoriesList))
-					for _, cat := range sub.EventCategoriesList {
-						eventCategories = append(eventCategories, cat)
-					}
-
-					mqlSub, err := CreateResource(a.MqlRuntime, "aws.rds.eventSubscription",
-						map[string]*llx.RawData{
-							"__id":                     llx.StringDataPtr(sub.EventSubscriptionArn),
-							"arn":                      llx.StringDataPtr(sub.EventSubscriptionArn),
-							"name":                     llx.StringDataPtr(sub.CustSubscriptionId),
-							"region":                   llx.StringData(region),
-							"status":                   llx.StringDataPtr(sub.Status),
-							"snsTopicArn":              llx.StringDataPtr(sub.SnsTopicArn),
-							"sourceType":               llx.StringDataPtr(sub.SourceType),
-							"sourceIds":                llx.ArrayData(sourceIds, types.String),
-							"enabled":                  llx.BoolData(convert.ToValue(sub.Enabled)),
-							"eventCategories":          llx.ArrayData(eventCategories, types.String),
-							"customerAwsId":            llx.StringDataPtr(sub.CustomerAwsId),
-							"subscriptionCreationTime": llx.StringDataPtr(sub.SubscriptionCreationTime),
-						})
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlSub)
-				}
+				res = append(res, mqlSub)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 type mqlAwsRdsEventSubscriptionInternal struct {
@@ -175,58 +176,29 @@ func (a *mqlAwsRdsEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {
 
 func (a *mqlAwsRds) parameterGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getParameterGroups(conn), 5)
-	poolOfJobs.Run()
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
-}
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", region)
+		res := []any{}
+		svc := conn.Rds(region)
 
-func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getClusterParameterGroup>calling aws with region %s", region)
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-
-			params := &rds.DescribeDBClusterParameterGroupsInput{}
-			paginator := rds.NewDescribeDBClusterParameterGroupsPaginator(svc, params)
-			for paginator.HasMorePages() {
-				DBClusterParameterGroups, err := paginator.NextPage(ctx)
+		params := &rds.DescribeDBParameterGroupsInput{}
+		paginator := rds.NewDescribeDBParameterGroupsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			dbParameterGroups, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, dbParameterGroup := range dbParameterGroups.DBParameterGroups {
+				mqlParameterGroup, err := newMqlAwsParameterGroup(a.MqlRuntime, region, dbParameterGroup)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, dbClusterParameterGroup := range DBClusterParameterGroups.DBClusterParameterGroups {
-					mqlParameterGroup, err := newMqlAwsRdsClusterParameterGroup(a.MqlRuntime, region, dbClusterParameterGroup)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlParameterGroup)
-				}
+				res = append(res, mqlParameterGroup)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func newMqlAwsRdsClusterParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBClusterParameterGroup) (*mqlAwsRdsClusterParameterGroup, error) {
@@ -266,161 +238,39 @@ func (a *mqlAwsRdsParameterGroup) tags() (map[string]any, error) {
 	})
 }
 
-func (a *mqlAwsRds) getParameterGroups(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getParameterGroup>calling aws with region %s", region)
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-
-			params := &rds.DescribeDBParameterGroupsInput{}
-			paginator := rds.NewDescribeDBParameterGroupsPaginator(svc, params)
-			for paginator.HasMorePages() {
-				dbParameterGroups, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
-				}
-				for _, dbParameterGroup := range dbParameterGroups.DBParameterGroups {
-					mqlParameterGroup, err := newMqlAwsParameterGroup(a.MqlRuntime, region, dbParameterGroup)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlParameterGroup)
-				}
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
-}
-
-func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
-
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-
-			params := &rds.DescribeDBInstancesInput{}
-			paginator := rds.NewDescribeDBInstancesPaginator(svc, params)
-			for paginator.HasMorePages() {
-				dbInstances, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
-				}
-				for _, dbInstance := range dbInstances.DBInstances {
-					// we cannot filter it in the api call since the api does not support it negative filters
-					if dbInstance.Engine != nil && slices.Contains(nonRdsEngines, *dbInstance.Engine) {
-						log.Debug().Str("engine", *dbInstance.Engine).Msg("skipping non-RDS engine")
-						continue
-					}
-
-					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(dbInstance.TagList))) {
-						log.Debug().Interface("dbInstance", dbInstance.DBInstanceArn).Msg("skipping rds db instance due to filters")
-						continue
-					}
-
-					mqlDBInstance, err := newMqlAwsRdsInstance(a.MqlRuntime, region, conn.AccountId(), dbInstance)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlDBInstance)
-				}
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
-}
-
 // pendingMaintenanceActions returns all pending maintenance actions for all RDS instances
 func (a *mqlAwsRds) allPendingMaintenanceActions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getPendingMaintenanceActions(conn), 5)
-	poolOfJobs.Run()
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
 
-	return res, nil
-}
+		res := []any{}
+		svc := conn.Rds(region)
 
-func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", region)
-
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-
-			params := &rds.DescribePendingMaintenanceActionsInput{}
-			paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
-			for paginator.HasMorePages() {
-				pendingMaintenanceList, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
+		params := &rds.DescribePendingMaintenanceActionsInput{}
+		paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			pendingMaintenanceList, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, resp := range pendingMaintenanceList.PendingMaintenanceActions {
+				if resp.ResourceIdentifier == nil {
+					continue
 				}
-				for _, resp := range pendingMaintenanceList.PendingMaintenanceActions {
-					if resp.ResourceIdentifier == nil {
-						continue
+				for _, action := range resp.PendingMaintenanceActionDetails {
+					resourceArn := *resp.ResourceIdentifier
+					mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
+					if err != nil {
+						return nil, err
 					}
-					for _, action := range resp.PendingMaintenanceActionDetails {
-						resourceArn := *resp.ResourceIdentifier
-						mqlPendingAction, err := newMqlAwsPendingMaintenanceAction(a.MqlRuntime, resourceArn, action)
-						if err != nil {
-							return nil, err
-						}
-						res = append(res, mqlPendingAction)
-					}
+					res = append(res, mqlPendingAction)
 				}
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func (a *mqlAwsRdsDbinstance) id() (string, error) {
@@ -1224,72 +1074,42 @@ func rdsTagsToMap(tags []rds_types.Tag) map[string]any {
 // clusters returns all RDS clusters
 func (a *mqlAwsRds) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getDbClusters(conn), 5)
-	poolOfJobs.Run()
 
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getDbClusters>calling aws with region %s", region)
 
-	return res, nil
-}
+		res := []any{}
+		svc := conn.Rds(region)
 
-func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getDbClusters>calling aws with region %s", region)
+		params := &rds.DescribeDBClustersInput{}
+		paginator := rds.NewDescribeDBClustersPaginator(svc, params)
+		for paginator.HasMorePages() {
+			dbClusters, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
+			for _, cluster := range dbClusters.DBClusters {
+				// we cannot filter it in the api call since the api does not support it negative filters
+				if cluster.Engine != nil && slices.Contains(nonRdsEngines, *cluster.Engine) {
+					log.Debug().Str("engine", *cluster.Engine).Msg("skipping non-RDS engine")
+					continue
+				}
 
-			params := &rds.DescribeDBClustersInput{}
-			paginator := rds.NewDescribeDBClustersPaginator(svc, params)
-			for paginator.HasMorePages() {
-				dbClusters, err := paginator.NextPage(ctx)
+				if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(cluster.TagList))) {
+					log.Debug().Interface("cluster", cluster.DBClusterArn).Msg("skipping rds cluster due to filters")
+					continue
+				}
+
+				mqlDbCluster, err := newMqlAwsRdsCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
 					return nil, err
 				}
-
-				for _, cluster := range dbClusters.DBClusters {
-					// we cannot filter it in the api call since the api does not support it negative filters
-					if cluster.Engine != nil && slices.Contains(nonRdsEngines, *cluster.Engine) {
-						log.Debug().Str("engine", *cluster.Engine).Msg("skipping non-RDS engine")
-						continue
-					}
-
-					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(cluster.TagList))) {
-						log.Debug().Interface("cluster", cluster.DBClusterArn).Msg("skipping rds cluster due to filters")
-						continue
-					}
-
-					mqlDbCluster, err := newMqlAwsRdsCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlDbCluster)
-				}
+				res = append(res, mqlDbCluster)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 type mqlAwsRdsDbclusterInternal struct {
@@ -1833,64 +1653,33 @@ func (a *mqlAwsRdsSnapshot) isPublic() (bool, error) {
 
 func (a *mqlAwsRds) proxies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getProxies(conn), 5)
-	poolOfJobs.Run()
 
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-		}
-	}
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		log.Debug().Msgf("rds>getProxies>calling aws with region %s", region)
 
-	return res, nil
-}
+		res := []any{}
+		svc := conn.Rds(region)
 
-func (a *mqlAwsRds) getProxies(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("rds>getProxies>calling aws with region %s", region)
-
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-
-			paginator := rds.NewDescribeDBProxiesPaginator(svc, &rds.DescribeDBProxiesInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+		paginator := rds.NewDescribeDBProxiesPaginator(svc, &rds.DescribeDBProxiesInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				if IsServiceNotAvailableInRegionError(err) {
+					log.Debug().Str("region", region).Msg("rds proxy service not available in region")
+					return res, nil
+				}
+				return nil, err
+			}
+			for _, proxy := range page.DBProxies {
+				mqlProxy, err := newMqlAwsRdsProxy(a.MqlRuntime, region, conn.AccountId(), proxy)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					if IsServiceNotAvailableInRegionError(err) {
-						log.Debug().Str("region", region).Msg("rds proxy service not available in region")
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, proxy := range page.DBProxies {
-					mqlProxy, err := newMqlAwsRdsProxy(a.MqlRuntime, region, conn.AccountId(), proxy)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlProxy)
-				}
+				res = append(res, mqlProxy)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 func newMqlAwsRdsProxy(runtime *plugin.Runtime, region string, accountID string, proxy rds_types.DBProxy) (*mqlAwsRdsProxy, error) {
@@ -2023,52 +1812,26 @@ func rdsTagsForArn(runtime *plugin.Runtime, region, resourceArn string) (map[str
 
 func (a *mqlAwsRds) optionGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getOptionGroups(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
-	}
-	return res, nil
-}
 
-func (a *mqlAwsRds) getOptionGroups(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		region := region
-		f := func() (jobpool.JobResult, error) {
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-			paginator := rds.NewDescribeOptionGroupsPaginator(svc, &rds.DescribeOptionGroupsInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
+	return perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		res := []any{}
+		svc := conn.Rds(region)
+		paginator := rds.NewDescribeOptionGroupsPaginator(svc, &rds.DescribeOptionGroupsInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, og := range page.OptionGroupsList {
+				mqlOG, err := newMqlAwsRdsOptionGroup(a.MqlRuntime, region, og)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, og := range page.OptionGroupsList {
-					mqlOG, err := newMqlAwsRdsOptionGroup(a.MqlRuntime, region, og)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlOG)
-				}
+				res = append(res, mqlOG)
 			}
-			return jobpool.JobResult(res), nil
 		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
+		return res, nil
+	})
 }
 
 type mqlAwsRdsOptionGroupInternal struct {
@@ -2171,65 +1934,47 @@ func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
 
 func (a *mqlAwsRds) globalClusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	pool := jobpool.CreatePool(a.getGlobalClusters(conn), 5)
-	pool.Run()
-	if pool.HasErrors() {
-		return nil, pool.GetErrors()
+
+	all, err := perRegion(conn, "rds", func(ctx context.Context, region string) ([]any, error) {
+		res := []any{}
+		svc := conn.Rds(region)
+		paginator := rds.NewDescribeGlobalClustersPaginator(svc, &rds.DescribeGlobalClustersInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, gc := range page.GlobalClusters {
+				mqlGc, err := newMqlAwsRdsGlobalCluster(a.MqlRuntime, region, gc)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlGc)
+			}
+		}
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// Aurora global clusters surface from any member region's regional
-	// endpoint, so deduplicate by ARN across the parallel region jobs.
+	// endpoint, so deduplicate by ARN across the parallel region reads.
 	seen := map[string]bool{}
 	res := []any{}
-	for i := range pool.Jobs {
-		for _, r := range pool.Jobs[i].Result.([]any) {
-			gc := r.(*mqlAwsRdsGlobalCluster)
-			arn := gc.Arn.Data
-			if arn == "" || seen[arn] {
-				continue
-			}
-			seen[arn] = true
-			res = append(res, gc)
+	for _, r := range all {
+		gc, ok := r.(*mqlAwsRdsGlobalCluster)
+		if !ok {
+			continue
 		}
+		arn := gc.Arn.Data
+		if arn == "" || seen[arn] {
+			continue
+		}
+		seen[arn] = true
+		res = append(res, gc)
 	}
 	return res, nil
-}
-
-func (a *mqlAwsRds) getGlobalClusters(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		region := region
-		f := func() (jobpool.JobResult, error) {
-			res := []any{}
-			svc := conn.Rds(region)
-			ctx := context.Background()
-			paginator := rds.NewDescribeGlobalClustersPaginator(svc, &rds.DescribeGlobalClustersInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("access denied describing RDS global clusters")
-						return res, nil
-					}
-					return nil, err
-				}
-				for _, gc := range page.GlobalClusters {
-					mqlGc, err := newMqlAwsRdsGlobalCluster(a.MqlRuntime, region, gc)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlGc)
-				}
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 // mqlAwsRdsGlobalClusterInternal carries the region the global cluster was

@@ -45,6 +45,9 @@ type AwsConnection struct {
 	awsConfigOptions []func(*config.LoadOptions) error
 	PlatformOverride string
 	Filters          DiscoveryFilters
+	// gaps records service/region pairs this scan could not read. See
+	// coverage.go for why an unreadable region must not look like an empty one.
+	gaps coverageGaps
 
 	opts awsConnectionOptions
 }
