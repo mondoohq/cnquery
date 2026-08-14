@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -311,6 +312,36 @@ func TestFetchPowerBiWorkspacePages(t *testing.T) {
 				assert.Equal(t, fmt.Sprintf("ws-%d", i), got[i].Id)
 			}
 		})
+	}
+}
+
+// TestFetchPowerBiWorkspacePagesBoundsAStuckSkip is the counterpart to
+// TestPowerBiGetRejectsRepeatedContinuation: the only signal that ends this
+// walk is a page shorter than the page size, so an endpoint that ignores $skip
+// answers every request with a full page. Unbounded, the loop never returns and
+// appends pageSize workspaces per iteration until the scan is out of memory.
+func TestFetchPowerBiWorkspacePagesBoundsAStuckSkip(t *testing.T) {
+	var requests int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		// a full page every time, regardless of $skip
+		fmt.Fprint(w, `{"value":[{"id":"ws-0"},{"id":"ws-1"}]}`)
+	}))
+	defer srv.Close()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := fetchPowerBiWorkspacePages(context.Background(), "tok", srv.URL+"/", 2)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "ignoring $skip")
+		assert.Equal(t, powerBiMaxPages, requests, "must stop at the page bound")
+	case <-time.After(30 * time.Second):
+		t.Fatal("walk did not terminate: a stuck $skip spins forever")
 	}
 }
 
