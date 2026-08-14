@@ -667,10 +667,29 @@ func (r *mqlOpenstackPort) server() (*mqlOpenstackComputeServer, error) {
 	return res.(*mqlOpenstackComputeServer), nil
 }
 
+// deviceOwnerIsRouter reports whether a port's deviceOwner marks the port as
+// owned by a Neutron router, which means its deviceId holds a router UUID.
+//
+// The "network:router" prefix covers the legacy and distributed interface
+// owners (network:router_interface, network:router_interface_distributed),
+// the external gateway port (network:router_gateway), the HA keepalived
+// interface (network:router_ha_interface) and the centralized SNAT port
+// (network:router_centralized_snat). DVR and HA deployments additionally use
+// network:ha_router_replicated_interface for every router interface
+// replicated onto a compute or network node, which does not carry that
+// prefix.
+//
+// network:dhcp is deliberately excluded: its device_id is a synthetic
+// "dhcp<host>-<network>" string rather than a resource UUID.
+func deviceOwnerIsRouter(deviceOwner string) bool {
+	return strings.HasPrefix(deviceOwner, "network:router") ||
+		deviceOwner == "network:ha_router_replicated_interface"
+}
+
 // router resolves the port's device to a router when the port is a router
-// interface or gateway (deviceOwner starts with "network:router").
+// interface, gateway, or replicated HA/DVR interface.
 func (r *mqlOpenstackPort) router() (*mqlOpenstackRouter, error) {
-	if r.cacheDeviceID == "" || !strings.HasPrefix(r.DeviceOwner.Data, "network:router") {
+	if r.cacheDeviceID == "" || !deviceOwnerIsRouter(r.DeviceOwner.Data) {
 		r.Router.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

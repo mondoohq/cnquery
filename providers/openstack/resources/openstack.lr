@@ -820,7 +820,12 @@ private openstack.port @defaults("id name status macAddress") {
   project() openstack.project
   // Server this port is attached to; null when the port is not bound to a compute instance
   server() openstack.compute.server
-  // Router this port is attached to; null when the port is not a router interface or gateway
+  // Router this port is attached to
+  //
+  // Covers the legacy and distributed router interfaces, the external gateway
+  // port, the HA keepalived interface, the centralized SNAT port, and the
+  // replicated interfaces that DVR and HA deployments create on compute and
+  // network nodes. Null when the port is not owned by a router.
   router() openstack.router
   // Floating (public) IPs bound to this port; empty when none are bound
   floatingIps() []openstack.floatingIp
@@ -1417,12 +1422,36 @@ private openstack.octavia.listener @defaults("id name protocol protocolPort prov
   defaultPool() openstack.octavia.pool
   // Barbican container holding the listener's default TLS material; null when not set or when the ref points at a bare Barbican secret
   defaultTlsContainer() openstack.keymanager.container
+  // Barbican secret holding the listener's default TLS material
+  //
+  // Octavia accepts either a container or a bare secret for
+  // `default_tls_container_ref`, and a PKCS12 bundle stored as a single secret
+  // is the common form on modern clouds. Null when the ref is unset or names a
+  // container, in which case defaultTlsContainer carries the material instead.
+  // Check both to decide whether a listener terminates TLS.
+  defaultTlsSecret() openstack.keymanager.secret
   // Barbican containers used for SNI; empty when SNI is not configured
   sniContainers() []openstack.keymanager.container
+  // Barbican secrets used for SNI
+  //
+  // The entries of `sni_container_refs` that name a bare secret rather than a
+  // container. Empty when SNI is not configured or every ref names a
+  // container, which sniContainers then resolves.
+  sniSecrets() []openstack.keymanager.secret
   // Barbican container holding the client CA bundle for mTLS; null when not configured
   clientCATlsContainer() openstack.keymanager.container
+  // Barbican secret holding the client CA bundle for mTLS
+  //
+  // Null when the client CA ref is unset or names a container, which
+  // clientCATlsContainer then resolves.
+  clientCATlsSecret() openstack.keymanager.secret
   // Barbican container holding the client CRL list; null when not configured
   clientCRLContainer() openstack.keymanager.container
+  // Barbican secret holding the client CRL list
+  //
+  // Null when the CRL ref is unset or names a container, which
+  // clientCRLContainer then resolves.
+  clientCRLSecret() openstack.keymanager.secret
   // L7 policies attached to this listener
   l7Policies() []openstack.octavia.l7Policy
   // Whether the listener accepts connections from any source (allowedCidrs is empty or contains a public CIDR)
@@ -1481,10 +1510,25 @@ private openstack.octavia.pool @defaults("id name lbAlgorithm protocol provision
   subnet() openstack.subnet
   // Barbican container holding the CA bundle used to verify backend TLS; null when not set
   caTlsContainer() openstack.keymanager.container
+  // Barbican secret holding the CA bundle used to verify backend TLS
+  //
+  // Null when `ca_tls_container_ref` is unset or names a container, which
+  // caTlsContainer then resolves.
+  caTlsSecret() openstack.keymanager.secret
   // Barbican container holding the CRL list for backend TLS; null when not set
   crlContainer() openstack.keymanager.container
+  // Barbican secret holding the CRL list for backend TLS
+  //
+  // Null when `crl_container_ref` is unset or names a container, which
+  // crlContainer then resolves.
+  crlSecret() openstack.keymanager.secret
   // Barbican container holding the client cert/key bundle for backend mTLS; null when not set
   clientTlsContainer() openstack.keymanager.container
+  // Barbican secret holding the client cert/key bundle for backend mTLS
+  //
+  // Null when `tls_container_ref` is unset or names a container, which
+  // clientTlsContainer then resolves.
+  clientTlsSecret() openstack.keymanager.secret
   // Members in this pool
   members() []openstack.octavia.member
 }
