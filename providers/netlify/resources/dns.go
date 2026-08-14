@@ -91,10 +91,23 @@ func (z *mqlNetlifyDnsZone) id() (string, error) {
 
 // site resolves the site the zone was created for. A zone added for a domain
 // that is not attached to a site has none.
+//
+// The match runs against the site list the root resource has already fetched,
+// so a query over many zones does not read one site per zone. A site outside
+// the scope the connection is narrowed to is absent from that list, so a miss
+// falls back to the direct lookup.
 func (z *mqlNetlifyDnsZone) site() (*mqlNetlifySite, error) {
 	if z.cacheSiteID == "" {
 		z.Site.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+
+	root, err := getNetlify(z.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if site, ok := findCachedResource(root.GetSites(), netlifySiteID, z.cacheSiteID); ok {
+		return site, nil
 	}
 
 	res, err := NewResource(z.MqlRuntime, "netlify.site", map[string]*llx.RawData{
