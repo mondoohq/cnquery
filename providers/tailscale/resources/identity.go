@@ -55,7 +55,10 @@ type userIndex map[string]*mqlTailscaleUser
 // applied second so that in the improbable event a login name collides with
 // another account's id, the id wins and `tailscale.user(id:)` semantics hold.
 func buildUserIndex(users []any) userIndex {
-	index := make(userIndex, len(users)*2)
+	// One entry per user is a lower bound rather than the final size, since an
+	// account contributes both a login name and an id. Sizing to the count we
+	// know keeps the hint free of arithmetic; the map grows past it on its own.
+	index := make(userIndex, len(users))
 
 	for _, entry := range users {
 		// Comma-ok rather than a bare assertion: an unexpected entry in a
