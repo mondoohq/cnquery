@@ -106,7 +106,7 @@ func TestTenantStageAssets_SubscriptionConfigTriggersStage2(t *testing.T) {
 	rootConf := stagedRootConfig(DiscoveryAuto)
 	subs := []subscriptions.Subscription{testSubscription("sub-1"), testSubscription("sub-2")}
 
-	swcs, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf))
+	swcs, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), connection.DiscoveryFilters{})
 	require.Len(t, assets, 2)
 	require.Len(t, swcs, 2)
 
@@ -131,7 +131,7 @@ func TestTenantStageAssets_SubscriptionsGetTheirOwnCache(t *testing.T) {
 	rootConf := stagedRootConfig(DiscoveryAuto)
 	subs := []subscriptions.Subscription{testSubscription("sub-1"), testSubscription("sub-2")}
 
-	_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf))
+	_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), connection.DiscoveryFilters{})
 
 	for _, asset := range assets {
 		assert.Zero(t, asset.Connections[0].ParentConnectionId,
@@ -159,7 +159,7 @@ func TestTenantStageAssets_ScannableWhenSubscriptionsAreTargeted(t *testing.T) {
 			rootConf := stagedRootConfig(test.targets...)
 			subs := []subscriptions.Subscription{testSubscription("sub-1")}
 
-			_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf))
+			_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), connection.DiscoveryFilters{})
 			require.Len(t, assets, 1)
 
 			if test.wantPlatformIds {
@@ -270,7 +270,7 @@ func TestLegacyAssetOpts_Unchanged(t *testing.T) {
 // can rebuild the subscription record without asking ARM for it again.
 func TestSubscriptionRecord_FromConnectionOptions(t *testing.T) {
 	rootConf := stagedRootConfig(DiscoveryAuto)
-	_, assets := tenantStageAssets(rootConf, []subscriptions.Subscription{testSubscription("sub-1")}, getDiscoveryTargets(rootConf))
+	_, assets := tenantStageAssets(rootConf, []subscriptions.Subscription{testSubscription("sub-1")}, getDiscoveryTargets(rootConf), connection.DiscoveryFilters{})
 	subConf := assets[0].Connections[0]
 
 	conn := &connection.AzureConnection{}
@@ -293,24 +293,47 @@ func TestSubscriptionRecord_MissingTenantStaysNil(t *testing.T) {
 	assert.Nil(t, sub.TenantID, "an unknown tenant must stay unknown, not become the empty string")
 }
 
-// Stage 1 marks the subscription configs it has emitted assets for, so stage 2
-// knows whether it has to emit the subscription itself. Reaching stage 2 from a
-// command line scoped to one subscription means no stage 1 ran and nothing has
-// emitted it -- the legacy path emits it either way, so this one must too.
-func TestStageOneEmittedSubscription(t *testing.T) {
+// Stage 1 marks the configs it builds, which tells stage 2 both that the
+// subscription asset already exists and that its tags have already been
+// resolved. Reaching stage 2 from a command line scoped to one subscription
+// means no stage 1 ran and neither is true.
+func TestBuiltByTenantStage(t *testing.T) {
 	rootConf := stagedRootConfig(DiscoveryAuto)
-	_, assets := tenantStageAssets(rootConf, []subscriptions.Subscription{testSubscription("sub-1")}, getDiscoveryTargets(rootConf))
+	_, assets := tenantStageAssets(rootConf, []subscriptions.Subscription{testSubscription("sub-1")}, getDiscoveryTargets(rootConf), connection.DiscoveryFilters{})
 	require.Len(t, assets, 1)
 
-	assert.True(t, stageOneEmittedSubscription(assets[0].Connections[0]),
-		"stage 1 already emitted this subscription as an asset")
+	assert.True(t, builtByTenantStage(assets[0].Connections[0]),
+		"stage 1 built this config, so it emitted the subscription and read its tags")
 
 	cliScoped := &inventory.Config{Options: map[string]string{
 		plugin.OptionStagedDiscovery:    "true",
 		connection.OptionSubscriptionID: "sub-1",
 	}}
-	assert.False(t, stageOneEmittedSubscription(cliScoped),
+	assert.False(t, builtByTenantStage(cliScoped),
 		"a command-line scoped run never went through stage 1")
+}
+
+// The bug this guards: a subscription with no tags carries none, so an empty
+// set at stage 2 is ambiguous unless the stage-1 marker disambiguates it.
+// Without that, every untagged subscription in the tenant costs a GET.
+func TestTenantStageAssets_UntaggedSubscriptionNeedsNoFetch(t *testing.T) {
+	rootConf := stagedRootConfig(DiscoveryAuto)
+	rootConf.Discover.Filter = map[string]string{"propagate-subscription-tags": "true"}
+	// No tags at all on this one.
+	subs := []subscriptions.Subscription{testSubscription("sub-1")}
+	filters := connection.DiscoveryFiltersFromOpts(rootConf.Discover.Filter)
+
+	_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), filters)
+	require.Len(t, assets, 1)
+	cfg := assets[0].Connections[0]
+
+	stage2 := connection.DiscoveryFiltersFromOpts(cfg.GetDiscover().GetFilter())
+	require.True(t, stage2.PropagateSubscriptionTags)
+	require.Empty(t, stage2.SubscriptionTags, "there were none to carry")
+
+	// The marker is what stops stage 2 reading that empty set as "not fetched yet".
+	assert.True(t, builtByTenantStage(cfg),
+		"an untagged subscription must still be recognised as resolved by stage 1")
 }
 
 // Nothing beyond the ids is needed here, so the record must not be fetched.
@@ -332,4 +355,82 @@ func TestSubscriptionRecord_SkipsTheFetchWhenNothingNeedsIt(t *testing.T) {
 	require.NotNil(t, sub.SubscriptionID)
 	assert.Equal(t, "sub-1", *sub.SubscriptionID)
 	assert.Empty(t, sub.Tags)
+}
+
+func taggedSubscription(id string, tags map[string]string) subscriptions.Subscription {
+	sub := testSubscription(id)
+	sub.Tags = map[string]*string{}
+	for k, v := range tags {
+		sub.Tags[k] = to.Ptr(v)
+	}
+	return sub
+}
+
+// The subscription list already returns each subscription's tags. Stage 1 hands
+// them to stage 2 through the config, so stage 2 never has to spend a GET per
+// subscription on a record it would only read the tags off.
+func TestTenantStageAssets_CarriesSubscriptionTagsToStage2(t *testing.T) {
+	rootConf := stagedRootConfig(DiscoveryAuto)
+	// Derived the way the connection derives it, so the flag reaches stage 2
+	// the same way it does in production.
+	rootConf.Discover.Filter = map[string]string{"propagate-subscription-tags": "true"}
+	subs := []subscriptions.Subscription{
+		taggedSubscription("sub-1", map[string]string{"env": "prod", "team": "infra"}),
+		taggedSubscription("sub-2", map[string]string{"env": "dev"}),
+	}
+	filters := connection.DiscoveryFiltersFromOpts(rootConf.Discover.Filter)
+	require.True(t, filters.PropagateSubscriptionTags)
+
+	_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), filters)
+	require.Len(t, assets, 2)
+
+	// What stage 2 will see once its connection parses the config.
+	stage2Filters := func(a *inventory.Asset) connection.DiscoveryFilters {
+		return connection.DiscoveryFiltersFromOpts(a.Connections[0].GetDiscover().GetFilter())
+	}
+
+	assert.Equal(t, map[string]string{"env": "prod", "team": "infra"},
+		stage2Filters(assets[0]).SubscriptionTags)
+	// Each subscription carries only its own tags -- the configs must not share
+	// a filter map, or every subscription would inherit the last one's tags.
+	assert.Equal(t, map[string]string{"env": "dev"},
+		stage2Filters(assets[1]).SubscriptionTags)
+
+	// With the tags already in hand, stage 2 has no reason to fetch the record.
+	for _, a := range assets {
+		f := stage2Filters(a)
+		assert.True(t, f.PropagateSubscriptionTags, "propagation must survive to stage 2")
+		assert.False(t, f.PropagateSubscriptionTags && len(f.SubscriptionTags) == 0,
+			"stage 2 must not need an extra GetSubscription call")
+	}
+}
+
+// A caller-supplied override decides the tags, so stage 1 must not overwrite it
+// with what ARM reported.
+func TestTenantStageAssets_CallerTagOverrideWins(t *testing.T) {
+	rootConf := stagedRootConfig(DiscoveryAuto)
+	rootConf.Discover.Filter = map[string]string{
+		"propagate-subscription-tags":                  "true",
+		connection.SubscriptionTagFilterPrefix + "env": "override",
+	}
+	subs := []subscriptions.Subscription{taggedSubscription("sub-1", map[string]string{"env": "prod"})}
+	filters := connection.DiscoveryFiltersFromOpts(rootConf.Discover.Filter)
+
+	_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), filters)
+	require.Len(t, assets, 1)
+
+	got := connection.DiscoveryFiltersFromOpts(assets[0].Connections[0].GetDiscover().GetFilter())
+	assert.Equal(t, map[string]string{"env": "override"}, got.SubscriptionTags)
+}
+
+// Propagation is off by default; nothing should be written in that case.
+func TestTenantStageAssets_NoTagsCarriedWhenPropagationIsOff(t *testing.T) {
+	rootConf := stagedRootConfig(DiscoveryAuto)
+	subs := []subscriptions.Subscription{taggedSubscription("sub-1", map[string]string{"env": "prod"})}
+
+	_, assets := tenantStageAssets(rootConf, subs, getDiscoveryTargets(rootConf), connection.DiscoveryFilters{})
+	require.Len(t, assets, 1)
+
+	got := connection.DiscoveryFiltersFromOpts(assets[0].Connections[0].GetDiscover().GetFilter())
+	assert.Empty(t, got.SubscriptionTags)
 }

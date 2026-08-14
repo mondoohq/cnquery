@@ -122,6 +122,15 @@ func (f GeneralDiscoveryFilters) MatchesExcludeTags(resourceTags map[string]stri
 	return false
 }
 
+// SubscriptionTagFilterPrefix is the --filters key prefix that names the tags
+// to attribute to a subscription's assets, as in
+// `--filters subscription-tag:env=prod`. Staged discovery also writes it: a
+// stage-2 connection is scoped to exactly one subscription, so "the tags of
+// this subscription" and "the tag override for this connection" are the same
+// thing, and stage 1 can hand over the tags it already read rather than making
+// stage 2 fetch them again.
+const SubscriptionTagFilterPrefix = "subscription-tag:"
+
 // DiscoveryFiltersFromOpts parses the raw --filters key/value options into the
 // typed DiscoveryFilters. It is nil-safe: a nil opts map yields empty filters.
 func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
@@ -135,7 +144,7 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			ExcludeTags: parseMapOpt(opts, "exclude:tag:"),
 		},
 		PropagateSubscriptionTags: filteropts.ParseBoolOpt(opts, "propagate-subscription-tags", false),
-		SubscriptionTags:          parseMapOpt(opts, "subscription-tag:"),
+		SubscriptionTags:          parseMapOpt(opts, SubscriptionTagFilterPrefix),
 	}
 }
 

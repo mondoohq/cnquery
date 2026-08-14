@@ -63,16 +63,19 @@ const (
 	DiscoveryContainerApps           = "container-apps"
 	DiscoveryCognitiveServices       = "cognitiveservices-accounts"
 
-	// optionSubscriptionAssetEmitted marks a connection config that stage 1 of
-	// staged discovery built for a subscription it has already emitted as an
-	// asset.
+	// optionBuiltByTenantStage marks a connection config that stage 1 of staged
+	// discovery built for a subscription, meaning stage 1 has already read that
+	// subscription's record and acted on it.
 	//
 	// Stage 2 runs from two places: a subscription asset stage 1 emitted, and a
 	// root connection the caller scoped to one subscription on the command
-	// line. In the first case the subscription asset exists already; in the
-	// second nothing has emitted it, and without this marker the run would
-	// silently lose it -- the legacy path emits it in both cases.
-	optionSubscriptionAssetEmitted = "azure-subscription-asset-emitted"
+	// line. Two things follow from which of the two it is. Stage 1 emits the
+	// subscription asset, so stage 2 has to emit it itself when stage 1 never
+	// ran, or the run silently loses it -- the legacy path emits it either way.
+	// And stage 1 resolves the subscription's tags from the listing it already
+	// paid for, so when it ran, whatever it did not hand over genuinely is not
+	// there and stage 2 has no reason to ask ARM again.
+	optionBuiltByTenantStage = "azure-tenant-stage"
 )
 
 // Auto includes all API resources except storage containers (which require
@@ -369,7 +372,7 @@ func discoverTenantStage(conn *connection.AzureConnection, rootConf *inventory.C
 		Strs("targets", targets).
 		Msg("azure.discovery> stage 1: discovering subscriptions")
 
-	subsWithConfigs, assets := tenantStageAssets(rootConf, subs, targets)
+	subsWithConfigs, assets := tenantStageAssets(rootConf, subs, targets, conn.Filters)
 
 	if conn.Filters.PropagateSubscriptionTags {
 		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
@@ -391,14 +394,23 @@ func discoverTenantStage(conn *connection.AzureConnection, rootConf *inventory.C
 // the caller asked for subscriptions -- when it is not a target it is still
 // emitted, so that the client connects to it and stage 2 runs, but stripping
 // its platform ids keeps the scanner from treating it as an asset to scan.
-func tenantStageAssets(rootConf *inventory.Config, subs []subscriptions.Subscription, targets []string) ([]subWithConfig, []*inventory.Asset) {
+func tenantStageAssets(rootConf *inventory.Config, subs []subscriptions.Subscription, targets []string, filters connection.DiscoveryFilters) ([]subWithConfig, []*inventory.Asset) {
 	scannable := stringx.ContainsAnyOf(targets, DiscoverySubscriptions)
+	// The subscription list already returned each subscription's tags. Hand
+	// them to stage 2 through the config rather than leaving it to ask ARM for
+	// a record it would only read the tags off -- that would be one GET per
+	// subscription for data this stage is holding. A caller-supplied override
+	// means the tags are not ours to decide, so it is left alone.
+	carryTags := filters.PropagateSubscriptionTags && len(filters.SubscriptionTags) == 0
 
 	subsWithConfigs := make([]subWithConfig, len(subs))
 	assets := make([]*inventory.Asset, 0, len(subs))
 	for i := range subs {
 		conf := getSubConfig(rootConf, subs[i])
-		conf.Options[optionSubscriptionAssetEmitted] = "true"
+		conf.Options[optionBuiltByTenantStage] = "true"
+		if carryTags {
+			carrySubscriptionTags(conf, subs[i])
+		}
 		subsWithConfigs[i] = subWithConfig{sub: subs[i], conf: conf}
 		asset := subToAsset(subsWithConfigs[i])
 		if !scannable {
@@ -409,11 +421,32 @@ func tenantStageAssets(rootConf *inventory.Config, subs []subscriptions.Subscrip
 	return subsWithConfigs, assets
 }
 
-// stageOneEmittedSubscription reports whether the subscription this connection
-// is scoped to has already been emitted as an asset by stage 1.
-func stageOneEmittedSubscription(cfg *inventory.Config) bool {
-	_, ok := cfg.GetOptions()[optionSubscriptionAssetEmitted]
+// builtByTenantStage reports whether stage 1 built this connection config, and
+// so has already emitted the subscription as an asset and resolved its tags.
+func builtByTenantStage(cfg *inventory.Config) bool {
+	_, ok := cfg.GetOptions()[optionBuiltByTenantStage]
 	return ok
+}
+
+// carrySubscriptionTags writes a subscription's ARM tags onto the config stage 2
+// will connect with, in the same form the --filters flag uses, so stage 2 reads
+// them off conn.Filters.SubscriptionTags like any other override.
+func carrySubscriptionTags(cfg *inventory.Config, sub subscriptions.Subscription) {
+	if len(sub.Tags) == 0 {
+		return
+	}
+	if cfg.Discover == nil {
+		cfg.Discover = &inventory.Discovery{}
+	}
+	if cfg.Discover.Filter == nil {
+		cfg.Discover.Filter = map[string]string{}
+	}
+	for k, v := range sub.Tags {
+		if k == "" || v == nil || *v == "" {
+			continue
+		}
+		cfg.Discover.Filter[connection.SubscriptionTagFilterPrefix+k] = *v
+	}
 }
 
 // discoverSubscriptionStage is stage 2 of staged discovery: it lists the
@@ -437,9 +470,14 @@ func discoverSubscriptionStage(runtime *plugin.Runtime, conn *connection.AzureCo
 	// When the caller scoped the run to one subscription there was no stage 1,
 	// so nothing has emitted the subscription itself yet and this stage has to.
 	// That needs its display name, which the connection options do not carry.
-	emitSubscription := !stageOneEmittedSubscription(invConfig) &&
-		stringx.ContainsAnyOf(targets, DiscoverySubscriptions)
-	needsTags := conn.Filters.PropagateSubscriptionTags && len(conn.Filters.SubscriptionTags) == 0
+	fromTenantStage := builtByTenantStage(invConfig)
+	emitSubscription := !fromTenantStage && stringx.ContainsAnyOf(targets, DiscoverySubscriptions)
+	// Stage 1 hands over the tags it read from the subscription listing, so
+	// after it ran an empty set means the subscription has no tags -- not that
+	// they are still to be fetched. Asking ARM here would be one GET per
+	// subscription for something already known.
+	needsTags := !fromTenantStage &&
+		conn.Filters.PropagateSubscriptionTags && len(conn.Filters.SubscriptionTags) == 0
 
 	swc := subWithConfig{
 		sub:  subscriptionRecord(conn, invConfig, subId, emitSubscription || needsTags),
