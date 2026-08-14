@@ -199,27 +199,11 @@ func (r *mqlMongodbatlasServiceAccount) projects() ([]any, error) {
 		}
 	}
 
-	root, err := rootMongodbatlas(r.MqlRuntime)
-	if err != nil {
-		return nil, err
-	}
-	projectsByID, err := root.orgProjectsByID()
-	if err != nil {
-		return nil, err
-	}
-
 	out := []any{}
 	for _, id := range groupIDs {
-		if p, ok := projectsByID[id]; ok {
-			out = append(out, p)
-			continue
-		}
-		// The organization listing did not cover this project, so fetch it
-		// directly. A failure here is reported rather than skipped: dropping
-		// the entry would under-report the account's reach.
-		proj, err := NewResource(r.MqlRuntime, "mongodbatlas.project", map[string]*llx.RawData{
-			"id": llx.StringData(id),
-		})
+		// A failure here is reported rather than skipped: dropping the entry
+		// would under-report the account's reach.
+		proj, err := resolveProject(r.MqlRuntime, id)
 		if err != nil {
 			return nil, err
 		}
