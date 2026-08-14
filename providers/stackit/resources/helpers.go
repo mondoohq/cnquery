@@ -313,6 +313,58 @@ func volumeRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStac
 	return res.(*mqlStackitVolume), nil
 }
 
+// kmsKeyRef resolves a Key Management Service key by its bare UUID, marking the
+// given field null when the ID is empty or the project holds no such key.
+//
+// The lookup goes through the project-wide key index on the stackit.kms
+// singleton rather than NewResource: stackit.kms.key has no init, and its cache
+// key is qualified by the key ring, so a bare UUID cannot address one. Reading
+// a denied key ring already degrades to an empty listing upstream, which lands
+// here as a null reference rather than an error.
+func kmsKeyRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStackitKmsKey]) (*mqlStackitKmsKey, error) {
+	if id == "" {
+		return markNull[mqlStackitKmsKey](field)
+	}
+	k, err := kmsResource(runtime)
+	if err != nil {
+		return nil, err
+	}
+	idx, err := k.keyIndexByID()
+	if err != nil {
+		return nil, err
+	}
+	key, ok := idx[id]
+	if !ok || key == nil {
+		return markNull[mqlStackitKmsKey](field)
+	}
+	return key, nil
+}
+
+// iamRoleRef resolves a project role by name, marking the given field null when
+// the name is empty or the role catalog does not define it.
+//
+// The lookup goes through the role index on the stackit.iam singleton rather
+// than NewResource: stackit.iam.role has no init and roles are only ever
+// produced by listing the catalog.
+func iamRoleRef(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlStackitIamRole]) (*mqlStackitIamRole, error) {
+	if name == "" {
+		return markNull[mqlStackitIamRole](field)
+	}
+	i, err := iamResource(runtime)
+	if err != nil {
+		return nil, err
+	}
+	idx, err := i.roleIndexByName()
+	if err != nil {
+		return nil, err
+	}
+	role, ok := idx[name]
+	if !ok || role == nil {
+		return markNull[mqlStackitIamRole](field)
+	}
+	return role, nil
+}
+
 // volumeRefs resolves a list of stackit.volume resources from their UUIDs,
 // skipping empty IDs.
 func volumeRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {

@@ -254,10 +254,30 @@ private stackit.volume @defaults("id name size status") {
   serverId string
   // Whether the volume is encrypted at rest
   encrypted bool
-  // KEK UUID used to wrap the volume data-encryption key; empty when using platform-managed encryption
-  encryptionKeyId string
+  // Key-encryption-key UUID that wraps the volume data-encryption key
+  //
+  // Deprecated in favor of encryptionKey, which resolves the same UUID to
+  // the Key Management Service key it names. Empty when the volume uses
+  // platform-managed encryption.
+  encryptionKeyId @maturity("deprecated") string
+  // Key that wraps the volume data-encryption key (nullable)
+  //
+  // Customer-managed key from Key Management Service whose material wraps
+  // this volume data-encryption key. Null when the volume relies on
+  // platform-managed encryption, and null when the key is no longer present
+  // in the project key rings. Follow it to read the key state, whether the
+  // key is importOnly, and the createdAt of its newest version, which is
+  // what a key-rotation check reads.
+  encryptionKey() stackit.kms.key
   // KEK version number; 0 when unset
   encryptionKeyVersion int
+  // Key version pinned by the volume (nullable)
+  //
+  // Generation of the key material identified by encryptionKeyVersion, so a
+  // volume can be checked against the state of the exact version that wraps
+  // it rather than the newest one. Null when no version is pinned or when
+  // that generation is no longer listed on the key.
+  encryptionKeyVersionRef() stackit.kms.key.version
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2898,6 +2918,14 @@ private stackit.iam.member @defaults("subject role") {
   subject string
   // Role assigned to the subject
   role string
+  // Role definition the binding grants (nullable)
+  //
+  // Catalog entry for the role named by role, carrying the permissions the
+  // binding actually confers on the subject. Follow it to turn a binding
+  // into the concrete actions it allows, which is what a least-privilege
+  // review compares against. Null when the project role catalog cannot be
+  // read or no longer defines that role.
+  roleDetails() stackit.iam.role
 }
 
 // STACKIT IAM role

@@ -839,8 +839,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.volume.encryptionKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetEncryptionKeyId()).ToDataRes(types.String)
 	},
+	"stackit.volume.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetEncryptionKey()).ToDataRes(types.Resource("stackit.kms.key"))
+	},
 	"stackit.volume.encryptionKeyVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetEncryptionKeyVersion()).ToDataRes(types.Int)
+	},
+	"stackit.volume.encryptionKeyVersionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitVolume).GetEncryptionKeyVersionRef()).ToDataRes(types.Resource("stackit.kms.key.version"))
 	},
 	"stackit.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitVolume).GetCreatedAt()).ToDataRes(types.Time)
@@ -2909,6 +2915,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.iam.member.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamMember).GetRole()).ToDataRes(types.String)
 	},
+	"stackit.iam.member.roleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitIamMember).GetRoleDetails()).ToDataRes(types.Resource("stackit.iam.role"))
+	},
 	"stackit.iam.role.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitIamRole).GetName()).ToDataRes(types.String)
 	},
@@ -3419,8 +3428,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitVolume).EncryptionKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.volume.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).EncryptionKey, ok = plugin.RawToTValue[*mqlStackitKmsKey](v.Value, v.Error)
+		return
+	},
 	"stackit.volume.encryptionKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitVolume).EncryptionKeyVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.volume.encryptionKeyVersionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitVolume).EncryptionKeyVersionRef, ok = plugin.RawToTValue[*mqlStackitKmsKeyVersion](v.Value, v.Error)
 		return
 	},
 	"stackit.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6519,6 +6536,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitIamMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.iam.member.roleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitIamMember).RoleDetails, ok = plugin.RawToTValue[*mqlStackitIamRole](v.Value, v.Error)
+		return
+	},
 	"stackit.iam.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitIamRole).__id, ok = v.Value.(string)
 		return
@@ -7776,28 +7797,30 @@ type mqlStackitVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitVolumeInternal it will be used here
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Description          plugin.TValue[string]
-	Size                 plugin.TValue[int64]
-	Status               plugin.TValue[string]
-	AvailabilityZone     plugin.TValue[string]
-	PerformanceClass     plugin.TValue[string]
-	Bootable             plugin.TValue[bool]
-	ImageId              plugin.TValue[string]
-	Image                plugin.TValue[*mqlStackitImage]
-	SourceSnapshotId     plugin.TValue[string]
-	SourceSnapshot       plugin.TValue[*mqlStackitSnapshot]
-	SourceBackupId       plugin.TValue[string]
-	SourceBackup         plugin.TValue[*mqlStackitBackup]
-	Server               plugin.TValue[*mqlStackitServer]
-	ServerId             plugin.TValue[string]
-	Encrypted            plugin.TValue[bool]
-	EncryptionKeyId      plugin.TValue[string]
-	EncryptionKeyVersion plugin.TValue[int64]
-	CreatedAt            plugin.TValue[*time.Time]
-	UpdatedAt            plugin.TValue[*time.Time]
-	Labels               plugin.TValue[map[string]any]
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Size                    plugin.TValue[int64]
+	Status                  plugin.TValue[string]
+	AvailabilityZone        plugin.TValue[string]
+	PerformanceClass        plugin.TValue[string]
+	Bootable                plugin.TValue[bool]
+	ImageId                 plugin.TValue[string]
+	Image                   plugin.TValue[*mqlStackitImage]
+	SourceSnapshotId        plugin.TValue[string]
+	SourceSnapshot          plugin.TValue[*mqlStackitSnapshot]
+	SourceBackupId          plugin.TValue[string]
+	SourceBackup            plugin.TValue[*mqlStackitBackup]
+	Server                  plugin.TValue[*mqlStackitServer]
+	ServerId                plugin.TValue[string]
+	Encrypted               plugin.TValue[bool]
+	EncryptionKeyId         plugin.TValue[string]
+	EncryptionKey           plugin.TValue[*mqlStackitKmsKey]
+	EncryptionKeyVersion    plugin.TValue[int64]
+	EncryptionKeyVersionRef plugin.TValue[*mqlStackitKmsKeyVersion]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+	Labels                  plugin.TValue[map[string]any]
 }
 
 // createStackitVolume creates a new instance of this resource
@@ -7957,8 +7980,40 @@ func (c *mqlStackitVolume) GetEncryptionKeyId() *plugin.TValue[string] {
 	return &c.EncryptionKeyId
 }
 
+func (c *mqlStackitVolume) GetEncryptionKey() *plugin.TValue[*mqlStackitKmsKey] {
+	return plugin.GetOrCompute[*mqlStackitKmsKey](&c.EncryptionKey, func() (*mqlStackitKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
+}
+
 func (c *mqlStackitVolume) GetEncryptionKeyVersion() *plugin.TValue[int64] {
 	return &c.EncryptionKeyVersion
+}
+
+func (c *mqlStackitVolume) GetEncryptionKeyVersionRef() *plugin.TValue[*mqlStackitKmsKeyVersion] {
+	return plugin.GetOrCompute[*mqlStackitKmsKeyVersion](&c.EncryptionKeyVersionRef, func() (*mqlStackitKmsKeyVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.volume", c.__id, "encryptionKeyVersionRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitKmsKeyVersion), nil
+			}
+		}
+
+		return c.encryptionKeyVersionRef()
+	})
 }
 
 func (c *mqlStackitVolume) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -15495,7 +15550,7 @@ func (c *mqlStackitAlbCustomRuleCondition) GetTransformations() *plugin.TValue[[
 type mqlStackitKms struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitKmsInternal it will be used here
+	mqlStackitKmsInternal
 	KeyRings plugin.TValue[[]any]
 	Keys     plugin.TValue[[]any]
 }
@@ -15994,7 +16049,7 @@ func (c *mqlStackitKmsKeyVersion) GetPublicKey() *plugin.TValue[string] {
 type mqlStackitIam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitIamInternal it will be used here
+	mqlStackitIamInternal
 	Members plugin.TValue[[]any]
 	Roles   plugin.TValue[[]any]
 }
@@ -16073,8 +16128,9 @@ type mqlStackitIamMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitIamMemberInternal it will be used here
-	Subject plugin.TValue[string]
-	Role    plugin.TValue[string]
+	Subject     plugin.TValue[string]
+	Role        plugin.TValue[string]
+	RoleDetails plugin.TValue[*mqlStackitIamRole]
 }
 
 // createStackitIamMember creates a new instance of this resource
@@ -16120,6 +16176,22 @@ func (c *mqlStackitIamMember) GetSubject() *plugin.TValue[string] {
 
 func (c *mqlStackitIamMember) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+func (c *mqlStackitIamMember) GetRoleDetails() *plugin.TValue[*mqlStackitIamRole] {
+	return plugin.GetOrCompute[*mqlStackitIamRole](&c.RoleDetails, func() (*mqlStackitIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.iam.member", c.__id, "roleDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitIamRole), nil
+			}
+		}
+
+		return c.roleDetails()
+	})
 }
 
 // mqlStackitIamRole for the stackit.iam.role resource

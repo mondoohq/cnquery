@@ -140,6 +140,7 @@ stackit.dns.zones 13.0.0
 stackit.iam 13.0.1
 stackit.iam.member 13.0.1
 stackit.iam.member.role 13.0.1
+stackit.iam.member.roleDetails 13.6.2
 stackit.iam.member.subject 13.0.1
 stackit.iam.members 13.0.1
 stackit.iam.role 13.0.1
@@ -837,8 +838,10 @@ stackit.volume.bootable 13.0.0
 stackit.volume.createdAt 13.0.0
 stackit.volume.description 13.0.0
 stackit.volume.encrypted 13.0.0
+stackit.volume.encryptionKey 13.6.2
 stackit.volume.encryptionKeyId 13.0.1
 stackit.volume.encryptionKeyVersion 13.0.1
+stackit.volume.encryptionKeyVersionRef 13.6.2
 stackit.volume.id 13.0.0
 stackit.volume.image 13.0.0
 stackit.volume.imageId 13.0.0

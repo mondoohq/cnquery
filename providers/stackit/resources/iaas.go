@@ -413,6 +413,39 @@ func (r *mqlStackitVolume) sourceBackup() (*mqlStackitBackup, error) {
 	return res.(*mqlStackitBackup), nil
 }
 
+// encryptionKey resolves the customer-managed key that wraps the volume's
+// data-encryption key. Null for a platform-managed volume.
+func (r *mqlStackitVolume) encryptionKey() (*mqlStackitKmsKey, error) {
+	return kmsKeyRef(r.MqlRuntime, r.EncryptionKeyId.Data, &r.EncryptionKey)
+}
+
+// encryptionKeyVersionRef resolves the exact generation of key material the
+// volume is pinned to, so a check can read that version's state rather than the
+// key's newest one. Version numbers start at 1, so 0 means nothing is pinned.
+func (r *mqlStackitVolume) encryptionKeyVersionRef() (*mqlStackitKmsKeyVersion, error) {
+	field := &r.EncryptionKeyVersionRef
+	number := r.EncryptionKeyVersion.Data
+	if number == 0 {
+		return markNull[mqlStackitKmsKeyVersion](field)
+	}
+	key := r.GetEncryptionKey()
+	if key.Error != nil {
+		return nil, key.Error
+	}
+	if key.Data == nil {
+		return markNull[mqlStackitKmsKeyVersion](field)
+	}
+	versions := key.Data.GetVersions()
+	if versions.Error != nil {
+		return nil, versions.Error
+	}
+	v := findKmsKeyVersion(versions.Data, number)
+	if v == nil {
+		return markNull[mqlStackitKmsKeyVersion](field)
+	}
+	return v, nil
+}
+
 // ------------------------- snapshots -------------------------
 
 func (r *mqlStackit) snapshots() ([]any, error) {
