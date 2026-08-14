@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -122,7 +123,7 @@ func agentSkills(runtime *plugin.Runtime, agentID string, skills []anthropic.Bet
 	res := make([]interface{}, 0, len(skills))
 	for _, s := range skills {
 		mqlSkill, err := CreateResource(runtime, "claude.agent.skill", map[string]*llx.RawData{
-			"__id":    llx.StringData(fmt.Sprintf("%s/skill/%s/%s", agentID, s.SkillID, s.Version)),
+			"__id":    llx.StringData(agentID + "/skill/" + s.SkillID + "/" + s.Version),
 			"source":  llx.StringData(s.Type),
 			"version": llx.StringData(s.Version),
 		})
@@ -206,7 +207,7 @@ func agentTools(runtime *plugin.Runtime, agentID string, entries []anthropic.Bet
 			}
 
 			mqlTool, err := CreateResource(runtime, "claude.agent.customTool", map[string]*llx.RawData{
-				"__id":        llx.StringData(fmt.Sprintf("%s/customTool/%s", agentID, tool.Name)),
+				"__id":        llx.StringData(agentID + "/customTool/" + tool.Name),
 				"name":        llx.StringData(tool.Name),
 				"description": llx.StringData(tool.Description),
 				"inputSchema": llx.DictData(inputSchema),
@@ -240,10 +241,12 @@ type toolsetSpec struct {
 }
 
 func newToolset(runtime *plugin.Runtime, agentID string, toolsetIndex int, spec toolsetSpec) (plugin.Resource, error) {
+	toolsetID := agentID + "/toolset/" + strconv.Itoa(toolsetIndex)
+
 	tools := make([]interface{}, 0, len(spec.tools))
 	for _, tool := range spec.tools {
 		mqlTool, err := CreateResource(runtime, "claude.agent.toolset.tool", map[string]*llx.RawData{
-			"__id":             llx.StringData(fmt.Sprintf("%s/toolset/%d/%s", agentID, toolsetIndex, tool.name)),
+			"__id":             llx.StringData(toolsetID + "/" + tool.name),
 			"name":             llx.StringData(tool.name),
 			"enabled":          llx.BoolData(tool.enabled),
 			"permissionPolicy": llx.StringData(tool.permissionPolicy),
@@ -255,7 +258,7 @@ func newToolset(runtime *plugin.Runtime, agentID string, toolsetIndex int, spec 
 	}
 
 	return CreateResource(runtime, "claude.agent.toolset", map[string]*llx.RawData{
-		"__id":                    llx.StringData(fmt.Sprintf("%s/toolset/%d", agentID, toolsetIndex)),
+		"__id":                    llx.StringData(toolsetID),
 		"type":                    llx.StringData(spec.toolsetType),
 		"mcpServerName":           llx.StringData(spec.mcpServerName),
 		"defaultEnabled":          llx.BoolData(spec.defaultEnabled),

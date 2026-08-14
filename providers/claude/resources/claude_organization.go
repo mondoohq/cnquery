@@ -267,7 +267,7 @@ func convertRateLimits(runtime *plugin.Runtime, limits []connection.AdminRateLim
 		}
 
 		mqlLimit, err := CreateResource(runtime, "claude.organization.rateLimit", map[string]*llx.RawData{
-			"__id":                  llx.StringData(fmt.Sprintf("%s/ratelimit/%s", prefix, l.GroupType)),
+			"__id":                  llx.StringData(prefix + "/ratelimit/" + l.GroupType),
 			"groupType":             llx.StringData(l.GroupType),
 			"models":                llx.ArrayData(models, types.String),
 			"requestsPerMinute":     llx.IntData(l.LimitValue("requests_per_minute")),
@@ -406,7 +406,7 @@ func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 
 		for _, result := range b.Results {
 			mqlEntry, err := CreateResource(r.MqlRuntime, "claude.organization.usageEntry", map[string]*llx.RawData{
-				"__id":                 llx.StringData(fmt.Sprintf("usage/%s/%s/%s/%s", b.StartingAt, result.Model, result.WorkspaceID, result.ServiceTier)),
+				"__id":                 llx.StringData("usage/" + b.StartingAt + "/" + result.Model + "/" + result.WorkspaceID + "/" + result.ServiceTier),
 				"startingAt":           llx.TimeData(startingAt),
 				"endingAt":             llx.TimeData(endingAt),
 				"model":                llx.StringData(result.Model),
@@ -471,7 +471,7 @@ func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 
 		for _, result := range b.Results {
 			mqlEntry, err := CreateResource(r.MqlRuntime, "claude.organization.costEntry", map[string]*llx.RawData{
-				"__id":        llx.StringData(fmt.Sprintf("cost/%s/%s/%s/%s", b.StartingAt, result.CostType, result.Model, result.WorkspaceID)),
+				"__id":        llx.StringData("cost/" + b.StartingAt + "/" + result.CostType + "/" + result.Model + "/" + result.WorkspaceID),
 				"startingAt":  llx.TimeData(startingAt),
 				"endingAt":    llx.TimeData(endingAt),
 				"amount":      llx.StringData(result.Amount),
