@@ -21,10 +21,15 @@ import (
 type mqlAzureInternal struct {
 	sub *mqlAzureSubscription
 
-	// The tenant's management group hierarchy, fetched at most once per scan.
-	// It lives here rather than on a subscription because it spans every
-	// subscription in the tenant, and one entities listing answers parentage,
-	// children, and subtree counts for the whole tree.
+	// The tenant's management group hierarchy. It lives here rather than on a
+	// subscription because it spans every subscription in the tenant, and one
+	// entities listing answers parentage, children, and subtree counts for the
+	// whole tree.
+	//
+	// Fetched at most once per resource cache, which under staged discovery is
+	// once per subscription: the assets inside a subscription share their
+	// subscription's cache, so the first of them to ask pays for the listing
+	// and the rest read this.
 	mgOnce     sync.Once
 	mgEntities []*armmanagementgroups.EntityInfo
 	mgErr      error

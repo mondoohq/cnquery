@@ -62,6 +62,20 @@ const (
 	DiscoveryFirewalls               = "firewalls"
 	DiscoveryContainerApps           = "container-apps"
 	DiscoveryCognitiveServices       = "cognitiveservices-accounts"
+
+	// optionBuiltByTenantStage marks a connection config that stage 1 of staged
+	// discovery built for a subscription, meaning stage 1 has already read that
+	// subscription's record and acted on it.
+	//
+	// Stage 2 runs from two places: a subscription asset stage 1 emitted, and a
+	// root connection the caller scoped to one subscription on the command
+	// line. Two things follow from which of the two it is. Stage 1 emits the
+	// subscription asset, so stage 2 has to emit it itself when stage 1 never
+	// ran, or the run silently loses it -- the legacy path emits it either way.
+	// And stage 1 resolves the subscription's tags from the listing it already
+	// paid for, so when it ran, whatever it did not hand over genuinely is not
+	// there and stage 2 has no reason to ask ARM again.
+	optionBuiltByTenantStage = "azure-tenant-stage"
 )
 
 // Auto includes all API resources except storage containers (which require
@@ -196,6 +210,11 @@ type mqlObject struct {
 type subWithConfig struct {
 	sub  subscriptions.Subscription
 	conf *inventory.Config
+	// assetOpts are applied when conf is cloned for each asset discovered
+	// inside this subscription. Stage 2 of staged discovery uses it to point
+	// every one of them at the subscription's connection, so they share a
+	// single MQL resource cache instead of each rebuilding their own.
+	assetOpts []inventory.CloneOption
 }
 
 func MondooAzureInstanceID(instanceID string) string {
@@ -222,11 +241,64 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	return targets
 }
 
+// Discover routes to the appropriate discovery path based on whether the client
+// has opted in to staged discovery via plugin.OptionStagedDiscovery.
+//
+// TODO(v15): remove discoverLegacy and the OptionStagedDiscovery toggle. Staged
+// discovery should be the only path.
 func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.Inventory, error) {
 	conn, ok := runtime.Connection.(*connection.AzureConnection)
 	if !ok {
 		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
+
+	switch stage, subId := discoveryStageFor(rootConf); stage {
+	case stageSubscription:
+		return discoverSubscriptionStage(runtime, conn, rootConf, subId)
+	case stageTenant:
+		return discoverTenantStage(conn, rootConf)
+	default:
+		return discoverLegacy(runtime, conn, rootConf)
+	}
+}
+
+// discoveryStage names the discovery path a connection takes.
+type discoveryStage int
+
+const (
+	// stageLegacy is the single-pass path taken by clients that have not opted
+	// in to staged discovery.
+	stageLegacy discoveryStage = iota
+	// stageTenant is stage 1: discover the subscriptions, nothing inside them.
+	stageTenant
+	// stageSubscription is stage 2: discover the resources of one subscription.
+	stageSubscription
+)
+
+// discoveryStageFor decides which discovery path a connection config takes, and
+// for stage 2 returns the subscription it is scoped to.
+//
+// A staged connection that already names a subscription has no tenant level
+// left to walk, so it goes straight to stage 2. That covers both the
+// subscription assets stage 1 emits and a caller who scoped the whole run to
+// one subscription on the command line.
+func discoveryStageFor(cfg *inventory.Config) (discoveryStage, string) {
+	if _, staged := cfg.GetOptions()[plugin.OptionStagedDiscovery]; !staged {
+		return stageLegacy, ""
+	}
+	if subId := cfg.GetOptions()[connection.OptionSubscriptionID]; subId != "" {
+		return stageSubscription, subId
+	}
+	return stageTenant, ""
+}
+
+// discoverLegacy is the original single-pass discovery: every subscription and
+// every resource inside all of them, enumerated in one call and attached to the
+// connection that started the scan. Kept for clients that do not set
+// plugin.OptionStagedDiscovery.
+//
+// TODO(v15): remove once all supported clients set the flag.
+func discoverLegacy(runtime *plugin.Runtime, conn *connection.AzureConnection, rootConf *inventory.Config) (*inventory.Inventory, error) {
 	assets := []*inventory.Asset{}
 	filter := conn.Filters.Subscriptions
 	// note: we always need the subscriptions, either to return them as assets or discover resources inside the subs
@@ -238,7 +310,14 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	subsWithConfigs := make([]subWithConfig, len(subs))
 	for i := range subs {
 		sub := subs[i]
-		subsWithConfigs[i] = subWithConfig{sub: sub, conf: getSubConfig(conn.Conf, sub)}
+		subsWithConfigs[i] = subWithConfig{
+			sub:  sub,
+			conf: getSubConfig(conn.Conf, sub, inventory.WithoutDiscovery()),
+			// No parent connection: on this path every discovered asset gets a
+			// runtime and a resource cache of its own, and re-fetches whatever
+			// it needs. That is the cost staged discovery exists to remove.
+			assetOpts: []inventory.CloneOption{inventory.WithoutDiscovery()},
+		}
 	}
 
 	targets := getDiscoveryTargets(rootConf)
@@ -250,9 +329,221 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions) {
 		// we've already discovered those, simply add them as assets
 		for _, s := range subsWithConfigs {
-			assets = append(assets, subToAsset(s))
+			assets = append(assets, subToAsset(s, inventory.WithoutDiscovery()))
 		}
 	}
+
+	assets = append(assets, discoverResources(runtime, conn, subsWithConfigs, targets)...)
+
+	if conn.Filters.PropagateSubscriptionTags {
+		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
+	}
+
+	log.Debug().Int("assets", len(assets)).Msg("azure.discovery> discovery complete")
+	return &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: assets,
+		},
+	}, nil
+}
+
+// discoverTenantStage is stage 1 of staged discovery: it discovers the
+// subscriptions this credential can see and emits one asset per subscription,
+// each carrying the connection config that runs stage 2 when the client
+// connects to it. No resources are listed here.
+//
+// The subscription configs deliberately do not name a parent connection. Each
+// subscription gets its own runtime and its own MQL resource cache, so closing
+// a subscription releases everything discovered beneath it -- and, just as
+// importantly, one subscription's cached azure.subscription.* resources can
+// never be handed to an asset in another subscription. Several azure resources
+// read the subscription from the connection rather than from their own id
+// (azure.subscription itself among them), so a cache shared across
+// subscriptions would answer with the wrong one rather than fail.
+func discoverTenantStage(conn *connection.AzureConnection, rootConf *inventory.Config) (*inventory.Inventory, error) {
+	subs, err := discoverSubscriptions(conn, conn.Filters.Subscriptions)
+	if err != nil {
+		return nil, err
+	}
+
+	targets := getDiscoveryTargets(rootConf)
+	log.Debug().
+		Int("subscriptions", len(subs)).
+		Strs("targets", targets).
+		Msg("azure.discovery> stage 1: discovering subscriptions")
+
+	subsWithConfigs, assets := tenantStageAssets(rootConf, subs, targets, conn.Filters)
+
+	if conn.Filters.PropagateSubscriptionTags {
+		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
+	}
+
+	return &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: assets,
+		},
+	}, nil
+}
+
+// tenantStageAssets turns the subscriptions stage 1 discovered into the assets
+// it emits, along with the carriers the tag propagation needs.
+//
+// Each subscription's config is cloned without WithoutDiscovery on purpose: the
+// discovery targets it carries are what make stage 2 run when the client
+// connects to it. A subscription is only worth scanning in its own right when
+// the caller asked for subscriptions -- when it is not a target it is still
+// emitted, so that the client connects to it and stage 2 runs, but stripping
+// its platform ids keeps the scanner from treating it as an asset to scan.
+func tenantStageAssets(rootConf *inventory.Config, subs []subscriptions.Subscription, targets []string, filters connection.DiscoveryFilters) ([]subWithConfig, []*inventory.Asset) {
+	scannable := stringx.ContainsAnyOf(targets, DiscoverySubscriptions)
+	// The subscription list already returned each subscription's tags. Hand
+	// them to stage 2 through the config rather than leaving it to ask ARM for
+	// a record it would only read the tags off -- that would be one GET per
+	// subscription for data this stage is holding. A caller-supplied override
+	// means the tags are not ours to decide, so it is left alone.
+	carryTags := filters.PropagateSubscriptionTags && len(filters.SubscriptionTags) == 0
+
+	subsWithConfigs := make([]subWithConfig, len(subs))
+	assets := make([]*inventory.Asset, 0, len(subs))
+	for i := range subs {
+		conf := getSubConfig(rootConf, subs[i])
+		conf.Options[optionBuiltByTenantStage] = "true"
+		if carryTags {
+			carrySubscriptionTags(conf, subs[i])
+		}
+		subsWithConfigs[i] = subWithConfig{sub: subs[i], conf: conf}
+		asset := subToAsset(subsWithConfigs[i])
+		if !scannable {
+			asset.PlatformIds = nil
+		}
+		assets = append(assets, asset)
+	}
+	return subsWithConfigs, assets
+}
+
+// builtByTenantStage reports whether stage 1 built this connection config, and
+// so has already emitted the subscription as an asset and resolved its tags.
+func builtByTenantStage(cfg *inventory.Config) bool {
+	_, ok := cfg.GetOptions()[optionBuiltByTenantStage]
+	return ok
+}
+
+// carrySubscriptionTags writes a subscription's ARM tags onto the config stage 2
+// will connect with, in the same form the --filters flag uses, so stage 2 reads
+// them off conn.Filters.SubscriptionTags like any other override.
+func carrySubscriptionTags(cfg *inventory.Config, sub subscriptions.Subscription) {
+	if len(sub.Tags) == 0 {
+		return
+	}
+	if cfg.Discover == nil {
+		cfg.Discover = &inventory.Discovery{}
+	}
+	if cfg.Discover.Filter == nil {
+		cfg.Discover.Filter = map[string]string{}
+	}
+	for k, v := range sub.Tags {
+		if k == "" || v == nil || *v == "" {
+			continue
+		}
+		cfg.Discover.Filter[connection.SubscriptionTagFilterPrefix+k] = *v
+	}
+}
+
+// discoverSubscriptionStage is stage 2 of staged discovery: it lists the
+// resources inside one subscription. It runs when the client connects to a
+// subscription asset emitted by stage 1, or when the caller scoped the whole
+// run to a single subscription.
+//
+// Every asset it emits names this connection as its parent, so the plugin
+// service hands them all the subscription runtime's resource cache. That is
+// what stops a subscription-wide read -- the app service list, a web app's
+// slots and site config, a VM's instance view -- from being re-fetched once per
+// asset: the first asset to ask pays for it and the rest read the cached
+// resource. All of it is released when the subscription is closed.
+func discoverSubscriptionStage(runtime *plugin.Runtime, conn *connection.AzureConnection, invConfig *inventory.Config, subId string) (*inventory.Inventory, error) {
+	targets := getDiscoveryTargets(invConfig)
+	log.Debug().
+		Str("subscription", subId).
+		Strs("targets", targets).
+		Msg("azure.discovery> stage 2: discovering resources in subscription")
+
+	// When the caller scoped the run to one subscription there was no stage 1,
+	// so nothing has emitted the subscription itself yet and this stage has to.
+	// That needs its display name, which the connection options do not carry.
+	fromTenantStage := builtByTenantStage(invConfig)
+	emitSubscription := !fromTenantStage && stringx.ContainsAnyOf(targets, DiscoverySubscriptions)
+	// Stage 1 hands over the tags it read from the subscription listing, so
+	// after it ran an empty set means the subscription has no tags -- not that
+	// they are still to be fetched. Asking ARM here would be one GET per
+	// subscription for something already known.
+	needsTags := !fromTenantStage &&
+		conn.Filters.PropagateSubscriptionTags && len(conn.Filters.SubscriptionTags) == 0
+
+	swc := subWithConfig{
+		sub:  subscriptionRecord(conn, invConfig, subId, emitSubscription || needsTags),
+		conf: invConfig,
+		assetOpts: []inventory.CloneOption{
+			// These are leaves: nothing below them to discover.
+			inventory.WithoutDiscovery(),
+			inventory.WithParentConnectionId(invConfig.Id),
+		},
+	}
+	subsWithConfigs := []subWithConfig{swc}
+
+	assets := []*inventory.Asset{}
+	if emitSubscription {
+		assets = append(assets, subToAsset(swc, inventory.WithoutDiscovery()))
+	}
+	assets = append(assets, discoverResources(runtime, conn, subsWithConfigs, targets)...)
+
+	if conn.Filters.PropagateSubscriptionTags {
+		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
+	}
+
+	log.Debug().
+		Str("subscription", subId).
+		Int("assets", len(assets)).
+		Msg("azure.discovery> stage 2 complete")
+	return &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: assets,
+		},
+	}, nil
+}
+
+// subscriptionRecord rebuilds the subscription a stage-2 connection is scoped
+// to. The ids come from the connection options stage 1 wrote, which is all the
+// resource listing needs, so the common case costs no API call.
+//
+// full asks ARM for the rest of the record, for the two callers that need a
+// field the options do not carry: the display name of a subscription asset this
+// stage has to emit itself, and the tags when they are being propagated and no
+// override supplied them. A failure there costs those fields, not the
+// discovery.
+func subscriptionRecord(conn *connection.AzureConnection, invConfig *inventory.Config, subId string, full bool) subscriptions.Subscription {
+	sub := subscriptions.Subscription{SubscriptionID: &subId}
+	if tenantId := invConfig.Options[connection.OptionTenantID]; tenantId != "" {
+		sub.TenantID = &tenantId
+	}
+	if !full {
+		return sub
+	}
+
+	record, err := connection.NewSubscriptionsClient(conn.Token(), conn.ClientOptions()).GetSubscription(subId)
+	if err != nil {
+		log.Warn().Err(err).Str("subscription", subId).
+			Msg("could not read the subscription record, discovering without its name and tags")
+		return sub
+	}
+	return record
+}
+
+// discoverResources lists the assets inside the given subscriptions for every
+// active discovery target. Shared by the legacy single-pass path, which passes
+// every subscription in the tenant, and by stage 2 of staged discovery, which
+// passes exactly one.
+func discoverResources(runtime *plugin.Runtime, conn *connection.AzureConnection, subsWithConfigs []subWithConfig, targets []string) []*inventory.Asset {
+	assets := []*inventory.Asset{}
 
 	// A failure in one discovery target must not zero the whole inventory. The
 	// compute path in particular has no access-denied degrade of its own, so a
@@ -291,16 +582,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		return discoverGeneric(conn, subsWithConfigs, targets)
 	})
 
-	if conn.Filters.PropagateSubscriptionTags {
-		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
-	}
-
-	log.Debug().Int("assets", len(assets)).Msg("azure.discovery> discovery complete")
-	return &inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: assets,
-		},
-	}, nil
+	return assets
 }
 
 func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConfig, filters connection.GeneralDiscoveryFilters) ([]*inventory.Asset, error) {
@@ -338,7 +620,7 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 					service:      "compute",
 					objectType:   "vm-api",
 				},
-			}, subWithConfig.conf, false)
+			}, subWithConfig.conf, false, subWithConfig.assetOpts...)
 			labels, err := getInstancesLabels(vm)
 			if err != nil {
 				return nil, err
@@ -391,7 +673,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig,
 					service:      "compute",
 					objectType:   "vm",
 				},
-			}, subWithConfig.conf, false)
+			}, subWithConfig.conf, false, subWithConfig.assetOpts...)
 			for _, ip := range ipAddresses.Data {
 				ipAddress := ip.(*mqlAzureSubscriptionNetworkServiceIpAddress)
 				// TODO: we need to make this work via another provider maybe?
@@ -499,7 +781,7 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 						service:      spec.service,
 						objectType:   spec.objectType,
 					},
-				}, swc.conf, spec.includeObjectTypeInUrl)
+				}, swc.conf, spec.includeObjectTypeInUrl, swc.assetOpts...)
 				if asset != nil {
 					assets = append(assets, asset)
 				}
@@ -566,7 +848,7 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 						service:      "storage",
 						objectType:   "container",
 					},
-				}, subWithConfig.conf, true)
+				}, subWithConfig.conf, true, subWithConfig.assetOpts...)
 				assets = append(assets, asset)
 			}
 		}
@@ -651,10 +933,14 @@ func discoverSubscriptions(conn *connection.AzureConnection, filter connection.S
 	return subs, nil
 }
 
-func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
+// subToAsset builds the asset for a subscription. cloneOpts are passed to
+// Clone: the legacy path strips discovery from the result, while stage 1 of
+// staged discovery keeps it, because the targets on a subscription's config are
+// what make stage 2 run when the client connects to it.
+func subToAsset(subWithConfig subWithConfig, cloneOpts ...inventory.CloneOption) *inventory.Asset {
 	sub := subWithConfig.sub
 	conf := subWithConfig.conf
-	copyConf := conf.Clone(inventory.WithoutDiscovery())
+	copyConf := conf.Clone(cloneOpts...)
 	platformId := "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + convert.ToValue(sub.SubscriptionID)
 	tenantId := "unknown"
 	if sub.TenantID != nil {
@@ -742,9 +1028,14 @@ func applySubscriptionTags(override map[string]string, subs []subWithConfig, ass
 }
 
 // creates a config with filled in subscription and tenant id, this config can be used by the subscription asset
-// or any assets that are discovered within that subscription
-func getSubConfig(rootConf *inventory.Config, sub subscriptions.Subscription) *inventory.Config {
-	cfg := rootConf.Clone(inventory.WithoutDiscovery())
+// or any assets that are discovered within that subscription.
+//
+// cloneOpts are passed straight to Clone. Stage 1 of staged discovery passes
+// none, keeping the discovery targets that make stage 2 run; the legacy path
+// passes WithoutDiscovery, because nothing below a subscription discovers
+// anything further on that path.
+func getSubConfig(rootConf *inventory.Config, sub subscriptions.Subscription, cloneOpts ...inventory.CloneOption) *inventory.Config {
+	cfg := rootConf.Clone(cloneOpts...)
 	if cfg.Options == nil {
 		cfg.Options = map[string]string{}
 	}
@@ -865,7 +1156,12 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	return azureObjectPlatformInfo{}, fmt.Errorf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
 }
 
-func mqlObjectToAsset(mqlObject mqlObject, parentConf *inventory.Config, includeObjectTypeInUrl bool) *inventory.Asset {
+// mqlObjectToAsset builds the asset for a single discovered azure resource.
+// cloneOpts are passed to Clone; callers hand it the owning subscription's
+// assetOpts, which always strip discovery and, under staged discovery, also
+// name the subscription connection as the parent so the asset shares its
+// resource cache.
+func mqlObjectToAsset(mqlObject mqlObject, parentConf *inventory.Config, includeObjectTypeInUrl bool, cloneOpts ...inventory.CloneOption) *inventory.Asset {
 	if mqlObject.name == "" {
 		mqlObject.name = mqlObject.azureObject.id
 	}
@@ -874,7 +1170,7 @@ func mqlObjectToAsset(mqlObject mqlObject, parentConf *inventory.Config, include
 		return nil
 	}
 	platformid := AzureObjectPlatformId(mqlObject.azureObject.id)
-	cfg := parentConf.Clone(inventory.WithoutDiscovery())
+	cfg := parentConf.Clone(cloneOpts...)
 	cfg.PlatformId = platformid
 
 	tenantId := "unknown"
