@@ -303,7 +303,7 @@ func TestParsePEMCertificateRejectsUnusableBodies(t *testing.T) {
 	}{
 		{name: "empty string"},
 		{name: "not PEM", body: "MIIB..."},
-		{name: "wrong PEM type", body: "-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----\n"},
+		{name: "wrong PEM type", body: "-----BEGIN PUBLIC KEY-----\nAAAA\n-----END PUBLIC KEY-----\n"},
 		{name: "PEM with broken body", body: "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n"},
 	}
 
