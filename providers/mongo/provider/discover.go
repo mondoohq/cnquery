@@ -24,7 +24,7 @@ func (s *Service) discover(conn *connection.MongoConnection) (*inventory.Invento
 		return nil, nil
 	}
 	if !stringx.ContainsAnyOf(conf.Discover.Targets,
-		connection.DiscoveryAll, connection.DiscoveryAuto, connection.DiscoveryDatabases) {
+		connection.DiscoveryAll, connection.DiscoveryDatabases) {
 		return nil, nil
 	}
 
