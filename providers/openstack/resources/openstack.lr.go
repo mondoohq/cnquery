@@ -2019,14 +2019,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.octavia.listener.defaultTlsContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetDefaultTlsContainer()).ToDataRes(types.Resource("openstack.keymanager.container"))
 	},
+	"openstack.octavia.listener.defaultTlsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaListener).GetDefaultTlsSecret()).ToDataRes(types.Resource("openstack.keymanager.secret"))
+	},
 	"openstack.octavia.listener.sniContainers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetSniContainers()).ToDataRes(types.Array(types.Resource("openstack.keymanager.container")))
+	},
+	"openstack.octavia.listener.sniSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaListener).GetSniSecrets()).ToDataRes(types.Array(types.Resource("openstack.keymanager.secret")))
 	},
 	"openstack.octavia.listener.clientCATlsContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetClientCATlsContainer()).ToDataRes(types.Resource("openstack.keymanager.container"))
 	},
+	"openstack.octavia.listener.clientCATlsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaListener).GetClientCATlsSecret()).ToDataRes(types.Resource("openstack.keymanager.secret"))
+	},
 	"openstack.octavia.listener.clientCRLContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetClientCRLContainer()).ToDataRes(types.Resource("openstack.keymanager.container"))
+	},
+	"openstack.octavia.listener.clientCRLSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaListener).GetClientCRLSecret()).ToDataRes(types.Resource("openstack.keymanager.secret"))
 	},
 	"openstack.octavia.listener.l7Policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetL7Policies()).ToDataRes(types.Array(types.Resource("openstack.octavia.l7Policy")))
@@ -2097,11 +2109,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.octavia.pool.caTlsContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaPool).GetCaTlsContainer()).ToDataRes(types.Resource("openstack.keymanager.container"))
 	},
+	"openstack.octavia.pool.caTlsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaPool).GetCaTlsSecret()).ToDataRes(types.Resource("openstack.keymanager.secret"))
+	},
 	"openstack.octavia.pool.crlContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaPool).GetCrlContainer()).ToDataRes(types.Resource("openstack.keymanager.container"))
 	},
+	"openstack.octavia.pool.crlSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaPool).GetCrlSecret()).ToDataRes(types.Resource("openstack.keymanager.secret"))
+	},
 	"openstack.octavia.pool.clientTlsContainer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaPool).GetClientTlsContainer()).ToDataRes(types.Resource("openstack.keymanager.container"))
+	},
+	"openstack.octavia.pool.clientTlsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaPool).GetClientTlsSecret()).ToDataRes(types.Resource("openstack.keymanager.secret"))
 	},
 	"openstack.octavia.pool.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaPool).GetMembers()).ToDataRes(types.Array(types.Resource("openstack.octavia.member")))
@@ -6483,16 +6504,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackOctaviaListener).DefaultTlsContainer, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerContainer](v.Value, v.Error)
 		return
 	},
+	"openstack.octavia.listener.defaultTlsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaListener).DefaultTlsSecret, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
+		return
+	},
 	"openstack.octavia.listener.sniContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaListener).SniContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.listener.sniSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaListener).SniSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.octavia.listener.clientCATlsContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaListener).ClientCATlsContainer, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerContainer](v.Value, v.Error)
 		return
 	},
+	"openstack.octavia.listener.clientCATlsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaListener).ClientCATlsSecret, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
+		return
+	},
 	"openstack.octavia.listener.clientCRLContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaListener).ClientCRLContainer, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerContainer](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.listener.clientCRLSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaListener).ClientCRLSecret, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
 		return
 	},
 	"openstack.octavia.listener.l7Policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6591,12 +6628,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackOctaviaPool).CaTlsContainer, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerContainer](v.Value, v.Error)
 		return
 	},
+	"openstack.octavia.pool.caTlsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaPool).CaTlsSecret, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
+		return
+	},
 	"openstack.octavia.pool.crlContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaPool).CrlContainer, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerContainer](v.Value, v.Error)
 		return
 	},
+	"openstack.octavia.pool.crlSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaPool).CrlSecret, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
+		return
+	},
 	"openstack.octavia.pool.clientTlsContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaPool).ClientTlsContainer, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerContainer](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.pool.clientTlsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaPool).ClientTlsSecret, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
 		return
 	},
 	"openstack.octavia.pool.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15675,9 +15724,13 @@ type mqlOpenstackOctaviaListener struct {
 	LoadBalancer          plugin.TValue[*mqlOpenstackOctaviaLoadBalancer]
 	DefaultPool           plugin.TValue[*mqlOpenstackOctaviaPool]
 	DefaultTlsContainer   plugin.TValue[*mqlOpenstackKeymanagerContainer]
+	DefaultTlsSecret      plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	SniContainers         plugin.TValue[[]any]
+	SniSecrets            plugin.TValue[[]any]
 	ClientCATlsContainer  plugin.TValue[*mqlOpenstackKeymanagerContainer]
+	ClientCATlsSecret     plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	ClientCRLContainer    plugin.TValue[*mqlOpenstackKeymanagerContainer]
+	ClientCRLSecret       plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	L7Policies            plugin.TValue[[]any]
 	OpenToWorld           plugin.TValue[bool]
 }
@@ -15863,6 +15916,22 @@ func (c *mqlOpenstackOctaviaListener) GetDefaultTlsContainer() *plugin.TValue[*m
 	})
 }
 
+func (c *mqlOpenstackOctaviaListener) GetDefaultTlsSecret() *plugin.TValue[*mqlOpenstackKeymanagerSecret] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerSecret](&c.DefaultTlsSecret, func() (*mqlOpenstackKeymanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.listener", c.__id, "defaultTlsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerSecret), nil
+			}
+		}
+
+		return c.defaultTlsSecret()
+	})
+}
+
 func (c *mqlOpenstackOctaviaListener) GetSniContainers() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SniContainers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -15876,6 +15945,22 @@ func (c *mqlOpenstackOctaviaListener) GetSniContainers() *plugin.TValue[[]any] {
 		}
 
 		return c.sniContainers()
+	})
+}
+
+func (c *mqlOpenstackOctaviaListener) GetSniSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SniSecrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.listener", c.__id, "sniSecrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sniSecrets()
 	})
 }
 
@@ -15895,6 +15980,22 @@ func (c *mqlOpenstackOctaviaListener) GetClientCATlsContainer() *plugin.TValue[*
 	})
 }
 
+func (c *mqlOpenstackOctaviaListener) GetClientCATlsSecret() *plugin.TValue[*mqlOpenstackKeymanagerSecret] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerSecret](&c.ClientCATlsSecret, func() (*mqlOpenstackKeymanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.listener", c.__id, "clientCATlsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerSecret), nil
+			}
+		}
+
+		return c.clientCATlsSecret()
+	})
+}
+
 func (c *mqlOpenstackOctaviaListener) GetClientCRLContainer() *plugin.TValue[*mqlOpenstackKeymanagerContainer] {
 	return plugin.GetOrCompute[*mqlOpenstackKeymanagerContainer](&c.ClientCRLContainer, func() (*mqlOpenstackKeymanagerContainer, error) {
 		if c.MqlRuntime.HasRecording {
@@ -15908,6 +16009,22 @@ func (c *mqlOpenstackOctaviaListener) GetClientCRLContainer() *plugin.TValue[*mq
 		}
 
 		return c.clientCRLContainer()
+	})
+}
+
+func (c *mqlOpenstackOctaviaListener) GetClientCRLSecret() *plugin.TValue[*mqlOpenstackKeymanagerSecret] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerSecret](&c.ClientCRLSecret, func() (*mqlOpenstackKeymanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.listener", c.__id, "clientCRLSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerSecret), nil
+			}
+		}
+
+		return c.clientCRLSecret()
 	})
 }
 
@@ -15959,8 +16076,11 @@ type mqlOpenstackOctaviaPool struct {
 	HealthMonitor      plugin.TValue[*mqlOpenstackOctaviaHealthMonitor]
 	Subnet             plugin.TValue[*mqlOpenstackSubnet]
 	CaTlsContainer     plugin.TValue[*mqlOpenstackKeymanagerContainer]
+	CaTlsSecret        plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	CrlContainer       plugin.TValue[*mqlOpenstackKeymanagerContainer]
+	CrlSecret          plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	ClientTlsContainer plugin.TValue[*mqlOpenstackKeymanagerContainer]
+	ClientTlsSecret    plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	Members            plugin.TValue[[]any]
 }
 
@@ -16157,6 +16277,22 @@ func (c *mqlOpenstackOctaviaPool) GetCaTlsContainer() *plugin.TValue[*mqlOpensta
 	})
 }
 
+func (c *mqlOpenstackOctaviaPool) GetCaTlsSecret() *plugin.TValue[*mqlOpenstackKeymanagerSecret] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerSecret](&c.CaTlsSecret, func() (*mqlOpenstackKeymanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.pool", c.__id, "caTlsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerSecret), nil
+			}
+		}
+
+		return c.caTlsSecret()
+	})
+}
+
 func (c *mqlOpenstackOctaviaPool) GetCrlContainer() *plugin.TValue[*mqlOpenstackKeymanagerContainer] {
 	return plugin.GetOrCompute[*mqlOpenstackKeymanagerContainer](&c.CrlContainer, func() (*mqlOpenstackKeymanagerContainer, error) {
 		if c.MqlRuntime.HasRecording {
@@ -16173,6 +16309,22 @@ func (c *mqlOpenstackOctaviaPool) GetCrlContainer() *plugin.TValue[*mqlOpenstack
 	})
 }
 
+func (c *mqlOpenstackOctaviaPool) GetCrlSecret() *plugin.TValue[*mqlOpenstackKeymanagerSecret] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerSecret](&c.CrlSecret, func() (*mqlOpenstackKeymanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.pool", c.__id, "crlSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerSecret), nil
+			}
+		}
+
+		return c.crlSecret()
+	})
+}
+
 func (c *mqlOpenstackOctaviaPool) GetClientTlsContainer() *plugin.TValue[*mqlOpenstackKeymanagerContainer] {
 	return plugin.GetOrCompute[*mqlOpenstackKeymanagerContainer](&c.ClientTlsContainer, func() (*mqlOpenstackKeymanagerContainer, error) {
 		if c.MqlRuntime.HasRecording {
@@ -16186,6 +16338,22 @@ func (c *mqlOpenstackOctaviaPool) GetClientTlsContainer() *plugin.TValue[*mqlOpe
 		}
 
 		return c.clientTlsContainer()
+	})
+}
+
+func (c *mqlOpenstackOctaviaPool) GetClientTlsSecret() *plugin.TValue[*mqlOpenstackKeymanagerSecret] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerSecret](&c.ClientTlsSecret, func() (*mqlOpenstackKeymanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.pool", c.__id, "clientTlsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerSecret), nil
+			}
+		}
+
+		return c.clientTlsSecret()
 	})
 }
 

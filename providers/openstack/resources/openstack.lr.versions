@@ -906,10 +906,13 @@ openstack.octavia.listener.allowedCidrs 13.0.1
 openstack.octavia.listener.alpnProtocols 13.0.1
 openstack.octavia.listener.clientAuthentication 13.0.1
 openstack.octavia.listener.clientCATlsContainer 13.0.1
+openstack.octavia.listener.clientCATlsSecret 13.8.2
 openstack.octavia.listener.clientCRLContainer 13.0.1
+openstack.octavia.listener.clientCRLSecret 13.8.2
 openstack.octavia.listener.connectionLimit 13.0.1
 openstack.octavia.listener.defaultPool 13.0.1
 openstack.octavia.listener.defaultTlsContainer 13.0.1
+openstack.octavia.listener.defaultTlsSecret 13.8.2
 openstack.octavia.listener.description 13.0.1
 openstack.octavia.listener.hstsIncludeSubdomains 13.0.1
 openstack.octavia.listener.id 13.0.1
@@ -923,6 +926,7 @@ openstack.octavia.listener.protocol 13.0.1
 openstack.octavia.listener.protocolPort 13.0.1
 openstack.octavia.listener.provisioningStatus 13.0.1
 openstack.octavia.listener.sniContainers 13.0.1
+openstack.octavia.listener.sniSecrets 13.8.2
 openstack.octavia.listener.tags 13.0.1
 openstack.octavia.listener.timeoutClientData 13.0.1
 openstack.octavia.listener.timeoutMemberConnect 13.0.1
@@ -979,8 +983,11 @@ openstack.octavia.pool 13.0.1
 openstack.octavia.pool.adminStateUp 13.0.1
 openstack.octavia.pool.alpnProtocols 13.0.1
 openstack.octavia.pool.caTlsContainer 13.0.1
+openstack.octavia.pool.caTlsSecret 13.8.2
 openstack.octavia.pool.clientTlsContainer 13.0.1
+openstack.octavia.pool.clientTlsSecret 13.8.2
 openstack.octavia.pool.crlContainer 13.0.1
+openstack.octavia.pool.crlSecret 13.8.2
 openstack.octavia.pool.description 13.0.1
 openstack.octavia.pool.healthMonitor 13.0.1
 openstack.octavia.pool.id 13.0.1
