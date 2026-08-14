@@ -620,7 +620,6 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionComputeServiceDisk, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	propertiesDict := a.Properties.Data
 	data, err := json.Marshal(propertiesDict)
 	if err != nil {
@@ -641,31 +640,15 @@ func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionCo
 		return nil, nil
 	}
 
-	resourceID, err := ParseResourceID(*properties.StorageProfile.OSDisk.ManagedDisk.ID)
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionComputeServiceDisk,
+		map[string]*llx.RawData{"id": llx.StringData(*properties.StorageProfile.OSDisk.ManagedDisk.ID)})
 	if err != nil {
 		return nil, err
 	}
-
-	diskName, err := resourceID.Component("disks")
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	token := conn.Token()
-
-	client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	disk, err := client.Get(ctx, resourceID.ResourceGroup, diskName, &compute.DisksClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return diskToMql(a.MqlRuntime, disk.Disk)
+	return res.(*mqlAzureSubscriptionComputeServiceDisk), nil
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]any, error) {
@@ -1356,6 +1339,13 @@ func initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[s
 		return nil, nil, err
 	}
 
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionComputeServiceDisk, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := compute.NewDisksClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -1397,6 +1387,13 @@ func initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtim
 	desName, err := resourceID.Component("diskEncryptionSets")
 	if err != nil {
 		return nil, nil, err
+	}
+
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionComputeServiceDiskEncryptionSet, id); cached != nil {
+		return args, cached, nil
 	}
 
 	client, err := compute.NewDiskEncryptionSetsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{

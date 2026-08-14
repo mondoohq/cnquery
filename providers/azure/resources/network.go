@@ -1045,9 +1045,6 @@ func nestedResourceIDs(props any, key string) []string {
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
 	// A firewall using classic rule collections has no policy attached; that
 	// is the normal state, not an error.
 	strId := nestedResourceID(a.Properties.Data, "firewallPolicy")
@@ -1055,34 +1052,19 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscrip
 		a.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	{
-		azureId, err := ParseResourceID(strId)
-		if err != nil {
-			return nil, err
-		}
-		client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
-			ClientOptions: conn.ClientOptions(),
-		})
-		if err != nil {
-			return nil, err
-		}
-		policyName, err := azureId.Component("firewallPolicies")
-		if err != nil {
-			return nil, err
-		}
-		fwp, err := client.Get(ctx, azureId.ResourceGroup, policyName, &network.FirewallPoliciesClientGetOptions{})
-		if err != nil {
-			return nil, err
-		}
 
-		return azureFirewallPolicyToMql(a.MqlRuntime, fwp.FirewallPolicy)
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceFirewallPolicy,
+		map[string]*llx.RawData{"id": llx.StringData(strId)})
+	if err != nil {
+		return nil, err
 	}
+	return res.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
 	// Management-only and forced-tunneling ip configurations carry no public
 	// IP; report null rather than failing the field.
 	strId := nestedResourceID(a.Properties.Data, "publicIPAddress")
@@ -1090,34 +1072,19 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (
 		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	{
-		azureId, err := ParseResourceID(strId)
-		if err != nil {
-			return nil, err
-		}
-		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
-			ClientOptions: conn.ClientOptions(),
-		})
-		if err != nil {
-			return nil, err
-		}
-		ipAddressName, err := azureId.Component("publicIPAddresses")
-		if err != nil {
-			return nil, err
-		}
-		ipAddress, err := client.Get(ctx, azureId.ResourceGroup, ipAddressName, &network.PublicIPAddressesClientGetOptions{})
-		if err != nil {
-			return nil, err
-		}
 
-		return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceIpAddress,
+		map[string]*llx.RawData{"id": llx.StringData(strId)})
+	if err != nil {
+		return nil, err
 	}
+	return res.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
 	// Management-only and forced-tunneling ip configurations carry no public
 	// IP; report null rather than failing the field.
 	strId := nestedResourceID(a.Properties.Data, "publicIPAddress")
@@ -1125,65 +1092,34 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) public
 		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	{
-		azureId, err := ParseResourceID(strId)
-		if err != nil {
-			return nil, err
-		}
-		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
-			ClientOptions: conn.ClientOptions(),
-		})
-		if err != nil {
-			return nil, err
-		}
-		ipAddressName, err := azureId.Component("publicIPAddresses")
-		if err != nil {
-			return nil, err
-		}
-		ipAddress, err := client.Get(ctx, azureId.ResourceGroup, ipAddressName, &network.PublicIPAddressesClientGetOptions{})
-		if err != nil {
-			return nil, err
-		}
 
-		return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceIpAddress,
+		map[string]*llx.RawData{"id": llx.StringData(strId)})
+	if err != nil {
+		return nil, err
 	}
+	return res.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
 	strId := nestedResourceID(a.Properties.Data, "subnet")
 	if strId == "" {
 		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	{
-		azureId, err := ParseResourceID(strId)
-		if err != nil {
-			return nil, err
-		}
-		client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{
-			ClientOptions: conn.ClientOptions(),
-		})
-		if err != nil {
-			return nil, err
-		}
-		vnName, err := azureId.Component("virtualNetworks")
-		if err != nil {
-			return nil, err
-		}
-		subnetName, err := azureId.Component("subnets")
-		if err != nil {
-			return nil, err
-		}
-		subnet, err := client.Get(ctx, azureId.ResourceGroup, vnName, subnetName, &network.SubnetsClientGetOptions{})
-		if err != nil {
-			return nil, err
-		}
 
-		return azureSubnetToMql(a.MqlRuntime, subnet.Subnet)
+	// Resolved through the subnet's own init rather than fetched here, so a
+	// subnet several resources sit on is fetched once for the scan instead of
+	// once per resource pointing at it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceSubnet,
+		map[string]*llx.RawData{"id": llx.StringData(strId)})
+	if err != nil {
+		return nil, err
 	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]any, error) {
@@ -1315,28 +1251,16 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) defaultNatGateway() (
 		a.DefaultNatGateway.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	resourceID, err := ParseResourceID(*a.cacheDefaultNatGatewayId)
+
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceNatGateway,
+		map[string]*llx.RawData{"id": llx.StringData(*a.cacheDefaultNatGatewayId)})
 	if err != nil {
 		return nil, err
 	}
-	natGatewayName, err := resourceID.Component("natGateways")
-	if err != nil {
-		return nil, err
-	}
-	client, err := network.NewNatGatewaysClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	natGatewayRes, err := client.Get(ctx, resourceID.ResourceGroup, natGatewayName, &network.NatGatewaysClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return azureNatGatewayToMql(a.MqlRuntime, natGatewayRes.NatGateway)
+	return res.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
 }
 
 // flowLogs resolves the flow logs that target this virtual network. Returns an
@@ -1560,6 +1484,13 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) remoteVirtualN
 	if a.RemoteVirtualNetworkId.Data == "" {
 		a.RemoteVirtualNetwork.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+
+	// Answer a repeated reference from the cache; the fetch below stays,
+	// because a peer often lives in another subscription, which this subscription's vnet
+	// list cannot answer for.
+	if cached := cachedResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceVirtualNetwork, a.RemoteVirtualNetworkId.Data); cached != nil {
+		return cached.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -2225,6 +2156,13 @@ func initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime,
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServicePrivateEndpoint, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewPrivateEndpointsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -2537,6 +2475,13 @@ func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runti
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServicePrivateLinkService, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewPrivateLinkServicesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -2791,6 +2736,12 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzu
 	if strId == "" {
 		a.Policy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
+	}
+
+	// Answer a repeated reference from the cache; the fetch below stays,
+	// because this resource has no init to route through.
+	if cached := cachedResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy, strId); cached != nil {
+		return cached.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy), nil
 	}
 	azureId, err := ParseResourceID(strId)
 	if err != nil {
@@ -3091,14 +3042,6 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]any, error) 
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	azureId, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
 	// NAT gateways are opt-in, so the overwhelming majority of subnets have
 	// none. That is a null, not an error.
 	natGatewayId := nestedResourceID(a.Properties.Data, "natGateway")
@@ -3106,29 +3049,16 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 		a.NatGateway.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	resourceID, err := ParseResourceID(natGatewayId)
+
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceNatGateway,
+		map[string]*llx.RawData{"id": llx.StringData(natGatewayId)})
 	if err != nil {
 		return nil, err
 	}
-	natGatewayName, err := resourceID.Component("natGateways")
-	if err != nil {
-		return nil, err
-	}
-	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	natGatewayRes, err := client.Get(ctx, resourceID.ResourceGroup, natGatewayName, &network.NatGatewaysClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	mqlNatGateway, err := azureNatGatewayToMql(a.MqlRuntime, natGatewayRes.NatGateway)
-	if err != nil {
-		return nil, err
-	}
-	return mqlNatGateway, nil
+	return res.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]any, error) {
@@ -3174,9 +3104,6 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]any, er
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
 	// Only child policies have a base policy; a standalone or root policy
 	// legitimately has none.
 	basePolicyId := nestedResourceID(a.Properties.Data, "basePolicy")
@@ -3184,25 +3111,16 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzu
 		a.BasePolicy.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	resourceID, err := ParseResourceID(basePolicyId)
+
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceFirewallPolicy,
+		map[string]*llx.RawData{"id": llx.StringData(basePolicyId)})
 	if err != nil {
 		return nil, err
 	}
-	client, err := network.NewFirewallPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	basePolicyName, err := resourceID.Component("firewallPolicies")
-	if err != nil {
-		return nil, err
-	}
-	basePolicyRes, err := client.Get(ctx, resourceID.ResourceGroup, basePolicyName, &network.FirewallPoliciesClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return azureFirewallPolicyToMql(a.MqlRuntime, basePolicyRes.FirewallPolicy)
+	return res.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]any, error) {
@@ -4191,28 +4109,16 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) p
 		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	azureId, err := ParseResourceID(a.PublicIpAddressId.Data)
+
+	// Resolved through the target's own init rather than fetched here, so a
+	// resource several things point at is fetched once for the scan instead
+	// of once per reference to it.
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceIpAddress,
+		map[string]*llx.RawData{"id": llx.StringData(a.PublicIpAddressId.Data)})
 	if err != nil {
 		return nil, err
 	}
-	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	ipAddressName, err := azureId.Component("publicIPAddresses")
-	if err != nil {
-		return nil, err
-	}
-	ipAddress, err := client.Get(ctx, azureId.ResourceGroup, ipAddressName, &network.PublicIPAddressesClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
+	return res.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
 }
 
 // frontendIpConfigFields extracts the displayable fields from an application
@@ -4688,6 +4594,13 @@ func initAzureSubscriptionNetworkServiceNatGateway(runtime *plugin.Runtime, args
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceNatGateway, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -4758,6 +4671,13 @@ func initAzureSubscriptionNetworkServiceSubnet(runtime *plugin.Runtime, args map
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceSubnet, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewSubnetsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -4766,7 +4686,11 @@ func initAzureSubscriptionNetworkServiceSubnet(runtime *plugin.Runtime, args map
 	}
 	resp, err := client.Get(context.Background(), azureId.ResourceGroup, vnName, subnetName, &network.SubnetsClientGetOptions{})
 	if err != nil {
-		return args, nil, nil
+		// Not `return args, nil, nil`: that has the runtime build a subnet from
+		// the id alone, every other field unset rather than null, which reaches
+		// the client as an untyped null with nothing naming the cause. Callers
+		// resolving a subnet reference through here need the failure reported.
+		return nil, nil, err
 	}
 
 	mqlSubnet, err := azureSubnetToMql(runtime, resp.Subnet)
@@ -6409,6 +6333,13 @@ func initAzureSubscriptionNetworkServiceLocalNetworkGateway(runtime *plugin.Runt
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewLocalNetworkGatewaysClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})

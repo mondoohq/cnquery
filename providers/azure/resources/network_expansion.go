@@ -469,6 +469,13 @@ func initAzureSubscriptionNetworkServiceVirtualWan(runtime *plugin.Runtime, args
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceVirtualWan, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewVirtualWansClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -823,6 +830,13 @@ func initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, 
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceFirewallPolicy, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -870,6 +884,13 @@ func initAzureSubscriptionNetworkServiceExpressRouteCircuit(runtime *plugin.Runt
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewExpressRouteCircuitsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -1514,6 +1535,13 @@ func initAzureSubscriptionNetworkServiceVirtualHub(runtime *plugin.Runtime, args
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceVirtualHub, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewVirtualHubsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -1554,6 +1582,13 @@ func initAzureSubscriptionNetworkServiceVpnSite(runtime *plugin.Runtime, args ma
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceVpnSite, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewVPNSitesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})

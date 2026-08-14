@@ -214,6 +214,13 @@ func initAzureSubscriptionNetworkServiceAppSecurityGroup(runtime *plugin.Runtime
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceAppSecurityGroup, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewApplicationSecurityGroupsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})

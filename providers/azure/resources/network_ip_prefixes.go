@@ -250,6 +250,13 @@ func initAzureSubscriptionNetworkServiceCustomIpPrefix(runtime *plugin.Runtime, 
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceCustomIpPrefix, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewCustomIPPrefixesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -414,6 +421,13 @@ func initAzureSubscriptionNetworkServicePublicIpPrefix(runtime *plugin.Runtime, 
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServicePublicIpPrefix, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewPublicIPPrefixesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
@@ -456,6 +470,13 @@ func initAzureSubscriptionNetworkServiceIpAllocation(runtime *plugin.Runtime, ar
 	if err != nil {
 		return nil, nil, err
 	}
+	// Already fetched by an earlier reference: NewResource consults the
+	// cache only after this init returns, so without this the same target is
+	// re-fetched once per reference and the result thrown away.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceIpAllocation, id); cached != nil {
+		return args, cached, nil
+	}
+
 	client, err := network.NewIPAllocationsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
