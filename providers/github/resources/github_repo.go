@@ -141,6 +141,34 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 	}
 	r := res.(*mqlGithubRepository)
 	r.mqlGithubRepositoryInternal.findSpecialFilesOnceFunc = sync.OnceValue[error](r.findSpecialFiles)
+
+	// Every repository record already carries its license, so set the field
+	// here and the resolver never runs -- it was costing one
+	// Repositories.License call per repository for data that arrived with the
+	// repository itself.
+	//
+	// Null included, which is what makes this worth doing: a repository with no
+	// license is the common case, and leaving those unset would still spend a
+	// call each to learn nothing. Every endpoint feeding this returns one of
+	// GitHub's repository representations, and repository, full-repository and
+	// minimal-repository all define license as present-but-nullable, so a nil
+	// here means the repository has no license rather than that the listing
+	// omitted it.
+	//
+	// First writer wins: CreateResource hands back the already-cached instance
+	// for a repository some other listing has built, and a second record must
+	// not overwrite what the first one recorded.
+	if !r.License.IsSet() {
+		if repo.License == nil {
+			r.License = plugin.TValue[*mqlGithubLicense]{State: plugin.StateIsSet | plugin.StateIsNull}
+		} else {
+			license, err := newMqlGithubLicense(runtime, repo.License)
+			if err != nil {
+				return nil, err
+			}
+			r.License = plugin.TValue[*mqlGithubLicense]{Data: license, State: plugin.StateIsSet}
+		}
+	}
 	return r, nil
 }
 
@@ -333,8 +361,11 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 		return nil, nil
 	}
 
-	license := repoLicense.License
-	res, err := CreateResource(g.MqlRuntime, "github.license", map[string]*llx.RawData{
+	return newMqlGithubLicense(g.MqlRuntime, repoLicense.License)
+}
+
+func newMqlGithubLicense(runtime *plugin.Runtime, license *github.License) (*mqlGithubLicense, error) {
+	res, err := CreateResource(runtime, "github.license", map[string]*llx.RawData{
 		"key":    llx.StringData(license.GetKey()),
 		"name":   llx.StringData(license.GetName()),
 		"url":    llx.StringData(license.GetURL()),

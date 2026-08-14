@@ -843,7 +843,12 @@ func keyAgeInDays(createdAt *github.Timestamp) int64 {
 	return int64(time.Since(createdAt.Time).Hours() / 24)
 }
 
-func newMqlDeployKey(runtime *plugin.Runtime, k *github.Key, repoOwner, repoName string) (*mqlGithubDeployKey, error) {
+// newMqlDeployKey builds a deploy key. repo is the repository the key was read
+// from, when the caller has it; passing it sets the key's repository field
+// outright, so repository() -- one Repositories.Get per key, for a repository
+// the scan is already holding, repeated for every key on the same one -- never
+// runs. A caller without the repository passes nil and keeps that fallback.
+func newMqlDeployKey(runtime *plugin.Runtime, k *github.Key, repo *mqlGithubRepository, repoOwner, repoName string) (*mqlGithubDeployKey, error) {
 	var idVal int64
 	if k.ID != nil {
 		idVal = *k.ID
@@ -868,7 +873,10 @@ func newMqlDeployKey(runtime *plugin.Runtime, k *github.Key, repoOwner, repoName
 	if k.AddedBy != nil {
 		dk.cacheAddedByLogin = *k.AddedBy
 	}
-	if repoOwner == "" || repoName == "" {
+	switch {
+	case repo != nil:
+		dk.Repository = plugin.TValue[*mqlGithubRepository]{Data: repo, State: plugin.StateIsSet}
+	case repoOwner == "" || repoName == "":
 		dk.Repository.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return dk, nil
@@ -931,7 +939,7 @@ func (g *mqlGithubRepository) deployKeys() ([]any, error) {
 
 	res := make([]any, 0, len(allKeys))
 	for _, k := range allKeys {
-		dk, err := newMqlDeployKey(g.MqlRuntime, k, ownerLogin, repoName)
+		dk, err := newMqlDeployKey(g.MqlRuntime, k, g, ownerLogin, repoName)
 		if err != nil {
 			return nil, err
 		}
