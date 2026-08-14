@@ -88,8 +88,6 @@ option go_package = "go.mondoo.com/mql/v13/providers/bitwarden/resources"
 // read by this provider; the Bitwarden Public API this provider talks
 // to has no endpoint for them.
 bitwarden {
-  // Organization the connection authenticates as
-  organization() bitwarden.organization
   // Security policies configured for the organization
   policies() []bitwarden.policy
   // Members of the organization
@@ -99,6 +97,14 @@ bitwarden {
   // Groups used to assign collection access to multiple members at once
   groups() []bitwarden.group
 }
+
+// The organization's own account-level settings are exposed as a standalone
+// top-level resource, `bitwarden.organization`, rather than an accessor on the
+// `bitwarden` root. There is exactly one organization per connection (the one
+// the API key authenticates as), so the resource is a singleton whose init
+// reads GET /organization/subscription on demand and keys itself on the
+// organization UUID. Query it directly, e.g. `bitwarden.organization { name
+// seats useSso }`.
 
 // Bitwarden organization
 //

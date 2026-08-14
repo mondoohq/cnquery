@@ -85,7 +85,7 @@ func (r *mqlBitwarden) policies() ([]any, error) {
 func (r *mqlBitwarden) members() ([]any, error) {
 	conn := r.conn()
 
-	members, err := conn.Client().ListMembers(context.Background())
+	members, err := conn.ListMembersCached(context.Background())
 	if err != nil {
 		return nil, err
 	}

@@ -115,7 +115,7 @@ func (c *mqlBitwardenCollection) groupAccess() ([]any, error) {
 func (c *mqlBitwardenCollection) members() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.BitwardenConnection)
 
-	members, err := conn.Client().ListMembers(context.Background())
+	members, err := conn.ListMembersCached(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (c *mqlBitwardenCollection) members() ([]any, error) {
 func (c *mqlBitwardenCollection) memberAccess() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.BitwardenConnection)
 
-	members, err := conn.Client().ListMembers(context.Background())
+	members, err := conn.ListMembersCached(context.Background())
 	if err != nil {
 		return nil, err
 	}

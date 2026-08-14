@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -49,6 +50,16 @@ type BitwardenConnection struct {
 	asset  *inventory.Asset
 	client *Client
 	orgID  string
+
+	// memberCache memoizes the organization member list for the lifetime of
+	// the connection. The member-to-collection access flags are only exposed
+	// on the member record, so a query like
+	// `bitwarden.collections { members memberAccess }` would otherwise issue
+	// two full member-list calls per collection; caching collapses that to a
+	// single call for the whole scan.
+	membersOnce sync.Once
+	members     []Member
+	membersErr  error
 }
 
 func NewBitwardenConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*BitwardenConnection, error) {
@@ -111,6 +122,18 @@ func (c *BitwardenConnection) Client() *Client {
 // extracted from the client ID.
 func (c *BitwardenConnection) OrgID() string {
 	return c.orgID
+}
+
+// ListMembersCached returns the organization member list, fetching it from the
+// Public API exactly once per connection and reusing the result on subsequent
+// calls. Use this instead of Client().ListMembers when the same list may be
+// read by several accessors during a single scan (e.g. per-collection member
+// and access lookups) to avoid redundant API calls.
+func (c *BitwardenConnection) ListMembersCached(ctx context.Context) ([]Member, error) {
+	c.membersOnce.Do(func() {
+		c.members, c.membersErr = c.client.ListMembers(ctx)
+	})
+	return c.members, c.membersErr
 }
 
 // Verify validates the client-credentials by issuing the cheapest
