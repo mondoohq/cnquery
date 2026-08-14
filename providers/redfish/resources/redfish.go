@@ -41,18 +41,25 @@ func (r *mqlRedfish) systems() ([]any, error) {
 
 	res := make([]any, 0, len(systems))
 	for _, s := range systems {
+		overrideEnabled := string(s.Boot.BootSourceOverrideEnabled)
+		overrideTarget := string(s.Boot.BootSourceOverrideTarget)
+
 		o, err := CreateResource(r.MqlRuntime, "redfish.system", map[string]*llx.RawData{
-			"__id":         llx.StringData(s.ODataID),
-			"uuid":         llx.StringData(s.UUID),
-			"name":         llx.StringData(s.Name),
-			"manufacturer": llx.StringData(s.Manufacturer),
-			"model":        llx.StringData(s.Model),
-			"serialNumber": llx.StringData(s.SerialNumber),
-			"sku":          llx.StringData(s.SKU),
-			"biosVersion":  llx.StringData(s.BiosVersion),
-			"hostName":     llx.StringData(s.HostName),
-			"powerState":   llx.StringData(string(s.PowerState)),
-			"systemType":   llx.StringData(string(s.SystemType)),
+			"__id":                      llx.StringData(s.ODataID),
+			"uuid":                      llx.StringData(s.UUID),
+			"name":                      llx.StringData(s.Name),
+			"manufacturer":              llx.StringData(s.Manufacturer),
+			"model":                     llx.StringData(s.Model),
+			"serialNumber":              llx.StringData(s.SerialNumber),
+			"sku":                       llx.StringData(s.SKU),
+			"biosVersion":               llx.StringData(s.BiosVersion),
+			"hostName":                  llx.StringData(s.HostName),
+			"powerState":                llx.StringData(string(s.PowerState)),
+			"systemType":                llx.StringData(string(s.SystemType)),
+			"bootSourceOverrideEnabled": llx.StringData(overrideEnabled),
+			"bootSourceOverrideTarget":  llx.StringData(overrideTarget),
+			"bootSourceOverrideMode":    llx.StringData(string(s.Boot.BootSourceOverrideMode)),
+			"persistentBootOverride":    llx.BoolData(isPersistentBootOverride(overrideEnabled, overrideTarget)),
 		})
 		if err != nil {
 			return nil, err
@@ -138,12 +145,13 @@ func (r *mqlRedfish) accounts() ([]any, error) {
 		}
 
 		o, err := CreateResource(r.MqlRuntime, "redfish.account", map[string]*llx.RawData{
-			"__id":         llx.StringData(a.ODataID),
-			"userName":     llx.StringData(a.UserName),
-			"roleId":       llx.StringData(a.RoleID),
-			"enabled":      llx.BoolData(a.Enabled),
-			"locked":       llx.BoolData(a.Locked),
-			"accountTypes": llx.ArrayData(accountTypes, types.String),
+			"__id":                 llx.StringData(a.ODataID),
+			"userName":             llx.StringData(a.UserName),
+			"roleId":               llx.StringData(a.RoleID),
+			"enabled":              llx.BoolData(a.Enabled),
+			"locked":               llx.BoolData(a.Locked),
+			"accountTypes":         llx.ArrayData(accountTypes, types.String),
+			"defaultVendorAccount": llx.BoolData(isDefaultVendorAccountName(a.UserName)),
 		})
 		if err != nil {
 			return nil, err

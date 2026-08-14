@@ -22,6 +22,21 @@ redfish {
   accounts() []redfish.account
   // Firmware and software components tracked by the update service
   firmware() []redfish.softwareInventory
+  // Management network protocols exposed by each controller
+  networkProtocols() []redfish.networkProtocol
+  // TLS certificates that the controllers present on their HTTPS endpoint
+  certificates() []redfish.certificate
+  // Sessions that are currently open on the management service
+  sessions() []redfish.session
+  // Whether the Redfish service root answers without credentials
+  //
+  // The provider sends an unauthenticated GET to `/redfish/v1/` on the same
+  // host and port. True means the controller returns the service root to an
+  // anonymous caller, which discloses the vendor, firmware version, and the
+  // resource layout to anyone who reaches the management network. Null when
+  // the probe cannot reach the controller, so an audit does not read a network
+  // failure as a closed service root.
+  serviceRootUnauthenticated() bool
 }
 
 // Managed computer system
@@ -57,6 +72,23 @@ redfish.system @defaults("model powerState") {
   // controller cannot report its state, so an audit can tell an unsupported
   // or unreachable system apart from one where Secure Boot is switched off.
   secureBootEnabled() bool
+  // Boot source override state, one of Disabled, Once, or Continuous
+  //
+  // Continuous is the value that matters for an audit. It keeps the system on
+  // the overridden boot source across every reset, so a network or removable
+  // boot source stays active until an operator clears it.
+  bootSourceOverrideEnabled string
+  // Boot source that the override selects, such as Pxe, Usb, Hdd, or None
+  bootSourceOverrideTarget string
+  // Firmware mode the override boots in, either Legacy or UEFI
+  bootSourceOverrideMode string
+  // Whether a boot source override is set to persist across resets
+  //
+  // True when the override state is Continuous and the target is a real boot
+  // source rather than None. A persistent override to Pxe or Usb lets anyone
+  // who controls the network or the virtual media device supply the operating
+  // system on every boot.
+  persistentBootOverride bool
   // Installed processors
   processors() []redfish.processor
   // Installed memory modules
@@ -160,12 +192,16 @@ redfish.manager @defaults("model firmwareVersion") {
   dateTime string
   // Management network services and their enabled state and listening ports
   //
+  // Deprecated in favor of `redfish.networkProtocols`, which types every field,
+  // covers telnet, and reports a protocol the controller does not describe as
+  // null rather than as disabled.
+  //
   // The `hostName` and `fqdn` keys carry the controller's network identity.
   // Each of `http`, `https`, `ssh`, `ipmi`, `snmp`, `kvmip`, and `virtualMedia`
   // maps to an object with `enabled` (bool) and `port` (int), letting you audit
   // which out-of-band management protocols are exposed and on which ports (for
   // example flagging cleartext `http`, `snmp`, or `ipmi` that should be disabled).
-  networkProtocol() dict
+  networkProtocol() @maturity("deprecated") dict
 }
 
 // Physical chassis
@@ -206,6 +242,160 @@ redfish.account @defaults("userName roleId enabled") {
   locked bool
   // Account categories, such as Redfish, SNMP, or OEM
   accountTypes []string
+  // Whether the login name is a known vendor default
+  //
+  // True when `userName` matches a name that a controller ships with from the
+  // factory, such as root on HPE iLO, root on Dell iDRAC, ADMIN on Supermicro,
+  // or USERID on Lenovo XClarity. The match ignores case. A default name keeps
+  // half of the credential pair public, so an audit can require that these
+  // accounts are renamed or disabled without hardcoding the vendor list.
+  defaultVendorAccount bool
+}
+
+// Management network protocol settings
+//
+// Network protocols that a management controller exposes, with the enabled
+// state and the listening port of each one. Covers the protocols that carry
+// out-of-band access to the server, so an audit can flag cleartext or legacy
+// paths such as telnet, IPMI over LAN, SNMP, and plain HTTP.
+redfish.networkProtocol @defaults("hostName ipmiEnabled telnetEnabled") {
+  // Host name of the controller, without domain information
+  hostName string
+  // Fully qualified domain name of the controller
+  fqdn string
+  // Whether the cleartext HTTP interface is enabled
+  //
+  // Every enabled state in this resource is null when the controller does not
+  // report the protocol at all, so an audit can tell a protocol that is
+  // switched off apart from one the controller does not describe.
+  httpEnabled bool
+  // TCP port of the HTTP interface, usually 80
+  httpPort int
+  // Whether the HTTPS interface is enabled
+  httpsEnabled bool
+  // TCP port of the HTTPS interface, usually 443
+  httpsPort int
+  // Whether the SSH interface is enabled
+  sshEnabled bool
+  // TCP port of the SSH interface, usually 22
+  sshPort int
+  // Whether the telnet interface is enabled
+  //
+  // Telnet carries credentials in cleartext and has no host authentication.
+  // An enabled telnet interface bypasses the controls that guard the Redfish
+  // and SSH paths.
+  telnetEnabled bool
+  // TCP port of the telnet interface, usually 23
+  telnetPort int
+  // Whether IPMI over LAN is enabled
+  //
+  // IPMI over LAN keeps password hashes retrievable before authentication in
+  // the RAKP handshake of IPMI 2.0. An enabled IPMI interface therefore
+  // bypasses the account controls that apply to the Redfish interface.
+  ipmiEnabled bool
+  // UDP port of the IPMI over LAN interface, usually 623
+  ipmiPort int
+  // Whether the SNMP agent is enabled
+  snmpEnabled bool
+  // UDP port of the SNMP agent, usually 161
+  snmpPort int
+  // Whether virtual media is enabled
+  //
+  // Virtual media lets the controller attach a remote image as a local drive,
+  // which supplies a boot source that the host operating system cannot see.
+  virtualMediaEnabled bool
+  // TCP port of the virtual media service
+  virtualMediaPort int
+  // Whether the KVM over IP console is enabled
+  kvmipEnabled bool
+  // TCP port of the KVM over IP console
+  kvmipPort int
+}
+
+// Management controller TLS certificate
+//
+// Certificate that a management controller presents on its HTTPS endpoint.
+// Covers the issuer, the subject, the validity window, and the public key
+// size, so an audit can find expired certificates, self-signed certificates,
+// and keys below the required strength.
+redfish.certificate @defaults("subjectCommonName validNotAfter") {
+  // Common name of the issuer
+  issuerCommonName string
+  // Organization of the issuer
+  issuerOrganization string
+  // Common name of the subject
+  subjectCommonName string
+  // Organization of the subject
+  subjectOrganization string
+  // Start of the validity period, in ISO 8601 format
+  validNotBefore string
+  // End of the validity period, in ISO 8601 format
+  validNotAfter string
+  // Serial number of the certificate
+  serialNumber string
+  // Object identifier of the signature algorithm, as defined by RFC 5280
+  signatureAlgorithm string
+  // Fingerprint of the certificate
+  fingerprint string
+  // Hash algorithm that produced the fingerprint, such as SHA256
+  fingerprintHashAlgorithm string
+  // Format of the certificate, such as PEM or PKCS7
+  certificateType string
+  // Purposes the certificate is used for, such as Web or Device
+  certificateUsageTypes []string
+  // Size of the public key in bits, such as 2048 for RSA or 256 for ECDSA
+  //
+  // Null when the controller does not return the encoded certificate or the
+  // provider cannot parse the key, so an audit does not read a missing value
+  // as a weak key.
+  keySizeBits int
+  // Public key algorithm, such as RSA, ECDSA, or Ed25519
+  keyAlgorithm string
+  // Whether the issuer and the subject are the same entity
+  //
+  // Null when the certificate carries no issuer or subject common name, so an
+  // audit does not read missing identity data as a certificate signed by a
+  // certificate authority.
+  selfSigned bool
+}
+
+// Session service
+//
+// Service that issues and tracks Redfish sessions on the management
+// controller. Covers whether the service accepts new sessions and how long an
+// idle or long-lived session stays open, so an audit can require that stale
+// management sessions close. Every field is null when the controller exposes
+// no session service, so an audit can tell an unsupported controller apart
+// from one that reports a disabled service or an unlimited timeout.
+redfish.sessionService @defaults("serviceEnabled sessionTimeout") {
+  // Whether the session service accepts new sessions
+  serviceEnabled() bool
+  // Idle time in seconds after which the service closes a session
+  sessionTimeout() int
+  // Maximum lifetime in seconds of a session, regardless of activity
+  absoluteSessionTimeout() int
+  // Whether the service applies the absolute session lifetime
+  absoluteSessionTimeoutEnabled() bool
+}
+
+// Redfish session
+//
+// Session that is currently open on the management controller. Covers the
+// account that opened it, the client address, and the timestamps, so an audit
+// can review who holds live out-of-band access.
+redfish.session @defaults("userName clientOriginIPAddress") {
+  // Account that opened the session
+  userName string
+  // IP address of the client that opened the session
+  clientOriginIPAddress string
+  // Kind of session, such as Redfish, HostConsole, or IPMI
+  sessionType string
+  // Time the session was created, in ISO 8601 format
+  createdTime string
+  // Time the session expires regardless of activity, in ISO 8601 format
+  expirationTime string
+  // Redfish roles that carry the privileges of the session
+  roles []string
 }
 
 // Firmware or software inventory item

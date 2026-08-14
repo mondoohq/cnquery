@@ -25,6 +25,13 @@ type RedfishConnection struct {
 	vendor Vendor
 	id     string
 
+	// endpoint is the base URL of the management service, and insecure records
+	// whether the caller waived TLS verification. Both are kept so the
+	// unauthenticated service-root probe can reach the same target as the
+	// authenticated client.
+	endpoint string
+	insecure bool
+
 	// Systems and managers are immutable for the lifetime of a scan, so they
 	// are fetched once and reused across vendor detection, the platform
 	// identifier, and every resource that navigates from them.
@@ -36,6 +43,11 @@ type RedfishConnection struct {
 	managersErr  error
 
 	idOnce sync.Once
+
+	// anonOnce guards the single unauthenticated service-root probe.
+	anonOnce sync.Once
+	anon     bool
+	anonErr  error
 }
 
 // Systems returns the compute systems exposed by the service, fetched once and
@@ -89,9 +101,10 @@ func NewRedfishConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	}
 
 	insecure := conf.Options != nil && conf.Options["insecure"] == "true"
+	endpoint := fmt.Sprintf("https://%s:%d", conf.Host, port)
 
 	client, err := gofish.Connect(gofish.ClientConfig{
-		Endpoint: fmt.Sprintf("https://%s:%d", conf.Host, port),
+		Endpoint: endpoint,
 		Username: cred.User,
 		Password: string(cred.Secret),
 		Insecure: insecure,
@@ -101,6 +114,8 @@ func NewRedfishConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	}
 
 	conn.client = client
+	conn.endpoint = endpoint
+	conn.insecure = insecure
 	conn.vendor = detectVendorFromService(conn)
 	return conn, nil
 }
