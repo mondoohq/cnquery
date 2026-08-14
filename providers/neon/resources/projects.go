@@ -213,10 +213,23 @@ func newNeonProject(runtime *plugin.Runtime, rec *projectRecord) (*mqlNeonProjec
 	project := res.(*mqlNeonProject)
 	project.cacheOrgID = strPtr(rec.OrgID)
 	if rec.Owner != nil {
-		project.ownerEmail_ = rec.Owner.Email
-		project.ownerFetched.Store(true)
+		project.seedOwnerEmail(rec.Owner.Email)
 	}
 	return project, nil
+}
+
+// seedOwnerEmail records the owner a project payload carried so the read that
+// the list endpoint cannot answer is skipped. It takes the same lock the lazy
+// read takes, because CreateResource hands back an instance it already holds
+// when one exists, and another query may be inside that read on it.
+func (p *mqlNeonProject) seedOwnerEmail(email string) {
+	p.ownerLock.Lock()
+	defer p.ownerLock.Unlock()
+	if p.ownerFetched.Load() {
+		return
+	}
+	p.ownerEmail_ = email
+	p.ownerFetched.Store(true)
 }
 
 // ownerEmail reports the account that owns the project. The list endpoint omits
@@ -316,6 +329,18 @@ func (p *mqlNeonProject) organization() (*mqlNeonOrganization, error) {
 		return nil, nil
 	}
 
+	// The organization list the root already fetched answers this for every
+	// project of an organization the key can enumerate, which is one call for
+	// the whole query rather than one per project.
+	org, err := organizationByID(p.MqlRuntime, p.cacheOrgID)
+	if err != nil {
+		return nil, err
+	}
+	if org != nil {
+		return org, nil
+	}
+
+	// An organization the key cannot enumerate is read directly.
 	res, err := NewResource(p.MqlRuntime, "neon.organization", map[string]*llx.RawData{
 		"id": llx.StringData(p.cacheOrgID),
 	})
@@ -355,7 +380,10 @@ func (p *mqlNeonProject) permissions() ([]any, error) {
 	var res []any
 	for i := range records {
 		rec := records[i]
+		// A grant is read through its project, so the cache key carries the
+		// project it was read from and cannot alias one in another project.
 		permission, err := CreateResource(p.MqlRuntime, "neon.project.permission", map[string]*llx.RawData{
+			"__id":           llx.StringData(p.Id.Data + "/" + rec.ID),
 			"id":             llx.StringData(rec.ID),
 			"grantedToEmail": llx.StringData(rec.GrantedToEmail),
 			"grantedAt":      llx.TimeDataPtr(rec.GrantedAt.Time()),
@@ -416,7 +444,10 @@ func (p *mqlNeonProject) jwksEndpoints() ([]any, error) {
 			roleNames = *rec.RoleNames
 		}
 
+		// A key set is read through its project, so the cache key carries the
+		// project it was read from and cannot alias one in another project.
 		endpoint, err := CreateResource(p.MqlRuntime, "neon.project.jwksEndpoint", map[string]*llx.RawData{
+			"__id":         llx.StringData(p.Id.Data + "/" + rec.ID),
 			"id":           llx.StringData(rec.ID),
 			"jwksUrl":      llx.StringData(rec.JwksURL),
 			"providerName": llx.StringData(rec.ProviderName),
