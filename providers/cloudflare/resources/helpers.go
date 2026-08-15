@@ -45,8 +45,8 @@ func connectionAccountID(runtime *plugin.Runtime) (string, error) {
 		"scan an account, or reach this resource through cloudflare.account")
 }
 
-// timeOrNil converts a cloudflare-go v6 time.Time value into MQL time data,
-// returning a null value when the timestamp is the zero value. The v6 SDK
+// timeOrNil converts a cloudflare-go time.Time value into MQL time data,
+// returning a null value when the timestamp is the zero value. The current SDK
 // models optional/nullable timestamps as a plain time.Time (a JSON `null`
 // decodes to the zero value), whereas the v0 SDK used *time.Time. This helper
 // preserves the original null semantics in the MQL schema.
@@ -61,7 +61,7 @@ func timeOrNil(t time.Time) *llx.RawData {
 // cfGetPaged walks a page-numbered Cloudflare list endpoint via the client's
 // generic Get, decoding each page's `result` array into T and following
 // `result_info.total_pages`. It's used for endpoints whose typed cloudflare-go
-// v6 representation is a polymorphic union (or drops fields we expose), where
+// representation is a polymorphic union (or drops fields we expose), where
 // decoding the raw payload into our own shape is simpler and preserves the MQL
 // schema. uriBase is the path without pagination query params.
 func cfGetPaged[T any](conn *connection.CloudflareConnection, uriBase string) ([]T, error) {
@@ -111,7 +111,7 @@ func degradedList(err error) ([]any, error) {
 // cloudflareTimeLayouts are the timestamp formats seen on Cloudflare endpoints
 // that report a date as a JSON string rather than an RFC 3339 timestamp. The
 // client-certificate and content-scanning endpoints are the two cases we hit:
-// both type the field as a string in cloudflare-go v6, and the wire format
+// both type the field as a string in cloudflare-go, and the wire format
 // varies between RFC 3339 and Go's default time.Time rendering.
 var cloudflareTimeLayouts = []string{
 	time.RFC3339Nano,
@@ -130,7 +130,7 @@ var cloudflareTimeLayouts = []string{
 //
 // This is a superset of parseRFC3339 in devices.go, which stays strict because
 // the device endpoints are documented to emit RFC 3339. Use this one for the
-// endpoints that type a date as a plain string in cloudflare-go v6, where the
+// endpoints that type a date as a plain string in cloudflare-go, where the
 // layout is not guaranteed.
 func parseCloudflareTime(s string) (time.Time, bool) {
 	s = strings.TrimSpace(s)
@@ -189,7 +189,7 @@ var credentialScopeCodes = map[int64]struct{}{
 // to the credentials themselves, which says nothing about whether the resource
 // exists and so must surface. See credentialScopeCodes.
 //
-// v6 collapses the v0 typed *AuthenticationError/*AuthorizationError/
+// cloudflare-go collapses the v0 typed *AuthenticationError/*AuthorizationError/
 // *NotFoundError into a single *cloudflare.Error with a StatusCode.
 func isUnavailable(err error) bool {
 	var apiErr *cloudflare.Error

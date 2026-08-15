@@ -20,7 +20,7 @@ func TestTunnels(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/cfd_tunnel", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		// cloudflare-go v6 keeps fetching pages until result is empty.
+		// cloudflare-go keeps fetching pages until result is empty.
 		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
 			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
 			return

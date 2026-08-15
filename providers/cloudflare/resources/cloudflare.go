@@ -40,7 +40,7 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 		acc, err := NewResource(c.MqlRuntime, "cloudflare.zone.account", map[string]*llx.RawData{
 			"id":   llx.StringData(zone.Account.ID),
 			"name": llx.StringData(zone.Account.Name),
-			// v6 ZoneAccount has no Type field; surface empty for schema compatibility.
+			// cloudflare-go's ZoneAccount has no Type field; surface empty for schema compatibility.
 			"type": llx.StringData(""),
 		})
 		if err != nil {
@@ -49,7 +49,7 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 
 		owner, err := NewResource(c.MqlRuntime, "cloudflare.zone.owner", map[string]*llx.RawData{
 			"id": llx.StringData(zone.Owner.ID),
-			// v6 ZoneOwner has no Email field — the OpenAPI spec doesn't expose
+			// cloudflare-go's ZoneOwner has no Email field — the OpenAPI spec doesn't expose
 			// it at the zone level. Surface empty for schema compatibility.
 			"email":     llx.StringData(""),
 			"name":      llx.StringData(zone.Owner.Name),

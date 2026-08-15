@@ -20,7 +20,7 @@ func (c *mqlCloudflareZoneWafRule) id() (string, error) {
 	return c.RulesetId.Data + "/" + c.Id.Data, nil
 }
 
-// rulesetDetail mirrors the ruleset-detail response. cloudflare-go v6's typed
+// rulesetDetail mirrors the ruleset-detail response. cloudflare-go's typed
 // rule struct doesn't expose the per-rule score_threshold we surface, so we read
 // the ruleset detail via the client's generic Get and decode it ourselves.
 type rulesetDetail struct {

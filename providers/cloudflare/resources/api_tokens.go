@@ -47,7 +47,7 @@ func (c *mqlCloudflare) apiTokens() ([]any, error) {
 					"name": pg.Name,
 				})
 			}
-			// The resources field is a polymorphic union in cloudflare-go v6;
+			// The resources field is a polymorphic union in cloudflare-go;
 			// round-trip it through JSON so the dict holds a plain decoded value
 			// matching the raw API shape.
 			var resources any

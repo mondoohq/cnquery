@@ -20,7 +20,7 @@ type mqlCloudflareOneInternal struct {
 }
 
 // The Cloudflare Access (Zero Trust) list endpoints are modeled as polymorphic
-// unions in cloudflare-go v6 (apps and identity providers vary by type). To keep
+// unions in cloudflare-go (apps and identity providers vary by type). To keep
 // the existing MQL schema stable we read these endpoints via the client's
 // generic Get and decode them into the flat shapes below.
 type (

@@ -66,7 +66,7 @@ func (c *mqlCloudflareZone) customCertificates() ([]any, error) {
 
 // certificatePack mirrors a zone SSL certificate-pack list entry. We read the
 // endpoint via the client's generic Get with `status=all` so pending/expired
-// packs are included (matching the v0 behavior); the cloudflare-go v6 typed
+// packs are included (matching the v0 behavior); the cloudflare-go typed
 // list does not expose that filter.
 type certificatePack struct {
 	ID                   string   `json:"id"`
@@ -132,7 +132,7 @@ func (c *mqlCloudflareZone) originCACertificates() ([]any, error) {
 			"requestType":     llx.StringData(string(cert.RequestType)),
 			"requestValidity": llx.IntData(int64(cert.RequestedValidity)),
 			"expiresAt":       timeOrNil(parseRFC3339(cert.ExpiresOn)),
-			// cloudflare-go v6's origin CA certificate list response no longer
+			// cloudflare-go's origin CA certificate list response no longer
 			// exposes a revocation timestamp, so this field is always null.
 			"revokedAt": llx.NilData,
 		})

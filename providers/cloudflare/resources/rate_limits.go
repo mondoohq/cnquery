@@ -20,7 +20,7 @@ func (c *mqlCloudflareZoneRateLimitRule) id() (string, error) {
 }
 
 // rateLimitRule is the response shape of the legacy zone rate-limits endpoint
-// (`/zones/{id}/rate_limits`). cloudflare-go v6 marks its typed RateLimitService
+// (`/zones/{id}/rate_limits`). cloudflare-go marks its typed RateLimitService
 // as deprecated and its typed response drops fields we expose (the per-rule
 // response status filter), so we read the endpoint via the client's generic Get
 // and decode the full payload ourselves to preserve the MQL schema.

@@ -16,7 +16,7 @@ type mqlCloudflareDnsInternal struct {
 	ZoneID string
 }
 
-// dnsRecord mirrors a zone DNS record. cloudflare-go v6 models the record list
+// dnsRecord mirrors a zone DNS record. cloudflare-go models the record list
 // as a polymorphic union (and exposes tags as an untyped value), so we decode
 // the endpoint via the client's generic Get to keep the existing MQL schema.
 type dnsRecord struct {

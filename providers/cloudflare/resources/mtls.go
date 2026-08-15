@@ -47,7 +47,7 @@ func (c *mqlCloudflareZone) mtlsCertificates() ([]any, error) {
 			"ca":           llx.BoolData(rec.CA),
 			"uploadedOn":   llx.TimeData(rec.UploadedOn),
 			"expiresAt":    llx.TimeData(rec.ExpiresOn),
-			// cloudflare-go v6's mTLS certificate response no longer exposes a
+			// cloudflare-go's mTLS certificate response no longer exposes a
 			// separate "updated" timestamp, so this field is always null.
 			"updatedAt": llx.NilData,
 		})

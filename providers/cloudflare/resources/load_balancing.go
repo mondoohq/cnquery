@@ -17,7 +17,7 @@ import (
 // loadBalancer and loadBalancerPool mirror the Cloudflare load-balancing API
 // responses. We decode them via the client's generic Get so the typed pool
 // references can be resolved in memory without depending on the (substantially
-// different) cloudflare-go v6 load-balancer types.
+// different) cloudflare-go load-balancer types.
 type loadBalancer struct {
 	ID                        string              `json:"id"`
 	Name                      string              `json:"name"`

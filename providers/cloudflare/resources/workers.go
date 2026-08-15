@@ -67,7 +67,7 @@ func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
 
 // workerScript mirrors the account workers-scripts list entry. We decode it via
 // the client's generic Get to preserve fields (size, deployment_id,
-// pipeline_hash) that the typed cloudflare-go v6 script struct no longer
+// pipeline_hash) that the typed cloudflare-go script struct no longer
 // exposes.
 type workerScript struct {
 	ID               string    `json:"id"`

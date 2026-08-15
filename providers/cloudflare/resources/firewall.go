@@ -24,7 +24,7 @@ func (c *mqlCloudflareZoneFirewallRule) id() (string, error) {
 }
 
 // firewallRule is the response shape of the legacy zone firewall-rules endpoint
-// (`/zones/{id}/firewall/rules`). cloudflare-go v6 marks its typed
+// (`/zones/{id}/firewall/rules`). cloudflare-go marks its typed
 // firewall.RuleService as deprecated and its typed response drops the
 // created/modified timestamps we expose, so we read the endpoint via the
 // client's generic Get and decode the full payload ourselves to preserve the

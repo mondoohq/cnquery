@@ -54,7 +54,7 @@ func fetchTunnels(runtime *plugin.Runtime, accountID string) ([]any, error) {
 		rec := iter.Current()
 
 		// The inline connections field on the list response is deprecated in
-		// cloudflare-go v6 in favor of the dedicated per-tunnel connections
+		// cloudflare-go in favor of the dedicated per-tunnel connections
 		// endpoint, so fetch connection details from there instead.
 		connections, err := tunnelConnections(runtime, conn, accountID, rec.ID, string(rec.TunType))
 		if err != nil {
@@ -66,7 +66,7 @@ func fetchTunnels(runtime *plugin.Runtime, accountID string) ([]any, error) {
 			"name":       llx.StringData(rec.Name),
 			"tunnelType": llx.StringData(string(rec.TunType)),
 			"status":     llx.StringData(string(rec.Status)),
-			// v6 deprecates the remote_config bool in favor of config_src;
+			// cloudflare-go deprecates the remote_config bool in favor of config_src;
 			// "cloudflare" means the tunnel is managed remotely from the
 			// Zero Trust dashboard, which is what remote_config==true meant.
 			"remoteConfig": llx.BoolData(string(rec.ConfigSrc) == "cloudflare"),

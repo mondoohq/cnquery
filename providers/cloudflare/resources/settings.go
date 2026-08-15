@@ -12,7 +12,7 @@ import (
 )
 
 // zoneSetting is the shape of a single entry returned by the bulk zone-settings
-// endpoint (`/zones/{id}/settings`). cloudflare-go v6 only exposes a typed
+// endpoint (`/zones/{id}/settings`). cloudflare-go only exposes a typed
 // per-setting Get, so we read the full set in one call via the client's generic
 // Get and pick out the settings we surface.
 type zoneSetting struct {
@@ -135,7 +135,7 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 }
 
 // botManagementSettings mirrors the zone bot-management response. cloudflare-go
-// v6 models this endpoint as a polymorphic union (each bot-management plan is a
+// models this endpoint as a polymorphic union (each bot-management plan is a
 // separate variant), so decoding into a single typed struct only populates one
 // variant's fields. We read the endpoint via the client's generic Get and decode
 // the full payload to keep every field the MQL schema exposes.

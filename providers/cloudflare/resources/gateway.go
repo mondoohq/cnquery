@@ -111,7 +111,7 @@ func (c *mqlCloudflareOneLocation) id() (string, error) {
 }
 
 // gatewayLocation is the response shape of the gateway-locations endpoint. The
-// cloudflare-go v6 typed Location no longer exposes anonymized_logs_enabled, so
+// cloudflare-go typed Location no longer exposes anonymized_logs_enabled, so
 // we read the endpoint via the client's generic Get to preserve that field.
 type gatewayLocation struct {
 	ID                    string    `json:"id"`

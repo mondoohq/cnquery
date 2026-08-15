@@ -28,7 +28,7 @@ func TestZones(t *testing.T) {
 
 	env.Mux.HandleFunc("/zones", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		// cloudflare-go v6 keeps fetching pages until result is empty (it
+		// cloudflare-go keeps fetching pages until result is empty (it
 		// ignores total_pages). Return empty for any page beyond 1.
 		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
 			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
@@ -56,10 +56,10 @@ func TestZones(t *testing.T) {
 	assert.Equal(t, "Test Account", z1.Account.Data.Name.Data)
 
 	require.NotNil(t, z1.Owner.Data)
-	// cloudflare-go v6 ZoneOwner has no Email field (Cloudflare's OpenAPI
+	// cloudflare-go ZoneOwner has no Email field (Cloudflare's OpenAPI
 	// spec doesn't expose it at the zone level), so the migrated provider
 	// always surfaces "". Field is preserved in the MQL schema to keep the
-	// existing query surface, just always empty post-v6.
+	// existing query surface, just always empty now.
 	assert.Equal(t, "", z1.Owner.Data.Email.Data)
 
 	require.NotNil(t, z1.Plan.Data)

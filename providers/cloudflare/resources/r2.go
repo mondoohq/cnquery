@@ -103,7 +103,7 @@ func (c *mqlCloudflareR2Bucket) id() (string, error) {
 	return c.accountID + "/" + c.GetName().Data, nil
 }
 
-// buckets enumerates R2 buckets across the account. The cloudflare-go v6 typed
+// buckets enumerates R2 buckets across the account. The cloudflare-go typed
 // bucket list response doesn't surface the pagination cursor, so we call the
 // endpoint directly via the client's generic Get and follow
 // `result_info.cursor` to walk every page.
