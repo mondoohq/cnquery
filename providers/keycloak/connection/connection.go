@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"crypto/tls"
 	"errors"
 	"net/http"
 	"net/url"
@@ -46,7 +47,7 @@ func NewKeycloakConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
-		client:     &http.Client{Timeout: requestTimeout},
+		client:     newHTTPClient(conf),
 	}
 
 	rawURL := option(conf, "url")
@@ -112,6 +113,30 @@ func NewKeycloakConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 	conn.tokens = newTokenSource(conn.client, conn.baseURL+"/realms/"+url.PathEscape(authRealm)+"/protocol/openid-connect/token", form)
 
 	return conn, nil
+}
+
+// newHTTPClient builds the client both the token endpoint and the admin API are
+// called through. It honors the provider --insecure flag and the global
+// --insecure (-k), which the runtime surfaces as conf.Insecure, since a
+// Keycloak server is commonly published under a private certificate authority.
+func newHTTPClient(conf *inventory.Config) *http.Client {
+	client := &http.Client{Timeout: requestTimeout}
+
+	if SkipTLSVerify(conf) {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // the operator asked for it with --insecure
+		}
+	}
+	return client
+}
+
+// SkipTLSVerify reports whether the connection was told to accept any server
+// certificate.
+func SkipTLSVerify(conf *inventory.Config) bool {
+	if conf == nil {
+		return false
+	}
+	return conf.Insecure || option(conf, OptionInsecure) == "true"
 }
 
 // grantForm builds the token request for whichever credentials were supplied. A

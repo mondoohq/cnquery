@@ -54,6 +54,9 @@ Arguments:
   account authentication.
 - `--username` and `--password` - admin user, which selects password
   authentication.
+- `--insecure` (`-k`) - accept any server certificate. A Keycloak server is
+  commonly published under a private certificate authority, which is the case
+  this covers. It applies to the token endpoint as well as the admin API.
 
 `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_AUTH_REALM`, `KEYCLOAK_CLIENT_ID`,
 `KEYCLOAK_CLIENT_SECRET`, `KEYCLOAK_USERNAME` and `KEYCLOAK_PASSWORD` supply the
@@ -88,6 +91,20 @@ Passing `--realm` scans that realm as a single asset and emits no child assets.
 Assets land under `technology=saas/provider=keycloak/host=<host>/realm=<realm>`.
 
 ## Examples
+
+**Select one realm or client directly**
+
+A realm is selected by name and a client by its client id, so a policy does not
+have to filter the whole list.
+
+```shell
+mql> keycloak.realm(name: "production") { sslRequired bruteForceProtected }
+mql> keycloak.client(clientId: "kubernetes") { publicClient redirectUris }
+```
+
+A client id is only unique within a realm. When the same id exists in more than
+one realm, the lookup reports the realms it found rather than picking one, so
+scope the connection with `--realm`.
 
 **Find a full authentication bypass**
 
@@ -162,6 +179,15 @@ mql> keycloak.realms { name browserFlowRef { alias executions { displayName requ
 
 ```shell
 mql> keycloak.realms { name requiredActions.where(alias == "CONFIGURE_TOTP") { enabled defaultAction } }
+```
+
+**Find groups that make every member an administrator**
+
+A client role is as capable as a realm role, and the realm-management ones
+administer the realm.
+
+```shell
+mql> keycloak.realms.first.groups { path clientRoleMappings.where(name == "realm-admin") { name } }
 ```
 
 **Find service accounts that administer a realm**

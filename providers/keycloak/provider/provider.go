@@ -78,6 +78,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(conf.Options["username"], password))
 	}
 
+	if x, ok := flags["insecure"]; ok {
+		if v, isBool := x.RawData().Value.(bool); isBool && v {
+			conf.Options[connection.OptionInsecure] = "true"
+		}
+	}
+
 	clientSecret := flagValue(flags, "client-secret")
 	if clientSecret == "" {
 		clientSecret = os.Getenv("KEYCLOAK_CLIENT_SECRET")

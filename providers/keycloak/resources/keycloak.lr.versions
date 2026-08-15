@@ -114,7 +114,9 @@ keycloak.component.usersDn 13.0.0
 keycloak.component.validatePasswordPolicy 13.0.0
 keycloak.component.vendor 13.0.0
 keycloak.group 13.0.0
+keycloak.group.allRoles 13.0.0
 keycloak.group.attributes 13.0.0
+keycloak.group.clientRoleMappings 13.0.0
 keycloak.group.clientRoles 13.0.0
 keycloak.group.id 13.0.0
 keycloak.group.name 13.0.0
@@ -289,7 +291,9 @@ keycloak.role.name 13.0.0
 keycloak.role.realm 13.0.0
 keycloak.serverUrl 13.0.0
 keycloak.user 13.0.0
+keycloak.user.allRoles 13.0.0
 keycloak.user.attributes 13.0.0
+keycloak.user.clientRoleMappings 13.0.0
 keycloak.user.createdTimestamp 13.0.0
 keycloak.user.email 13.0.0
 keycloak.user.emailVerified 13.0.0

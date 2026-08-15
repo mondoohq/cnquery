@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -18,6 +19,12 @@ import (
 type mqlKeycloakGroupInternal struct {
 	parentRealm    *mqlKeycloakRealm
 	cacheSubGroups []groupRecord
+
+	// roles, clientRoleMappings and allRoles all read the same response, so it
+	// is fetched once per group rather than once per field.
+	roleMappingsLock    sync.Mutex
+	roleMappingsFetched bool
+	cacheRoleMappings   *roleMappingsRecord
 }
 
 type groupRecord struct {
@@ -126,12 +133,8 @@ func (g *mqlKeycloakGroup) roles() ([]any, error) {
 		return nil, nil
 	}
 
-	ctx := context.Background()
-	conn := keycloakConn(g.MqlRuntime)
-	path := connection.AdminPath(g.parentRealm.realmName(), "groups", g.Id.Data, "role-mappings")
-
-	var mappings roleMappingsRecord
-	if err := conn.Get(ctx, path, nil, &mappings); err != nil {
+	mappings, err := g.roleMappings()
+	if err != nil {
 		return nil, err
 	}
 
@@ -144,4 +147,72 @@ func (g *mqlKeycloakGroup) roles() ([]any, error) {
 		res = append(res, role)
 	}
 	return res, nil
+}
+
+// clientRoleMappings resolves the client roles the group grants. They come from
+// the same response the realm roles do, so they cost no extra call.
+func (g *mqlKeycloakGroup) clientRoleMappings() ([]any, error) {
+	return g.mappedRoles(func(m *roleMappingsRecord) []roleRecord {
+		records := []roleRecord{}
+		for _, mapping := range m.ClientMappings {
+			records = append(records, mapping.Mappings...)
+		}
+		return records
+	})
+}
+
+// allRoles resolves every role the group grants, realm and client alike.
+func (g *mqlKeycloakGroup) allRoles() ([]any, error) {
+	return g.mappedRoles(collectMappedRoles)
+}
+
+func (g *mqlKeycloakGroup) mappedRoles(pick func(*roleMappingsRecord) []roleRecord) ([]any, error) {
+	if g.parentRealm == nil {
+		return nil, nil
+	}
+
+	mappings, err := g.roleMappings()
+	if err != nil {
+		return nil, err
+	}
+
+	records := pick(mappings)
+	res := make([]any, 0, len(records))
+	for i := range records {
+		role, err := newKeycloakRole(g.MqlRuntime, g.parentRealm, &records[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, role)
+	}
+	return res, nil
+}
+
+// roleMappings reads the group's role mappings once and keeps the response,
+// since roles, clientRoleMappings and allRoles all need it.
+func (g *mqlKeycloakGroup) roleMappings() (*roleMappingsRecord, error) {
+	if g.roleMappingsFetched {
+		return g.cacheRoleMappings, nil
+	}
+
+	g.roleMappingsLock.Lock()
+	defer g.roleMappingsLock.Unlock()
+	if g.roleMappingsFetched {
+		return g.cacheRoleMappings, nil
+	}
+
+	ctx := context.Background()
+	conn := keycloakConn(g.MqlRuntime)
+	path := connection.AdminPath(g.parentRealm.realmName(), "groups", g.Id.Data, "role-mappings")
+
+	var mappings roleMappingsRecord
+	if err := conn.Get(ctx, path, nil, &mappings); err != nil {
+		// A failure is not cached, so a later query retries rather than
+		// reporting an empty mapping set as fact.
+		return nil, err
+	}
+
+	g.cacheRoleMappings = &mappings
+	g.roleMappingsFetched = true
+	return g.cacheRoleMappings, nil
 }

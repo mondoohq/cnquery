@@ -44,7 +44,7 @@ func init() {
 			Create: createKeycloak,
 		},
 		"keycloak.realm": {
-			// to override args, implement: initKeycloakRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKeycloakRealm,
 			Create: createKeycloakRealm,
 		},
 		"keycloak.realm.requiredAction": {
@@ -52,7 +52,7 @@ func init() {
 			Create: createKeycloakRealmRequiredAction,
 		},
 		"keycloak.client": {
-			// to override args, implement: initKeycloakClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKeycloakClient,
 			Create: createKeycloakClient,
 		},
 		"keycloak.clientScope": {
@@ -700,6 +700,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.group.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakGroup).GetRoles()).ToDataRes(types.Array(types.Resource("keycloak.role")))
 	},
+	"keycloak.group.clientRoleMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakGroup).GetClientRoleMappings()).ToDataRes(types.Array(types.Resource("keycloak.role")))
+	},
+	"keycloak.group.allRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakGroup).GetAllRoles()).ToDataRes(types.Array(types.Resource("keycloak.role")))
+	},
 	"keycloak.group.subGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakGroup).GetSubGroups()).ToDataRes(types.Array(types.Resource("keycloak.group")))
 	},
@@ -750,6 +756,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"keycloak.user.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakUser).GetRoles()).ToDataRes(types.Array(types.Resource("keycloak.role")))
+	},
+	"keycloak.user.clientRoleMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakUser).GetClientRoleMappings()).ToDataRes(types.Array(types.Resource("keycloak.role")))
+	},
+	"keycloak.user.allRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakUser).GetAllRoles()).ToDataRes(types.Array(types.Resource("keycloak.role")))
 	},
 	"keycloak.user.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakUser).GetGroups()).ToDataRes(types.Array(types.Resource("keycloak.group")))
@@ -1788,6 +1800,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloakGroup).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"keycloak.group.clientRoleMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakGroup).ClientRoleMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.group.allRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakGroup).AllRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"keycloak.group.subGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakGroup).SubGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1858,6 +1878,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"keycloak.user.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakUser).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.user.clientRoleMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakUser).ClientRoleMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.user.allRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakUser).AllRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"keycloak.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3900,16 +3928,18 @@ type mqlKeycloakGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlKeycloakGroupInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Path          plugin.TValue[string]
-	SubGroupCount plugin.TValue[int64]
-	Attributes    plugin.TValue[any]
-	RealmRoles    plugin.TValue[[]any]
-	ClientRoles   plugin.TValue[any]
-	Roles         plugin.TValue[[]any]
-	SubGroups     plugin.TValue[[]any]
-	Realm         plugin.TValue[*mqlKeycloakRealm]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Path               plugin.TValue[string]
+	SubGroupCount      plugin.TValue[int64]
+	Attributes         plugin.TValue[any]
+	RealmRoles         plugin.TValue[[]any]
+	ClientRoles        plugin.TValue[any]
+	Roles              plugin.TValue[[]any]
+	ClientRoleMappings plugin.TValue[[]any]
+	AllRoles           plugin.TValue[[]any]
+	SubGroups          plugin.TValue[[]any]
+	Realm              plugin.TValue[*mqlKeycloakRealm]
 }
 
 // createKeycloakGroup creates a new instance of this resource
@@ -3993,6 +4023,38 @@ func (c *mqlKeycloakGroup) GetRoles() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlKeycloakGroup) GetClientRoleMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientRoleMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.group", c.__id, "clientRoleMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientRoleMappings()
+	})
+}
+
+func (c *mqlKeycloakGroup) GetAllRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.group", c.__id, "allRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allRoles()
+	})
+}
+
 func (c *mqlKeycloakGroup) GetSubGroups() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SubGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4045,6 +4107,8 @@ type mqlKeycloakUser struct {
 	HasAdminRole           plugin.TValue[bool]
 	Attributes             plugin.TValue[any]
 	Roles                  plugin.TValue[[]any]
+	ClientRoleMappings     plugin.TValue[[]any]
+	AllRoles               plugin.TValue[[]any]
 	Groups                 plugin.TValue[[]any]
 	ServiceAccountClient   plugin.TValue[*mqlKeycloakClient]
 	Realm                  plugin.TValue[*mqlKeycloakRealm]
@@ -4158,6 +4222,38 @@ func (c *mqlKeycloakUser) GetRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.roles()
+	})
+}
+
+func (c *mqlKeycloakUser) GetClientRoleMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientRoleMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.user", c.__id, "clientRoleMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientRoleMappings()
+	})
+}
+
+func (c *mqlKeycloakUser) GetAllRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.user", c.__id, "allRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allRoles()
 	})
 }
 

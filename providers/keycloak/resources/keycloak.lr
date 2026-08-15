@@ -35,7 +35,9 @@ keycloak {
 // the authentication flows in force, which is what makes a missing
 // multi-factor step detectable. Select a realm with
 // `keycloak.realms.where(name == "production")`.
-private keycloak.realm @defaults("name enabled sslRequired") {
+keycloak.realm @defaults("name enabled sslRequired") {
+  // Selects the realm by its name, for example `keycloak.realm(name: "master")`
+  init(name string)
   // Internal realm identifier
   id string
   // Realm name as it appears in the issuer URL
@@ -296,7 +298,13 @@ private keycloak.realm.requiredAction @defaults("alias enabled defaultAction") {
 // requesting client. A public client with a wildcard redirect URI lets an
 // attacker collect authorization codes for any user of the realm. Select a
 // client with `keycloak.clients.where(clientId == "kubernetes")`.
-private keycloak.client @defaults("clientId enabled publicClient") {
+keycloak.client @defaults("clientId enabled publicClient") {
+  // Selects the client by its client id, for example `keycloak.client(clientId: "kubernetes")`
+  //
+  // The lookup covers every realm in scope. Scope the connection with --realm
+  // when the same client id exists in more than one realm, since a client id
+  // is only unique within a realm.
+  init(clientId string)
   // Internal client identifier
   id string
   // Client identifier used in OAuth requests
@@ -598,10 +606,18 @@ private keycloak.group @defaults("path name") {
   // Names of the client roles the group grants
   //
   // Keyed by the client identifier, with the list of role names that client
-  // grants. Use roles for the realm roles as resolved resources.
+  // grants. Use clientRoleMappings for the same roles as resolved resources.
   clientRoles dict
   // Realm roles the group grants
   roles() []keycloak.role
+  // Client roles the group grants
+  //
+  // A client role is as capable as a realm role, and the realm-management
+  // ones administer the realm, so a group that grants them makes every member
+  // an administrator.
+  clientRoleMappings() []keycloak.role
+  // Every role the group grants, realm and client alike
+  allRoles() []keycloak.role
   // Groups nested under this one
   subGroups() []keycloak.group
   // Realm the group belongs to
@@ -668,6 +684,13 @@ private keycloak.user @defaults("username enabled emailVerified") {
   attributes dict
   // Realm roles mapped to the account
   roles() []keycloak.role
+  // Client roles mapped to the account
+  //
+  // The realm-management roles administer the realm, so this is where a
+  // service account's administrative reach becomes visible.
+  clientRoleMappings() []keycloak.role
+  // Every role mapped to the account, realm and client alike
+  allRoles() []keycloak.role
   // Groups the account belongs to
   groups() []keycloak.group
   // Client this account is the service account of, or null for an ordinary user

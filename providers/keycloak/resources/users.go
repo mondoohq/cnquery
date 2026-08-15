@@ -398,3 +398,42 @@ func clientIDsByUUID(realm *mqlKeycloakRealm) map[string]string {
 	}
 	return ids
 }
+
+// clientRoleMappings resolves the client roles mapped to the account. They come
+// from the same response the realm roles do, so they cost no extra call.
+func (u *mqlKeycloakUser) clientRoleMappings() ([]any, error) {
+	return u.mappedRoles(func(m *roleMappingsRecord) []roleRecord {
+		records := []roleRecord{}
+		for _, mapping := range m.ClientMappings {
+			records = append(records, mapping.Mappings...)
+		}
+		return records
+	})
+}
+
+// allRoles resolves every role mapped to the account, realm and client alike.
+func (u *mqlKeycloakUser) allRoles() ([]any, error) {
+	return u.mappedRoles(collectMappedRoles)
+}
+
+func (u *mqlKeycloakUser) mappedRoles(pick func(*roleMappingsRecord) []roleRecord) ([]any, error) {
+	if u.parentRealm == nil {
+		return nil, nil
+	}
+
+	mappings, err := u.roleMappings()
+	if err != nil {
+		return nil, err
+	}
+
+	records := pick(mappings)
+	res := make([]any, 0, len(records))
+	for i := range records {
+		role, err := newKeycloakRole(u.MqlRuntime, u.parentRealm, &records[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, role)
+	}
+	return res, nil
+}

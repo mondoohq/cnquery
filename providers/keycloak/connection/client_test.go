@@ -519,3 +519,52 @@ func TestGetPagedKeepsEveryRecordFromANonPagingEndpoint(t *testing.T) {
 	// One request for the body, one that repeats it and ends the walk.
 	assert.Equal(t, 2, calls)
 }
+
+func TestSkipTLSVerify(t *testing.T) {
+	assert.False(t, SkipTLSVerify(nil))
+	assert.False(t, SkipTLSVerify(&inventory.Config{}))
+
+	// The provider flag.
+	assert.True(t, SkipTLSVerify(&inventory.Config{Options: map[string]string{OptionInsecure: "true"}}))
+	assert.False(t, SkipTLSVerify(&inventory.Config{Options: map[string]string{OptionInsecure: "false"}}))
+
+	// The global --insecure, which the runtime surfaces on the config itself.
+	assert.True(t, SkipTLSVerify(&inventory.Config{Insecure: true}))
+}
+
+func TestNewHTTPClientAppliesInsecure(t *testing.T) {
+	// A default client keeps the standard transport, so TLS is verified.
+	plain := newHTTPClient(&inventory.Config{})
+	assert.Nil(t, plain.Transport)
+	assert.Equal(t, requestTimeout, plain.Timeout)
+
+	insecure := newHTTPClient(&inventory.Config{Options: map[string]string{OptionInsecure: "true"}})
+	transport, ok := insecure.Transport.(*http.Transport)
+	require.True(t, ok)
+	require.NotNil(t, transport.TLSClientConfig)
+	assert.True(t, transport.TLSClientConfig.InsecureSkipVerify)
+	assert.Equal(t, requestTimeout, insecure.Timeout)
+}
+
+func TestNewKeycloakConnectionUsesTheInsecureClient(t *testing.T) {
+	t.Setenv("KEYCLOAK_PASSWORD", "")
+
+	conf := &inventory.Config{
+		Type: "keycloak",
+		Options: map[string]string{
+			"url": "https://kc.example.com", "client-id": "scanner",
+			OptionInsecure: "true",
+		},
+		Credentials: []*vault.Credential{vault.NewPasswordCredential("", "client-secret")},
+	}
+
+	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+
+	// The token endpoint must use the same client, otherwise authentication
+	// fails against the private certificate authority the admin API works with.
+	assert.Same(t, conn.client, conn.tokens.client)
+	transport, ok := conn.client.Transport.(*http.Transport)
+	require.True(t, ok)
+	assert.True(t, transport.TLSClientConfig.InsecureSkipVerify)
+}

@@ -905,3 +905,40 @@ func TestHoldsAdminRoleOnASingleRef(t *testing.T) {
 	assert.False(t, HoldsAdminRole([]RoleRef{ordinary}))
 	assert.True(t, HoldsAdminRole([]RoleRef{ordinary, admin}))
 }
+
+func TestClientRoleMappingsCollectEveryClient(t *testing.T) {
+	// The client role picker must walk every client mapping. A group that
+	// grants realm-management roles through the second client would otherwise
+	// look harmless.
+	mappings := &roleMappingsRecord{
+		RealmMappings: []roleRecord{{ID: "r1", Name: "developer"}},
+		ClientMappings: map[string]clientRoleMappings{
+			"account": {
+				Client:   "account",
+				Mappings: []roleRecord{{ID: "c1", Name: "view-profile", ClientRole: true}},
+			},
+			"realm-management": {
+				Client:   "realm-management",
+				Mappings: []roleRecord{{ID: "c2", Name: "realm-admin", ClientRole: true}},
+			},
+		},
+	}
+
+	clientOnly := []roleRecord{}
+	for _, mapping := range mappings.ClientMappings {
+		clientOnly = append(clientOnly, mapping.Mappings...)
+	}
+	require.Len(t, clientOnly, 2)
+
+	names := map[string]bool{}
+	for _, rec := range clientOnly {
+		names[rec.Name] = true
+		// The realm role must not leak into the client-only list.
+		assert.True(t, rec.ClientRole)
+	}
+	assert.True(t, names["realm-admin"])
+	assert.True(t, names["view-profile"])
+
+	// allRoles is the union, so it carries the realm role as well.
+	assert.Len(t, collectMappedRoles(mappings), 3)
+}
