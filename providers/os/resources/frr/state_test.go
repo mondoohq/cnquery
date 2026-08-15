@@ -363,3 +363,12 @@ func TestSummaryKeyFor(t *testing.T) {
 	// The dash of a SAFI never appears in a JSON key.
 	assert.Equal(t, "ipv4Labeledunicast", summaryKeyFor("ipv4", "labeled-unicast"))
 }
+
+// TestRefused covers the answer vtysh gives for a VRF that a daemon does
+// not serve. It exits zero, so only the text says the query was refused.
+func TestRefused(t *testing.T) {
+	assert.True(t, Refused([]byte("% VRF t-blue not found\n")))
+	assert.True(t, Refused([]byte("\n  % Unknown command: show bgp vrf x summary json\n")))
+	assert.False(t, Refused([]byte(`{"ipv4Unicast":{}}`)))
+	assert.False(t, Refused([]byte("")))
+}
