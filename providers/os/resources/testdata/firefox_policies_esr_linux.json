@@ -1,0 +1,95 @@
+{
+ "assets": [
+  {
+   "asset": {
+    "id": "firefox-esr-linux",
+    "platform_ids": [
+     "//platformid.api.mondoo.app/test/firefox-esr-linux"
+    ],
+    "name": "debian-firefox-esr",
+    "platform": {
+     "name": "debian",
+     "arch": "aarch64",
+     "title": "Debian GNU/Linux",
+     "family": [
+      "debian",
+      "linux",
+      "unix",
+      "os"
+     ],
+     "version": "12"
+    }
+   },
+   "connections": [
+    {
+     "url": "local://",
+     "provider": "os",
+     "connector": "local",
+     "version": ""
+    }
+   ],
+   "resources": [
+    {
+     "Resource": "file",
+     "ID": "/etc/firefox/policies/policies.json",
+     "Fields": {
+      "path": {
+       "type": "\u0007",
+       "value": "/etc/firefox/policies/policies.json"
+      },
+      "exists": {
+       "type": "\u0004",
+       "value": false
+      }
+     }
+    },
+    {
+     "Resource": "file",
+     "ID": "/usr/lib/firefox/distribution/policies.json",
+     "Fields": {
+      "path": {
+       "type": "\u0007",
+       "value": "/usr/lib/firefox/distribution/policies.json"
+      },
+      "exists": {
+       "type": "\u0004",
+       "value": false
+      }
+     }
+    },
+    {
+     "Resource": "file",
+     "ID": "/usr/lib64/firefox/distribution/policies.json",
+     "Fields": {
+      "path": {
+       "type": "\u0007",
+       "value": "/usr/lib64/firefox/distribution/policies.json"
+      },
+      "exists": {
+       "type": "\u0004",
+       "value": false
+      }
+     }
+    },
+    {
+     "Resource": "file",
+     "ID": "/usr/lib/firefox-esr/distribution/policies.json",
+     "Fields": {
+      "path": {
+       "type": "\u0007",
+       "value": "/usr/lib/firefox-esr/distribution/policies.json"
+      },
+      "exists": {
+       "type": "\u0004",
+       "value": true
+      },
+      "content": {
+       "type": "\u0007",
+       "value": "{\n  \"policies\": {\n    \"SSLVersionMin\": \"tls1.2\",\n    \"DisableTelemetry\": true,\n    \"SanitizeOnShutdown\": {\n      \"Cache\": false,\n      \"Cookies\": false,\n      \"Locked\": true\n    },\n    \"Preferences\": {\n      \"security.default_personal_cert\": {\n        \"Value\": \"Ask Every Time\",\n        \"Status\": \"locked\"\n      }\n    }\n  }\n}"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

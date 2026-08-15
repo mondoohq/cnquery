@@ -12094,6 +12094,84 @@ private firefox.addon @defaults("name version active browser") {
   uid int
 }
 
+// Firefox enterprise policy configuration
+//
+// Effective enterprise policy configuration for a managed Firefox
+// installation — the settings an administrator deploys to lock the browser
+// down (TLS floor, telemetry, private browsing, sanitize-on-shutdown, locked
+// preferences, and so on). Firefox shows this state at `about:policies`; this
+// resource resolves it off-host from the policy file and, on Windows,
+// additionally from the Mozilla policy keys in the registry.
+//
+// `params` holds the normalized policy set — the contents of the top-level
+// "policies" object — in the same shape regardless of which platform or
+// source it came from, so one check works everywhere. `inputs` exposes the
+// unmerged sources for hosts where an operator needs to see what each one
+// contributed on its own.
+//
+// Precedence follows Firefox. On Windows the registry and the policy file are
+// combined with the registry winning per top-level policy key, and the merge
+// is shallow: if the registry sets a policy at all, the file's entire object
+// for that policy is discarded rather than merged into. On Linux and macOS
+// Firefox reads exactly one policy file — on Linux the administrator-owned
+// `/etc/firefox/policies/policies.json` outranks the install prefix, and the
+// files are never merged with each other.
+//
+// A host with no enterprise policy anywhere is the normal unmanaged state,
+// not an error: `configured` is false, `source` is empty, and `params` is
+// null.
+firefox.policies @defaults("configured source") {
+  // Whether any enterprise policy configuration was found on this host
+  configured() bool
+  // Where the effective configuration came from
+  //
+  // One of `file`, `registry`, or `file+registry`, and empty when the host
+  // carries no enterprise policy configuration at all.
+  source() string
+  // Policy file that contributed to the effective configuration
+  //
+  // Null when the configuration came from the registry alone, or when the
+  // host is unmanaged. Compose permission and ownership checks onto it to
+  // confirm the file an administrator deployed is not writable by others.
+  file() file
+  // Normalized enterprise policy configuration
+  //
+  // The merged, precedence-resolved policy set, keyed by Mozilla policy name
+  // (e.g. `params["SSLVersionMin"]`, `params["SanitizeOnShutdown"]["Cookies"]`,
+  // `params["Preferences"]["security.default_personal_cert"]["Status"]`).
+  // Null on an unmanaged host, so a check against it evaluates to false
+  // rather than passing vacuously.
+  params() dict
+  // Unmerged configuration from each source that contributed
+  //
+  // In increasing order of precedence, so the last entry is the one that wins
+  // a conflicting key. Empty on an unmanaged host.
+  //
+  // Named `inputs` rather than `sources` because a resource named
+  // `firefox.policies.source` would shadow the `source` field above:
+  // `firefox.policies.source` resolves to the resource, not the field, which
+  // would put the effective-source string out of reach.
+  inputs() []firefox.policies.input
+}
+
+// Firefox enterprise policy input
+//
+// One input that contributed to the effective policy configuration, before
+// merging: which kind of `source` it is, the `path` it was read from, and the
+// `params` that source alone declared. Use it to see what a single source
+// contributes when several disagree.
+private firefox.policies.input @defaults("source path") {
+  // Kind of source: `file` or `registry`
+  source string
+  // Path this configuration was read from
+  //
+  // A filesystem path for a `file` source, or the registry key path for a
+  // `registry` source.
+  path string
+  // Normalized policy configuration declared by this source alone
+  params dict
+}
+
 // USB device inventory (experimental)
 //
 // USB devices attached to the host, each with its vendor and product IDs,

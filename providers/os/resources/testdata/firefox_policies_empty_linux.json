@@ -1,0 +1,53 @@
+{
+ "assets": [
+  {
+   "asset": {
+    "id": "firefox-empty-linux",
+    "platform_ids": [
+     "//platformid.api.mondoo.app/test/firefox-empty-linux"
+    ],
+    "name": "debian-empty-policy",
+    "platform": {
+     "name": "debian",
+     "arch": "aarch64",
+     "title": "Debian GNU/Linux",
+     "family": [
+      "debian",
+      "linux",
+      "unix",
+      "os"
+     ],
+     "version": "12"
+    }
+   },
+   "connections": [
+    {
+     "url": "local://",
+     "provider": "os",
+     "connector": "local",
+     "version": ""
+    }
+   ],
+   "resources": [
+    {
+     "Resource": "file",
+     "ID": "/etc/firefox/policies/policies.json",
+     "Fields": {
+      "path": {
+       "type": "\u0007",
+       "value": "/etc/firefox/policies/policies.json"
+      },
+      "exists": {
+       "type": "\u0004",
+       "value": true
+      },
+      "content": {
+       "type": "\u0007",
+       "value": ""
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
