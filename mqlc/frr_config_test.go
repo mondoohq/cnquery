@@ -199,3 +199,52 @@ func TestFrrPolicyQueriesCompile(t *testing.T) {
 		})
 	}
 }
+
+// The daemons other than BGP carry their own security settings. These pin
+// one read of every field plus the questions they exist to answer.
+func TestFrrDaemonQueriesCompile(t *testing.T) {
+	schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"}).
+		Add(testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"}))
+
+	queries := []string{
+		// the posture questions these resources exist to answer
+		`frr.config.ospf.all(passiveInterfaceDefault)`,
+		`frr.config.ospf.all(logAdjacencyChanges)`,
+		`frr.config.isis.all(areaPasswordSet && domainPasswordSet)`,
+		`frr.config.interfaces.where(ospfArea != "").all(ospfAuthentication != "")`,
+		`frr.config.interfaces.where(isisTag != "").all(isisPasswordSet)`,
+		`frr.config.service.agentxEnabled == false`,
+		`frr.config.service.advancedVty == false`,
+		`frr.config.service.users.length == 0`,
+		`frr.config.bfdPeers.where(kind == "peer").all(shutdown == false)`,
+		`frr.config.pbrMaps.length == 0`,
+		`frr.config.segmentRouting.configured == false`,
+
+		// ospf and isis
+		`frr.config.ospf { version vrf routerId areas networks passiveInterfaceDefault passiveInterfaces noPassiveInterfaces }`,
+		`frr.config.ospf { redistribute defaultInformationOriginate logAdjacencyChanges maxMetricRouterLsa params file startLine raw }`,
+		`frr.config.isis { tag vrf net isType metricStyle areaPasswordSet areaPasswordMode domainPasswordSet domainPasswordMode }`,
+		`frr.config.isis { authenticationMode redistribute logAdjacencyChanges params file startLine raw }`,
+
+		// bfd, pbr and segment routing
+		`frr.config.bfdPeers { kind name interface localAddress vrf multiHop profile }`,
+		`frr.config.bfdPeers { detectMultiplier receiveInterval transmitInterval echoMode echoInterval passiveMode shutdown minimumTtl params file startLine raw }`,
+		`frr.config.pbrMaps { name rules file line }`,
+		`frr.config.segmentRouting { configured mplsEnabled srv6Locators params file startLine raw }`,
+
+		// daemon services
+		`frr.config.service { logTargets passwordSet enablePasswordSet agentxEnabled integratedVtyshConfig advancedVty logCommands users }`,
+
+		// interface protocol settings
+		`frr.config.interfaces { ospfArea ospfAuthentication ospfAuthenticationKeySet ospfMessageDigestKeySet ospfCost ospfPriority }`,
+		`frr.config.interfaces { ospfHelloInterval ospfDeadInterval ospfNetworkType ospfPassive }`,
+		`frr.config.interfaces { isisTag isisPasswordSet isisAuthenticationMode isisNetworkType isisCircuitType pimEnabled igmpEnabled bfdEnabled }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}
