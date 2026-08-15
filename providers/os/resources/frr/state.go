@@ -338,11 +338,6 @@ func firstInt(m map[string]any, keys []string) (int64, bool) {
 		switch n := v.(type) {
 		case float64:
 			return int64(n), true
-		case json.Number:
-			i, err := n.Int64()
-			if err == nil {
-				return i, true
-			}
 		case string:
 			i, err := strconv.ParseInt(n, 10, 64)
 			if err == nil {
