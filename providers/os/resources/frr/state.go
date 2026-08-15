@@ -47,6 +47,10 @@ type BGPPeer struct {
 	AFI  string
 	SAFI string
 	Name string
+	// SummaryKey is the address family key FRR used in the summary, for
+	// example `ipv4Unicast`. The neighbor detail keys its address families
+	// the same way, so the key is kept instead of rebuilt.
+	SummaryKey string
 
 	RemoteAS int64
 	LocalAS  int64
@@ -181,6 +185,7 @@ func ParseBGPSummary(vrf string, data []byte) ([]BGPPeer, error) {
 				AFI:                    afi,
 				SAFI:                   safi,
 				Name:                   name,
+				SummaryKey:             key,
 				RemoteAS:               p.RemoteAS,
 				LocalAS:                p.LocalAS,
 				Hostname:               p.Hostname,
@@ -236,7 +241,7 @@ func EnrichBGPPeers(peers []BGPPeer, data []byte) error {
 		if !ok {
 			continue
 		}
-		af, ok := detail.AddressFamilyInfo[summaryKeyFor(p.AFI, p.SAFI)]
+		af, ok := lookupAddressFamily(detail.AddressFamilyInfo, p)
 		if !ok {
 			continue
 		}
@@ -269,16 +274,32 @@ func EnrichBGPPeers(peers []BGPPeer, data []byte) error {
 	return nil
 }
 
+// lookupAddressFamily finds the address family object of one peer in the
+// neighbor detail. It uses the key FRR wrote in the summary first, so a
+// spelling this code does not know still matches.
+func lookupAddressFamily(info map[string]map[string]any, p *BGPPeer) (map[string]any, bool) {
+	if p.SummaryKey != "" {
+		if af, ok := info[p.SummaryKey]; ok {
+			return af, true
+		}
+	}
+	if af, ok := info[summaryKeyFor(p.AFI, p.SAFI)]; ok {
+		return af, true
+	}
+	return nil, false
+}
+
 // summaryKeyFor rebuilds the camel case address family key that FRR uses in
-// both the summary and the neighbor detail.
+// both the summary and the neighbor detail. It is the fallback for a peer
+// that carries no summary key.
 func summaryKeyFor(afi, safi string) string {
 	switch {
 	case afi == "l2vpn" && safi == "evpn":
 		return "l2VpnEvpn"
 	case afi == "l2vpn":
-		return "l2Vpn" + title(safi)
+		return "l2Vpn" + title(strings.ReplaceAll(safi, "-", ""))
 	default:
-		return afi + title(safi)
+		return afi + title(strings.ReplaceAll(safi, "-", ""))
 	}
 }
 
