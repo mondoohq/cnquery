@@ -312,12 +312,13 @@ func (l *linuxRouteDetector) parseLinuxIPv6RoutesFromProc(output string) ([]Rout
 			metric = v
 		}
 
+		// /proc/net/ipv6_route holds the routes of every table and names
+		// none of them, so the table stays empty rather than claiming main.
 		routes = append(routes, Route{
 			Destination: destStr,
 			Gateway:     gatewayStr,
 			Flags:       flags,
 			Interface:   device,
-			Table:       "main",
 			Metric:      metric,
 		})
 	}
