@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func TestInitFrrEvpnRouteTable(t *testing.T) {
@@ -99,4 +100,32 @@ func TestFrrRIBIDs(t *testing.T) {
 		frrPeerRoutesID("swp1", "advertised", "", "ipv4"))
 	assert.Equal(t, "frr.bgp.peerRoutes/cluster/l2vpn/received/192.0.2.1",
 		frrPeerRoutesID("192.0.2.1", "received", "cluster", "l2vpn"))
+}
+
+// TestFrrBgpPeerRoutesLoadValidates pins that the values which reach the
+// vtysh command line are checked again when the resource is built from a
+// recording rather than from init.
+func TestFrrBgpPeerRoutesLoadValidates(t *testing.T) {
+	// The direction and the address family are part of the command, so a
+	// value that init would have rejected must not slip through later.
+	for _, tc := range []struct {
+		name      string
+		direction string
+		afi       string
+	}{
+		{"tampered direction", `x"; reboot; "`, "ipv4"},
+		{"tampered address family", "advertised", `x"; reboot; "`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := &mqlFrrBgpPeerRoutes{}
+			res.Peer = plugin.TValue[string]{Data: "swp1", State: plugin.StateIsSet}
+			res.Direction = plugin.TValue[string]{Data: tc.direction, State: plugin.StateIsSet}
+			res.Vrf = plugin.TValue[string]{Data: "", State: plugin.StateIsSet}
+			res.Afi = plugin.TValue[string]{Data: tc.afi, State: plugin.StateIsSet}
+			res.Limit = plugin.TValue[int64]{Data: 10, State: plugin.StateIsSet}
+
+			_, _, err := res.load()
+			require.Error(t, err)
+		})
+	}
 }
