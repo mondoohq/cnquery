@@ -276,3 +276,64 @@ func (c *mqlKeycloakClient) scopeMappings() ([]any, error) {
 
 	return fetchScopeMappings(ctx, conn, c.MqlRuntime, c.parentRealm, path)
 }
+
+type authorizationSettingsRecord struct {
+	PolicyEnforcementMode         string `json:"policyEnforcementMode"`
+	DecisionStrategy              string `json:"decisionStrategy"`
+	AllowRemoteResourceManagement bool   `json:"allowRemoteResourceManagement"`
+}
+
+type mqlKeycloakClientAuthorizationSettingsInternal struct {
+	parentClient *mqlKeycloakClient
+}
+
+// authorizationSettings reads how the client's authorization server decides a
+// request no policy covers. It is null for a client that has none, which is
+// the ordinary case.
+func (c *mqlKeycloakClient) authorizationSettings() (*mqlKeycloakClientAuthorizationSettings, error) {
+	if c.parentRealm == nil || !c.AuthorizationServicesEnabled.Data {
+		setNullResource(&c.AuthorizationSettings)
+		return nil, nil
+	}
+
+	ctx := context.Background()
+	conn := keycloakConn(c.MqlRuntime)
+	path := connection.AdminPath(c.parentRealm.realmName(), "clients", c.Id.Data, "authz", "resource-server")
+
+	var rec authorizationSettingsRecord
+	if err := conn.Get(ctx, path, nil, &rec); err != nil {
+		// A client can report the service as enabled while the server is not
+		// yet created, and a token below view-authorization cannot read it.
+		if connection.IsNotFound(err) || connection.IsForbidden(err) {
+			setNullResource(&c.AuthorizationSettings)
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	created, err := CreateResource(c.MqlRuntime, "keycloak.client.authorizationSettings", map[string]*llx.RawData{
+		"__id":                          llx.StringData(c.__id + "/authorizationSettings"),
+		"policyEnforcementMode":         llx.StringData(rec.PolicyEnforcementMode),
+		"decisionStrategy":              llx.StringData(rec.DecisionStrategy),
+		"allowRemoteResourceManagement": llx.BoolData(rec.AllowRemoteResourceManagement),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	settings := created.(*mqlKeycloakClientAuthorizationSettings)
+	settings.parentClient = c
+	return settings, nil
+}
+
+func (a *mqlKeycloakClientAuthorizationSettings) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlKeycloakClientAuthorizationSettings) client() (*mqlKeycloakClient, error) {
+	if a.parentClient == nil {
+		setNullResource(&a.Client)
+		return nil, nil
+	}
+	return a.parentClient, nil
+}

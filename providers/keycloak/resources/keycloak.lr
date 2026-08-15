@@ -430,6 +430,11 @@ keycloak.client @defaults("clientId enabled publicClient") {
   // role the user holds. Otherwise these are the only roles that reach the
   // token, which is what bounds a compromised client.
   scopeMappings() []keycloak.role
+  // Fine-grained authorization settings of the client
+  //
+  // Null unless authorizationServicesEnabled is true. It reports how the
+  // client decides a request that no policy covers.
+  authorizationSettings() keycloak.client.authorizationSettings
   // Roles defined by the client
   roles() []keycloak.role
   // User the client authenticates as when it uses its service account
@@ -855,6 +860,13 @@ private keycloak.authenticationFlow.execution @defaults("displayName requirement
   configurable bool
   // Identifier of the step's configuration, or an empty value when it has none
   authenticationConfig string
+  // Settings of the step
+  //
+  // Empty for a step that carries none. For a conditional one-time password
+  // sub-flow, this is what decides when the second factor is demanded, so a
+  // step set to skip the prompt is visible here rather than in the
+  // requirement.
+  config() map[string]string
   // Flow the step belongs to
   flow() keycloak.authenticationFlow
 }
@@ -1045,4 +1057,29 @@ private keycloak.clientPolicy @defaults("name enabled") {
   conditions dict
   // Realm the policy is defined in
   realm() keycloak.realm
+}
+
+// Keycloak Client Authorization Settings
+//
+// The fine-grained authorization server a client can turn on, and how it
+// decides a request. The `policyEnforcementMode` field is the one that carries
+// risk: with PERMISSIVE, a request for a resource that no policy covers is
+// allowed, so adding a resource without a policy grants it to everyone. The
+// `decisionStrategy` field decides how several matching policies combine.
+private keycloak.client.authorizationSettings @defaults("policyEnforcementMode decisionStrategy") {
+  // How a request that no policy covers is decided
+  //
+  // One of ENFORCING, PERMISSIVE or DISABLED. With ENFORCING, such a request
+  // is denied. With PERMISSIVE, it is allowed. With DISABLED, authorization is
+  // not evaluated at all.
+  policyEnforcementMode string
+  // How several matching policies combine
+  //
+  // Either UNANIMOUS, which requires every policy to allow, or AFFIRMATIVE,
+  // which allows when any one of them does.
+  decisionStrategy string
+  // Whether a client may manage its own resources through the protection API
+  allowRemoteResourceManagement bool
+  // Client the settings belong to
+  client() keycloak.client
 }

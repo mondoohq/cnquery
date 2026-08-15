@@ -291,6 +291,24 @@ A policy that is disabled, or that names no profile, is inert.
 mql> keycloak.realms.first.clientPolicies.where(enabled == false || profiles.length == 0) { name enabled profiles }
 ```
 
+**Find a permissive authorization server**
+
+With PERMISSIVE, a request for a resource that no policy covers is allowed, so
+adding a resource without a policy grants it to everyone.
+
+```shell
+mql> keycloak.clients.where(authorizationServicesEnabled) { clientId authorizationSettings { policyEnforcementMode decisionStrategy } }
+```
+
+**Find a conditional second factor set to skip**
+
+A step set to skip demands no second factor, which the requirement alone does
+not reveal.
+
+```shell
+mql> keycloak.realms.first.browserFlowRef.executions.where(authenticationConfig != "") { displayName requirement config }
+```
+
 **Follow a composite role**
 
 A role named after a team commonly carries `realm-admin` without saying so.

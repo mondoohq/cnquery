@@ -158,3 +158,31 @@ func (e *mqlKeycloakAuthenticationFlowExecution) flow() (*mqlKeycloakAuthenticat
 	}
 	return e.parentFlow, nil
 }
+
+type executionConfigRecord struct {
+	ID     string            `json:"id"`
+	Alias  string            `json:"alias"`
+	Config map[string]string `json:"config"`
+}
+
+// config reads the settings of one step. A step without a configuration
+// identifier carries none, so it is answered without a call.
+func (e *mqlKeycloakAuthenticationFlowExecution) config() (map[string]any, error) {
+	configID := e.AuthenticationConfig.Data
+	if configID == "" || e.parentFlow == nil || e.parentFlow.parentRealm == nil {
+		return map[string]any{}, nil
+	}
+
+	ctx := context.Background()
+	conn := keycloakConn(e.MqlRuntime)
+	path := connection.AdminPath(e.parentFlow.parentRealm.realmName(), "authentication", "config", configID)
+
+	var rec executionConfigRecord
+	if err := conn.Get(ctx, path, nil, &rec); err != nil {
+		// A configuration the token cannot read leaves the step's settings
+		// unknown, which is reported rather than answered as none.
+		return nil, err
+	}
+
+	return mapStrToAny(rec.Config), nil
+}

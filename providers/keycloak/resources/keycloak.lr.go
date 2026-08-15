@@ -33,6 +33,7 @@ const (
 	ResourceKeycloakRealmEventsConfig           string = "keycloak.realm.eventsConfig"
 	ResourceKeycloakClientProfile               string = "keycloak.clientProfile"
 	ResourceKeycloakClientPolicy                string = "keycloak.clientPolicy"
+	ResourceKeycloakClientAuthorizationSettings string = "keycloak.client.authorizationSettings"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -106,6 +107,10 @@ func init() {
 		"keycloak.clientPolicy": {
 			// to override args, implement: initKeycloakClientPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKeycloakClientPolicy,
+		},
+		"keycloak.client.authorizationSettings": {
+			// to override args, implement: initKeycloakClientAuthorizationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakClientAuthorizationSettings,
 		},
 	}
 }
@@ -553,6 +558,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.client.scopeMappings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakClient).GetScopeMappings()).ToDataRes(types.Array(types.Resource("keycloak.role")))
 	},
+	"keycloak.client.authorizationSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClient).GetAuthorizationSettings()).ToDataRes(types.Resource("keycloak.client.authorizationSettings"))
+	},
 	"keycloak.client.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakClient).GetRoles()).ToDataRes(types.Array(types.Resource("keycloak.role")))
 	},
@@ -904,6 +912,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.authenticationFlow.execution.authenticationConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakAuthenticationFlowExecution).GetAuthenticationConfig()).ToDataRes(types.String)
 	},
+	"keycloak.authenticationFlow.execution.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakAuthenticationFlowExecution).GetConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"keycloak.authenticationFlow.execution.flow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakAuthenticationFlowExecution).GetFlow()).ToDataRes(types.Resource("keycloak.authenticationFlow"))
 	},
@@ -1059,6 +1070,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"keycloak.clientPolicy.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakClientPolicy).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
+	"keycloak.client.authorizationSettings.policyEnforcementMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientAuthorizationSettings).GetPolicyEnforcementMode()).ToDataRes(types.String)
+	},
+	"keycloak.client.authorizationSettings.decisionStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientAuthorizationSettings).GetDecisionStrategy()).ToDataRes(types.String)
+	},
+	"keycloak.client.authorizationSettings.allowRemoteResourceManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientAuthorizationSettings).GetAllowRemoteResourceManagement()).ToDataRes(types.Bool)
+	},
+	"keycloak.client.authorizationSettings.client": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientAuthorizationSettings).GetClient()).ToDataRes(types.Resource("keycloak.client"))
 	},
 }
 
@@ -1588,6 +1611,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloakClient).ScopeMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"keycloak.client.authorizationSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClient).AuthorizationSettings, ok = plugin.RawToTValue[*mqlKeycloakClientAuthorizationSettings](v.Value, v.Error)
+		return
+	},
 	"keycloak.client.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakClient).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2088,6 +2115,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloakAuthenticationFlowExecution).AuthenticationConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"keycloak.authenticationFlow.execution.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakAuthenticationFlowExecution).Config, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"keycloak.authenticationFlow.execution.flow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakAuthenticationFlowExecution).Flow, ok = plugin.RawToTValue[*mqlKeycloakAuthenticationFlow](v.Value, v.Error)
 		return
@@ -2314,6 +2345,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"keycloak.clientPolicy.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakClientPolicy).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.authorizationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientAuthorizationSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.client.authorizationSettings.policyEnforcementMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientAuthorizationSettings).PolicyEnforcementMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.authorizationSettings.decisionStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientAuthorizationSettings).DecisionStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.authorizationSettings.allowRemoteResourceManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientAuthorizationSettings).AllowRemoteResourceManagement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.authorizationSettings.client": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientAuthorizationSettings).Client, ok = plugin.RawToTValue[*mqlKeycloakClient](v.Value, v.Error)
 		return
 	},
 }
@@ -3255,6 +3306,7 @@ type mqlKeycloakClient struct {
 	OptionalScopes                     plugin.TValue[[]any]
 	ProtocolMappers                    plugin.TValue[[]any]
 	ScopeMappings                      plugin.TValue[[]any]
+	AuthorizationSettings              plugin.TValue[*mqlKeycloakClientAuthorizationSettings]
 	Roles                              plugin.TValue[[]any]
 	ServiceAccountUser                 plugin.TValue[*mqlKeycloakUser]
 	Realm                              plugin.TValue[*mqlKeycloakRealm]
@@ -3478,6 +3530,22 @@ func (c *mqlKeycloakClient) GetScopeMappings() *plugin.TValue[[]any] {
 		}
 
 		return c.scopeMappings()
+	})
+}
+
+func (c *mqlKeycloakClient) GetAuthorizationSettings() *plugin.TValue[*mqlKeycloakClientAuthorizationSettings] {
+	return plugin.GetOrCompute[*mqlKeycloakClientAuthorizationSettings](&c.AuthorizationSettings, func() (*mqlKeycloakClientAuthorizationSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.client", c.__id, "authorizationSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakClientAuthorizationSettings), nil
+			}
+		}
+
+		return c.authorizationSettings()
 	})
 }
 
@@ -4642,6 +4710,7 @@ type mqlKeycloakAuthenticationFlowExecution struct {
 	FlowAlias            plugin.TValue[string]
 	Configurable         plugin.TValue[bool]
 	AuthenticationConfig plugin.TValue[string]
+	Config               plugin.TValue[map[string]any]
 	Flow                 plugin.TValue[*mqlKeycloakAuthenticationFlow]
 }
 
@@ -4716,6 +4785,12 @@ func (c *mqlKeycloakAuthenticationFlowExecution) GetConfigurable() *plugin.TValu
 
 func (c *mqlKeycloakAuthenticationFlowExecution) GetAuthenticationConfig() *plugin.TValue[string] {
 	return &c.AuthenticationConfig
+}
+
+func (c *mqlKeycloakAuthenticationFlowExecution) GetConfig() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Config, func() (map[string]any, error) {
+		return c.config()
+	})
 }
 
 func (c *mqlKeycloakAuthenticationFlowExecution) GetFlow() *plugin.TValue[*mqlKeycloakAuthenticationFlow] {
@@ -5266,5 +5341,81 @@ func (c *mqlKeycloakClientPolicy) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
 		}
 
 		return c.realm()
+	})
+}
+
+// mqlKeycloakClientAuthorizationSettings for the keycloak.client.authorizationSettings resource
+type mqlKeycloakClientAuthorizationSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlKeycloakClientAuthorizationSettingsInternal
+	PolicyEnforcementMode         plugin.TValue[string]
+	DecisionStrategy              plugin.TValue[string]
+	AllowRemoteResourceManagement plugin.TValue[bool]
+	Client                        plugin.TValue[*mqlKeycloakClient]
+}
+
+// createKeycloakClientAuthorizationSettings creates a new instance of this resource
+func createKeycloakClientAuthorizationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakClientAuthorizationSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.client.authorizationSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakClientAuthorizationSettings) MqlName() string {
+	return "keycloak.client.authorizationSettings"
+}
+
+func (c *mqlKeycloakClientAuthorizationSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakClientAuthorizationSettings) GetPolicyEnforcementMode() *plugin.TValue[string] {
+	return &c.PolicyEnforcementMode
+}
+
+func (c *mqlKeycloakClientAuthorizationSettings) GetDecisionStrategy() *plugin.TValue[string] {
+	return &c.DecisionStrategy
+}
+
+func (c *mqlKeycloakClientAuthorizationSettings) GetAllowRemoteResourceManagement() *plugin.TValue[bool] {
+	return &c.AllowRemoteResourceManagement
+}
+
+func (c *mqlKeycloakClientAuthorizationSettings) GetClient() *plugin.TValue[*mqlKeycloakClient] {
+	return plugin.GetOrCompute[*mqlKeycloakClient](&c.Client, func() (*mqlKeycloakClient, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.client.authorizationSettings", c.__id, "client")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakClient), nil
+			}
+		}
+
+		return c.client()
 	})
 }

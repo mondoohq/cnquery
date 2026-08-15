@@ -8,6 +8,7 @@ keycloak.authenticationFlow.builtIn 13.0.0
 keycloak.authenticationFlow.description 13.0.0
 keycloak.authenticationFlow.execution 13.0.0
 keycloak.authenticationFlow.execution.authenticationConfig 13.0.0
+keycloak.authenticationFlow.execution.config 13.0.0
 keycloak.authenticationFlow.execution.configurable 13.0.0
 keycloak.authenticationFlow.execution.displayName 13.0.0
 keycloak.authenticationFlow.execution.flow 13.0.0
@@ -27,6 +28,11 @@ keycloak.client.adminUrl 13.0.0
 keycloak.client.attributes 13.0.0
 keycloak.client.authenticationFlowBindingOverrides 13.0.0
 keycloak.client.authorizationServicesEnabled 13.0.0
+keycloak.client.authorizationSettings 13.0.0
+keycloak.client.authorizationSettings.allowRemoteResourceManagement 13.0.0
+keycloak.client.authorizationSettings.client 13.0.0
+keycloak.client.authorizationSettings.decisionStrategy 13.0.0
+keycloak.client.authorizationSettings.policyEnforcementMode 13.0.0
 keycloak.client.baseUrl 13.0.0
 keycloak.client.bearerOnly 13.0.0
 keycloak.client.clientAuthenticatorType 13.0.0

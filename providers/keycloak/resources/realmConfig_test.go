@@ -142,3 +142,53 @@ func TestClientPoliciesDecode(t *testing.T) {
 	assert.False(t, resp.Policies[1].Enabled)
 	assert.Empty(t, resp.Policies[1].Profiles)
 }
+
+func TestAuthorizationSettingsDecode(t *testing.T) {
+	// The shape of GET /clients/{id}/authz/resource-server. With PERMISSIVE, a
+	// request for a resource no policy covers is allowed.
+	const payload = `{
+      "id": "rs-1",
+      "clientId": "app",
+      "name": "app",
+      "allowRemoteResourceManagement": true,
+      "policyEnforcementMode": "PERMISSIVE",
+      "decisionStrategy": "UNANIMOUS"
+    }`
+
+	var rec authorizationSettingsRecord
+	require.NoError(t, json.Unmarshal([]byte(payload), &rec))
+
+	assert.Equal(t, "PERMISSIVE", rec.PolicyEnforcementMode)
+	assert.Equal(t, "UNANIMOUS", rec.DecisionStrategy)
+	assert.True(t, rec.AllowRemoteResourceManagement)
+}
+
+func TestAuthorizationSettingsDecodeWhenEnforcing(t *testing.T) {
+	const payload = `{"policyEnforcementMode":"ENFORCING","decisionStrategy":"AFFIRMATIVE","allowRemoteResourceManagement":false}`
+
+	var rec authorizationSettingsRecord
+	require.NoError(t, json.Unmarshal([]byte(payload), &rec))
+
+	assert.Equal(t, "ENFORCING", rec.PolicyEnforcementMode)
+	assert.Equal(t, "AFFIRMATIVE", rec.DecisionStrategy)
+	assert.False(t, rec.AllowRemoteResourceManagement)
+}
+
+func TestExecutionConfigDecode(t *testing.T) {
+	// The settings of a conditional one-time password step, which decide when
+	// the second factor is demanded.
+	const payload = `{
+      "id": "cfg-1",
+      "alias": "otp-conditional",
+      "config": {"defaultOtpOutcome": "skip", "otpControlAttribute": "user.attribute"}
+    }`
+
+	var rec executionConfigRecord
+	require.NoError(t, json.Unmarshal([]byte(payload), &rec))
+
+	assert.Equal(t, "otp-conditional", rec.Alias)
+	// A step set to skip demands no second factor, which the requirement alone
+	// does not reveal.
+	assert.Equal(t, "skip", rec.Config["defaultOtpOutcome"])
+	assert.Len(t, rec.Config, 2)
+}
