@@ -4,24 +4,51 @@
 package firefox
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func readFixture(t *testing.T, name string) []byte {
-	t.Helper()
-	content, err := os.ReadFile(filepath.Join("testdata", name))
-	require.NoError(t, err)
-	return content
-}
+// The documents under test are small enough to read here, which keeps each
+// case next to the shape it is about.
+const (
+	managedPolicy = `{
+  "policies": {
+    "DisableTelemetry": true,
+    "SSLVersionMin": "tls1.2",
+    "SanitizeOnShutdown": {
+      "Cache": true,
+      "Cookies": false,
+      "Locked": true
+    },
+    "Preferences": {
+      "security.default_personal_cert": {
+        "Value": "Ask Every Time",
+        "Status": "locked"
+      }
+    },
+    "PrivateBrowsingModeAvailability": 1
+  }
+}`
+
+	noPoliciesKey = `{
+  "comment": "a well-formed document that declares no policies at all"
+}`
+
+	emptyPolicies = `{
+  "policies": {}
+}`
+
+	// truncated mid-object, the shape a half-written deployment leaves behind
+	malformedPolicy = `{
+  "policies": {
+    "DisableTelemetry": true,`
+)
 
 func TestParsePolicyFile(t *testing.T) {
 	t.Run("a managed installation yields its policy set", func(t *testing.T) {
-		params, err := ParsePolicyFile(readFixture(t, "policies.json"))
+		params, err := ParsePolicyFile([]byte(managedPolicy))
 		require.NoError(t, err)
 		require.NotNil(t, params)
 
@@ -40,7 +67,7 @@ func TestParsePolicyFile(t *testing.T) {
 	// there; here we cover a file that exists but says nothing.
 
 	t.Run("an empty file declares nothing and is not an error", func(t *testing.T) {
-		params, err := ParsePolicyFile(readFixture(t, "empty.json"))
+		params, err := ParsePolicyFile([]byte(""))
 		require.NoError(t, err)
 		assert.Nil(t, params)
 	})
@@ -52,19 +79,19 @@ func TestParsePolicyFile(t *testing.T) {
 	})
 
 	t.Run("a document with no policies key declares nothing", func(t *testing.T) {
-		params, err := ParsePolicyFile(readFixture(t, "no-policies.json"))
+		params, err := ParsePolicyFile([]byte(noPoliciesKey))
 		require.NoError(t, err)
 		assert.Nil(t, params)
 	})
 
 	t.Run("an empty policies object declares nothing", func(t *testing.T) {
-		params, err := ParsePolicyFile(readFixture(t, "empty-policies.json"))
+		params, err := ParsePolicyFile([]byte(emptyPolicies))
 		require.NoError(t, err)
 		assert.Nil(t, params)
 	})
 
 	t.Run("malformed JSON is an error, not an empty policy set", func(t *testing.T) {
-		params, err := ParsePolicyFile(readFixture(t, "malformed.json"))
+		params, err := ParsePolicyFile([]byte(malformedPolicy))
 		require.Error(t, err)
 		assert.Nil(t, params)
 		// A deployed-but-broken policy file must not be reported as "no policy
