@@ -16,6 +16,9 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Compiled once: matched against every line of a yarn.lock file.
+var kv = regexp.MustCompile(`^(\s+)(\S+)\s+(.+?)\s*$`)
+
 // yarnLockBom wraps a parsed yarnLock with file evidence.
 type yarnLockBom struct {
 	packages yarnLock
@@ -42,7 +45,6 @@ func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 	// "url"`) OR unquoted (`integrity sha512-…`). Rewrite both forms to
 	// `key: "value"`; pass through blank lines, comments, and mapping headers
 	// (spec lines / `dependencies:` that already end in ":") untouched.
-	kv := regexp.MustCompile(`^(\s+)(\S+)\s+(.+?)\s*$`)
 	scanner := bufio.NewScanner(r)
 	// yarn.lock integrity/resolved lines can be long; grow the scanner buffer.
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
