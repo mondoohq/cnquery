@@ -55,12 +55,11 @@ done`
 const sriovLinkShow = `ip -details -json link show`
 
 type mqlSriovInternal struct {
-	lock     sync.Mutex
-	loaded   bool
-	loadErr  error
-	pfs      []*mqlSriovPhysicalFunction
-	allVFs   []any
-	pfByName map[string]*mqlSriovPhysicalFunction
+	lock    sync.Mutex
+	loaded  bool
+	loadErr error
+	pfs     []*mqlSriovPhysicalFunction
+	allVFs  []any
 }
 
 type mqlSriovPhysicalFunctionInternal struct {
@@ -92,7 +91,6 @@ func (s *mqlSriov) load() error {
 func (s *mqlSriov) doLoad() error {
 	s.pfs = []*mqlSriovPhysicalFunction{}
 	s.allVFs = []any{}
-	s.pfByName = map[string]*mqlSriovPhysicalFunction{}
 
 	stdout, ok, err := runShellCmd(s.MqlRuntime, sriovSysfsWalk)
 	if err != nil {
@@ -128,7 +126,6 @@ func (s *mqlSriov) doLoad() error {
 			return err
 		}
 		s.pfs = append(s.pfs, mqlPF)
-		s.pfByName[pf.Interface] = mqlPF
 		s.allVFs = append(s.allVFs, mqlPF.vfResources...)
 	}
 	return nil
