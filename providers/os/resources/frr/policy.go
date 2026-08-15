@@ -245,7 +245,10 @@ func (c *Config) CommunityLists() []CommunityList {
 			continue
 		}
 
-		key := kind + "/" + name
+		// FRR keeps a standard and an expanded list of the same name apart.
+		// One matches values, the other matches a regular expression, so
+		// the type belongs in the key.
+		key := kind + "/" + listType + "/" + name
 		list, ok := byKey[key]
 		if !ok {
 			list = &CommunityList{Kind: kind, Type: listType, Name: name, File: d.File, Line: d.Line}
