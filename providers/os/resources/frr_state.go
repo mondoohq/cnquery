@@ -88,8 +88,11 @@ type mqlFrrInternal struct {
 	loadedRule bool
 }
 
-// tableNameMap reads /etc/iproute2/rt_tables once. A missing file is not an
-// error, it only means the tables have no names.
+// tableNameMap reads /etc/iproute2/rt_tables once and caches the result. A
+// missing file is not an error, it only means the tables have no names.
+//
+// It does not take the lock of its own. Every caller already holds n.lock,
+// which is what keeps the cache safe.
 func (n *mqlFrr) tableNameMap(conn shared.Connection) map[int64]string {
 	if n.tableNames != nil {
 		return n.tableNames
