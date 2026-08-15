@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.5
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.0
 	github.com/cockroachdb/errors v1.14.0
 	github.com/google/uuid v1.6.0
 	github.com/microsoft/kiota-abstractions-go v1.9.4
