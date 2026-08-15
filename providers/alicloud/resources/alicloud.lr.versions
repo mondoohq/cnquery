@@ -313,7 +313,6 @@ alicloud.config.deliveryChannel.oversizedDataOssTargetArn 13.4.1
 alicloud.config.deliveryChannel.snapshotTime 13.4.1
 alicloud.config.deliveryChannel.targetArn 13.4.1
 alicloud.config.deliveryChannel.type 13.4.1
-alicloud.config.deliveryChannelList 13.4.1
 alicloud.config.deliveryChannels 13.0.1
 alicloud.config.evaluationResult 13.4.1
 alicloud.config.evaluationResult.annotation 13.4.1

@@ -3026,10 +3026,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAlicloudConfig).GetComplianceSummary()).ToDataRes(types.Dict)
 	},
 	"alicloud.config.deliveryChannels": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudConfig).GetDeliveryChannels()).ToDataRes(types.Array(types.Dict))
-	},
-	"alicloud.config.deliveryChannelList": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAlicloudConfig).GetDeliveryChannelList()).ToDataRes(types.Array(types.Resource("alicloud.config.deliveryChannel")))
+		return (r.(*mqlAlicloudConfig).GetDeliveryChannels()).ToDataRes(types.Array(types.Resource("alicloud.config.deliveryChannel")))
 	},
 	"alicloud.config.compliancePacks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudConfig).GetCompliancePacks()).ToDataRes(types.Array(types.Resource("alicloud.config.compliancePack")))
@@ -8720,10 +8717,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.config.deliveryChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudConfig).DeliveryChannels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"alicloud.config.deliveryChannelList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAlicloudConfig).DeliveryChannelList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.config.compliancePacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19752,7 +19745,6 @@ type mqlAlicloudConfig struct {
 	RecordedResourceTypes plugin.TValue[[]any]
 	ComplianceSummary     plugin.TValue[any]
 	DeliveryChannels      plugin.TValue[[]any]
-	DeliveryChannelList   plugin.TValue[[]any]
 	CompliancePacks       plugin.TValue[[]any]
 	Aggregators           plugin.TValue[[]any]
 	NonCompliantResults   plugin.TValue[[]any]
@@ -19837,14 +19829,8 @@ func (c *mqlAlicloudConfig) GetComplianceSummary() *plugin.TValue[any] {
 
 func (c *mqlAlicloudConfig) GetDeliveryChannels() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.DeliveryChannels, func() ([]any, error) {
-		return c.deliveryChannels()
-	})
-}
-
-func (c *mqlAlicloudConfig) GetDeliveryChannelList() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.DeliveryChannelList, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config", c.__id, "deliveryChannelList")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config", c.__id, "deliveryChannels")
 			if err != nil {
 				return nil, err
 			}
@@ -19853,7 +19839,7 @@ func (c *mqlAlicloudConfig) GetDeliveryChannelList() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.deliveryChannelList()
+		return c.deliveryChannels()
 	})
 }
 

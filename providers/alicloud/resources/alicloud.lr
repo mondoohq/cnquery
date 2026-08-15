@@ -2815,21 +2815,13 @@ alicloud.config {
   // compliantResourceCount, nonCompliantResourceCount, totalResourceCount, and
   // the highRisk, mediumRisk, and lowRisk non-compliant resource counts.
   complianceSummary() dict
-  // Delivery channel summaries
-  //
-  // Deprecated in favor of deliveryChannelList, which exposes the same channels
-  // with references to the OSS bucket, logstore, and RAM role each delivers
-  // through. Each entry lists the channelId, name, type (OSS, SLS, or MNS),
-  // targetArn, assumeRoleArn, and enabled state, plus the snapshot and
-  // notification toggles.
-  deliveryChannels() @maturity("deprecated") []dict
   // Delivery channels that export configuration data and compliance results
   //
   // A recording account that has no enabled delivery channel keeps its
   // configuration history only inside the Cloud Config console, so nothing
   // reaches the OSS bucket, logstore, or message topic an audit pipeline reads.
   // Empty when no delivery channel is configured.
-  deliveryChannelList() []alicloud.config.deliveryChannel
+  deliveryChannels() []alicloud.config.deliveryChannel
   // Compliance packs applied in the account
   //
   // A compliance pack bundles Config rules into a single evaluated set. Reports

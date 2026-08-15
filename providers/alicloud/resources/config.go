@@ -232,39 +232,6 @@ func (r *mqlAlicloudConfig) complianceSummary() (any, error) {
 	return res, nil
 }
 
-func (r *mqlAlicloudConfig) deliveryChannels() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.ConfigClient()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := client.ListConfigDeliveryChannels(&configclient.ListConfigDeliveryChannelsRequest{})
-	if err != nil || resp == nil || resp.Body == nil {
-		return []any{}, nil
-	}
-
-	res := []any{}
-	for _, ch := range resp.Body.DeliveryChannels {
-		if ch == nil {
-			continue
-		}
-		res = append(res, map[string]any{
-			"channelId":                           tea.StringValue(ch.DeliveryChannelId),
-			"name":                                tea.StringValue(ch.DeliveryChannelName),
-			"type":                                tea.StringValue(ch.DeliveryChannelType),
-			"targetArn":                           tea.StringValue(ch.DeliveryChannelTargetArn),
-			"assumeRoleArn":                       tea.StringValue(ch.DeliveryChannelAssumeRoleArn),
-			"enabled":                             tea.Int32Value(ch.Status) == 1,
-			"description":                         tea.StringValue(ch.Description),
-			"configurationItemChangeNotification": tea.BoolValue(ch.ConfigurationItemChangeNotification),
-			"configurationSnapshot":               tea.BoolValue(ch.ConfigurationSnapshot),
-			"compliantSnapshot":                   tea.BoolValue(ch.CompliantSnapshot),
-			"nonCompliantNotification":            tea.BoolValue(ch.NonCompliantNotification),
-		})
-	}
-	return res, nil
-}
-
 // mqlAlicloudConfigRuleInternal memoizes the GetConfigRule detail shared by the
 // timestamp and execution-frequency accessors.
 type mqlAlicloudConfigRuleInternal struct {
@@ -439,7 +406,7 @@ func parseSlsLogstoreArn(arn string) (region, project, logstore string) {
 	return parts[2], p, l
 }
 
-func (r *mqlAlicloudConfig) deliveryChannelList() ([]any, error) {
+func (r *mqlAlicloudConfig) deliveryChannels() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	client, err := conn.ConfigClient()
 	if err != nil {
@@ -879,8 +846,10 @@ func (r *mqlAlicloudConfigEvaluationResult) id() (string, error) {
 	}, "/"), nil
 }
 
-// configRule resolves the rule that produced the result. A result cannot exist
-// without its rule, so a lookup failure is a real error rather than a null.
+// configRule resolves the rule that produced the result. The rule can be
+// deleted after its verdict was recorded, which leaves the result behind with
+// nothing to point at, so a rule that is not in the account list resolves to
+// null. A failure to read the rule list at all is still an error.
 func (r *mqlAlicloudConfigEvaluationResult) configRule() (*mqlAlicloudConfigRule, error) {
 	rule, err := configRuleByID(r.MqlRuntime, r.cacheConfigRuleID)
 	if err != nil {
