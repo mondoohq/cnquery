@@ -12,61 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOciFirewallListNames(t *testing.T) {
-	tests := []struct {
-		name      string
-		condition map[string]any
-		key       string
-		want      []string
-	}{
-		{
-			name:      "names present",
-			condition: map[string]any{"sourceAddress": []any{"corp", "vpn"}},
-			key:       "sourceAddress",
-			want:      []string{"corp", "vpn"},
-		},
-		{
-			// An absent key means the rule places no constraint on that
-			// dimension, which is the permissive reading. The caller has to be
-			// able to tell it apart from an empty list, so nil is returned.
-			name:      "absent key",
-			condition: map[string]any{"destinationAddress": []any{"corp"}},
-			key:       "sourceAddress",
-			want:      nil,
-		},
-		{
-			name:      "explicit nil value",
-			condition: map[string]any{"sourceAddress": nil},
-			key:       "sourceAddress",
-			want:      nil,
-		},
-		{
-			name:      "value that is not a list",
-			condition: map[string]any{"sourceAddress": "corp"},
-			key:       "sourceAddress",
-			want:      nil,
-		},
-		{
-			name:      "non-string and empty entries are dropped",
-			condition: map[string]any{"sourceAddress": []any{"corp", "", 42, nil, "vpn"}},
-			key:       "sourceAddress",
-			want:      []string{"corp", "vpn"},
-		},
-		{
-			name:      "nil condition",
-			condition: nil,
-			key:       "sourceAddress",
-			want:      nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.want, ociFirewallListNames(test.condition, test.key))
-		})
-	}
-}
-
 // namedItem stands in for a policy collection member so the selector can be
 // tested without building MQL resources.
 type namedItem struct{ name string }
@@ -158,21 +103,26 @@ func TestOciFirewallApplicationFields(t *testing.T) {
 		assert.Nil(t, fields["icmpCode"].Value, "an absent code must not become code 0")
 	})
 
-	t.Run("an unknown member is dropped rather than mis-typed", func(t *testing.T) {
+	t.Run("an unknown member is not classified", func(t *testing.T) {
+		// nil is how the flattener reports "I do not know this member". The
+		// caller turns that into an error rather than dropping the application,
+		// which would leave a rule naming it resolving to nothing.
 		assert.Nil(t, ociFirewallApplicationFields(nil))
 	})
 }
 
 // ----- SDK union drift -----
 //
-// The switches that flatten these unions all carry a default arm, so a member
-// added by an SDK upgrade keeps compiling and keeps returning results - it just
-// silently reports nothing. These tests drive the discriminators from the SDK's
-// own enum helpers, so a new member fails the build instead.
+// A member added by an SDK upgrade keeps compiling. The flatteners now error
+// on one rather than dropping it, so it is loud at runtime - but an error found
+// during a scan is still worse than one found at build time. These tests drive
+// the discriminators from the SDK's own enum helpers, so a new member fails the
+// build without anyone having to remember to update them.
 
 func TestNetworkFirewallServiceUnionMembers(t *testing.T) {
-	// portRanges names TcpService and UdpService explicitly. If the SDK grows a
-	// third transport, this fails and the switch needs the new arm.
+	// portRanges names TcpService and UdpService explicitly and errors on
+	// anything else. If the SDK grows a third transport, this fails and the
+	// switch needs the new arm.
 	handled := map[string]bool{
 		"TCP_SERVICE": true,
 		"UDP_SERVICE": true,
@@ -188,7 +138,7 @@ func TestNetworkFirewallServiceUnionMembers(t *testing.T) {
 }
 
 func TestNetworkFirewallNatRuleUnionMembers(t *testing.T) {
-	// natRules asserts NatV4NatSummary and skips anything else.
+	// natRules asserts NatV4NatSummary and errors on anything else.
 	handled := map[string]bool{"NATV4": true}
 
 	values := networkfirewall.GetNatTypeEnumStringValues()

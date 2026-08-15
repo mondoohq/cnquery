@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -14,7 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 // The lists a network firewall policy's rules are written against.
@@ -212,17 +212,22 @@ func (o *mqlOciNetworkFirewallPolicyService) portRanges() ([]any, error) {
 
 	// Service is a union over the transports. Both members carry port ranges,
 	// but they are separate fields on separate structs rather than a shared
-	// accessor, so each has to be named. A member added later lands in the
-	// default arm and returns nothing rather than mis-reporting another
-	// transport's ranges; TestNetworkFirewallServiceUnionMembers fails the
-	// build when that happens.
+	// accessor, so each has to be named.
+	//
+	// An unhandled member is an error rather than an empty list. Returning no
+	// ranges would render as `[]`, which reads as "this service covers no
+	// ports" - a wrong answer that looks like a real one, and the exact shape
+	// of silent under-reporting this provider treats as worse than failing.
+	// TestNetworkFirewallServiceUnionMembers catches a new transport at build
+	// time; this catches it at runtime if that test is ever bypassed.
 	switch s := detail.(type) {
 	case networkfirewall.TcpService:
 		return convert.JsonToDictSlice(s.PortRanges)
 	case networkfirewall.UdpService:
 		return convert.JsonToDictSlice(s.PortRanges)
 	default:
-		return nil, nil
+		return nil, fmt.Errorf(
+			"oci.networkFirewall.policy.service %q: unhandled service type %T", o.Name.Data, detail)
 	}
 }
 
@@ -366,7 +371,11 @@ func (o *mqlOciNetworkFirewallPolicy) applications() ([]any, error) {
 	for i := range items {
 		fields := ociFirewallApplicationFields(items[i])
 		if fields == nil {
-			continue
+			// Skipping would drop the application from the policy's list
+			// entirely, so a rule naming it would resolve to nothing and read
+			// as matching no traffic.
+			return nil, fmt.Errorf(
+				"oci.networkFirewall.policy %q: unhandled application type %T", o.Id.Data, items[i])
 		}
 		fields["__id"] = llx.StringData(o.Id.Data + "/application/" + fields["name"].Value.(string))
 
@@ -629,9 +638,11 @@ func (o *mqlOciNetworkFirewallPolicy) natRules() ([]any, error) {
 	for i := range items {
 		nat, ok := items[i].(networkfirewall.NatV4NatSummary)
 		if !ok {
-			// An unrecognised NAT kind is skipped rather than reported with
-			// another kind's semantics. See the union drift test.
-			continue
+			// Skipping would leave the rule out of the policy's list, so an
+			// audit counting NAT rules would under-report - and a NAT rule
+			// changes which address downstream controls observe.
+			return nil, fmt.Errorf(
+				"oci.networkFirewall.policy %q: unhandled NAT rule type %T", o.Id.Data, items[i])
 		}
 		name := stringValue(nat.Name)
 
@@ -681,7 +692,10 @@ func (o *mqlOciNetworkFirewallPolicy) tunnelInspectionRules() ([]any, error) {
 	for i := range items {
 		rule, ok := items[i].(networkfirewall.VxlanInspectionRuleSummary)
 		if !ok {
-			continue
+			// The absence of a tunnel inspection rule is itself a finding, so
+			// dropping one silently would manufacture that finding.
+			return nil, fmt.Errorf(
+				"oci.networkFirewall.policy %q: unhandled tunnel inspection rule type %T", o.Id.Data, items[i])
 		}
 		name := stringValue(rule.Name)
 
@@ -882,27 +896,6 @@ func ociNetworkFirewallClient(runtime *plugin.Runtime, region string) (*networkf
 	return conn.NetworkFirewallClient(region)
 }
 
-// ociFirewallListNames pulls one match-criteria key out of a security rule's
-// condition. An absent key is not an empty match: it means the rule places no
-// constraint on that dimension, which the caller distinguishes.
-func ociFirewallListNames(condition map[string]any, key string) []string {
-	raw, ok := condition[key]
-	if !ok || raw == nil {
-		return nil
-	}
-	entries, ok := raw.([]any)
-	if !ok {
-		return nil
-	}
-	names := make([]string, 0, len(entries))
-	for _, entry := range entries {
-		if s, ok := entry.(string); ok && s != "" {
-			names = append(names, s)
-		}
-	}
-	return names
-}
-
 // ociFirewallSelectByName picks the members of a policy collection whose name
 // appears in the given list, preserving the collection's order.
 func ociFirewallSelectByName(items []any, names []string, nameOf func(any) (string, bool)) []any {
@@ -926,5 +919,3 @@ func ociFirewallSelectByName(items []any, names []string, nameOf func(any) (stri
 	}
 	return res
 }
-
-var _ = types.String
