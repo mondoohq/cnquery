@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
@@ -17,10 +18,14 @@ import (
 // ovsTableDump reads the three tables that make up the switch topology in one
 // call, separated by a marker line. Listing only the columns the resource maps
 // keeps the output small on a node with hundreds of pod interfaces.
-const ovsTableDump = `ovs-vsctl --format=json --columns=_uuid,name,datapath_type,fail_mode,protocols,stp_enable,rstp_enable,external_ids,other_config,ports list Bridge
-echo '===OVSTABLE==='
-ovs-vsctl --format=json --columns=_uuid,name,vlan_mode,tag,trunks,external_ids,other_config,interfaces list Port
-echo '===OVSTABLE==='
+//
+// The calls are chained with && so that any one of them failing fails the whole
+// script. A partial read would otherwise leave a table empty and report ports
+// that belong to no bridge.
+const ovsTableDump = `ovs-vsctl --format=json --columns=_uuid,name,datapath_type,fail_mode,protocols,stp_enable,rstp_enable,external_ids,other_config,ports list Bridge &&
+echo '===OVSTABLE===' &&
+ovs-vsctl --format=json --columns=_uuid,name,vlan_mode,tag,trunks,external_ids,other_config,interfaces list Port &&
+echo '===OVSTABLE===' &&
 ovs-vsctl --format=json --columns=_uuid,name,type,admin_state,link_state,mac_in_use,mtu,ofport,error,external_ids,options list Interface`
 
 const ovsVersionCmd = `ovs-vsctl --version`
@@ -94,9 +99,12 @@ func (o *mqlOvs) doLoad() error {
 		return nil
 	}
 
+	// The script only exits 0 when all three calls ran, so a different number of
+	// sections means the output shape changed. Report that rather than an empty
+	// switch, which reads as a host with no bridges.
 	documents := strings.Split(stdout, ovsTableSeparator)
 	if len(documents) != 3 {
-		return nil
+		return fmt.Errorf("ovs-vsctl returned %d table sections, expected 3", len(documents))
 	}
 
 	topology, err := ovs.ParseTopology(documents[0], documents[1], documents[2])
