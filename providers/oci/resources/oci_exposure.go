@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -486,19 +488,72 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		}
 	}
 
-	res, err := CreateResource(i.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
-		"__id":                       llx.StringData("oci.compute.instance/" + id.Data + "/exposure"),
-		"internetReachable":          llx.BoolData(internetReachable),
-		"hasPublicIp":                llx.BoolData(hasPublicIp),
-		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
-		"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
-		"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
-		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
-	})
+	res, err := CreateResource(i.MqlRuntime, "oci.network.exposure", ociExposureFields(
+		i.MqlRuntime,
+		"oci.compute.instance/"+id.Data+"/exposure",
+		map[string]*llx.RawData{
+			"internetReachable":          llx.BoolData(internetReachable),
+			"hasPublicIp":                llx.BoolData(hasPublicIp),
+			"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
+			"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
+			"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
+			"openIngressRules":           llx.ArrayData(openRules, types.Dict),
+		},
+		i.GetSecurityAttributes(),
+	))
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlOciNetworkExposure), nil
+}
+
+// ociExposureFields completes an exposure's field set with the Zero Trust
+// Packet Routing facts, which are the same computation on every resource that
+// has an exposure.
+//
+// They are added here rather than at each call site because getting them wrong
+// is directional: zprEnforced false leaves internetReachable reading as an
+// opening, and true is what suppresses it. One implementation means one place
+// where that decision is made, and one place a reader has to check it.
+//
+// A resource whose securityAttributes could not be read is treated as carrying
+// none, so zprEnforced is false and the opening still shows.
+func ociExposureFields(
+	runtime *plugin.Runtime,
+	id string,
+	fields map[string]*llx.RawData,
+	securityAttributes *plugin.TValue[map[string]any],
+) map[string]*llx.RawData {
+	conn := runtime.Connection.(*connection.OciConnection)
+
+	attributes := map[string]any{}
+	if securityAttributes != nil && securityAttributes.Error == nil && securityAttributes.Data != nil {
+		attributes = securityAttributes.Data
+	}
+
+	fields["__id"] = llx.StringData(id)
+	fields["securityAttributes"] = llx.MapData(attributes, types.Dict)
+	fields["zprEnforced"] = llx.BoolData(ociZprEnforced(ociZprStateFor(conn), attributes))
+	return fields
+}
+
+// zprPolicies lists the Zero Trust Packet Routing policies in the tenancy.
+//
+// The policies are not narrowed to the ones governing this resource: deciding
+// that requires reading the Zero Trust Packet Routing Policy Language, and a
+// wrong reading would drop the policy that actually denies the traffic. The
+// full set is returned so a caller can inspect the statements themselves.
+func (e *mqlOciNetworkExposure) zprPolicies() ([]any, error) {
+	obj, err := CreateResource(e.MqlRuntime, "oci.zpr", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	policies := obj.(*mqlOciZpr).GetPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+	return policies.Data, nil
 }
 
 // exposure breaks down whether the load balancer is reachable from the internet:
@@ -597,15 +652,19 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	// ingress through the NSG or its own security lists.
 	internetReachable := hasPublicIp && hasListener && ociAnySubnetAdmitsInternet(gates, len(nsgOpenRules))
 
-	res, err := CreateResource(l.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
-		"__id":                       llx.StringData("oci.loadBalancer.loadBalancer/" + id.Data + "/exposure"),
-		"internetReachable":          llx.BoolData(internetReachable),
-		"hasPublicIp":                llx.BoolData(hasPublicIp),
-		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
-		"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
-		"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
-		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
-	})
+	res, err := CreateResource(l.MqlRuntime, "oci.network.exposure", ociExposureFields(
+		l.MqlRuntime,
+		"oci.loadBalancer.loadBalancer/"+id.Data+"/exposure",
+		map[string]*llx.RawData{
+			"internetReachable":          llx.BoolData(internetReachable),
+			"hasPublicIp":                llx.BoolData(hasPublicIp),
+			"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
+			"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
+			"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
+			"openIngressRules":           llx.ArrayData(openRules, types.Dict),
+		},
+		l.GetSecurityAttributes(),
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -690,15 +749,19 @@ func (n *mqlOciNetworkLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposu
 
 	internetReachable := hasPublicIp && hasListener && ociAnySubnetAdmitsInternet(gates, len(nsgOpenRules))
 
-	res, err := CreateResource(n.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
-		"__id":                       llx.StringData("oci.networkLoadBalancer.loadBalancer/" + id.Data + "/exposure"),
-		"internetReachable":          llx.BoolData(internetReachable),
-		"hasPublicIp":                llx.BoolData(hasPublicIp),
-		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
-		"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
-		"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
-		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
-	})
+	res, err := CreateResource(n.MqlRuntime, "oci.network.exposure", ociExposureFields(
+		n.MqlRuntime,
+		"oci.networkLoadBalancer.loadBalancer/"+id.Data+"/exposure",
+		map[string]*llx.RawData{
+			"internetReachable":          llx.BoolData(internetReachable),
+			"hasPublicIp":                llx.BoolData(hasPublicIp),
+			"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
+			"securityListAllowsIngress":  llx.BoolData(securityListAllowsIngress),
+			"hasRouteToInternet":         llx.BoolData(hasRouteToInternet),
+			"openIngressRules":           llx.ArrayData(openRules, types.Dict),
+		},
+		n.GetSecurityAttributes(),
+	))
 	if err != nil {
 		return nil, err
 	}

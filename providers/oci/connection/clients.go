@@ -51,10 +51,12 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/redis"
 	"github.com/oracle/oci-go-sdk/v65/resourcemanager"
 	"github.com/oracle/oci-go-sdk/v65/sch"
+	"github.com/oracle/oci-go-sdk/v65/securityattribute"
 	"github.com/oracle/oci-go-sdk/v65/streaming"
 	"github.com/oracle/oci-go-sdk/v65/vault"
 	"github.com/oracle/oci-go-sdk/v65/vulnerabilityscanning"
 	"github.com/oracle/oci-go-sdk/v65/waf"
+	"github.com/oracle/oci-go-sdk/v65/zpr"
 )
 
 // Every OCI service client this provider talks to is built here, once per
@@ -314,6 +316,19 @@ func (c *OciConnection) NetworkLoadBalancerClient(region string) (*networkloadba
 
 func (c *OciConnection) NetworkFirewallClient(region string) (*networkfirewall.NetworkFirewallClient, error) {
 	return regionalClient(c, "networkfirewall", region, networkfirewall.NewNetworkFirewallClientWithConfigurationProvider)
+}
+
+// ZprClient talks to Zero Trust Packet Routing, whose policies and onboarding
+// status are tenancy-wide rather than regional.
+func (c *OciConnection) ZprClient(region string) (*zpr.ZprClient, error) {
+	return regionalClient(c, "zpr", region, zpr.NewZprClientWithConfigurationProvider)
+}
+
+// SecurityAttributeClient talks to the security attribute service, which holds
+// the namespaces and attribute definitions Zero Trust Packet Routing policies
+// are written against.
+func (c *OciConnection) SecurityAttributeClient(region string) (*securityattribute.SecurityAttributeClient, error) {
+	return regionalClient(c, "securityattribute", region, securityattribute.NewSecurityAttributeClientWithConfigurationProvider)
 }
 
 func (c *OciConnection) WafClient(region string) (*waf.WafClient, error) {

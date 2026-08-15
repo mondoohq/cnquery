@@ -99,6 +99,12 @@ Examples:
 					Default: "",
 					Desc:    "Authentication method: api-key (default), instance-principal, resource-principal, workload-identity, or security-token",
 				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter options, e.g., --filters regions=us-ashburn-1,us-phoenix-1 --filters compartments=production --filters exclude:compartments=sandbox --filters tag:env=prod --filters tag:Operations.CostCenter=42 --filters exclude:tag:env=dev",
+				},
 			},
 		},
 	},

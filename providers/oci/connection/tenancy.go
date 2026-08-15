@@ -20,6 +20,16 @@ func (c *OciConnection) TenantID() string {
 	return c.tenancyOcid
 }
 
+// ConfiguredRegion returns the region the configuration provider is pointed at.
+//
+// Tenancy-wide services answer the same from any region, so a lister that does
+// not fan out needs one region to build a client against rather than a choice
+// between them. This is that region: whatever the profile, environment or
+// principal the connection was built from already named.
+func (c *OciConnection) ConfiguredRegion() (string, error) {
+	return c.config.Region()
+}
+
 func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 	oClient, err := c.IdentityClient()
 	if err != nil {

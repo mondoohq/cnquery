@@ -253,6 +253,10 @@ func (o *mqlOciApigateway) deployments() ([]any, error) {
 			for i := range items {
 				d := items[i]
 
+				if conn.Filters.IsFilteredOutByTags(d.FreeformTags, d.DefinedTags) {
+					continue
+				}
+
 				var created, updated *time.Time
 				if d.TimeCreated != nil {
 					created = &d.TimeCreated.Time

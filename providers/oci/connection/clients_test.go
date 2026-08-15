@@ -142,6 +142,13 @@ var regionalAccessors = map[string]func(*OciConnection, string) (endpointer, err
 	"DnsClient":                 func(c *OciConnection, r string) (endpointer, error) { return c.DnsClient(r) },
 	"BastionClient":             func(c *OciConnection, r string) (endpointer, error) { return c.BastionClient(r) },
 
+	// Zero Trust Packet Routing and the security attributes its policies name.
+	// Both answer tenancy-wide, but they are built per region like everything
+	// else so a caller already inside a regional fan-out does not need a second
+	// way to reach them.
+	"ZprClient":               func(c *OciConnection, r string) (endpointer, error) { return c.ZprClient(r) },
+	"SecurityAttributeClient": func(c *OciConnection, r string) (endpointer, error) { return c.SecurityAttributeClient(r) },
+
 	// API gateway
 	"ApiGatewayClient":           func(c *OciConnection, r string) (endpointer, error) { return c.ApiGatewayClient(r) },
 	"ApiGatewayGatewayClient":    func(c *OciConnection, r string) (endpointer, error) { return c.ApiGatewayGatewayClient(r) },

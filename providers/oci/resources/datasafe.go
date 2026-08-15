@@ -50,17 +50,12 @@ func (o *mqlOciDataSafeMaskingPolicy) id() (string, error) {
 }
 
 func (o *mqlOciDataSafe) regionsList() ([]*mqlOciRegion, error) {
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	list, err := ociRegionsFor(o.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
-	}
-	regions := make([]*mqlOciRegion, 0, len(list.Data))
-	for _, r := range list.Data {
+	regions := make([]*mqlOciRegion, 0, len(list))
+	for _, r := range list {
 		region, ok := r.(*mqlOciRegion)
 		if !ok {
 			return nil, errors.New("invalid region type")

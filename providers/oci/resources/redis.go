@@ -51,6 +51,10 @@ func (o *mqlOciRedis) clusters() ([]any, error) {
 			for i := range clusters {
 				c := clusters[i]
 
+				if conn.Filters.IsFilteredOutByTags(c.FreeformTags, c.DefinedTags) {
+					continue
+				}
+
 				var created, updated *time.Time
 				if c.TimeCreated != nil {
 					created = &c.TimeCreated.Time

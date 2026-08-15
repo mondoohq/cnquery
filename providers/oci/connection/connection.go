@@ -22,6 +22,11 @@ type OciConnection struct {
 	config      common.ConfigurationProvider
 	tenancyOcid string
 
+	// Filters narrows what the scan looks at. Region and compartment filters
+	// are applied where the region x compartment fan-out is built, so they
+	// affect every lister; tag filters are applied per-lister. See filters.go.
+	Filters DiscoveryFilters
+
 	// The compartment tree, resolved once per connection. Every
 	// compartment-scoped lister needs the full list to fan out over, and there
 	// are a dozen of them, so without this a scan re-walked the paginated
@@ -53,6 +58,7 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
+		Filters:    DiscoveryFiltersFromOpts(conf.Options),
 	}
 
 	// initialize your connection here
