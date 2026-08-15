@@ -6,9 +6,9 @@ import (
 	"context"
 	"fmt"
 
-	cloudflare "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/custom_certificates"
-	"github.com/cloudflare/cloudflare-go/v6/origin_ca_certificates"
+	cloudflare "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/custom_certificates"
+	"github.com/cloudflare/cloudflare-go/v7/origin_ca_certificates"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"

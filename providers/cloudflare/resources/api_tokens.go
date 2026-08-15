@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/cloudflare/cloudflare-go/v6/user"
+	"github.com/cloudflare/cloudflare-go/v7/user"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"

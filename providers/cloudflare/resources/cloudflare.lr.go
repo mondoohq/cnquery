@@ -85,6 +85,10 @@ const (
 	ResourceCloudflareZoneLeakedCredentialChecksDetection             string = "cloudflare.zone.leakedCredentialChecks.detection"
 	ResourceCloudflareZoneContentScanning                             string = "cloudflare.zone.contentScanning"
 	ResourceCloudflareZoneContentScanningPayload                      string = "cloudflare.zone.contentScanning.payload"
+	ResourceCloudflareZoneAiSecurity                                  string = "cloudflare.zone.aiSecurity"
+	ResourceCloudflareZoneAiSecurityCustomTopic                       string = "cloudflare.zone.aiSecurity.customTopic"
+	ResourceCloudflareZoneAiAudit                                     string = "cloudflare.zone.aiAudit"
+	ResourceCloudflareZoneAiAuditUserAgent                            string = "cloudflare.zone.aiAudit.userAgent"
 	ResourceCloudflareZoneSecurityTxt                                 string = "cloudflare.zone.securityTxt"
 	ResourceCloudflareTurnstileWidget                                 string = "cloudflare.turnstile.widget"
 )
@@ -369,6 +373,22 @@ func init() {
 			// to override args, implement: initCloudflareZoneContentScanningPayload(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareZoneContentScanningPayload,
 		},
+		"cloudflare.zone.aiSecurity": {
+			// to override args, implement: initCloudflareZoneAiSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneAiSecurity,
+		},
+		"cloudflare.zone.aiSecurity.customTopic": {
+			// to override args, implement: initCloudflareZoneAiSecurityCustomTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneAiSecurityCustomTopic,
+		},
+		"cloudflare.zone.aiAudit": {
+			// to override args, implement: initCloudflareZoneAiAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneAiAudit,
+		},
+		"cloudflare.zone.aiAudit.userAgent": {
+			// to override args, implement: initCloudflareZoneAiAuditUserAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneAiAuditUserAgent,
+		},
 		"cloudflare.zone.securityTxt": {
 			// to override args, implement: initCloudflareZoneSecurityTxt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareZoneSecurityTxt,
@@ -582,6 +602,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.zone.securityTxt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZone).GetSecurityTxt()).ToDataRes(types.Resource("cloudflare.zone.securityTxt"))
+	},
+	"cloudflare.zone.aiSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetAiSecurity()).ToDataRes(types.Resource("cloudflare.zone.aiSecurity"))
+	},
+	"cloudflare.zone.aiAudit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetAiAudit()).ToDataRes(types.Resource("cloudflare.zone.aiAudit"))
 	},
 	"cloudflare.zone.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneAccount).GetId()).ToDataRes(types.String)
@@ -2266,6 +2292,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.contentScanning.payload.payload": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneContentScanningPayload).GetPayload()).ToDataRes(types.String)
 	},
+	"cloudflare.zone.aiSecurity.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiSecurity).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.aiSecurity.customTopics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiSecurity).GetCustomTopics()).ToDataRes(types.Array(types.Resource("cloudflare.zone.aiSecurity.customTopic")))
+	},
+	"cloudflare.zone.aiSecurity.customTopic.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiSecurityCustomTopic).GetLabel()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.aiSecurity.customTopic.topic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiSecurityCustomTopic).GetTopic()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.aiAudit.robotsStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAudit).GetRobotsStatus()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.aiAudit.sitemaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAudit).GetSitemaps()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.aiAudit.userAgents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAudit).GetUserAgents()).ToDataRes(types.Array(types.Resource("cloudflare.zone.aiAudit.userAgent")))
+	},
+	"cloudflare.zone.aiAudit.userAgent.userAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetUserAgent()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.aiAudit.userAgent.allow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetAllow()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.aiAudit.userAgent.disallow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetDisallow()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.aiAudit.userAgent.crawlDelay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetCrawlDelay()).ToDataRes(types.Float)
+	},
+	"cloudflare.zone.aiAudit.userAgent.contentSignalAiTrain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetContentSignalAiTrain()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.aiAudit.userAgent.contentSignalAiInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetContentSignalAiInput()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.aiAudit.userAgent.contentSignalSearch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneAiAuditUserAgent).GetContentSignalSearch()).ToDataRes(types.String)
+	},
 	"cloudflare.zone.securityTxt.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneSecurityTxt).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -2524,6 +2592,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.zone.securityTxt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZone).SecurityTxt, ok = plugin.RawToTValue[*mqlCloudflareZoneSecurityTxt](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).AiSecurity, ok = plugin.RawToTValue[*mqlCloudflareZoneAiSecurity](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).AiAudit, ok = plugin.RawToTValue[*mqlCloudflareZoneAiAudit](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5038,6 +5114,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZoneContentScanningPayload).Payload, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"cloudflare.zone.aiSecurity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiSecurity).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.aiSecurity.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiSecurity).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiSecurity.customTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiSecurity).CustomTopics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiSecurity.customTopic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiSecurityCustomTopic).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.aiSecurity.customTopic.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiSecurityCustomTopic).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiSecurity.customTopic.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiSecurityCustomTopic).Topic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAudit).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.aiAudit.robotsStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAudit).RobotsStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.sitemaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAudit).Sitemaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAudit).UserAgents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.userAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).UserAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.allow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).Allow, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.disallow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).Disallow, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.crawlDelay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).CrawlDelay, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.contentSignalAiTrain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).ContentSignalAiTrain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.contentSignalAiInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).ContentSignalAiInput, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.aiAudit.userAgent.contentSignalSearch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneAiAuditUserAgent).ContentSignalSearch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"cloudflare.zone.securityTxt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneSecurityTxt).__id, ok = v.Value.(string)
 		return
@@ -5292,6 +5440,8 @@ type mqlCloudflareZone struct {
 	LeakedCredentialChecks   plugin.TValue[*mqlCloudflareZoneLeakedCredentialChecks]
 	ContentScanning          plugin.TValue[*mqlCloudflareZoneContentScanning]
 	SecurityTxt              plugin.TValue[*mqlCloudflareZoneSecurityTxt]
+	AiSecurity               plugin.TValue[*mqlCloudflareZoneAiSecurity]
+	AiAudit                  plugin.TValue[*mqlCloudflareZoneAiAudit]
 }
 
 // createCloudflareZone creates a new instance of this resource
@@ -5856,6 +6006,38 @@ func (c *mqlCloudflareZone) GetSecurityTxt() *plugin.TValue[*mqlCloudflareZoneSe
 		}
 
 		return c.securityTxt()
+	})
+}
+
+func (c *mqlCloudflareZone) GetAiSecurity() *plugin.TValue[*mqlCloudflareZoneAiSecurity] {
+	return plugin.GetOrCompute[*mqlCloudflareZoneAiSecurity](&c.AiSecurity, func() (*mqlCloudflareZoneAiSecurity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "aiSecurity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareZoneAiSecurity), nil
+			}
+		}
+
+		return c.aiSecurity()
+	})
+}
+
+func (c *mqlCloudflareZone) GetAiAudit() *plugin.TValue[*mqlCloudflareZoneAiAudit] {
+	return plugin.GetOrCompute[*mqlCloudflareZoneAiAudit](&c.AiAudit, func() (*mqlCloudflareZoneAiAudit, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "aiAudit")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareZoneAiAudit), nil
+			}
+		}
+
+		return c.aiAudit()
 	})
 }
 
@@ -12028,6 +12210,256 @@ func (c *mqlCloudflareZoneContentScanningPayload) GetId() *plugin.TValue[string]
 
 func (c *mqlCloudflareZoneContentScanningPayload) GetPayload() *plugin.TValue[string] {
 	return &c.Payload
+}
+
+// mqlCloudflareZoneAiSecurity for the cloudflare.zone.aiSecurity resource
+type mqlCloudflareZoneAiSecurity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCloudflareZoneAiSecurityInternal
+	Enabled      plugin.TValue[bool]
+	CustomTopics plugin.TValue[[]any]
+}
+
+// createCloudflareZoneAiSecurity creates a new instance of this resource
+func createCloudflareZoneAiSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneAiSecurity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.aiSecurity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneAiSecurity) MqlName() string {
+	return "cloudflare.zone.aiSecurity"
+}
+
+func (c *mqlCloudflareZoneAiSecurity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneAiSecurity) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareZoneAiSecurity) GetCustomTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomTopics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone.aiSecurity", c.__id, "customTopics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customTopics()
+	})
+}
+
+// mqlCloudflareZoneAiSecurityCustomTopic for the cloudflare.zone.aiSecurity.customTopic resource
+type mqlCloudflareZoneAiSecurityCustomTopic struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneAiSecurityCustomTopicInternal it will be used here
+	Label plugin.TValue[string]
+	Topic plugin.TValue[string]
+}
+
+// createCloudflareZoneAiSecurityCustomTopic creates a new instance of this resource
+func createCloudflareZoneAiSecurityCustomTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneAiSecurityCustomTopic{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.aiSecurity.customTopic", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneAiSecurityCustomTopic) MqlName() string {
+	return "cloudflare.zone.aiSecurity.customTopic"
+}
+
+func (c *mqlCloudflareZoneAiSecurityCustomTopic) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneAiSecurityCustomTopic) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlCloudflareZoneAiSecurityCustomTopic) GetTopic() *plugin.TValue[string] {
+	return &c.Topic
+}
+
+// mqlCloudflareZoneAiAudit for the cloudflare.zone.aiAudit resource
+type mqlCloudflareZoneAiAudit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCloudflareZoneAiAuditInternal
+	RobotsStatus plugin.TValue[int64]
+	Sitemaps     plugin.TValue[[]any]
+	UserAgents   plugin.TValue[[]any]
+}
+
+// createCloudflareZoneAiAudit creates a new instance of this resource
+func createCloudflareZoneAiAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneAiAudit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.aiAudit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneAiAudit) MqlName() string {
+	return "cloudflare.zone.aiAudit"
+}
+
+func (c *mqlCloudflareZoneAiAudit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneAiAudit) GetRobotsStatus() *plugin.TValue[int64] {
+	return &c.RobotsStatus
+}
+
+func (c *mqlCloudflareZoneAiAudit) GetSitemaps() *plugin.TValue[[]any] {
+	return &c.Sitemaps
+}
+
+func (c *mqlCloudflareZoneAiAudit) GetUserAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAgents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone.aiAudit", c.__id, "userAgents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAgents()
+	})
+}
+
+// mqlCloudflareZoneAiAuditUserAgent for the cloudflare.zone.aiAudit.userAgent resource
+type mqlCloudflareZoneAiAuditUserAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneAiAuditUserAgentInternal it will be used here
+	UserAgent            plugin.TValue[string]
+	Allow                plugin.TValue[[]any]
+	Disallow             plugin.TValue[[]any]
+	CrawlDelay           plugin.TValue[float64]
+	ContentSignalAiTrain plugin.TValue[string]
+	ContentSignalAiInput plugin.TValue[string]
+	ContentSignalSearch  plugin.TValue[string]
+}
+
+// createCloudflareZoneAiAuditUserAgent creates a new instance of this resource
+func createCloudflareZoneAiAuditUserAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneAiAuditUserAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.aiAudit.userAgent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) MqlName() string {
+	return "cloudflare.zone.aiAudit.userAgent"
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetUserAgent() *plugin.TValue[string] {
+	return &c.UserAgent
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetAllow() *plugin.TValue[[]any] {
+	return &c.Allow
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetDisallow() *plugin.TValue[[]any] {
+	return &c.Disallow
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetCrawlDelay() *plugin.TValue[float64] {
+	return &c.CrawlDelay
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetContentSignalAiTrain() *plugin.TValue[string] {
+	return &c.ContentSignalAiTrain
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetContentSignalAiInput() *plugin.TValue[string] {
+	return &c.ContentSignalAiInput
+}
+
+func (c *mqlCloudflareZoneAiAuditUserAgent) GetContentSignalSearch() *plugin.TValue[string] {
+	return &c.ContentSignalSearch
 }
 
 // mqlCloudflareZoneSecurityTxt for the cloudflare.zone.securityTxt resource

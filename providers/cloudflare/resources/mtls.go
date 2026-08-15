@@ -6,8 +6,8 @@ import (
 	"context"
 	"errors"
 
-	cloudflare "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/mtls_certificates"
+	cloudflare "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/mtls_certificates"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )

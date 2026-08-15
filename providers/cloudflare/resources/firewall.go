@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	cloudflare "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/page_rules"
-	"github.com/cloudflare/cloudflare-go/v6/rulesets"
+	cloudflare "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/page_rules"
+	"github.com/cloudflare/cloudflare-go/v7/rulesets"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"

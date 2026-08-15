@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	cloudflarev6 "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/shared"
+	cloudflarev6 "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"

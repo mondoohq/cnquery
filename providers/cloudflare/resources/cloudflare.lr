@@ -165,6 +165,10 @@ private cloudflare.zone @defaults("name account.name") {
 	contentScanning() cloudflare.zone.contentScanning
 	// Vulnerability disclosure policy published at /.well-known/security.txt
 	securityTxt() cloudflare.zone.securityTxt
+	// AI Security for Apps configuration
+	aiSecurity() cloudflare.zone.aiSecurity
+	// Crawler directives Cloudflare read from the zone's robots.txt
+	aiAudit() cloudflare.zone.aiAudit
 }
 
 // Cloudflare account
@@ -1943,6 +1947,83 @@ private cloudflare.zone.contentScanning.payload @defaults("id payload") {
 	id string
 	// Ruleset expression matching content objects in a request
 	payload string
+}
+
+// AI Security for Apps
+//
+// Inspection of prompts and responses passing through the zone, which lets
+// Cloudflare classify model traffic by topic and act on it before it reaches
+// an application. The enabled field reports whether that inspection runs at
+// all, so a zone fronting an AI application with it switched off is passing
+// prompts through unexamined. The customTopics collection carries the
+// site-specific categories added on top of the built-in ones.
+private cloudflare.zone.aiSecurity @defaults("enabled") {
+	// Whether AI Security for Apps is enabled on the zone
+	enabled bool
+	// Site-specific topic categories used for content detection
+	customTopics() []cloudflare.zone.aiSecurity.customTopic
+}
+
+// AI Security custom topic category
+//
+// A site-specific category AI Security matches prompt and response content
+// against, in addition to the built-in categories. The label selects the topic
+// and the topic field carries the description the classifier matches on.
+private cloudflare.zone.aiSecurity.customTopic @defaults("label topic") {
+	// Unique label identifying the topic category
+	label string
+	// Description of the content the category matches
+	topic string
+}
+
+// Crawler directives for the zone
+//
+// The zone's robots.txt as Cloudflare fetched and parsed it, which is what
+// governs whether AI crawlers may read the site and whether its content may be
+// used for model training. The robotsStatus field carries the HTTP status of
+// the fetch, so a zone serving no robots.txt at all is visible as a status
+// rather than as an empty rule set, and userAgents lists the parsed rules per
+// crawler.
+private cloudflare.zone.aiAudit @defaults("robotsStatus") {
+	// HTTP status Cloudflare received fetching the zone's robots.txt
+	//
+	// 200 when a file was served. A 404 means the zone publishes no robots.txt,
+	// which leaves every crawler undirected rather than denied.
+	robotsStatus int
+	// Sitemap URLs advertised in robots.txt
+	sitemaps []string
+	// Parsed directives, one entry per user agent named in robots.txt
+	userAgents() []cloudflare.zone.aiAudit.userAgent
+}
+
+// Crawler directives for one user agent
+//
+// The robots.txt rules that apply to a single named crawler, selected by
+// userAgent. Covers the allowed and disallowed path patterns, the requested
+// crawl delay, and the content signals that state whether the site permits its
+// content to be used for AI training, as AI input, or for search indexing.
+private cloudflare.zone.aiAudit.userAgent @defaults("userAgent") {
+	// User agent string the directives apply to, or * for the default rules
+	userAgent string
+	// Path patterns the crawler is allowed to fetch
+	allow []string
+	// Path patterns the crawler is told not to fetch
+	disallow []string
+	// Seconds the crawler is asked to wait between requests, 0 when unset
+	crawlDelay float
+	// Whether the site permits its content to be used for AI training
+	//
+	// Carries the ai-train content signal, empty when robots.txt states none.
+	contentSignalAiTrain string
+	// Whether the site permits its content to be used as AI input
+	//
+	// Carries the ai-input content signal, which covers retrieval and grounding
+	// rather than training. Empty when robots.txt states none.
+	contentSignalAiInput string
+	// Whether the site permits its content to be indexed for search
+	//
+	// Carries the search content signal, empty when robots.txt states none.
+	contentSignalSearch string
 }
 
 // Vulnerability disclosure policy (security.txt)
