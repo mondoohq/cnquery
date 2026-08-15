@@ -13,6 +13,7 @@ import (
 	cloudfwclient "github.com/alibabacloud-go/cloudfw-20171207/v11/client"
 	cloudssoclient "github.com/alibabacloud-go/cloudsso-20210515/client"
 	configclient "github.com/alibabacloud-go/config-20200907/v4/client"
+	crclient "github.com/alibabacloud-go/cr-20181201/v3/client"
 	csclient "github.com/alibabacloud-go/cs-20151215/v8/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	ddoscooclient "github.com/alibabacloud-go/ddoscoo-20200101/v5/client"
@@ -174,6 +175,18 @@ func (c *AlicloudConnection) SlbClient(region string) (*slbclient.Client, error)
 		return nil, err
 	}
 	return client.(*slbclient.Client), nil
+}
+
+// CrClient returns the Container Registry client. The service's endpoint prefix
+// is cr.
+func (c *AlicloudConnection) CrClient(region string) (*crclient.Client, error) {
+	client, err := c.cachedClient("cr/"+region, func() (any, error) {
+		return crclient.NewClient(c.config("cr", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*crclient.Client), nil
 }
 
 func (c *AlicloudConnection) StsClient(region string) (*stsclient.Client, error) {

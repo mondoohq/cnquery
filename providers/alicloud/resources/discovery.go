@@ -33,6 +33,7 @@ const (
 	DiscoveryMongodbInstances = "mongodb-instances"
 	DiscoveryPolardbClusters  = "polardb-clusters"
 	DiscoveryFcFunctions      = "fc-functions"
+	DiscoveryAcrInstances     = "acr-instances"
 )
 
 // Discover enumerates the major service objects in the account and returns one
@@ -77,6 +78,8 @@ func Discover(runtime *plugin.Runtime, conf *inventory.Config) (*inventory.Inven
 			assets, err = discoverPolardbClusters(runtime, conn, conf)
 		case DiscoveryFcFunctions:
 			assets, err = discoverFcFunctions(runtime, conn, conf)
+		case DiscoveryAcrInstances:
+			assets, err = discoverAcrInstances(runtime, conn, conf)
 		case DiscoveryAccounts:
 			// the account is already returned as the connected root asset, so it
 			// contributes no discovered child assets
@@ -110,6 +113,7 @@ func handleTargets(targets []string) []string {
 			DiscoveryMongodbInstances,
 			DiscoveryPolardbClusters,
 			DiscoveryFcFunctions,
+			DiscoveryAcrInstances,
 		}
 	}
 	return targets
@@ -365,6 +369,29 @@ func discoverFcFunctions(runtime *plugin.Runtime, conn *connection.AlicloudConne
 		assets = append(assets, newChildAsset(conf, conn.ID(), region,
 			connection.NewFcFunctionIdentifier(region, name), connection.NewFcFunctionPlatform(region, name),
 			name, connection.OptionFcFunctionName, name))
+	}
+	return assets, nil
+}
+
+func discoverAcrInstances(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.acr", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances, err := res.(*mqlAlicloudAcr).instances()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(instances))
+	for _, ii := range instances {
+		inst := ii.(*mqlAlicloudAcrInstance)
+		id := inst.InstanceId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
+			connection.NewAcrInstanceIdentifier(id), connection.NewAcrInstancePlatform(id),
+			nameOr(inst.InstanceName.Data, id), connection.OptionAcrInstanceID, id))
 	}
 	return assets, nil
 }

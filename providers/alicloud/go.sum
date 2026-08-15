@@ -55,6 +55,8 @@ github.com/alibabacloud-go/cloudsso-20210515 v1.6.2 h1:ZGVwnlSC1ioXXReKS5Ks1ZHar
 github.com/alibabacloud-go/cloudsso-20210515 v1.6.2/go.mod h1:yMRHC9zVPra7DCa9G7YWr53a3fkDTwonGOdcfb+DFZU=
 github.com/alibabacloud-go/config-20200907/v4 v4.2.3 h1:2pc+g0xLJIZySTbGHIcO+SgO3tFvmfFV8cpXhkcjZH8=
 github.com/alibabacloud-go/config-20200907/v4 v4.2.3/go.mod h1:676adIwzf0Vv49S7EbnLgx15yypR6ksoZBmGRC+SoMs=
+github.com/alibabacloud-go/cr-20181201/v3 v3.2.2 h1:FVb9x96nzfYYGY1TiqGeGIJ94hiV3rMDYJj450xcgew=
+github.com/alibabacloud-go/cr-20181201/v3 v3.2.2/go.mod h1:n6rgkvIRrWimA7ZDk/amBIcxjw0lXF8tL+NKdMjSDW4=
 github.com/alibabacloud-go/cs-20151215/v8 v8.0.4 h1:yt4OLEgGWxyFIziBJtd4M2QGF5Sievr+92u/FZNTYXg=
 github.com/alibabacloud-go/cs-20151215/v8 v8.0.4/go.mod h1:BCwaxkn50Fg/j7jcVtamSy1GjXIVTpbWc8ihEnOcgwY=
 github.com/alibabacloud-go/darabonba-array v0.1.0 h1:vR8s7b1fWAQIjEjWnuF0JiKsCvclSRTfDzZHTYqfufY=

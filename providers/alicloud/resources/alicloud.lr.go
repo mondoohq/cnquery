@@ -123,6 +123,12 @@ const (
 	ResourceAlicloudCenAttachment                string = "alicloud.cen.attachment"
 	ResourceAlicloudVpcVpnGateway                string = "alicloud.vpc.vpnGateway"
 	ResourceAlicloudVpcVpnConnection             string = "alicloud.vpc.vpnConnection"
+	ResourceAlicloudAcr                          string = "alicloud.acr"
+	ResourceAlicloudAcrInstance                  string = "alicloud.acr.instance"
+	ResourceAlicloudAcrNamespace                 string = "alicloud.acr.namespace"
+	ResourceAlicloudAcrRepository                string = "alicloud.acr.repository"
+	ResourceAlicloudAcrSyncRule                  string = "alicloud.acr.syncRule"
+	ResourceAlicloudAcrScanRule                  string = "alicloud.acr.scanRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -556,6 +562,30 @@ func init() {
 		"alicloud.vpc.vpnConnection": {
 			// to override args, implement: initAlicloudVpcVpnConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudVpcVpnConnection,
+		},
+		"alicloud.acr": {
+			// to override args, implement: initAlicloudAcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcr,
+		},
+		"alicloud.acr.instance": {
+			Init:   initAlicloudAcrInstance,
+			Create: createAlicloudAcrInstance,
+		},
+		"alicloud.acr.namespace": {
+			// to override args, implement: initAlicloudAcrNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcrNamespace,
+		},
+		"alicloud.acr.repository": {
+			// to override args, implement: initAlicloudAcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcrRepository,
+		},
+		"alicloud.acr.syncRule": {
+			// to override args, implement: initAlicloudAcrSyncRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcrSyncRule,
+		},
+		"alicloud.acr.scanRule": {
+			// to override args, implement: initAlicloudAcrScanRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcrScanRule,
 		},
 	}
 }
@@ -5310,6 +5340,219 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.vpc.vpnConnection.vpnGateway": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnConnection).GetVpnGateway()).ToDataRes(types.Resource("alicloud.vpc.vpnGateway"))
+	},
+	"alicloud.acr.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcr).GetInstances()).ToDataRes(types.Array(types.Resource("alicloud.acr.instance")))
+	},
+	"alicloud.acr.instance.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.instance.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInstanceName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.instance.instanceSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInstanceSpecification()).ToDataRes(types.String)
+	},
+	"alicloud.acr.instance.instanceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInstanceStatus()).ToDataRes(types.String)
+	},
+	"alicloud.acr.instance.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.instance.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.instance.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.acr.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.instance.modifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.instance.internetEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInternetEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.instance.internetEndpointAclEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInternetEndpointAclEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.instance.internetEndpointAclEntries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInternetEndpointAclEntries()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.acr.instance.internetEndpointDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetInternetEndpointDomains()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.acr.instance.namespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetNamespaces()).ToDataRes(types.Array(types.Resource("alicloud.acr.namespace")))
+	},
+	"alicloud.acr.instance.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetRepositories()).ToDataRes(types.Array(types.Resource("alicloud.acr.repository")))
+	},
+	"alicloud.acr.instance.syncRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetSyncRules()).ToDataRes(types.Array(types.Resource("alicloud.acr.syncRule")))
+	},
+	"alicloud.acr.instance.scanRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetScanRules()).ToDataRes(types.Array(types.Resource("alicloud.acr.scanRule")))
+	},
+	"alicloud.acr.namespace.namespaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetNamespaceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.namespace.namespaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetNamespaceName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.namespace.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.namespace.autoCreateRepo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetAutoCreateRepo()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.namespace.defaultRepoType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetDefaultRepoType()).ToDataRes(types.String)
+	},
+	"alicloud.acr.namespace.defaultTagImmutability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetDefaultTagImmutability()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.namespace.namespaceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetNamespaceStatus()).ToDataRes(types.String)
+	},
+	"alicloud.acr.namespace.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.namespace.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.acr.namespace.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrNamespace).GetRepositories()).ToDataRes(types.Array(types.Resource("alicloud.acr.repository")))
+	},
+	"alicloud.acr.repository.repoId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetRepoId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.repoName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetRepoName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.repoNamespaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetRepoNamespaceName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetNamespace()).ToDataRes(types.Resource("alicloud.acr.namespace"))
+	},
+	"alicloud.acr.repository.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.repoType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetRepoType()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.repository.tagImmutability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetTagImmutability()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.repository.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetSummary()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.repoStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetRepoStatus()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.repoBuildType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetRepoBuildType()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repository.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.acr.repository.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.repository.modifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.syncRule.syncRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetSyncRuleId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.syncRuleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetSyncRuleName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.crossUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetCrossUser()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.syncRule.syncDirection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetSyncDirection()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.syncScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetSyncScope()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.syncTrigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetSyncTrigger()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.localInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetLocalInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.localRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetLocalRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.localNamespaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetLocalNamespaceName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.localRepoName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetLocalRepoName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.targetInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetTargetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.targetRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetTargetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.targetNamespaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetTargetNamespaceName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.targetRepoName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetTargetRepoName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.namespaceNameFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetNamespaceNameFilter()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.repoNameFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetRepoNameFilter()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.tagFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetTagFilter()).ToDataRes(types.String)
+	},
+	"alicloud.acr.syncRule.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.syncRule.modifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrSyncRule).GetModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.scanRule.scanRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetScanRuleId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetRuleName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.scanType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetScanType()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.scanScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetScanScope()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.repoTagFilterPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetRepoTagFilterPattern()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.triggerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetTriggerType()).ToDataRes(types.String)
+	},
+	"alicloud.acr.scanRule.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.scanRule.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrScanRule).GetUpdateTime()).ToDataRes(types.Time)
 	},
 }
 
@@ -11993,6 +12236,314 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.vpc.vpnConnection.vpnGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpcVpnConnection).VpnGateway, ok = plugin.RawToTValue[*mqlAlicloudVpcVpnGateway](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcr).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcr).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.instance.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.instanceSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InstanceSpecification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.instanceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InstanceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.modifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).ModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.internetEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InternetEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.internetEndpointAclEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InternetEndpointAclEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.internetEndpointAclEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InternetEndpointAclEntries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.internetEndpointDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).InternetEndpointDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).Namespaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.syncRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).SyncRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.scanRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).ScanRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.namespace.namespaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).NamespaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.namespaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).NamespaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.autoCreateRepo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).AutoCreateRepo, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.defaultRepoType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).DefaultRepoType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.defaultTagImmutability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).DefaultTagImmutability, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.namespaceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).NamespaceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.namespace.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrNamespace).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.repository.repoId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).RepoId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.repoNamespaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).RepoNamespaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).Namespace, ok = plugin.RawToTValue[*mqlAlicloudAcrNamespace](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.repoType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).RepoType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.tagImmutability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).TagImmutability, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.repoStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).RepoStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.repoBuildType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).RepoBuildType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.modifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).ModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.syncRule.syncRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).SyncRuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.syncRuleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).SyncRuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.crossUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).CrossUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.syncDirection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).SyncDirection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.syncScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).SyncScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.syncTrigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).SyncTrigger, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.localInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).LocalInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.localRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).LocalRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.localNamespaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).LocalNamespaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.localRepoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).LocalRepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.targetInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).TargetInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.targetRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).TargetRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.targetNamespaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).TargetNamespaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.targetRepoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).TargetRepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.namespaceNameFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).NamespaceNameFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.repoNameFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).RepoNameFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.tagFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).TagFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.syncRule.modifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrSyncRule).ModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.scanRule.scanRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).ScanRuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.scanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).ScanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.scanScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).ScanScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.repoTagFilterPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).RepoTagFilterPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.triggerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).TriggerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.scanRule.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrScanRule).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -27611,4 +28162,753 @@ func (c *mqlAlicloudVpcVpnConnection) GetVpnGateway() *plugin.TValue[*mqlAliclou
 
 		return c.vpnGateway()
 	})
+}
+
+// mqlAlicloudAcr for the alicloud.acr resource
+type mqlAlicloudAcr struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAcrInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createAlicloudAcr creates a new instance of this resource
+func createAlicloudAcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcr{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcr) MqlName() string {
+	return "alicloud.acr"
+}
+
+func (c *mqlAlicloudAcr) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcr) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlAlicloudAcrInstance for the alicloud.acr.instance resource
+type mqlAlicloudAcrInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudAcrInstanceInternal
+	InstanceId                 plugin.TValue[string]
+	InstanceName               plugin.TValue[string]
+	InstanceSpecification      plugin.TValue[string]
+	InstanceStatus             plugin.TValue[string]
+	RegionId                   plugin.TValue[string]
+	ResourceGroupId            plugin.TValue[string]
+	ResourceGroup              plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	CreateTime                 plugin.TValue[*time.Time]
+	ModifiedTime               plugin.TValue[*time.Time]
+	InternetEndpointEnabled    plugin.TValue[bool]
+	InternetEndpointAclEnabled plugin.TValue[bool]
+	InternetEndpointAclEntries plugin.TValue[[]any]
+	InternetEndpointDomains    plugin.TValue[[]any]
+	Namespaces                 plugin.TValue[[]any]
+	Repositories               plugin.TValue[[]any]
+	SyncRules                  plugin.TValue[[]any]
+	ScanRules                  plugin.TValue[[]any]
+}
+
+// createAlicloudAcrInstance creates a new instance of this resource
+func createAlicloudAcrInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrInstance) MqlName() string {
+	return "alicloud.acr.instance"
+}
+
+func (c *mqlAlicloudAcrInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrInstance) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAcrInstance) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlAlicloudAcrInstance) GetInstanceSpecification() *plugin.TValue[string] {
+	return &c.InstanceSpecification
+}
+
+func (c *mqlAlicloudAcrInstance) GetInstanceStatus() *plugin.TValue[string] {
+	return &c.InstanceStatus
+}
+
+func (c *mqlAlicloudAcrInstance) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudAcrInstance) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudAcrInstance) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.instance", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudAcrInstance) GetModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTime
+}
+
+func (c *mqlAlicloudAcrInstance) GetInternetEndpointEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetEndpointEnabled, func() (bool, error) {
+		return c.internetEndpointEnabled()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetInternetEndpointAclEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetEndpointAclEnabled, func() (bool, error) {
+		return c.internetEndpointAclEnabled()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetInternetEndpointAclEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InternetEndpointAclEntries, func() ([]any, error) {
+		return c.internetEndpointAclEntries()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetInternetEndpointDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InternetEndpointDomains, func() ([]any, error) {
+		return c.internetEndpointDomains()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetNamespaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Namespaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.instance", c.__id, "namespaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.namespaces()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.instance", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetSyncRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SyncRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.instance", c.__id, "syncRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.syncRules()
+	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetScanRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScanRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.instance", c.__id, "scanRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scanRules()
+	})
+}
+
+// mqlAlicloudAcrNamespace for the alicloud.acr.namespace resource
+type mqlAlicloudAcrNamespace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudAcrNamespaceInternal
+	NamespaceId            plugin.TValue[string]
+	NamespaceName          plugin.TValue[string]
+	InstanceId             plugin.TValue[string]
+	AutoCreateRepo         plugin.TValue[bool]
+	DefaultRepoType        plugin.TValue[string]
+	DefaultTagImmutability plugin.TValue[bool]
+	NamespaceStatus        plugin.TValue[string]
+	ResourceGroupId        plugin.TValue[string]
+	ResourceGroup          plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Repositories           plugin.TValue[[]any]
+}
+
+// createAlicloudAcrNamespace creates a new instance of this resource
+func createAlicloudAcrNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrNamespace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.namespace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrNamespace) MqlName() string {
+	return "alicloud.acr.namespace"
+}
+
+func (c *mqlAlicloudAcrNamespace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrNamespace) GetNamespaceId() *plugin.TValue[string] {
+	return &c.NamespaceId
+}
+
+func (c *mqlAlicloudAcrNamespace) GetNamespaceName() *plugin.TValue[string] {
+	return &c.NamespaceName
+}
+
+func (c *mqlAlicloudAcrNamespace) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAcrNamespace) GetAutoCreateRepo() *plugin.TValue[bool] {
+	return &c.AutoCreateRepo
+}
+
+func (c *mqlAlicloudAcrNamespace) GetDefaultRepoType() *plugin.TValue[string] {
+	return &c.DefaultRepoType
+}
+
+func (c *mqlAlicloudAcrNamespace) GetDefaultTagImmutability() *plugin.TValue[bool] {
+	return &c.DefaultTagImmutability
+}
+
+func (c *mqlAlicloudAcrNamespace) GetNamespaceStatus() *plugin.TValue[string] {
+	return &c.NamespaceStatus
+}
+
+func (c *mqlAlicloudAcrNamespace) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudAcrNamespace) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.namespace", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudAcrNamespace) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.namespace", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+// mqlAlicloudAcrRepository for the alicloud.acr.repository resource
+type mqlAlicloudAcrRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudAcrRepositoryInternal
+	RepoId            plugin.TValue[string]
+	RepoName          plugin.TValue[string]
+	RepoNamespaceName plugin.TValue[string]
+	Namespace         plugin.TValue[*mqlAlicloudAcrNamespace]
+	InstanceId        plugin.TValue[string]
+	RepoType          plugin.TValue[string]
+	IsPublic          plugin.TValue[bool]
+	TagImmutability   plugin.TValue[bool]
+	Summary           plugin.TValue[string]
+	RepoStatus        plugin.TValue[string]
+	RepoBuildType     plugin.TValue[string]
+	ResourceGroupId   plugin.TValue[string]
+	ResourceGroup     plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	CreateTime        plugin.TValue[*time.Time]
+	ModifiedTime      plugin.TValue[*time.Time]
+}
+
+// createAlicloudAcrRepository creates a new instance of this resource
+func createAlicloudAcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrRepository) MqlName() string {
+	return "alicloud.acr.repository"
+}
+
+func (c *mqlAlicloudAcrRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrRepository) GetRepoId() *plugin.TValue[string] {
+	return &c.RepoId
+}
+
+func (c *mqlAlicloudAcrRepository) GetRepoName() *plugin.TValue[string] {
+	return &c.RepoName
+}
+
+func (c *mqlAlicloudAcrRepository) GetRepoNamespaceName() *plugin.TValue[string] {
+	return &c.RepoNamespaceName
+}
+
+func (c *mqlAlicloudAcrRepository) GetNamespace() *plugin.TValue[*mqlAlicloudAcrNamespace] {
+	return plugin.GetOrCompute[*mqlAlicloudAcrNamespace](&c.Namespace, func() (*mqlAlicloudAcrNamespace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.repository", c.__id, "namespace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudAcrNamespace), nil
+			}
+		}
+
+		return c.namespace()
+	})
+}
+
+func (c *mqlAlicloudAcrRepository) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAcrRepository) GetRepoType() *plugin.TValue[string] {
+	return &c.RepoType
+}
+
+func (c *mqlAlicloudAcrRepository) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
+}
+
+func (c *mqlAlicloudAcrRepository) GetTagImmutability() *plugin.TValue[bool] {
+	return &c.TagImmutability
+}
+
+func (c *mqlAlicloudAcrRepository) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlAlicloudAcrRepository) GetRepoStatus() *plugin.TValue[string] {
+	return &c.RepoStatus
+}
+
+func (c *mqlAlicloudAcrRepository) GetRepoBuildType() *plugin.TValue[string] {
+	return &c.RepoBuildType
+}
+
+func (c *mqlAlicloudAcrRepository) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudAcrRepository) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.repository", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudAcrRepository) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudAcrRepository) GetModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTime
+}
+
+// mqlAlicloudAcrSyncRule for the alicloud.acr.syncRule resource
+type mqlAlicloudAcrSyncRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAcrSyncRuleInternal it will be used here
+	SyncRuleId          plugin.TValue[string]
+	SyncRuleName        plugin.TValue[string]
+	CrossUser           plugin.TValue[bool]
+	SyncDirection       plugin.TValue[string]
+	SyncScope           plugin.TValue[string]
+	SyncTrigger         plugin.TValue[string]
+	LocalInstanceId     plugin.TValue[string]
+	LocalRegionId       plugin.TValue[string]
+	LocalNamespaceName  plugin.TValue[string]
+	LocalRepoName       plugin.TValue[string]
+	TargetInstanceId    plugin.TValue[string]
+	TargetRegionId      plugin.TValue[string]
+	TargetNamespaceName plugin.TValue[string]
+	TargetRepoName      plugin.TValue[string]
+	NamespaceNameFilter plugin.TValue[string]
+	RepoNameFilter      plugin.TValue[string]
+	TagFilter           plugin.TValue[string]
+	CreateTime          plugin.TValue[*time.Time]
+	ModifiedTime        plugin.TValue[*time.Time]
+}
+
+// createAlicloudAcrSyncRule creates a new instance of this resource
+func createAlicloudAcrSyncRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrSyncRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.syncRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrSyncRule) MqlName() string {
+	return "alicloud.acr.syncRule"
+}
+
+func (c *mqlAlicloudAcrSyncRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetSyncRuleId() *plugin.TValue[string] {
+	return &c.SyncRuleId
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetSyncRuleName() *plugin.TValue[string] {
+	return &c.SyncRuleName
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetCrossUser() *plugin.TValue[bool] {
+	return &c.CrossUser
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetSyncDirection() *plugin.TValue[string] {
+	return &c.SyncDirection
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetSyncScope() *plugin.TValue[string] {
+	return &c.SyncScope
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetSyncTrigger() *plugin.TValue[string] {
+	return &c.SyncTrigger
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetLocalInstanceId() *plugin.TValue[string] {
+	return &c.LocalInstanceId
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetLocalRegionId() *plugin.TValue[string] {
+	return &c.LocalRegionId
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetLocalNamespaceName() *plugin.TValue[string] {
+	return &c.LocalNamespaceName
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetLocalRepoName() *plugin.TValue[string] {
+	return &c.LocalRepoName
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetTargetInstanceId() *plugin.TValue[string] {
+	return &c.TargetInstanceId
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetTargetRegionId() *plugin.TValue[string] {
+	return &c.TargetRegionId
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetTargetNamespaceName() *plugin.TValue[string] {
+	return &c.TargetNamespaceName
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetTargetRepoName() *plugin.TValue[string] {
+	return &c.TargetRepoName
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetNamespaceNameFilter() *plugin.TValue[string] {
+	return &c.NamespaceNameFilter
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetRepoNameFilter() *plugin.TValue[string] {
+	return &c.RepoNameFilter
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetTagFilter() *plugin.TValue[string] {
+	return &c.TagFilter
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudAcrSyncRule) GetModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTime
+}
+
+// mqlAlicloudAcrScanRule for the alicloud.acr.scanRule resource
+type mqlAlicloudAcrScanRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAcrScanRuleInternal it will be used here
+	ScanRuleId           plugin.TValue[string]
+	RuleName             plugin.TValue[string]
+	InstanceId           plugin.TValue[string]
+	ScanType             plugin.TValue[string]
+	ScanScope            plugin.TValue[string]
+	RepoTagFilterPattern plugin.TValue[string]
+	TriggerType          plugin.TValue[string]
+	CreateTime           plugin.TValue[*time.Time]
+	UpdateTime           plugin.TValue[*time.Time]
+}
+
+// createAlicloudAcrScanRule creates a new instance of this resource
+func createAlicloudAcrScanRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrScanRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.scanRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrScanRule) MqlName() string {
+	return "alicloud.acr.scanRule"
+}
+
+func (c *mqlAlicloudAcrScanRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrScanRule) GetScanRuleId() *plugin.TValue[string] {
+	return &c.ScanRuleId
+}
+
+func (c *mqlAlicloudAcrScanRule) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAlicloudAcrScanRule) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAcrScanRule) GetScanType() *plugin.TValue[string] {
+	return &c.ScanType
+}
+
+func (c *mqlAlicloudAcrScanRule) GetScanScope() *plugin.TValue[string] {
+	return &c.ScanScope
+}
+
+func (c *mqlAlicloudAcrScanRule) GetRepoTagFilterPattern() *plugin.TValue[string] {
+	return &c.RepoTagFilterPattern
+}
+
+func (c *mqlAlicloudAcrScanRule) GetTriggerType() *plugin.TValue[string] {
+	return &c.TriggerType
+}
+
+func (c *mqlAlicloudAcrScanRule) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudAcrScanRule) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }

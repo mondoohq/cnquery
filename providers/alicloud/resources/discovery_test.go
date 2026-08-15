@@ -17,7 +17,7 @@ func TestHandleTargets(t *testing.T) {
 		DiscoveryVpcs, DiscoveryWaf, DiscoveryCloudFirewall,
 		DiscoveryOssBuckets, DiscoveryRdsInstances,
 		DiscoverySlbs, DiscoveryRedisInstances, DiscoveryMongodbInstances,
-		DiscoveryPolardbClusters, DiscoveryFcFunctions,
+		DiscoveryPolardbClusters, DiscoveryFcFunctions, DiscoveryAcrInstances,
 	}
 
 	assert.ElementsMatch(t, fineGrained, handleTargets([]string{DiscoveryAuto}))
