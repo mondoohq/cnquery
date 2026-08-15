@@ -548,7 +548,7 @@ func (s *mqlFrrConfig) routeMaps(file *mqlFile) ([]any, error) {
 		entries := make([]any, 0, len(rm.Entries))
 		for j := range rm.Entries {
 			e := &rm.Entries[j]
-			obj, err := CreateResource(s.MqlRuntime, "frr.config.routeMap.entry", map[string]*llx.RawData{
+			entryArgs := map[string]*llx.RawData{
 				"__id":      llx.StringData(id + "/" + strconv.FormatInt(e.Sequence, 10) + "/" + strconv.Itoa(j)),
 				"name":      llx.StringData(e.Name),
 				"action":    llx.StringData(e.Action),
@@ -560,7 +560,10 @@ func (s *mqlFrrConfig) routeMaps(file *mqlFile) ([]any, error) {
 				"file":      llx.StringData(e.File),
 				"startLine": llx.IntData(int64(e.StartLine)),
 				"raw":       llx.StringData(e.Raw),
-			})
+			}
+			routeMapClauseArgs(entryArgs, &e.Clauses)
+
+			obj, err := CreateResource(s.MqlRuntime, "frr.config.routeMap.entry", entryArgs)
 			if err != nil {
 				return nil, err
 			}
