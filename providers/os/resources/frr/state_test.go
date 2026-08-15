@@ -37,9 +37,12 @@ func TestValidateName(t *testing.T) {
 	}
 
 	// A name that reaches the command line must not be able to change it.
+	// The characters between `%` and `-` in ASCII are listed on purpose, so
+	// a character class that was read as a range would fail here.
 	invalid := []string{
 		"", "-lead", ".lead", "a b", "a;id", "a$(id)", "a`id`", "a|b", "a\nb",
-		"a'b", "a\"b", "../etc", strings.Repeat("a", 65),
+		"a'b", "a\"b", "../etc", "a&b", "a(b", "a)b", "a*b", "a+b", "a,b",
+		strings.Repeat("a", 65),
 	}
 	for _, v := range invalid {
 		assert.Error(t, ValidateName("vrf", v), "%q must be rejected", v)
