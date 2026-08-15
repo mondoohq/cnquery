@@ -97,6 +97,19 @@ const (
 	ResourceNginxConfServer                               string = "nginx.conf.server"
 	ResourceNginxConfUpstream                             string = "nginx.conf.upstream"
 	ResourceNginxConfLocation                             string = "nginx.conf.location"
+	ResourceTomcat                                        string = "tomcat"
+	ResourceTomcatServer                                  string = "tomcat.server"
+	ResourceTomcatListener                                string = "tomcat.listener"
+	ResourceTomcatService                                 string = "tomcat.service"
+	ResourceTomcatConnector                               string = "tomcat.connector"
+	ResourceTomcatEngine                                  string = "tomcat.engine"
+	ResourceTomcatHost                                    string = "tomcat.host"
+	ResourceTomcatValve                                   string = "tomcat.valve"
+	ResourceTomcatRealm                                   string = "tomcat.realm"
+	ResourceTomcatContext                                 string = "tomcat.context"
+	ResourceTomcatWebxml                                  string = "tomcat.webxml"
+	ResourceTomcatUser                                    string = "tomcat.user"
+	ResourceTomcatWebapp                                  string = "tomcat.webapp"
 	ResourceSquid                                         string = "squid"
 	ResourceSquidConf                                     string = "squid.conf"
 	ResourceSquidConfListen                               string = "squid.conf.listen"
@@ -870,6 +883,58 @@ func init() {
 		"nginx.conf.location": {
 			// to override args, implement: initNginxConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNginxConfLocation,
+		},
+		"tomcat": {
+			Init:   initTomcat,
+			Create: createTomcat,
+		},
+		"tomcat.server": {
+			Init:   initTomcatServer,
+			Create: createTomcatServer,
+		},
+		"tomcat.listener": {
+			// to override args, implement: initTomcatListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatListener,
+		},
+		"tomcat.service": {
+			// to override args, implement: initTomcatService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatService,
+		},
+		"tomcat.connector": {
+			// to override args, implement: initTomcatConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatConnector,
+		},
+		"tomcat.engine": {
+			// to override args, implement: initTomcatEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatEngine,
+		},
+		"tomcat.host": {
+			// to override args, implement: initTomcatHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatHost,
+		},
+		"tomcat.valve": {
+			// to override args, implement: initTomcatValve(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatValve,
+		},
+		"tomcat.realm": {
+			// to override args, implement: initTomcatRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatRealm,
+		},
+		"tomcat.context": {
+			Init:   initTomcatContext,
+			Create: createTomcatContext,
+		},
+		"tomcat.webxml": {
+			Init:   initTomcatWebxml,
+			Create: createTomcatWebxml,
+		},
+		"tomcat.user": {
+			// to override args, implement: initTomcatUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatUser,
+		},
+		"tomcat.webapp": {
+			// to override args, implement: initTomcatWebapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTomcatWebapp,
 		},
 		"squid": {
 			// to override args, implement: initSquid(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3974,6 +4039,297 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"nginx.conf.location.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfLocation).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.home": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetHome()).ToDataRes(types.String)
+	},
+	"tomcat.base": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetBase()).ToDataRes(types.String)
+	},
+	"tomcat.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetVersion()).ToDataRes(types.String)
+	},
+	"tomcat.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetServer()).ToDataRes(types.Resource("tomcat.server"))
+	},
+	"tomcat.webXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetWebXml()).ToDataRes(types.Resource("tomcat.webxml"))
+	},
+	"tomcat.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetContext()).ToDataRes(types.Resource("tomcat.context"))
+	},
+	"tomcat.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetLogging()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetUsers()).ToDataRes(types.Array(types.Resource("tomcat.user")))
+	},
+	"tomcat.webapps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcat).GetWebapps()).ToDataRes(types.Array(types.Resource("tomcat.webapp")))
+	},
+	"tomcat.server.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatServer).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"tomcat.server.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatServer).GetPort()).ToDataRes(types.Int)
+	},
+	"tomcat.server.shutdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatServer).GetShutdown()).ToDataRes(types.String)
+	},
+	"tomcat.server.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatServer).GetListeners()).ToDataRes(types.Array(types.Resource("tomcat.listener")))
+	},
+	"tomcat.server.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatServer).GetServices()).ToDataRes(types.Array(types.Resource("tomcat.service")))
+	},
+	"tomcat.listener.className": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatListener).GetClassName()).ToDataRes(types.String)
+	},
+	"tomcat.listener.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatListener).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatService).GetName()).ToDataRes(types.String)
+	},
+	"tomcat.service.connectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatService).GetConnectors()).ToDataRes(types.Array(types.Resource("tomcat.connector")))
+	},
+	"tomcat.service.engines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatService).GetEngines()).ToDataRes(types.Array(types.Resource("tomcat.engine")))
+	},
+	"tomcat.connector.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetPort()).ToDataRes(types.Int)
+	},
+	"tomcat.connector.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetAddress()).ToDataRes(types.String)
+	},
+	"tomcat.connector.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetProtocol()).ToDataRes(types.String)
+	},
+	"tomcat.connector.sslEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetSslEnabled()).ToDataRes(types.Bool)
+	},
+	"tomcat.connector.scheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetScheme()).ToDataRes(types.String)
+	},
+	"tomcat.connector.secure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetSecure()).ToDataRes(types.Bool)
+	},
+	"tomcat.connector.allowTrace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetAllowTrace()).ToDataRes(types.Bool)
+	},
+	"tomcat.connector.xpoweredBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetXpoweredBy()).ToDataRes(types.Bool)
+	},
+	"tomcat.connector.enableLookups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetEnableLookups()).ToDataRes(types.Bool)
+	},
+	"tomcat.connector.connectionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetConnectionTimeout()).ToDataRes(types.Int)
+	},
+	"tomcat.connector.maxHttpHeaderSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetMaxHttpHeaderSize()).ToDataRes(types.Int)
+	},
+	"tomcat.connector.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetServer()).ToDataRes(types.String)
+	},
+	"tomcat.connector.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetCiphers()).ToDataRes(types.String)
+	},
+	"tomcat.connector.sslProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetSslProtocol()).ToDataRes(types.String)
+	},
+	"tomcat.connector.sslEnabledProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetSslEnabledProtocols()).ToDataRes(types.String)
+	},
+	"tomcat.connector.clientAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetClientAuth()).ToDataRes(types.String)
+	},
+	"tomcat.connector.sslHostConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetSslHostConfigs()).ToDataRes(types.Array(types.Dict))
+	},
+	"tomcat.connector.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatConnector).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.engine.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatEngine).GetName()).ToDataRes(types.String)
+	},
+	"tomcat.engine.defaultHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatEngine).GetDefaultHost()).ToDataRes(types.String)
+	},
+	"tomcat.engine.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatEngine).GetHosts()).ToDataRes(types.Array(types.Resource("tomcat.host")))
+	},
+	"tomcat.engine.realms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatEngine).GetRealms()).ToDataRes(types.Array(types.Resource("tomcat.realm")))
+	},
+	"tomcat.engine.valves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatEngine).GetValves()).ToDataRes(types.Array(types.Resource("tomcat.valve")))
+	},
+	"tomcat.host.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetName()).ToDataRes(types.String)
+	},
+	"tomcat.host.appBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetAppBase()).ToDataRes(types.String)
+	},
+	"tomcat.host.appBaseDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetAppBaseDir()).ToDataRes(types.String)
+	},
+	"tomcat.host.autoDeploy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetAutoDeploy()).ToDataRes(types.Bool)
+	},
+	"tomcat.host.deployOnStartup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetDeployOnStartup()).ToDataRes(types.Bool)
+	},
+	"tomcat.host.deployXML": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetDeployXML()).ToDataRes(types.Bool)
+	},
+	"tomcat.host.unpackWARs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetUnpackWARs()).ToDataRes(types.Bool)
+	},
+	"tomcat.host.valves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetValves()).ToDataRes(types.Array(types.Resource("tomcat.valve")))
+	},
+	"tomcat.host.contexts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatHost).GetContexts()).ToDataRes(types.Array(types.Resource("tomcat.context")))
+	},
+	"tomcat.valve.className": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetClassName()).ToDataRes(types.String)
+	},
+	"tomcat.valve.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetPattern()).ToDataRes(types.String)
+	},
+	"tomcat.valve.directory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetDirectory()).ToDataRes(types.String)
+	},
+	"tomcat.valve.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetPrefix()).ToDataRes(types.String)
+	},
+	"tomcat.valve.suffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetSuffix()).ToDataRes(types.String)
+	},
+	"tomcat.valve.showServerInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetShowServerInfo()).ToDataRes(types.Bool)
+	},
+	"tomcat.valve.showReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetShowReport()).ToDataRes(types.Bool)
+	},
+	"tomcat.valve.allow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetAllow()).ToDataRes(types.String)
+	},
+	"tomcat.valve.deny": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetDeny()).ToDataRes(types.String)
+	},
+	"tomcat.valve.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatValve).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.realm.className": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetClassName()).ToDataRes(types.String)
+	},
+	"tomcat.realm.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetDigest()).ToDataRes(types.String)
+	},
+	"tomcat.realm.connectionURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetConnectionURL()).ToDataRes(types.String)
+	},
+	"tomcat.realm.failureCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetFailureCount()).ToDataRes(types.Int)
+	},
+	"tomcat.realm.lockOutTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetLockOutTime()).ToDataRes(types.Int)
+	},
+	"tomcat.realm.realms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetRealms()).ToDataRes(types.Array(types.Resource("tomcat.realm")))
+	},
+	"tomcat.realm.credentialHandlers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetCredentialHandlers()).ToDataRes(types.Array(types.Dict))
+	},
+	"tomcat.realm.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatRealm).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.context.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"tomcat.context.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetPath()).ToDataRes(types.String)
+	},
+	"tomcat.context.privileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetPrivileged()).ToDataRes(types.Bool)
+	},
+	"tomcat.context.crossContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetCrossContext()).ToDataRes(types.Bool)
+	},
+	"tomcat.context.logEffectiveWebXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetLogEffectiveWebXml()).ToDataRes(types.Bool)
+	},
+	"tomcat.context.allowLinking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetAllowLinking()).ToDataRes(types.Bool)
+	},
+	"tomcat.context.valves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetValves()).ToDataRes(types.Array(types.Resource("tomcat.valve")))
+	},
+	"tomcat.context.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatContext).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"tomcat.webxml.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"tomcat.webxml.metadataComplete": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetMetadataComplete()).ToDataRes(types.Bool)
+	},
+	"tomcat.webxml.errorPages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetErrorPages()).ToDataRes(types.Array(types.Dict))
+	},
+	"tomcat.webxml.securityConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetSecurityConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"tomcat.webxml.loginConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetLoginConfig()).ToDataRes(types.Dict)
+	},
+	"tomcat.webxml.sessionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetSessionTimeout()).ToDataRes(types.Int)
+	},
+	"tomcat.webxml.cookieHttpOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetCookieHttpOnly()).ToDataRes(types.Bool)
+	},
+	"tomcat.webxml.cookieSecure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetCookieSecure()).ToDataRes(types.Bool)
+	},
+	"tomcat.webxml.servlets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetServlets()).ToDataRes(types.Array(types.Dict))
+	},
+	"tomcat.webxml.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebxml).GetFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"tomcat.user.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatUser).GetUsername()).ToDataRes(types.String)
+	},
+	"tomcat.user.password": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatUser).GetPassword()).ToDataRes(types.String)
+	},
+	"tomcat.user.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatUser).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"tomcat.webapp.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebapp).GetName()).ToDataRes(types.String)
+	},
+	"tomcat.webapp.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebapp).GetPath()).ToDataRes(types.String)
+	},
+	"tomcat.webapp.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebapp).GetHost()).ToDataRes(types.String)
+	},
+	"tomcat.webapp.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebapp).GetContext()).ToDataRes(types.Resource("tomcat.context"))
+	},
+	"tomcat.webapp.webXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebapp).GetWebXml()).ToDataRes(types.Resource("tomcat.webxml"))
+	},
+	"tomcat.webapp.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTomcatWebapp).GetLogging()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"squid.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSquid).GetVersion()).ToDataRes(types.String)
@@ -15891,6 +16247,446 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nginx.conf.location.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfLocation).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.home": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Home, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.base": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Base, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Server, ok = plugin.RawToTValue[*mqlTomcatServer](v.Value, v.Error)
+		return
+	},
+	"tomcat.webXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).WebXml, ok = plugin.RawToTValue[*mqlTomcatWebxml](v.Value, v.Error)
+		return
+	},
+	"tomcat.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Context, ok = plugin.RawToTValue[*mqlTomcatContext](v.Value, v.Error)
+		return
+	},
+	"tomcat.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Logging, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcat).Webapps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatServer).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.server.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatServer).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"tomcat.server.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.server.shutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatServer).Shutdown, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.server.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatServer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.server.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatServer).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatListener).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.listener.className": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatListener).ClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.listener.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatListener).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatService).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.service.connectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatService).Connectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.service.engines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatService).Engines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.connector.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.sslEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).SslEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.scheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Scheme, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.secure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Secure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.allowTrace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).AllowTrace, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.xpoweredBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).XpoweredBy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.enableLookups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).EnableLookups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.connectionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).ConnectionTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.maxHttpHeaderSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).MaxHttpHeaderSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Ciphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.sslProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).SslProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.sslEnabledProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).SslEnabledProtocols, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.clientAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).ClientAuth, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.sslHostConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).SslHostConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.connector.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatConnector).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.engine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatEngine).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.engine.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatEngine).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.engine.defaultHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatEngine).DefaultHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.engine.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatEngine).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.engine.realms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatEngine).Realms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.engine.valves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatEngine).Valves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.host.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.appBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).AppBase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.appBaseDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).AppBaseDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.autoDeploy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).AutoDeploy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.deployOnStartup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).DeployOnStartup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.deployXML": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).DeployXML, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.unpackWARs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).UnpackWARs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.valves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).Valves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.host.contexts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatHost).Contexts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.valve.className": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).ClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.directory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Directory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.suffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Suffix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.showServerInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).ShowServerInfo, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.showReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).ShowReport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.allow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Allow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.deny": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Deny, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.valve.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatValve).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.realm.className": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).ClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.connectionURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).ConnectionURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.failureCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).FailureCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.lockOutTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).LockOutTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.realms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).Realms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.credentialHandlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).CredentialHandlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.realm.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatRealm).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.context.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.crossContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).CrossContext, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.logEffectiveWebXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).LogEffectiveWebXml, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.allowLinking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).AllowLinking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.valves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).Valves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.context.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatContext).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.webxml.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.metadataComplete": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).MetadataComplete, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.errorPages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).ErrorPages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.securityConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).SecurityConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.loginConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).LoginConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.sessionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).SessionTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.cookieHttpOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).CookieHttpOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.cookieSecure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).CookieSecure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.servlets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).Servlets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webxml.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebxml).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatUser).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.user.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatUser).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.user.password": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatUser).Password, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.user.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatUser).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).__id, ok = v.Value.(string)
+		return
+	},
+	"tomcat.webapp.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapp.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapp.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapp.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).Context, ok = plugin.RawToTValue[*mqlTomcatContext](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapp.webXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).WebXml, ok = plugin.RawToTValue[*mqlTomcatWebxml](v.Value, v.Error)
+		return
+	},
+	"tomcat.webapp.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTomcatWebapp).Logging, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"squid.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38018,6 +38814,1099 @@ func (c *mqlNginxConfLocation) GetFastcgiPass() *plugin.TValue[string] {
 
 func (c *mqlNginxConfLocation) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
+}
+
+// mqlTomcat for the tomcat resource
+type mqlTomcat struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTomcatInternal
+	Home       plugin.TValue[string]
+	Base       plugin.TValue[string]
+	Version    plugin.TValue[string]
+	Server     plugin.TValue[*mqlTomcatServer]
+	WebXml     plugin.TValue[*mqlTomcatWebxml]
+	Context    plugin.TValue[*mqlTomcatContext]
+	Properties plugin.TValue[map[string]any]
+	Logging    plugin.TValue[map[string]any]
+	Users      plugin.TValue[[]any]
+	Webapps    plugin.TValue[[]any]
+}
+
+// createTomcat creates a new instance of this resource
+func createTomcat(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcat{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcat) MqlName() string {
+	return "tomcat"
+}
+
+func (c *mqlTomcat) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcat) GetHome() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Home, func() (string, error) {
+		return c.home()
+	})
+}
+
+func (c *mqlTomcat) GetBase() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Base, func() (string, error) {
+		return c.base()
+	})
+}
+
+func (c *mqlTomcat) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlTomcat) GetServer() *plugin.TValue[*mqlTomcatServer] {
+	return plugin.GetOrCompute[*mqlTomcatServer](&c.Server, func() (*mqlTomcatServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat", c.__id, "server")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTomcatServer), nil
+			}
+		}
+
+		return c.server()
+	})
+}
+
+func (c *mqlTomcat) GetWebXml() *plugin.TValue[*mqlTomcatWebxml] {
+	return plugin.GetOrCompute[*mqlTomcatWebxml](&c.WebXml, func() (*mqlTomcatWebxml, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat", c.__id, "webXml")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTomcatWebxml), nil
+			}
+		}
+
+		return c.webXml()
+	})
+}
+
+func (c *mqlTomcat) GetContext() *plugin.TValue[*mqlTomcatContext] {
+	return plugin.GetOrCompute[*mqlTomcatContext](&c.Context, func() (*mqlTomcatContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTomcatContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
+func (c *mqlTomcat) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlTomcat) GetLogging() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Logging, func() (map[string]any, error) {
+		return c.logging()
+	})
+}
+
+func (c *mqlTomcat) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlTomcat) GetWebapps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webapps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat", c.__id, "webapps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webapps()
+	})
+}
+
+// mqlTomcatServer for the tomcat.server resource
+type mqlTomcatServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatServerInternal it will be used here
+	File      plugin.TValue[*mqlFile]
+	Port      plugin.TValue[int64]
+	Shutdown  plugin.TValue[string]
+	Listeners plugin.TValue[[]any]
+	Services  plugin.TValue[[]any]
+}
+
+// createTomcatServer creates a new instance of this resource
+func createTomcatServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.server", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatServer) MqlName() string {
+	return "tomcat.server"
+}
+
+func (c *mqlTomcatServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatServer) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlTomcatServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlTomcatServer) GetShutdown() *plugin.TValue[string] {
+	return &c.Shutdown
+}
+
+func (c *mqlTomcatServer) GetListeners() *plugin.TValue[[]any] {
+	return &c.Listeners
+}
+
+func (c *mqlTomcatServer) GetServices() *plugin.TValue[[]any] {
+	return &c.Services
+}
+
+// mqlTomcatListener for the tomcat.listener resource
+type mqlTomcatListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatListenerInternal it will be used here
+	ClassName plugin.TValue[string]
+	Params    plugin.TValue[map[string]any]
+}
+
+// createTomcatListener creates a new instance of this resource
+func createTomcatListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatListener) MqlName() string {
+	return "tomcat.listener"
+}
+
+func (c *mqlTomcatListener) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatListener) GetClassName() *plugin.TValue[string] {
+	return &c.ClassName
+}
+
+func (c *mqlTomcatListener) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlTomcatService for the tomcat.service resource
+type mqlTomcatService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatServiceInternal it will be used here
+	Name       plugin.TValue[string]
+	Connectors plugin.TValue[[]any]
+	Engines    plugin.TValue[[]any]
+}
+
+// createTomcatService creates a new instance of this resource
+func createTomcatService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatService) MqlName() string {
+	return "tomcat.service"
+}
+
+func (c *mqlTomcatService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTomcatService) GetConnectors() *plugin.TValue[[]any] {
+	return &c.Connectors
+}
+
+func (c *mqlTomcatService) GetEngines() *plugin.TValue[[]any] {
+	return &c.Engines
+}
+
+// mqlTomcatConnector for the tomcat.connector resource
+type mqlTomcatConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatConnectorInternal it will be used here
+	Port                plugin.TValue[int64]
+	Address             plugin.TValue[string]
+	Protocol            plugin.TValue[string]
+	SslEnabled          plugin.TValue[bool]
+	Scheme              plugin.TValue[string]
+	Secure              plugin.TValue[bool]
+	AllowTrace          plugin.TValue[bool]
+	XpoweredBy          plugin.TValue[bool]
+	EnableLookups       plugin.TValue[bool]
+	ConnectionTimeout   plugin.TValue[int64]
+	MaxHttpHeaderSize   plugin.TValue[int64]
+	Server              plugin.TValue[string]
+	Ciphers             plugin.TValue[string]
+	SslProtocol         plugin.TValue[string]
+	SslEnabledProtocols plugin.TValue[string]
+	ClientAuth          plugin.TValue[string]
+	SslHostConfigs      plugin.TValue[[]any]
+	Params              plugin.TValue[map[string]any]
+}
+
+// createTomcatConnector creates a new instance of this resource
+func createTomcatConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.connector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatConnector) MqlName() string {
+	return "tomcat.connector"
+}
+
+func (c *mqlTomcatConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatConnector) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlTomcatConnector) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlTomcatConnector) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlTomcatConnector) GetSslEnabled() *plugin.TValue[bool] {
+	return &c.SslEnabled
+}
+
+func (c *mqlTomcatConnector) GetScheme() *plugin.TValue[string] {
+	return &c.Scheme
+}
+
+func (c *mqlTomcatConnector) GetSecure() *plugin.TValue[bool] {
+	return &c.Secure
+}
+
+func (c *mqlTomcatConnector) GetAllowTrace() *plugin.TValue[bool] {
+	return &c.AllowTrace
+}
+
+func (c *mqlTomcatConnector) GetXpoweredBy() *plugin.TValue[bool] {
+	return &c.XpoweredBy
+}
+
+func (c *mqlTomcatConnector) GetEnableLookups() *plugin.TValue[bool] {
+	return &c.EnableLookups
+}
+
+func (c *mqlTomcatConnector) GetConnectionTimeout() *plugin.TValue[int64] {
+	return &c.ConnectionTimeout
+}
+
+func (c *mqlTomcatConnector) GetMaxHttpHeaderSize() *plugin.TValue[int64] {
+	return &c.MaxHttpHeaderSize
+}
+
+func (c *mqlTomcatConnector) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlTomcatConnector) GetCiphers() *plugin.TValue[string] {
+	return &c.Ciphers
+}
+
+func (c *mqlTomcatConnector) GetSslProtocol() *plugin.TValue[string] {
+	return &c.SslProtocol
+}
+
+func (c *mqlTomcatConnector) GetSslEnabledProtocols() *plugin.TValue[string] {
+	return &c.SslEnabledProtocols
+}
+
+func (c *mqlTomcatConnector) GetClientAuth() *plugin.TValue[string] {
+	return &c.ClientAuth
+}
+
+func (c *mqlTomcatConnector) GetSslHostConfigs() *plugin.TValue[[]any] {
+	return &c.SslHostConfigs
+}
+
+func (c *mqlTomcatConnector) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlTomcatEngine for the tomcat.engine resource
+type mqlTomcatEngine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatEngineInternal it will be used here
+	Name        plugin.TValue[string]
+	DefaultHost plugin.TValue[string]
+	Hosts       plugin.TValue[[]any]
+	Realms      plugin.TValue[[]any]
+	Valves      plugin.TValue[[]any]
+}
+
+// createTomcatEngine creates a new instance of this resource
+func createTomcatEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatEngine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.engine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatEngine) MqlName() string {
+	return "tomcat.engine"
+}
+
+func (c *mqlTomcatEngine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatEngine) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTomcatEngine) GetDefaultHost() *plugin.TValue[string] {
+	return &c.DefaultHost
+}
+
+func (c *mqlTomcatEngine) GetHosts() *plugin.TValue[[]any] {
+	return &c.Hosts
+}
+
+func (c *mqlTomcatEngine) GetRealms() *plugin.TValue[[]any] {
+	return &c.Realms
+}
+
+func (c *mqlTomcatEngine) GetValves() *plugin.TValue[[]any] {
+	return &c.Valves
+}
+
+// mqlTomcatHost for the tomcat.host resource
+type mqlTomcatHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatHostInternal it will be used here
+	Name            plugin.TValue[string]
+	AppBase         plugin.TValue[string]
+	AppBaseDir      plugin.TValue[string]
+	AutoDeploy      plugin.TValue[bool]
+	DeployOnStartup plugin.TValue[bool]
+	DeployXML       plugin.TValue[bool]
+	UnpackWARs      plugin.TValue[bool]
+	Valves          plugin.TValue[[]any]
+	Contexts        plugin.TValue[[]any]
+}
+
+// createTomcatHost creates a new instance of this resource
+func createTomcatHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.host", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatHost) MqlName() string {
+	return "tomcat.host"
+}
+
+func (c *mqlTomcatHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatHost) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTomcatHost) GetAppBase() *plugin.TValue[string] {
+	return &c.AppBase
+}
+
+func (c *mqlTomcatHost) GetAppBaseDir() *plugin.TValue[string] {
+	return &c.AppBaseDir
+}
+
+func (c *mqlTomcatHost) GetAutoDeploy() *plugin.TValue[bool] {
+	return &c.AutoDeploy
+}
+
+func (c *mqlTomcatHost) GetDeployOnStartup() *plugin.TValue[bool] {
+	return &c.DeployOnStartup
+}
+
+func (c *mqlTomcatHost) GetDeployXML() *plugin.TValue[bool] {
+	return &c.DeployXML
+}
+
+func (c *mqlTomcatHost) GetUnpackWARs() *plugin.TValue[bool] {
+	return &c.UnpackWARs
+}
+
+func (c *mqlTomcatHost) GetValves() *plugin.TValue[[]any] {
+	return &c.Valves
+}
+
+func (c *mqlTomcatHost) GetContexts() *plugin.TValue[[]any] {
+	return &c.Contexts
+}
+
+// mqlTomcatValve for the tomcat.valve resource
+type mqlTomcatValve struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatValveInternal it will be used here
+	ClassName      plugin.TValue[string]
+	Pattern        plugin.TValue[string]
+	Directory      plugin.TValue[string]
+	Prefix         plugin.TValue[string]
+	Suffix         plugin.TValue[string]
+	ShowServerInfo plugin.TValue[bool]
+	ShowReport     plugin.TValue[bool]
+	Allow          plugin.TValue[string]
+	Deny           plugin.TValue[string]
+	Params         plugin.TValue[map[string]any]
+}
+
+// createTomcatValve creates a new instance of this resource
+func createTomcatValve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatValve{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.valve", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatValve) MqlName() string {
+	return "tomcat.valve"
+}
+
+func (c *mqlTomcatValve) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatValve) GetClassName() *plugin.TValue[string] {
+	return &c.ClassName
+}
+
+func (c *mqlTomcatValve) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlTomcatValve) GetDirectory() *plugin.TValue[string] {
+	return &c.Directory
+}
+
+func (c *mqlTomcatValve) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlTomcatValve) GetSuffix() *plugin.TValue[string] {
+	return &c.Suffix
+}
+
+func (c *mqlTomcatValve) GetShowServerInfo() *plugin.TValue[bool] {
+	return &c.ShowServerInfo
+}
+
+func (c *mqlTomcatValve) GetShowReport() *plugin.TValue[bool] {
+	return &c.ShowReport
+}
+
+func (c *mqlTomcatValve) GetAllow() *plugin.TValue[string] {
+	return &c.Allow
+}
+
+func (c *mqlTomcatValve) GetDeny() *plugin.TValue[string] {
+	return &c.Deny
+}
+
+func (c *mqlTomcatValve) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlTomcatRealm for the tomcat.realm resource
+type mqlTomcatRealm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatRealmInternal it will be used here
+	ClassName          plugin.TValue[string]
+	Digest             plugin.TValue[string]
+	ConnectionURL      plugin.TValue[string]
+	FailureCount       plugin.TValue[int64]
+	LockOutTime        plugin.TValue[int64]
+	Realms             plugin.TValue[[]any]
+	CredentialHandlers plugin.TValue[[]any]
+	Params             plugin.TValue[map[string]any]
+}
+
+// createTomcatRealm creates a new instance of this resource
+func createTomcatRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatRealm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.realm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatRealm) MqlName() string {
+	return "tomcat.realm"
+}
+
+func (c *mqlTomcatRealm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatRealm) GetClassName() *plugin.TValue[string] {
+	return &c.ClassName
+}
+
+func (c *mqlTomcatRealm) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlTomcatRealm) GetConnectionURL() *plugin.TValue[string] {
+	return &c.ConnectionURL
+}
+
+func (c *mqlTomcatRealm) GetFailureCount() *plugin.TValue[int64] {
+	return &c.FailureCount
+}
+
+func (c *mqlTomcatRealm) GetLockOutTime() *plugin.TValue[int64] {
+	return &c.LockOutTime
+}
+
+func (c *mqlTomcatRealm) GetRealms() *plugin.TValue[[]any] {
+	return &c.Realms
+}
+
+func (c *mqlTomcatRealm) GetCredentialHandlers() *plugin.TValue[[]any] {
+	return &c.CredentialHandlers
+}
+
+func (c *mqlTomcatRealm) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlTomcatContext for the tomcat.context resource
+type mqlTomcatContext struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatContextInternal it will be used here
+	File               plugin.TValue[*mqlFile]
+	Path               plugin.TValue[string]
+	Privileged         plugin.TValue[bool]
+	CrossContext       plugin.TValue[bool]
+	LogEffectiveWebXml plugin.TValue[bool]
+	AllowLinking       plugin.TValue[bool]
+	Valves             plugin.TValue[[]any]
+	Params             plugin.TValue[map[string]any]
+}
+
+// createTomcatContext creates a new instance of this resource
+func createTomcatContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatContext) MqlName() string {
+	return "tomcat.context"
+}
+
+func (c *mqlTomcatContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatContext) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlTomcatContext) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlTomcatContext) GetPrivileged() *plugin.TValue[bool] {
+	return &c.Privileged
+}
+
+func (c *mqlTomcatContext) GetCrossContext() *plugin.TValue[bool] {
+	return &c.CrossContext
+}
+
+func (c *mqlTomcatContext) GetLogEffectiveWebXml() *plugin.TValue[bool] {
+	return &c.LogEffectiveWebXml
+}
+
+func (c *mqlTomcatContext) GetAllowLinking() *plugin.TValue[bool] {
+	return &c.AllowLinking
+}
+
+func (c *mqlTomcatContext) GetValves() *plugin.TValue[[]any] {
+	return &c.Valves
+}
+
+func (c *mqlTomcatContext) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlTomcatWebxml for the tomcat.webxml resource
+type mqlTomcatWebxml struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatWebxmlInternal it will be used here
+	File                plugin.TValue[*mqlFile]
+	MetadataComplete    plugin.TValue[bool]
+	ErrorPages          plugin.TValue[[]any]
+	SecurityConstraints plugin.TValue[[]any]
+	LoginConfig         plugin.TValue[any]
+	SessionTimeout      plugin.TValue[int64]
+	CookieHttpOnly      plugin.TValue[bool]
+	CookieSecure        plugin.TValue[bool]
+	Servlets            plugin.TValue[[]any]
+	Filters             plugin.TValue[[]any]
+}
+
+// createTomcatWebxml creates a new instance of this resource
+func createTomcatWebxml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatWebxml{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.webxml", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatWebxml) MqlName() string {
+	return "tomcat.webxml"
+}
+
+func (c *mqlTomcatWebxml) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatWebxml) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlTomcatWebxml) GetMetadataComplete() *plugin.TValue[bool] {
+	return &c.MetadataComplete
+}
+
+func (c *mqlTomcatWebxml) GetErrorPages() *plugin.TValue[[]any] {
+	return &c.ErrorPages
+}
+
+func (c *mqlTomcatWebxml) GetSecurityConstraints() *plugin.TValue[[]any] {
+	return &c.SecurityConstraints
+}
+
+func (c *mqlTomcatWebxml) GetLoginConfig() *plugin.TValue[any] {
+	return &c.LoginConfig
+}
+
+func (c *mqlTomcatWebxml) GetSessionTimeout() *plugin.TValue[int64] {
+	return &c.SessionTimeout
+}
+
+func (c *mqlTomcatWebxml) GetCookieHttpOnly() *plugin.TValue[bool] {
+	return &c.CookieHttpOnly
+}
+
+func (c *mqlTomcatWebxml) GetCookieSecure() *plugin.TValue[bool] {
+	return &c.CookieSecure
+}
+
+func (c *mqlTomcatWebxml) GetServlets() *plugin.TValue[[]any] {
+	return &c.Servlets
+}
+
+func (c *mqlTomcatWebxml) GetFilters() *plugin.TValue[[]any] {
+	return &c.Filters
+}
+
+// mqlTomcatUser for the tomcat.user resource
+type mqlTomcatUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTomcatUserInternal it will be used here
+	Username plugin.TValue[string]
+	Password plugin.TValue[string]
+	Roles    plugin.TValue[[]any]
+}
+
+// createTomcatUser creates a new instance of this resource
+func createTomcatUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatUser) MqlName() string {
+	return "tomcat.user"
+}
+
+func (c *mqlTomcatUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatUser) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlTomcatUser) GetPassword() *plugin.TValue[string] {
+	return &c.Password
+}
+
+func (c *mqlTomcatUser) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+// mqlTomcatWebapp for the tomcat.webapp resource
+type mqlTomcatWebapp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTomcatWebappInternal
+	Name    plugin.TValue[string]
+	Path    plugin.TValue[string]
+	Host    plugin.TValue[string]
+	Context plugin.TValue[*mqlTomcatContext]
+	WebXml  plugin.TValue[*mqlTomcatWebxml]
+	Logging plugin.TValue[map[string]any]
+}
+
+// createTomcatWebapp creates a new instance of this resource
+func createTomcatWebapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTomcatWebapp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tomcat.webapp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTomcatWebapp) MqlName() string {
+	return "tomcat.webapp"
+}
+
+func (c *mqlTomcatWebapp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTomcatWebapp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTomcatWebapp) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlTomcatWebapp) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlTomcatWebapp) GetContext() *plugin.TValue[*mqlTomcatContext] {
+	return plugin.GetOrCompute[*mqlTomcatContext](&c.Context, func() (*mqlTomcatContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat.webapp", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTomcatContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
+func (c *mqlTomcatWebapp) GetWebXml() *plugin.TValue[*mqlTomcatWebxml] {
+	return plugin.GetOrCompute[*mqlTomcatWebxml](&c.WebXml, func() (*mqlTomcatWebxml, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tomcat.webapp", c.__id, "webXml")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTomcatWebxml), nil
+			}
+		}
+
+		return c.webXml()
+	})
+}
+
+func (c *mqlTomcatWebapp) GetLogging() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Logging, func() (map[string]any, error) {
+		return c.logging()
+	})
 }
 
 // mqlSquid for the squid resource
