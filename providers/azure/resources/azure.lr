@@ -798,6 +798,37 @@ azure.subscription.computeService.hybridMachine @defaults("name location osName 
   parentClusterResourceId string
   // Resource ID of the private link scope this machine is assigned to, if any
   privateLinkScopeResourceId string
+  // Key store protecting the Arc agent's identity private key
+  //
+  // One of Default or TPM. Default keeps the key in a software key store on
+  // disk, where anyone who can read the file can replay the machine's identity
+  // to Azure. TPM binds the key to the hardware security module.
+  identityKeyStore string
+  // TPM endorsement key certificate reported by the agent
+  tpmEkCertificate string
+  // Reason the service set the machine status to its current value
+  //
+  // Currently the only value is Cloned, which Azure sets when it detects that
+  // this machine is a clone of another onboarded machine. Two machines sharing
+  // one Arc identity is otherwise invisible.
+  statusReason string
+  // Firmware type reported by the agent (for example UEFI or BIOS)
+  firmwareType string
+  // Firmware serial number reported by the agent
+  firmwareSerialNumber string
+  // Total number of CPU sockets available on the machine
+  numberOfCpuSockets int
+  // Total physical memory on the machine, in bytes
+  totalPhysicalMemoryInBytes int
+  // Physical processors reported by the agent
+  //
+  // Each entry carries the processor name and the number of cores.
+  processors []dict
+  // Disks attached to the machine
+  //
+  // Each entry carries the disk id, generatedId, name, diskType, and
+  // maxSizeInBytes as reported by the agent.
+  disks []dict
   // Detected agent-reported properties (azureResourceId, manufacturer, model, etc.)
   detectedProperties map[string]string
   // Detected cloud environment metadata (Azure/GCP/AWS/OCI provider, account, region) when applicable

@@ -3357,6 +3357,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.hybridMachine.privateLinkScopeResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetPrivateLinkScopeResourceId()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.hybridMachine.identityKeyStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetIdentityKeyStore()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.tpmEkCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetTpmEkCertificate()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetStatusReason()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.firmwareType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetFirmwareType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.firmwareSerialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetFirmwareSerialNumber()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.numberOfCpuSockets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetNumberOfCpuSockets()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.hybridMachine.totalPhysicalMemoryInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetTotalPhysicalMemoryInBytes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.hybridMachine.processors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetProcessors()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.computeService.hybridMachine.disks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetDisks()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.computeService.hybridMachine.detectedProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetDetectedProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -21514,6 +21541,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.hybridMachine.privateLinkScopeResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).PrivateLinkScopeResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.identityKeyStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).IdentityKeyStore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.tpmEkCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).TpmEkCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.firmwareType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).FirmwareType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.firmwareSerialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).FirmwareSerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.numberOfCpuSockets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).NumberOfCpuSockets, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.totalPhysicalMemoryInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).TotalPhysicalMemoryInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.processors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Processors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.disks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.hybridMachine.detectedProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48999,6 +49062,15 @@ type mqlAzureSubscriptionComputeServiceHybridMachine struct {
 	ProvisioningState          plugin.TValue[string]
 	ParentClusterResourceId    plugin.TValue[string]
 	PrivateLinkScopeResourceId plugin.TValue[string]
+	IdentityKeyStore           plugin.TValue[string]
+	TpmEkCertificate           plugin.TValue[string]
+	StatusReason               plugin.TValue[string]
+	FirmwareType               plugin.TValue[string]
+	FirmwareSerialNumber       plugin.TValue[string]
+	NumberOfCpuSockets         plugin.TValue[int64]
+	TotalPhysicalMemoryInBytes plugin.TValue[int64]
+	Processors                 plugin.TValue[[]any]
+	Disks                      plugin.TValue[[]any]
 	DetectedProperties         plugin.TValue[map[string]any]
 	CloudMetadata              plugin.TValue[any]
 	LicenseProfile             plugin.TValue[any]
@@ -49135,6 +49207,42 @@ func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetParentClusterResour
 
 func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetPrivateLinkScopeResourceId() *plugin.TValue[string] {
 	return &c.PrivateLinkScopeResourceId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetIdentityKeyStore() *plugin.TValue[string] {
+	return &c.IdentityKeyStore
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetTpmEkCertificate() *plugin.TValue[string] {
+	return &c.TpmEkCertificate
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetFirmwareType() *plugin.TValue[string] {
+	return &c.FirmwareType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetFirmwareSerialNumber() *plugin.TValue[string] {
+	return &c.FirmwareSerialNumber
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetNumberOfCpuSockets() *plugin.TValue[int64] {
+	return &c.NumberOfCpuSockets
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetTotalPhysicalMemoryInBytes() *plugin.TValue[int64] {
+	return &c.TotalPhysicalMemoryInBytes
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetProcessors() *plugin.TValue[[]any] {
+	return &c.Processors
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetDisks() *plugin.TValue[[]any] {
+	return &c.Disks
 }
 
 func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetDetectedProperties() *plugin.TValue[map[string]any] {

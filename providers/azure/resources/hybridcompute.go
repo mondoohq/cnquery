@@ -66,6 +66,10 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 				vmID, vmUUID, provisioningState, parentClusterResourceID, privateLinkScopeResourceID *string
 				cloudMetadataDict, licenseProfileDict                                                map[string]any
 				detectedProperties                                                                   map[string]any
+				identityKeyStore, statusReason, tpmEkCertificate                                     *string
+				firmwareType, firmwareSerialNumber                                                   *string
+				numberOfCPUSockets, totalPhysicalMemoryInBytes                                       *int64
+				processorsDict, disksDict                                                            []any
 			)
 
 			if p := m.Properties; p != nil {
@@ -87,6 +91,34 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 				provisioningState = p.ProvisioningState
 				parentClusterResourceID = p.ParentClusterResourceID
 				privateLinkScopeResourceID = p.PrivateLinkScopeResourceID
+
+				identityKeyStore = stringEnumPtr(p.IdentityKeyStore)
+				statusReason = stringEnumPtr(p.StatusReason)
+				tpmEkCertificate = p.TpmEkCertificate
+
+				if fw := p.FirmwareProfile; fw != nil {
+					firmwareType = fw.Type
+					firmwareSerialNumber = fw.SerialNumber
+				}
+
+				if hw := p.HardwareProfile; hw != nil {
+					if hw.NumberOfCPUSockets != nil {
+						v := int64(*hw.NumberOfCPUSockets)
+						numberOfCPUSockets = &v
+					}
+					totalPhysicalMemoryInBytes = hw.TotalPhysicalMemoryInBytes
+					processorsDict, err = convert.JsonToDictSlice(hw.Processors)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				if sp := p.StorageProfile; sp != nil {
+					disksDict, err = convert.JsonToDictSlice(sp.Disks)
+					if err != nil {
+						return nil, err
+					}
+				}
 
 				cloudMetadataDict, err = convert.JsonToDict(p.CloudMetadata)
 				if err != nil {
@@ -140,6 +172,15 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 					"provisioningState":          llx.StringDataPtr(provisioningState),
 					"parentClusterResourceId":    llx.StringDataPtr(parentClusterResourceID),
 					"privateLinkScopeResourceId": llx.StringDataPtr(privateLinkScopeResourceID),
+					"identityKeyStore":           llx.StringDataPtr(identityKeyStore),
+					"tpmEkCertificate":           llx.StringDataPtr(tpmEkCertificate),
+					"statusReason":               llx.StringDataPtr(statusReason),
+					"firmwareType":               llx.StringDataPtr(firmwareType),
+					"firmwareSerialNumber":       llx.StringDataPtr(firmwareSerialNumber),
+					"numberOfCpuSockets":         llx.IntDataPtr(numberOfCPUSockets),
+					"totalPhysicalMemoryInBytes": llx.IntDataPtr(totalPhysicalMemoryInBytes),
+					"processors":                 llx.ArrayData(processorsDict, types.Dict),
+					"disks":                      llx.ArrayData(disksDict, types.Dict),
 					"detectedProperties":         llx.MapData(detectedProperties, types.String),
 					"cloudMetadata":              llx.DictData(cloudMetadataDict),
 					"licenseProfile":             llx.DictData(licenseProfileDict),
