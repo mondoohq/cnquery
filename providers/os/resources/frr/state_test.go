@@ -335,3 +335,31 @@ func TestMergeVRFs(t *testing.T) {
 	assert.True(t, blue.InKernel)
 	assert.False(t, blue.Up)
 }
+
+// TestEnrichBGPPeers_UsesSummaryKey covers the address family spellings that
+// differ between FRR versions. The key FRR wrote in the summary is the key
+// its neighbor detail uses, so enrichment must not rebuild it.
+func TestEnrichBGPPeers_UsesSummaryKey(t *testing.T) {
+	summary := []byte(`{"ipv4LabeledUnicast":{"as":65100,"peers":{
+		"swp1":{"remoteAs":65000,"state":"Established","pfxRcd":3,"pfxSnt":1}}}}`)
+	peers, err := ParseBGPSummary("", summary)
+	require.NoError(t, err)
+	require.Len(t, peers, 1)
+	assert.Equal(t, "ipv4", peers[0].AFI)
+	assert.Equal(t, "labeled-unicast", peers[0].SAFI)
+	assert.Equal(t, "ipv4LabeledUnicast", peers[0].SummaryKey)
+
+	detail := []byte(`{"swp1":{"addressFamilyInfo":{"ipv4LabeledUnicast":{
+		"acceptedPrefixCounter":3,"routeMapForIncomingAdvertisements":"rm_in"}}}}`)
+	require.NoError(t, EnrichBGPPeers(peers, detail))
+	assert.Equal(t, "rm_in", peers[0].RouteMapIn)
+	assert.Equal(t, int64(3), peers[0].PrefixesAccepted)
+}
+
+func TestSummaryKeyFor(t *testing.T) {
+	assert.Equal(t, "ipv4Unicast", summaryKeyFor("ipv4", "unicast"))
+	assert.Equal(t, "ipv6Multicast", summaryKeyFor("ipv6", "multicast"))
+	assert.Equal(t, "l2VpnEvpn", summaryKeyFor("l2vpn", "evpn"))
+	// The dash of a SAFI never appears in a JSON key.
+	assert.Equal(t, "ipv4Labeledunicast", summaryKeyFor("ipv4", "labeled-unicast"))
+}
