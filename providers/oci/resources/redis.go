@@ -24,7 +24,7 @@ func (o *mqlOciRedis) id() (string, error) {
 func (o *mqlOciRedis) clusters() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci redis cluster with region %s", region)
 

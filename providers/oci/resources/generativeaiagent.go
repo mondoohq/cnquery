@@ -30,7 +30,7 @@ func (o *mqlOciAiAgents) id() (string, error) {
 func (o *mqlOciAiAgents) agents() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci generative ai agents with region %s", region)
 
@@ -127,7 +127,7 @@ func (o *mqlOciAiAgentsAgent) compartment() (*mqlOciCompartment, error) {
 func (o *mqlOciAiAgents) agentEndpoints() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			svc, err := conn.GenerativeAiAgentClient(region)
 			if err != nil {
@@ -248,7 +248,7 @@ func (o *mqlOciAiAgentsEndpoint) agent() (*mqlOciAiAgentsAgent, error) {
 func (o *mqlOciAiAgents) knowledgeBases() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			svc, err := conn.GenerativeAiAgentClient(region)
 			if err != nil {
@@ -335,7 +335,7 @@ func (o *mqlOciAiAgentsKnowledgeBase) compartment() (*mqlOciCompartment, error) 
 func (o *mqlOciAiAgents) dataSources() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			svc, err := conn.GenerativeAiAgentClient(region)
 			if err != nil {
@@ -443,7 +443,7 @@ func (o *mqlOciAiAgentsDataSource) knowledgeBase() (*mqlOciAiAgentsKnowledgeBase
 func (o *mqlOciAiAgents) tools() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			svc, err := conn.GenerativeAiAgentClient(region)
 			if err != nil {

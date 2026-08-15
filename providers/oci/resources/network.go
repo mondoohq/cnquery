@@ -933,7 +933,7 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci internet gateways with region %s", region)
 
@@ -1014,7 +1014,7 @@ func (o *mqlOciNetworkInternetGateway) vcn() (*mqlOciNetworkVcn, error) {
 func (o *mqlOciNetwork) natGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci NAT gateways with region %s", region)
 
@@ -1257,7 +1257,7 @@ func (o *mqlOciNetworkSubnet) routeTable() (*mqlOciNetworkRouteTable, error) {
 func (o *mqlOciNetwork) publicIps() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci public ips with region %s", region)
 

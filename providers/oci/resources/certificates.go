@@ -205,7 +205,7 @@ func initOciCertificatesCertificateAuthority(runtime *plugin.Runtime, args map[s
 func (o *mqlOciCertificates) certificateAuthorities() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci certificate authorities with region %s", region)
 
@@ -358,7 +358,7 @@ func initOciCertificatesCaBundle(runtime *plugin.Runtime, args map[string]*llx.R
 func (o *mqlOciCertificates) caBundles() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci CA bundles with region %s", region)
 

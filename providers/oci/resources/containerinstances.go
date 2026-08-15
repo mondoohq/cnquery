@@ -66,7 +66,7 @@ func (o *mqlOciContainerInstances) id() (string, error) {
 func (o *mqlOciContainerInstances) instances() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci container instances with region %s", region)
 

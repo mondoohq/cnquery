@@ -26,7 +26,7 @@ func (o *mqlOciDatabase) id() (string, error) {
 func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci DB systems with region %s", region)
 
@@ -140,7 +140,7 @@ func (o *mqlOciDatabaseDbSystem) subnet() (*mqlOciNetworkSubnet, error) {
 func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci autonomous databases with region %s", region)
 
@@ -298,7 +298,7 @@ func (o *mqlOciDatabaseAutonomousDatabase) subnet() (*mqlOciNetworkSubnet, error
 func (o *mqlOciDatabase) backups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci database backups with region %s", region)
 
@@ -416,7 +416,7 @@ func (o *mqlOciDatabaseBackup) kmsVault() (*mqlOciKmsVault, error) {
 func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci autonomous database backups with region %s", region)
 

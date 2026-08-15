@@ -22,7 +22,7 @@ import (
 
 func (o *mqlOciNetwork) cpes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci CPEs with region %s", regionKey)
@@ -122,7 +122,7 @@ type mqlOciNetworkIpsecConnectionInternal struct {
 
 func (o *mqlOciNetwork) ipsecConnections() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci IPSec connections with region %s", regionKey)
@@ -621,7 +621,7 @@ type crossConnectMapping struct {
 
 func (o *mqlOciNetwork) virtualCircuits() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci virtual circuits with region %s", regionKey)
@@ -758,7 +758,7 @@ func (o *mqlOciNetworkVirtualCircuit) drg() (*mqlOciNetworkDrg, error) {
 
 func (o *mqlOciNetwork) crossConnects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci cross-connects with region %s", regionKey)

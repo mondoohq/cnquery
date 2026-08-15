@@ -26,7 +26,7 @@ type mqlOciNetworkDrgInternal struct {
 
 func (o *mqlOciNetwork) drgs() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci DRGs with region %s", regionKey)
@@ -388,7 +388,7 @@ type mqlOciNetworkLocalPeeringGatewayInternal struct {
 
 func (o *mqlOciNetwork) localPeeringGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci local peering gateways with region %s", regionKey)
@@ -537,7 +537,7 @@ type mqlOciNetworkServiceGatewayInternal struct {
 
 func (o *mqlOciNetwork) serviceGateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			regionKey := region
 			log.Debug().Msgf("calling oci service gateways with region %s", regionKey)

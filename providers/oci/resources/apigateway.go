@@ -27,7 +27,7 @@ func (o *mqlOciApigateway) id() (string, error) {
 func (o *mqlOciApigateway) gateways() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci api gateways with region %s", region)
 
@@ -226,7 +226,7 @@ func (o *mqlOciApigatewayGateway) hasResponseCache() (bool, error) {
 func (o *mqlOciApigateway) deployments() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci api gateway deployments with region %s", region)
 
@@ -596,7 +596,7 @@ func (o *mqlOciApigatewayDeployment) hasDynamicAuthentication() (bool, error) {
 func (o *mqlOciApigateway) certificates() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci api gateway certificates with region %s", region)
 

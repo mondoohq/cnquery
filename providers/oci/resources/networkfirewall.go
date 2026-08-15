@@ -24,7 +24,7 @@ func (o *mqlOciNetworkFirewall) id() (string, error) {
 func (o *mqlOciNetworkFirewall) firewalls() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci network firewall with region %s", region)
 
@@ -145,7 +145,7 @@ func (o *mqlOciNetworkFirewallFirewall) policy() (*mqlOciNetworkFirewallPolicy, 
 func (o *mqlOciNetworkFirewall) policies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci network firewall policies with region %s", region)
 
