@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	ddsclient "github.com/alibabacloud-go/dds-20151201/v9/client"
+	ddsclient "github.com/alibabacloud-go/dds-20151201/v10/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"

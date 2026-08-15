@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	rdsclient "github.com/alibabacloud-go/rds-20140815/v11/client"
+	rdsclient "github.com/alibabacloud-go/rds-20140815/v16/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -264,6 +264,58 @@ func (r *mqlAlicloudRdsInstance) fetchAttribute() *rdsclient.DescribeDBInstanceA
 	}
 	r.attr = attrs[0]
 	return r.attr
+}
+
+// The blue-green fields, compute burst, vector support and read-only state all
+// arrive on the same DescribeDBInstanceAttribute detail, so they share the one
+// cached fetch rather than making a call each.
+
+func (r *mqlAlicloudRdsInstance) blueGreenDeploymentName() (string, error) {
+	attr := r.fetchAttribute()
+	if attr == nil {
+		return "", nil
+	}
+	return tea.StringValue(attr.BlueGreenDeploymentName), nil
+}
+
+func (r *mqlAlicloudRdsInstance) blueInstanceName() (string, error) {
+	attr := r.fetchAttribute()
+	if attr == nil {
+		return "", nil
+	}
+	return tea.StringValue(attr.BlueInstanceName), nil
+}
+
+func (r *mqlAlicloudRdsInstance) greenInstanceName() (string, error) {
+	attr := r.fetchAttribute()
+	if attr == nil {
+		return "", nil
+	}
+	return tea.StringValue(attr.GreenInstanceName), nil
+}
+
+func (r *mqlAlicloudRdsInstance) computeBurstEnabled() (bool, error) {
+	attr := r.fetchAttribute()
+	if attr == nil {
+		return false, nil
+	}
+	return tea.BoolValue(attr.ComputeBurstEnabled), nil
+}
+
+func (r *mqlAlicloudRdsInstance) vectorSupportStatus() (string, error) {
+	attr := r.fetchAttribute()
+	if attr == nil {
+		return "", nil
+	}
+	return tea.StringValue(attr.VectorSupportStatus), nil
+}
+
+func (r *mqlAlicloudRdsInstance) readOnlyStatus() (string, error) {
+	attr := r.fetchAttribute()
+	if attr == nil {
+		return "", nil
+	}
+	return tea.StringValue(attr.ReadOnlyStatus), nil
 }
 
 func (r *mqlAlicloudRdsInstance) dbInstanceStorage() (int64, error) {

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	ecsclient "github.com/alibabacloud-go/ecs-20140526/v6/client"
+	ecsclient "github.com/alibabacloud-go/ecs-20140526/v7/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"

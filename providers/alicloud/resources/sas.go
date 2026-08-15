@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	sasclient "github.com/alibabacloud-go/sas-20181203/v3/client"
+	sasclient "github.com/alibabacloud-go/sas-20181203/v9/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"

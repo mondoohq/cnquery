@@ -5,7 +5,7 @@ package resources
 
 import (
 	"github.com/alibabacloud-go/tea/tea"
-	vpcclient "github.com/alibabacloud-go/vpc-20160428/v6/client"
+	vpcclient "github.com/alibabacloud-go/vpc-20160428/v7/client"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
