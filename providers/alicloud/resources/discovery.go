@@ -27,6 +27,12 @@ const (
 	DiscoveryCloudFirewall = "cloud-firewall"
 	DiscoveryOssBuckets    = "oss-buckets"
 	DiscoveryRdsInstances  = "rds-instances"
+
+	DiscoverySlbs             = "slbs"
+	DiscoveryRedisInstances   = "redis-instances"
+	DiscoveryMongodbInstances = "mongodb-instances"
+	DiscoveryPolardbClusters  = "polardb-clusters"
+	DiscoveryFcFunctions      = "fc-functions"
 )
 
 // Discover enumerates the major service objects in the account and returns one
@@ -61,6 +67,16 @@ func Discover(runtime *plugin.Runtime, conf *inventory.Config) (*inventory.Inven
 			assets, err = discoverOssBuckets(runtime, conn, conf)
 		case DiscoveryRdsInstances:
 			assets, err = discoverRdsInstances(runtime, conn, conf)
+		case DiscoverySlbs:
+			assets, err = discoverSlbs(runtime, conn, conf)
+		case DiscoveryRedisInstances:
+			assets, err = discoverRedisInstances(runtime, conn, conf)
+		case DiscoveryMongodbInstances:
+			assets, err = discoverMongodbInstances(runtime, conn, conf)
+		case DiscoveryPolardbClusters:
+			assets, err = discoverPolardbClusters(runtime, conn, conf)
+		case DiscoveryFcFunctions:
+			assets, err = discoverFcFunctions(runtime, conn, conf)
 		case DiscoveryAccounts:
 			// the account is already returned as the connected root asset, so it
 			// contributes no discovered child assets
@@ -89,6 +105,11 @@ func handleTargets(targets []string) []string {
 			DiscoveryCloudFirewall,
 			DiscoveryOssBuckets,
 			DiscoveryRdsInstances,
+			DiscoverySlbs,
+			DiscoveryRedisInstances,
+			DiscoveryMongodbInstances,
+			DiscoveryPolardbClusters,
+			DiscoveryFcFunctions,
 		}
 	}
 	return targets
@@ -228,6 +249,122 @@ func discoverRdsInstances(runtime *plugin.Runtime, conn *connection.AlicloudConn
 		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
 			connection.NewRdsInstanceIdentifier(id), connection.NewRdsInstancePlatform(id),
 			nameOr(inst.DbInstanceDescription.Data, id), connection.OptionRdsInstanceID, id))
+	}
+	return assets, nil
+}
+
+func discoverSlbs(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.slb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	lbs, err := res.(*mqlAlicloudSlb).loadBalancers()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(lbs))
+	for _, il := range lbs {
+		lb := il.(*mqlAlicloudSlbLoadBalancer)
+		id := lb.LoadBalancerId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), lb.RegionId.Data,
+			connection.NewSlbIdentifier(id), connection.NewSlbPlatform(id),
+			nameOr(lb.LoadBalancerName.Data, id), connection.OptionSlbID, id))
+	}
+	return assets, nil
+}
+
+func discoverRedisInstances(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.redis", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances, err := res.(*mqlAlicloudRedis).instances()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(instances))
+	for _, ii := range instances {
+		inst := ii.(*mqlAlicloudRedisInstance)
+		id := inst.InstanceId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
+			connection.NewRedisInstanceIdentifier(id), connection.NewRedisInstancePlatform(id),
+			nameOr(inst.InstanceName.Data, id), connection.OptionRedisInstanceID, id))
+	}
+	return assets, nil
+}
+
+func discoverMongodbInstances(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.mongodb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances, err := res.(*mqlAlicloudMongodb).instances()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(instances))
+	for _, ii := range instances {
+		inst := ii.(*mqlAlicloudMongodbInstance)
+		id := inst.DbInstanceId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
+			connection.NewMongodbInstanceIdentifier(id), connection.NewMongodbInstancePlatform(id),
+			nameOr(inst.DbInstanceDescription.Data, id), connection.OptionMongodbInstanceID, id))
+	}
+	return assets, nil
+}
+
+func discoverPolardbClusters(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.polardb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	clusters, err := res.(*mqlAlicloudPolardb).clusters()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(clusters))
+	for _, ic := range clusters {
+		cluster := ic.(*mqlAlicloudPolardbCluster)
+		id := cluster.DbClusterId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), cluster.RegionId.Data,
+			connection.NewPolardbClusterIdentifier(id), connection.NewPolardbClusterPlatform(id),
+			nameOr(cluster.DbClusterDescription.Data, id), connection.OptionPolardbClusterID, id))
+	}
+	return assets, nil
+}
+
+func discoverFcFunctions(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.fc", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	functions, err := res.(*mqlAlicloudFc).functions()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(functions))
+	for _, ifn := range functions {
+		fn := ifn.(*mqlAlicloudFcFunction)
+		name := fn.FunctionName.Data
+		region := fn.RegionId.Data
+		if name == "" || region == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), region,
+			connection.NewFcFunctionIdentifier(region, name), connection.NewFcFunctionPlatform(region, name),
+			name, connection.OptionFcFunctionName, name))
 	}
 	return assets, nil
 }

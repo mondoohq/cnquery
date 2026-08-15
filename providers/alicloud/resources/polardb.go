@@ -4,10 +4,12 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	polardb "github.com/alibabacloud-go/polardb-20170801/v8/client"
+	tea "github.com/alibabacloud-go/tea/tea"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
@@ -123,50 +125,16 @@ func (r *mqlAlicloudPolardb) clusters() ([]any, error) {
 				if c == nil || c.DBClusterId == nil {
 					continue
 				}
-				id := region + "/" + *c.DBClusterId
-				resource, err := CreateResource(r.MqlRuntime, "alicloud.polardb.cluster", map[string]*llx.RawData{
-					"__id":                 llx.StringData(id),
-					"dbClusterId":          llx.StringDataPtr(c.DBClusterId),
-					"dbClusterDescription": llx.StringDataPtr(c.DBClusterDescription),
-					"dbClusterStatus":      llx.StringDataPtr(c.DBClusterStatus),
-					"dbType":               llx.StringDataPtr(c.DBType),
-					"dbVersion":            llx.StringDataPtr(c.DBVersion),
-					"engine":               llx.StringDataPtr(c.Engine),
-					"category":             llx.StringDataPtr(c.Category),
-					"subCategory":          llx.StringDataPtr(c.SubCategory),
-					"dbNodeClass":          llx.StringDataPtr(c.DBNodeClass),
-					"dbNodeNumber":         llx.IntDataPtr(c.DBNodeNumber),
-					"cpuCores":             llx.StringDataPtr(c.CpuCores),
-					"memorySize":           llx.StringDataPtr(c.MemorySize),
-					"storageUsed":          llx.IntDataPtr(c.StorageUsed),
-					"storageType":          llx.StringDataPtr(c.StorageType),
-					"storagePayType":       llx.StringDataPtr(c.StoragePayType),
-					"storageSpace":         llx.IntDataPtr(c.StorageSpace),
-					"regionId":             llx.StringDataPtr(c.RegionId),
-					"zoneId":               llx.StringDataPtr(c.ZoneId),
-					"payType":              llx.StringDataPtr(c.PayType),
-					"createTime":           llx.TimeDataPtr(polardbParseTime(c.CreateTime)),
-					"expireTime":           llx.TimeDataPtr(polardbParseTime(c.ExpireTime)),
-					"expired":              llx.StringDataPtr(c.Expired),
-					"lockMode":             llx.StringDataPtr(c.LockMode),
-					"deletionLock":         llx.IntDataPtr(c.DeletionLock),
-					"resourceGroupId":      llx.StringDataPtr(c.ResourceGroupId),
-					"serverlessType":       llx.StringDataPtr(c.ServerlessType),
-					"dbClusterNetworkType": llx.StringDataPtr(c.DBClusterNetworkType),
-					"aiType":               llx.StringDataPtr(c.AiType),
-					"hotStandbyCluster":    llx.StringDataPtr(c.HotStandbyCluster),
-					"strictConsistency":    llx.StringDataPtr(c.StrictConsistency),
-					"tags":                 llx.MapData(polardbTagsToMap(c.Tags), types.String),
-					"dbNodes":              llx.ArrayData(polardbNodesToDict(c.DBNodes), types.Dict),
-				})
+
+				cluster, err := newPolardbCluster(r.MqlRuntime, region, c)
 				if err != nil {
 					return nil, err
 				}
-				cluster := resource.(*mqlAlicloudPolardbCluster)
-				cluster.region = region
-				cluster.dbClusterId = *c.DBClusterId
-				cluster.cacheVpcID = polardbStr(c.VpcId)
-				cluster.cacheVswitchID = polardbStr(c.VswitchId)
+				// DescribeDBClusters returns tags inline, so the filter costs
+				// nothing beyond the listing already made
+				if filteredOutByTags(conn, cluster.Tags.Data) {
+					continue
+				}
 				res = append(res, cluster)
 			}
 
@@ -179,6 +147,110 @@ func (r *mqlAlicloudPolardb) clusters() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// newPolardbCluster builds a fully populated alicloud.polardb.cluster from a
+// DescribeDBClusters list item within a region. It is shared by the clusters
+// list accessor and the by-id init so both produce identical resources.
+func newPolardbCluster(runtime *plugin.Runtime, region string, c *polardb.DescribeDBClustersResponseBodyItemsDBCluster) (*mqlAlicloudPolardbCluster, error) {
+	id := region + "/" + tea.StringValue(c.DBClusterId)
+	resource, err := CreateResource(runtime, "alicloud.polardb.cluster", map[string]*llx.RawData{
+		"__id":                 llx.StringData(id),
+		"dbClusterId":          llx.StringDataPtr(c.DBClusterId),
+		"dbClusterDescription": llx.StringDataPtr(c.DBClusterDescription),
+		"dbClusterStatus":      llx.StringDataPtr(c.DBClusterStatus),
+		"dbType":               llx.StringDataPtr(c.DBType),
+		"dbVersion":            llx.StringDataPtr(c.DBVersion),
+		"engine":               llx.StringDataPtr(c.Engine),
+		"category":             llx.StringDataPtr(c.Category),
+		"subCategory":          llx.StringDataPtr(c.SubCategory),
+		"dbNodeClass":          llx.StringDataPtr(c.DBNodeClass),
+		"dbNodeNumber":         llx.IntDataPtr(c.DBNodeNumber),
+		"cpuCores":             llx.StringDataPtr(c.CpuCores),
+		"memorySize":           llx.StringDataPtr(c.MemorySize),
+		"storageUsed":          llx.IntDataPtr(c.StorageUsed),
+		"storageType":          llx.StringDataPtr(c.StorageType),
+		"storagePayType":       llx.StringDataPtr(c.StoragePayType),
+		"storageSpace":         llx.IntDataPtr(c.StorageSpace),
+		"regionId":             llx.StringDataPtr(c.RegionId),
+		"zoneId":               llx.StringDataPtr(c.ZoneId),
+		"payType":              llx.StringDataPtr(c.PayType),
+		"createTime":           llx.TimeDataPtr(polardbParseTime(c.CreateTime)),
+		"expireTime":           llx.TimeDataPtr(polardbParseTime(c.ExpireTime)),
+		"expired":              llx.StringDataPtr(c.Expired),
+		"lockMode":             llx.StringDataPtr(c.LockMode),
+		"deletionLock":         llx.IntDataPtr(c.DeletionLock),
+		"resourceGroupId":      llx.StringDataPtr(c.ResourceGroupId),
+		"serverlessType":       llx.StringDataPtr(c.ServerlessType),
+		"dbClusterNetworkType": llx.StringDataPtr(c.DBClusterNetworkType),
+		"aiType":               llx.StringDataPtr(c.AiType),
+		"hotStandbyCluster":    llx.StringDataPtr(c.HotStandbyCluster),
+		"strictConsistency":    llx.StringDataPtr(c.StrictConsistency),
+		"tags":                 llx.MapData(polardbTagsToMap(c.Tags), types.String),
+		"dbNodes":              llx.ArrayData(polardbNodesToDict(c.DBNodes), types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cluster := resource.(*mqlAlicloudPolardbCluster)
+	cluster.region = region
+	cluster.dbClusterId = tea.StringValue(c.DBClusterId)
+	cluster.cacheVpcID = polardbStr(c.VpcId)
+	cluster.cacheVswitchID = polardbStr(c.VswitchId)
+	return cluster, nil
+}
+
+// initAlicloudPolardbCluster resolves a PolarDB cluster by its native cluster id
+// within a region, reusing an already-listed cluster from the resource cache. It
+// also backs the discovered polardb-cluster asset, which scopes the connection
+// to one cluster.
+func initAlicloudPolardbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	// on a discovered PolarDB cluster asset, resolve the cluster the asset is
+	// scoped to
+	args = scopedInitArgs(runtime, args, connection.OptionPolardbClusterID, "dbClusterId")
+
+	clusterID, err := requiredStringArg(args, "dbClusterId", "alicloud.polardb.cluster")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.polardb.cluster")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Matches the cluster __id: region + "/" + dbClusterId.
+	if x, ok := runtime.Resources.Get("alicloud.polardb.cluster\x00" + region + "/" + clusterID); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.PolarDBClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeDBClusters(&polardb.DescribeDBClustersRequest{
+		RegionId:     tea.String(region),
+		DBClusterIds: tea.String(clusterID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.Items != nil {
+		for _, c := range resp.Body.Items.DBCluster {
+			if c == nil || tea.StringValue(c.DBClusterId) != clusterID {
+				continue
+			}
+			res, err := newPolardbCluster(runtime, region, c)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.polardb.cluster %q not found in region %q", clusterID, region)
 }
 
 func (r *mqlAlicloudPolardbCluster) id() (string, error) {

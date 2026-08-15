@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -94,46 +95,16 @@ func (r *mqlAlicloudMongodb) instances() ([]any, error) {
 				if inst == nil || inst.DBInstanceId == nil {
 					continue
 				}
-				id := tea.StringValue(inst.DBInstanceId)
 
-				mqlInst, err := CreateResource(r.MqlRuntime, "alicloud.mongodb.instance", map[string]*llx.RawData{
-					"__id":                  llx.StringData(id),
-					"dbInstanceId":          llx.StringDataPtr(inst.DBInstanceId),
-					"dbInstanceDescription": llx.StringDataPtr(inst.DBInstanceDescription),
-					"dbInstanceType":        llx.StringDataPtr(inst.DBInstanceType),
-					"dbInstanceClass":       llx.StringDataPtr(inst.DBInstanceClass),
-					"dbInstanceStorage":     llx.IntData(tea.Int32Value(inst.DBInstanceStorage)),
-					"engine":                llx.StringDataPtr(inst.Engine),
-					"engineVersion":         llx.StringDataPtr(inst.EngineVersion),
-					"dbInstanceStatus":      llx.StringDataPtr(inst.DBInstanceStatus),
-					"regionId":              llx.StringDataPtr(inst.RegionId),
-					"zoneId":                llx.StringDataPtr(inst.ZoneId),
-					"secondaryZoneId":       llx.StringDataPtr(inst.SecondaryZoneId),
-					"hiddenZoneId":          llx.StringDataPtr(inst.HiddenZoneId),
-					"networkType":           llx.StringDataPtr(inst.NetworkType),
-					"chargeType":            llx.StringDataPtr(inst.ChargeType),
-					"storageType":           llx.StringDataPtr(inst.StorageType),
-					"replicationFactor":     llx.StringDataPtr(inst.ReplicationFactor),
-					"vpcAuthMode":           llx.StringDataPtr(inst.VpcAuthMode),
-					"backupRetentionPolicy": llx.IntData(tea.Int32Value(inst.BackupRetentionPolicy)),
-					"capacityUnit":          llx.StringDataPtr(inst.CapacityUnit),
-					"kindCode":              llx.StringDataPtr(inst.KindCode),
-					"createTime":            llx.TimeDataPtr(mongodbParseTime(inst.CreationTime)),
-					"expireTime":            llx.TimeDataPtr(mongodbParseTime(inst.ExpireTime)),
-					"destroyTime":           llx.TimeDataPtr(mongodbParseTime(inst.DestroyTime)),
-					"releaseTime":           llx.TimeDataPtr(mongodbParseTime(inst.ReleaseTime)),
-					"lastDowngradeTime":     llx.StringDataPtr(inst.LastDowngradeTime),
-					"lockMode":              llx.StringDataPtr(inst.LockMode),
-					"resourceGroupId":       llx.StringDataPtr(inst.ResourceGroupId),
-					"tags":                  llx.MapData(mongodbTagsToMap(inst.Tags), types.String),
-				})
+				mqlInst, err := newMongodbInstance(r.MqlRuntime, region, inst)
 				if err != nil {
 					return nil, err
 				}
-				m := mqlInst.(*mqlAlicloudMongodbInstance)
-				m.region = region
-				m.cacheRegion = region
-				m.instanceId = id
+				// DescribeDBInstances returns tags inline, so the filter costs
+				// nothing beyond the listing already made
+				if filteredOutByTags(conn, mqlInst.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlInst)
 			}
 
@@ -166,6 +137,104 @@ type mqlAlicloudMongodbInstanceInternal struct {
 	sslOnce sync.Once
 	sslBody *ddsclient.DescribeDBInstanceSSLResponseBody
 	sslErr  error
+}
+
+// newMongodbInstance builds a fully populated alicloud.mongodb.instance from a
+// DescribeDBInstances list item within a region. It is shared by the instances
+// list accessor and the by-id init so both produce identical resources.
+func newMongodbInstance(runtime *plugin.Runtime, region string, inst *ddsclient.DescribeDBInstancesResponseBodyDBInstancesDBInstance) (*mqlAlicloudMongodbInstance, error) {
+	id := tea.StringValue(inst.DBInstanceId)
+	resource, err := CreateResource(runtime, "alicloud.mongodb.instance", map[string]*llx.RawData{
+		"__id":                  llx.StringData(id),
+		"dbInstanceId":          llx.StringDataPtr(inst.DBInstanceId),
+		"dbInstanceDescription": llx.StringDataPtr(inst.DBInstanceDescription),
+		"dbInstanceType":        llx.StringDataPtr(inst.DBInstanceType),
+		"dbInstanceClass":       llx.StringDataPtr(inst.DBInstanceClass),
+		"dbInstanceStorage":     llx.IntData(tea.Int32Value(inst.DBInstanceStorage)),
+		"engine":                llx.StringDataPtr(inst.Engine),
+		"engineVersion":         llx.StringDataPtr(inst.EngineVersion),
+		"dbInstanceStatus":      llx.StringDataPtr(inst.DBInstanceStatus),
+		"regionId":              llx.StringDataPtr(inst.RegionId),
+		"zoneId":                llx.StringDataPtr(inst.ZoneId),
+		"secondaryZoneId":       llx.StringDataPtr(inst.SecondaryZoneId),
+		"hiddenZoneId":          llx.StringDataPtr(inst.HiddenZoneId),
+		"networkType":           llx.StringDataPtr(inst.NetworkType),
+		"chargeType":            llx.StringDataPtr(inst.ChargeType),
+		"storageType":           llx.StringDataPtr(inst.StorageType),
+		"replicationFactor":     llx.StringDataPtr(inst.ReplicationFactor),
+		"vpcAuthMode":           llx.StringDataPtr(inst.VpcAuthMode),
+		"backupRetentionPolicy": llx.IntData(tea.Int32Value(inst.BackupRetentionPolicy)),
+		"capacityUnit":          llx.StringDataPtr(inst.CapacityUnit),
+		"kindCode":              llx.StringDataPtr(inst.KindCode),
+		"createTime":            llx.TimeDataPtr(mongodbParseTime(inst.CreationTime)),
+		"expireTime":            llx.TimeDataPtr(mongodbParseTime(inst.ExpireTime)),
+		"destroyTime":           llx.TimeDataPtr(mongodbParseTime(inst.DestroyTime)),
+		"releaseTime":           llx.TimeDataPtr(mongodbParseTime(inst.ReleaseTime)),
+		"lastDowngradeTime":     llx.StringDataPtr(inst.LastDowngradeTime),
+		"lockMode":              llx.StringDataPtr(inst.LockMode),
+		"resourceGroupId":       llx.StringDataPtr(inst.ResourceGroupId),
+		"tags":                  llx.MapData(mongodbTagsToMap(inst.Tags), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlInst := resource.(*mqlAlicloudMongodbInstance)
+	mqlInst.region = region
+	mqlInst.cacheRegion = region
+	mqlInst.instanceId = id
+	return mqlInst, nil
+}
+
+// initAlicloudMongodbInstance resolves an ApsaraDB for MongoDB instance by its
+// native DB instance id within a region, reusing an already-listed instance from
+// the resource cache. It also backs the discovered mongodb-instance asset, which
+// scopes the connection to one instance.
+func initAlicloudMongodbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	// on a discovered MongoDB instance asset, resolve the instance the asset is
+	// scoped to
+	args = scopedInitArgs(runtime, args, connection.OptionMongodbInstanceID, "dbInstanceId")
+
+	instanceID, err := requiredStringArg(args, "dbInstanceId", "alicloud.mongodb.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.mongodb.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.mongodb.instance\x00" + instanceID); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.MongoDBClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeDBInstances(&ddsclient.DescribeDBInstancesRequest{
+		RegionId:     tea.String(region),
+		DBInstanceId: tea.String(instanceID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.DBInstances != nil {
+		for _, inst := range resp.Body.DBInstances.DBInstance {
+			if inst == nil || tea.StringValue(inst.DBInstanceId) != instanceID {
+				continue
+			}
+			res, err := newMongodbInstance(runtime, region, inst)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.mongodb.instance %q not found in region %q", instanceID, region)
 }
 
 func (r *mqlAlicloudMongodbInstance) id() (string, error) {

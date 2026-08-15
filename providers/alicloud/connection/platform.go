@@ -10,14 +10,19 @@ import (
 
 const (
 	// Scope options that pin a discovered child connection to a single object.
-	OptionClusterID     = "cluster-id"
-	OptionAlbID         = "alb-id"
-	OptionNlbID         = "nlb-id"
-	OptionVpcID         = "vpc-id"
-	OptionWafInstanceID = "waf-instance-id"
-	OptionCloudFirewall = "cloud-firewall"
-	OptionOssBucket     = "oss-bucket"
-	OptionRdsInstanceID = "rds-instance-id"
+	OptionClusterID         = "cluster-id"
+	OptionAlbID             = "alb-id"
+	OptionNlbID             = "nlb-id"
+	OptionVpcID             = "vpc-id"
+	OptionWafInstanceID     = "waf-instance-id"
+	OptionCloudFirewall     = "cloud-firewall"
+	OptionOssBucket         = "oss-bucket"
+	OptionRdsInstanceID     = "rds-instance-id"
+	OptionSlbID             = "slb-id"
+	OptionRedisInstanceID   = "redis-instance-id"
+	OptionMongodbInstanceID = "mongodb-instance-id"
+	OptionPolardbClusterID  = "polardb-cluster-id"
+	OptionFcFunctionName    = "fc-function-name"
 )
 
 const (
@@ -30,6 +35,11 @@ const (
 	platformIDCloudFirewall = "//platformid.api.mondoo.app/runtime/alicloud/cloudfirewall/"
 	platformIDOssBucket     = "//platformid.api.mondoo.app/runtime/alicloud/oss/bucket/"
 	platformIDRdsInstance   = "//platformid.api.mondoo.app/runtime/alicloud/rds/instance/"
+	platformIDSlb           = "//platformid.api.mondoo.app/runtime/alicloud/slb/loadbalancer/"
+	platformIDRedisInstance = "//platformid.api.mondoo.app/runtime/alicloud/redis/instance/"
+	platformIDMongodb       = "//platformid.api.mondoo.app/runtime/alicloud/mongodb/instance/"
+	platformIDPolardb       = "//platformid.api.mondoo.app/runtime/alicloud/polardb/cluster/"
+	platformIDFcFunction    = "//platformid.api.mondoo.app/runtime/alicloud/fc/function/"
 )
 
 // Platforms is the static catalog of platforms the alicloud provider emits: the
@@ -45,6 +55,11 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "alicloud-cloud-firewall", Title: "Alibaba Cloud Cloud Firewall", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-oss-bucket", Title: "Alibaba Cloud OSS Bucket", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-rds-instance", Title: "Alibaba Cloud RDS Instance", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-slb-loadbalancer", Title: "Alibaba Cloud Classic Load Balancer", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-redis-instance", Title: "Alibaba Cloud ApsaraDB for Redis Instance", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-mongodb-instance", Title: "Alibaba Cloud ApsaraDB for MongoDB Instance", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-polardb-cluster", Title: "Alibaba Cloud PolarDB Cluster", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-fc-function", Title: "Alibaba Cloud Function Compute Function", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)
@@ -118,6 +133,41 @@ func NewRdsInstancePlatform(instanceID string) *inventory.Platform {
 		[]string{"technology=alicloud", "kind=rds-instance", "instance=" + instanceID})
 }
 
+// NewSlbPlatform returns the platform for a discovered CLB instance asset.
+func NewSlbPlatform(lbID string) *inventory.Platform {
+	return newPlatform("alicloud-slb-loadbalancer", "",
+		[]string{"technology=alicloud", "kind=slb-loadbalancer", "loadbalancer=" + lbID})
+}
+
+// NewRedisInstancePlatform returns the platform for a discovered ApsaraDB for
+// Redis instance asset.
+func NewRedisInstancePlatform(instanceID string) *inventory.Platform {
+	return newPlatform("alicloud-redis-instance", "",
+		[]string{"technology=alicloud", "kind=redis-instance", "instance=" + instanceID})
+}
+
+// NewMongodbInstancePlatform returns the platform for a discovered ApsaraDB for
+// MongoDB instance asset.
+func NewMongodbInstancePlatform(instanceID string) *inventory.Platform {
+	return newPlatform("alicloud-mongodb-instance", "",
+		[]string{"technology=alicloud", "kind=mongodb-instance", "instance=" + instanceID})
+}
+
+// NewPolardbClusterPlatform returns the platform for a discovered PolarDB
+// cluster asset.
+func NewPolardbClusterPlatform(clusterID string) *inventory.Platform {
+	return newPlatform("alicloud-polardb-cluster", "",
+		[]string{"technology=alicloud", "kind=polardb-cluster", "cluster=" + clusterID})
+}
+
+// NewFcFunctionPlatform returns the platform for a discovered Function Compute
+// function asset. Function names repeat across regions, so the region is part of
+// the identity.
+func NewFcFunctionPlatform(region, functionName string) *inventory.Platform {
+	return newPlatform("alicloud-fc-function", "",
+		[]string{"technology=alicloud", "kind=fc-function", "region=" + region, "function=" + functionName})
+}
+
 func NewAccountIdentifier(accountID string) string       { return platformIDAccount + accountID }
 func NewAckClusterIdentifier(clusterID string) string    { return platformIDAckCluster + clusterID }
 func NewAlbIdentifier(lbID string) string                { return platformIDAlb + lbID }
@@ -127,3 +177,22 @@ func NewWafInstanceIdentifier(instanceID string) string  { return platformIDWafI
 func NewCloudFirewallIdentifier(accountID string) string { return platformIDCloudFirewall + accountID }
 func NewOssBucketIdentifier(bucketName string) string    { return platformIDOssBucket + bucketName }
 func NewRdsInstanceIdentifier(instanceID string) string  { return platformIDRdsInstance + instanceID }
+func NewSlbIdentifier(lbID string) string                { return platformIDSlb + lbID }
+
+func NewRedisInstanceIdentifier(instanceID string) string {
+	return platformIDRedisInstance + instanceID
+}
+
+func NewMongodbInstanceIdentifier(instanceID string) string {
+	return platformIDMongodb + instanceID
+}
+
+func NewPolardbClusterIdentifier(clusterID string) string {
+	return platformIDPolardb + clusterID
+}
+
+// NewFcFunctionIdentifier keys a function by region and name: Function Compute
+// names are unique within a region, not across the account.
+func NewFcFunctionIdentifier(region, functionName string) string {
+	return platformIDFcFunction + region + "/" + functionName
+}
