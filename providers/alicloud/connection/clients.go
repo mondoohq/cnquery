@@ -19,6 +19,7 @@ import (
 	ddoscooclient "github.com/alibabacloud-go/ddoscoo-20200101/v5/client"
 	ddsclient "github.com/alibabacloud-go/dds-20151201/v10/client"
 	ecsclient "github.com/alibabacloud-go/ecs-20140526/v7/client"
+	esclient "github.com/alibabacloud-go/elasticsearch-20170613/v6/client"
 	essclient "github.com/alibabacloud-go/ess-20220222/v2/client"
 	fcclient "github.com/alibabacloud-go/fc-20230330/v4/client"
 	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
@@ -187,6 +188,18 @@ func (c *AlicloudConnection) CrClient(region string) (*crclient.Client, error) {
 		return nil, err
 	}
 	return client.(*crclient.Client), nil
+}
+
+// ElasticsearchClient returns the Elasticsearch client. The service's endpoint
+// prefix is elasticsearch.
+func (c *AlicloudConnection) ElasticsearchClient(region string) (*esclient.Client, error) {
+	client, err := c.cachedClient("elasticsearch/"+region, func() (any, error) {
+		return esclient.NewClient(c.config("elasticsearch", region))
+	})
+	if err != nil {
+		return nil, err
+	}
+	return client.(*esclient.Client), nil
 }
 
 func (c *AlicloudConnection) StsClient(region string) (*stsclient.Client, error) {

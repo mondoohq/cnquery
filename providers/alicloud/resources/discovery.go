@@ -34,6 +34,7 @@ const (
 	DiscoveryPolardbClusters  = "polardb-clusters"
 	DiscoveryFcFunctions      = "fc-functions"
 	DiscoveryAcrInstances     = "acr-instances"
+	DiscoveryEsClusters       = "es-clusters"
 )
 
 // Discover enumerates the major service objects in the account and returns one
@@ -80,6 +81,8 @@ func Discover(runtime *plugin.Runtime, conf *inventory.Config) (*inventory.Inven
 			assets, err = discoverFcFunctions(runtime, conn, conf)
 		case DiscoveryAcrInstances:
 			assets, err = discoverAcrInstances(runtime, conn, conf)
+		case DiscoveryEsClusters:
+			assets, err = discoverEsClusters(runtime, conn, conf)
 		case DiscoveryAccounts:
 			// the account is already returned as the connected root asset, so it
 			// contributes no discovered child assets
@@ -114,6 +117,7 @@ func handleTargets(targets []string) []string {
 			DiscoveryPolardbClusters,
 			DiscoveryFcFunctions,
 			DiscoveryAcrInstances,
+			DiscoveryEsClusters,
 		}
 	}
 	return targets
@@ -392,6 +396,29 @@ func discoverAcrInstances(runtime *plugin.Runtime, conn *connection.AlicloudConn
 		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
 			connection.NewAcrInstanceIdentifier(id), connection.NewAcrInstancePlatform(id),
 			nameOr(inst.InstanceName.Data, id), connection.OptionAcrInstanceID, id))
+	}
+	return assets, nil
+}
+
+func discoverEsClusters(runtime *plugin.Runtime, conn *connection.AlicloudConnection, conf *inventory.Config) ([]*inventory.Asset, error) {
+	res, err := CreateResource(runtime, "alicloud.es", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances, err := res.(*mqlAlicloudEs).instances()
+	if err != nil {
+		return nil, err
+	}
+	assets := make([]*inventory.Asset, 0, len(instances))
+	for _, ii := range instances {
+		inst := ii.(*mqlAlicloudEsInstance)
+		id := inst.InstanceId.Data
+		if id == "" {
+			continue
+		}
+		assets = append(assets, newChildAsset(conf, conn.ID(), inst.RegionId.Data,
+			connection.NewEsInstanceIdentifier(id), connection.NewEsInstancePlatform(id),
+			nameOr(inst.Description.Data, id), connection.OptionEsInstanceID, id))
 	}
 	return assets, nil
 }

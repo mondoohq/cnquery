@@ -87,6 +87,8 @@ github.com/alibabacloud-go/debug v1.0.1 h1:MsW9SmUtbb1Fnt3ieC6NNZi6aEwrXfDksD4QA
 github.com/alibabacloud-go/debug v1.0.1/go.mod h1:8gfgZCCAC3+SCzjWtY053FrOcd4/qlH6IHTI4QyICOc=
 github.com/alibabacloud-go/ecs-20140526/v7 v7.9.5 h1:ZgFwtZfnppJJeLSlTfjVDHh+YVDE7kkYnKaEzzJemB0=
 github.com/alibabacloud-go/ecs-20140526/v7 v7.9.5/go.mod h1:k60ZRBAI7mnXMFi2H13zJGd00Km0iNh3iSHtLrRWPVk=
+github.com/alibabacloud-go/elasticsearch-20170613/v6 v6.3.3 h1:RsDWYbZ2xGPvR3caEE+FkLhtgId/y/hrBMnHT8EeVEU=
+github.com/alibabacloud-go/elasticsearch-20170613/v6 v6.3.3/go.mod h1:zVEJeSIhboRKVqpuhLIeEi0LFhKCEIBZTvrh+PyFqHg=
 github.com/alibabacloud-go/endpoint-util v1.1.0 h1:r/4D3VSw888XGaeNpP994zDUaxdgTSHBbVfZlzf6b5Q=
 github.com/alibabacloud-go/endpoint-util v1.1.0/go.mod h1:O5FuCALmCKs2Ff7JFJMudHs0I5EBgecXXxZRyswlEjE=
 github.com/alibabacloud-go/ess-20220222/v2 v2.13.3 h1:VafOjNLGZtRn62lzvu9NlXG7/hEBqKBENqXNv1z5VmU=

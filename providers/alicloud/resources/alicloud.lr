@@ -5547,3 +5547,109 @@ alicloud.acr.scanRule @defaults("ruleName scanType scanScope triggerType") {
   // Time the rule was last updated
   updateTime time
 }
+
+// Alibaba Cloud Elasticsearch
+//
+// Elasticsearch clusters in the account. A cluster holds indexed copies of
+// whatever was shipped into it, which is often log and application data, and it
+// can be published on a public endpoint of its own alongside a Kibana console.
+// Reports what each cluster accepts connections on and which addresses are
+// allowed to reach it.
+alicloud.es {
+  // Elasticsearch clusters in the account
+  instances() []alicloud.es.instance
+}
+
+// Elasticsearch cluster
+//
+// A single Elasticsearch cluster, keyed by instanceId. Reports the engine
+// version and node layout, whether the transport is plain HTTP, whether disks
+// are encrypted, and, through its detail accessors, whether the cluster and its
+// Kibana console answer on a public endpoint and which address lists gate them.
+alicloud.es.instance @defaults("description instanceId esVersion status") {
+  // Instance ID, used as the lookup key
+  instanceId string
+  // Cluster description, which is the name shown in the console
+  description string
+  // Elasticsearch version the cluster runs
+  //
+  // An unsupported version stops receiving security fixes, so the version is
+  // part of the cluster's exposure and not only its capability.
+  esVersion string
+  // Cluster edition
+  //
+  // Values include x-pack for a standard commercial cluster and advanced for
+  // the enterprise edition.
+  instanceCategory() string
+  // Cluster status
+  //
+  // One of active, activating, inactive, or invalid.
+  status string
+  // Region the cluster lives in
+  regionId string
+  // Billing method
+  paymentType string
+  // Number of data nodes in the cluster
+  nodeAmount int
+  // Number of zones the cluster spans
+  zoneCount int
+  // Whether the cluster runs dedicated master nodes
+  dedicatedMaster bool
+  // Protocol the cluster accepts connections on
+  //
+  // HTTP or HTTPS. HTTP means credentials and query results cross the network
+  // in the clear, which matters most on a cluster that also answers publicly.
+  protocol string
+  // Private domain the cluster answers on
+  domain string
+  // Port the cluster answers on
+  port int
+  // Whether the data node disks are encrypted at rest
+  diskEncrypted bool
+  // VPC the cluster is attached to
+  vpc() alicloud.vpc.network
+  // vSwitch the cluster is attached to
+  vswitch() alicloud.vpc.vswitch
+  // ID of the resource group the cluster belongs to
+  resourceGroupId string
+  // Resource group the cluster belongs to
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the cluster
+  tags map[string]string
+  // Time the cluster was created
+  createdAt time
+  // Time the cluster was last updated
+  updatedAt time
+  // Whether the cluster answers on a public endpoint
+  //
+  // True means the cluster is reachable from outside its VPC, leaving
+  // publicIpWhitelist as the control over who may connect.
+  publicNetworkEnabled() bool
+  // Public domain the cluster answers on
+  //
+  // Empty when no public endpoint is switched on.
+  publicDomain() string
+  // Port the public endpoint answers on
+  publicPort() int
+  // Addresses allowed to reach the public endpoint
+  //
+  // An entry of 0.0.0.0/0 leaves the cluster open to the whole internet, which
+  // is the default the console offers when a public endpoint is switched on.
+  publicIpWhitelist() []string
+  // Addresses allowed to reach the cluster from inside the VPC
+  privateIpWhitelist() []string
+  // Whether the Kibana console answers on a public endpoint
+  //
+  // Kibana reads everything the cluster holds, so a public console is a data
+  // exposure in its own right even when the cluster endpoint stays private.
+  kibanaPublicNetworkEnabled() bool
+  // Public domain the Kibana console answers on
+  kibanaDomain() string
+  // Addresses allowed to reach the Kibana console
+  kibanaIpWhitelist() []string
+  // Whether the cluster is reachable from the internet
+  //
+  // True when either the cluster endpoint or the Kibana console answers
+  // publicly. False means both are confined to the VPC.
+  internetExposed() bool
+}
