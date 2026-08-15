@@ -28,8 +28,17 @@ func readTable(data []byte) ([]entry, error) {
 	entries := make([]entry, 0, n)
 	for i := range n {
 		rec := headerSize + i*recordSize
+		length := int(data[rec+7])
 		off := blobStart + int(binary.LittleEndian.Uint32(data[rec+3:rec+7]))
-		end := off + int(data[rec+7])
+		end := off + length
+
+		// simplifyName can reduce an organization name to nothing, and run
+		// drops those rows rather than writing them, so a length of zero here
+		// means the file was corrupted. Letting it through would report the
+		// assignment as renamed into an empty cell instead of failing.
+		if length == 0 {
+			return nil, fmt.Errorf("assignment %d has an empty vendor name", i)
+		}
 		if end > len(data) {
 			return nil, fmt.Errorf("assignment %d names bytes %d:%d, past the end of the blob", i, off, end)
 		}

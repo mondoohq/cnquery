@@ -68,6 +68,13 @@ func TestReadTableRejectsMalformed(t *testing.T) {
 			data:    append(header(1), 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0xFF),
 			wantErr: "past the end of the blob",
 		},
+		{
+			// The writer never emits a zero-length name, so one here is
+			// corruption rather than an assignment with no vendor.
+			name:    "empty vendor name",
+			data:    append(header(1), 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00),
+			wantErr: "empty vendor name",
+		},
 	}
 
 	for _, test := range tests {

@@ -121,6 +121,22 @@ func TestRunRejectsAnUnreadableExistingTable(t *testing.T) {
 	assert.Contains(t, err.Error(), "wrong magic")
 }
 
+// An organization whose whole legal name is a corporate suffix simplifies to
+// nothing. Such a row has to be dropped rather than written: readTable rejects
+// a zero-length name, so emitting one would produce a table this generator
+// cannot read back.
+func TestRunDropsRowsThatSimplifyToNothing(t *testing.T) {
+	binPath := filepath.Join(t.TempDir(), "oui.bin")
+	require.NoError(t, run(writeCSV(t, "MA-L,000000,XEROX CORPORATION,\nMA-L,00000C,Co.,\n"), binPath, ""))
+
+	data, err := os.ReadFile(binPath)
+	require.NoError(t, err)
+
+	got, err := readTable(data)
+	require.NoError(t, err)
+	assert.Equal(t, []entry{{oui: 0x000000, vendor: "XEROX"}}, got)
+}
+
 // The header guard is what keeps an error page or an unrelated CSV from being
 // encoded into a table that reports every vendor as gone.
 func TestRunRejectsANonRegistryCSV(t *testing.T) {
