@@ -5274,3 +5274,276 @@ alicloud.vpc.vpnConnection @defaults("vpnConnectionId name status") {
   // VPN gateway the connection terminates on
   vpnGateway() alicloud.vpc.vpnGateway
 }
+
+// Alibaba Cloud Container Registry
+//
+// Container Registry (ACR) instances in the account and what is published
+// through them: the namespaces that group repositories, the repositories
+// themselves and whether each is readable without credentials, the replication
+// rules that copy images to other regions or accounts, and the scan rules that
+// decide whether an image is examined before it runs. The images an ACK cluster
+// pulls come from here, so this is where a container supply chain begins.
+alicloud.acr {
+  // Container Registry Enterprise Edition instances in the account
+  instances() []alicloud.acr.instance
+}
+
+// Container Registry instance
+//
+// A single Enterprise Edition registry, keyed by instanceId. Reports the
+// edition and state of the instance, whether its internet endpoint is switched
+// on and which addresses that endpoint accepts, and the namespaces,
+// repositories, replication rules and scan rules it holds.
+alicloud.acr.instance @defaults("instanceName instanceSpecification instanceStatus regionId") {
+  // Instance ID, used as the lookup key
+  instanceId string
+  // Instance name
+  instanceName string
+  // Enterprise Edition specification
+  //
+  // The purchased edition, such as Enterprise_Basic, Enterprise_Standard, or
+  // Enterprise_Advanced. Vulnerability scanning and some replication features
+  // are only available above the basic edition.
+  instanceSpecification string
+  // Instance status
+  //
+  // RUNNING for an instance serving traffic.
+  instanceStatus string
+  // Region the instance lives in
+  regionId string
+  // ID of the resource group the instance belongs to
+  resourceGroupId string
+  // Resource group the instance belongs to
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the instance
+  tags map[string]string
+  // Time the instance was created
+  createTime time
+  // Time the instance was last modified
+  modifiedTime time
+  // Whether the instance is reachable over the internet
+  //
+  // False means images can only be pulled from inside a linked VPC. True means
+  // the registry answers on a public domain, and internetEndpointAclEnabled
+  // decides whether anything narrows who may reach it.
+  internetEndpointEnabled() bool
+  // Whether an address list gates the internet endpoint
+  //
+  // False on an enabled internet endpoint means every source address may reach
+  // the registry, leaving repository visibility as the only control.
+  internetEndpointAclEnabled() bool
+  // Addresses allowed to reach the internet endpoint
+  //
+  // The CIDR entries of the endpoint's address list. Empty when no list is
+  // configured, which is not a restriction: an enabled endpoint with no
+  // entries and no list enforcement accepts every source.
+  internetEndpointAclEntries() []string
+  // Public domains the instance answers on
+  internetEndpointDomains() []string
+  // Namespaces defined in the instance
+  namespaces() []alicloud.acr.namespace
+  // Repositories held in the instance
+  repositories() []alicloud.acr.repository
+  // Replication rules that copy images in or out of the instance
+  syncRules() []alicloud.acr.syncRule
+  // Rules that decide which images are scanned and when
+  //
+  // Empty when no scan rule is configured, in which case images are only
+  // examined if someone starts a scan by hand.
+  scanRules() []alicloud.acr.scanRule
+}
+
+// Container Registry namespace
+//
+// A namespace groups repositories inside one registry and sets the defaults new
+// repositories inherit. Selected by namespaceName within an instance. The
+// defaults matter on their own: a namespace that creates repositories on push
+// and hands them public visibility turns a mistyped image name into a
+// world-readable repository.
+alicloud.acr.namespace @defaults("namespaceName defaultRepoType autoCreateRepo") {
+  // Namespace ID
+  namespaceId string
+  // Namespace name, used as the selection key within an instance
+  namespaceName string
+  // ID of the instance holding the namespace
+  instanceId string
+  // Whether pushing an unknown repository name creates it
+  //
+  // True means a push to a name that does not exist yet creates the repository
+  // with the namespace defaults rather than failing, so a typo or an unreviewed
+  // push lands a new repository.
+  autoCreateRepo bool
+  // Visibility given to a repository created in this namespace
+  //
+  // Either PUBLIC or PRIVATE. PUBLIC together with autoCreateRepo means an
+  // automatically created repository is readable without credentials.
+  defaultRepoType string
+  // Tag immutability given to a repository created in this namespace
+  //
+  // False means new repositories allow an existing tag to be repointed at
+  // different content.
+  defaultTagImmutability bool
+  // Namespace status
+  //
+  // Either NORMAL or DELETING.
+  namespaceStatus string
+  // ID of the resource group the namespace belongs to
+  resourceGroupId string
+  // Resource group the namespace belongs to
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Repositories in the namespace
+  repositories() []alicloud.acr.repository
+}
+
+// Container Registry repository
+//
+// One image repository, keyed by repoId. Reports whether the repository is
+// readable without credentials, whether its tags can be overwritten after they
+// have been deployed, and which namespace holds it.
+alicloud.acr.repository @defaults("repoNamespaceName repoName repoType tagImmutability") {
+  // Repository ID, used as the lookup key
+  repoId string
+  // Repository name
+  repoName string
+  // Name of the namespace holding the repository
+  repoNamespaceName string
+  // Namespace holding the repository
+  namespace() alicloud.acr.namespace
+  // ID of the instance holding the repository
+  instanceId string
+  // Repository visibility
+  //
+  // Either PUBLIC, which needs no credentials to pull, or PRIVATE.
+  repoType string
+  // Whether the repository can be pulled from the internet without credentials
+  //
+  // True only when the repository is PUBLIC and its instance answers on the
+  // internet: a public repository inside an instance with no internet endpoint
+  // is still reachable only from a linked VPC.
+  isPublic() bool
+  // Whether an existing tag can be overwritten
+  //
+  // False means a tag can be repointed at different content after it has been
+  // deployed, so the image reviewed at build time is not necessarily the one
+  // that runs.
+  tagImmutability bool
+  // Repository summary
+  summary string
+  // Repository status
+  repoStatus string
+  // How images reach the repository
+  //
+  // MANUAL for images pushed by a client, AUTO for images produced by a build
+  // rule in the registry.
+  repoBuildType string
+  // ID of the resource group the repository belongs to
+  resourceGroupId string
+  // Resource group the repository belongs to
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Time the repository was created
+  createTime time
+  // Time the repository was last modified
+  modifiedTime time
+}
+
+// Container Registry replication rule
+//
+// A rule that copies images between registries, keyed by syncRuleId. Reports
+// what the rule matches and where the copies land, so a rule that moves images
+// into another account or region is visible as one.
+alicloud.acr.syncRule @defaults("syncRuleName syncDirection targetRegionId crossUser") {
+  // Replication rule ID, used as the lookup key
+  syncRuleId string
+  // Replication rule name
+  syncRuleName string
+  // Whether the rule crosses an account boundary
+  //
+  // True means the other end of the rule belongs to a different Alibaba Cloud
+  // account, so images leave this account entirely.
+  crossUser bool
+  // Direction images move
+  //
+  // FROM copies from the source instance to the target instance, TO copies from
+  // the target instance back to the source.
+  syncDirection string
+  // What the rule matches
+  //
+  // NAMESPACE replicates a whole namespace, REPO replicates a single
+  // repository. A NAMESPACE rule keeps applying to repositories created after
+  // the rule was written.
+  syncScope string
+  // How the rule fires
+  //
+  // INITIATIVE for a replication started on purpose, PASSIVE for one triggered
+  // by a push.
+  syncTrigger string
+  // ID of the instance the rule was defined on
+  localInstanceId string
+  // Region of the instance the rule was defined on
+  localRegionId string
+  // Namespace the rule reads from
+  localNamespaceName string
+  // Repository the rule reads from
+  //
+  // Empty for a rule scoped to a whole namespace.
+  localRepoName string
+  // ID of the instance images are copied to
+  //
+  // The target can belong to another account, which has no resource here, so
+  // this is the only view of it.
+  targetInstanceId string
+  // Region images are copied to
+  targetRegionId string
+  // Namespace images are copied into
+  targetNamespaceName string
+  // Repository images are copied into
+  //
+  // Empty for a rule scoped to a whole namespace.
+  targetRepoName string
+  // Regular expression selecting which namespaces the rule covers
+  namespaceNameFilter string
+  // Regular expression selecting which repositories the rule covers
+  repoNameFilter string
+  // Regular expression selecting which tags the rule copies
+  tagFilter string
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  modifiedTime time
+}
+
+// Container Registry scan rule
+//
+// A rule that decides which images are examined and when, keyed by scanRuleId.
+// A registry with no scan rule only examines an image when someone asks it to,
+// so an image can be pulled and run without ever having been looked at.
+alicloud.acr.scanRule @defaults("ruleName scanType scanScope triggerType") {
+  // Scan rule ID, used as the lookup key
+  scanRuleId string
+  // Scan rule name
+  ruleName string
+  // ID of the instance the rule applies to
+  instanceId string
+  // What the scan looks for
+  //
+  // VUL runs the cloud security scanner for vulnerabilities, SBOM runs content
+  // analysis to inventory what an image contains.
+  scanType string
+  // What the rule covers
+  //
+  // REPO for a single repository, or the wider scope the rule was created with.
+  scanScope string
+  // Regular expression selecting which tags are scanned
+  //
+  // Empty when the rule covers every tag in scope.
+  repoTagFilterPattern string
+  // How the scan fires
+  //
+  // AUTO for a scan triggered by a push, so an image is examined as it arrives
+  // rather than on request.
+  triggerType string
+  // Time the rule was created
+  createTime time
+  // Time the rule was last updated
+  updateTime time
+}

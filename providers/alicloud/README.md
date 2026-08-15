@@ -84,6 +84,7 @@ Scanning an account discovers one asset per major service object, each scoped to
 | `mongodb-instances` | ApsaraDB for MongoDB instances |
 | `polardb-clusters` | PolarDB clusters |
 | `fc-functions` | Function Compute functions |
+| `acr-instances` | Container Registry instances |
 | `waf` | Web Application Firewall instances |
 | `cloud-firewall` | the account's Cloud Firewall, when provisioned |
 | `auto` / `all` | every target above |
@@ -134,6 +135,28 @@ alicloud.oss.buckets.where(blockPublicAccess == false) { name acl policy }
 # RDS instances allowing connections from anywhere
 alicloud.rds.instances.where(securityIPList.contains("0.0.0.0/0")) {
   dbInstanceId engine sslEnabled tdeEnabled
+}
+
+# container images anyone can pull, and images whose tags can be
+# repointed after they were reviewed
+alicloud.acr.instances {
+  instanceName
+  repositories.where(isPublic) { repoNamespaceName repoName }
+  repositories.where(tagImmutability == false) { repoNamespaceName repoName }
+}
+
+# registries reachable from the internet with no address list in front,
+# and no rule that scans an image as it arrives
+alicloud.acr.instances.where(internetEndpointEnabled && internetEndpointAclEnabled == false) {
+  instanceName internetEndpointDomains
+  scanRules.where(triggerType == "AUTO") { ruleName scanType }
+}
+
+# replication rules that copy images into another account
+alicloud.acr.instances {
+  syncRules.where(crossUser) {
+    syncRuleName localNamespaceName targetInstanceId targetRegionId
+  }
 }
 
 # RAM users holding administrator permissions directly

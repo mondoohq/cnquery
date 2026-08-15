@@ -29,6 +29,7 @@ func TestAlicloudPlatforms(t *testing.T) {
 	assert.True(t, PlatformByName("alicloud-mongodb-instance").Consistent(NewMongodbInstancePlatform("dds-abc")))
 	assert.True(t, PlatformByName("alicloud-polardb-cluster").Consistent(NewPolardbClusterPlatform("pc-abc")))
 	assert.True(t, PlatformByName("alicloud-fc-function").Consistent(NewFcFunctionPlatform("cn-hangzhou", "handler")))
+	assert.True(t, PlatformByName("alicloud-acr-instance").Consistent(NewAcrInstancePlatform("cri-abc")))
 }
 
 // TestAlicloudIdentifiers pins the stable platform-id formats used for asset
@@ -56,4 +57,6 @@ func TestAlicloudIdentifiers(t *testing.T) {
 	assert.NotEqual(t,
 		NewFcFunctionIdentifier("cn-hangzhou", "handler"),
 		NewFcFunctionIdentifier("ap-southeast-1", "handler"))
+
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/acr/instance/cri-abc", NewAcrInstanceIdentifier("cri-abc"))
 }
