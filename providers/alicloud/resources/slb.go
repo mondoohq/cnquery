@@ -6,6 +6,8 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	slbclient "github.com/alibabacloud-go/slb-20140515/v4/client"
@@ -83,6 +85,10 @@ type mqlAlicloudSlbLoadBalancerInternal struct {
 	cacheRegion    string
 	cacheVpcID     string
 	cacheVswitchID string
+
+	backendsLock    sync.Mutex
+	backendsFetched atomic.Bool
+	cacheBackends   []*slbclient.DescribeLoadBalancerAttributeResponseBodyBackendServersBackendServer
 }
 
 func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
@@ -339,26 +345,13 @@ func (r *mqlAlicloudSlbLoadBalancer) listeners() ([]any, error) {
 }
 
 func (r *mqlAlicloudSlbLoadBalancer) backendServers() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.SlbClient(r.region)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := client.DescribeLoadBalancerAttribute(&slbclient.DescribeLoadBalancerAttributeRequest{
-		RegionId:       tea.String(r.region),
-		LoadBalancerId: tea.String(r.LoadBalancerId.Data),
-	})
+	servers, err := r.fetchBackendServers()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []any{}
-	if resp == nil || resp.Body == nil || resp.Body.BackendServers == nil {
-		return res, nil
-	}
-
-	for _, s := range resp.Body.BackendServers.BackendServer {
+	for _, s := range servers {
 		if s == nil {
 			continue
 		}

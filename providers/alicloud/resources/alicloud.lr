@@ -530,8 +530,7 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   vswitch() alicloud.vpc.vswitch
   // Security group IDs applied to the instance
   //
-  // Deprecated in favor of securityGroups, which returns the same groups as
-  // resources whose rules can be inspected.
+  // Deprecated in favor of securityGroups.
   securityGroupIds @maturity("deprecated") []string
   // Private IP addresses assigned to the instance
   privateIpAddresses []string
@@ -1864,11 +1863,19 @@ alicloud.slb.loadBalancer {
   tags map[string]string
   // Listeners configured on the CLB instance
   listeners() []alicloud.slb.listener
-  // Backend servers attached to the CLB instance
+  // Backend server summaries
   //
-  // Each entry carries the serverId, serverIp, weight, type (ecs or eni), and
-  // an optional description of an attached backend server.
-  backendServers() []dict
+  // Deprecated in favor of backends. Each entry carries the serverId, serverIp,
+  // weight, type (ecs or eni), and an optional description.
+  backendServers() @maturity("deprecated") []dict
+  // Backend servers attached directly to the CLB instance
+  //
+  // What the load balancer forwards to. An internet-facing CLB makes every one
+  // of these reachable from the public internet on the listener's port,
+  // whatever the backend's own security groups say about its address.
+  backends() []alicloud.slb.backendServer
+  // vServer groups defined on the CLB instance
+  vServerGroups() []alicloud.slb.vServerGroup
   // Whether the load balancer is reachable from the internet
   //
   // True when addressType is internet, meaning the CLB has a public IP address
@@ -1886,9 +1893,6 @@ alicloud.slb.loadBalancer {
 // available through config.
 alicloud.slb.listener {
   // ID of the CLB instance that the listener belongs to
-  //
-  // Not deprecated alongside the ALB and NLB equivalents: a CLB listener has no
-  // id of its own and is keyed by this id together with its protocol and port.
   loadBalancerId string
   // CLB instance that the listener belongs to
   loadBalancer() alicloud.slb.loadBalancer
@@ -1929,6 +1933,11 @@ alicloud.slb.listener {
   aclIds []string
   // ID of the vServer group associated with the listener
   vServerGroupId string
+  // vServer group the listener forwards to
+  //
+  // Null when the listener forwards to the load balancer's default backend
+  // servers rather than a group.
+  vServerGroup() alicloud.slb.vServerGroup
   // TLS security policy applied to an HTTPS listener
   //
   // One of tls_cipher_policy_1_0, tls_cipher_policy_1_1,
@@ -1950,6 +1959,70 @@ alicloud.slb.listener {
   // request-header settings for the listener. The available keys vary by
   // protocol (HTTP, HTTPS, TCP, or UDP).
   config dict
+}
+
+// CLB vServer group
+//
+// A named set of backend servers that a CLB listener or forwarding rule sends
+// traffic to, keyed by vServerGroupId. A group lets one load balancer serve
+// several backend sets, so the servers behind a listener are found here rather
+// than on the load balancer itself.
+alicloud.slb.vServerGroup @defaults("vServerGroupName vServerGroupId serverCount") {
+  // vServer group ID, used as the lookup key
+  vServerGroupId string
+  // vServer group name
+  vServerGroupName string
+  // ID of the CLB instance the group belongs to
+  loadBalancerId string
+  // Region the group lives in
+  regionId string
+  // Number of backend servers in the group
+  serverCount int
+  // Time the group was created
+  createTime time
+  // Tags applied to the group
+  tags map[string]string
+  // Backend servers in the group
+  backends() []alicloud.slb.backendServer
+}
+
+// CLB backend server
+//
+// One server a CLB forwards traffic to, whether attached directly to the load
+// balancer or through a vServer group. An internet-facing CLB makes its
+// backends reachable from the public internet on the listener's port,
+// regardless of what the backend's own security groups say about its address,
+// which is why the load balancer and not the instance is where that exposure
+// becomes visible.
+alicloud.slb.backendServer @defaults("type serverId serverIp port weight") {
+  // ID of the backend server
+  //
+  // An ECS instance ID or an elastic network interface ID, depending on type.
+  serverId string
+  // IP address the load balancer forwards to
+  //
+  // Set when the backend is an elastic network interface or is addressed by IP.
+  serverIp string
+  // Port the load balancer forwards to
+  //
+  // Zero for a backend attached directly to the load balancer, where the port
+  // comes from the listener instead.
+  port int
+  // Share of traffic the server receives
+  //
+  // A weight of 0 takes the server out of rotation without detaching it.
+  weight int
+  // Kind of backend
+  //
+  // Either ecs for an instance or eni for an elastic network interface.
+  type string
+  // Backend server description
+  description string
+  // ECS instance behind the backend
+  //
+  // Null when the backend is an elastic network interface or the instance can
+  // no longer be read.
+  ecsInstance() alicloud.ecs.instance
 }
 
 // ApsaraDB RDS
@@ -2064,8 +2137,7 @@ alicloud.rds.instance {
   securityIPList() []string
   // IDs of the ECS security groups attached to the instance
   //
-  // Deprecated in favor of securityGroups, which returns the same groups as
-  // resources whose rules can be inspected.
+  // Deprecated in favor of securityGroups.
   securityGroupIds() @maturity("deprecated") []string
   // ECS security groups attached to the instance
   //
@@ -2212,8 +2284,7 @@ alicloud.redis.instance {
   securityIPList() []string
   // IDs of the ECS security groups associated with the instance
   //
-  // Deprecated in favor of securityGroups, which returns the same groups as
-  // resources whose rules can be inspected.
+  // Deprecated in favor of securityGroups.
   securityGroupIds() @maturity("deprecated") []string
   // ECS security groups associated with the instance
   //
@@ -2365,8 +2436,7 @@ alicloud.mongodb.instance {
   securityIPList() []string
   // IDs of the ECS security groups bound to the instance
   //
-  // Deprecated in favor of securityGroups, which returns the same groups as
-  // resources whose rules can be inspected.
+  // Deprecated in favor of securityGroups.
   securityGroupIds() @maturity("deprecated") []string
   // ECS security groups bound to the instance
   //
@@ -3570,8 +3640,8 @@ alicloud.cs.nodePool {
   regionId string
   // ID of the cluster the node pool belongs to
   //
-  // Not deprecated alongside the other duplicated identifiers: a node pool id is
-  // unique only within its cluster, so the node pool is keyed by both.
+  // A node pool ID is unique only within its cluster, so both are needed to
+  // identify a node pool.
   clusterId string
   // Cluster the node pool belongs to
   cluster() alicloud.cs.cluster
@@ -3867,10 +3937,53 @@ alicloud.alb.serverGroup {
   stickySessionEnabled bool
   // Session stickiness type, either Insert or Server
   stickySessionType string
+  // Servers in the group
+  //
+  // What the load balancer forwards to. An internet-facing ALB makes every one
+  // of these reachable from the public internet on the listener's port.
+  servers() []alicloud.alb.serverGroup.server
   // Tags applied to the server group
   tags map[string]string
   // VPC the server group belongs to
   vpc() alicloud.vpc.network
+}
+
+// ALB backend server
+//
+// One server an ALB server group forwards requests to. The serverType decides
+// what serverId names, and the ECS case is the one that reaches an instance
+// whose own security groups may say nothing about the load balancer's address.
+alicloud.alb.serverGroup.server @defaults("serverType serverId serverIp port weight") {
+  // ID of the backend server
+  //
+  // An ECS instance ID, an elastic network interface ID, an IP address, or a
+  // Function Compute function, depending on serverType.
+  serverId string
+  // Kind of backend
+  //
+  // One of Ecs, Eni, Ip, or Fc.
+  serverType string
+  // IP address the load balancer forwards to
+  serverIp string
+  // Port the load balancer forwards to
+  port int
+  // Share of traffic the server receives
+  //
+  // A weight of 0 takes the server out of rotation without detaching it.
+  weight int
+  // Backend server status
+  status string
+  // Whether the client IP is preserved to the backend
+  //
+  // False means the backend sees the load balancer's address instead of the
+  // caller's, which affects any allowlist or log the backend keeps.
+  remoteIpEnabled bool
+  // Backend server description
+  description string
+  // ECS instance behind the backend
+  //
+  // Null unless serverType is Ecs, or when the instance can no longer be read.
+  ecsInstance() alicloud.ecs.instance
 }
 
 // Alibaba Cloud Network Load Balancer
@@ -4042,10 +4155,50 @@ alicloud.nlb.serverGroup {
   resourceGroupId string
   // Resource group that contains the server group
   resourceGroup() alicloud.resourceManager.resourceGroup
+  // Servers in the group
+  //
+  // What the load balancer forwards to. An internet-facing NLB makes every one
+  // of these reachable from the public internet on the listener's port.
+  servers() []alicloud.nlb.serverGroup.server
   // Tags applied to the server group
   tags map[string]string
   // VPC the server group belongs to
   vpc() alicloud.vpc.network
+}
+
+// NLB backend server
+//
+// One server an NLB server group forwards traffic to. The serverType decides
+// what serverId names, and the ECS case is the one that reaches an instance
+// whose own security groups may say nothing about the load balancer's address.
+alicloud.nlb.serverGroup.server @defaults("serverType serverId serverIp port weight") {
+  // ID of the backend server
+  //
+  // An ECS instance ID, an elastic network interface ID, or an IP address,
+  // depending on serverType.
+  serverId string
+  // Kind of backend
+  //
+  // One of Ecs, Eni, or Ip.
+  serverType string
+  // IP address the load balancer forwards to
+  serverIp string
+  // Port the load balancer forwards to
+  port int
+  // Share of traffic the server receives
+  //
+  // A weight of 0 takes the server out of rotation without detaching it.
+  weight int
+  // Backend server status
+  status string
+  // Zone the backend server sits in
+  zoneId string
+  // Backend server description
+  description string
+  // ECS instance behind the backend
+  //
+  // Null unless serverType is Ecs, or when the instance can no longer be read.
+  ecsInstance() alicloud.ecs.instance
 }
 
 // Alibaba Cloud Function Compute

@@ -142,6 +142,24 @@ alicloud.ecs.prefixLists.where(cidrBlocks.contains("0.0.0.0/0")) {
   prefixListName associationCount
 }
 
+# what an internet-facing load balancer actually forwards to
+alicloud.alb.loadBalancers.where(internetFacing) { loadBalancerName }
+alicloud.alb.serverGroups {
+  name
+  servers { serverType port ecsInstance { instanceName internetExposed } }
+}
+
+# the same for a classic load balancer, both directly attached backends and
+# those reached through a vServer group
+alicloud.slb.loadBalancers.where(internetFacing) {
+  loadBalancerName
+  backends { serverId ecsInstance { instanceName } }
+  vServerGroups { vServerGroupName backends { serverId port } }
+}
+
+# backends left in place but taking no traffic
+alicloud.nlb.serverGroups { name servers.where(weight == 0) { serverId status } }
+
 # network ACL rules that accept traffic from anywhere, evaluated before
 # security groups ever see it
 alicloud.vpc.networkAcls {
