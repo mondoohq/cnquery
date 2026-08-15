@@ -298,8 +298,13 @@ func buildBGP(blk *Block) BGP {
 			case d.Args[0] == "default" && len(d.Args) > 1 && d.Args[1] == "ipv4-unicast":
 				b.DefaultIPv4Unicast = !d.Negated
 			case d.Args[0] == "listen" && len(d.Args) >= 4 && d.Args[1] == "range":
-				// `bgp listen range <prefix> peer-group <name>`
+				// `bgp listen range <prefix> peer-group <name>`. A line
+				// without the group names no peer, so it must not create
+				// one under an empty name.
 				group := argAfter(d.Args, "peer-group")
+				if group == "" {
+					break
+				}
 				n := neighbors.get(group, d)
 				n.ListenRange = d.Args[2]
 				n.IsPeerGroup = true
