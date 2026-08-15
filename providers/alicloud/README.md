@@ -85,6 +85,7 @@ Scanning an account discovers one asset per major service object, each scoped to
 | `polardb-clusters` | PolarDB clusters |
 | `fc-functions` | Function Compute functions |
 | `acr-instances` | Container Registry instances |
+| `es-clusters` | Elasticsearch clusters |
 | `waf` | Web Application Firewall instances |
 | `cloud-firewall` | the account's Cloud Firewall, when provisioned |
 | `auto` / `all` | every target above |
@@ -158,6 +159,16 @@ alicloud.acr.instances {
     syncRuleName localNamespaceName targetInstanceId targetRegionId
   }
 }
+
+# Elasticsearch clusters on the internet, and what is allowed to reach them
+alicloud.es.instances.where(internetExposed) {
+  description esVersion protocol
+  publicIpWhitelist kibanaPublicNetworkEnabled kibanaIpWhitelist
+}
+
+# clusters open to the whole internet, or serving over plain HTTP
+alicloud.es.instances.where(publicIpWhitelist.contains("0.0.0.0/0")) { description }
+alicloud.es.instances.where(protocol == "HTTP") { description domain diskEncrypted }
 
 # RAM users holding administrator permissions directly
 alicloud.ram.users.where(attachedPolicies.any(policyName == "AdministratorAccess")) {

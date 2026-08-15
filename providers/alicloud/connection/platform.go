@@ -24,6 +24,7 @@ const (
 	OptionPolardbClusterID  = "polardb-cluster-id"
 	OptionFcFunctionName    = "fc-function-name"
 	OptionAcrInstanceID     = "acr-instance-id"
+	OptionEsInstanceID      = "es-instance-id"
 )
 
 const (
@@ -42,6 +43,7 @@ const (
 	platformIDPolardb       = "//platformid.api.mondoo.app/runtime/alicloud/polardb/cluster/"
 	platformIDFcFunction    = "//platformid.api.mondoo.app/runtime/alicloud/fc/function/"
 	platformIDAcrInstance   = "//platformid.api.mondoo.app/runtime/alicloud/acr/instance/"
+	platformIDEsInstance    = "//platformid.api.mondoo.app/runtime/alicloud/elasticsearch/instance/"
 )
 
 // Platforms is the static catalog of platforms the alicloud provider emits: the
@@ -63,6 +65,7 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "alicloud-polardb-cluster", Title: "Alibaba Cloud PolarDB Cluster", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-fc-function", Title: "Alibaba Cloud Function Compute Function", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 	{Name: "alicloud-acr-instance", Title: "Alibaba Cloud Container Registry Instance", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
+	{Name: "alicloud-elasticsearch-instance", Title: "Alibaba Cloud Elasticsearch Cluster", Family: []string{"alicloud"}, Kind: []string{"api"}, Runtime: []string{"alicloud"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)
@@ -178,6 +181,13 @@ func NewAcrInstancePlatform(instanceID string) *inventory.Platform {
 		[]string{"technology=alicloud", "kind=acr-instance", "instance=" + instanceID})
 }
 
+// NewEsInstancePlatform returns the platform for a discovered Elasticsearch
+// cluster asset.
+func NewEsInstancePlatform(instanceID string) *inventory.Platform {
+	return newPlatform("alicloud-elasticsearch-instance", "",
+		[]string{"technology=alicloud", "kind=elasticsearch-instance", "instance=" + instanceID})
+}
+
 func NewAccountIdentifier(accountID string) string       { return platformIDAccount + accountID }
 func NewAckClusterIdentifier(clusterID string) string    { return platformIDAckCluster + clusterID }
 func NewAlbIdentifier(lbID string) string                { return platformIDAlb + lbID }
@@ -203,6 +213,10 @@ func NewPolardbClusterIdentifier(clusterID string) string {
 
 func NewAcrInstanceIdentifier(instanceID string) string {
 	return platformIDAcrInstance + instanceID
+}
+
+func NewEsInstanceIdentifier(instanceID string) string {
+	return platformIDEsInstance + instanceID
 }
 
 // NewFcFunctionIdentifier keys a function by region and name: Function Compute
