@@ -22,6 +22,7 @@ alicloud.acr.instance.resourceGroup 13.4.1
 alicloud.acr.instance.resourceGroupId 13.4.1
 alicloud.acr.instance.scanRules 13.4.1
 alicloud.acr.instance.syncRules 13.4.1
+alicloud.acr.instance.tags 13.4.1
 alicloud.acr.instances 13.4.1
 alicloud.acr.namespace 13.4.1
 alicloud.acr.namespace.autoCreateRepo 13.4.1

@@ -5315,6 +5315,8 @@ alicloud.acr.instance @defaults("instanceName instanceSpecification instanceStat
   resourceGroupId string
   // Resource group the instance belongs to
   resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the instance
+  tags map[string]string
   // Time the instance was created
   createTime time
   // Time the instance was last modified

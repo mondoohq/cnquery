@@ -5365,6 +5365,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.acr.instance.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudAcrInstance).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
 	},
+	"alicloud.acr.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"alicloud.acr.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudAcrInstance).GetCreateTime()).ToDataRes(types.Time)
 	},
@@ -12276,6 +12279,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.acr.instance.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudAcrInstance).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.acr.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28237,6 +28244,7 @@ type mqlAlicloudAcrInstance struct {
 	RegionId                   plugin.TValue[string]
 	ResourceGroupId            plugin.TValue[string]
 	ResourceGroup              plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Tags                       plugin.TValue[map[string]any]
 	CreateTime                 plugin.TValue[*time.Time]
 	ModifiedTime               plugin.TValue[*time.Time]
 	InternetEndpointEnabled    plugin.TValue[bool]
@@ -28324,6 +28332,10 @@ func (c *mqlAlicloudAcrInstance) GetResourceGroup() *plugin.TValue[*mqlAlicloudR
 
 		return c.resourceGroup()
 	})
+}
+
+func (c *mqlAlicloudAcrInstance) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlAlicloudAcrInstance) GetCreateTime() *plugin.TValue[*time.Time] {

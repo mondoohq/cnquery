@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // acrEpochMillis converts an epoch-milliseconds timestamp into a *time.Time,
@@ -95,10 +96,15 @@ func (r *mqlAlicloudAcr) instances() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				// ListInstance returns tags inline, so the filter costs nothing
+				// beyond the listing already made
+				if filteredOutByTags(conn, mqlInst.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlInst)
 			}
 
-			total := int32(tea.Int32Value(resp.Body.TotalCount))
+			total := tea.Int32Value(resp.Body.TotalCount)
 			if len(items) < int(pageSize) || (total > 0 && pageNo*pageSize >= total) {
 				break
 			}
@@ -121,6 +127,14 @@ type mqlAlicloudAcrInstanceInternal struct {
 
 // newAcrInstance builds an alicloud.acr.instance from a ListInstance item.
 func newAcrInstance(runtime *plugin.Runtime, region string, inst *crclient.ListInstanceResponseBodyInstances) (*mqlAlicloudAcrInstance, error) {
+	tags := map[string]any{}
+	for _, t := range inst.Tags {
+		if t == nil || tea.StringValue(t.TagKey) == "" {
+			continue
+		}
+		tags[tea.StringValue(t.TagKey)] = tea.StringValue(t.TagValue)
+	}
+
 	resource, err := CreateResource(runtime, "alicloud.acr.instance", map[string]*llx.RawData{
 		"__id":                  llx.StringDataPtr(inst.InstanceId),
 		"instanceId":            llx.StringDataPtr(inst.InstanceId),
@@ -129,6 +143,7 @@ func newAcrInstance(runtime *plugin.Runtime, region string, inst *crclient.ListI
 		"instanceStatus":        llx.StringDataPtr(inst.InstanceStatus),
 		"regionId":              llx.StringData(region),
 		"resourceGroupId":       llx.StringDataPtr(inst.ResourceGroupId),
+		"tags":                  llx.MapData(tags, types.String),
 		"createTime":            llx.TimeDataPtr(acrEpochMillisString(inst.CreateTime)),
 		"modifiedTime":          llx.TimeDataPtr(acrEpochMillisString(inst.ModifiedTime)),
 	})
@@ -170,16 +185,25 @@ func initAlicloudAcrInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return nil, nil, err
 	}
 	// ListInstance has no by-id filter, so the match is made over the region's
-	// instances; a registry account holds a handful of instances at most.
-	resp, err := client.ListInstance(&crclient.ListInstanceRequest{
-		PageNo:   tea.Int32(1),
-		PageSize: tea.Int32(100),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	if resp != nil && resp.Body != nil {
-		for _, inst := range resp.Body.Instances {
+	// instances. The walk runs to the end rather than stopping at the first
+	// page: a registry beyond the hundredth would otherwise report as not found
+	// rather than as unmatched.
+	pageNo := int32(1)
+	pageSize := int32(100)
+	for {
+		resp, err := client.ListInstance(&crclient.ListInstanceRequest{
+			PageNo:   tea.Int32(pageNo),
+			PageSize: tea.Int32(pageSize),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if resp == nil || resp.Body == nil {
+			break
+		}
+
+		items := resp.Body.Instances
+		for _, inst := range items {
 			if inst == nil || tea.StringValue(inst.InstanceId) != instanceID {
 				continue
 			}
@@ -189,6 +213,12 @@ func initAlicloudAcrInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 			}
 			return nil, res, nil
 		}
+
+		total := tea.Int32Value(resp.Body.TotalCount)
+		if len(items) < int(pageSize) || (total > 0 && pageNo*pageSize >= total) {
+			break
+		}
+		pageNo++
 	}
 	return nil, nil, fmt.Errorf("alicloud.acr.instance %q not found in region %q", instanceID, region)
 }
