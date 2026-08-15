@@ -151,40 +151,106 @@ func StreamEVPNRoutes(r io.Reader, limit int) (*EVPNRouteSet, error) {
 			continue
 		}
 
-		var section map[string]json.RawMessage
-		if err := dec.Decode(&section); err != nil {
-			// A scalar at the top level is a counter this code does not know.
-			continue
-		}
-
-		rd := key
-		if raw, ok := section["rd"]; ok {
-			var v string
-			if json.Unmarshal(raw, &v) == nil && v != "" {
-				rd = v
-			}
-		}
 		// The per VNI form prints prefixes at the top level, where the key
 		// is the prefix rather than a route distinguisher.
 		if isEVPNPrefix(key) {
-			rd = ""
-			res.addEVPNPrefix(rd, key, section, limit)
+			var entry map[string]json.RawMessage
+			if err := dec.Decode(&entry); err != nil {
+				continue
+			}
+			res.addEVPNPrefix("", key, entry, limit)
 			continue
 		}
 
-		for _, prefix := range sortedKeys(section) {
-			if evpnSummaryKeys[prefix] {
-				continue
-			}
-			var entry map[string]json.RawMessage
-			if err := json.Unmarshal(section[prefix], &entry); err != nil {
-				continue
-			}
-			res.addEVPNPrefix(rd, prefix, entry, limit)
+		// Anything else is a route distinguisher section. It is walked key
+		// by key, so only one prefix is held at a time. A section of a busy
+		// fabric holds tens of thousands of them.
+		if err := res.streamEVPNSection(dec, key, limit); err != nil {
+			return nil, err
 		}
 	}
 
 	return res, nil
+}
+
+// streamEVPNSection walks one route distinguisher section. The section key
+// is the route distinguisher, and an `rd` member overrides it when the
+// version prints one.
+func (s *EVPNRouteSet) streamEVPNSection(dec *json.Decoder, sectionKey string, limit int) error {
+	tok, err := dec.Token()
+	if err != nil {
+		return fmt.Errorf("cannot read evpn section: %w", err)
+	}
+	if delim, ok := tok.(json.Delim); !ok || delim != '{' {
+		// A scalar at the top level is a counter this code does not know.
+		return skipRemainder(dec, tok)
+	}
+
+	rd := sectionKey
+	// The prefixes of a section are recorded first and their route
+	// distinguisher is corrected afterwards, because `rd` can follow them.
+	first := len(s.Routes)
+
+	for dec.More() {
+		keyTok, err := dec.Token()
+		if err != nil {
+			return fmt.Errorf("cannot read evpn prefix: %w", err)
+		}
+		key, _ := keyTok.(string)
+
+		if key == "rd" {
+			var v string
+			if err := dec.Decode(&v); err == nil && v != "" {
+				rd = v
+			}
+			continue
+		}
+		if evpnSummaryKeys[key] {
+			if err := skipValue(dec); err != nil {
+				return err
+			}
+			continue
+		}
+
+		var entry map[string]json.RawMessage
+		if err := dec.Decode(&entry); err != nil {
+			continue
+		}
+		s.addEVPNPrefix(rd, key, entry, limit)
+	}
+
+	// Close the section object.
+	if _, err := dec.Token(); err != nil {
+		return err
+	}
+
+	for i := first; i < len(s.Routes); i++ {
+		s.Routes[i].RD = rd
+	}
+	return nil
+}
+
+// skipRemainder consumes the value that starts with the token already read.
+func skipRemainder(dec *json.Decoder, tok json.Token) error {
+	if _, ok := tok.(json.Delim); !ok {
+		return nil
+	}
+	depth := 1
+	for depth > 0 {
+		next, err := dec.Token()
+		if err != nil {
+			return err
+		}
+		if d, ok := next.(json.Delim); ok {
+			switch d {
+			case '{', '[':
+				depth++
+			case '}', ']':
+				depth--
+			}
+		}
+	}
+	return nil
 }
 
 // addEVPNPrefix records one prefix, or only counts it once the limit is

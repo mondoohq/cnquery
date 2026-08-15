@@ -224,3 +224,27 @@ func TestRouteTargetOf(t *testing.T) {
 	_, ok = routeTargetOf("ET:8")
 	assert.False(t, ok)
 }
+
+// TestStreamEVPNRoutes_RDAfterPrefixes covers a section that prints its route
+// distinguisher after its prefixes. The prefixes still carry the right value.
+func TestStreamEVPNRoutes_RDAfterPrefixes(t *testing.T) {
+	src := `{"192.0.2.30:7":{
+		"[2]:[0]:[48]:[aa:bb:cc:00:20:01]":{"prefix":"[2]:[0]:[48]:[aa:bb:cc:00:20:01]",
+			"paths":[{"valid":true,"nexthops":[{"ip":"192.0.2.30"}]}]},
+		"rd":"192.0.2.30:7","numPrefix":1}}`
+	set, err := StreamEVPNRoutes(strings.NewReader(src), 0)
+	require.NoError(t, err)
+	require.Len(t, set.Routes, 1)
+	assert.Equal(t, "192.0.2.30:7", set.Routes[0].RD)
+}
+
+// TestStreamEVPNRoutes_ScalarSection covers a top-level counter this code
+// does not know, which must not stop the walk.
+func TestStreamEVPNRoutes_ScalarSection(t *testing.T) {
+	src := `{"unknownCounter":7,"unknownList":[1,2,3],"192.0.2.30:2":{"rd":"192.0.2.30:2",
+		"[3]:[0]:[32]:[192.0.2.31]":{"prefix":"[3]:[0]:[32]:[192.0.2.31]","paths":[]}}}`
+	set, err := StreamEVPNRoutes(strings.NewReader(src), 0)
+	require.NoError(t, err)
+	require.Len(t, set.Routes, 1)
+	assert.Equal(t, int64(3), set.Routes[0].RouteType)
+}
