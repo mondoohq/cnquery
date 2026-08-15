@@ -55,6 +55,7 @@ const (
 	ResourceDatabricksClusterSpec                  string = "databricks.clusterSpec"
 	ResourceDatabricksJob                          string = "databricks.job"
 	ResourceDatabricksJobTask                      string = "databricks.job.task"
+	ResourceDatabricksJobTrigger                   string = "databricks.job.trigger"
 	ResourceDatabricksPipeline                     string = "databricks.pipeline"
 	ResourceDatabricksRepo                         string = "databricks.repo"
 	ResourceDatabricksGitCredential                string = "databricks.gitCredential"
@@ -228,6 +229,10 @@ func init() {
 		"databricks.job.task": {
 			// to override args, implement: initDatabricksJobTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksJobTask,
+		},
+		"databricks.job.trigger": {
+			// to override args, implement: initDatabricksJobTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksJobTrigger,
 		},
 		"databricks.pipeline": {
 			Init:   initDatabricksPipeline,
@@ -1704,6 +1709,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.job.tasks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJob).GetTasks()).ToDataRes(types.Array(types.Resource("databricks.job.task")))
 	},
+	"databricks.job.triggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJob).GetTriggers()).ToDataRes(types.Array(types.Resource("databricks.job.trigger")))
+	},
 	"databricks.job.jobClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJob).GetJobClusters()).ToDataRes(types.Array(types.Resource("databricks.clusterSpec")))
 	},
@@ -1769,6 +1777,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.job.task.pipeline": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksJobTask).GetPipeline()).ToDataRes(types.Resource("databricks.pipeline"))
+	},
+	"databricks.job.trigger.triggerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetTriggerType()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.pauseStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetPauseStatus()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.cronExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetCronExpression()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.timezoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetTimezoneId()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.periodicInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetPeriodicInterval()).ToDataRes(types.Int)
+	},
+	"databricks.job.trigger.periodicUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetPeriodicUnit()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.fileArrivalUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetFileArrivalUrl()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.tableNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetTableNames()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.job.trigger.tableUpdateCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetTableUpdateCondition()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.modelSecurableName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetModelSecurableName()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.modelCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetModelCondition()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.modelAliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetModelAliases()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.job.trigger.continuousTaskRetryMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetContinuousTaskRetryMode()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.minTimeBetweenTriggersSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetMinTimeBetweenTriggersSeconds()).ToDataRes(types.Int)
+	},
+	"databricks.job.trigger.waitAfterLastChangeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetWaitAfterLastChangeSeconds()).ToDataRes(types.Int)
+	},
+	"databricks.job.trigger.sqlConditionQueryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetSqlConditionQueryId()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.sqlConditionWarehouseId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetSqlConditionWarehouseId()).ToDataRes(types.String)
+	},
+	"databricks.job.trigger.sqlConditionTriggerMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksJobTrigger).GetSqlConditionTriggerMode()).ToDataRes(types.String)
 	},
 	"databricks.pipeline.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksPipeline).GetId()).ToDataRes(types.String)
@@ -4129,6 +4191,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksJob).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.job.triggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJob).Triggers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"databricks.job.jobClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksJob).JobClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4219,6 +4285,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.job.task.pipeline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksJobTask).Pipeline, ok = plugin.RawToTValue[*mqlDatabricksPipeline](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.job.trigger.triggerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).TriggerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.pauseStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).PauseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.cronExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).CronExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.timezoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).TimezoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.periodicInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).PeriodicInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.periodicUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).PeriodicUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.fileArrivalUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).FileArrivalUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.tableNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).TableNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.tableUpdateCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).TableUpdateCondition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.modelSecurableName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).ModelSecurableName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.modelCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).ModelCondition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.modelAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).ModelAliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.continuousTaskRetryMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).ContinuousTaskRetryMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.minTimeBetweenTriggersSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).MinTimeBetweenTriggersSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.waitAfterLastChangeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).WaitAfterLastChangeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.sqlConditionQueryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).SqlConditionQueryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.sqlConditionWarehouseId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).SqlConditionWarehouseId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.job.trigger.sqlConditionTriggerMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksJobTrigger).SqlConditionTriggerMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"databricks.pipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9352,6 +9494,7 @@ type mqlDatabricksJob struct {
 	NotificationEmails     plugin.TValue[[]any]
 	WebhookNotificationIds plugin.TValue[[]any]
 	Tasks                  plugin.TValue[[]any]
+	Triggers               plugin.TValue[[]any]
 	JobClusters            plugin.TValue[[]any]
 	PolicyCompliant        plugin.TValue[bool]
 	PolicyViolations       plugin.TValue[map[string]any]
@@ -9511,6 +9654,22 @@ func (c *mqlDatabricksJob) GetTasks() *plugin.TValue[[]any] {
 		}
 
 		return c.tasks()
+	})
+}
+
+func (c *mqlDatabricksJob) GetTriggers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Triggers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.job", c.__id, "triggers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.triggers()
 	})
 }
 
@@ -9721,6 +9880,135 @@ func (c *mqlDatabricksJobTask) GetPipeline() *plugin.TValue[*mqlDatabricksPipeli
 
 		return c.pipeline()
 	})
+}
+
+// mqlDatabricksJobTrigger for the databricks.job.trigger resource
+type mqlDatabricksJobTrigger struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksJobTriggerInternal it will be used here
+	TriggerType                   plugin.TValue[string]
+	PauseStatus                   plugin.TValue[string]
+	CronExpression                plugin.TValue[string]
+	TimezoneId                    plugin.TValue[string]
+	PeriodicInterval              plugin.TValue[int64]
+	PeriodicUnit                  plugin.TValue[string]
+	FileArrivalUrl                plugin.TValue[string]
+	TableNames                    plugin.TValue[[]any]
+	TableUpdateCondition          plugin.TValue[string]
+	ModelSecurableName            plugin.TValue[string]
+	ModelCondition                plugin.TValue[string]
+	ModelAliases                  plugin.TValue[[]any]
+	ContinuousTaskRetryMode       plugin.TValue[string]
+	MinTimeBetweenTriggersSeconds plugin.TValue[int64]
+	WaitAfterLastChangeSeconds    plugin.TValue[int64]
+	SqlConditionQueryId           plugin.TValue[string]
+	SqlConditionWarehouseId       plugin.TValue[string]
+	SqlConditionTriggerMode       plugin.TValue[string]
+}
+
+// createDatabricksJobTrigger creates a new instance of this resource
+func createDatabricksJobTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksJobTrigger{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.job.trigger", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksJobTrigger) MqlName() string {
+	return "databricks.job.trigger"
+}
+
+func (c *mqlDatabricksJobTrigger) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksJobTrigger) GetTriggerType() *plugin.TValue[string] {
+	return &c.TriggerType
+}
+
+func (c *mqlDatabricksJobTrigger) GetPauseStatus() *plugin.TValue[string] {
+	return &c.PauseStatus
+}
+
+func (c *mqlDatabricksJobTrigger) GetCronExpression() *plugin.TValue[string] {
+	return &c.CronExpression
+}
+
+func (c *mqlDatabricksJobTrigger) GetTimezoneId() *plugin.TValue[string] {
+	return &c.TimezoneId
+}
+
+func (c *mqlDatabricksJobTrigger) GetPeriodicInterval() *plugin.TValue[int64] {
+	return &c.PeriodicInterval
+}
+
+func (c *mqlDatabricksJobTrigger) GetPeriodicUnit() *plugin.TValue[string] {
+	return &c.PeriodicUnit
+}
+
+func (c *mqlDatabricksJobTrigger) GetFileArrivalUrl() *plugin.TValue[string] {
+	return &c.FileArrivalUrl
+}
+
+func (c *mqlDatabricksJobTrigger) GetTableNames() *plugin.TValue[[]any] {
+	return &c.TableNames
+}
+
+func (c *mqlDatabricksJobTrigger) GetTableUpdateCondition() *plugin.TValue[string] {
+	return &c.TableUpdateCondition
+}
+
+func (c *mqlDatabricksJobTrigger) GetModelSecurableName() *plugin.TValue[string] {
+	return &c.ModelSecurableName
+}
+
+func (c *mqlDatabricksJobTrigger) GetModelCondition() *plugin.TValue[string] {
+	return &c.ModelCondition
+}
+
+func (c *mqlDatabricksJobTrigger) GetModelAliases() *plugin.TValue[[]any] {
+	return &c.ModelAliases
+}
+
+func (c *mqlDatabricksJobTrigger) GetContinuousTaskRetryMode() *plugin.TValue[string] {
+	return &c.ContinuousTaskRetryMode
+}
+
+func (c *mqlDatabricksJobTrigger) GetMinTimeBetweenTriggersSeconds() *plugin.TValue[int64] {
+	return &c.MinTimeBetweenTriggersSeconds
+}
+
+func (c *mqlDatabricksJobTrigger) GetWaitAfterLastChangeSeconds() *plugin.TValue[int64] {
+	return &c.WaitAfterLastChangeSeconds
+}
+
+func (c *mqlDatabricksJobTrigger) GetSqlConditionQueryId() *plugin.TValue[string] {
+	return &c.SqlConditionQueryId
+}
+
+func (c *mqlDatabricksJobTrigger) GetSqlConditionWarehouseId() *plugin.TValue[string] {
+	return &c.SqlConditionWarehouseId
+}
+
+func (c *mqlDatabricksJobTrigger) GetSqlConditionTriggerMode() *plugin.TValue[string] {
+	return &c.SqlConditionTriggerMode
 }
 
 // mqlDatabricksPipeline for the databricks.pipeline resource

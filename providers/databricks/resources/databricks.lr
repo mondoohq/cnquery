@@ -1502,6 +1502,14 @@ databricks.job @defaults("name runAs format") {
   webhookNotificationIds []string
   // Tasks the job runs
   tasks() []databricks.job.task
+  // Triggers that start runs of the job
+  //
+  // A job may carry several triggers alongside its schedule, each watching a
+  // different source: a cron schedule, a fixed interval, files landing at a
+  // URL, table or model updates, or continuous execution. An unpaused trigger
+  // starts job code without anyone acting, so the sources listed here are the
+  // full set of things that can set the job running.
+  triggers() []databricks.job.trigger
   // Reusable compute definitions shared by the job's tasks
   jobClusters() []databricks.clusterSpec
   // Whether the job's compute satisfies the policies its job clusters are created against
@@ -1579,6 +1587,70 @@ private databricks.job.task @defaults("taskKey taskType") {
   newCluster() databricks.clusterSpec
   // Pipeline the task triggers
   pipeline() databricks.pipeline
+}
+
+// Trigger of a Databricks job
+//
+// One entry in a job's trigger list, describing what starts a run and whether
+// that trigger is currently active. The triggerType field names which kind the
+// entry is, and only the fields belonging to that kind carry values. An
+// unpaused trigger starts job code with no person involved, so the pause
+// status and the source being watched are what an audit turns on: a file
+// arrival trigger pointed at an external location means anything that can
+// write a file there can start the job.
+private databricks.job.trigger @defaults("triggerType pauseStatus") {
+  // Kind of trigger
+  //
+  // One of schedule, periodic, file_arrival, table_update, model, or
+  // continuous. Reports unknown when the SDK models a kind this provider does
+  // not yet classify, so a trigger never silently disappears from the list.
+  triggerType string
+  // Whether the trigger is paused, PAUSED or UNPAUSED
+  pauseStatus string
+  // Quartz cron expression driving a schedule trigger, empty for other kinds
+  cronExpression string
+  // Java timezone id a schedule trigger is evaluated in, empty for other kinds
+  timezoneId string
+  // Interval a periodic trigger fires on, 0 for other kinds
+  periodicInterval int
+  // Unit of the periodic interval
+  //
+  // One of DAYS, HOURS, or MINUTES. Empty for other kinds.
+  periodicUnit string
+  // URL a file arrival trigger monitors, empty for other kinds
+  //
+  // Points at the root or a subpath of an external location. A file landing
+  // there starts a run, so write access to that location is effectively
+  // permission to execute the job.
+  fileArrivalUrl string
+  // Tables a table update trigger monitors, each as catalog.schema.table
+  tableNames []string
+  // Condition a table update trigger fires on, empty for other kinds
+  tableUpdateCondition string
+  // Securable a model trigger monitors, empty for other kinds
+  //
+  // Names a model as catalog.schema.model, a schema as catalog.schema, or is
+  // empty for a metastore-level trigger.
+  modelSecurableName string
+  // Condition a model trigger fires on, empty for other kinds
+  modelCondition string
+  // Model version aliases a model trigger monitors
+  modelAliases []string
+  // Retry behavior of a continuous trigger, empty for other kinds
+  continuousTaskRetryMode string
+  // Minimum seconds between two firings of the trigger, 0 when unset
+  minTimeBetweenTriggersSeconds int
+  // Seconds of inactivity awaited before the trigger fires, 0 when unset
+  waitAfterLastChangeSeconds int
+  // Identifier of the SQL query gating whether the trigger fires
+  //
+  // Empty when the trigger is ungated. A gated trigger fires only when the
+  // query result satisfies the trigger mode.
+  sqlConditionQueryId string
+  // Identifier of the SQL warehouse the gating query runs against, empty when ungated
+  sqlConditionWarehouseId string
+  // How the gating query result is read, empty when ungated
+  sqlConditionTriggerMode string
 }
 
 // Delta Live Tables pipeline

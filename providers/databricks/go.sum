@@ -120,8 +120,8 @@ github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/cyphar/filepath-securejoin v0.7.0 h1:s0Y3ITPy6sQn5xt54DuYvTF8hu134ooYLUb58DX/HjE=
 github.com/cyphar/filepath-securejoin v0.7.0/go.mod h1:ymLGms/u3BYaviIiuKFnUx8EkQEZeK6cInNoAPJA3o4=
-github.com/databricks/databricks-sdk-go v0.170.0 h1:ZfnkoS6xPKFm7WO0Ic+WIb3CA434srwcS797xPvPlLo=
-github.com/databricks/databricks-sdk-go v0.170.0/go.mod h1:C5LNgGe6hGuRrTwoxFmuup3XtQQEaqtq0e+K8IFDIS4=
+github.com/databricks/databricks-sdk-go v0.172.0 h1:rfaG69e5USFZz927yJbLWXZb8kUZcvYFrP6C1HXnmT0=
+github.com/databricks/databricks-sdk-go v0.172.0/go.mod h1:C5LNgGe6hGuRrTwoxFmuup3XtQQEaqtq0e+K8IFDIS4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
@@ -142,8 +142,6 @@ github.com/elazarl/goproxy v1.7.2 h1:Y2o6urb7Eule09PjlhQRGNsqRfPmYI3KKQLFpCAV3+o
 github.com/elazarl/goproxy v1.7.2/go.mod h1:82vkLNir0ALaW14Rc399OTTjyNREgmdL2cVoIbS6XaE=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
-github.com/endobit/oui v0.7.0 h1:6/aPQPEA+HcCW+pvZcYBVa0EVcj1uOS9c7XJS33uyCg=
-github.com/endobit/oui v0.7.0/go.mod h1:Y40Y6pCm9rVd6L1OITp7WJp7+F3cSIfaYqohHvMreZs=
 github.com/facebookincubator/nvdtools v0.1.5 h1:jbmDT1nd6+k+rlvKhnkgMokrCAzHoASWE5LtHbX2qFQ=
 github.com/facebookincubator/nvdtools v0.1.5/go.mod h1:Kh55SAWnjckS96TBSrXI99KrEKH4iB0OJby3N8GRJO4=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
