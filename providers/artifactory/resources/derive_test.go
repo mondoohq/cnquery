@@ -869,3 +869,33 @@ func TestXrayAbsentIsNotTheSameAsDenied(t *testing.T) {
 		t.Errorf("a transport error produced %v", got)
 	}
 }
+
+// The roles of a member are alternatives, so every role is read before the
+// answer is no. Stopping at the first ordinary role would report a project
+// administrator as an ordinary member.
+func TestRolesAdministerProject(t *testing.T) {
+	tests := []struct {
+		name  string
+		roles []string
+		want  bool
+	}{
+		{name: "no roles", roles: nil},
+		{name: "ordinary roles", roles: []string{"Developer", "Contributor"}},
+		{name: "admin role first", roles: []string{"Project Admin", "Developer"}, want: true},
+		{name: "admin role last", roles: []string{"Developer", "Viewer", "Project Admin"}, want: true},
+		{name: "admin role in the middle", roles: []string{"Developer", "Project Admin", "Viewer"}, want: true},
+		{name: "underscore spelling", roles: []string{"project_admin"}, want: true},
+		{name: "lower case", roles: []string{"project admin"}, want: true},
+		{name: "surrounding space", roles: []string{"  Project Admin  "}, want: true},
+		{name: "bare admin", roles: []string{"Admin"}, want: true},
+		{name: "a role that only contains admin", roles: []string{"Administrator of nothing"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rolesAdministerProject(tt.roles); got != tt.want {
+				t.Errorf("rolesAdministerProject(%v) = %v, want %v", tt.roles, got, tt.want)
+			}
+		})
+	}
+}

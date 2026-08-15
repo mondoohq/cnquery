@@ -33,6 +33,8 @@ artifactory {
   cleanupPolicies() []artifactory.cleanupPolicy
   // Scheduled exports of the instance
   backups() []artifactory.backup
+  // Projects defined on the instance
+  projects() []artifactory.project
   // Xray scanning configuration, or null when the platform has no reachable Xray
   xray() artifactory.xray
   // Version and identity of the instance
@@ -1131,4 +1133,70 @@ private artifactory.xray.ignoreRule @defaults("id notes expiresAt") {
   repositories []string
   // Repositories the rule is limited to
   repositoryRefs() []artifactory.repository
+}
+
+// Artifactory Project
+//
+// A project, which delegates part of the instance to its own administrators.
+// The `manageMembers` and `manageResources` fields report what a project
+// administrator may do without a platform administrator: add members, and
+// attach repositories to the project. That delegation is a second path to
+// access alongside the instance's permission targets, so read `members`
+// together with `artifactory.permissionTargets`. Select a project with
+// `artifactory.projects.where(key == "example")`.
+private artifactory.project @defaults("key displayName") {
+  // Key of the project, which is unique on the instance
+  key string
+  // Display name of the project
+  displayName string
+  // Human-readable description, or null when unset
+  description string
+  // Whether a project administrator may add and remove members
+  //
+  // When true, who reaches the project's repositories is decided inside the
+  // project rather than by a platform administrator.
+  manageMembers bool
+  // Whether a project administrator may attach and detach repositories
+  //
+  // When true, a project administrator can bring a repository under the
+  // project's own roles.
+  manageResources bool
+  // Whether a project administrator may index repositories for scanning
+  indexResources bool
+  // Storage the project may use, in bytes, or null when it is not limited
+  storageQuotaBytes int
+  // Whether the storage quota only warns rather than blocks
+  softLimit bool
+  // Accounts that belong to the project, with the roles they hold
+  members() []artifactory.project.member
+  // Repositories attached to the project
+  //
+  // Resolved from the repositories that report this project. A repository a
+  // project administrator attached is reached through the project's roles as
+  // well as through the instance's permission targets.
+  repositories() []artifactory.repository
+}
+
+// Member of an Artifactory Project
+//
+// An account that belongs to a project, together with the roles it holds
+// there. A role is granted inside the project, so it does not appear in the
+// instance's permission targets. The `isAdmin` field reports whether the member
+// holds a role that administers the project itself.
+private artifactory.project.member @defaults("name roles") {
+  // Name of the account
+  name string
+  // Roles the account holds in the project
+  //
+  // Contains the built-in roles, for example Project Admin, Developer,
+  // Contributor, Viewer, or Release Manager, and any role the project defines
+  // itself.
+  roles []string
+  // User the member names, or null when the account is unknown to the instance
+  user() artifactory.user
+  // Whether the member administers the project
+  //
+  // True when a role administers the project. Such a member decides who else
+  // reaches the project's repositories, as far as `manageMembers` allows.
+  isAdmin bool
 }

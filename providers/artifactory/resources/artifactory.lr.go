@@ -42,6 +42,8 @@ const (
 	ResourceArtifactoryXrayPolicy                string = "artifactory.xray.policy"
 	ResourceArtifactoryXrayPolicyRule            string = "artifactory.xray.policy.rule"
 	ResourceArtifactoryXrayIgnoreRule            string = "artifactory.xray.ignoreRule"
+	ResourceArtifactoryProject                   string = "artifactory.project"
+	ResourceArtifactoryProjectMember             string = "artifactory.project.member"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -152,6 +154,14 @@ func init() {
 			// to override args, implement: initArtifactoryXrayIgnoreRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createArtifactoryXrayIgnoreRule,
 		},
+		"artifactory.project": {
+			// to override args, implement: initArtifactoryProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryProject,
+		},
+		"artifactory.project.member": {
+			// to override args, implement: initArtifactoryProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryProjectMember,
+		},
 	}
 }
 
@@ -246,6 +256,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"artifactory.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactory).GetBackups()).ToDataRes(types.Array(types.Resource("artifactory.backup")))
+	},
+	"artifactory.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactory).GetProjects()).ToDataRes(types.Array(types.Resource("artifactory.project")))
 	},
 	"artifactory.xray": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactory).GetXray()).ToDataRes(types.Resource("artifactory.xray"))
@@ -1078,6 +1091,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"artifactory.xray.ignoreRule.repositoryRefs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryXrayIgnoreRule).GetRepositoryRefs()).ToDataRes(types.Array(types.Resource("artifactory.repository")))
 	},
+	"artifactory.project.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetKey()).ToDataRes(types.String)
+	},
+	"artifactory.project.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetDisplayName()).ToDataRes(types.String)
+	},
+	"artifactory.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetDescription()).ToDataRes(types.String)
+	},
+	"artifactory.project.manageMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetManageMembers()).ToDataRes(types.Bool)
+	},
+	"artifactory.project.manageResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetManageResources()).ToDataRes(types.Bool)
+	},
+	"artifactory.project.indexResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetIndexResources()).ToDataRes(types.Bool)
+	},
+	"artifactory.project.storageQuotaBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetStorageQuotaBytes()).ToDataRes(types.Int)
+	},
+	"artifactory.project.softLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetSoftLimit()).ToDataRes(types.Bool)
+	},
+	"artifactory.project.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetMembers()).ToDataRes(types.Array(types.Resource("artifactory.project.member")))
+	},
+	"artifactory.project.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProject).GetRepositories()).ToDataRes(types.Array(types.Resource("artifactory.repository")))
+	},
+	"artifactory.project.member.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProjectMember).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.project.member.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProjectMember).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.project.member.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProjectMember).GetUser()).ToDataRes(types.Resource("artifactory.user"))
+	},
+	"artifactory.project.member.isAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryProjectMember).GetIsAdmin()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1124,6 +1179,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactory).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactory).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"artifactory.xray": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2334,6 +2393,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlArtifactoryXrayIgnoreRule).RepositoryRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"artifactory.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.project.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.manageMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).ManageMembers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.manageResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).ManageResources, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.indexResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).IndexResources, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.storageQuotaBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).StorageQuotaBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.softLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).SoftLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProject).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProjectMember).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.project.member.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProjectMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.member.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProjectMember).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.member.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProjectMember).User, ok = plugin.RawToTValue[*mqlArtifactoryUser](v.Value, v.Error)
+		return
+	},
+	"artifactory.project.member.isAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryProjectMember).IsAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2371,6 +2494,7 @@ type mqlArtifactory struct {
 	Security          plugin.TValue[*mqlArtifactorySecuritySettings]
 	CleanupPolicies   plugin.TValue[[]any]
 	Backups           plugin.TValue[[]any]
+	Projects          plugin.TValue[[]any]
 	Xray              plugin.TValue[*mqlArtifactoryXray]
 	System            plugin.TValue[*mqlArtifactorySystemInfo]
 }
@@ -2537,6 +2661,22 @@ func (c *mqlArtifactory) GetBackups() *plugin.TValue[[]any] {
 		}
 
 		return c.backups()
+	})
+}
+
+func (c *mqlArtifactory) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
 	})
 }
 
@@ -5603,4 +5743,198 @@ func (c *mqlArtifactoryXrayIgnoreRule) GetRepositoryRefs() *plugin.TValue[[]any]
 
 		return c.repositoryRefs()
 	})
+}
+
+// mqlArtifactoryProject for the artifactory.project resource
+type mqlArtifactoryProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryProjectInternal
+	Key               plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Description       plugin.TValue[string]
+	ManageMembers     plugin.TValue[bool]
+	ManageResources   plugin.TValue[bool]
+	IndexResources    plugin.TValue[bool]
+	StorageQuotaBytes plugin.TValue[int64]
+	SoftLimit         plugin.TValue[bool]
+	Members           plugin.TValue[[]any]
+	Repositories      plugin.TValue[[]any]
+}
+
+// createArtifactoryProject creates a new instance of this resource
+func createArtifactoryProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryProject) MqlName() string {
+	return "artifactory.project"
+}
+
+func (c *mqlArtifactoryProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryProject) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlArtifactoryProject) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlArtifactoryProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlArtifactoryProject) GetManageMembers() *plugin.TValue[bool] {
+	return &c.ManageMembers
+}
+
+func (c *mqlArtifactoryProject) GetManageResources() *plugin.TValue[bool] {
+	return &c.ManageResources
+}
+
+func (c *mqlArtifactoryProject) GetIndexResources() *plugin.TValue[bool] {
+	return &c.IndexResources
+}
+
+func (c *mqlArtifactoryProject) GetStorageQuotaBytes() *plugin.TValue[int64] {
+	return &c.StorageQuotaBytes
+}
+
+func (c *mqlArtifactoryProject) GetSoftLimit() *plugin.TValue[bool] {
+	return &c.SoftLimit
+}
+
+func (c *mqlArtifactoryProject) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.project", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlArtifactoryProject) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.project", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+// mqlArtifactoryProjectMember for the artifactory.project.member resource
+type mqlArtifactoryProjectMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryProjectMemberInternal
+	Name    plugin.TValue[string]
+	Roles   plugin.TValue[[]any]
+	User    plugin.TValue[*mqlArtifactoryUser]
+	IsAdmin plugin.TValue[bool]
+}
+
+// createArtifactoryProjectMember creates a new instance of this resource
+func createArtifactoryProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryProjectMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.project.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryProjectMember) MqlName() string {
+	return "artifactory.project.member"
+}
+
+func (c *mqlArtifactoryProjectMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryProjectMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryProjectMember) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+func (c *mqlArtifactoryProjectMember) GetUser() *plugin.TValue[*mqlArtifactoryUser] {
+	return plugin.GetOrCompute[*mqlArtifactoryUser](&c.User, func() (*mqlArtifactoryUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.project.member", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlArtifactoryProjectMember) GetIsAdmin() *plugin.TValue[bool] {
+	return &c.IsAdmin
 }

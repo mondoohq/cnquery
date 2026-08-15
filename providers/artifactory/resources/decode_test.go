@@ -1132,3 +1132,76 @@ func TestPageMarkerDistinguishesPages(t *testing.T) {
 		t.Error("an empty page produced the same marker as a page with a record")
 	}
 }
+
+// A project delegates part of the instance to its own administrators. The
+// privilege flags decide what those administrators may do without a platform
+// administrator, so a mistyped tag would report a delegated project as locked
+// down.
+func TestProjectRecordDecodes(t *testing.T) {
+	const payload = `[
+	  {
+	    "project_key": "example",
+	    "display_name": "Example",
+	    "description": "platform artifacts",
+	    "admin_privileges": {"manage_members": true, "manage_resources": true, "index_resources": false},
+	    "storage_quota_bytes": 1073741824,
+	    "soft_limit": true
+	  },
+	  {"project_key": "minimal", "display_name": "Minimal"}
+	]`
+
+	var records []projectRecord
+	if err := json.Unmarshal([]byte(payload), &records); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(records) != 2 {
+		t.Fatalf("expected 2 projects, got %d", len(records))
+	}
+
+	first := records[0]
+	if first.ProjectKey != "example" || first.DisplayName != "Example" || first.Description != "platform artifacts" {
+		t.Errorf("project identity decoded wrong: %+v", first)
+	}
+	if !boolValue(first.AdminPrivileges.ManageMembers) || !boolValue(first.AdminPrivileges.ManageResources) {
+		t.Errorf("admin privileges decoded wrong: %+v", first.AdminPrivileges)
+	}
+	if boolValue(first.AdminPrivileges.IndexResources) {
+		t.Error("index_resources decoded as true, want false")
+	}
+	if first.StorageQuotaBytes == nil || *first.StorageQuotaBytes != 1073741824 {
+		t.Errorf("storage quota decoded wrong: %v", first.StorageQuotaBytes)
+	}
+
+	// A project the instance reports without privileges or a quota must keep
+	// them absent. Reading a missing quota as zero would report a project that
+	// may store nothing.
+	second := records[1]
+	if second.AdminPrivileges.ManageMembers != nil || second.StorageQuotaBytes != nil || second.SoftLimit != nil {
+		t.Errorf("an absent value decoded as present: %+v", second)
+	}
+	if boolValue(second.AdminPrivileges.ManageMembers) {
+		t.Error("an absent privilege read as granted")
+	}
+}
+
+func TestProjectMembersDecode(t *testing.T) {
+	const payload = `{"members":[
+	  {"name":"example-admin","roles":["Project Admin","Developer"]},
+	  {"name":"build-account","roles":["Contributor"]},
+	  {"name":"viewer"}
+	]}`
+
+	var response projectMembersResponse
+	if err := json.Unmarshal([]byte(payload), &response); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(response.Members) != 3 {
+		t.Fatalf("expected 3 members, got %d", len(response.Members))
+	}
+	if response.Members[0].Name != "example-admin" || len(response.Members[0].Roles) != 2 {
+		t.Errorf("member decoded wrong: %+v", response.Members[0])
+	}
+	if response.Members[2].Roles != nil {
+		t.Errorf("a member with no roles decoded as %v", response.Members[2].Roles)
+	}
+}
