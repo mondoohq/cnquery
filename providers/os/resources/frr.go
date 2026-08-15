@@ -224,6 +224,10 @@ func (s *mqlFrrConfig) markParseErrors(err error) {
 	s.RouteMaps = arrVal
 	s.Blocks = arrVal
 	s.Directives = arrVal
+	s.StaticRoutes = arrVal
+	s.CommunityLists = arrVal
+	s.AccessLists = arrVal
+	s.AsPathAccessLists = arrVal
 }
 
 func (s *mqlFrrConfig) hostname(file *mqlFile) (string, error) {
