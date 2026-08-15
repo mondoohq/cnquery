@@ -5,6 +5,7 @@ package packages
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -24,10 +25,36 @@ const (
 )
 
 var (
-	DPKG_REGEX = regexp.MustCompile(`^(.+):\s(.+)$`)
 	// e.g. source with version: samba (2:4.17.12+dfsg-0+deb12u1)
 	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
 )
+
+// isDpkgFieldSpace reports whether c belongs to the regexp `\s` class. Go
+// defines that class as [\t\n\f\r ].
+func isDpkgFieldSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r'
+}
+
+// dpkgControlField splits a dpkg control line into its field name and value.
+// It returns the same key and value as the regexp `^(.+):\s(.+)$`. The greedy
+// first group binds that regexp to the last colon followed by a whitespace
+// character. At least one byte must precede the colon, and at least one byte
+// must follow the whitespace.
+//
+// The colon and the whitespace bytes are ASCII, so they never appear inside a
+// multi-byte UTF-8 sequence. A byte scan therefore finds the same split point
+// as a rune scan. The caller passes one line from a bufio.Scanner, so the input
+// carries no newline.
+//
+// The returned slices alias line. The caller must copy what it keeps.
+func dpkgControlField(line []byte) (key []byte, value []byte, ok bool) {
+	for i := len(line) - 3; i >= 1; i-- {
+		if line[i] == ':' && isDpkgFieldSpace(line[i+1]) {
+			return line[:i], line[i+2:], true
+		}
+	}
+	return nil, nil, false
+}
 
 // ParseDpkgPackages parses the dpkg database content located in /var/lib/dpkg/status
 func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, error) {
@@ -55,9 +82,10 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 	scanner := bufio.NewScanner(input)
 	pkg := Package{Format: DpkgPkgFormat}
 	state := STATE_RESET
-	var key string
 	for scanner.Scan() {
-		line := scanner.Text()
+		// Bytes avoids one string allocation per line. Every field we keep is
+		// copied into the package below, so nothing aliases the scanner buffer.
+		line := scanner.Bytes()
 
 		// reset package definition once we reach a newline
 		if len(line) == 0 {
@@ -68,30 +96,28 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 			}
 		}
 
-		m := DPKG_REGEX.FindStringSubmatch(line)
-		key = ""
-		if m != nil {
-			key = m[1]
+		key, value, ok := dpkgControlField(line)
+		if ok {
 			state = STATE_RESET
 		}
 		switch {
-		case key == "Package":
-			pkg.Name = strings.TrimSpace(m[2])
-		case key == "Version":
-			pkg.Version = strings.TrimSpace(m[2])
-		case key == "Architecture":
-			pkg.Arch = strings.TrimSpace(m[2])
-		case key == "Status":
-			pkg.Status = strings.TrimSpace(m[2])
-		case key == "Source":
-			pkg.Origin = strings.TrimSpace(m[2])
+		case string(key) == "Package":
+			pkg.Name = string(bytes.TrimSpace(value))
+		case string(key) == "Version":
+			pkg.Version = string(bytes.TrimSpace(value))
+		case string(key) == "Architecture":
+			pkg.Arch = string(bytes.TrimSpace(value))
+		case string(key) == "Status":
+			pkg.Status = string(bytes.TrimSpace(value))
+		case string(key) == "Source":
+			pkg.Origin = string(bytes.TrimSpace(value))
 		// description supports multi-line statements, start desc
-		case key == "Description":
-			pkg.Description = strings.TrimSpace(m[2])
+		case string(key) == "Description":
+			pkg.Description = string(bytes.TrimSpace(value))
 			state = STATE_DESC
 		// next desc line, append to previous one
 		case state == STATE_DESC:
-			pkg.Description += "\n" + strings.TrimSpace(line)
+			pkg.Description += "\n" + string(bytes.TrimSpace(line))
 		}
 	}
 
