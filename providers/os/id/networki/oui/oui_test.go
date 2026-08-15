@@ -11,39 +11,54 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/id/networki/oui"
 )
 
-func TestVendor(t *testing.T) {
+// Every spelling of an address resolves off the same first 24 bits, so they
+// all have to agree.
+//
+// The vendor string itself is deliberately not pinned. The IEEE renames
+// organizations in place, so an assertion on a literal name turns any refresh
+// of the embedded table into a build failure: "Extreme Networks Headquarters"
+// became "Extreme Networks" in the registry. The shortening rules that produce
+// these strings are covered against a fixture in gen, where they live.
+func TestVendorAcceptsEveryAddressForm(t *testing.T) {
+	want := oui.Vendor("00000c")
+	require.NotEmpty(t, want, "00:00:0c has been an assigned prefix for decades")
+
+	addrs := []string{
+		"00000C",
+		"00:00:0c",
+		"00:00:0C",
+		"00:00:0c:11:22:33",
+		"00000c112233",
+
+		// Separators are dropped wherever they fall, so a MAC written with
+		// ragged groups still resolves off its first six hex digits.
+		"0:00:00:c:11:22",
+	}
+
+	for _, addr := range addrs {
+		t.Run(addr, func(t *testing.T) {
+			assert.Equal(t, want, oui.Vendor(addr))
+		})
+	}
+}
+
+func TestVendorRejectsMalformedAddresses(t *testing.T) {
 	tests := []struct {
 		name string
 		addr string
-		want string
 	}{
-		{"bare oui", "00000c", "Cisco Systems"},
-		{"bare oui, uppercase", "00000C", "Cisco Systems"},
-		{"colon separated", "00:00:0c", "Cisco Systems"},
-		{"colon separated, uppercase", "00:00:0C", "Cisco Systems"},
-		{"full mac", "00:00:0c:11:22:33", "Cisco Systems"},
-		{"full mac, no separators", "00000c112233", "Cisco Systems"},
-		{"first record in the table", "000000", "XEROX"},
-		{"vendor with a stripped suffix", "286fb9", "Nokia Shanghai Bell"},
-		{"vendor kept whole", "08ea44", "Extreme Networks Headquarters"},
-		{"apple", "3c22fb", "Apple"},
-
-		// Separators are dropped wherever they fall, so a MAC written with
-		// single-digit groups still resolves off its first six hex digits.
-		{"ragged separators", "0:0:0:c:11:22", "NIPPON DEMPA"},
-
-		{"unassigned", "ffffff", ""},
-		{"empty", "", ""},
-		{"too short", "00000", ""},
-		{"too short after separators", "00:00:0", ""},
-		{"not hex", "zzzzzz", ""},
-		{"partially not hex", "00000z", ""},
-		{"dash separated is not hex", "00-00-0c", ""},
+		{"unassigned", "ffffff"},
+		{"empty", ""},
+		{"too short", "00000"},
+		{"too short after separators", "00:00:0"},
+		{"not hex", "zzzzzz"},
+		{"partially not hex", "00000z"},
+		{"dash separated is not hex", "00-00-0c"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.want, oui.Vendor(test.addr))
+			assert.Empty(t, oui.Vendor(test.addr))
 		})
 	}
 }

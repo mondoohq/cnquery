@@ -14,14 +14,22 @@
 // Usage:
 //
 //	go run ./gen -csv oui.csv -out oui.bin
+//
+// The encoded table is a binary blob, so a refresh shows up in review as
+// "Binary file changed" and nothing else. -summary writes a Markdown account
+// of what moved between the table already on disk and the one being written:
+//
+//	go run ./gen -csv oui.csv -out oui.bin -summary summary.md
 package main
 
 import (
 	"bytes"
 	"encoding/binary"
 	"encoding/csv"
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"regexp"
 	"sort"
@@ -32,6 +40,7 @@ import (
 func main() {
 	csvPath := flag.String("csv", "", "path to the IEEE oui.csv registry export")
 	outPath := flag.String("out", "oui.bin", "path to write the encoded table to")
+	summaryPath := flag.String("summary", "", "path to write a Markdown summary of the change to")
 	flag.Parse()
 
 	if *csvPath == "" {
@@ -39,7 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(*csvPath, *outPath); err != nil {
+	if err := run(*csvPath, *outPath, *summaryPath); err != nil {
 		fmt.Fprintln(os.Stderr, "gen:", err)
 		os.Exit(1)
 	}
@@ -50,7 +59,22 @@ type entry struct {
 	vendor string
 }
 
-func run(csvPath, outPath string) error {
+func run(csvPath, outPath, summaryPath string) error {
+	// Read the table being replaced before it is overwritten, so the summary
+	// can say what the refresh actually changed.
+	var before []entry
+	if summaryPath != "" {
+		old, err := os.ReadFile(outPath)
+		switch {
+		case err == nil:
+			if before, err = readTable(old); err != nil {
+				return fmt.Errorf("read existing %s: %w", outPath, err)
+			}
+		case !errors.Is(err, fs.ErrNotExist):
+			return err
+		}
+	}
+
 	f, err := os.Open(csvPath)
 	if err != nil {
 		return err
@@ -146,6 +170,12 @@ func run(csvPath, outPath string) error {
 
 	fmt.Printf("wrote %s: %d assignments, %d distinct vendors, %d bytes\n",
 		outPath, len(entries), len(offsets), out.Len())
+
+	if summaryPath != "" {
+		if err := os.WriteFile(summaryPath, []byte(summarize(before, entries)), 0o644); err != nil {
+			return fmt.Errorf("write summary: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -153,6 +183,7 @@ func run(csvPath, outPath string) error {
 const (
 	magic      = "MQOUIv1\x00"
 	recordSize = 8
+	headerSize = len(magic) + 4
 )
 
 // The IEEE registry records legal entity names, so most of them carry a
