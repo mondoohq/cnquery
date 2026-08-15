@@ -27,15 +27,23 @@ func (s *mqlApache2) id() (string, error) {
 	return "apache2", nil
 }
 
-// apacheVersionBinaries lists the well-known binary paths for the Apache httpd
-// server. The version string (e.g. "Apache/2.4.62") is embedded as a constant in
-// the binary, so we can extract it by reading the file directly — no command
-// execution required.
-var apacheVersionBinaries = []string{
+// apacheBinaries lists the well-known binary paths for the Apache httpd
+// server. Both the version string (e.g. "Apache/2.4.62") and the compiled-in
+// configuration layout are embedded as constants in the binary, so we can
+// extract them by reading the file directly — no command execution required,
+// which keeps this working on image and filesystem scans.
+var apacheBinaries = []string{
 	"/usr/sbin/apache2",
 	"/usr/sbin/httpd",
 	"/usr/local/sbin/httpd",
 	"/usr/local/bin/httpd",
+	// A source build defaults to --prefix=/usr/local/apache2 and keeps its
+	// binary, configuration and content under it. The upstream httpd container
+	// image is built this way.
+	"/usr/local/apache2/bin/httpd",
+	// Homebrew, on Apple Silicon and Intel respectively.
+	"/opt/homebrew/bin/httpd",
+	"/usr/local/opt/httpd/bin/httpd",
 }
 
 // apacheVersionCommands are tried as a fallback when the binary cannot be read.
@@ -49,7 +57,7 @@ func (s *mqlApache2) version() (string, error) {
 
 	// Prefer file-based detection: scan the httpd binary for the embedded
 	// "Apache/x.y.z" version string without loading the full binary into memory.
-	for _, bin := range apacheVersionBinaries {
+	for _, bin := range apacheBinaries {
 		if v := scanBinaryForTag(afs, bin, apacheVersionTag); v != "" {
 			return v, nil
 		}
@@ -101,6 +109,110 @@ func scanBinaryForTag(fs *afero.Afero, path string, tag []byte) string {
 // dot-separated numeric version (e.g. "2.4.62").
 func isApacheVersionByte(b byte) bool {
 	return b == '.' || (b >= '0' && b <= '9')
+}
+
+// The server's compiled-in layout. `httpd -V` prints these two values, but they
+// are plain string constants in the binary, so reading the file gives the same
+// answer on an asset we cannot run commands on.
+var (
+	apacheRootTag       = []byte(`-D HTTPD_ROOT="`)
+	apacheConfigFileTag = []byte(`-D SERVER_CONFIG_FILE="`)
+)
+
+// isNotDoubleQuote terminates a scan at the closing quote of a `-D NAME="value"`
+// literal.
+func isNotDoubleQuote(b byte) bool { return b != '"' }
+
+// maxApacheLayoutValue bounds how far a scan will run looking for that closing
+// quote, so a spurious tag match cannot walk the rest of a binary.
+const maxApacheLayoutValue = 512
+
+// apacheLayout is where a particular build of httpd keeps its configuration.
+type apacheLayout struct {
+	// root is HTTPD_ROOT, the directory relative paths resolve against.
+	root string
+	// conf is SERVER_CONFIG_FILE. Every vendor build observed states it
+	// relative to root, but an absolute value is legal and is honoured.
+	conf string
+}
+
+// confPath returns the absolute path of the main configuration file, or "" when
+// the layout is too incomplete to name one.
+func (l apacheLayout) confPath() string {
+	if l.conf == "" {
+		return ""
+	}
+	if filepath.IsAbs(l.conf) {
+		return l.conf
+	}
+	if l.root == "" {
+		return ""
+	}
+	return filepath.Join(l.root, l.conf)
+}
+
+// apacheLayoutFromBinary reads the layout out of an httpd binary.
+func apacheLayoutFromBinary(fs *afero.Afero, path string) apacheLayout {
+	return apacheLayout{
+		root: scanBinaryForQuotedTag(fs, path, apacheRootTag),
+		conf: scanBinaryForQuotedTag(fs, path, apacheConfigFileTag),
+	}
+}
+
+// scanBinaryForQuotedTag returns the value of a `-D NAME="value"` literal.
+func scanBinaryForQuotedTag(fs *afero.Afero, path string, tag []byte) string {
+	f, err := fs.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	// The overlap has to cover the tag plus the longest value we are willing to
+	// read, so a literal straddling two chunks is not truncated.
+	return scanReaderForTag(f, tag, len(tag)+maxApacheLayoutValue, isNotDoubleQuote)
+}
+
+var (
+	reApacheRoot       = regexp.MustCompile(`-D HTTPD_ROOT="([^"]*)"`)
+	reApacheConfigFile = regexp.MustCompile(`-D SERVER_CONFIG_FILE="([^"]*)"`)
+)
+
+// apacheLayoutFromCommand asks the server itself. This is the last resort: it
+// covers a build whose binary sits somewhere apacheBinaries does not list, and
+// it only works on an asset we can run commands on.
+func apacheLayoutFromCommand(conn shared.Connection) apacheLayout {
+	for _, bin := range apacheVersionCommands {
+		cmd, err := conn.RunCommand(bin + " -V")
+		if err != nil || cmd.ExitStatus != 0 {
+			continue
+		}
+		data, err := io.ReadAll(cmd.Stdout)
+		if err != nil {
+			continue
+		}
+		var layout apacheLayout
+		if m := reApacheRoot.FindSubmatch(data); m != nil {
+			layout.root = string(m[1])
+		}
+		if m := reApacheConfigFile.FindSubmatch(data); m != nil {
+			layout.conf = string(m[1])
+		}
+		if layout.confPath() != "" {
+			return layout
+		}
+	}
+	return apacheLayout{}
+}
+
+// apacheDiscoverLayout finds where the installed server keeps its
+// configuration, preferring the binary over running anything.
+func apacheDiscoverLayout(conn shared.Connection, afs *afero.Afero) apacheLayout {
+	for _, bin := range apacheBinaries {
+		if layout := apacheLayoutFromBinary(afs, bin); layout.confPath() != "" {
+			return layout
+		}
+	}
+	return apacheLayoutFromCommand(conn)
 }
 
 // scanReaderForTag streams r in chunks, looking for tag followed by a run of
@@ -165,8 +277,13 @@ func scanReaderForTag(r io.Reader, tag []byte, overlap int, isVersionByte func(b
 }
 
 type mqlApache2ConfInternal struct {
-	lock       sync.Mutex
+	lock sync.Mutex
+	// serverRoot comes from the config's own ServerRoot directive and wins.
 	serverRoot string
+	// binaryServerRoot is the server's compiled-in HTTPD_ROOT, discovered while
+	// locating the config file. It is only consulted when the config does not
+	// state a ServerRoot, and is written once by file() before any parsing.
+	binaryServerRoot string
 }
 
 // apacheConfByFamily maps platform families (and a few standalone platform
@@ -343,6 +460,28 @@ func (s *mqlApache2Conf) file() (*mqlFile, error) {
 		}
 	}
 
+	// Nothing at a packaged location. Ask the installed server where it keeps
+	// its configuration: a source build with a custom --prefix puts everything
+	// under that prefix, which no vendor path list can anticipate. The vendor
+	// paths are still tried first, so a packaged install is unaffected by this.
+	if layout := apacheDiscoverLayout(conn, afs); layout.confPath() != "" {
+		path := layout.confPath()
+		if ok, _ := afs.Exists(path); ok {
+			// Relative Include paths resolve against HTTPD_ROOT. The platform
+			// default would be wrong for a custom prefix, and the config's own
+			// ServerRoot directive (which takes precedence) is not read yet.
+			s.binaryServerRoot = layout.root
+
+			f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+				"path": llx.StringData(path),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return f.(*mqlFile), nil
+		}
+	}
+
 	// No config file found anywhere — Apache likely isn't installed. Mark the
 	// field as set+null so downstream field accessors (params, modules, ...)
 	// return empty data instead of bubbling up "file does not exist" errors.
@@ -355,9 +494,13 @@ var reApacheGlob = regexp.MustCompile(`[*?\[]`)
 func (s *mqlApache2Conf) expandGlob(pattern string) ([]string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
-	// Resolve relative paths against ServerRoot (prefer config value, fall back to platform default)
+	// Resolve relative paths against ServerRoot: the directive in the config
+	// wins, then the server's compiled-in HTTPD_ROOT, then the platform default.
 	if !filepath.IsAbs(pattern) {
 		serverRoot := s.serverRoot
+		if serverRoot == "" {
+			serverRoot = s.binaryServerRoot
+		}
 		if serverRoot == "" {
 			serverRoot = apacheServerRoot(conn)
 		}
