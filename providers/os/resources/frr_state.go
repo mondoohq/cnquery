@@ -53,6 +53,9 @@ func runOutput(conn shared.Connection, command string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot run %q: %w", command, err)
 	}
+	if cmd == nil {
+		return nil, fmt.Errorf("cannot run %q, the connection returned no result", command)
+	}
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read output of %q: %w", command, err)
@@ -111,10 +114,11 @@ func (n *mqlFrr) loadVRFs() ([]frr.VRFState, error) {
 	conn := n.MqlRuntime.Connection.(shared.Connection)
 
 	var zebra []frr.ZebraVRF
-	if out, err := runOutput(conn, vtyshCommand("show vrf")); err != nil {
+	out, vtyshErr := runOutput(conn, vtyshCommand("show vrf"))
+	if vtyshErr != nil {
 		// The kernel view alone is still worth returning. A VRF device
 		// without FRR is exactly what `inFrr` reports.
-		log.Debug().Err(err).Msg("cannot read vrfs from vtysh")
+		log.Debug().Err(vtyshErr).Msg("cannot read vrfs from vtysh")
 	} else {
 		zebra = frr.ParseShowVRF(string(out))
 	}
@@ -132,7 +136,9 @@ func (n *mqlFrr) loadVRFs() ([]frr.VRFState, error) {
 		}
 	}
 
-	if len(zebra) == 0 && kernelErr != nil {
+	// A node without VRFs is a valid answer, so the empty result only counts
+	// as a failure when neither command could run.
+	if vtyshErr != nil && kernelErr != nil {
 		return nil, errors.New("cannot read vrfs, neither vtysh nor ip could be run on this asset")
 	}
 
@@ -566,6 +572,9 @@ func (s *mqlFrrRouteTable) load() (*frr.RouteTable, error) {
 	cmd, err := conn.RunCommand(vtyshCommand(command))
 	if err != nil {
 		return nil, fmt.Errorf("cannot run %q: %w", command, err)
+	}
+	if cmd == nil {
+		return nil, fmt.Errorf("cannot run %q, the connection returned no result", command)
 	}
 	if cmd.ExitStatus != 0 {
 		stderr, _ := io.ReadAll(cmd.Stderr)
