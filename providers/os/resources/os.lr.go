@@ -556,6 +556,9 @@ const (
 	ResourceOpenhandsSkill                                string = "openhands.skill"
 	ResourceQwenCode                                      string = "qwen.code"
 	ResourceQwenCodeSkill                                 string = "qwen.code.skill"
+	ResourceSriov                                         string = "sriov"
+	ResourceSriovPhysicalFunction                         string = "sriov.physicalFunction"
+	ResourceSriovVirtualFunction                          string = "sriov.virtualFunction"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2721,6 +2724,18 @@ func init() {
 		"qwen.code.skill": {
 			// to override args, implement: initQwenCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createQwenCodeSkill,
+		},
+		"sriov": {
+			// to override args, implement: initSriov(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSriov,
+		},
+		"sriov.physicalFunction": {
+			// to override args, implement: initSriovPhysicalFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSriovPhysicalFunction,
+		},
+		"sriov.virtualFunction": {
+			// to override args, implement: initSriovVirtualFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSriovVirtualFunction,
 		},
 	}
 }
@@ -14270,6 +14285,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"qwen.code.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCodeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunctions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriov).GetPhysicalFunctions()).ToDataRes(types.Array(types.Resource("sriov.physicalFunction")))
+	},
+	"sriov.virtualFunctions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriov).GetVirtualFunctions()).ToDataRes(types.Array(types.Resource("sriov.virtualFunction")))
+	},
+	"sriov.physicalFunction.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetInterface()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.pciAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetPciAddress()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetDriver()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.vendorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetVendorId()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetDeviceId()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.numVfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetNumVfs()).ToDataRes(types.Int)
+	},
+	"sriov.physicalFunction.totalVfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetTotalVfs()).ToDataRes(types.Int)
+	},
+	"sriov.physicalFunction.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetMacAddress()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetMtu()).ToDataRes(types.Int)
+	},
+	"sriov.physicalFunction.operationalState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetOperationalState()).ToDataRes(types.String)
+	},
+	"sriov.physicalFunction.numaNode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetNumaNode()).ToDataRes(types.Int)
+	},
+	"sriov.physicalFunction.virtualFunctions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovPhysicalFunction).GetVirtualFunctions()).ToDataRes(types.Array(types.Resource("sriov.virtualFunction")))
+	},
+	"sriov.virtualFunction.pciAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetPciAddress()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.index": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetIndex()).ToDataRes(types.Int)
+	},
+	"sriov.virtualFunction.physicalFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetPhysicalFunction()).ToDataRes(types.Resource("sriov.physicalFunction"))
+	},
+	"sriov.virtualFunction.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetDriver()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetInterface()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.vendorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetVendorId()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetDeviceId()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.numaNode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetNumaNode()).ToDataRes(types.Int)
+	},
+	"sriov.virtualFunction.usesPassthroughDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetUsesPassthroughDriver()).ToDataRes(types.Bool)
+	},
+	"sriov.virtualFunction.linkConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetLinkConfigured()).ToDataRes(types.Bool)
+	},
+	"sriov.virtualFunction.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetMacAddress()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.vlanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetVlanId()).ToDataRes(types.Int)
+	},
+	"sriov.virtualFunction.qos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetQos()).ToDataRes(types.Int)
+	},
+	"sriov.virtualFunction.spoofChecking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetSpoofChecking()).ToDataRes(types.Bool)
+	},
+	"sriov.virtualFunction.trusted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetTrusted()).ToDataRes(types.Bool)
+	},
+	"sriov.virtualFunction.linkState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetLinkState()).ToDataRes(types.String)
+	},
+	"sriov.virtualFunction.minTxRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetMinTxRate()).ToDataRes(types.Int)
+	},
+	"sriov.virtualFunction.maxTxRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSriovVirtualFunction).GetMaxTxRate()).ToDataRes(types.Int)
 	},
 }
 
@@ -31745,6 +31856,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"qwen.code.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlQwenCodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriov).__id, ok = v.Value.(string)
+		return
+	},
+	"sriov.physicalFunctions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriov).PhysicalFunctions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunctions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriov).VirtualFunctions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).__id, ok = v.Value.(string)
+		return
+	},
+	"sriov.physicalFunction.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.pciAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).PciAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.numVfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).NumVfs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.totalVfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).TotalVfs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.operationalState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).OperationalState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.numaNode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).NumaNode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.physicalFunction.virtualFunctions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovPhysicalFunction).VirtualFunctions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).__id, ok = v.Value.(string)
+		return
+	},
+	"sriov.virtualFunction.pciAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).PciAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.index": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).Index, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.physicalFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).PhysicalFunction, ok = plugin.RawToTValue[*mqlSriovPhysicalFunction](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.numaNode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).NumaNode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.usesPassthroughDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).UsesPassthroughDriver, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.linkConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).LinkConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.vlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).VlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.qos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).Qos, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.spoofChecking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).SpoofChecking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.trusted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).Trusted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.linkState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).LinkState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.minTxRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).MinTxRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sriov.virtualFunction.maxTxRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSriovVirtualFunction).MaxTxRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 }
@@ -84827,4 +85078,334 @@ func (c *mqlQwenCodeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})
+}
+
+// mqlSriov for the sriov resource
+type mqlSriov struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSriovInternal
+	PhysicalFunctions plugin.TValue[[]any]
+	VirtualFunctions  plugin.TValue[[]any]
+}
+
+// createSriov creates a new instance of this resource
+func createSriov(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSriov{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sriov", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSriov) MqlName() string {
+	return "sriov"
+}
+
+func (c *mqlSriov) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSriov) GetPhysicalFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PhysicalFunctions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sriov", c.__id, "physicalFunctions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.physicalFunctions()
+	})
+}
+
+func (c *mqlSriov) GetVirtualFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualFunctions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sriov", c.__id, "virtualFunctions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualFunctions()
+	})
+}
+
+// mqlSriovPhysicalFunction for the sriov.physicalFunction resource
+type mqlSriovPhysicalFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSriovPhysicalFunctionInternal
+	Interface        plugin.TValue[string]
+	PciAddress       plugin.TValue[string]
+	Driver           plugin.TValue[string]
+	VendorId         plugin.TValue[string]
+	DeviceId         plugin.TValue[string]
+	NumVfs           plugin.TValue[int64]
+	TotalVfs         plugin.TValue[int64]
+	MacAddress       plugin.TValue[string]
+	Mtu              plugin.TValue[int64]
+	OperationalState plugin.TValue[string]
+	NumaNode         plugin.TValue[int64]
+	VirtualFunctions plugin.TValue[[]any]
+}
+
+// createSriovPhysicalFunction creates a new instance of this resource
+func createSriovPhysicalFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSriovPhysicalFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sriov.physicalFunction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSriovPhysicalFunction) MqlName() string {
+	return "sriov.physicalFunction"
+}
+
+func (c *mqlSriovPhysicalFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSriovPhysicalFunction) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlSriovPhysicalFunction) GetPciAddress() *plugin.TValue[string] {
+	return &c.PciAddress
+}
+
+func (c *mqlSriovPhysicalFunction) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlSriovPhysicalFunction) GetVendorId() *plugin.TValue[string] {
+	return &c.VendorId
+}
+
+func (c *mqlSriovPhysicalFunction) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlSriovPhysicalFunction) GetNumVfs() *plugin.TValue[int64] {
+	return &c.NumVfs
+}
+
+func (c *mqlSriovPhysicalFunction) GetTotalVfs() *plugin.TValue[int64] {
+	return &c.TotalVfs
+}
+
+func (c *mqlSriovPhysicalFunction) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlSriovPhysicalFunction) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlSriovPhysicalFunction) GetOperationalState() *plugin.TValue[string] {
+	return &c.OperationalState
+}
+
+func (c *mqlSriovPhysicalFunction) GetNumaNode() *plugin.TValue[int64] {
+	return &c.NumaNode
+}
+
+func (c *mqlSriovPhysicalFunction) GetVirtualFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualFunctions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sriov.physicalFunction", c.__id, "virtualFunctions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualFunctions()
+	})
+}
+
+// mqlSriovVirtualFunction for the sriov.virtualFunction resource
+type mqlSriovVirtualFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSriovVirtualFunctionInternal
+	PciAddress            plugin.TValue[string]
+	Index                 plugin.TValue[int64]
+	PhysicalFunction      plugin.TValue[*mqlSriovPhysicalFunction]
+	Driver                plugin.TValue[string]
+	Interface             plugin.TValue[string]
+	VendorId              plugin.TValue[string]
+	DeviceId              plugin.TValue[string]
+	NumaNode              plugin.TValue[int64]
+	UsesPassthroughDriver plugin.TValue[bool]
+	LinkConfigured        plugin.TValue[bool]
+	MacAddress            plugin.TValue[string]
+	VlanId                plugin.TValue[int64]
+	Qos                   plugin.TValue[int64]
+	SpoofChecking         plugin.TValue[bool]
+	Trusted               plugin.TValue[bool]
+	LinkState             plugin.TValue[string]
+	MinTxRate             plugin.TValue[int64]
+	MaxTxRate             plugin.TValue[int64]
+}
+
+// createSriovVirtualFunction creates a new instance of this resource
+func createSriovVirtualFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSriovVirtualFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sriov.virtualFunction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSriovVirtualFunction) MqlName() string {
+	return "sriov.virtualFunction"
+}
+
+func (c *mqlSriovVirtualFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSriovVirtualFunction) GetPciAddress() *plugin.TValue[string] {
+	return &c.PciAddress
+}
+
+func (c *mqlSriovVirtualFunction) GetIndex() *plugin.TValue[int64] {
+	return &c.Index
+}
+
+func (c *mqlSriovVirtualFunction) GetPhysicalFunction() *plugin.TValue[*mqlSriovPhysicalFunction] {
+	return plugin.GetOrCompute[*mqlSriovPhysicalFunction](&c.PhysicalFunction, func() (*mqlSriovPhysicalFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sriov.virtualFunction", c.__id, "physicalFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSriovPhysicalFunction), nil
+			}
+		}
+
+		return c.physicalFunction()
+	})
+}
+
+func (c *mqlSriovVirtualFunction) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlSriovVirtualFunction) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlSriovVirtualFunction) GetVendorId() *plugin.TValue[string] {
+	return &c.VendorId
+}
+
+func (c *mqlSriovVirtualFunction) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlSriovVirtualFunction) GetNumaNode() *plugin.TValue[int64] {
+	return &c.NumaNode
+}
+
+func (c *mqlSriovVirtualFunction) GetUsesPassthroughDriver() *plugin.TValue[bool] {
+	return &c.UsesPassthroughDriver
+}
+
+func (c *mqlSriovVirtualFunction) GetLinkConfigured() *plugin.TValue[bool] {
+	return &c.LinkConfigured
+}
+
+func (c *mqlSriovVirtualFunction) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlSriovVirtualFunction) GetVlanId() *plugin.TValue[int64] {
+	return &c.VlanId
+}
+
+func (c *mqlSriovVirtualFunction) GetQos() *plugin.TValue[int64] {
+	return &c.Qos
+}
+
+func (c *mqlSriovVirtualFunction) GetSpoofChecking() *plugin.TValue[bool] {
+	return &c.SpoofChecking
+}
+
+func (c *mqlSriovVirtualFunction) GetTrusted() *plugin.TValue[bool] {
+	return &c.Trusted
+}
+
+func (c *mqlSriovVirtualFunction) GetLinkState() *plugin.TValue[string] {
+	return &c.LinkState
+}
+
+func (c *mqlSriovVirtualFunction) GetMinTxRate() *plugin.TValue[int64] {
+	return &c.MinTxRate
+}
+
+func (c *mqlSriovVirtualFunction) GetMaxTxRate() *plugin.TValue[int64] {
+	return &c.MaxTxRate
 }
