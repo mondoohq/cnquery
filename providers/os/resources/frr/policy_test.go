@@ -4,6 +4,7 @@
 package frr
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -233,4 +234,23 @@ func TestRouteMapClauses_EVPNFixture(t *testing.T) {
 	require.NotNil(t, deny)
 	assert.Equal(t, "deny", deny.Action)
 	assert.Equal(t, []string{"cm-received-fabric"}, deny.Clauses.MatchCommunityLists)
+}
+
+// TestStaticRoutes_ColorArgument pins that the numeric argument of `color`
+// is not read as the administrative distance.
+func TestStaticRoutes_ColorArgument(t *testing.T) {
+	src := `hostname x
+ip route 10.0.0.0/8 192.0.2.1 color 100
+ip route 10.1.0.0/16 192.0.2.1 color 100 40
+`
+	cfg, err := Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+	routes := cfg.StaticRoutes()
+	require.Len(t, routes, 2)
+
+	assert.Equal(t, "192.0.2.1", routes[0].Nexthop)
+	assert.Equal(t, int64(0), routes[0].Distance)
+
+	// A distance after the color is still read.
+	assert.Equal(t, int64(40), routes[1].Distance)
 }
