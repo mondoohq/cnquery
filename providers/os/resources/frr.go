@@ -306,7 +306,10 @@ func (s *mqlFrrConfig) bgp(file *mqlFile) ([]any, error) {
 	res := make([]any, 0, len(instances))
 	for i := range instances {
 		b := &instances[i]
-		id := fmt.Sprintf("%s#bgp/%d/%d/%s", s.__id, i, b.ASN, b.VRF)
+		// The id is built from what the instance is, not from where it
+		// sits, so reordering the blocks does not renumber the rest. An ASN
+		// and a VRF name identify an instance.
+		id := fmt.Sprintf("%s#bgp/%d/%s", s.__id, b.ASN, b.VRF)
 
 		neighbors, err := s.createNeighbors(id, b.Neighbors)
 		if err != nil {
