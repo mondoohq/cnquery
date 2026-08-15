@@ -6,6 +6,7 @@ package packages
 import (
 	"bytes"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -255,6 +256,42 @@ func apkBenchDB(pkgCount int, filesPerPkg int) []byte {
 		buf.WriteString("\n")
 	}
 	return buf.Bytes()
+}
+
+func TestApkLongLineDoesNotTruncate(t *testing.T) {
+	pf := &inventory.Platform{Name: "alpine", Version: "3.21", Arch: "x86_64"}
+
+	// a dependency line well past the 64KB default of bufio.Scanner
+	var buf bytes.Buffer
+	buf.WriteString("P:first\nV:1.0.0-r0\nA:x86_64\n\n")
+	buf.WriteString("P:huge\nV:2.0.0-r0\nA:x86_64\n")
+	buf.WriteString("D:" + strings.Repeat("so:libfoo.so.1 ", 6000) + "\n\n")
+	buf.WriteString("P:last\nV:3.0.0-r0\nA:x86_64\n\n")
+
+	pkgs := ParseApkDbPackages(pf, bytes.NewReader(buf.Bytes()))
+
+	names := make([]string, len(pkgs))
+	for i := range pkgs {
+		names[i] = pkgs[i].Name
+	}
+	// without a raised scanner limit the scan stops at the long line and the
+	// packages behind it are lost
+	assert.Equal(t, []string{"first", "huge", "last"}, names)
+}
+
+func TestApkLastPackage(t *testing.T) {
+	pf := &inventory.Platform{Name: "alpine", Version: "3.21", Arch: "x86_64"}
+	db := "P:first\nV:1.0.0-r0\nA:x86_64\n\nP:last\nV:2.0.0-r0\nA:x86_64\n"
+
+	// a database whose last package has no trailing empty line
+	pkgs := ParseApkDbPackages(pf, bytes.NewReader([]byte(db)))
+	assert.Len(t, pkgs, 2)
+	assert.Equal(t, "last", pkgs[1].Name)
+
+	// and one that ends the last package with an empty line
+	pkgs = ParseApkDbPackages(pf, bytes.NewReader([]byte(db+"\n")))
+	assert.Len(t, pkgs, 2)
+	assert.Equal(t, "last", pkgs[1].Name)
 }
 
 func BenchmarkParseApkDbPackages(b *testing.B) {
