@@ -6,6 +6,8 @@ package resources
 import (
 	"fmt"
 	"strconv"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v7/client"
@@ -590,6 +592,10 @@ type mqlAlicloudVpcRouteTableInternal struct {
 	cacheRegion     string
 	cacheVpcID      string
 	cacheVSwitchIDs []string
+
+	routesLock        sync.Mutex
+	routesFetched     atomic.Bool
+	cacheRouteEntries []*vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntry
 }
 
 // newVpcRouteTable maps a DescribeRouteTableList item into an
@@ -680,20 +686,32 @@ func (r *mqlAlicloudVpcRouteTable) vswitches() ([]any, error) {
 	return res, nil
 }
 
-func (r *mqlAlicloudVpcRouteTable) routeEntries() ([]any, error) {
+// fetchRouteEntries walks DescribeRouteEntryList and memoizes the raw entries.
+// Both the deprecated routeEntries dict list and the typed routes list read
+// through it, so querying them together costs one walk rather than two.
+func (r *mqlAlicloudVpcRouteTable) fetchRouteEntries() ([]*vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntry, error) {
+	if r.routesFetched.Load() {
+		return r.cacheRouteEntries, nil
+	}
+	r.routesLock.Lock()
+	defer r.routesLock.Unlock()
+	if r.routesFetched.Load() {
+		return r.cacheRouteEntries, nil
+	}
+
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	region := r.cacheRegion
 	if region == "" {
 		// The route table was not created through the regional fan-out, so the
 		// region needed to reach the route-entry endpoint is unknown.
-		return nil, fmt.Errorf("alicloud.vpc.routeTable.routeEntries: region unknown for route table %s", r.RouteTableId.Data)
+		return nil, fmt.Errorf("alicloud.vpc.routeTable: region unknown for route table %s", r.RouteTableId.Data)
 	}
 	client, err := conn.VpcClient(region)
 	if err != nil {
 		return nil, err
 	}
 
-	res := []any{}
+	entries := []*vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntry{}
 	var nextToken *string
 	maxResult := int32(100)
 	for {
@@ -715,34 +733,94 @@ func (r *mqlAlicloudVpcRouteTable) routeEntries() ([]any, error) {
 			if entry == nil {
 				continue
 			}
-			var nextHopType, nextHopId *string
-			if entry.NextHops != nil {
-				for _, h := range entry.NextHops.NextHop {
-					if h != nil {
-						nextHopType = h.NextHopType
-						nextHopId = h.NextHopId
-						break
-					}
-				}
-			}
-			res = append(res, map[string]any{
-				"routeEntryId":         vpcStr(entry.RouteEntryId),
-				"routeEntryName":       vpcStr(entry.RouteEntryName),
-				"description":          vpcStr(entry.Description),
-				"destinationCidrBlock": vpcStr(entry.DestinationCidrBlock),
-				"nextHopType":          vpcStr(nextHopType),
-				"nextHopId":            vpcStr(nextHopId),
-				"status":               vpcStr(entry.Status),
-				"type":                 vpcStr(entry.Type),
-				"ipVersion":            vpcStr(entry.IpVersion),
-				"origin":               vpcStr(entry.Origin),
-			})
+			entries = append(entries, entry)
 		}
 
 		if resp.Body.NextToken == nil || *resp.Body.NextToken == "" {
 			break
 		}
 		nextToken = resp.Body.NextToken
+	}
+
+	r.cacheRouteEntries = entries
+	r.routesFetched.Store(true)
+	return r.cacheRouteEntries, nil
+}
+
+// routeEntryNextHop returns the first next hop of a route entry. The API models
+// next hops as a list, but a route hands traffic to exactly one, so the rest
+// (when present at all) are weighted alternates that do not change where the
+// route leads.
+func routeEntryNextHop(entry *vpcclient.DescribeRouteEntryListResponseBodyRouteEntrysRouteEntry) (nextHopType, nextHopID string) {
+	if entry == nil || entry.NextHops == nil {
+		return "", ""
+	}
+	for _, h := range entry.NextHops.NextHop {
+		if h == nil {
+			continue
+		}
+		return vpcStr(h.NextHopType), vpcStr(h.NextHopId)
+	}
+	return "", ""
+}
+
+func (r *mqlAlicloudVpcRouteTable) routeEntries() ([]any, error) {
+	entries, err := r.fetchRouteEntries()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, entry := range entries {
+		nextHopType, nextHopID := routeEntryNextHop(entry)
+		res = append(res, map[string]any{
+			"routeEntryId":         vpcStr(entry.RouteEntryId),
+			"routeEntryName":       vpcStr(entry.RouteEntryName),
+			"description":          vpcStr(entry.Description),
+			"destinationCidrBlock": vpcStr(entry.DestinationCidrBlock),
+			"nextHopType":          nextHopType,
+			"nextHopId":            nextHopID,
+			"status":               vpcStr(entry.Status),
+			"type":                 vpcStr(entry.Type),
+			"ipVersion":            vpcStr(entry.IpVersion),
+			"origin":               vpcStr(entry.Origin),
+		})
+	}
+	return res, nil
+}
+
+func (r *mqlAlicloudVpcRouteTable) routes() ([]any, error) {
+	entries, err := r.fetchRouteEntries()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, entry := range entries {
+		nextHopType, nextHopID := routeEntryNextHop(entry)
+		routeID := vpcStr(entry.RouteEntryId)
+		if routeID == "" {
+			// A system route can arrive without an id; key it on the route table
+			// and destination, which is unique within the table.
+			routeID = r.RouteTableId.Data + "/" + vpcStr(entry.DestinationCidrBlock)
+		}
+		resource, err := CreateResource(r.MqlRuntime, "alicloud.vpc.routeTable.route", map[string]*llx.RawData{
+			"__id":                 llx.StringData(r.RouteTableId.Data + "/" + routeID),
+			"routeEntryId":         llx.StringDataPtr(entry.RouteEntryId),
+			"routeEntryName":       llx.StringDataPtr(entry.RouteEntryName),
+			"description":          llx.StringDataPtr(entry.Description),
+			"destinationCidrBlock": llx.StringDataPtr(entry.DestinationCidrBlock),
+			"nextHopType":          llx.StringData(nextHopType),
+			"nextHopId":            llx.StringData(nextHopID),
+			"status":               llx.StringDataPtr(entry.Status),
+			"type":                 llx.StringDataPtr(entry.Type),
+			"ipVersion":            llx.StringDataPtr(entry.IpVersion),
+			"origin":               llx.StringDataPtr(entry.Origin),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resource)
 	}
 	return res, nil
 }
@@ -1109,6 +1187,55 @@ func (r *mqlAlicloudVpc) networkAcls() ([]any, error) {
 // newVpcNetworkAcl maps a DescribeNetworkAcls item into an
 // alicloud.vpc.networkAcl resource. It is shared by the namespace list accessor
 // and by initAlicloudVpcNetworkAcl.
+// vpcNetworkAclEntryArgs carries one rule's fields. Ingress and egress rules are
+// separate SDK types that differ only in whether they name a source or a
+// destination, so one builder covers both.
+type vpcNetworkAclEntryArgs struct {
+	entryID           *string
+	name              *string
+	description       *string
+	protocol          *string
+	port              *string
+	sourceCidrIp      *string
+	destinationCidrIp *string
+	policy            *string
+	entryType         *string
+	ipVersion         *string
+}
+
+// vpcNetworkAclEntryKey builds the per-ACL part of a rule's cache key. The rule
+// id is used when the API returns one. A rule without an id falls back to the
+// fields that make it distinct within its ACL, because keying every id-less rule
+// on the ACL alone would collapse them onto one another.
+func vpcNetworkAclEntryKey(direction string, args vpcNetworkAclEntryArgs) string {
+	if id := vpcStr(args.entryID); id != "" {
+		return id
+	}
+	return direction + "/" + vpcStr(args.protocol) + "/" + vpcStr(args.port) + "/" +
+		vpcStr(args.sourceCidrIp) + vpcStr(args.destinationCidrIp)
+}
+
+// newVpcNetworkAclEntry builds one alicloud.vpc.networkAcl.entry, keyed by its
+// ACL so two ACLs holding equivalent rules stay distinct.
+func newVpcNetworkAclEntry(runtime *plugin.Runtime, aclID, direction string, args vpcNetworkAclEntryArgs) (plugin.Resource, error) {
+	entryID := vpcStr(args.entryID)
+	key := vpcNetworkAclEntryKey(direction, args)
+	return CreateResource(runtime, "alicloud.vpc.networkAcl.entry", map[string]*llx.RawData{
+		"__id":              llx.StringData(aclID + "/" + key),
+		"entryId":           llx.StringData(entryID),
+		"name":              llx.StringDataPtr(args.name),
+		"description":       llx.StringDataPtr(args.description),
+		"direction":         llx.StringData(direction),
+		"policy":            llx.StringDataPtr(args.policy),
+		"protocol":          llx.StringDataPtr(args.protocol),
+		"port":              llx.StringDataPtr(args.port),
+		"sourceCidrIp":      llx.StringData(vpcStr(args.sourceCidrIp)),
+		"destinationCidrIp": llx.StringData(vpcStr(args.destinationCidrIp)),
+		"entryType":         llx.StringDataPtr(args.entryType),
+		"ipVersion":         llx.StringDataPtr(args.ipVersion),
+	})
+}
+
 func newVpcNetworkAcl(runtime *plugin.Runtime, region string, acl *vpcclient.DescribeNetworkAclsResponseBodyNetworkAclsNetworkAcl) (plugin.Resource, error) {
 	ingress := []any{}
 	if acl.IngressAclEntries != nil {
@@ -1175,8 +1302,60 @@ func newVpcNetworkAcl(runtime *plugin.Runtime, region string, acl *vpcclient.Des
 		tags = vpcTagMap(pairs)
 	}
 
+	aclID := vpcStr(acl.NetworkAclId)
+
+	// The rule bodies are already in this response, so the typed entries are
+	// built alongside the dict form rather than costing a second call.
+	ingressEntries := []any{}
+	if acl.IngressAclEntries != nil {
+		for _, e := range acl.IngressAclEntries.IngressAclEntry {
+			if e == nil {
+				continue
+			}
+			entry, err := newVpcNetworkAclEntry(runtime, aclID, "ingress", vpcNetworkAclEntryArgs{
+				entryID:      e.NetworkAclEntryId,
+				name:         e.NetworkAclEntryName,
+				description:  e.Description,
+				protocol:     e.Protocol,
+				port:         e.Port,
+				sourceCidrIp: e.SourceCidrIp,
+				policy:       e.Policy,
+				entryType:    e.EntryType,
+				ipVersion:    e.IpVersion,
+			})
+			if err != nil {
+				return nil, err
+			}
+			ingressEntries = append(ingressEntries, entry)
+		}
+	}
+
+	egressEntries := []any{}
+	if acl.EgressAclEntries != nil {
+		for _, e := range acl.EgressAclEntries.EgressAclEntry {
+			if e == nil {
+				continue
+			}
+			entry, err := newVpcNetworkAclEntry(runtime, aclID, "egress", vpcNetworkAclEntryArgs{
+				entryID:           e.NetworkAclEntryId,
+				name:              e.NetworkAclEntryName,
+				description:       e.Description,
+				protocol:          e.Protocol,
+				port:              e.Port,
+				destinationCidrIp: e.DestinationCidrIp,
+				policy:            e.Policy,
+				entryType:         e.EntryType,
+				ipVersion:         e.IpVersion,
+			})
+			if err != nil {
+				return nil, err
+			}
+			egressEntries = append(egressEntries, entry)
+		}
+	}
+
 	resource, err := CreateResource(runtime, "alicloud.vpc.networkAcl", map[string]*llx.RawData{
-		"__id":              llx.StringData(region + "/" + vpcStr(acl.NetworkAclId)),
+		"__id":              llx.StringData(region + "/" + aclID),
 		"networkAclId":      llx.StringDataPtr(acl.NetworkAclId),
 		"networkAclName":    llx.StringDataPtr(acl.NetworkAclName),
 		"description":       llx.StringDataPtr(acl.Description),
@@ -1186,6 +1365,8 @@ func newVpcNetworkAcl(runtime *plugin.Runtime, region string, acl *vpcclient.Des
 		"ownerId":           llx.IntDataPtr(acl.OwnerId),
 		"ingressAclEntries": llx.ArrayData(ingress, types.Dict),
 		"egressAclEntries":  llx.ArrayData(egress, types.Dict),
+		"ingressEntries":    llx.ArrayData(ingressEntries, types.Resource("alicloud.vpc.networkAcl.entry")),
+		"egressEntries":     llx.ArrayData(egressEntries, types.Resource("alicloud.vpc.networkAcl.entry")),
 		"resources":         llx.ArrayData(resources, types.Dict),
 		"tags":              llx.MapData(tags, types.String),
 	})
