@@ -202,6 +202,21 @@ mql> artifactory.repositories.where(type == "remote") { key packageType url }
 mql> artifactory.repositories.where(type == "remote" && (allowAnyHostAuth || externalDependenciesEnabled)) { key url }
 ```
 
+**Where the registry's contents are copied to**
+
+A push replication sends every artifact of a repository to another instance. An
+unexpected URL there is an export of the registry.
+
+```shell
+mql> artifactory.repositories { key replications.where(enabled) { url syncDeletes hasCredential } }
+```
+
+**Replications that send artifacts and a credential in the clear**
+
+```shell
+mql> artifactory.repositories { key replications.where(enabled && usesEncryptedTransport == false) { url hasCredential } }
+```
+
 **Repositories Xray does not index**
 
 An unindexed repository is never scanned, so a finding on an artifact stored
@@ -294,6 +309,17 @@ permission target gives the anonymous user over a repository and does not
 evaluate the targets' path patterns, so an action it lists may be limited to
 part of the repository. Read `permissionTargets` on the repository for the
 patterns.
+
+**Replication is read per repository.** The instance serves no instance-wide
+list, so `replications` is one call for each repository it is asked about.
+Query it on the repositories that matter rather than across the whole instance.
+A repository that replicates nothing reports an empty list, because not
+replicating is a normal state.
+
+**The replication password is never decoded.** The instance returns it with the
+configuration. It is not read into a struct field at all, so it cannot reach a
+resource field, a log line, or a recording. `hasCredential` reports whether one
+exists.
 
 **An integration the instance never configured reports null, not disabled.**
 `saml`, `oauth`, `httpSso`, and `crowd` are null when the instance descriptor

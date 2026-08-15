@@ -35,6 +35,7 @@ const (
 	ResourceArtifactoryCrowdSettings             string = "artifactory.crowdSettings"
 	ResourceArtifactoryBackup                    string = "artifactory.backup"
 	ResourceArtifactoryCleanupPolicy             string = "artifactory.cleanupPolicy"
+	ResourceArtifactoryReplication               string = "artifactory.replication"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -116,6 +117,10 @@ func init() {
 		"artifactory.cleanupPolicy": {
 			// to override args, implement: initArtifactoryCleanupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createArtifactoryCleanupPolicy,
+		},
+		"artifactory.replication": {
+			// to override args, implement: initArtifactoryReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryReplication,
 		},
 	}
 }
@@ -322,6 +327,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"artifactory.repository.permissionTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetPermissionTargets()).ToDataRes(types.Array(types.Resource("artifactory.permissionTarget")))
+	},
+	"artifactory.repository.replications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetReplications()).ToDataRes(types.Array(types.Resource("artifactory.replication")))
 	},
 	"artifactory.repository.anonymousActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetAnonymousActions()).ToDataRes(types.Array(types.String))
@@ -809,6 +817,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"artifactory.cleanupPolicy.keepLastNVersions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryCleanupPolicy).GetKeepLastNVersions()).ToDataRes(types.Int)
 	},
+	"artifactory.replication.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetKey()).ToDataRes(types.String)
+	},
+	"artifactory.replication.repositoryKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetRepositoryKey()).ToDataRes(types.String)
+	},
+	"artifactory.replication.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetRepository()).ToDataRes(types.Resource("artifactory.repository"))
+	},
+	"artifactory.replication.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetUrl()).ToDataRes(types.String)
+	},
+	"artifactory.replication.usesEncryptedTransport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetUsesEncryptedTransport()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.cronExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetCronExpression()).ToDataRes(types.String)
+	},
+	"artifactory.replication.enableEventReplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetEnableEventReplication()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.syncDeletes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetSyncDeletes()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.syncProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetSyncProperties()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.syncStatistics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetSyncStatistics()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.hasCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetHasCredential()).ToDataRes(types.Bool)
+	},
+	"artifactory.replication.includePathPrefixPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetIncludePathPrefixPattern()).ToDataRes(types.String)
+	},
+	"artifactory.replication.excludePathPrefixPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetExcludePathPrefixPattern()).ToDataRes(types.String)
+	},
+	"artifactory.replication.socketTimeoutMillis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryReplication).GetSocketTimeoutMillis()).ToDataRes(types.Int)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1011,6 +1064,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.repository.permissionTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactoryRepository).PermissionTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.replications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).Replications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"artifactory.repository.anonymousActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1725,6 +1782,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlArtifactoryCleanupPolicy).KeepLastNVersions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"artifactory.replication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.replication.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.repositoryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).RepositoryKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).Repository, ok = plugin.RawToTValue[*mqlArtifactoryRepository](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.usesEncryptedTransport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).UsesEncryptedTransport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.cronExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).CronExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.enableEventReplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).EnableEventReplication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.syncDeletes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).SyncDeletes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.syncProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).SyncProperties, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.syncStatistics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).SyncStatistics, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.hasCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).HasCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.includePathPrefixPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).IncludePathPrefixPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.excludePathPrefixPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).ExcludePathPrefixPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.replication.socketTimeoutMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryReplication).SocketTimeoutMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2047,6 +2168,7 @@ type mqlArtifactoryRepository struct {
 	PropertySets                  plugin.TValue[[]any]
 	Notes                         plugin.TValue[string]
 	PermissionTargets             plugin.TValue[[]any]
+	Replications                  plugin.TValue[[]any]
 	AnonymousActions              plugin.TValue[[]any]
 }
 
@@ -2286,6 +2408,22 @@ func (c *mqlArtifactoryRepository) GetPermissionTargets() *plugin.TValue[[]any] 
 		}
 
 		return c.permissionTargets()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetReplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Replications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.repository", c.__id, "replications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replications()
 	})
 }
 
@@ -4126,4 +4264,135 @@ func (c *mqlArtifactoryCleanupPolicy) GetLastDownloadedBeforeInMonths() *plugin.
 
 func (c *mqlArtifactoryCleanupPolicy) GetKeepLastNVersions() *plugin.TValue[int64] {
 	return &c.KeepLastNVersions
+}
+
+// mqlArtifactoryReplication for the artifactory.replication resource
+type mqlArtifactoryReplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryReplicationInternal
+	Key                      plugin.TValue[string]
+	RepositoryKey            plugin.TValue[string]
+	Repository               plugin.TValue[*mqlArtifactoryRepository]
+	Url                      plugin.TValue[string]
+	UsesEncryptedTransport   plugin.TValue[bool]
+	Enabled                  plugin.TValue[bool]
+	CronExpression           plugin.TValue[string]
+	EnableEventReplication   plugin.TValue[bool]
+	SyncDeletes              plugin.TValue[bool]
+	SyncProperties           plugin.TValue[bool]
+	SyncStatistics           plugin.TValue[bool]
+	HasCredential            plugin.TValue[bool]
+	IncludePathPrefixPattern plugin.TValue[string]
+	ExcludePathPrefixPattern plugin.TValue[string]
+	SocketTimeoutMillis      plugin.TValue[int64]
+}
+
+// createArtifactoryReplication creates a new instance of this resource
+func createArtifactoryReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryReplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.replication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryReplication) MqlName() string {
+	return "artifactory.replication"
+}
+
+func (c *mqlArtifactoryReplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryReplication) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlArtifactoryReplication) GetRepositoryKey() *plugin.TValue[string] {
+	return &c.RepositoryKey
+}
+
+func (c *mqlArtifactoryReplication) GetRepository() *plugin.TValue[*mqlArtifactoryRepository] {
+	return plugin.GetOrCompute[*mqlArtifactoryRepository](&c.Repository, func() (*mqlArtifactoryRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.replication", c.__id, "repository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryRepository), nil
+			}
+		}
+
+		return c.repository()
+	})
+}
+
+func (c *mqlArtifactoryReplication) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlArtifactoryReplication) GetUsesEncryptedTransport() *plugin.TValue[bool] {
+	return &c.UsesEncryptedTransport
+}
+
+func (c *mqlArtifactoryReplication) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactoryReplication) GetCronExpression() *plugin.TValue[string] {
+	return &c.CronExpression
+}
+
+func (c *mqlArtifactoryReplication) GetEnableEventReplication() *plugin.TValue[bool] {
+	return &c.EnableEventReplication
+}
+
+func (c *mqlArtifactoryReplication) GetSyncDeletes() *plugin.TValue[bool] {
+	return &c.SyncDeletes
+}
+
+func (c *mqlArtifactoryReplication) GetSyncProperties() *plugin.TValue[bool] {
+	return &c.SyncProperties
+}
+
+func (c *mqlArtifactoryReplication) GetSyncStatistics() *plugin.TValue[bool] {
+	return &c.SyncStatistics
+}
+
+func (c *mqlArtifactoryReplication) GetHasCredential() *plugin.TValue[bool] {
+	return &c.HasCredential
+}
+
+func (c *mqlArtifactoryReplication) GetIncludePathPrefixPattern() *plugin.TValue[string] {
+	return &c.IncludePathPrefixPattern
+}
+
+func (c *mqlArtifactoryReplication) GetExcludePathPrefixPattern() *plugin.TValue[string] {
+	return &c.ExcludePathPrefixPattern
+}
+
+func (c *mqlArtifactoryReplication) GetSocketTimeoutMillis() *plugin.TValue[int64] {
+	return &c.SocketTimeoutMillis
 }

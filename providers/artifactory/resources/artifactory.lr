@@ -189,6 +189,13 @@ private artifactory.repository @defaults("key type packageType") {
   notes() string
   // Permission targets whose repository scope covers this repository
   permissionTargets() []artifactory.permissionTarget
+  // Replications configured on the repository
+  //
+  // A push replication sends the repository's artifacts to another instance,
+  // and a pull replication brings another instance's artifacts here. Empty
+  // when the repository replicates nothing. Read on demand, one call per
+  // repository.
+  replications() []artifactory.replication
   // Actions the anonymous user holds on the repository
   //
   // The union of the actions every permission target grants to the anonymous
@@ -836,4 +843,62 @@ private artifactory.cleanupPolicy @defaults("key enabled cronExpression") {
   lastDownloadedBeforeInMonths int
   // Versions the policy keeps regardless of age, or null when it keeps none
   keepLastNVersions int
+}
+
+// Artifactory Replication
+//
+// A configured copy of a repository's contents between this instance and
+// another one. The `url` field is the other end: a push replication sends every
+// artifact there, so an unexpected URL is an export of the registry, and a pull
+// replication brings that instance's artifacts here under a trusted repository
+// name. The `syncDeletes` field reports whether a deletion at one end removes
+// the artifact at the other. Select a repository's replications with
+// `artifactory.repositories.where(key == "example-docker") { replications }`.
+private artifactory.replication @defaults("repositoryKey url enabled") {
+  // Key of the replication, or null when the instance does not report one
+  key string
+  // Key of the repository the replication belongs to
+  repositoryKey string
+  // Repository the replication belongs to
+  repository() artifactory.repository
+  // URL of the other end of the replication
+  //
+  // Every artifact of the repository is sent to, or fetched from, this URL. A
+  // URL that is not the expected instance moves the registry's contents
+  // somewhere that was never reviewed.
+  url string
+  // Whether the URL uses an encrypted transport
+  //
+  // False when the URL uses plain HTTP, which sends both the artifacts and the
+  // stored credential in the clear.
+  usesEncryptedTransport bool
+  // Whether the replication runs
+  enabled bool
+  // Schedule the replication runs on, as a cron expression, or null when it is event driven
+  cronExpression string
+  // Whether the replication runs on every change rather than on a schedule
+  //
+  // Event replication copies each artifact as it is written, so the other end
+  // follows this instance continuously.
+  enableEventReplication bool
+  // Whether a deletion is copied to the other end
+  //
+  // When true, removing an artifact here removes it there as well, so the
+  // other end is not a copy that survives a deletion.
+  syncDeletes bool
+  // Whether artifact properties are copied
+  syncProperties bool
+  // Whether download statistics are copied
+  syncStatistics bool
+  // Whether a credential is stored for the other end
+  //
+  // True when a user name is configured. The credential itself is never
+  // exposed. A stored credential is what a plain HTTP URL sends in the clear.
+  hasCredential bool
+  // Path patterns the replication is limited to, or null when it covers the whole repository
+  includePathPrefixPattern string
+  // Path patterns the replication leaves out, or null when it leaves out nothing
+  excludePathPrefixPattern string
+  // Milliseconds the replication waits on the other end, or null when unset
+  socketTimeoutMillis int
 }
