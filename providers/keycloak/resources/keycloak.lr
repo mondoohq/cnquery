@@ -223,6 +223,25 @@ private keycloak.realm @defaults("name enabled sslRequired") {
   authenticationFlows() []keycloak.authenticationFlow
   // Components configured for the realm, including user federation providers
   components() []keycloak.component
+  // Signing keys the realm holds
+  //
+  // An active key is one the realm signs tokens with. Its algorithm and size
+  // decide how hard a token is to forge.
+  keys() []keycloak.realm.key
+  // Event recording configuration of the realm
+  //
+  // The realm fields eventsEnabled and adminEventsEnabled report whether
+  // recording is on. This reports which event types are kept and where they
+  // are sent, which is what decides whether an audit can read a change back.
+  eventsConfig() keycloak.realm.eventsConfig
+  // Client profiles the realm defines
+  //
+  // A profile is a set of requirements, such as demanding PKCE or a
+  // confidential client. It only takes effect where a client policy applies
+  // it.
+  clientProfiles() []keycloak.clientProfile
+  // Client policies the realm defines
+  clientPolicies() []keycloak.clientPolicy
   // Client scopes defined in the realm
   //
   // The scopes named in defaultDefaultClientScopes are attached to every new
@@ -885,5 +904,122 @@ private keycloak.component @defaults("name providerId providerType") {
   // Whether an email address from the directory is accepted as verified
   trustEmail bool
   // Realm the component belongs to
+  realm() keycloak.realm
+}
+
+// Keycloak Realm Signing Key
+//
+// A cryptographic key the realm holds for signing or encrypting tokens. The
+// `status` field reports whether the realm still signs with it, and
+// `algorithm` with `certificate` reports how strong that signature is. A realm
+// that signs with HS256 shares the signing secret with every client that
+// validates it, so any one of them can forge a token for the rest.
+private keycloak.realm.key @defaults("algorithm status use") {
+  // Key identifier, which appears in a token header as kid
+  kid string
+  // Signature or encryption algorithm, for example RS256, ES256 or HS256
+  algorithm string
+  // Key type, for example RSA, EC or OCT
+  type string
+  // What the key is used for, either SIG for signing or ENC for encryption
+  use string
+  // Lifecycle state of the key
+  //
+  // One of ACTIVE, PASSIVE or DISABLED. An ACTIVE key signs new tokens, a
+  // PASSIVE key only validates tokens already issued, and a DISABLED key does
+  // neither.
+  status string
+  // Component that provides the key, for example rsa-generated or hmac-generated
+  providerId string
+  // Identifier of the providing component
+  providerPriority int
+  // Public certificate of the key, when it has one
+  certificate string
+  // Public modulus of an RSA key
+  publicKey string
+  // Whether the realm signs new tokens with this key
+  isActive bool
+  // Realm the key belongs to
+  realm() keycloak.realm
+}
+
+// Keycloak Realm Event Configuration
+//
+// What the realm records and where it sends it. The `eventsEnabled` and
+// `adminEventsEnabled` fields report whether recording is on at all, and
+// `enabledEventTypes` reports which login events are kept, since a realm can
+// record logins while dropping the failure events an audit needs. The
+// `eventsListeners` field names the sinks, and a realm with only the built-in
+// logging listener keeps nothing outside the server.
+private keycloak.realm.eventsConfig @defaults("eventsEnabled adminEventsEnabled") {
+  // Whether login events are recorded
+  eventsEnabled bool
+  // Seconds a login event is kept, or 0 when events never expire
+  eventsExpiration int
+  // Event types the realm records
+  //
+  // A realm that records LOGIN but not LOGIN_ERROR keeps no trace of a
+  // password guessing run.
+  enabledEventTypes []string
+  // Sinks the events are sent to
+  //
+  // Contains jboss-logging on a stock install, which writes to the server log
+  // and nowhere else.
+  eventsListeners []string
+  // Whether administrative changes are recorded
+  adminEventsEnabled bool
+  // Whether administrative events record the full request body
+  adminEventsDetailsEnabled bool
+  // Realm the configuration belongs to
+  realm() keycloak.realm
+}
+
+// Keycloak Client Profile
+//
+// A named set of requirements a client must meet, called executors, such as
+// demanding a proof key or refusing a public client. A profile is inert until
+// a client policy applies it, so `keycloak.realm.clientPolicies` is what says
+// whether it is in force. Query `executorTypes` for what the profile demands.
+private keycloak.clientProfile @defaults("name isBuiltIn") {
+  // Profile name
+  name string
+  // Description
+  description string
+  // Whether Keycloak ships the profile rather than an administrator creating it
+  isBuiltIn bool
+  // Requirements the profile applies
+  //
+  // Each entry names an executor, for example secure-client-authenticator,
+  // pkce-enforcer or confidential-client-acceptable.
+  executorTypes []string
+  // Full executor configuration as Keycloak stores it
+  executors dict
+  // Realm the profile is defined in
+  realm() keycloak.realm
+}
+
+// Keycloak Client Policy
+//
+// A rule that applies client profiles to the clients its conditions match. The
+// `enabled` field decides whether it is in force at all, `profiles` names the
+// profiles it applies, and `conditionTypes` reports what it matches on. A
+// policy that is disabled, or that names no profile, enforces nothing.
+private keycloak.clientPolicy @defaults("name enabled") {
+  // Policy name
+  name string
+  // Description
+  description string
+  // Whether the policy is in force
+  enabled bool
+  // Names of the client profiles the policy applies
+  profiles []string
+  // Conditions that decide which clients the policy applies to
+  //
+  // Each entry names a condition, for example client-access-type,
+  // client-updater-context or any-client.
+  conditionTypes []string
+  // Full condition configuration as Keycloak stores it
+  conditions dict
+  // Realm the policy is defined in
   realm() keycloak.realm
 }

@@ -29,6 +29,10 @@ const (
 	ResourceKeycloakAuthenticationFlow          string = "keycloak.authenticationFlow"
 	ResourceKeycloakAuthenticationFlowExecution string = "keycloak.authenticationFlow.execution"
 	ResourceKeycloakComponent                   string = "keycloak.component"
+	ResourceKeycloakRealmKey                    string = "keycloak.realm.key"
+	ResourceKeycloakRealmEventsConfig           string = "keycloak.realm.eventsConfig"
+	ResourceKeycloakClientProfile               string = "keycloak.clientProfile"
+	ResourceKeycloakClientPolicy                string = "keycloak.clientPolicy"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -86,6 +90,22 @@ func init() {
 		"keycloak.component": {
 			// to override args, implement: initKeycloakComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKeycloakComponent,
+		},
+		"keycloak.realm.key": {
+			// to override args, implement: initKeycloakRealmKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakRealmKey,
+		},
+		"keycloak.realm.eventsConfig": {
+			// to override args, implement: initKeycloakRealmEventsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakRealmEventsConfig,
+		},
+		"keycloak.clientProfile": {
+			// to override args, implement: initKeycloakClientProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakClientProfile,
+		},
+		"keycloak.clientPolicy": {
+			// to override args, implement: initKeycloakClientPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakClientPolicy,
 		},
 	}
 }
@@ -382,6 +402,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"keycloak.realm.components": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakRealm).GetComponents()).ToDataRes(types.Array(types.Resource("keycloak.component")))
+	},
+	"keycloak.realm.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetKeys()).ToDataRes(types.Array(types.Resource("keycloak.realm.key")))
+	},
+	"keycloak.realm.eventsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetEventsConfig()).ToDataRes(types.Resource("keycloak.realm.eventsConfig"))
+	},
+	"keycloak.realm.clientProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetClientProfiles()).ToDataRes(types.Array(types.Resource("keycloak.clientProfile")))
+	},
+	"keycloak.realm.clientPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetClientPolicies()).ToDataRes(types.Array(types.Resource("keycloak.clientPolicy")))
 	},
 	"keycloak.realm.clientScopes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakRealm).GetClientScopes()).ToDataRes(types.Array(types.Resource("keycloak.clientScope")))
@@ -923,6 +955,99 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.component.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakComponent).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
 	},
+	"keycloak.realm.key.kid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetKid()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetAlgorithm()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetType()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.use": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetUse()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetStatus()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.providerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetProviderId()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.providerPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetProviderPriority()).ToDataRes(types.Int)
+	},
+	"keycloak.realm.key.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetCertificate()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.publicKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetPublicKey()).ToDataRes(types.String)
+	},
+	"keycloak.realm.key.isActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetIsActive()).ToDataRes(types.Bool)
+	},
+	"keycloak.realm.key.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmKey).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
+	"keycloak.realm.eventsConfig.eventsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetEventsEnabled()).ToDataRes(types.Bool)
+	},
+	"keycloak.realm.eventsConfig.eventsExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetEventsExpiration()).ToDataRes(types.Int)
+	},
+	"keycloak.realm.eventsConfig.enabledEventTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetEnabledEventTypes()).ToDataRes(types.Array(types.String))
+	},
+	"keycloak.realm.eventsConfig.eventsListeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetEventsListeners()).ToDataRes(types.Array(types.String))
+	},
+	"keycloak.realm.eventsConfig.adminEventsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetAdminEventsEnabled()).ToDataRes(types.Bool)
+	},
+	"keycloak.realm.eventsConfig.adminEventsDetailsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetAdminEventsDetailsEnabled()).ToDataRes(types.Bool)
+	},
+	"keycloak.realm.eventsConfig.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealmEventsConfig).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
+	"keycloak.clientProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientProfile).GetName()).ToDataRes(types.String)
+	},
+	"keycloak.clientProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"keycloak.clientProfile.isBuiltIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientProfile).GetIsBuiltIn()).ToDataRes(types.Bool)
+	},
+	"keycloak.clientProfile.executorTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientProfile).GetExecutorTypes()).ToDataRes(types.Array(types.String))
+	},
+	"keycloak.clientProfile.executors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientProfile).GetExecutors()).ToDataRes(types.Dict)
+	},
+	"keycloak.clientProfile.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientProfile).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
+	"keycloak.clientPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetName()).ToDataRes(types.String)
+	},
+	"keycloak.clientPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"keycloak.clientPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"keycloak.clientPolicy.profiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetProfiles()).ToDataRes(types.Array(types.String))
+	},
+	"keycloak.clientPolicy.conditionTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetConditionTypes()).ToDataRes(types.Array(types.String))
+	},
+	"keycloak.clientPolicy.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetConditions()).ToDataRes(types.Dict)
+	},
+	"keycloak.clientPolicy.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientPolicy).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1241,6 +1366,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"keycloak.realm.components": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakRealm).Components, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).EventsConfig, ok = plugin.RawToTValue[*mqlKeycloakRealmEventsConfig](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.clientProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).ClientProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.clientPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).ClientPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"keycloak.realm.clientScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2007,6 +2148,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloakComponent).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
 		return
 	},
+	"keycloak.realm.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.realm.key.kid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Kid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.use": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Use, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.providerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).ProviderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.providerPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).ProviderPriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.isActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).IsActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.key.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmKey).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.realm.eventsConfig.eventsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).EventsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.eventsExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).EventsExpiration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.enabledEventTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).EnabledEventTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.eventsListeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).EventsListeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.adminEventsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).AdminEventsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.adminEventsDetailsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).AdminEventsDetailsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.eventsConfig.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealmEventsConfig).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.clientProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientProfile.isBuiltIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).IsBuiltIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientProfile.executorTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).ExecutorTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientProfile.executors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).Executors, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientProfile.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientProfile).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.clientPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.conditionTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).ConditionTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientPolicy.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientPolicy).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2209,6 +2490,10 @@ type mqlKeycloakRealm struct {
 	IdentityProviders                  plugin.TValue[[]any]
 	AuthenticationFlows                plugin.TValue[[]any]
 	Components                         plugin.TValue[[]any]
+	Keys                               plugin.TValue[[]any]
+	EventsConfig                       plugin.TValue[*mqlKeycloakRealmEventsConfig]
+	ClientProfiles                     plugin.TValue[[]any]
+	ClientPolicies                     plugin.TValue[[]any]
 	ClientScopes                       plugin.TValue[[]any]
 	DefaultDefaultClientScopes         plugin.TValue[[]any]
 	DefaultOptionalClientScopes        plugin.TValue[[]any]
@@ -2701,6 +2986,70 @@ func (c *mqlKeycloakRealm) GetComponents() *plugin.TValue[[]any] {
 		}
 
 		return c.components()
+	})
+}
+
+func (c *mqlKeycloakRealm) GetKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm", c.__id, "keys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keys()
+	})
+}
+
+func (c *mqlKeycloakRealm) GetEventsConfig() *plugin.TValue[*mqlKeycloakRealmEventsConfig] {
+	return plugin.GetOrCompute[*mqlKeycloakRealmEventsConfig](&c.EventsConfig, func() (*mqlKeycloakRealmEventsConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm", c.__id, "eventsConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakRealmEventsConfig), nil
+			}
+		}
+
+		return c.eventsConfig()
+	})
+}
+
+func (c *mqlKeycloakRealm) GetClientProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm", c.__id, "clientProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientProfiles()
+	})
+}
+
+func (c *mqlKeycloakRealm) GetClientPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm", c.__id, "clientPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientPolicies()
 	})
 }
 
@@ -4433,6 +4782,385 @@ func (c *mqlKeycloakComponent) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
 	return plugin.GetOrCompute[*mqlKeycloakRealm](&c.Realm, func() (*mqlKeycloakRealm, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.component", c.__id, "realm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakRealm), nil
+			}
+		}
+
+		return c.realm()
+	})
+}
+
+// mqlKeycloakRealmKey for the keycloak.realm.key resource
+type mqlKeycloakRealmKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlKeycloakRealmKeyInternal
+	Kid              plugin.TValue[string]
+	Algorithm        plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Use              plugin.TValue[string]
+	Status           plugin.TValue[string]
+	ProviderId       plugin.TValue[string]
+	ProviderPriority plugin.TValue[int64]
+	Certificate      plugin.TValue[string]
+	PublicKey        plugin.TValue[string]
+	IsActive         plugin.TValue[bool]
+	Realm            plugin.TValue[*mqlKeycloakRealm]
+}
+
+// createKeycloakRealmKey creates a new instance of this resource
+func createKeycloakRealmKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakRealmKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.realm.key", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakRealmKey) MqlName() string {
+	return "keycloak.realm.key"
+}
+
+func (c *mqlKeycloakRealmKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakRealmKey) GetKid() *plugin.TValue[string] {
+	return &c.Kid
+}
+
+func (c *mqlKeycloakRealmKey) GetAlgorithm() *plugin.TValue[string] {
+	return &c.Algorithm
+}
+
+func (c *mqlKeycloakRealmKey) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlKeycloakRealmKey) GetUse() *plugin.TValue[string] {
+	return &c.Use
+}
+
+func (c *mqlKeycloakRealmKey) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlKeycloakRealmKey) GetProviderId() *plugin.TValue[string] {
+	return &c.ProviderId
+}
+
+func (c *mqlKeycloakRealmKey) GetProviderPriority() *plugin.TValue[int64] {
+	return &c.ProviderPriority
+}
+
+func (c *mqlKeycloakRealmKey) GetCertificate() *plugin.TValue[string] {
+	return &c.Certificate
+}
+
+func (c *mqlKeycloakRealmKey) GetPublicKey() *plugin.TValue[string] {
+	return &c.PublicKey
+}
+
+func (c *mqlKeycloakRealmKey) GetIsActive() *plugin.TValue[bool] {
+	return &c.IsActive
+}
+
+func (c *mqlKeycloakRealmKey) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
+	return plugin.GetOrCompute[*mqlKeycloakRealm](&c.Realm, func() (*mqlKeycloakRealm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm.key", c.__id, "realm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakRealm), nil
+			}
+		}
+
+		return c.realm()
+	})
+}
+
+// mqlKeycloakRealmEventsConfig for the keycloak.realm.eventsConfig resource
+type mqlKeycloakRealmEventsConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlKeycloakRealmEventsConfigInternal
+	EventsEnabled             plugin.TValue[bool]
+	EventsExpiration          plugin.TValue[int64]
+	EnabledEventTypes         plugin.TValue[[]any]
+	EventsListeners           plugin.TValue[[]any]
+	AdminEventsEnabled        plugin.TValue[bool]
+	AdminEventsDetailsEnabled plugin.TValue[bool]
+	Realm                     plugin.TValue[*mqlKeycloakRealm]
+}
+
+// createKeycloakRealmEventsConfig creates a new instance of this resource
+func createKeycloakRealmEventsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakRealmEventsConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.realm.eventsConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakRealmEventsConfig) MqlName() string {
+	return "keycloak.realm.eventsConfig"
+}
+
+func (c *mqlKeycloakRealmEventsConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetEventsEnabled() *plugin.TValue[bool] {
+	return &c.EventsEnabled
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetEventsExpiration() *plugin.TValue[int64] {
+	return &c.EventsExpiration
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetEnabledEventTypes() *plugin.TValue[[]any] {
+	return &c.EnabledEventTypes
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetEventsListeners() *plugin.TValue[[]any] {
+	return &c.EventsListeners
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetAdminEventsEnabled() *plugin.TValue[bool] {
+	return &c.AdminEventsEnabled
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetAdminEventsDetailsEnabled() *plugin.TValue[bool] {
+	return &c.AdminEventsDetailsEnabled
+}
+
+func (c *mqlKeycloakRealmEventsConfig) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
+	return plugin.GetOrCompute[*mqlKeycloakRealm](&c.Realm, func() (*mqlKeycloakRealm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm.eventsConfig", c.__id, "realm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakRealm), nil
+			}
+		}
+
+		return c.realm()
+	})
+}
+
+// mqlKeycloakClientProfile for the keycloak.clientProfile resource
+type mqlKeycloakClientProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlKeycloakClientProfileInternal
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	IsBuiltIn     plugin.TValue[bool]
+	ExecutorTypes plugin.TValue[[]any]
+	Executors     plugin.TValue[any]
+	Realm         plugin.TValue[*mqlKeycloakRealm]
+}
+
+// createKeycloakClientProfile creates a new instance of this resource
+func createKeycloakClientProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakClientProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.clientProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakClientProfile) MqlName() string {
+	return "keycloak.clientProfile"
+}
+
+func (c *mqlKeycloakClientProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakClientProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKeycloakClientProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlKeycloakClientProfile) GetIsBuiltIn() *plugin.TValue[bool] {
+	return &c.IsBuiltIn
+}
+
+func (c *mqlKeycloakClientProfile) GetExecutorTypes() *plugin.TValue[[]any] {
+	return &c.ExecutorTypes
+}
+
+func (c *mqlKeycloakClientProfile) GetExecutors() *plugin.TValue[any] {
+	return &c.Executors
+}
+
+func (c *mqlKeycloakClientProfile) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
+	return plugin.GetOrCompute[*mqlKeycloakRealm](&c.Realm, func() (*mqlKeycloakRealm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.clientProfile", c.__id, "realm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakRealm), nil
+			}
+		}
+
+		return c.realm()
+	})
+}
+
+// mqlKeycloakClientPolicy for the keycloak.clientPolicy resource
+type mqlKeycloakClientPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlKeycloakClientPolicyInternal
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Enabled        plugin.TValue[bool]
+	Profiles       plugin.TValue[[]any]
+	ConditionTypes plugin.TValue[[]any]
+	Conditions     plugin.TValue[any]
+	Realm          plugin.TValue[*mqlKeycloakRealm]
+}
+
+// createKeycloakClientPolicy creates a new instance of this resource
+func createKeycloakClientPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakClientPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.clientPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakClientPolicy) MqlName() string {
+	return "keycloak.clientPolicy"
+}
+
+func (c *mqlKeycloakClientPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakClientPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKeycloakClientPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlKeycloakClientPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlKeycloakClientPolicy) GetProfiles() *plugin.TValue[[]any] {
+	return &c.Profiles
+}
+
+func (c *mqlKeycloakClientPolicy) GetConditionTypes() *plugin.TValue[[]any] {
+	return &c.ConditionTypes
+}
+
+func (c *mqlKeycloakClientPolicy) GetConditions() *plugin.TValue[any] {
+	return &c.Conditions
+}
+
+func (c *mqlKeycloakClientPolicy) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
+	return plugin.GetOrCompute[*mqlKeycloakRealm](&c.Realm, func() (*mqlKeycloakRealm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.clientPolicy", c.__id, "realm")
 			if err != nil {
 				return nil, err
 			}

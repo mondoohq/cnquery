@@ -228,6 +228,41 @@ mql> keycloak.clients.where(fullScopeAllowed == false) { clientId scopeMappings 
 mql> keycloak.clients.where(enabled && fullScopeAllowed) { clientId }
 ```
 
+**Find a realm that signs tokens with a shared secret**
+
+An HS256 signing key is shared with every client that validates it, so any one
+of them can forge a token for the rest.
+
+```shell
+mql> keycloak.realms { name keys.where(isActive && use == "SIG" && algorithm == "HS256") { kid algorithm } }
+```
+
+**Find realms that record no administrative changes**
+
+Without admin events, a change to a client's redirect URIs leaves no trace an
+audit can read back.
+
+```shell
+mql> keycloak.realms.where(eventsConfig.adminEventsEnabled == false) { name }
+```
+
+**Find realms that drop login failures**
+
+A realm that records LOGIN but not LOGIN_ERROR keeps no trace of a password
+guessing run.
+
+```shell
+mql> keycloak.realms { name eventsConfig { eventsEnabled enabledEventTypes.contains("LOGIN_ERROR") eventsListeners } }
+```
+
+**Find client policies that enforce nothing**
+
+A policy that is disabled, or that names no profile, is inert.
+
+```shell
+mql> keycloak.realms.first.clientPolicies.where(enabled == false || profiles.length == 0) { name enabled profiles }
+```
+
 **Follow a composite role**
 
 A role named after a team commonly carries `realm-admin` without saying so.
@@ -241,7 +276,8 @@ mql> keycloak.realms.first.roles.where(composite) { name composites { name clien
 The root resource is `keycloak`. It carries `realms`, and `clients` flattens
 every client across the realms in scope. A realm carries its `clients`, `roles`,
 `groups`, `users`, `identityProviders`, `authenticationFlows`, `components`,
-`clientScopes` and `requiredActions`. A client scope carries its
+`clientScopes`, `keys`, `eventsConfig`, `clientProfiles`, `clientPolicies` and
+`requiredActions`. A client scope carries its
 `protocolMappers`, which is where a token's claims come from. The full field reference is generated from the schema
 comments in `resources/keycloak.lr`.
 

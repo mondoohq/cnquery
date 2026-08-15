@@ -226,3 +226,11 @@ func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, qu
 
 	return results, nil
 }
+
+// IncludeGlobals asks a client policy endpoint for the profiles and policies
+// Keycloak ships alongside the realm's own. A policy may name a built-in
+// profile, so reading only the realm's own would report that profile as
+// missing.
+func IncludeGlobals() url.Values {
+	return url.Values{"include-global-profiles": []string{"true"}}
+}
