@@ -133,6 +133,14 @@ k8s {
   apiServices() []k8s.apiservice
   // Kubernetes IngressClasses
   ingressClasses() []k8s.ingressclass
+  // Kubernetes dynamic resource allocation DeviceClasses
+  deviceClasses() []k8s.deviceclass
+  // Kubernetes dynamic resource allocation ResourceSlices
+  resourceSlices() []k8s.resourceslice
+  // Kubernetes dynamic resource allocation ResourceClaims
+  resourceClaims() []k8s.resourceclaim
+  // Kubernetes dynamic resource allocation ResourceClaimTemplates
+  resourceClaimTemplates() []k8s.resourceclaimtemplate
 }
 
 // Kubernetes API resource type
@@ -4770,4 +4778,246 @@ private k8s.context @defaults("path range content") {
   range range
   // Manifest text within the range, shown as an excerpt
   content(path, range) string
+}
+
+// Kubernetes DeviceClass
+//
+// Dynamic resource allocation class that constrains which devices a claim may
+// select, selected by name. The selectors field holds the CEL expressions a
+// device must satisfy, config carries the vendor parameters passed to the
+// driver for every device claimed through the class, and extendedResourceName
+// reports the extended resource name that maps a plain resource request onto
+// this class. A class with no selectors admits every device its driver
+// publishes.
+private k8s.deviceclass @defaults("name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Device selectors a device must satisfy to be claimed through this class
+  //
+  // Each entry holds a `cel` object with an `expression` evaluated against the
+  // device's attributes and capacity. An empty list admits every device the
+  // driver publishes.
+  selectors []dict
+  // Vendor configuration passed to the driver for every device claimed through this class
+  config []dict
+  // Extended resource name that maps a plain resource request onto this class
+  //
+  // Empty when the class is only reachable through an explicit ResourceClaim.
+  extendedResourceName string
+  // Whether the class admits every device its driver publishes
+  //
+  // True when the class declares no selectors, so any device the driver
+  // publishes satisfies it.
+  selectsAllDevices bool
+}
+
+// Kubernetes ResourceSlice
+//
+// Device inventory one dynamic resource allocation driver publishes for one
+// pool, selected by name. The driver, poolName and nodeName fields report who
+// published the slice and where the devices live, and node resolves the owning
+// node. The devices field lists each device with its attributes and capacity,
+// which is what makes the realised hardware inventory (for example the PCI
+// address and physical function of an SR-IOV virtual function) queryable
+// rather than opaque. A pool split across several slices is complete only when
+// poolResourceSliceCount slices carry the same poolGeneration.
+private k8s.resourceslice @defaults("name driver nodeName deviceCount") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Name of the driver that published this slice
+  driver string
+  // Name of the pool the slice belongs to
+  poolName string
+  // Generation of the pool this slice was published for
+  poolGeneration int
+  // Number of slices that make up the pool
+  poolResourceSliceCount int
+  // Name of the node that provides the devices
+  //
+  // Empty when the pool is not bound to a single node.
+  nodeName string
+  // Node that provides the devices (null when the pool is not node-local)
+  node() k8s.node
+  // Whether every node has access to the devices in the pool
+  allNodes bool
+  // Whether each device carries its own node selection
+  perDeviceNodeSelection bool
+  // Node selector that limits which nodes can use the pool
+  nodeSelector dict
+  // Devices the slice publishes
+  //
+  // Each entry has `name`, `attributes` (driver-published values such as
+  // `pciAddress`, `pfName`, or `vendor`, rendered as strings), `capacity`
+  // (quantities keyed by name), `allowMultipleAllocations`, `nodeName`,
+  // `allNodes`, `taints`, and `bindingConditions`.
+  devices []dict
+  // Names of the devices the slice publishes
+  deviceNames []string
+  // Number of devices the slice publishes
+  deviceCount int
+}
+
+// Kubernetes ResourceClaim
+//
+// Dynamic resource allocation request for devices and the allocation the
+// scheduler made for it, selected by namespace and name. The requests and
+// deviceClassNames fields describe the intent, while allocated,
+// allocatedDevices and reservedFor report what the scheduler actually bound
+// and which pods may use it. The deviceStatuses field carries the driver's
+// report about each prepared device, including the interface name, IP
+// addresses, and hardware address of a network device, so realised attachment
+// state can be compared against intent. usesAdminAccess marks a claim that
+// took a device in the privileged administrative mode.
+private k8s.resourceclaim @defaults("namespace name allocated created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Device requests the claim declares
+  //
+  // Each entry has a `name` and either an `exactly` object or a
+  // `firstAvailable` list of subrequests, carrying `deviceClassName`,
+  // `selectors`, `allocationMode`, `count`, and `adminAccess`.
+  requests []dict
+  // Names of the device requests the claim declares
+  requestNames []string
+  // DeviceClasses the requests select, deduplicated and sorted
+  deviceClassNames []string
+  // Constraints the allocated set of devices must satisfy
+  constraints []dict
+  // Whether the scheduler allocated the claim
+  allocated bool
+  // Devices the scheduler allocated
+  //
+  // Each entry has `request`, `driver`, `pool`, `device`, `adminAccess`,
+  // `tolerations`, and `bindingConditions`. Empty while the claim is pending.
+  allocatedDevices []dict
+  // Node selector that records where the allocated devices are available
+  allocationNodeSelector dict
+  // Consumers currently allowed to use the claim
+  //
+  // Each entry has `apiGroup`, `resource`, `name`, and `uid`.
+  reservedFor []dict
+  // Pods that reserved the claim
+  reservedForPods() []k8s.pod
+  // Whether any allocated device was taken with administrative access
+  //
+  // Admin access lifts the driver's isolation for the device, so the workload
+  // sees it unfiltered.
+  usesAdminAccess bool
+  // Driver reports about each prepared device
+  //
+  // Each entry has `driver`, `pool`, `device`, `shareID`, `conditions`, and
+  // `networkData` with `interfaceName`, `ips`, and `hardwareAddress`. This is
+  // the realised device state on the node, not the request.
+  deviceStatuses []dict
+}
+
+// Kubernetes ResourceClaimTemplate
+//
+// Template that produces one dynamic resource allocation ResourceClaim per
+// pod, selected by namespace and name. The requests, deviceClassNames and
+// constraints fields describe the claim every pod using the template receives,
+// so a workload's device intent is queryable without walking the generated
+// claims. The templateLabels and templateAnnotations fields report the
+// metadata stamped onto each generated claim.
+private k8s.resourceclaimtemplate @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Device requests every generated claim declares
+  requests []dict
+  // Names of the device requests every generated claim declares
+  requestNames []string
+  // DeviceClasses the requests select, deduplicated and sorted
+  deviceClassNames []string
+  // Constraints the allocated set of devices must satisfy
+  constraints []dict
+  // Whether any request takes a device with administrative access
+  usesAdminAccess bool
+  // Labels stamped onto every generated claim
+  templateLabels map[string]string
+  // Annotations stamped onto every generated claim
+  templateAnnotations map[string]string
 }
