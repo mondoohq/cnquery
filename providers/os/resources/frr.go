@@ -228,6 +228,16 @@ func (s *mqlFrrConfig) markParseErrors(err error) {
 	s.CommunityLists = arrVal
 	s.AccessLists = arrVal
 	s.AsPathAccessLists = arrVal
+	s.Ospf = arrVal
+	s.Isis = arrVal
+	s.BfdPeers = arrVal
+	s.PbrMaps = arrVal
+	s.SegmentRouting = plugin.TValue[*mqlFrrConfigSegmentRoutingSettings]{
+		Error: err, State: plugin.StateIsSet | plugin.StateIsNull,
+	}
+	s.Service = plugin.TValue[*mqlFrrConfigServiceSettings]{
+		Error: err, State: plugin.StateIsSet | plugin.StateIsNull,
+	}
 }
 
 func (s *mqlFrrConfig) hostname(file *mqlFile) (string, error) {
