@@ -196,6 +196,29 @@ func writeJSON(v any) error {
 	return enc.Encode(v)
 }
 
+// maturityTag renders a colored "[deprecated]" style suffix for a resource or
+// field maturity level. It returns "" for stable or empty maturity so normal
+// output is unchanged. This mirrors the provider-level rendering in
+// printProvider.
+func maturityTag(maturity string) string {
+	label := resources.MaturityLabel(maturity)
+	if label == "" {
+		return ""
+	}
+	color := colors.DefaultColorTheme.High
+	switch maturity {
+	case resources.MaturityExperimental, resources.MaturityPreview:
+		color = colors.DefaultColorTheme.Medium
+	case resources.MaturityEOL:
+		color = colors.DefaultColorTheme.Critical
+	case resources.MaturityDeprecated:
+		// High (not Critical) is intentional: deprecated is the most common
+		// non-stable maturity and reads as a warning, matching printProvider.
+		color = colors.DefaultColorTheme.High
+	}
+	return " " + termenv.String("["+strings.ToLower(label)+"]").Foreground(color).String()
+}
+
 func flagTypeString(ft plugin.FlagType) string {
 	switch ft {
 	case plugin.FlagType_Bool:
@@ -434,6 +457,7 @@ type resourceSummary struct {
 	Title      string   `json:"title,omitempty"`
 	Desc       string   `json:"desc,omitempty"`
 	Private    bool     `json:"private"`
+	Maturity   string   `json:"maturity,omitempty"`
 	Defaults   []string `json:"defaults,omitempty"`
 	FieldCount int      `json:"field_count"`
 }
@@ -465,6 +489,7 @@ func listResources(cmd *cobra.Command, providerName string) error {
 			Title:      ri.Title,
 			Desc:       ri.Desc,
 			Private:    ri.Private,
+			Maturity:   ri.Maturity,
 			Defaults:   defaults,
 			FieldCount: len(ri.Fields),
 		})
@@ -487,7 +512,7 @@ func listResources(cmd *cobra.Command, providerName string) error {
 		if r.Title != "" {
 			title = " - " + r.Title
 		}
-		fmt.Printf("  %s%s\n", theme.DefaultTheme.Secondary(r.Name), title)
+		fmt.Printf("  %s%s%s\n", theme.DefaultTheme.Secondary(r.Name), maturityTag(r.Maturity), title)
 	}
 	fmt.Println()
 	return nil
@@ -500,6 +525,7 @@ type resourceDetail struct {
 	Title      string        `json:"title,omitempty"`
 	Desc       string        `json:"desc,omitempty"`
 	Private    bool          `json:"private"`
+	Maturity   string        `json:"maturity,omitempty"`
 	Defaults   []string      `json:"defaults,omitempty"`
 	FieldCount int           `json:"field_count"`
 	Fields     []fieldDetail `json:"fields"`
@@ -510,6 +536,7 @@ type fieldDetail struct {
 	Type        string `json:"type"`
 	Title       string `json:"title,omitempty"`
 	Desc        string `json:"desc,omitempty"`
+	Maturity    string `json:"maturity,omitempty"`
 	IsMandatory bool   `json:"is_mandatory,omitempty"`
 }
 
@@ -534,6 +561,7 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 			Type:        types.Type(f.Type).Label(),
 			Title:       f.Title,
 			Desc:        f.Desc,
+			Maturity:    f.Maturity,
 			IsMandatory: f.IsMandatory,
 		})
 	}
@@ -551,6 +579,7 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 		Title:      ri.Title,
 		Desc:       ri.Desc,
 		Private:    ri.Private,
+		Maturity:   ri.Maturity,
 		Defaults:   defaults,
 		FieldCount: len(fields),
 		Fields:     fields,
@@ -560,7 +589,7 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 		return writeJSON(detail)
 	}
 
-	fmt.Printf("%s\n", theme.DefaultTheme.Primary(ri.Name))
+	fmt.Printf("%s%s\n", theme.DefaultTheme.Primary(ri.Name), maturityTag(ri.Maturity))
 	if ri.Title != "" {
 		fmt.Printf("  %s\n", ri.Title)
 	}
@@ -578,9 +607,9 @@ func showResource(cmd *cobra.Command, providerName string, resourceName string) 
 		if f.Title != "" {
 			title = " - " + f.Title
 		}
-		fmt.Printf("    %-30s %s%s%s\n",
+		fmt.Printf("    %-30s %s%s%s%s\n",
 			theme.DefaultTheme.Secondary(f.Name),
-			f.Type, mandatory, title)
+			f.Type, mandatory, maturityTag(f.Maturity), title)
 	}
 	fmt.Println()
 	return nil
