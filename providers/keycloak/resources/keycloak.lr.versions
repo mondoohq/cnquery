@@ -108,6 +108,7 @@ keycloak.identityProvider.jwksUrl 13.0.0
 keycloak.identityProvider.linkOnly 13.0.0
 keycloak.identityProvider.pkceEnabled 13.0.0
 keycloak.identityProvider.postBrokerLoginFlow 13.0.0
+keycloak.identityProvider.postBrokerLoginFlowRef 13.0.0
 keycloak.identityProvider.providerId 13.0.0
 keycloak.identityProvider.realm 13.0.0
 keycloak.identityProvider.storeToken 13.0.0

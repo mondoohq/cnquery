@@ -685,6 +685,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.identityProvider.firstBrokerLoginFlowRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakIdentityProvider).GetFirstBrokerLoginFlowRef()).ToDataRes(types.Resource("keycloak.authenticationFlow"))
 	},
+	"keycloak.identityProvider.postBrokerLoginFlowRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakIdentityProvider).GetPostBrokerLoginFlowRef()).ToDataRes(types.Resource("keycloak.authenticationFlow"))
+	},
 	"keycloak.identityProvider.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakIdentityProvider).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
 	},
@@ -1560,6 +1563,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"keycloak.identityProvider.firstBrokerLoginFlowRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakIdentityProvider).FirstBrokerLoginFlowRef, ok = plugin.RawToTValue[*mqlKeycloakAuthenticationFlow](v.Value, v.Error)
+		return
+	},
+	"keycloak.identityProvider.postBrokerLoginFlowRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakIdentityProvider).PostBrokerLoginFlowRef, ok = plugin.RawToTValue[*mqlKeycloakAuthenticationFlow](v.Value, v.Error)
 		return
 	},
 	"keycloak.identityProvider.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3233,6 +3240,7 @@ type mqlKeycloakIdentityProvider struct {
 	DefaultScope             plugin.TValue[string]
 	Config                   plugin.TValue[map[string]any]
 	FirstBrokerLoginFlowRef  plugin.TValue[*mqlKeycloakAuthenticationFlow]
+	PostBrokerLoginFlowRef   plugin.TValue[*mqlKeycloakAuthenticationFlow]
 	Realm                    plugin.TValue[*mqlKeycloakRealm]
 }
 
@@ -3382,6 +3390,22 @@ func (c *mqlKeycloakIdentityProvider) GetFirstBrokerLoginFlowRef() *plugin.TValu
 		}
 
 		return c.firstBrokerLoginFlowRef()
+	})
+}
+
+func (c *mqlKeycloakIdentityProvider) GetPostBrokerLoginFlowRef() *plugin.TValue[*mqlKeycloakAuthenticationFlow] {
+	return plugin.GetOrCompute[*mqlKeycloakAuthenticationFlow](&c.PostBrokerLoginFlowRef, func() (*mqlKeycloakAuthenticationFlow, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.identityProvider", c.__id, "postBrokerLoginFlowRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakAuthenticationFlow), nil
+			}
+		}
+
+		return c.postBrokerLoginFlowRef()
 	})
 }
 

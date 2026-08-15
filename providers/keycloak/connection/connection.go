@@ -34,10 +34,11 @@ type KeycloakConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
-	baseURL string
-	host    string
-	client  *http.Client
-	tokens  *tokenSource
+	baseURL   string
+	host      string
+	authRealm string
+	client    *http.Client
+	tokens    *tokenSource
 }
 
 func NewKeycloakConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*KeycloakConnection, error) {
@@ -106,6 +107,7 @@ func NewKeycloakConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 	if authRealm == "" {
 		authRealm = defaultAuthRealmFor(form.Get("grant_type"), conn.RealmFilter())
 	}
+	conn.authRealm = authRealm
 
 	conn.tokens = newTokenSource(conn.client, conn.baseURL+"/realms/"+url.PathEscape(authRealm)+"/protocol/openid-connect/token", form)
 
@@ -198,6 +200,15 @@ func (c *KeycloakConnection) Host() string {
 // BaseURL returns the root the admin API is served under.
 func (c *KeycloakConnection) BaseURL() string {
 	return c.baseURL
+}
+
+// AuthRealm returns the realm the token was requested from. A discovered realm
+// asset carries it forward, because the default depends on the realm the
+// connection is scoped to. Without it, a service account discovered from an
+// unscoped root would ask its own realm for a token instead of the realm the
+// root authenticated against.
+func (c *KeycloakConnection) AuthRealm() string {
+	return c.authRealm
 }
 
 // RealmFilter returns the realm the connection is scoped to. It is the empty

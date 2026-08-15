@@ -436,3 +436,49 @@ func TestFullRepresentationIsAFreshCopy(t *testing.T) {
 	first.Set("max", "1")
 	assert.Empty(t, FullRepresentation().Get("max"))
 }
+
+func TestAuthRealmIsReportedForACarriedOverScope(t *testing.T) {
+	t.Setenv("KEYCLOAK_PASSWORD", "")
+
+	// An unscoped service account root authenticates against master. A realm
+	// discovered from it must keep that realm, otherwise it would ask its own
+	// realm for a token and fail.
+	root := &inventory.Config{
+		Type:        "keycloak",
+		Options:     map[string]string{"url": "https://kc.example.com", "client-id": "scanner"},
+		Credentials: []*vault.Credential{vault.NewPasswordCredential("", "client-secret")},
+	}
+	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, root)
+	require.NoError(t, err)
+	assert.Equal(t, "master", conn.AuthRealm())
+
+	child := &inventory.Config{
+		Type: "keycloak",
+		Options: map[string]string{
+			"url": "https://kc.example.com", "client-id": "scanner",
+			"realmName": "production", "auth-realm": conn.AuthRealm(),
+		},
+		Credentials: []*vault.Credential{vault.NewPasswordCredential("", "client-secret")},
+	}
+	childConn, err := NewKeycloakConnection(2, &inventory.Asset{}, child)
+	require.NoError(t, err)
+	assert.Equal(t, "production", childConn.RealmFilter())
+	assert.Equal(t, "master", childConn.AuthRealm())
+	assert.Equal(t, "https://kc.example.com/realms/master/protocol/openid-connect/token", childConn.tokens.tokenURL)
+}
+
+func TestNewKeycloakRealmIdentifierEscapesItsSegments(t *testing.T) {
+	assert.Equal(t,
+		PlatformIdKeycloakRealm+"kc.example.com/realm/production",
+		NewKeycloakRealmIdentifier("kc.example.com", "production"))
+
+	// A realm name may carry a slash. Without escaping it would read as a
+	// deeper path, so two different realms could share one identifier.
+	assert.Equal(t,
+		PlatformIdKeycloakRealm+"kc.example.com/realm/my%2Frealm",
+		NewKeycloakRealmIdentifier("kc.example.com", "my/realm"))
+
+	assert.NotEqual(t,
+		NewKeycloakRealmIdentifier("kc.example.com", "my/realm"),
+		NewKeycloakRealmIdentifier("kc.example.com/realm/my", "realm"))
+}

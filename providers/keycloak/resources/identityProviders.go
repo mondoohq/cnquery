@@ -112,3 +112,11 @@ func (i *mqlKeycloakIdentityProvider) firstBrokerLoginFlowRef() (*mqlKeycloakAut
 	}
 	return i.parentRealm.flowByAlias(&i.FirstBrokerLoginFlowRef, i.FirstBrokerLoginFlow.Data)
 }
+
+func (i *mqlKeycloakIdentityProvider) postBrokerLoginFlowRef() (*mqlKeycloakAuthenticationFlow, error) {
+	if i.parentRealm == nil {
+		setNullResource(&i.PostBrokerLoginFlowRef)
+		return nil, nil
+	}
+	return i.parentRealm.flowByAlias(&i.PostBrokerLoginFlowRef, i.PostBrokerLoginFlow.Data)
+}

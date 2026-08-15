@@ -4,8 +4,6 @@
 package resources
 
 import (
-	"maps"
-
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/keycloak/connection"
@@ -54,24 +52,37 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 			continue
 		}
 
-		realmConf := conf.Clone()
-		if realmConf.Options == nil {
-			realmConf.Options = map[string]string{}
-		} else {
-			realmConf.Options = maps.Clone(realmConf.Options)
-		}
-		realmConf.Options["realmName"] = name
-		realmConf.Discover = &inventory.Discovery{Targets: []string{}}
-
 		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
 			PlatformIds: []string{connection.NewKeycloakRealmIdentifier(conn.Host(), name)},
 			Name:        conn.Host() + "/" + name,
 			Platform:    connection.NewKeycloakRealmPlatform(conn.Host(), name),
-			Connections: []*inventory.Config{realmConf},
+			Labels:      map[string]string{},
+			Connections: []*inventory.Config{scopedConfig(conn, conf, name)},
 		})
 	}
 
 	return in, nil
+}
+
+// scopedConfig clones the root connection config for a discovered realm asset,
+// stamping the realm it is scoped to. The realm the token is requested from is
+// carried over rather than recomputed, since its default depends on the realm
+// the connection is scoped to and the child is scoped where the root was not.
+func scopedConfig(conn *connection.KeycloakConnection, conf *inventory.Config, realm string) *inventory.Config {
+	child := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+
+	options := map[string]string{
+		"realmName":  realm,
+		"auth-realm": conn.AuthRealm(),
+	}
+	for _, key := range []string{"url", "client-id", "username"} {
+		if value := conf.Options[key]; value != "" {
+			options[key] = value
+		}
+	}
+	child.Options = options
+
+	return child
 }
 
 func handleTargets(targets []string) []string {

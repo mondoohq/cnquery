@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"net/url"
+
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
@@ -26,6 +28,9 @@ func NewKeycloakRealmPlatform(host, realm string) *inventory.Platform {
 	return pf
 }
 
+// NewKeycloakRealmIdentifier builds the platform ID of a realm asset. Both
+// segments are escaped, since a realm name may carry a slash and would
+// otherwise produce an identifier that reads as a deeper path.
 func NewKeycloakRealmIdentifier(host, realm string) string {
-	return PlatformIdKeycloakRealm + host + "/realm/" + realm
+	return PlatformIdKeycloakRealm + url.PathEscape(host) + "/realm/" + url.PathEscape(realm)
 }

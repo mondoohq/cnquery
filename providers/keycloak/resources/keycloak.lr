@@ -605,6 +605,11 @@ private keycloak.identityProvider @defaults("alias providerId enabled") {
   config map[string]string
   // Flow a first-time federated user runs
   firstBrokerLoginFlowRef() keycloak.authenticationFlow
+  // Flow run after every login through the provider
+  //
+  // Null when the provider binds no flow, which is the default. A bound flow
+  // is what can add a step, such as a second factor, to every federated login.
+  postBrokerLoginFlowRef() keycloak.authenticationFlow
   // Realm the provider is configured for
   realm() keycloak.realm
 }
