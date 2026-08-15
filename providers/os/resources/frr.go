@@ -232,6 +232,11 @@ func (s *mqlFrrConfig) markParseErrors(err error) {
 	s.Isis = arrVal
 	s.BfdPeers = arrVal
 	s.PbrMaps = arrVal
+	s.KeyChains = arrVal
+	s.VtyLines = arrVal
+	s.Rpki = plugin.TValue[*mqlFrrConfigRpkiSettings]{
+		Error: err, State: plugin.StateIsSet | plugin.StateIsNull,
+	}
 	s.SegmentRouting = plugin.TValue[*mqlFrrConfigSegmentRoutingSettings]{
 		Error: err, State: plugin.StateIsSet | plugin.StateIsNull,
 	}
