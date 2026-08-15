@@ -12,7 +12,13 @@ import (
 )
 
 // epochRegex matches a version that carries an epoch, e.g. `1:2.3.4`.
+// Compiled once: this function runs two to three times per package, so
+// compiling in the body cost a few kilobytes of garbage per package on every
+// scan.
 var epochRegex = regexp.MustCompile(`^\d+:(.*)$`)
+
+// Field names for the WFNize error, positionally matched to the loop below.
+var cpeFieldNames = [...]string{"vendor", "name", "version", "release", "arch"}
 
 func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, error) {
 	cpes := []string{}
@@ -28,17 +34,15 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 		version = matches[1]
 	}
 
-	var err error
-	for n, addr := range map[string]*string{
-		"vendor":  &vendor,
-		"name":    &name,
-		"version": &version,
-		"release": &release,
-		"arch":    &arch,
-	} {
-		if *addr, err = wfn.WFNize(*addr); err != nil {
-			return cpes, fmt.Errorf("couldn't wfnize %s %q: %v", n, *addr, err)
+	for i, addr := range [...]*string{&vendor, &name, &version, &release, &arch} {
+		// WFNize returns an empty string alongside its error, so the result is
+		// only assigned once it succeeded. Assigning first would leave the
+		// error message reporting "" instead of the value that failed.
+		wfnized, err := wfn.WFNize(*addr)
+		if err != nil {
+			return cpes, fmt.Errorf("couldn't wfnize %s %q: %v", cpeFieldNames[i], *addr, err)
 		}
+		*addr = wfnized
 	}
 
 	// A CPE needs both a product name and a version. When either is missing we
