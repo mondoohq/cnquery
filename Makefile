@@ -234,6 +234,7 @@ PROVIDERS := \
 	iru \
 	jamf \
 	k8s \
+	keycloak \
 	kustomize \
 	mikrotik \
 	mistral \

@@ -144,6 +144,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Iru (formerly Kandji) tenants | `iru`                      | `mql shell iru --subdomain SUBDOMAIN --token API_TOKEN`                                                                                         |
 | Jira projects                 | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | Juniper Junos devices         | `junos`                    | `mql shell junos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
+| Keycloak realms               | `keycloak`                 | `mql shell keycloak --url URL --username admin --password PASSWORD`                                                                             |
 | Kubernetes cluster nodes      | `local`, `ssh`             | `mql shell ssh user@host`                                                                                                                       |
 | Kubernetes clusters           | `k8s`                      | `mql shell k8s`                                                                                                                                 |
 | Kubernetes manifests          | `k8s`                      | `mql shell k8s manifest.yaml`                                                                                                                   |
