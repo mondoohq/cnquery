@@ -4,6 +4,8 @@
 package cpe
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -125,15 +127,63 @@ func TestPkg2Gen(t *testing.T) {
 	}
 }
 
+// WFNize rejects a field carrying an escaped wildcard, which is the only path
+// out of this function that reports which field it was. The name comes from
+// cpeFieldNames positionally, so a table that drifts out of step with the loop
+// would blame the wrong field with nothing to catch it.
+func TestNewPackage2CpeWFNizeError(t *testing.T) {
+	// An escaped wildcard is only rejected when it sits inside the value; a
+	// trailing one is a legal WFN wildcard, so every case embeds it.
+	tests := []struct {
+		name  string
+		args  [5]string // vendor, name, version, release, arch
+		index int
+		field string
+	}{
+		{"vendor", [5]string{`v\*endor`, "widget", "1.2.3", "", "x86_64"}, 0, "vendor"},
+		{"name", [5]string{"acme", `wid\*get`, "1.2.3", "", "x86_64"}, 1, "name"},
+		{"version", [5]string{"acme", "widget", `1\*.2.3`, "", "x86_64"}, 2, "version"},
+		{"release", [5]string{"acme", "widget", "1.2.3", `5\*x`, "x86_64"}, 3, "release"},
+		{"arch", [5]string{"acme", "widget", "1.2.3", "", `x86\*64`}, 4, "arch"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			a := test.args
+			cpes, err := NewPackage2Cpe(a[0], a[1], a[2], a[3], a[4])
+			require.Error(t, err)
+			assert.Empty(t, cpes)
+			// Naming the field and carrying the value that failed. WFNize
+			// returns an empty string with its error, so assigning before
+			// checking would report `""` here.
+			assert.Contains(t, err.Error(),
+				fmt.Sprintf("couldn't wfnize %s %q", test.field, strings.ToLower(a[test.index])))
+		})
+	}
+}
+
+// Two malformed fields at once. Ranging a map gave whichever one the runtime
+// happened to visit first, so the same input reported a different field from
+// run to run; the fixed array makes it the first field in order.
+func TestNewPackage2CpeWFNizeErrorIsDeterministic(t *testing.T) {
+	for i := 0; i < 50; i++ {
+		_, err := NewPackage2Cpe(`v\*endor`, `n\*ame`, `1\*.2`, "", "x86_64")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "couldn't wfnize vendor ")
+	}
+}
+
 // NewPackage2Cpe runs two to three times per package, so the regexp and the
 // field-name table are package level rather than rebuilt per call. This pins
 // the allocation count so a future edit cannot quietly move them back into the
-// function body.
+// function body. The ceiling sits just above the current count: the map this
+// function used to range over cost five allocations, and a threshold that does
+// not catch its return is not guarding anything.
 func TestNewPackage2CpeAllocations(t *testing.T) {
 	allocs := testing.AllocsPerRun(100, func() {
 		_, _ = NewPackage2Cpe("red hat, inc.", "libfoo-dev", "2:1.2.3-2.el9", "", "x86_64")
 	})
-	assert.LessOrEqual(t, allocs, float64(30), "NewPackage2Cpe allocations regressed")
+	assert.LessOrEqual(t, allocs, float64(25), "NewPackage2Cpe allocations regressed")
 }
 
 func BenchmarkNewPackage2Cpe(b *testing.B) {

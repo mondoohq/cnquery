@@ -34,11 +34,15 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 		version = matches[1]
 	}
 
-	var err error
 	for i, addr := range [...]*string{&vendor, &name, &version, &release, &arch} {
-		if *addr, err = wfn.WFNize(*addr); err != nil {
+		// WFNize returns an empty string alongside its error, so the result is
+		// only assigned once it succeeded. Assigning first would leave the
+		// error message reporting "" instead of the value that failed.
+		wfnized, err := wfn.WFNize(*addr)
+		if err != nil {
 			return cpes, fmt.Errorf("couldn't wfnize %s %q: %v", cpeFieldNames[i], *addr, err)
 		}
+		*addr = wfnized
 	}
 
 	// A CPE needs both a product name and a version. When either is missing we
