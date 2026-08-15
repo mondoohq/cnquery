@@ -1,0 +1,235 @@
+---
+name: update-provider-deps
+description: Upgrade an mql provider's vendored SDKs (all providers or a named subset), audit the new versions for breaking changes and fix call sites while keeping shipped MQL fields backwards-compatible, check whether .lr enum comments drifted, and propose a numbered list of new resources and fields the upgrade unlocks for the user to choose from. Use this whenever the user mentions updating, bumping, upgrading, or refreshing SDK or provider dependencies for any provider (azure, aws, gcp, github, cloudflare, okta, alicloud, mongodbatlas, databricks, and the rest), asks what a newer SDK would give us, asks whether a dep bump is safe or breaking, or asks what new fields or resources an SDK version makes available. Also use it for "check for new SDK majors", "are our SDKs current", and "what did we miss in the new SDK".
+argument-hint: "[provider names, comma-separated] (default: probe all)"
+---
+
+# Update provider SDK dependencies
+
+An mql provider is a thin layer over a vendor SDK, so an SDK upgrade is two jobs at once:
+not breaking what we already ship, and harvesting what the new version exposes. Doing only
+the first leaves the schema stale for months; doing only the second breaks customers.
+
+`go get path@latest` cannot do the first job at all — it only searches within the current
+major and never discovers that the dep now lives at `path/v3`. The bundled `probe.py`
+handles that; the rest of this skill is about the parts that need judgment.
+
+All paths below assume you are at the mql root:
+
+```bash
+P=.claude/skills/update-provider-deps
+```
+
+## Phase 0 — Scope
+
+Work in a worktree, and **one provider per branch and PR**. Bumps across providers are
+independent, they get reviewed by different people, and a single failing migration
+shouldn't hold up four clean ones.
+
+Pick the providers with the user. `python3 $P/probe.py --list` shows every known provider
+and the module prefixes it scans. For a provider that isn't in that table (a DB driver, a
+network device client), pass its `go.mod` directly — that's the escape hatch:
+
+```bash
+python3 $P/probe.py providers/mssql/go.mod --provider=mongo   # any prefix set you like
+```
+
+**Some providers are pinned on purpose.** `probe.py` refuses to touch them and prints why.
+Nutanix is the standing case: its SDK version is set by the Prism Central release the
+customer runs, and a newer client requests API paths that GA Prism Central answers with
+404. If a user asks for one of these, relay the reason rather than working around it —
+the failure is invisible locally and only shows up against the customer's server.
+
+The general form of that rule: **newest is not automatically correct.** An SDK is a client
+for a server someone else operates. Where a provider talks to self-hosted or
+version-negotiated software, the right target is the oldest version in the major that
+still covers our feature set.
+
+## Phase 1 — Probe, then get sign-off
+
+```bash
+python3 $P/probe.py --provider=github,cloudflare        # named subset
+python3 $P/probe.py                                     # everything
+python3 $P/probe.py --provider=aws --json               # structured, for scripted follow-up
+```
+
+Probing AWS or Azure takes minutes (120+ deps, two proxy round-trips each), so start it in
+the background and do other prep while it runs.
+
+Three outcomes: `UP` (stable upgrade available), `OK` (current), `BETA` (a higher major
+exists but only as beta or pseudo-version). Never fold `BETA` into the upgrade set — a
+major that has only shipped as beta churns for months, and adopting it means redoing the
+migration at GA. List them separately so the user can decide.
+
+Show the user the `UP` rows and confirm the set before applying anything.
+
+## Phase 2 — Read the release notes before touching code
+
+This is the step that pays for itself, and the easiest one to skip.
+
+```bash
+python3 $P/changelog.py github.com/cloudflare/cloudflare-go/v6 v6.10.0 v7.8.0
+```
+
+It resolves the module to its source repo (GitHub, and the vanity paths like
+`go.mongodb.org/...`, `cloud.google.com/go/...`, `k8s.io/...`), pulls GitHub Releases and
+`CHANGELOG.md` sections in range, and follows any migration-guide link it finds, inlining
+the guide. Run it for **every module crossing a major**. Patch and minor bumps inside a
+major are covered by SDK compatibility promises and rarely repay the time.
+
+What you are reading for, in priority order:
+
+1. **A migration guide.** Some vendors ship before/after code for each break. Cloudflare
+   v7 does. Use it rather than rediscovering the same edits from compiler errors.
+2. **Renames of things that still compile.** MongoDB Atlas announces "many renames of
+   existing function names, due to operation ID renaming" — that one line predicts the
+   entire migration. Without it you find the renames one compiler error at a time and
+   miss the ones that don't error.
+3. **Deprecations.** A method still present but marked deprecated is a decision, not a
+   fix: see the backwards-compatibility rules in Phase 4.
+4. **Enum additions and removals.** Azure's notes list these explicitly, and they feed
+   Phase 5 directly.
+5. **Fields that only populate under a request flag.** Rarer, but these are what make a
+   new field read as `false` on every asset. See "stub data" in
+   `references/schema-additions.md`.
+
+## Phase 3 — Apply and get it compiling
+
+```bash
+python3 $P/probe.py --provider=cloudflare --apply
+```
+
+This rewrites `go.mod`, rewrites the import path in every `.go` file when the major moved,
+then runs `go mod tidy` and `go build`.
+
+**The Go toolchain fails inside the sandbox.** `go mod tidy`, `go build`, `go test` and
+`gh` all hit the proxy's intercepted TLS and die with `x509: OSStatus -26276`. Re-run them
+with `dangerouslyDisableSandbox: true`. Don't set `GOSUMDB=off` to route around it — that
+disables checksum verification. `curl` and the bundled scripts are unaffected.
+
+Then iterate on build errors. Use `go build -gcflags=-e ./...` to see every error at once
+rather than the first ten.
+
+Two things the import rewrite deliberately does **not** touch, both of which have shipped
+as review findings:
+
+- **Import aliases.** `cloudflarev6 "github.com/cloudflare/cloudflare-go/v7"` compiles
+  perfectly and lies to every future reader. Grep for the old major as an identifier.
+- **Comments naming the old version.** "cloudflare-go v6 models this as a union" is
+  wrong the moment the path changes. Prefer dropping the version to advancing it: the
+  behavior being described is usually a property of the SDK, not of one release, and a
+  version number in a comment only guarantees it rots again at the next bump.
+
+If you fix those with a bulk rename, **read the rendered diff, not just the build**. A
+phrase that wraps across a line break defeats a single-line pattern: the first rule misses
+and a later, narrower rule fires on the orphaned fragment, producing duplicated words and
+mangled sentences that compile fine.
+
+## Phase 4 — Audit for breaks the compiler won't catch
+
+A clean build is not evidence of a clean upgrade. Three checks:
+
+```bash
+# What disappeared, intersected with what we call
+$P/apidiff.sh github.com/okta/okta-sdk-golang/v5 v5.0.6 \
+              github.com/okta/okta-sdk-golang/v6 v6.1.7 > /tmp/diff.txt
+
+# What changed shape on types this provider actually uses
+OLD=$($P/modfetch.sh github.com/okta/okta-sdk-golang/v5 v5.0.6)
+NEW=$($P/modfetch.sh github.com/okta/okta-sdk-golang/v6 v6.1.7)
+python3 $P/structdiff.py "$OLD" "$NEW" --types-from providers/okta
+```
+
+`structdiff.py`'s `RETYPED` and `REMOVED` lines are the dangerous output. For each one, ask
+whether the affected value reaches a **shipped `.lr` field**. If it does, the upgrade has a
+user-visible consequence and needs a deliberate decision rather than a mechanical fix.
+
+The scope-ambiguous rename is the worst case and deserves its own habit: when an SDK splits
+`ListThings` into `ListOrgThings` and `ListGroupThings`, both take `(ctx, string)`, so
+picking the wrong one **compiles cleanly and reads the wrong scope**. Check each migrated
+call against the identifier it passes, not against the build.
+
+**Read `references/breaking-changes.md`** for the taxonomy of silent breaks and the
+decision table for keeping shipped fields backwards-compatible. The short version: never
+change a shipped field's type or meaning in place — deprecate and add alongside.
+
+## Phase 5 — Check enum comments for drift
+
+`.lr` comments routinely enumerate a field's values ("One of Primary, Readonly, Guard, or
+Temp"). Policy authors write `where(state == "...")` against those lists, so a list that
+silently loses a value costs them rows they should have matched.
+
+```bash
+python3 $P/enumdrift.py providers/databricks/resources/databricks.lr "$NEW"
+```
+
+It pairs each enumerating comment with the SDK const block whose values overlap most, and
+reports what the SDK has that the comment omits. Treat every hit as a candidate, not a
+verdict — confirm the paired enum is the one the field carries, and that the omission
+isn't deliberate (a comment may list only the values we map). Fix the genuine ones in the
+same PR; they are cheap and they are documentation the user relies on.
+
+## Phase 6 — Propose additions, then stop
+
+This is the half of the upgrade that gets skipped, and the reason to bother upgrading at
+all. Produce a **numbered, ranked list** and let the user choose. Don't implement anything
+in this phase.
+
+```bash
+# Tier A — new fields on types the provider already uses
+python3 $P/structdiff.py "$OLD" "$NEW" --types-from providers/cloudflare
+
+# Tier B — whole services the SDK gained (drop the filter, read the NEW TYPES list,
+# and diff the client's service accessors)
+python3 $P/structdiff.py "$OLD" "$NEW" | head -60
+```
+
+Rank by audit value per unit of effort, and separate the tiers, because their costs differ
+by an order of magnitude: Tier A is fields on resources we already ship and often needs no
+new API call, while Tier B needs a lister, an `__id` scheme, and a schema review.
+
+Before listing anything, check it isn't already exposed (`grep` the `.lr`) and that it
+isn't stub data. **`references/proposal-format.md`** has the format and the ranking
+criteria.
+
+Present the list, ask which numbers they want, and wait. The user picks — that's the point
+of the phase.
+
+## Phase 7 — Implement the selection, verify, PR
+
+For each chosen item, follow `references/schema-additions.md`: `.lr` entry, `.lr.versions`
+at the provider's current version plus a patch, regenerate, map the field, and handle the
+null-versus-zero question honestly.
+
+Verify before claiming anything:
+
+```bash
+cd providers/<name> && go build ./... && go test ./... && gofmt -l .
+```
+
+Then commit and open a PR. Say plainly in the PR what was **not** verified — none of this
+can be checked against live infrastructure without credentials, and a reviewer needs to
+know which claims rest on the compiler and which on an actual API response.
+
+Provider versions in `config/config.go` are **not** bumped here; that's the release flow.
+
+## Reference files
+
+- `references/breaking-changes.md` — silent-break taxonomy, and how to keep shipped MQL
+  fields working when the SDK moves under them. Read during Phase 4.
+- `references/schema-additions.md` — `.lr` rules for adding fields and resources: version
+  entries, typed references, when something earns a sub-resource, null versus zero, and
+  the stub-data traps. Read during Phases 5 and 7.
+- `references/proposal-format.md` — the numbered proposal format and ranking criteria.
+  Read during Phase 6.
+
+## Bundled scripts
+
+| Script | Does |
+|---|---|
+| `probe.py` | Find and optionally apply upgrades, including new-major path rewrites |
+| `changelog.py` | Fetch release notes, CHANGELOGs, and migration guides between two versions |
+| `modfetch.sh` | Extract any module version from the proxy, no module context needed |
+| `apidiff.sh` | Exported symbols added and removed between two versions |
+| `structdiff.py` | Struct fields gained, lost, and retyped, filtered to types we use |
+| `enumdrift.py` | `.lr` enum comments that no longer match the SDK's constants |
