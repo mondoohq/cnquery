@@ -6,12 +6,16 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"strings"
+	"sync"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/oracle/oci-go-sdk/v65/identity"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
 func stringValue(s *string) string {
@@ -224,4 +228,55 @@ func ociRegionServiceUnavailable(err error) bool {
 // to be one.
 func ociRunRegionPool(jobs []*jobpool.Job) ([]any, error) {
 	return ociJoinRegionJobs(jobs, ociScopeTenancyRoot.concurrency())
+}
+
+// ociAvailabilityDomainCache memoizes a region's availability domains.
+//
+// Some OCI APIs are scoped to an availability domain rather than a region, so a
+// lister has to ask which domains exist before it can ask its real question.
+// That answer is the same for every compartment and does not change during a
+// scan, while the listers needing it run inside a compartment fan-out - so
+// without this, one collection costs an Identity call per compartment. Keyed by
+// connection and region because a tenancy's domains differ between regions.
+var (
+	ociAvailabilityDomainCache   = map[string][]string{}
+	ociAvailabilityDomainCacheMu sync.Mutex
+)
+
+// ociAvailabilityDomains returns the names of the availability domains in a
+// region.
+//
+// compartmentID is passed through to the Identity call, which accepts any
+// compartment in the tenancy and answers the same either way; it is not part of
+// the cache key for that reason. A failure is not cached, so a throttled call
+// is retried by the next caller rather than emptying the region for the rest of
+// the scan.
+func ociAvailabilityDomains(ctx context.Context, conn *connection.OciConnection, region, compartmentID string) ([]string, error) {
+	key := fmt.Sprintf("%d/%s", conn.ID(), region)
+
+	ociAvailabilityDomainCacheMu.Lock()
+	defer ociAvailabilityDomainCacheMu.Unlock()
+	if cached, ok := ociAvailabilityDomainCache[key]; ok {
+		return cached, nil
+	}
+
+	client, err := conn.IdentityClientWithRegion(region)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListAvailabilityDomains(ctx, identity.ListAvailabilityDomainsRequest{
+		CompartmentId: common.String(compartmentID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	names := make([]string, 0, len(resp.Items))
+	for i := range resp.Items {
+		if name := stringValue(resp.Items[i].Name); name != "" {
+			names = append(names, name)
+		}
+	}
+	ociAvailabilityDomainCache[key] = names
+	return names, nil
 }

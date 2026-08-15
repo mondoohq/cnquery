@@ -1266,21 +1266,46 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 				return nil, err
 			}
 
-			// Region-scoped listing covers reserved public IPs (which persist
-			// unattached) and the ephemeral public IPs held by regional
-			// entities such as NAT gateways. The OCI API requires a separate
-			// call per lifetime at REGION scope.
-			publicIps := []core.PublicIp{}
-			for _, lifetime := range []core.ListPublicIpsLifetimeEnum{
-				core.ListPublicIpsLifetimeReserved,
-				core.ListPublicIpsLifetimeEphemeral,
-			} {
-				perLifetime, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
+			// The two lifetimes live at different scopes, and asking at the
+			// wrong one returns nothing rather than an error.
+			//
+			// Reserved public IPs are regional: they persist unattached, so
+			// they answer at REGION scope. Ephemeral public IPs belong to the
+			// availability domain of the resource holding them - which is
+			// every public IP OCI assigns to an instance by default - and
+			// ListPublicIps only returns those when it is given
+			// AVAILABILITY_DOMAIN scope together with the domain to look in.
+			// Asking for EPHEMERAL at REGION scope, as this did, is accepted
+			// and returns an empty list, so instance public IPs were silently
+			// absent from the collection while reserved ones looked fine.
+			publicIps, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
+				response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
+					Scope:         core.ListPublicIpsScopeRegion,
+					CompartmentId: common.String(compartmentID),
+					Lifetime:      core.ListPublicIpsLifetimeReserved,
+					Page:          page,
+				})
+				if err != nil {
+					return nil, nil, err
+				}
+				return response.Items, response.OpcNextPage, nil
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			availabilityDomains, err := ociAvailabilityDomains(ctx, conn, region, compartmentID)
+			if err != nil {
+				return nil, err
+			}
+			for _, availabilityDomain := range availabilityDomains {
+				perDomain, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
 					response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
-						Scope:         core.ListPublicIpsScopeRegion,
-						CompartmentId: common.String(compartmentID),
-						Lifetime:      lifetime,
-						Page:          page,
+						Scope:              core.ListPublicIpsScopeAvailabilityDomain,
+						AvailabilityDomain: common.String(availabilityDomain),
+						CompartmentId:      common.String(compartmentID),
+						Lifetime:           core.ListPublicIpsLifetimeEphemeral,
+						Page:               page,
 					})
 					if err != nil {
 						return nil, nil, err
@@ -1290,7 +1315,7 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				publicIps = append(publicIps, perLifetime...)
+				publicIps = append(publicIps, perDomain...)
 			}
 
 			var res []any
