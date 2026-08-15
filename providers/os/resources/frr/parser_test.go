@@ -184,3 +184,28 @@ func TestParse_RawKeepsSourceText(t *testing.T) {
 	assert.Contains(t, vrfless.Raw, "neighbor server peer-group")
 	assert.Greater(t, vrfless.EndLine, vrfless.StartLine)
 }
+
+// TestParse_CommentMarkerInsideALine covers text that carries a comment
+// marker. FRR starts a comment only at the beginning of a line, so a
+// description keeps everything an operator wrote.
+func TestParse_CommentMarkerInsideALine(t *testing.T) {
+	src := `hostname leaf7
+! a real comment
+   ! an indented comment
+interface swp1
+ description Transit peer! Primary path #1
+exit
+`
+	cfg, err := Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+
+	ifaces := cfg.Interfaces()
+	require.Len(t, ifaces, 1)
+	assert.Equal(t, "Transit peer! Primary path #1", ifaces[0].Description)
+
+	// The comment lines are still dropped.
+	for _, d := range cfg.Directives {
+		assert.NotEqual(t, "a", d.Name)
+		assert.NotEqual(t, "an", d.Name)
+	}
+}
