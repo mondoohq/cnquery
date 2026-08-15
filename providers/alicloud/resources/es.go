@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,6 +15,7 @@ import (
 
 	esclient "github.com/alibabacloud-go/elasticsearch-20170613/v6/client"
 	tea "github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -33,6 +36,26 @@ func esParseTime(s *string) *time.Time {
 		}
 	}
 	return nil
+}
+
+// esRegionUnavailable reports whether a first-page ListInstance error means the
+// region simply does not offer Elasticsearch, or that the credential has no
+// access to it there. Both are ordinary on an account whose enabled regions
+// outnumber the ones running a cluster, so they are logged at debug rather than
+// emitting a warning per region on every healthy scan. Anything else, including
+// throttling and server faults, is a real failure and is warned about, so a
+// region skipped because the API was unhappy is distinguishable from a region
+// that legitimately has nothing.
+func esRegionUnavailable(err error) bool {
+	var sdkErr *tea.SDKError
+	if !errors.As(err, &sdkErr) || sdkErr.StatusCode == nil {
+		return false
+	}
+	switch *sdkErr.StatusCode {
+	case http.StatusForbidden, http.StatusNotFound:
+		return true
+	}
+	return false
 }
 
 // esStrings flattens a slice of string pointers, dropping nil and empty
@@ -80,6 +103,13 @@ func (r *mqlAlicloudEs) instances() ([]any, error) {
 				// credential lacks access there; skip it. A later-page error is
 				// real, so surface it rather than truncating the list.
 				if firstPage {
+					if esRegionUnavailable(err) {
+						log.Debug().Err(err).Str("region", region).
+							Msg("alicloud> skipping region with no Elasticsearch access")
+					} else {
+						log.Warn().Err(err).Str("region", region).
+							Msg("alicloud> skipping Elasticsearch region after an unexpected error")
+					}
 					break
 				}
 				return nil, err
@@ -160,7 +190,9 @@ func newEsInstance(runtime *plugin.Runtime, region string, inst *esclient.ListIn
 	}
 
 	resource, err := CreateResource(runtime, "alicloud.es.instance", map[string]*llx.RawData{
-		"__id":            llx.StringDataPtr(inst.InstanceId),
+		// region-qualified so two clusters can never share a cache key, matching
+		// the RDS and PolarDB keys; instanceId stays the user-facing field
+		"__id":            llx.StringData(region + "/" + tea.StringValue(inst.InstanceId)),
 		"instanceId":      llx.StringDataPtr(inst.InstanceId),
 		"description":     llx.StringDataPtr(inst.Description),
 		"esVersion":       llx.StringDataPtr(inst.EsVersion),
@@ -209,7 +241,8 @@ func initAlicloudEsInstance(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, err
 	}
 
-	if x, ok := runtime.Resources.Get("alicloud.es.instance\x00" + instanceID); ok {
+	// Matches the cluster __id: region + "/" + instanceId.
+	if x, ok := runtime.Resources.Get("alicloud.es.instance\x00" + region + "/" + instanceID); ok {
 		return nil, x, nil
 	}
 
@@ -242,7 +275,10 @@ func initAlicloudEsInstance(runtime *plugin.Runtime, args map[string]*llx.RawDat
 }
 
 func (r *mqlAlicloudEsInstance) id() (string, error) {
-	return r.InstanceId.Data, nil
+	// Read the public RegionId rather than the Internal region cache: the cache
+	// field is set after CreateResource, so reading it here would build the key
+	// from an empty region and collapse every cluster onto "/<id>".
+	return r.RegionId.Data + "/" + r.InstanceId.Data, nil
 }
 
 func (r *mqlAlicloudEsInstance) resourceGroup() (*mqlAlicloudResourceManagerResourceGroup, error) {

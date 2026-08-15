@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -51,6 +53,39 @@ func TestEsStrings(t *testing.T) {
 	assert.Equal(t, []any{"0.0.0.0/0"}, esStrings([]*string{tea.String("0.0.0.0/0"), nil}))
 	assert.Equal(t, []any{"10.0.0.0/8", "192.168.0.0/16"},
 		esStrings([]*string{tea.String("10.0.0.0/8"), tea.String(""), tea.String("192.168.0.0/16")}))
+}
+
+// TestEsRegionUnavailable covers the classifier that decides whether a
+// first-page listing error is an ordinary "no Elasticsearch here" or a real
+// failure. Getting this wrong in either direction is bad: matching everything
+// buries a throttled region in debug output, and matching nothing emits a
+// warning per region on every healthy scan.
+func TestEsRegionUnavailable(t *testing.T) {
+	sdkErr := func(status int) error {
+		return &tea.SDKError{StatusCode: tea.Int(status), Code: tea.String("Forbidden")}
+	}
+
+	t.Run("403 is an ordinary skip", func(t *testing.T) {
+		assert.True(t, esRegionUnavailable(sdkErr(403)))
+	})
+	t.Run("404 is an ordinary skip", func(t *testing.T) {
+		assert.True(t, esRegionUnavailable(sdkErr(404)))
+	})
+	t.Run("wrapped errors are still matched", func(t *testing.T) {
+		assert.True(t, esRegionUnavailable(fmt.Errorf("list instances: %w", sdkErr(403))))
+	})
+	t.Run("429 throttling is a real failure", func(t *testing.T) {
+		assert.False(t, esRegionUnavailable(sdkErr(429)))
+	})
+	t.Run("500 is a real failure", func(t *testing.T) {
+		assert.False(t, esRegionUnavailable(sdkErr(500)))
+	})
+	t.Run("transport error is a real failure", func(t *testing.T) {
+		assert.False(t, esRegionUnavailable(errors.New("dial tcp: i/o timeout")))
+	})
+	t.Run("SDK error without a status is a real failure", func(t *testing.T) {
+		assert.False(t, esRegionUnavailable(&tea.SDKError{Code: tea.String("Throttling")}))
+	})
 }
 
 // TestEsInternetExposed covers the exposure verdict. Kibana counts on its own:
