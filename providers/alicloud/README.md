@@ -130,14 +130,16 @@ alicloud.ecs.securityGroups {
   permissions.where(sourceCidrIp == "0.0.0.0/0") { ipProtocol portRange }
 }
 
-# the same question for rules scoped to a prefix list, which carry no CIDR
-# of their own
+# a rule scoped to a prefix list carries no CIDR of its own; the blocks it
+# admits live on the list
 alicloud.ecs.securityGroups {
   securityGroupName
-  permissions.where(sourcePrefixListId != "") {
-    ipProtocol portRange
-    sourcePrefixList { prefixListName cidrBlocks }
-  }
+  permissions { ipProtocol portRange sourcePrefixList { prefixListName cidrBlocks } }
+}
+
+# prefix lists that open every rule pointing at them
+alicloud.ecs.prefixLists.where(cidrBlocks.contains("0.0.0.0/0")) {
+  prefixListName associationCount
 }
 
 # network ACL rules that accept traffic from anywhere, evaluated before

@@ -805,7 +805,9 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   // Source security group for an inbound rule
   sourceSecurityGroup() alicloud.ecs.securitygroup
   // Source prefix list ID for an inbound rule
-  sourcePrefixListId string
+  //
+  // Deprecated in favor of sourcePrefixList.
+  sourcePrefixListId @maturity("deprecated") string
   // Source prefix list for an inbound rule
   //
   // Null unless the rule is scoped to a prefix list. When it is set, the rule
@@ -819,7 +821,9 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   // Destination security group for an outbound rule
   destSecurityGroup() alicloud.ecs.securitygroup
   // Destination prefix list ID for an outbound rule
-  destPrefixListId string
+  //
+  // Deprecated in favor of destPrefixList.
+  destPrefixListId @maturity("deprecated") string
   // Destination prefix list for an outbound rule
   //
   // Null unless the rule is scoped to a prefix list. When it is set, the rule
@@ -1604,7 +1608,7 @@ alicloud.vpc.networkAcl {
 // evaluated before security groups, so an accept rule here decides what reaches
 // the security groups at all and a drop rule overrides whatever they allow.
 // Ports arrive as a range string such as 22/22 or -1/-1 for every port.
-alicloud.vpc.networkAcl.entry @defaults("direction policy protocol port sourceCidrIp") {
+alicloud.vpc.networkAcl.entry @defaults("direction policy protocol port") {
   // Rule ID, used as the lookup key
   entryId string
   // Rule name
