@@ -55,3 +55,13 @@ func TestPkg2Gen(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkNewPackage2Cpe(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, err := NewPackage2Cpe("", "openssl", "1774381254:3.5.4-r0", "", "x86_64")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}

@@ -11,6 +11,9 @@ import (
 	"github.com/facebookincubator/nvdtools/wfn"
 )
 
+// epochRegex matches a version that carries an epoch, e.g. `1:2.3.4`.
+var epochRegex = regexp.MustCompile(`^\d+:(.*)$`)
+
 func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, error) {
 	cpes := []string{}
 	vendor = strings.ToLower(vendor)
@@ -21,7 +24,6 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 
 	// Remove epoch when present; otherwise WFNize will only use the epoch as
 	// the version.
-	epochRegex := regexp.MustCompile(`^\d+:(.*)$`)
 	if matches := epochRegex.FindStringSubmatch(version); len(matches) > 1 {
 		version = matches[1]
 	}

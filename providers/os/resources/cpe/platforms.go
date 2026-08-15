@@ -12,6 +12,9 @@ import (
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
+// amznLegacyVersion matches the Amazon Linux 1 version scheme.
+var amznLegacyVersion = regexp.MustCompile(`^(2017|2018)\.`)
+
 type platformCPEEntry struct {
 	Platform    string
 	CPEBuilder  func(platform, version string, workstation bool) (string, error)
@@ -36,10 +39,9 @@ var platformCPES = []platformCPEEntry{
 	{
 		Platform: "amazonlinux",
 		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
-			amzn1 := regexp.MustCompile(`^(2017|2018)\.`)
 			product := ""
 
-			if amzn1.MatchString(version) {
+			if amznLegacyVersion.MatchString(version) {
 				product = "linux"
 			} else if version == "2" {
 				product = "linux_2"
