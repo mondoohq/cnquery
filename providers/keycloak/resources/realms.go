@@ -283,9 +283,15 @@ func (r *mqlKeycloakRealm) identityProviders() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	var records []identityProviderRecord
+	// The list endpoints below are walked with GetPaged rather than read in
+	// one request. A server that caps the response would otherwise truncate it
+	// silently, and a truncated flow list makes the realm's flow bindings
+	// resolve to null for flows that are present. An endpoint that ignores the
+	// paging parameters answers the second request with the same body, which
+	// GetPaged detects and stops on, so the walk costs one extra request there.
 	path := connection.AdminPath(r.realmName(), "identity-provider", "instances")
-	if err := c.Get(ctx, path, nil, &records); err != nil {
+	records, err := connection.GetPaged[identityProviderRecord](ctx, c, path, nil)
+	if err != nil {
 		return nil, err
 	}
 
@@ -304,9 +310,9 @@ func (r *mqlKeycloakRealm) authenticationFlows() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	var records []authenticationFlowRecord
 	path := connection.AdminPath(r.realmName(), "authentication", "flows")
-	if err := c.Get(ctx, path, nil, &records); err != nil {
+	records, err := connection.GetPaged[authenticationFlowRecord](ctx, c, path, nil)
+	if err != nil {
 		return nil, err
 	}
 
@@ -325,8 +331,8 @@ func (r *mqlKeycloakRealm) components() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	var records []componentRecord
-	if err := c.Get(ctx, connection.AdminPath(r.realmName(), "components"), nil, &records); err != nil {
+	records, err := connection.GetPaged[componentRecord](ctx, c, connection.AdminPath(r.realmName(), "components"), nil)
+	if err != nil {
 		return nil, err
 	}
 
@@ -355,9 +361,9 @@ func (r *mqlKeycloakRealm) requiredActions() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	var records []requiredActionRecord
 	path := connection.AdminPath(r.realmName(), "authentication", "required-actions")
-	if err := c.Get(ctx, path, nil, &records); err != nil {
+	records, err := connection.GetPaged[requiredActionRecord](ctx, c, path, nil)
+	if err != nil {
 		return nil, err
 	}
 

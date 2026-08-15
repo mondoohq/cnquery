@@ -482,3 +482,40 @@ func TestNewKeycloakRealmIdentifierEscapesItsSegments(t *testing.T) {
 		NewKeycloakRealmIdentifier("kc.example.com", "my/realm"),
 		NewKeycloakRealmIdentifier("kc.example.com/realm/my", "realm"))
 }
+
+func TestGetPagedKeepsEveryRecordFromANonPagingEndpoint(t *testing.T) {
+	type record struct {
+		ID string `json:"id"`
+	}
+
+	// The authentication flow and component endpoints answer with the whole
+	// list and ignore first and max. The walk must return every record once,
+	// not truncate at the page size and not repeat the body.
+	const total = 250
+
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/realms/master/protocol/openid-connect/token" {
+			writeToken(t, w, "token", 300, "", 0)
+			return
+		}
+
+		calls++
+		batch := make([]record, 0, total)
+		for i := 0; i < total; i++ {
+			batch = append(batch, record{ID: strconv.Itoa(i)})
+		}
+		require.NoError(t, json.NewEncoder(w).Encode(batch))
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv)
+
+	records, err := GetPaged[record](context.Background(), conn, "/admin/realms/master/authentication/flows", nil)
+	require.NoError(t, err)
+	assert.Len(t, records, total)
+	assert.Equal(t, "0", records[0].ID)
+	assert.Equal(t, strconv.Itoa(total-1), records[total-1].ID)
+	// One request for the body, one that repeats it and ends the walk.
+	assert.Equal(t, 2, calls)
+}

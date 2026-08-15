@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -14,9 +15,17 @@ import (
 )
 
 // mqlKeycloakUserInternal holds the realm the account belongs to, which the
-// role and group lookups address.
+// role and group lookups address, and the account's role mappings once they
+// have been read.
 type mqlKeycloakUserInternal struct {
 	parentRealm *mqlKeycloakRealm
+
+	// roles and hasAdminRole both need the role mappings, and a policy that
+	// asks for both is the ordinary case, so the response is kept rather than
+	// fetched once per field.
+	roleMappingsLock    sync.Mutex
+	roleMappingsFetched bool
+	cacheRoleMappings   *roleMappingsRecord
 }
 
 type userRecord struct {
@@ -168,16 +177,34 @@ func (u *mqlKeycloakUser) groups() ([]any, error) {
 	return res, nil
 }
 
+// roleMappings reads the account's direct role mappings once and keeps the
+// response, so a query that asks for both roles and hasAdminRole costs one
+// request per account rather than two.
 func (u *mqlKeycloakUser) roleMappings() (*roleMappingsRecord, error) {
+	if u.roleMappingsFetched {
+		return u.cacheRoleMappings, nil
+	}
+
+	u.roleMappingsLock.Lock()
+	defer u.roleMappingsLock.Unlock()
+	if u.roleMappingsFetched {
+		return u.cacheRoleMappings, nil
+	}
+
 	ctx := context.Background()
 	conn := keycloakConn(u.MqlRuntime)
 	path := connection.AdminPath(u.parentRealm.realmName(), "users", u.Id.Data, "role-mappings")
 
 	var mappings roleMappingsRecord
 	if err := conn.Get(ctx, path, nil, &mappings); err != nil {
+		// A failure is not cached, so a later query retries rather than
+		// reporting an empty mapping set as fact.
 		return nil, err
 	}
-	return &mappings, nil
+
+	u.cacheRoleMappings = &mappings
+	u.roleMappingsFetched = true
+	return u.cacheRoleMappings, nil
 }
 
 // hasAdminRole reports whether the account holds a role that administers the
