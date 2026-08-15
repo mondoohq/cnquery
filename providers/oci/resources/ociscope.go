@@ -36,8 +36,23 @@ const (
 	//
 	// This is what the older listers did implicitly. It is correct for a
 	// genuinely tenancy-wide API, and wrong for anything a customer can place in
-	// a child compartment - which is most things. Sites carrying this scope are
-	// the migration list.
+	// a child compartment - which is most things.
+	//
+	// The bulk migration is done. What still carries this scope is one of three
+	// things, and only the last is a defect:
+	//
+	//   - the request sets a compartmentIdInSubtree flag itself, so one call
+	//     from the root already covers the tree (Cloud Guard, Data Safe,
+	//     Logging, Monitoring);
+	//   - the service really is tenancy-scoped (Zero Trust Packet Routing);
+	//   - the lister ignores the compartment it is handed and asks about
+	//     conn.TenantID() instead. Those cannot simply be re-scoped: under the
+	//     compartment scope they would ask the root once per compartment and,
+	//     since ociJoinCompartmentJobs concatenates without deduplicating,
+	//     return the root's resources N times while still never reading a child
+	//     compartment. Fixing one means threading the compartmentID argument
+	//     through first. TestCompartmentScopedListersUseTheirCompartment fails
+	//     the build if one is re-scoped without that.
 	ociScopeTenancyRoot ociScope = iota
 
 	// ociScopeAllCompartments walks the tenancy root plus every active

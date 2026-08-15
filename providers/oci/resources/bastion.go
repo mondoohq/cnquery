@@ -23,7 +23,7 @@ func (o *mqlOciBastion) id() (string, error) {
 func (o *mqlOciBastion) bastions() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci bastion with region %s", region)
 

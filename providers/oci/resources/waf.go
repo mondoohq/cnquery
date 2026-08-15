@@ -24,7 +24,7 @@ func (o *mqlOciWaf) id() (string, error) {
 func (o *mqlOciWaf) firewalls() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci WAF firewalls with region %s", region)
 
@@ -128,7 +128,7 @@ func (o *mqlOciWafFirewall) loadBalancer() (*mqlOciLoadBalancerLoadBalancer, err
 func (o *mqlOciWaf) policies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	return ociCollect(o.MqlRuntime, ociScopeTenancyRoot,
+	return ociCollect(o.MqlRuntime, ociScopeAllCompartments,
 		func(ctx context.Context, region string, compartmentID string) ([]any, error) {
 			log.Debug().Msgf("calling oci WAF policies with region %s", region)
 
