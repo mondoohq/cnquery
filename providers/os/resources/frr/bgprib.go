@@ -154,8 +154,18 @@ func StreamEVPNRoutes(r io.Reader, limit int) (*EVPNRouteSet, error) {
 		// The per VNI form prints prefixes at the top level, where the key
 		// is the prefix rather than a route distinguisher.
 		if isEVPNPrefix(key) {
+			// The value is read as a raw message first, which always
+			// consumes exactly one value, so a prefix that cannot be
+			// decoded does not leave the decoder mid-table.
+			var raw json.RawMessage
+			if err := dec.Decode(&raw); err != nil {
+				return nil, fmt.Errorf("cannot read the paths of a prefix: %w", err)
+			}
 			var entry map[string]json.RawMessage
-			if err := dec.Decode(&entry); err != nil {
+			if err := json.Unmarshal(raw, &entry); err != nil {
+				// The prefix was printed, so it counts even though its
+				// paths cannot be read.
+				res.Total++
 				continue
 			}
 			res.addEVPNPrefix("", key, entry, limit)
@@ -212,8 +222,15 @@ func (s *EVPNRouteSet) streamEVPNSection(dec *json.Decoder, sectionKey string, l
 			continue
 		}
 
+		var raw json.RawMessage
+		if err := dec.Decode(&raw); err != nil {
+			return fmt.Errorf("cannot read the paths of a prefix: %w", err)
+		}
 		var entry map[string]json.RawMessage
-		if err := dec.Decode(&entry); err != nil {
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			// A single unreadable prefix must not drop the section. It was
+			// printed, so it still counts.
+			s.Total++
 			continue
 		}
 		s.addEVPNPrefix(rd, key, entry, limit)

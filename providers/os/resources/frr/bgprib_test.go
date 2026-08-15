@@ -248,3 +248,23 @@ func TestStreamEVPNRoutes_ScalarSection(t *testing.T) {
 	require.Len(t, set.Routes, 1)
 	assert.Equal(t, int64(3), set.Routes[0].RouteType)
 }
+
+// TestStreamEVPNRoutes_BrokenEntryStopsCleanly covers a prefix whose value
+// cannot be decoded. The walk must not carry on from the middle of a
+// section, because everything after that point would be read as noise.
+func TestStreamEVPNRoutes_BrokenEntryStopsCleanly(t *testing.T) {
+	src := `{"192.0.2.30:2":{"rd":"192.0.2.30:2",` +
+		`"[2]:[0]:[48]:[aa:bb:cc:00:10:01]":{"prefix":"[2]:[0]:[48]:[aa:bb:cc:00:10:01]","paths":[]},` +
+		`"[2]:[0]:[48]:[aa:bb:cc:00:10:02]":"not an object",` +
+		`"[2]:[0]:[48]:[aa:bb:cc:00:10:03]":{"prefix":"[2]:[0]:[48]:[aa:bb:cc:00:10:03]","paths":[]}}}`
+	set, err := StreamEVPNRoutes(strings.NewReader(src), 0)
+	require.NoError(t, err)
+	assert.Equal(t, int64(3), set.Total)
+	require.Len(t, set.Routes, 2)
+	assert.Equal(t, "[2]:[0]:[48]:[aa:bb:cc:00:10:01]", set.Routes[0].Prefix)
+	assert.Equal(t, "[2]:[0]:[48]:[aa:bb:cc:00:10:03]", set.Routes[1].Prefix)
+
+	// A truncated document is an error rather than a partial answer.
+	_, err = StreamEVPNRoutes(strings.NewReader(`{"192.0.2.30:2":{"rd":`), 0)
+	require.Error(t, err)
+}
