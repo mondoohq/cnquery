@@ -89,6 +89,32 @@ func TestTaskTypeOfHandlesEverySdkTaskKind(t *testing.T) {
 	}
 }
 
+func TestTriggerTypeOfHandlesEverySdkTriggerKind(t *testing.T) {
+	// A trigger configuration carries members that are not the discriminator:
+	// PauseStatus is a plain string, and SqlCondition gates a trigger of any
+	// kind rather than selecting one. Everything else is a pointer to a
+	// *TriggerConfiguration struct and names a kind.
+	notAKind := map[string]bool{"PauseStatus": true, "SqlCondition": true}
+
+	typ := reflect.TypeOf(jobs.TriggerConfiguration{})
+	for _, f := range unionMembers(t, typ) {
+		if f.Type.Kind() != reflect.Ptr || notAKind[f.Name] {
+			continue
+		}
+
+		t.Run(f.Name, func(t *testing.T) {
+			trigger := withOnlyMember(t, typ, f).Interface().(jobs.TriggerConfiguration)
+			if got := triggerTypeOf(trigger); got == "unknown" || got == "" {
+				t.Fatalf("triggerTypeOf() returned %q for jobs.TriggerConfiguration.%s.\n"+
+					"The SDK models a trigger kind that triggerTypeOf does not classify, so every "+
+					"trigger of that kind reports an unknown triggerType and none of its "+
+					"configuration is mapped. Add a case for it in triggerTypeOf and in triggers().",
+					got, f.Name)
+			}
+		})
+	}
+}
+
 func TestJobLibrariesToDictHandlesEverySdkLibraryKind(t *testing.T) {
 	typ := reflect.TypeOf(compute.Library{})
 	for _, f := range unionMembers(t, typ) {

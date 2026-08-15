@@ -308,7 +308,120 @@ func (r *mqlDatabricksJob) jobClusters() ([]any, error) {
 	out := []any{}
 	for i := range settings.JobClusters {
 		jc := settings.JobClusters[i]
-		res, err := newMqlDatabricksClusterSpec(r.MqlRuntime, idPrefix, jobClusterSpecFields(jc.JobClusterKey, jc.NewCluster))
+
+		// NewCluster became a pointer in SDK v0.172. The API requires it
+		// alongside the key, so nil means a shape we do not understand: report
+		// the cluster with its key and an empty spec rather than dropping it
+		// from the list, which would read as a job with fewer clusters.
+		spec := compute.ClusterSpec{}
+		if jc.NewCluster != nil {
+			spec = *jc.NewCluster
+		}
+
+		res, err := newMqlDatabricksClusterSpec(r.MqlRuntime, idPrefix, jobClusterSpecFields(jc.JobClusterKey, spec))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// triggerTypeOf names the kind of source that starts a run. A trigger
+// configuration is a union in which exactly one kind member is populated, and
+// the populated member is the discriminator. The default branch reports unknown
+// so a kind the SDK models but this provider does not classify still appears in
+// the list rather than vanishing from it.
+func triggerTypeOf(t jobs.TriggerConfiguration) string {
+	switch {
+	case t.Schedule != nil:
+		return "schedule"
+	case t.Periodic != nil:
+		return "periodic"
+	case t.FileArrival != nil:
+		return "file_arrival"
+	case t.TableUpdate != nil:
+		return "table_update"
+	case t.Model != nil:
+		return "model"
+	case t.Continuous != nil:
+		return "continuous"
+	default:
+		return "unknown"
+	}
+}
+
+func (r *mqlDatabricksJob) triggers() ([]any, error) {
+	settings, err := r.jobSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	jobId := strconv.FormatInt(r.Id.Data, 10)
+	out := []any{}
+	for i := range settings.Triggers {
+		t := settings.Triggers[i]
+
+		// Only the members belonging to the trigger's own kind carry values.
+		// The rest stay at their zero value, which is what the schema documents
+		// for a field that does not apply to this kind.
+		args := map[string]*llx.RawData{
+			// A trigger carries no key of its own, so the cache id is the job
+			// plus the position in the list. That is the order the API returns
+			// and the order TriggerDetails is aligned to.
+			"__id":                          llx.StringData("databricks.job/" + jobId + "/trigger/" + strconv.Itoa(i)),
+			"triggerType":                   llx.StringData(triggerTypeOf(t)),
+			"pauseStatus":                   llx.StringData(string(t.PauseStatus)),
+			"cronExpression":                llx.StringData(""),
+			"timezoneId":                    llx.StringData(""),
+			"periodicInterval":              llx.IntData(0),
+			"periodicUnit":                  llx.StringData(""),
+			"fileArrivalUrl":                llx.StringData(""),
+			"tableNames":                    llx.ArrayData([]any{}, types.String),
+			"tableUpdateCondition":          llx.StringData(""),
+			"modelSecurableName":            llx.StringData(""),
+			"modelCondition":                llx.StringData(""),
+			"modelAliases":                  llx.ArrayData([]any{}, types.String),
+			"continuousTaskRetryMode":       llx.StringData(""),
+			"minTimeBetweenTriggersSeconds": llx.IntData(0),
+			"waitAfterLastChangeSeconds":    llx.IntData(0),
+			"sqlConditionQueryId":           llx.StringData(""),
+			"sqlConditionWarehouseId":       llx.StringData(""),
+			"sqlConditionTriggerMode":       llx.StringData(""),
+		}
+
+		switch {
+		case t.Schedule != nil:
+			args["cronExpression"] = llx.StringData(t.Schedule.QuartzCronExpression)
+			args["timezoneId"] = llx.StringData(t.Schedule.TimezoneId)
+		case t.Periodic != nil:
+			args["periodicInterval"] = llx.IntData(int64(t.Periodic.Interval))
+			args["periodicUnit"] = llx.StringData(string(t.Periodic.Unit))
+		case t.FileArrival != nil:
+			args["fileArrivalUrl"] = llx.StringData(t.FileArrival.Url)
+			args["minTimeBetweenTriggersSeconds"] = llx.IntData(int64(t.FileArrival.MinTimeBetweenTriggersSeconds))
+			args["waitAfterLastChangeSeconds"] = llx.IntData(int64(t.FileArrival.WaitAfterLastChangeSeconds))
+		case t.TableUpdate != nil:
+			args["tableNames"] = llx.ArrayData(strSlice(t.TableUpdate.TableNames), types.String)
+			args["tableUpdateCondition"] = llx.StringData(string(t.TableUpdate.Condition))
+			args["minTimeBetweenTriggersSeconds"] = llx.IntData(int64(t.TableUpdate.MinTimeBetweenTriggersSeconds))
+			args["waitAfterLastChangeSeconds"] = llx.IntData(int64(t.TableUpdate.WaitAfterLastChangeSeconds))
+		case t.Model != nil:
+			args["modelSecurableName"] = llx.StringData(t.Model.SecurableName)
+			args["modelCondition"] = llx.StringData(string(t.Model.Condition))
+			args["modelAliases"] = llx.ArrayData(strSlice(t.Model.Aliases), types.String)
+			args["minTimeBetweenTriggersSeconds"] = llx.IntData(int64(t.Model.MinTimeBetweenTriggersSeconds))
+		case t.Continuous != nil:
+			args["continuousTaskRetryMode"] = llx.StringData(string(t.Continuous.TaskRetryMode))
+		}
+
+		if c := t.SqlCondition; c != nil {
+			args["sqlConditionQueryId"] = llx.StringData(c.SqlQueryId)
+			args["sqlConditionWarehouseId"] = llx.StringData(c.WarehouseId)
+			args["sqlConditionTriggerMode"] = llx.StringData(string(c.TriggerMode))
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "databricks.job.trigger", args)
 		if err != nil {
 			return nil, err
 		}
