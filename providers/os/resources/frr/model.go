@@ -193,11 +193,14 @@ type RouteMap struct {
 
 // RouteMapEntry is one clause of a route map.
 type RouteMapEntry struct {
-	Name      string
-	Action    string
-	Sequence  int64
-	Match     []string
-	Set       []string
+	Name     string
+	Action   string
+	Sequence int64
+	// Match and Set hold the raw statements, without the leading keyword.
+	Match []string
+	Set   []string
+	// Clauses holds the same statements read into fields.
+	Clauses   RouteMapClauses
 	Call      string
 	OnMatch   string
 	File      string
@@ -817,6 +820,8 @@ func buildRouteMapEntry(blk *Block) RouteMapEntry {
 	if len(blk.Args) > 2 {
 		e.Sequence, _ = strconv.ParseInt(blk.Args[2], 10, 64)
 	}
+	e.Clauses = parseRouteMapClauses(blk.Directives)
+
 	for i := range blk.Directives {
 		d := &blk.Directives[i]
 		switch d.Name {
