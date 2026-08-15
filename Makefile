@@ -236,6 +236,7 @@ PROVIDERS := \
 	ipmi \
 	iru \
 	jamf \
+	jumpcloud \
 	k8s \
 	keycloak \
 	kustomize \
