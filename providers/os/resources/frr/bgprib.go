@@ -335,6 +335,7 @@ func fillEVPNPrefixParts(route *EVPNRoute) {
 			route.EthernetTag = tag
 		}
 	}
+	ipIndex := -1
 	for i := 2; i < len(values); i++ {
 		v := values[i]
 		switch {
@@ -342,15 +343,17 @@ func fillEVPNPrefixParts(route *EVPNRoute) {
 			route.MACAddress = v
 		case strings.Contains(v, ".") || strings.Contains(v, ":"):
 			// The IP field of a type 2, 3 or 5 route.
-			if route.IP == "" && !reMAC.MatchString(v) {
+			if route.IP == "" {
 				route.IP = v
+				ipIndex = i
 			}
 		}
 	}
-	// A type 5 route prints the prefix length before the IP, so the IP is
-	// reported with its length when both are present.
-	if route.RouteType == 5 && route.IP != "" && len(values) >= 3 {
-		if plen, err := strconv.ParseInt(values[len(values)-2], 10, 64); err == nil && plen <= 128 {
+	// A type 5 route prints the prefix length in the field right before the
+	// IP, so the length is read from there rather than from the end. A
+	// version that appends further fields does not move it.
+	if route.RouteType == 5 && route.IP != "" && ipIndex > 0 {
+		if plen, err := strconv.ParseInt(values[ipIndex-1], 10, 64); err == nil && plen <= 128 {
 			route.IP += "/" + strconv.FormatInt(plen, 10)
 		}
 	}
@@ -466,14 +469,17 @@ func streamRouteMap(dec *json.Decoder, res *RouteSet, limit int) error {
 			continue
 		}
 		for _, path := range decodePaths(raw) {
+			// A prefix with several paths must not push the result past the
+			// limit, so the check comes before the append.
+			if len(res.Routes) >= limit {
+				res.Truncated = true
+				break
+			}
 			route := convertPath(path)
 			if route.Prefix == "" {
 				route.Prefix = prefix
 			}
 			res.Routes = append(res.Routes, route)
-			if len(res.Routes) >= limit {
-				break
-			}
 		}
 	}
 
