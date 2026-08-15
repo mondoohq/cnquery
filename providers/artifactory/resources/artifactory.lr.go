@@ -26,6 +26,14 @@ const (
 	ResourceArtifactoryGroup                     string = "artifactory.group"
 	ResourceArtifactoryAccessToken               string = "artifactory.accessToken"
 	ResourceArtifactorySecuritySettings          string = "artifactory.securitySettings"
+	ResourceArtifactoryLdapSetting               string = "artifactory.ldapSetting"
+	ResourceArtifactoryLdapGroupSetting          string = "artifactory.ldapGroupSetting"
+	ResourceArtifactorySamlSettings              string = "artifactory.samlSettings"
+	ResourceArtifactoryOauthSettings             string = "artifactory.oauthSettings"
+	ResourceArtifactoryOauthProvider             string = "artifactory.oauthProvider"
+	ResourceArtifactoryHttpSsoSettings           string = "artifactory.httpSsoSettings"
+	ResourceArtifactoryCrowdSettings             string = "artifactory.crowdSettings"
+	ResourceArtifactoryBackup                    string = "artifactory.backup"
 	ResourceArtifactoryCleanupPolicy             string = "artifactory.cleanupPolicy"
 )
 
@@ -72,6 +80,38 @@ func init() {
 		"artifactory.securitySettings": {
 			// to override args, implement: initArtifactorySecuritySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createArtifactorySecuritySettings,
+		},
+		"artifactory.ldapSetting": {
+			// to override args, implement: initArtifactoryLdapSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryLdapSetting,
+		},
+		"artifactory.ldapGroupSetting": {
+			// to override args, implement: initArtifactoryLdapGroupSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryLdapGroupSetting,
+		},
+		"artifactory.samlSettings": {
+			// to override args, implement: initArtifactorySamlSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactorySamlSettings,
+		},
+		"artifactory.oauthSettings": {
+			// to override args, implement: initArtifactoryOauthSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryOauthSettings,
+		},
+		"artifactory.oauthProvider": {
+			// to override args, implement: initArtifactoryOauthProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryOauthProvider,
+		},
+		"artifactory.httpSsoSettings": {
+			// to override args, implement: initArtifactoryHttpSsoSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryHttpSsoSettings,
+		},
+		"artifactory.crowdSettings": {
+			// to override args, implement: initArtifactoryCrowdSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryCrowdSettings,
+		},
+		"artifactory.backup": {
+			// to override args, implement: initArtifactoryBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryBackup,
 		},
 		"artifactory.cleanupPolicy": {
 			// to override args, implement: initArtifactoryCleanupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -169,6 +209,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"artifactory.cleanupPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactory).GetCleanupPolicies()).ToDataRes(types.Array(types.Resource("artifactory.cleanupPolicy")))
 	},
+	"artifactory.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactory).GetBackups()).ToDataRes(types.Array(types.Resource("artifactory.backup")))
+	},
 	"artifactory.system": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactory).GetSystem()).ToDataRes(types.Resource("artifactory.systemInfo"))
 	},
@@ -228,6 +271,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"artifactory.repository.externalDependenciesEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetExternalDependenciesEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.blockPushingSchema1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetBlockPushingSchema1()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.forceNugetAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetForceNugetAuthentication()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.enableTokenAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetEnableTokenAuthentication()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.hasUpstreamCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetHasUpstreamCredential()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.storeArtifactsLocally": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetStoreArtifactsLocally()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.bypassHeadRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetBypassHeadRequests()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.contentSynchronisationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetContentSynchronisationEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.downloadRedirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetDownloadRedirect()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.cdnRedirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetCdnRedirect()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.archiveBrowsingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetArchiveBrowsingEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.priorityResolution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetPriorityResolution()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.signedUrlTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetSignedUrlTtl()).ToDataRes(types.Int)
+	},
+	"artifactory.repository.xrayDataTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetXrayDataTtl()).ToDataRes(types.Int)
+	},
+	"artifactory.repository.projectKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetProjectKey()).ToDataRes(types.String)
+	},
+	"artifactory.repository.propertySets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetPropertySets()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.repository.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetNotes()).ToDataRes(types.String)
 	},
 	"artifactory.repository.permissionTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetPermissionTargets()).ToDataRes(types.Array(types.Resource("artifactory.permissionTarget")))
@@ -436,6 +527,249 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"artifactory.securitySettings.anonymousDeployTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactorySecuritySettings).GetAnonymousDeployTargets()).ToDataRes(types.Array(types.Resource("artifactory.permissionTarget")))
 	},
+	"artifactory.securitySettings.buildGlobalBasicReadAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetBuildGlobalBasicReadAllowed()).ToDataRes(types.Bool)
+	},
+	"artifactory.securitySettings.buildGlobalBasicReadForAnonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetBuildGlobalBasicReadForAnonymous()).ToDataRes(types.Bool)
+	},
+	"artifactory.securitySettings.ldapSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetLdapSettings()).ToDataRes(types.Array(types.Resource("artifactory.ldapSetting")))
+	},
+	"artifactory.securitySettings.ldapGroupSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetLdapGroupSettings()).ToDataRes(types.Array(types.Resource("artifactory.ldapGroupSetting")))
+	},
+	"artifactory.securitySettings.saml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetSaml()).ToDataRes(types.Resource("artifactory.samlSettings"))
+	},
+	"artifactory.securitySettings.oauth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetOauth()).ToDataRes(types.Resource("artifactory.oauthSettings"))
+	},
+	"artifactory.securitySettings.httpSso": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetHttpSso()).ToDataRes(types.Resource("artifactory.httpSsoSettings"))
+	},
+	"artifactory.securitySettings.crowd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySecuritySettings).GetCrowd()).ToDataRes(types.Resource("artifactory.crowdSettings"))
+	},
+	"artifactory.ldapSetting.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetKey()).ToDataRes(types.String)
+	},
+	"artifactory.ldapSetting.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapSetting.ldapUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetLdapUrl()).ToDataRes(types.String)
+	},
+	"artifactory.ldapSetting.usesEncryptedTransport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetUsesEncryptedTransport()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapSetting.userDnPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetUserDnPattern()).ToDataRes(types.String)
+	},
+	"artifactory.ldapSetting.searchFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetSearchFilter()).ToDataRes(types.String)
+	},
+	"artifactory.ldapSetting.searchBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetSearchBase()).ToDataRes(types.String)
+	},
+	"artifactory.ldapSetting.searchSubTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetSearchSubTree()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapSetting.autoCreateUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetAutoCreateUser()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapSetting.hasManagerCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetHasManagerCredential()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapSetting.emailAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetEmailAttribute()).ToDataRes(types.String)
+	},
+	"artifactory.ldapSetting.ldapPoisoningProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetLdapPoisoningProtection()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapSetting.allowUserToAccessProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapSetting).GetAllowUserToAccessProfile()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapGroupSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.groupBaseDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetGroupBaseDn()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.groupNameAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetGroupNameAttribute()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.groupMemberAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetGroupMemberAttribute()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.descriptionAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetDescriptionAttribute()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetFilter()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.strategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetStrategy()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.subTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetSubTree()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapGroupSetting.forceAttributeSearch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetForceAttributeSearch()).ToDataRes(types.Bool)
+	},
+	"artifactory.ldapGroupSetting.ldapSettingKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetLdapSettingKey()).ToDataRes(types.String)
+	},
+	"artifactory.ldapGroupSetting.ldapSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryLdapGroupSetting).GetLdapSetting()).ToDataRes(types.Resource("artifactory.ldapSetting"))
+	},
+	"artifactory.samlSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.loginUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetLoginUrl()).ToDataRes(types.String)
+	},
+	"artifactory.samlSettings.logoutUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetLogoutUrl()).ToDataRes(types.String)
+	},
+	"artifactory.samlSettings.serviceProviderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetServiceProviderName()).ToDataRes(types.String)
+	},
+	"artifactory.samlSettings.noAutoUserCreation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetNoAutoUserCreation()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.autoRedirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetAutoRedirect()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.syncGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetSyncGroups()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.groupAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetGroupAttribute()).ToDataRes(types.String)
+	},
+	"artifactory.samlSettings.emailAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetEmailAttribute()).ToDataRes(types.String)
+	},
+	"artifactory.samlSettings.useEncryptedAssertion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetUseEncryptedAssertion()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.verifyAudienceRestriction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetVerifyAudienceRestriction()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.allowUserToAccessProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetAllowUserToAccessProfile()).ToDataRes(types.Bool)
+	},
+	"artifactory.samlSettings.hasCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactorySamlSettings).GetHasCertificate()).ToDataRes(types.Bool)
+	},
+	"artifactory.oauthSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthSettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.oauthSettings.persistUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthSettings).GetPersistUsers()).ToDataRes(types.Bool)
+	},
+	"artifactory.oauthSettings.allowUserToAccessProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthSettings).GetAllowUserToAccessProfile()).ToDataRes(types.Bool)
+	},
+	"artifactory.oauthSettings.providers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthSettings).GetProviders()).ToDataRes(types.Array(types.Resource("artifactory.oauthProvider")))
+	},
+	"artifactory.oauthProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.oauthProvider.providerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetProviderType()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetClientId()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.apiUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetApiUrl()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.authUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetAuthUrl()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.tokenUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetTokenUrl()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.basicUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetBasicUrl()).ToDataRes(types.String)
+	},
+	"artifactory.oauthProvider.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryOauthProvider).GetDomain()).ToDataRes(types.String)
+	},
+	"artifactory.httpSsoSettings.httpSsoProxied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryHttpSsoSettings).GetHttpSsoProxied()).ToDataRes(types.Bool)
+	},
+	"artifactory.httpSsoSettings.remoteUserRequestVariable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryHttpSsoSettings).GetRemoteUserRequestVariable()).ToDataRes(types.String)
+	},
+	"artifactory.httpSsoSettings.noAutoUserCreation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryHttpSsoSettings).GetNoAutoUserCreation()).ToDataRes(types.Bool)
+	},
+	"artifactory.httpSsoSettings.syncLdapGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryHttpSsoSettings).GetSyncLdapGroups()).ToDataRes(types.Bool)
+	},
+	"artifactory.httpSsoSettings.allowUserToAccessProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryHttpSsoSettings).GetAllowUserToAccessProfile()).ToDataRes(types.Bool)
+	},
+	"artifactory.crowdSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.crowdSettings.serverUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetServerUrl()).ToDataRes(types.String)
+	},
+	"artifactory.crowdSettings.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetApplicationName()).ToDataRes(types.String)
+	},
+	"artifactory.crowdSettings.sessionValidationInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetSessionValidationInterval()).ToDataRes(types.Int)
+	},
+	"artifactory.crowdSettings.noAutoUserCreation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetNoAutoUserCreation()).ToDataRes(types.Bool)
+	},
+	"artifactory.crowdSettings.directAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetDirectAuthentication()).ToDataRes(types.Bool)
+	},
+	"artifactory.crowdSettings.useDefaultProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetUseDefaultProxy()).ToDataRes(types.Bool)
+	},
+	"artifactory.crowdSettings.allowUserToAccessProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryCrowdSettings).GetAllowUserToAccessProfile()).ToDataRes(types.Bool)
+	},
+	"artifactory.backup.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetKey()).ToDataRes(types.String)
+	},
+	"artifactory.backup.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.backup.cronExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetCronExpression()).ToDataRes(types.String)
+	},
+	"artifactory.backup.retentionPeriodHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetRetentionPeriodHours()).ToDataRes(types.Int)
+	},
+	"artifactory.backup.createArchive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetCreateArchive()).ToDataRes(types.Bool)
+	},
+	"artifactory.backup.excludeBuilds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetExcludeBuilds()).ToDataRes(types.Bool)
+	},
+	"artifactory.backup.excludeNewRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetExcludeNewRepositories()).ToDataRes(types.Bool)
+	},
+	"artifactory.backup.sendMailOnError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetSendMailOnError()).ToDataRes(types.Bool)
+	},
+	"artifactory.backup.excludedRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetExcludedRepositories()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.backup.excludedRepositoryRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryBackup).GetExcludedRepositoryRefs()).ToDataRes(types.Array(types.Resource("artifactory.repository")))
+	},
 	"artifactory.cleanupPolicy.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryCleanupPolicy).GetKey()).ToDataRes(types.String)
 	},
@@ -517,6 +851,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.cleanupPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactory).CleanupPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactory).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"artifactory.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -605,6 +943,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.repository.externalDependenciesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactoryRepository).ExternalDependenciesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.blockPushingSchema1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).BlockPushingSchema1, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.forceNugetAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ForceNugetAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.enableTokenAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).EnableTokenAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.hasUpstreamCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).HasUpstreamCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.storeArtifactsLocally": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).StoreArtifactsLocally, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.bypassHeadRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).BypassHeadRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.contentSynchronisationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ContentSynchronisationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.downloadRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).DownloadRedirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.cdnRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).CdnRedirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.archiveBrowsingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ArchiveBrowsingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.priorityResolution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).PriorityResolution, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.signedUrlTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).SignedUrlTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.xrayDataTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).XrayDataTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.projectKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ProjectKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.propertySets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).PropertySets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"artifactory.repository.permissionTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -911,6 +1313,362 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlArtifactorySecuritySettings).AnonymousDeployTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"artifactory.securitySettings.buildGlobalBasicReadAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).BuildGlobalBasicReadAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.buildGlobalBasicReadForAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).BuildGlobalBasicReadForAnonymous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.ldapSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).LdapSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.ldapGroupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).LdapGroupSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.saml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).Saml, ok = plugin.RawToTValue[*mqlArtifactorySamlSettings](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.oauth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).Oauth, ok = plugin.RawToTValue[*mqlArtifactoryOauthSettings](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.httpSso": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).HttpSso, ok = plugin.RawToTValue[*mqlArtifactoryHttpSsoSettings](v.Value, v.Error)
+		return
+	},
+	"artifactory.securitySettings.crowd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySecuritySettings).Crowd, ok = plugin.RawToTValue[*mqlArtifactoryCrowdSettings](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.ldapSetting.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.ldapUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).LdapUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.usesEncryptedTransport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).UsesEncryptedTransport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.userDnPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).UserDnPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.searchFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).SearchFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.searchBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).SearchBase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.searchSubTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).SearchSubTree, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.autoCreateUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).AutoCreateUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.hasManagerCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).HasManagerCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.emailAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).EmailAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.ldapPoisoningProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).LdapPoisoningProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapSetting.allowUserToAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapSetting).AllowUserToAccessProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.ldapGroupSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.groupBaseDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).GroupBaseDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.groupNameAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).GroupNameAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.groupMemberAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).GroupMemberAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.descriptionAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).DescriptionAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.strategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).Strategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.subTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).SubTree, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.forceAttributeSearch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).ForceAttributeSearch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.ldapSettingKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).LdapSettingKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.ldapGroupSetting.ldapSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryLdapGroupSetting).LdapSetting, ok = plugin.RawToTValue[*mqlArtifactoryLdapSetting](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.samlSettings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.loginUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).LoginUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.logoutUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).LogoutUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.serviceProviderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).ServiceProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.noAutoUserCreation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).NoAutoUserCreation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.autoRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).AutoRedirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.syncGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).SyncGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.groupAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).GroupAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.emailAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).EmailAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.useEncryptedAssertion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).UseEncryptedAssertion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.verifyAudienceRestriction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).VerifyAudienceRestriction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.allowUserToAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).AllowUserToAccessProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.samlSettings.hasCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactorySamlSettings).HasCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.oauthSettings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthSettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthSettings.persistUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthSettings).PersistUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthSettings.allowUserToAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthSettings).AllowUserToAccessProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthSettings.providers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthSettings).Providers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.oauthProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).ProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.apiUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).ApiUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.authUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).AuthUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.tokenUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).TokenUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.basicUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).BasicUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.oauthProvider.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryOauthProvider).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.httpSsoSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryHttpSsoSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.httpSsoSettings.httpSsoProxied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryHttpSsoSettings).HttpSsoProxied, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.httpSsoSettings.remoteUserRequestVariable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryHttpSsoSettings).RemoteUserRequestVariable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.httpSsoSettings.noAutoUserCreation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryHttpSsoSettings).NoAutoUserCreation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.httpSsoSettings.syncLdapGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryHttpSsoSettings).SyncLdapGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.httpSsoSettings.allowUserToAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryHttpSsoSettings).AllowUserToAccessProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.crowdSettings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.serverUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).ServerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.sessionValidationInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).SessionValidationInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.noAutoUserCreation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).NoAutoUserCreation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.directAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).DirectAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.useDefaultProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).UseDefaultProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.crowdSettings.allowUserToAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryCrowdSettings).AllowUserToAccessProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.backup.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.cronExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).CronExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.retentionPeriodHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).RetentionPeriodHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.createArchive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).CreateArchive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.excludeBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).ExcludeBuilds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.excludeNewRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).ExcludeNewRepositories, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.sendMailOnError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).SendMailOnError, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.excludedRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).ExcludedRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.backup.excludedRepositoryRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryBackup).ExcludedRepositoryRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"artifactory.cleanupPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactoryCleanupPolicy).__id, ok = v.Value.(string)
 		return
@@ -1003,6 +1761,7 @@ type mqlArtifactory struct {
 	AccessTokens      plugin.TValue[[]any]
 	Security          plugin.TValue[*mqlArtifactorySecuritySettings]
 	CleanupPolicies   plugin.TValue[[]any]
+	Backups           plugin.TValue[[]any]
 	System            plugin.TValue[*mqlArtifactorySystemInfo]
 }
 
@@ -1155,6 +1914,22 @@ func (c *mqlArtifactory) GetCleanupPolicies() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlArtifactory) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
 func (c *mqlArtifactory) GetSystem() *plugin.TValue[*mqlArtifactorySystemInfo] {
 	return plugin.GetOrCompute[*mqlArtifactorySystemInfo](&c.System, func() (*mqlArtifactorySystemInfo, error) {
 		if c.MqlRuntime.HasRecording {
@@ -1240,23 +2015,39 @@ type mqlArtifactoryRepository struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlArtifactoryRepositoryInternal
-	Key                         plugin.TValue[string]
-	Type                        plugin.TValue[string]
-	PackageType                 plugin.TValue[string]
-	Description                 plugin.TValue[string]
-	Url                         plugin.TValue[string]
-	MemberRepositories          plugin.TValue[[]any]
-	MemberRepositoryRefs        plugin.TValue[[]any]
-	XrayIndex                   plugin.TValue[bool]
-	BlackedOut                  plugin.TValue[bool]
-	Offline                     plugin.TValue[bool]
-	IncludesPattern             plugin.TValue[string]
-	ExcludesPattern             plugin.TValue[string]
-	RepoLayoutRef               plugin.TValue[string]
-	AllowAnyHostAuth            plugin.TValue[bool]
-	ExternalDependenciesEnabled plugin.TValue[bool]
-	PermissionTargets           plugin.TValue[[]any]
-	AnonymousActions            plugin.TValue[[]any]
+	Key                           plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	PackageType                   plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	Url                           plugin.TValue[string]
+	MemberRepositories            plugin.TValue[[]any]
+	MemberRepositoryRefs          plugin.TValue[[]any]
+	XrayIndex                     plugin.TValue[bool]
+	BlackedOut                    plugin.TValue[bool]
+	Offline                       plugin.TValue[bool]
+	IncludesPattern               plugin.TValue[string]
+	ExcludesPattern               plugin.TValue[string]
+	RepoLayoutRef                 plugin.TValue[string]
+	AllowAnyHostAuth              plugin.TValue[bool]
+	ExternalDependenciesEnabled   plugin.TValue[bool]
+	BlockPushingSchema1           plugin.TValue[bool]
+	ForceNugetAuthentication      plugin.TValue[bool]
+	EnableTokenAuthentication     plugin.TValue[bool]
+	HasUpstreamCredential         plugin.TValue[bool]
+	StoreArtifactsLocally         plugin.TValue[bool]
+	BypassHeadRequests            plugin.TValue[bool]
+	ContentSynchronisationEnabled plugin.TValue[bool]
+	DownloadRedirect              plugin.TValue[bool]
+	CdnRedirect                   plugin.TValue[bool]
+	ArchiveBrowsingEnabled        plugin.TValue[bool]
+	PriorityResolution            plugin.TValue[bool]
+	SignedUrlTtl                  plugin.TValue[int64]
+	XrayDataTtl                   plugin.TValue[int64]
+	ProjectKey                    plugin.TValue[string]
+	PropertySets                  plugin.TValue[[]any]
+	Notes                         plugin.TValue[string]
+	PermissionTargets             plugin.TValue[[]any]
+	AnonymousActions              plugin.TValue[[]any]
 }
 
 // createArtifactoryRepository creates a new instance of this resource
@@ -1383,6 +2174,102 @@ func (c *mqlArtifactoryRepository) GetAllowAnyHostAuth() *plugin.TValue[bool] {
 func (c *mqlArtifactoryRepository) GetExternalDependenciesEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ExternalDependenciesEnabled, func() (bool, error) {
 		return c.externalDependenciesEnabled()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetBlockPushingSchema1() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockPushingSchema1, func() (bool, error) {
+		return c.blockPushingSchema1()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetForceNugetAuthentication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ForceNugetAuthentication, func() (bool, error) {
+		return c.forceNugetAuthentication()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetEnableTokenAuthentication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableTokenAuthentication, func() (bool, error) {
+		return c.enableTokenAuthentication()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetHasUpstreamCredential() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUpstreamCredential, func() (bool, error) {
+		return c.hasUpstreamCredential()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetStoreArtifactsLocally() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StoreArtifactsLocally, func() (bool, error) {
+		return c.storeArtifactsLocally()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetBypassHeadRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BypassHeadRequests, func() (bool, error) {
+		return c.bypassHeadRequests()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetContentSynchronisationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ContentSynchronisationEnabled, func() (bool, error) {
+		return c.contentSynchronisationEnabled()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetDownloadRedirect() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DownloadRedirect, func() (bool, error) {
+		return c.downloadRedirect()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetCdnRedirect() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CdnRedirect, func() (bool, error) {
+		return c.cdnRedirect()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetArchiveBrowsingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ArchiveBrowsingEnabled, func() (bool, error) {
+		return c.archiveBrowsingEnabled()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetPriorityResolution() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PriorityResolution, func() (bool, error) {
+		return c.priorityResolution()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetSignedUrlTtl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SignedUrlTtl, func() (int64, error) {
+		return c.signedUrlTtl()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetXrayDataTtl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.XrayDataTtl, func() (int64, error) {
+		return c.xrayDataTtl()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetProjectKey() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProjectKey, func() (string, error) {
+		return c.projectKey()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetPropertySets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PropertySets, func() ([]any, error) {
+		return c.propertySets()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetNotes() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Notes, func() (string, error) {
+		return c.notes()
 	})
 }
 
@@ -2144,7 +3031,7 @@ func (c *mqlArtifactoryAccessToken) GetIssuedAt() *plugin.TValue[*time.Time] {
 type mqlArtifactorySecuritySettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlArtifactorySecuritySettingsInternal it will be used here
+	mqlArtifactorySecuritySettingsInternal
 	AnonymousAccessEnabled              plugin.TValue[bool]
 	AnonymousAccessToBuildInfosDisabled plugin.TValue[bool]
 	HideUnauthorizedResources           plugin.TValue[bool]
@@ -2156,6 +3043,14 @@ type mqlArtifactorySecuritySettings struct {
 	AnonymousCanRead                    plugin.TValue[bool]
 	AnonymousCanDeploy                  plugin.TValue[bool]
 	AnonymousDeployTargets              plugin.TValue[[]any]
+	BuildGlobalBasicReadAllowed         plugin.TValue[bool]
+	BuildGlobalBasicReadForAnonymous    plugin.TValue[bool]
+	LdapSettings                        plugin.TValue[[]any]
+	LdapGroupSettings                   plugin.TValue[[]any]
+	Saml                                plugin.TValue[*mqlArtifactorySamlSettings]
+	Oauth                               plugin.TValue[*mqlArtifactoryOauthSettings]
+	HttpSso                             plugin.TValue[*mqlArtifactoryHttpSsoSettings]
+	Crowd                               plugin.TValue[*mqlArtifactoryCrowdSettings]
 }
 
 // createArtifactorySecuritySettings creates a new instance of this resource
@@ -2252,6 +3147,863 @@ func (c *mqlArtifactorySecuritySettings) GetAnonymousDeployTargets() *plugin.TVa
 		}
 
 		return c.anonymousDeployTargets()
+	})
+}
+
+func (c *mqlArtifactorySecuritySettings) GetBuildGlobalBasicReadAllowed() *plugin.TValue[bool] {
+	return &c.BuildGlobalBasicReadAllowed
+}
+
+func (c *mqlArtifactorySecuritySettings) GetBuildGlobalBasicReadForAnonymous() *plugin.TValue[bool] {
+	return &c.BuildGlobalBasicReadForAnonymous
+}
+
+func (c *mqlArtifactorySecuritySettings) GetLdapSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LdapSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.securitySettings", c.__id, "ldapSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ldapSettings()
+	})
+}
+
+func (c *mqlArtifactorySecuritySettings) GetLdapGroupSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LdapGroupSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.securitySettings", c.__id, "ldapGroupSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ldapGroupSettings()
+	})
+}
+
+func (c *mqlArtifactorySecuritySettings) GetSaml() *plugin.TValue[*mqlArtifactorySamlSettings] {
+	return plugin.GetOrCompute[*mqlArtifactorySamlSettings](&c.Saml, func() (*mqlArtifactorySamlSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.securitySettings", c.__id, "saml")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactorySamlSettings), nil
+			}
+		}
+
+		return c.saml()
+	})
+}
+
+func (c *mqlArtifactorySecuritySettings) GetOauth() *plugin.TValue[*mqlArtifactoryOauthSettings] {
+	return plugin.GetOrCompute[*mqlArtifactoryOauthSettings](&c.Oauth, func() (*mqlArtifactoryOauthSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.securitySettings", c.__id, "oauth")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryOauthSettings), nil
+			}
+		}
+
+		return c.oauth()
+	})
+}
+
+func (c *mqlArtifactorySecuritySettings) GetHttpSso() *plugin.TValue[*mqlArtifactoryHttpSsoSettings] {
+	return plugin.GetOrCompute[*mqlArtifactoryHttpSsoSettings](&c.HttpSso, func() (*mqlArtifactoryHttpSsoSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.securitySettings", c.__id, "httpSso")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryHttpSsoSettings), nil
+			}
+		}
+
+		return c.httpSso()
+	})
+}
+
+func (c *mqlArtifactorySecuritySettings) GetCrowd() *plugin.TValue[*mqlArtifactoryCrowdSettings] {
+	return plugin.GetOrCompute[*mqlArtifactoryCrowdSettings](&c.Crowd, func() (*mqlArtifactoryCrowdSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.securitySettings", c.__id, "crowd")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryCrowdSettings), nil
+			}
+		}
+
+		return c.crowd()
+	})
+}
+
+// mqlArtifactoryLdapSetting for the artifactory.ldapSetting resource
+type mqlArtifactoryLdapSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlArtifactoryLdapSettingInternal it will be used here
+	Key                      plugin.TValue[string]
+	Enabled                  plugin.TValue[bool]
+	LdapUrl                  plugin.TValue[string]
+	UsesEncryptedTransport   plugin.TValue[bool]
+	UserDnPattern            plugin.TValue[string]
+	SearchFilter             plugin.TValue[string]
+	SearchBase               plugin.TValue[string]
+	SearchSubTree            plugin.TValue[bool]
+	AutoCreateUser           plugin.TValue[bool]
+	HasManagerCredential     plugin.TValue[bool]
+	EmailAttribute           plugin.TValue[string]
+	LdapPoisoningProtection  plugin.TValue[bool]
+	AllowUserToAccessProfile plugin.TValue[bool]
+}
+
+// createArtifactoryLdapSetting creates a new instance of this resource
+func createArtifactoryLdapSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryLdapSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.ldapSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryLdapSetting) MqlName() string {
+	return "artifactory.ldapSetting"
+}
+
+func (c *mqlArtifactoryLdapSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryLdapSetting) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlArtifactoryLdapSetting) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactoryLdapSetting) GetLdapUrl() *plugin.TValue[string] {
+	return &c.LdapUrl
+}
+
+func (c *mqlArtifactoryLdapSetting) GetUsesEncryptedTransport() *plugin.TValue[bool] {
+	return &c.UsesEncryptedTransport
+}
+
+func (c *mqlArtifactoryLdapSetting) GetUserDnPattern() *plugin.TValue[string] {
+	return &c.UserDnPattern
+}
+
+func (c *mqlArtifactoryLdapSetting) GetSearchFilter() *plugin.TValue[string] {
+	return &c.SearchFilter
+}
+
+func (c *mqlArtifactoryLdapSetting) GetSearchBase() *plugin.TValue[string] {
+	return &c.SearchBase
+}
+
+func (c *mqlArtifactoryLdapSetting) GetSearchSubTree() *plugin.TValue[bool] {
+	return &c.SearchSubTree
+}
+
+func (c *mqlArtifactoryLdapSetting) GetAutoCreateUser() *plugin.TValue[bool] {
+	return &c.AutoCreateUser
+}
+
+func (c *mqlArtifactoryLdapSetting) GetHasManagerCredential() *plugin.TValue[bool] {
+	return &c.HasManagerCredential
+}
+
+func (c *mqlArtifactoryLdapSetting) GetEmailAttribute() *plugin.TValue[string] {
+	return &c.EmailAttribute
+}
+
+func (c *mqlArtifactoryLdapSetting) GetLdapPoisoningProtection() *plugin.TValue[bool] {
+	return &c.LdapPoisoningProtection
+}
+
+func (c *mqlArtifactoryLdapSetting) GetAllowUserToAccessProfile() *plugin.TValue[bool] {
+	return &c.AllowUserToAccessProfile
+}
+
+// mqlArtifactoryLdapGroupSetting for the artifactory.ldapGroupSetting resource
+type mqlArtifactoryLdapGroupSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryLdapGroupSettingInternal
+	Name                 plugin.TValue[string]
+	GroupBaseDn          plugin.TValue[string]
+	GroupNameAttribute   plugin.TValue[string]
+	GroupMemberAttribute plugin.TValue[string]
+	DescriptionAttribute plugin.TValue[string]
+	Filter               plugin.TValue[string]
+	Strategy             plugin.TValue[string]
+	SubTree              plugin.TValue[bool]
+	ForceAttributeSearch plugin.TValue[bool]
+	LdapSettingKey       plugin.TValue[string]
+	LdapSetting          plugin.TValue[*mqlArtifactoryLdapSetting]
+}
+
+// createArtifactoryLdapGroupSetting creates a new instance of this resource
+func createArtifactoryLdapGroupSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryLdapGroupSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.ldapGroupSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) MqlName() string {
+	return "artifactory.ldapGroupSetting"
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetGroupBaseDn() *plugin.TValue[string] {
+	return &c.GroupBaseDn
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetGroupNameAttribute() *plugin.TValue[string] {
+	return &c.GroupNameAttribute
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetGroupMemberAttribute() *plugin.TValue[string] {
+	return &c.GroupMemberAttribute
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetDescriptionAttribute() *plugin.TValue[string] {
+	return &c.DescriptionAttribute
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetStrategy() *plugin.TValue[string] {
+	return &c.Strategy
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetSubTree() *plugin.TValue[bool] {
+	return &c.SubTree
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetForceAttributeSearch() *plugin.TValue[bool] {
+	return &c.ForceAttributeSearch
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetLdapSettingKey() *plugin.TValue[string] {
+	return &c.LdapSettingKey
+}
+
+func (c *mqlArtifactoryLdapGroupSetting) GetLdapSetting() *plugin.TValue[*mqlArtifactoryLdapSetting] {
+	return plugin.GetOrCompute[*mqlArtifactoryLdapSetting](&c.LdapSetting, func() (*mqlArtifactoryLdapSetting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.ldapGroupSetting", c.__id, "ldapSetting")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryLdapSetting), nil
+			}
+		}
+
+		return c.ldapSetting()
+	})
+}
+
+// mqlArtifactorySamlSettings for the artifactory.samlSettings resource
+type mqlArtifactorySamlSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlArtifactorySamlSettingsInternal it will be used here
+	Enabled                   plugin.TValue[bool]
+	LoginUrl                  plugin.TValue[string]
+	LogoutUrl                 plugin.TValue[string]
+	ServiceProviderName       plugin.TValue[string]
+	NoAutoUserCreation        plugin.TValue[bool]
+	AutoRedirect              plugin.TValue[bool]
+	SyncGroups                plugin.TValue[bool]
+	GroupAttribute            plugin.TValue[string]
+	EmailAttribute            plugin.TValue[string]
+	UseEncryptedAssertion     plugin.TValue[bool]
+	VerifyAudienceRestriction plugin.TValue[bool]
+	AllowUserToAccessProfile  plugin.TValue[bool]
+	HasCertificate            plugin.TValue[bool]
+}
+
+// createArtifactorySamlSettings creates a new instance of this resource
+func createArtifactorySamlSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactorySamlSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.samlSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactorySamlSettings) MqlName() string {
+	return "artifactory.samlSettings"
+}
+
+func (c *mqlArtifactorySamlSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactorySamlSettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactorySamlSettings) GetLoginUrl() *plugin.TValue[string] {
+	return &c.LoginUrl
+}
+
+func (c *mqlArtifactorySamlSettings) GetLogoutUrl() *plugin.TValue[string] {
+	return &c.LogoutUrl
+}
+
+func (c *mqlArtifactorySamlSettings) GetServiceProviderName() *plugin.TValue[string] {
+	return &c.ServiceProviderName
+}
+
+func (c *mqlArtifactorySamlSettings) GetNoAutoUserCreation() *plugin.TValue[bool] {
+	return &c.NoAutoUserCreation
+}
+
+func (c *mqlArtifactorySamlSettings) GetAutoRedirect() *plugin.TValue[bool] {
+	return &c.AutoRedirect
+}
+
+func (c *mqlArtifactorySamlSettings) GetSyncGroups() *plugin.TValue[bool] {
+	return &c.SyncGroups
+}
+
+func (c *mqlArtifactorySamlSettings) GetGroupAttribute() *plugin.TValue[string] {
+	return &c.GroupAttribute
+}
+
+func (c *mqlArtifactorySamlSettings) GetEmailAttribute() *plugin.TValue[string] {
+	return &c.EmailAttribute
+}
+
+func (c *mqlArtifactorySamlSettings) GetUseEncryptedAssertion() *plugin.TValue[bool] {
+	return &c.UseEncryptedAssertion
+}
+
+func (c *mqlArtifactorySamlSettings) GetVerifyAudienceRestriction() *plugin.TValue[bool] {
+	return &c.VerifyAudienceRestriction
+}
+
+func (c *mqlArtifactorySamlSettings) GetAllowUserToAccessProfile() *plugin.TValue[bool] {
+	return &c.AllowUserToAccessProfile
+}
+
+func (c *mqlArtifactorySamlSettings) GetHasCertificate() *plugin.TValue[bool] {
+	return &c.HasCertificate
+}
+
+// mqlArtifactoryOauthSettings for the artifactory.oauthSettings resource
+type mqlArtifactoryOauthSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryOauthSettingsInternal
+	Enabled                  plugin.TValue[bool]
+	PersistUsers             plugin.TValue[bool]
+	AllowUserToAccessProfile plugin.TValue[bool]
+	Providers                plugin.TValue[[]any]
+}
+
+// createArtifactoryOauthSettings creates a new instance of this resource
+func createArtifactoryOauthSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryOauthSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.oauthSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryOauthSettings) MqlName() string {
+	return "artifactory.oauthSettings"
+}
+
+func (c *mqlArtifactoryOauthSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryOauthSettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactoryOauthSettings) GetPersistUsers() *plugin.TValue[bool] {
+	return &c.PersistUsers
+}
+
+func (c *mqlArtifactoryOauthSettings) GetAllowUserToAccessProfile() *plugin.TValue[bool] {
+	return &c.AllowUserToAccessProfile
+}
+
+func (c *mqlArtifactoryOauthSettings) GetProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Providers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.oauthSettings", c.__id, "providers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.providers()
+	})
+}
+
+// mqlArtifactoryOauthProvider for the artifactory.oauthProvider resource
+type mqlArtifactoryOauthProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlArtifactoryOauthProviderInternal it will be used here
+	Name         plugin.TValue[string]
+	Enabled      plugin.TValue[bool]
+	ProviderType plugin.TValue[string]
+	ClientId     plugin.TValue[string]
+	ApiUrl       plugin.TValue[string]
+	AuthUrl      plugin.TValue[string]
+	TokenUrl     plugin.TValue[string]
+	BasicUrl     plugin.TValue[string]
+	Domain       plugin.TValue[string]
+}
+
+// createArtifactoryOauthProvider creates a new instance of this resource
+func createArtifactoryOauthProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryOauthProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.oauthProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryOauthProvider) MqlName() string {
+	return "artifactory.oauthProvider"
+}
+
+func (c *mqlArtifactoryOauthProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryOauthProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryOauthProvider) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactoryOauthProvider) GetProviderType() *plugin.TValue[string] {
+	return &c.ProviderType
+}
+
+func (c *mqlArtifactoryOauthProvider) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlArtifactoryOauthProvider) GetApiUrl() *plugin.TValue[string] {
+	return &c.ApiUrl
+}
+
+func (c *mqlArtifactoryOauthProvider) GetAuthUrl() *plugin.TValue[string] {
+	return &c.AuthUrl
+}
+
+func (c *mqlArtifactoryOauthProvider) GetTokenUrl() *plugin.TValue[string] {
+	return &c.TokenUrl
+}
+
+func (c *mqlArtifactoryOauthProvider) GetBasicUrl() *plugin.TValue[string] {
+	return &c.BasicUrl
+}
+
+func (c *mqlArtifactoryOauthProvider) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+// mqlArtifactoryHttpSsoSettings for the artifactory.httpSsoSettings resource
+type mqlArtifactoryHttpSsoSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlArtifactoryHttpSsoSettingsInternal it will be used here
+	HttpSsoProxied            plugin.TValue[bool]
+	RemoteUserRequestVariable plugin.TValue[string]
+	NoAutoUserCreation        plugin.TValue[bool]
+	SyncLdapGroups            plugin.TValue[bool]
+	AllowUserToAccessProfile  plugin.TValue[bool]
+}
+
+// createArtifactoryHttpSsoSettings creates a new instance of this resource
+func createArtifactoryHttpSsoSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryHttpSsoSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.httpSsoSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) MqlName() string {
+	return "artifactory.httpSsoSettings"
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) GetHttpSsoProxied() *plugin.TValue[bool] {
+	return &c.HttpSsoProxied
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) GetRemoteUserRequestVariable() *plugin.TValue[string] {
+	return &c.RemoteUserRequestVariable
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) GetNoAutoUserCreation() *plugin.TValue[bool] {
+	return &c.NoAutoUserCreation
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) GetSyncLdapGroups() *plugin.TValue[bool] {
+	return &c.SyncLdapGroups
+}
+
+func (c *mqlArtifactoryHttpSsoSettings) GetAllowUserToAccessProfile() *plugin.TValue[bool] {
+	return &c.AllowUserToAccessProfile
+}
+
+// mqlArtifactoryCrowdSettings for the artifactory.crowdSettings resource
+type mqlArtifactoryCrowdSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlArtifactoryCrowdSettingsInternal it will be used here
+	Enabled                   plugin.TValue[bool]
+	ServerUrl                 plugin.TValue[string]
+	ApplicationName           plugin.TValue[string]
+	SessionValidationInterval plugin.TValue[int64]
+	NoAutoUserCreation        plugin.TValue[bool]
+	DirectAuthentication      plugin.TValue[bool]
+	UseDefaultProxy           plugin.TValue[bool]
+	AllowUserToAccessProfile  plugin.TValue[bool]
+}
+
+// createArtifactoryCrowdSettings creates a new instance of this resource
+func createArtifactoryCrowdSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryCrowdSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.crowdSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryCrowdSettings) MqlName() string {
+	return "artifactory.crowdSettings"
+}
+
+func (c *mqlArtifactoryCrowdSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetServerUrl() *plugin.TValue[string] {
+	return &c.ServerUrl
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetSessionValidationInterval() *plugin.TValue[int64] {
+	return &c.SessionValidationInterval
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetNoAutoUserCreation() *plugin.TValue[bool] {
+	return &c.NoAutoUserCreation
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetDirectAuthentication() *plugin.TValue[bool] {
+	return &c.DirectAuthentication
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetUseDefaultProxy() *plugin.TValue[bool] {
+	return &c.UseDefaultProxy
+}
+
+func (c *mqlArtifactoryCrowdSettings) GetAllowUserToAccessProfile() *plugin.TValue[bool] {
+	return &c.AllowUserToAccessProfile
+}
+
+// mqlArtifactoryBackup for the artifactory.backup resource
+type mqlArtifactoryBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryBackupInternal
+	Key                    plugin.TValue[string]
+	Enabled                plugin.TValue[bool]
+	CronExpression         plugin.TValue[string]
+	RetentionPeriodHours   plugin.TValue[int64]
+	CreateArchive          plugin.TValue[bool]
+	ExcludeBuilds          plugin.TValue[bool]
+	ExcludeNewRepositories plugin.TValue[bool]
+	SendMailOnError        plugin.TValue[bool]
+	ExcludedRepositories   plugin.TValue[[]any]
+	ExcludedRepositoryRefs plugin.TValue[[]any]
+}
+
+// createArtifactoryBackup creates a new instance of this resource
+func createArtifactoryBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryBackup) MqlName() string {
+	return "artifactory.backup"
+}
+
+func (c *mqlArtifactoryBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryBackup) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlArtifactoryBackup) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlArtifactoryBackup) GetCronExpression() *plugin.TValue[string] {
+	return &c.CronExpression
+}
+
+func (c *mqlArtifactoryBackup) GetRetentionPeriodHours() *plugin.TValue[int64] {
+	return &c.RetentionPeriodHours
+}
+
+func (c *mqlArtifactoryBackup) GetCreateArchive() *plugin.TValue[bool] {
+	return &c.CreateArchive
+}
+
+func (c *mqlArtifactoryBackup) GetExcludeBuilds() *plugin.TValue[bool] {
+	return &c.ExcludeBuilds
+}
+
+func (c *mqlArtifactoryBackup) GetExcludeNewRepositories() *plugin.TValue[bool] {
+	return &c.ExcludeNewRepositories
+}
+
+func (c *mqlArtifactoryBackup) GetSendMailOnError() *plugin.TValue[bool] {
+	return &c.SendMailOnError
+}
+
+func (c *mqlArtifactoryBackup) GetExcludedRepositories() *plugin.TValue[[]any] {
+	return &c.ExcludedRepositories
+}
+
+func (c *mqlArtifactoryBackup) GetExcludedRepositoryRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExcludedRepositoryRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.backup", c.__id, "excludedRepositoryRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.excludedRepositoryRefs()
 	})
 }
 

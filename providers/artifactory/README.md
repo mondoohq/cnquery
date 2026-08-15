@@ -22,7 +22,8 @@ Most of what this provider reads is administrator-only:
 | `permissionTargets`             | administrator |
 | `users`, `groups`               | administrator |
 | `accessTokens`                  | administrator to see every token, otherwise only the caller's own |
-| `security`                      | administrator |
+| `security` and its integrations | administrator |
+| `backups`                       | administrator |
 | `cleanupPolicies`               | administrator, and a product version that serves the endpoint |
 
 A token without those rights reports the field as an error rather than as an
@@ -77,6 +78,60 @@ The connection produces one asset, the instance. It is identified by the
 instance's service identifier, which survives a URL change.
 
 ## Examples
+
+**Docker repositories that still accept unsigned schema 1 manifests**
+
+A schema 1 manifest is not content addressable, so a tag can be moved to
+different content without the digest changing.
+
+```shell
+mql> artifactory.repositories.where(packageType == "docker" && blockPushingSchema1 != true) { key type }
+```
+
+**Remote repositories that hold a credential and may leak it on a redirect**
+
+```shell
+mql> artifactory.repositories.where(hasUpstreamCredential == true && allowAnyHostAuth == true) { key url }
+```
+
+**Identity integrations that create an account on first sign-in**
+
+Auto-creation makes every principal the directory or identity provider accepts
+a principal here, so what it may do is whatever the auto-join groups and the
+anonymous grants give it.
+
+```shell
+mql> artifactory.security.ldapSettings.where(enabled && autoCreateUser) { key ldapUrl }
+mql> artifactory.security { saml { enabled noAutoUserCreation } oauth { enabled persistUsers } }
+```
+
+**Header-based sign-in, which a caller can set itself**
+
+HTTP single sign-on trusts a request header. A deployment that also accepts
+requests that did not pass through the proxy lets a caller choose any account.
+
+```shell
+mql> artifactory.security.httpSso { httpSsoProxied remoteUserRequestVariable noAutoUserCreation }
+```
+
+**LDAP servers reached without transport encryption**
+
+```shell
+mql> artifactory.security.ldapSettings.where(enabled && usesEncryptedTransport == false) { key ldapUrl }
+```
+
+**Build info readable without a permission target**
+
+```shell
+mql> artifactory.security { buildGlobalBasicReadAllowed buildGlobalBasicReadForAnonymous }
+```
+
+**Backups that leave new repositories out, or are kept forever**
+
+```shell
+mql> artifactory.backups.where(enabled && excludeNewRepositories) { key cronExpression }
+mql> artifactory.backups.where(enabled && retentionPeriodHours == null) { key }
+```
 
 **Anonymous access, and whether it can publish**
 
@@ -220,10 +275,19 @@ credential is valid but not an administrator.
 
 ## Notes
 
-**Repository, user, and group detail is read on demand.** The list endpoints
-report only the identifying fields, so a query that asks for a detail field
-costs one call per record. Query `key`, `name`, `type`, and `packageType` alone
-when a broad listing is enough.
+**Repository, user, and group detail is read in bulk when the instance allows
+it.** Repository configurations come from one call to
+`/api/repositories/configurations`, which needs an administrator and a recent
+product version. The user and group lists are used directly when they already
+carry the full record. When neither applies, the detail is read on demand, one
+call per record, so a query that asks only for `key`, `name`, `type`, and
+`packageType` stays cheap either way.
+
+A list entry is only taken as complete when it carries both of its markers, the
+administrative flag and the group or member list. An entry carrying one of them
+is treated as short and read in full, because taking a stale `false` would
+report an administrator as an ordinary account, and taking an absent list would
+report an account as belonging to no group.
 
 **`anonymousActions` is taken at repository level.** It unions what every
 permission target gives the anonymous user over a repository and does not
@@ -231,9 +295,16 @@ evaluate the targets' path patterns, so an action it lists may be limited to
 part of the repository. Read `permissionTargets` on the repository for the
 patterns.
 
-**Xray is not queried.** Whether a repository is scanned is read from the
-repository's own `xrayIndex` setting, which Artifactory serves, so no Xray
-credential or reachable Xray service is needed.
+**An integration the instance never configured reports null, not disabled.**
+`saml`, `oauth`, `httpSso`, and `crowd` are null when the instance descriptor
+carries no block for them. An instance that configured an integration and
+turned it off reports the resource with `enabled` false, which is a different
+answer.
+
+**Settings that do not apply to a repository type stay null.** A local
+repository carries no upstream settings, and a package format carries only its
+own controls, so `allowAnyHostAuth`, `blockPushingSchema1`, and their peers are
+null rather than false there. Test them with `!= true`.
 
 **A permission target that cannot be read fails the field.** The list reports
 names only, and each grant is read separately. A target that is denied fails

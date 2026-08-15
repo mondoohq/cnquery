@@ -58,9 +58,26 @@ func (a *mqlArtifactory) groups() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Newer instances answer the list with the whole group, which keeps a
+		// query over every group at one call instead of one call per group.
+		if groupListIsComplete(&response.Groups[i]) {
+			group.seedDefinition(&response.Groups[i])
+		}
 		res = append(res, group)
 	}
 	return res, nil
+}
+
+// groupListIsComplete reports whether a list entry already carries the fields
+// that otherwise need the per-group read.
+//
+// Both markers must be present. The administrative flag is absent from the
+// short list shape, and taking a stale false there would report a group that
+// grants administrative rights as ordinary. The member list is absent from it
+// too, and taking a nil slice there would report an empty group. An entry that
+// carries only one of them is treated as short, so the group is read in full.
+func groupListIsComplete(rec *groupRecord) bool {
+	return rec.AdminPrivileges != nil && rec.Members != nil
 }
 
 func newArtifactoryGroup(runtime *plugin.Runtime, rec *groupRecord) (*mqlArtifactoryGroup, error) {
@@ -105,6 +122,18 @@ func groupDetailURL(runtime *plugin.Runtime, name string) string {
 	return conn.AccessURL("/api/v2/groups/" + url.PathEscape(name))
 }
 
+// seedDefinition records a group that the list already reported in full, so
+// the per-group read never happens.
+func (g *mqlArtifactoryGroup) seedDefinition(rec *groupRecord) {
+	g.lock.Lock()
+	defer g.lock.Unlock()
+	if g.detailLoaded.Load() {
+		return
+	}
+	g.detail = rec
+	g.detailLoaded.Store(true)
+}
+
 // definition reads the group once and shares it with every field that needs it.
 func (g *mqlArtifactoryGroup) definition() (*groupRecord, error) {
 	if g.detailLoaded.Load() {
@@ -132,7 +161,7 @@ func (g *mqlArtifactoryGroup) description() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return detail.Description, nil
+	return nullableString(detail.Description, &g.Description)
 }
 
 func (g *mqlArtifactoryGroup) adminPrivileges() (bool, error) {
@@ -164,7 +193,7 @@ func (g *mqlArtifactoryGroup) realmAttributes() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return detail.RealmAttributes, nil
+	return nullableString(detail.RealmAttributes, &g.RealmAttributes)
 }
 
 func (g *mqlArtifactoryGroup) internal() (bool, error) {

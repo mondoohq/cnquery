@@ -31,6 +31,8 @@ artifactory {
   security() artifactory.securitySettings
   // Cleanup policies that delete artifacts on a schedule
   cleanupPolicies() []artifactory.cleanupPolicy
+  // Scheduled exports of the instance
+  backups() []artifactory.backup
   // Version and identity of the instance
   system() artifactory.systemInfo
 }
@@ -117,6 +119,74 @@ private artifactory.repository @defaults("key type packageType") {
   // Null on repository types that do not proxy. When true, a build resolving
   // through the repository can reach a host that was never reviewed.
   externalDependenciesEnabled() bool
+  // Whether the repository refuses Docker image manifests of schema version 1
+  //
+  // Null on repository types and package formats that do not carry the
+  // setting. A schema 1 manifest is not content addressable, so a tag can be
+  // moved to different content without the digest changing.
+  blockPushingSchema1() bool
+  // Whether a client must authenticate to resolve NuGet packages
+  //
+  // Null on repository types and package formats that do not carry the
+  // setting.
+  forceNugetAuthentication() bool
+  // Whether the repository accepts an access token in place of a password
+  //
+  // Null on repository types and package formats that do not carry the
+  // setting.
+  enableTokenAuthentication() bool
+  // Whether a remote repository is configured with a credential for its upstream
+  //
+  // True when a user name is stored for the upstream. The credential itself is
+  // never exposed. A stored credential is what `allowAnyHostAuth` can leak to
+  // an unrelated host on a redirect. Null on repository types that do not
+  // proxy.
+  hasUpstreamCredential() bool
+  // Whether a remote repository keeps a copy of what it proxies
+  //
+  // Null on repository types that do not proxy. When false, the repository
+  // resolves from the upstream every time, so the upstream decides what a
+  // consumer receives on every request rather than only on the first.
+  storeArtifactsLocally() bool
+  // Whether a remote repository skips the HEAD request before a download
+  //
+  // Null on repository types that do not proxy.
+  bypassHeadRequests() bool
+  // Whether a remote repository mirrors the upstream continuously
+  //
+  // Null when the repository does not carry the setting. Continuous
+  // synchronization copies whatever the upstream publishes without a request
+  // for it.
+  contentSynchronisationEnabled() bool
+  // Whether a download is served by a redirect to another host
+  //
+  // Null when the repository does not carry the setting. A redirected download
+  // leaves the instance, so its access log does not record what was fetched.
+  downloadRedirect() bool
+  // Whether a download is served through a content delivery network
+  //
+  // Null when the repository does not carry the setting.
+  cdnRedirect() bool
+  // Whether a client may browse inside a stored archive
+  //
+  // Null when the repository does not carry the setting. Browsing extracts an
+  // archive on the instance and serves single entries from it.
+  archiveBrowsingEnabled() bool
+  // Whether the repository is resolved before others in a virtual repository
+  //
+  // Null when the repository does not carry the setting. A repository resolved
+  // first decides which copy of a package name a consumer receives.
+  priorityResolution() bool
+  // Seconds a signed download URL of the repository stays valid, or null when unset
+  signedUrlTtl() int
+  // Days Xray data for the repository is kept, or null when unset
+  xrayDataTtl() int
+  // Project the repository belongs to, or null when it is not in a project
+  projectKey() string
+  // Property sets applied to the artifacts of the repository
+  propertySets() []string
+  // Free-form notes stored with the repository, or null when unset
+  notes() string
   // Permission targets whose repository scope covers this repository
   permissionTargets() []artifactory.permissionTarget
   // Actions the anonymous user holds on the repository
@@ -435,6 +505,300 @@ private artifactory.securitySettings @defaults("anonymousAccessEnabled anonymous
   // Listed whether or not anonymous access is enabled instance-wide, so that
   // turning it on shows what would immediately apply.
   anonymousDeployTargets() []artifactory.permissionTarget
+  // Whether any authenticated account may read every build
+  //
+  // When true, build info is readable instance-wide regardless of the
+  // permission targets, so a build that names its artifacts and its
+  // environment is visible to every account.
+  buildGlobalBasicReadAllowed bool
+  // Whether an unauthenticated caller may read every build
+  //
+  // The anonymous form of the instance-wide build read. It bypasses the
+  // permission targets in the same way and needs no account at all.
+  buildGlobalBasicReadForAnonymous bool
+  // LDAP servers the instance authenticates against
+  ldapSettings() []artifactory.ldapSetting
+  // LDAP group trees mapped onto instance groups
+  ldapGroupSettings() []artifactory.ldapGroupSetting
+  // SAML single sign-on settings, or null when the instance has none
+  saml() artifactory.samlSettings
+  // OAuth settings, or null when the instance has none
+  oauth() artifactory.oauthSettings
+  // HTTP single sign-on settings, or null when the instance has none
+  httpSso() artifactory.httpSsoSettings
+  // Atlassian Crowd settings, or null when the instance has none
+  crowd() artifactory.crowdSettings
+}
+
+// Artifactory LDAP Server
+//
+// An LDAP server the instance authenticates accounts against. The
+// `autoCreateUser` field reports whether a successful bind creates an account
+// on the instance, which is what makes every principal in the directory a
+// principal here. Read it together with the groups the directory maps onto,
+// which `artifactory.security.ldapGroupSettings` reports.
+private artifactory.ldapSetting @defaults("key enabled ldapUrl") {
+  // Key of the setting, which is unique on the instance
+  key string
+  // Whether the instance authenticates against this server
+  enabled bool
+  // URL of the directory, including the search base
+  //
+  // A URL with the ldap scheme rather than ldaps carries the bind credential
+  // over an unencrypted connection.
+  ldapUrl string
+  // Whether the URL uses an encrypted transport
+  //
+  // True when the URL uses the ldaps scheme. A plain ldap URL sends the bind
+  // credential in the clear unless the deployment adds transport security
+  // outside Artifactory.
+  usesEncryptedTransport bool
+  // Pattern a distinguished name is built from, or null when a search is used instead
+  userDnPattern string
+  // Filter used to find an account in the directory, or null when a pattern is used instead
+  searchFilter string
+  // Subtree the search starts from, or null when unset
+  searchBase string
+  // Whether the search descends the whole subtree
+  searchSubTree bool
+  // Whether a successful bind creates an account on the instance
+  //
+  // When true, every principal the directory accepts becomes a principal here,
+  // and what it may do is whatever the auto-join groups and the anonymous
+  // grants give it.
+  autoCreateUser bool
+  // Whether a manager credential is stored for the directory
+  //
+  // True when a manager distinguished name is configured. The credential
+  // itself is never exposed.
+  hasManagerCredential bool
+  // Attribute the account email is read from, or null when unset
+  emailAttribute string
+  // Whether responses from the directory are filtered against injection
+  ldapPoisoningProtection bool
+  // Whether an account authenticated this way may edit its own profile
+  allowUserToAccessProfile bool
+}
+
+// Artifactory LDAP Group Mapping
+//
+// A mapping from an LDAP group tree onto the instance's groups. Whatever a
+// mapped group is granted is granted to everyone the directory places in it,
+// so a mapping onto a group with publishing rights moves that decision into
+// the directory. The `strategy` field reports how membership is resolved.
+private artifactory.ldapGroupSetting @defaults("name strategy groupBaseDn") {
+  // Name of the mapping, which is unique on the instance
+  name string
+  // Subtree the groups are read from
+  groupBaseDn string
+  // Attribute the group name is read from
+  groupNameAttribute string
+  // Attribute the members are read from
+  groupMemberAttribute string
+  // Attribute the description is read from, or null when unset
+  descriptionAttribute string
+  // Filter that selects the groups, or null when unset
+  filter string
+  // How membership is resolved, for example STATIC, DYNAMIC, or HIERARCHY
+  strategy string
+  // Whether the search descends the whole subtree
+  subTree bool
+  // Whether the member attribute is searched even when it is not indexed
+  forceAttributeSearch bool
+  // Key of the LDAP server the mapping applies to, or null when unset
+  ldapSettingKey string
+  // LDAP server the mapping applies to, or null when it names none on this instance
+  ldapSetting() artifactory.ldapSetting
+}
+
+// Artifactory SAML Settings
+//
+// Single sign-on through a SAML identity provider. The `noAutoUserCreation`
+// field decides whether a successful assertion creates an account here, and
+// `autoRedirect` decides whether the instance still offers its own sign-in
+// form. Read `syncGroups` for whether the identity provider also decides group
+// membership, which decides what the account may do.
+private artifactory.samlSettings @defaults("enabled loginUrl") {
+  // Whether the instance accepts SAML assertions
+  enabled bool
+  // URL callers are sent to in order to sign in
+  loginUrl string
+  // URL callers are sent to in order to sign out, or null when unset
+  logoutUrl string
+  // Name the instance identifies itself with to the identity provider
+  serviceProviderName string
+  // Whether an assertion for an unknown account is refused
+  //
+  // When false, a successful assertion creates an account on the instance, so
+  // every principal the identity provider accepts becomes a principal here.
+  noAutoUserCreation bool
+  // Whether callers are sent to the identity provider without seeing a sign-in form
+  //
+  // When false, the instance still accepts its own credentials, so an internal
+  // account stays usable outside the identity provider's controls.
+  autoRedirect bool
+  // Whether group membership is taken from the assertion
+  syncGroups bool
+  // Attribute the groups are read from, or null when unset
+  groupAttribute string
+  // Attribute the account email is read from, or null when unset
+  emailAttribute string
+  // Whether the instance requires an encrypted assertion
+  useEncryptedAssertion bool
+  // Whether the audience restriction of an assertion is checked
+  //
+  // When false, an assertion minted for another service provider can be
+  // replayed against this instance.
+  verifyAudienceRestriction bool
+  // Whether an account authenticated this way may edit its own profile
+  allowUserToAccessProfile bool
+  // Whether a signing certificate is configured for the identity provider
+  //
+  // The certificate itself is not exposed. Without one, an assertion cannot be
+  // verified against the identity provider that claims to have issued it.
+  hasCertificate bool
+}
+
+// Artifactory OAuth Settings
+//
+// Sign-in through OAuth providers. The `persistUsers` field decides whether a
+// successful sign-in creates an account here. The `providers` field lists every
+// configured provider, each of which is a separate way to become a principal on
+// this instance.
+private artifactory.oauthSettings @defaults("enabled") {
+  // Whether the instance accepts OAuth sign-in
+  enabled bool
+  // Whether a successful sign-in creates an account on the instance
+  //
+  // When true, every principal a configured provider accepts becomes a
+  // principal here.
+  persistUsers bool
+  // Whether an account authenticated this way may edit its own profile
+  allowUserToAccessProfile bool
+  // Providers configured for OAuth sign-in
+  providers() []artifactory.oauthProvider
+}
+
+// Artifactory OAuth Provider
+//
+// One OAuth provider the instance accepts a sign-in from. Every enabled
+// provider is a separate path to a principal on the instance, so the set of
+// providers bounds who can sign in at all. The `domain` field, where the
+// provider type supports it, limits which accounts of that provider are
+// accepted.
+private artifactory.oauthProvider @defaults("name providerType enabled") {
+  // Name of the provider, which is unique on the instance
+  name string
+  // Whether the instance accepts a sign-in from this provider
+  enabled bool
+  // Kind of provider, for example github, google, or openId
+  providerType string
+  // Client identifier the instance registered with the provider, or null when unset
+  clientId string
+  // API endpoint of the provider, or null when unset
+  apiUrl string
+  // Authorization endpoint of the provider, or null when unset
+  authUrl string
+  // Token endpoint of the provider, or null when unset
+  tokenUrl string
+  // Base URL of the provider, or null when unset
+  basicUrl string
+  // Account domain the provider accepts a sign-in from, or null when any is accepted
+  //
+  // Empty means the provider is not limited to one organization, so any
+  // account it holds can sign in.
+  domain string
+}
+
+// Artifactory HTTP Single Sign-On Settings
+//
+// Sign-in taken from a request header set by a reverse proxy. The instance
+// trusts whatever the header says, so this is only as strong as the proxy in
+// front of it: a caller that reaches the instance directly can set the header
+// itself. Read `httpSsoProxied` for whether the instance believes it is behind
+// such a proxy at all.
+private artifactory.httpSsoSettings @defaults("httpSsoProxied remoteUserRequestVariable") {
+  // Whether the instance takes the account name from a request header
+  //
+  // When true, the named header decides who the caller is. A deployment that
+  // also accepts requests that did not pass through the proxy lets a caller
+  // choose any account.
+  httpSsoProxied bool
+  // Header the account name is read from, for example REMOTE_USER
+  remoteUserRequestVariable string
+  // Whether a header naming an unknown account is refused
+  //
+  // When false, the header creates the account it names.
+  noAutoUserCreation bool
+  // Whether LDAP group membership is refreshed on such a sign-in
+  syncLdapGroups bool
+  // Whether an account authenticated this way may edit its own profile
+  allowUserToAccessProfile bool
+}
+
+// Artifactory Crowd Settings
+//
+// Sign-in through Atlassian Crowd or Jira. The `noAutoUserCreation` field
+// decides whether a successful authentication creates an account here, and
+// `directAuthentication` decides whether the instance forwards credentials to
+// Crowd itself rather than accepting a Crowd session.
+private artifactory.crowdSettings @defaults("enabled serverUrl") {
+  // Whether the instance authenticates against Crowd
+  enabled bool
+  // URL of the Crowd server
+  serverUrl string
+  // Application name the instance authenticates to Crowd as
+  applicationName string
+  // Seconds between session validations, or null when unset
+  //
+  // A long interval keeps a session usable after Crowd has ended it.
+  sessionValidationInterval int
+  // Whether an authentication for an unknown account is refused
+  //
+  // When false, a successful authentication creates an account on the instance.
+  noAutoUserCreation bool
+  // Whether credentials are sent to Crowd rather than a session being accepted
+  directAuthentication bool
+  // Whether the instance reaches Crowd through its default proxy
+  useDefaultProxy bool
+  // Whether an account authenticated this way may edit its own profile
+  allowUserToAccessProfile bool
+}
+
+// Artifactory Backup
+//
+// A scheduled export of the instance. The export contains the artifacts and
+// the configuration, including the secrets held in it, so where it is written
+// and how long it is kept are part of the instance's exposure. The
+// `excludedRepositories` field reports what is left out of it, and
+// `excludeNewRepositories` reports whether a repository created later is left
+// out without anyone deciding so.
+private artifactory.backup @defaults("key enabled cronExpression") {
+  // Key of the backup, which is unique on the instance
+  key string
+  // Whether the backup runs
+  enabled bool
+  // Schedule the backup runs on, as a cron expression
+  cronExpression string
+  // Hours an export is kept before it is removed, or null when it is kept forever
+  //
+  // An export that is kept forever accumulates every secret the instance held
+  // at each point in time.
+  retentionPeriodHours int
+  // Whether the export is written as an archive rather than a directory tree
+  createArchive bool
+  // Whether build info is left out of the export
+  excludeBuilds bool
+  // Whether a repository created after the backup was configured is left out
+  //
+  // When true, a repository added later is silently outside the backup.
+  excludeNewRepositories bool
+  // Whether a failed run sends mail
+  sendMailOnError bool
+  // Repository keys left out of the export
+  excludedRepositories []string
+  // Repositories left out of the export
+  excludedRepositoryRefs() []artifactory.repository
 }
 
 // Artifactory Cleanup Policy

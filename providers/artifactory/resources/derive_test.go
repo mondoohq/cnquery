@@ -5,8 +5,14 @@ package resources
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"testing"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 // These predicates are what a policy reads. Each one turns several raw API
@@ -431,6 +437,208 @@ func TestScopeWildcardsIgnoreCaseAndSpace(t *testing.T) {
 	for _, entry := range []string{" any local ", "Any Local", "ANY LOCAL"} {
 		if !scopeCoversRepository([]string{entry}, "example-repo", "local") {
 			t.Errorf("%q did not cover a local repository", entry)
+		}
+	}
+}
+
+// The list-first path must only be taken when the list is genuinely complete.
+// Taking a short entry would report an administrator as ordinary, or an
+// account as belonging to no group, which is the answer a review acts on.
+func TestUserListIsComplete(t *testing.T) {
+	admin := true
+
+	tests := []struct {
+		name string
+		rec  userRecord
+		want bool
+	}{
+		{name: "short list entry", rec: userRecord{Username: "example", Realm: "internal"}},
+		{name: "admin flag only", rec: userRecord{Username: "example", Admin: &admin}},
+		{name: "group list only", rec: userRecord{Username: "example", Groups: []string{}}},
+		{name: "both markers", rec: userRecord{Username: "example", Admin: &admin, Groups: []string{}}, want: true},
+		{name: "both markers with groups", rec: userRecord{Username: "example", Admin: &admin, Groups: []string{"readers"}}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := userListIsComplete(&tt.rec); got != tt.want {
+				t.Errorf("userListIsComplete(%+v) = %v, want %v", tt.rec, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGroupListIsComplete(t *testing.T) {
+	adminPrivileges := true
+
+	tests := []struct {
+		name string
+		rec  groupRecord
+		want bool
+	}{
+		{name: "short list entry", rec: groupRecord{Name: "readers", Description: "readers"}},
+		{name: "admin flag only", rec: groupRecord{Name: "readers", AdminPrivileges: &adminPrivileges}},
+		{name: "member list only", rec: groupRecord{Name: "readers", Members: []string{}}},
+		{name: "both markers", rec: groupRecord{Name: "readers", AdminPrivileges: &adminPrivileges, Members: []string{}}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := groupListIsComplete(&tt.rec); got != tt.want {
+				t.Errorf("groupListIsComplete(%+v) = %v, want %v", tt.rec, got, tt.want)
+			}
+		})
+	}
+}
+
+// An absent JSON member list decodes to nil and a present but empty one does
+// not. The completeness markers depend on that difference.
+func TestAbsentAndEmptyListsDiffer(t *testing.T) {
+	var absent groupRecord
+	if err := json.Unmarshal([]byte(`{"name":"readers"}`), &absent); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if absent.Members != nil {
+		t.Errorf("an absent member list decoded as %v, want nil", absent.Members)
+	}
+
+	var empty groupRecord
+	if err := json.Unmarshal([]byte(`{"name":"readers","members":[]}`), &empty); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if empty.Members == nil {
+		t.Error("an empty member list decoded as nil, want an empty slice")
+	}
+}
+
+func TestRepositoryProxies(t *testing.T) {
+	tests := []struct {
+		rclass string
+		want   bool
+	}{
+		{rclass: "remote", want: true},
+		{rclass: "REMOTE", want: true},
+		{rclass: "local"},
+		{rclass: "virtual"},
+		{rclass: "federated"},
+		{rclass: ""},
+	}
+
+	for _, tt := range tests {
+		if got := repositoryProxies(&repositoryDetailRecord{RClass: tt.rclass}); got != tt.want {
+			t.Errorf("repositoryProxies(%q) = %v, want %v", tt.rclass, got, tt.want)
+		}
+	}
+}
+
+// Several fields promise null when the instance leaves them unset. Returning
+// an empty string instead would make "not set" indistinguishable from "set to
+// nothing", and a query filtering on null would silently match neither.
+func TestOptionalStringReportsAnUnsetValueAsNull(t *testing.T) {
+	if optionalString("").Value != nil {
+		t.Errorf("an empty value produced %v, want null", optionalString("").Value)
+	}
+	if got := optionalString("platform images").Value; got != "platform images" {
+		t.Errorf("a set value produced %v", got)
+	}
+}
+
+func TestNullableStringMarksTheFieldNull(t *testing.T) {
+	var field plugin.TValue[string]
+
+	got, err := nullableString("", &field)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "" {
+		t.Errorf("an empty value produced %q", got)
+	}
+	if field.State&plugin.StateIsNull == 0 {
+		t.Error("the field was not marked null")
+	}
+
+	var set plugin.TValue[string]
+	got, err = nullableString("example", &set)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "example" {
+		t.Errorf("a set value produced %q", got)
+	}
+	if set.State&plugin.StateIsNull != 0 {
+		t.Error("a set value was marked null")
+	}
+}
+
+func TestUsesEncryptedLdapTransport(t *testing.T) {
+	tests := []struct {
+		url  string
+		want bool
+	}{
+		{url: "ldaps://ldap.example.com:636/dc=example,dc=com", want: true},
+		{url: "LDAPS://ldap.example.com/dc=example,dc=com", want: true},
+		{url: "  ldaps://ldap.example.com  ", want: true},
+		{url: "ldap://ldap.example.com:389/dc=example,dc=com"},
+		{url: "ldap://ldaps.example.com/dc=example,dc=com"},
+		{url: ""},
+	}
+
+	for _, tt := range tests {
+		if got := usesEncryptedLdapTransport(tt.url); got != tt.want {
+			t.Errorf("usesEncryptedLdapTransport(%q) = %v, want %v", tt.url, got, tt.want)
+		}
+	}
+}
+
+// Every string field whose schema promises null must be built with
+// optionalString. Returning an empty string instead makes "not configured"
+// indistinguishable from "configured to nothing", so a query filtering on null
+// matches neither. This walks the schema and the code together, so a field
+// added later cannot quietly break the promise.
+func TestSchemaNullPromisesAreHonoured(t *testing.T) {
+	schema, err := os.ReadFile("artifactory.lr")
+	if err != nil {
+		t.Fatalf("read the schema: %v", err)
+	}
+
+	promised := map[string]bool{}
+	var doc []string
+	for _, line := range strings.Split(string(schema), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "//") {
+			doc = append(doc, trimmed)
+			continue
+		}
+		if m := regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9_]*)\(?\)? +string\b`).FindStringSubmatch(trimmed); m != nil {
+			blob := strings.ToLower(strings.Join(doc, " "))
+			if strings.Contains(blob, "null when") || strings.Contains(blob, "null on") {
+				promised[m[1]] = true
+			}
+		}
+		doc = nil
+	}
+	if len(promised) == 0 {
+		t.Fatal("no field promises null; the schema scan is broken")
+	}
+
+	sources, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("list the sources: %v", err)
+	}
+
+	plain := regexp.MustCompile(`"([a-zA-Z][a-zA-Z0-9_]*)":\s*llx\.StringData\(`)
+	for _, source := range sources {
+		if strings.HasSuffix(source, "_test.go") || strings.HasSuffix(source, ".lr.go") {
+			continue
+		}
+		body, err := os.ReadFile(source)
+		if err != nil {
+			t.Fatalf("read %s: %v", source, err)
+		}
+		for _, m := range plain.FindAllStringSubmatch(string(body), -1) {
+			if promised[m[1]] {
+				t.Errorf("%s builds %q with llx.StringData, but the schema promises null; use optionalString", source, m[1])
+			}
 		}
 	}
 }
