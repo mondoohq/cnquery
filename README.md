@@ -104,6 +104,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
 | Apache Cassandra cluster      | `cassandra`                | `mql shell cassandra localhost --user cassandra --ask-pass`                                                                                     |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
+| Artifactory instances         | `artifactory`              | `mql shell artifactory --url https://example.jfrog.io --token YOUR_TOKEN`                                                                       |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | AWS accounts                  | `aws`                      | `mql shell aws`                                                                                                                                 |
 | AWS CloudFormation templates  | `cloudformation`           | `mql shell cloudformation cloudformation_file.json`                                                                                             |

@@ -1,0 +1,475 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/artifactory"
+option go_package = "go.mondoo.com/mql/v13/providers/artifactory/resources"
+
+// JFrog Artifactory
+//
+// Configuration of a JFrog Artifactory instance, the registry that stores the
+// packages, container images, and OCI artifacts a platform installs from. The
+// `repositories` field lists every repository with its type, package type, and
+// the upstream a remote repository proxies. The `permissionTargets` field
+// reports which principals hold which actions on which repository patterns,
+// which is where an over-broad grant on a publishing repository becomes
+// visible. The `users` and `groups` fields cover the principals themselves,
+// `accessTokens` covers the tokens issued against them, and `security` reports
+// instance-wide settings such as anonymous access. The `cleanupPolicies` field
+// covers scheduled deletion of artifacts, and `system` identifies the instance.
+artifactory {
+  // Repositories configured on the instance
+  repositories() []artifactory.repository
+  // Permission targets granting principals actions on repository patterns
+  permissionTargets() []artifactory.permissionTarget
+  // Users known to the instance, both internal and federated
+  users() []artifactory.user
+  // Groups known to the instance
+  groups() []artifactory.group
+  // Access tokens issued against the instance
+  accessTokens() []artifactory.accessToken
+  // Instance-wide security settings
+  security() artifactory.securitySettings
+  // Cleanup policies that delete artifacts on a schedule
+  cleanupPolicies() []artifactory.cleanupPolicy
+  // Version and identity of the instance
+  system() artifactory.systemInfo
+}
+
+// Artifactory Instance Identity
+//
+// Version and identity of the Artifactory instance the scan connected to. The
+// `serviceId` field is the instance's stable identifier, which is also the
+// asset's platform identifier. Use `version` and `revision` to tell whether an
+// endpoint that this provider reads is available on the instance.
+private artifactory.systemInfo @defaults("version serviceId") {
+  // Stable identifier of the Artifactory service, for example jfrt@01ab2c3d
+  serviceId string
+  // Product version, for example 7.90.10
+  version string
+  // Build revision of the running version
+  revision string
+  // Licensed add-ons enabled on the instance
+  addons []string
+}
+
+// Artifactory Repository
+//
+// A repository on the instance, which is where artifacts are stored, proxied,
+// or aggregated. The `type` field separates a local repository (artifacts are
+// pushed to it) from a remote one (artifacts are proxied from an upstream) and
+// from a virtual one (several repositories are served under one name). For a
+// remote repository, `url` is the upstream it fetches from, so an unexpected
+// upstream on a repository a platform installs from is detectable. The
+// `permissionTargets` field reports which grants reach the repository, and
+// `anonymousActions` reduces those grants to what an unauthenticated caller may
+// do. Select a repository with `artifactory.repositories.where(key ==
+// "example-docker")`.
+private artifactory.repository @defaults("key type packageType") {
+  // Repository key, which is its unique name on the instance
+  key string
+  // Repository type
+  //
+  // One of local, remote, virtual, federated, or distribution. A local
+  // repository holds artifacts pushed to it, a remote one proxies an upstream,
+  // and a virtual one aggregates other repositories under a single name.
+  type string
+  // Package format the repository serves, for example docker, helm, maven, or generic
+  packageType string
+  // Human-readable description, or null when unset
+  description string
+  // Upstream URL a remote repository fetches from, or null on other types
+  //
+  // Every artifact served by a remote repository originates here, so an
+  // upstream that is not the expected registry places untrusted content behind
+  // a trusted repository name.
+  url string
+  // Repository keys aggregated by a virtual repository
+  //
+  // Empty on repository types that do not aggregate. A virtual repository
+  // serves each member under one name, so a member with weaker controls is
+  // reachable through the virtual name.
+  memberRepositories() []string
+  // Repositories aggregated by a virtual repository
+  memberRepositoryRefs() []artifactory.repository
+  // Whether Xray indexes the repository for vulnerability scanning
+  //
+  // Null when the instance does not report the setting for the repository
+  // type. A repository that is not indexed is never scanned, so a finding on
+  // an artifact stored there is never raised.
+  xrayIndex() bool
+  // Whether the repository is blocked from serving and accepting artifacts
+  blackedOut() bool
+  // Whether a remote repository serves only what is already cached
+  offline() bool
+  // Artifact path patterns the repository serves, for example **/*
+  includesPattern() string
+  // Artifact path patterns the repository refuses to serve
+  excludesPattern() string
+  // Layout the repository stores artifacts under, for example simple-default
+  repoLayoutRef() string
+  // Whether a remote repository sends its credentials to any host it is redirected to
+  //
+  // Null on repository types that do not proxy. When true, a redirect from the
+  // upstream can carry the stored credentials to an unrelated host.
+  allowAnyHostAuth() bool
+  // Whether a remote repository may resolve dependencies from hosts other than its upstream
+  //
+  // Null on repository types that do not proxy. When true, a build resolving
+  // through the repository can reach a host that was never reviewed.
+  externalDependenciesEnabled() bool
+  // Permission targets whose repository scope covers this repository
+  permissionTargets() []artifactory.permissionTarget
+  // Actions the anonymous user holds on the repository
+  //
+  // The union of the actions every permission target grants to the anonymous
+  // user over this repository, for example read, write, or delete. Empty when
+  // no target grants the anonymous user anything. The union is taken at
+  // repository level and does not evaluate the targets' path patterns, so an
+  // action listed here may be limited to part of the repository. Anonymous
+  // access must also be enabled instance-wide for these actions to apply,
+  // which `artifactory.security.anonymousAccessEnabled` reports.
+  anonymousActions() []string
+}
+
+// Artifactory Permission Target
+//
+// A named grant that gives principals a set of actions over a set of
+// repository, build, or release bundle patterns. This is where an
+// over-broad grant becomes visible: `repo` holds the repository scope with its
+// repository keys and its include and exclude patterns, and `principals` lists
+// every user and group the target names together with the actions it gives
+// them. The `grantsAnonymousDeploy` field reduces the target to the single
+// question of whether an unauthenticated caller may publish through it. Select
+// a target with `artifactory.permissionTargets.where(name == "example")`.
+private artifactory.permissionTarget @defaults("name") {
+  // Name of the permission target, which is unique on the instance
+  name string
+  // Repository scope of the target, or null when it grants nothing over repositories
+  repo() artifactory.permissionTarget.scope
+  // Build scope of the target, or null when it grants nothing over build info
+  build() artifactory.permissionTarget.scope
+  // Release bundle scope of the target, or null when it grants nothing over release bundles
+  releaseBundle() artifactory.permissionTarget.scope
+  // Every principal the target names, across all of its scopes
+  principals() []artifactory.permissionTarget.principal
+  // Whether the target lets the anonymous user read from a repository
+  //
+  // Anonymous access must also be enabled instance-wide for the grant to
+  // apply, which `artifactory.security.anonymousAccessEnabled` reports.
+  grantsAnonymousRead bool
+  // Whether the target lets the anonymous user publish to a repository
+  //
+  // True when the repository scope gives the anonymous user a write, deploy,
+  // delete, or manage action. An unauthenticated caller can then replace the artifacts
+  // a platform installs from. Anonymous access must also be enabled
+  // instance-wide for the grant to apply, which
+  // `artifactory.security.anonymousAccessEnabled` reports.
+  grantsAnonymousDeploy bool
+}
+
+// Scope of an Artifactory Permission Target
+//
+// One of the three areas a permission target grants over: repositories, build
+// info, or release bundles. The `repositories` field holds the keys the scope
+// covers, which may include the wildcard keys the instance defines, and
+// `includePatterns` and `excludePatterns` narrow the grant to artifact paths
+// within them. The `appliesToAllRepositories` and `appliesToAllPaths` fields
+// reduce those to the question of whether the scope is narrowed at all.
+private artifactory.permissionTarget.scope @defaults("name repositories") {
+  // Area the scope grants over, one of repo, build, or releaseBundle
+  name string
+  // Repository keys the scope covers
+  //
+  // May contain a wildcard key the instance defines rather than a real
+  // repository, for example ANY, ANY LOCAL, ANY REMOTE, ANY VIRTUAL, ANY
+  // FEDERATED, or ANY DISTRIBUTION.
+  // Such a key covers repositories that did not exist when the target was
+  // written, including ones created later.
+  repositories []string
+  // Repositories the scope covers that exist on the instance
+  //
+  // Resolves the scope's repository keys against the instance. A wildcard key
+  // has no repository of its own and is skipped, so compare the length against
+  // `repositories` or read `appliesToAllRepositories` to see whether a
+  // wildcard is in play.
+  repositoryRefs() []artifactory.repository
+  // Artifact path patterns the grant applies to, for example **/*
+  //
+  // Empty or a single match-everything pattern means the grant covers the
+  // whole repository rather than part of it.
+  includePatterns []string
+  // Artifact path patterns the grant is withheld from
+  excludePatterns []string
+  // Principals the scope names and the actions it gives them
+  principals() []artifactory.permissionTarget.principal
+  // Whether the scope covers every repository through a wildcard key
+  //
+  // True when the repository keys contain one of the instance's wildcard keys.
+  // The grant then reaches repositories created after the target was written.
+  appliesToAllRepositories bool
+  // Whether the scope covers every artifact path in the repositories it names
+  //
+  // True when no include pattern narrows the grant, or when a pattern matches
+  // every path.
+  appliesToAllPaths bool
+}
+
+// Principal of an Artifactory Permission Target
+//
+// A user or a group named by a permission target, together with the actions
+// that target gives it. The `actions` field holds the raw action names the
+// instance reports, for example read, write, annotate, delete, or manage, and
+// the `canDeploy` and `canManage` fields reduce them to whether the principal
+// may publish or may change the grant itself.
+private artifactory.permissionTarget.principal @defaults("name type actions") {
+  // Name of the user or group
+  name string
+  // Kind of principal, one of user or group
+  type string
+  // Scope of the permission target the actions apply to, one of repo, build, or releaseBundle
+  scope string
+  // Actions the permission target gives the principal
+  //
+  // Contains entries such as read, write, annotate, delete, manage,
+  // managedXrayMeta, or distribute. The exact set depends on the scope and on
+  // the product version.
+  actions []string
+  // User the principal names, or null when the principal is a group or the user is unknown
+  user() artifactory.user
+  // Group the principal names, or null when the principal is a user or the group is unknown
+  group() artifactory.group
+  // Whether the actions let the principal publish artifacts
+  //
+  // True when the actions contain write, deploy, delete, or manage. Publishing
+  // rights
+  // on a repository a platform installs from let the principal replace what
+  // every consumer of that repository receives.
+  canDeploy bool
+  // Whether the actions let the principal change the grant itself
+  //
+  // True when the actions contain manage. A principal that can manage a
+  // permission target can widen its own access.
+  canManage bool
+}
+
+// Artifactory User
+//
+// An account on the instance. The `admin` field reports whether it holds
+// instance-wide administrative rights, and `realm` reports where it
+// authenticates: an internal account carries a password on the instance, while
+// a federated one is backed by an external identity provider and is removed
+// there rather than here. Select a user with `artifactory.users.where(name ==
+// "example")`.
+private artifactory.user @defaults("name realm admin") {
+  // User name, which is unique on the instance
+  name string
+  // Email address of the account, or null when unset
+  email() string
+  // Whether the account holds instance-wide administrative rights
+  //
+  // An administrator bypasses every permission target, so the count of
+  // administrators bounds how much a permission review can guarantee.
+  admin() bool
+  // Realm the account authenticates against, for example internal, ldap, saml, or oauth
+  realm() string
+  // Whether the account is local to the instance rather than backed by an identity provider
+  //
+  // True when the realm is internal. A local account keeps working after the
+  // identity provider disables the person, and it is outside any single
+  // sign-on control.
+  internal() bool
+  // Whether the account's internal password is disabled
+  //
+  // True on an account that can only authenticate through its identity
+  // provider or an access token. False on a federated account means it also
+  // carries a password on the instance.
+  internalPasswordDisabled() bool
+  // Whether the account may edit its own profile, including its API key
+  profileUpdatable() bool
+  // Whether the account is blocked from signing in to the web interface
+  disableUiAccess() bool
+  // Lifecycle state of the account, for example enabled, locked, or disabled
+  status() string
+  // Group names the account belongs to
+  groups() []string
+  // Groups the account belongs to
+  groupRefs() []artifactory.group
+  // Time the account last signed in, or null when it never has
+  lastLoggedIn() time
+  // Permission targets that name the account directly
+  //
+  // Does not include the targets the account reaches through its groups. Read
+  // those from the groups themselves.
+  permissionTargets() []artifactory.permissionTarget
+}
+
+// Artifactory Group
+//
+// A set of users that permission targets grant to as a unit. The
+// `adminPrivileges` field reports whether membership alone carries
+// instance-wide administrative rights, and `autoJoin` reports whether new
+// accounts land in the group without anyone adding them. The `realm` field
+// separates a group maintained on the instance from one synchronized out of an
+// identity provider. Select a group with `artifactory.groups.where(name ==
+// "example")`.
+private artifactory.group @defaults("name realm adminPrivileges") {
+  // Group name, which is unique on the instance
+  name string
+  // Human-readable description, or null when unset
+  description() string
+  // Whether every member holds instance-wide administrative rights
+  //
+  // Administrative rights carried by group membership are granted by adding
+  // someone to the group, which is a different review path than granting them
+  // on the account.
+  adminPrivileges() bool
+  // Whether new accounts join the group automatically
+  //
+  // When true, every account created on the instance receives whatever this
+  // group is granted, including accounts created by a federated sign-in.
+  autoJoin() bool
+  // Realm the group is maintained in, for example internal, ldap, or saml
+  realm() string
+  // Identity provider settings the group is synchronized with, or null when unset
+  realmAttributes() string
+  // Whether the group is maintained on the instance rather than synchronized from an identity provider
+  internal() bool
+  // Users that belong to the group
+  users() []artifactory.user
+  // Permission targets that name the group
+  permissionTargets() []artifactory.permissionTarget
+}
+
+// Artifactory Access Token
+//
+// A bearer token issued against the instance. The `expiry` field is null on a
+// token that never expires, which stays usable until someone revokes it by
+// hand. The `scope` field holds what the token may do, and `grantsAdmin`
+// reduces it to whether the token carries administrative rights. Query
+// `artifactory.accessTokens.where(expiry == null)` for the tokens that outlive
+// every rotation.
+private artifactory.accessToken @defaults("id subject expiry") {
+  // Identifier of the token
+  id string
+  // Principal the token authenticates as, for example jfrt@01ab2c3d/users/example
+  subject string
+  // User the token authenticates as, or null when the subject is not a user on this instance
+  subjectRef() artifactory.user
+  // Human-readable description, or null when unset
+  description string
+  // Service that issued the token
+  issuer string
+  // Scopes the token carries
+  //
+  // Contains entries such as applied-permissions/user,
+  // applied-permissions/admin, applied-permissions/groups:example, or a
+  // repository scope. A token carries at most the rights of the principal it
+  // was issued for.
+  scope []string
+  // Whether the token carries instance-wide administrative rights
+  //
+  // True when the scope contains applied-permissions/admin. Such a token
+  // bypasses every permission target for as long as it is valid.
+  grantsAdmin bool
+  // Whether the token can be exchanged for a new one without reauthenticating
+  refreshable bool
+  // Time the token stops being accepted, or null when it never expires
+  //
+  // A token without an expiry stays usable until it is revoked by hand, so it
+  // survives the rotation of everything issued around it.
+  expiry time
+  // Whether the token has an expiry at all
+  expires bool
+  // Time the token was issued, or null when the instance does not report it
+  issuedAt time
+}
+
+// Artifactory Security Settings
+//
+// Instance-wide security settings, read from the instance configuration. The
+// `anonymousAccessEnabled` field is the gate every anonymous grant depends on:
+// while it is off, a permission target naming the anonymous user has no
+// effect, and while it is on, every such target applies. The
+// `anonymousDeployTargets` field lists the targets that would then let an
+// unauthenticated caller publish, and `anonymousCanDeploy` reduces the whole
+// instance to that single question.
+private artifactory.securitySettings @defaults("anonymousAccessEnabled anonymousCanDeploy") {
+  // Whether unauthenticated callers may use the instance at all
+  //
+  // While this is off, a permission target naming the anonymous user grants
+  // nothing. While it is on, every such target applies, so read it together
+  // with `anonymousCanDeploy`.
+  anonymousAccessEnabled bool
+  // Whether unauthenticated callers are blocked from reading build info
+  anonymousAccessToBuildInfosDisabled bool
+  // Whether a caller is told nothing about a resource it may not read
+  //
+  // When false, the response distinguishes a resource that is absent from one
+  // the caller may not see, which confirms an artifact exists to someone who
+  // cannot fetch it.
+  hideUnauthorizedResources bool
+  // Policy applied to passwords held in the instance configuration, for example SUPPORTED or REQUIRED
+  passwordEncryptionPolicy string
+  // Whether an account is locked after repeated failed sign-ins
+  userLockPolicyEnabled bool
+  // Failed sign-in attempts allowed before an account is locked, or null when locking is off
+  loginAttempts int
+  // Whether internal passwords expire
+  passwordExpiryEnabled bool
+  // Days an internal password stays valid, or null when passwords do not expire
+  passwordExpiryDays int
+  // Whether an unauthenticated caller may read any repository
+  //
+  // True when anonymous access is enabled instance-wide and a permission
+  // target gives the anonymous user a read action.
+  anonymousCanRead() bool
+  // Whether an unauthenticated caller may publish to any repository
+  //
+  // True when anonymous access is enabled instance-wide and a permission
+  // target gives the anonymous user a write, deploy, delete, or manage action.
+  // This is the state in which anyone on the network can replace the artifacts
+  // the instance serves.
+  anonymousCanDeploy() bool
+  // Permission targets that would let an unauthenticated caller publish
+  //
+  // Listed whether or not anonymous access is enabled instance-wide, so that
+  // turning it on shows what would immediately apply.
+  anonymousDeployTargets() []artifactory.permissionTarget
+}
+
+// Artifactory Cleanup Policy
+//
+// A scheduled deletion of artifacts that match a search. The `enabled` and
+// `cronExpression` fields report whether and when it runs, and the
+// `repositories` field reports what it deletes from. A policy that reaches a
+// repository a platform installs from removes artifacts a consumer may still
+// pin, so read `keepLastNVersions` and the age thresholds together with the
+// repositories the policy covers.
+private artifactory.cleanupPolicy @defaults("key enabled cronExpression") {
+  // Key of the policy, which is unique on the instance
+  key string
+  // Human-readable description, or null when unset
+  description string
+  // Whether the policy runs
+  enabled bool
+  // Schedule the policy runs on, as a cron expression
+  cronExpression string
+  // Minutes the policy is allowed to run for, or null when unbounded
+  durationInMinutes int
+  // Whether deleted artifacts skip the trash can and are removed at once
+  skipTrashcan bool
+  // Repository keys the policy deletes from
+  repositories []string
+  // Repositories the policy deletes from
+  repositoryRefs() []artifactory.repository
+  // Repository keys the policy is withheld from
+  excludedRepositories []string
+  // Package types the policy deletes, empty when it covers every type
+  packageTypes []string
+  // Age in months an artifact must reach before the policy deletes it, or null when unset
+  createdBeforeInMonths int
+  // Months an artifact must go undownloaded before the policy deletes it, or null when unset
+  lastDownloadedBeforeInMonths int
+  // Versions the policy keeps regardless of age, or null when it keeps none
+  keepLastNVersions int
+}

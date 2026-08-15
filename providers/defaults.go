@@ -87,6 +87,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"artifactory": {
+		Provider: &plugin.Provider{
+			Name:            "artifactory",
+			ID:              "go.mondoo.com/mql/providers/artifactory",
+			ConnectionTypes: []string{"artifactory"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "artifactory",
+					Use:   "artifactory [url]",
+					Short: "a JFrog Artifactory instance",
+				},
+			},
+		},
+	},
+
 	"atlassian": {
 		Provider: &plugin.Provider{
 			Name:            "atlassian",

@@ -201,6 +201,7 @@ use (
    ./mql/providers/alicloud
    ./mql/providers/ansible
    ./mql/providers/arista
+   ./mql/providers/artifactory
    ./mql/providers/atlassian
    ./mql/providers/aws
    ./mql/providers/azure
