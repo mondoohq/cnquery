@@ -363,6 +363,54 @@ alicloud.ecs {
   keyPairs() []alicloud.ecs.keypair
   // Security groups across all enabled regions
   securityGroups() []alicloud.ecs.securitygroup
+  // Prefix lists across all enabled regions
+  //
+  // A prefix list names a set of CIDR blocks that security group rules point at
+  // instead of writing the blocks out, so a rule scoped to a list shows no CIDR
+  // of its own until the list is read.
+  prefixLists() []alicloud.ecs.prefixList
+}
+
+// Prefix list
+//
+// A named set of CIDR blocks that security group rules reference in place of a
+// literal address range, keyed by prefixListId. A rule scoped to a prefix list
+// carries no source or destination CIDR of its own, so the blocks it actually
+// admits live here and nowhere else. associationCount reports how many rules
+// and route tables point at the list, which is how far a change to it reaches.
+alicloud.ecs.prefixList @defaults("prefixListName prefixListId addressFamily associationCount") {
+  // Prefix list ID, used as the lookup key
+  prefixListId string
+  // Prefix list name
+  prefixListName string
+  // Prefix list description
+  description string
+  // Address family of the entries
+  //
+  // Either IPv4 or IPv6.
+  addressFamily string
+  // Maximum number of entries the list can hold
+  maxEntries int
+  // Number of resources that reference the list
+  //
+  // Counts the security group rules and route entries pointing at the list, so
+  // a change to its blocks reaches every one of them.
+  associationCount int
+  // Region the prefix list lives in
+  regionId string
+  // ID of the resource group the prefix list belongs to
+  resourceGroupId string
+  // Resource group the prefix list belongs to
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the prefix list
+  tags map[string]string
+  // Time the prefix list was created
+  creationTime time
+  // CIDR blocks the list admits
+  //
+  // These are the addresses a rule scoped to this list actually matches. An
+  // entry of 0.0.0.0/0 opens every rule that points at the list.
+  cidrBlocks() []string
 }
 
 // Elastic Compute Service instance
@@ -758,6 +806,12 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   sourceSecurityGroup() alicloud.ecs.securitygroup
   // Source prefix list ID for an inbound rule
   sourcePrefixListId string
+  // Source prefix list for an inbound rule
+  //
+  // Null unless the rule is scoped to a prefix list. When it is set, the rule
+  // has no sourceCidrIp of its own and the list's cidrBlocks are what the rule
+  // admits.
+  sourcePrefixList() alicloud.ecs.prefixList
   // Source IPv6 CIDR block for an inbound rule
   ipv6SourceCidrIp string
   // Destination IPv4 CIDR block for an outbound rule
@@ -766,6 +820,12 @@ alicloud.ecs.securitygroup.permission @defaults("direction ipProtocol portRange 
   destSecurityGroup() alicloud.ecs.securitygroup
   // Destination prefix list ID for an outbound rule
   destPrefixListId string
+  // Destination prefix list for an outbound rule
+  //
+  // Null unless the rule is scoped to a prefix list. When it is set, the rule
+  // has no destCidrIp of its own and the list's cidrBlocks are what the rule
+  // permits traffic to reach.
+  destPrefixList() alicloud.ecs.prefixList
   // Destination IPv6 CIDR block for an outbound rule
   ipv6DestCidrIp string
   // Rule description
@@ -1237,11 +1297,55 @@ alicloud.vpc.routeTable {
   ownerId int
   // Tags attached to the route table
   tags map[string]string
-  // Route entries in the route table
+  // Route entry summaries
   //
-  // Each entry carries destinationCidrBlock, nextHopType, nextHopId, status,
-  // type, routeEntryId, routeEntryName, description, ipVersion, and origin.
-  routeEntries() []dict
+  // Deprecated in favor of routes. Each entry carries destinationCidrBlock,
+  // nextHopType, nextHopId, status, type, routeEntryId, routeEntryName,
+  // description, ipVersion, and origin.
+  routeEntries() @maturity("deprecated") []dict
+  // Routes in the route table
+  //
+  // Where traffic leaving the attached vSwitches is sent. A route for
+  // 0.0.0.0/0 is the one that decides whether a subnet reaches the internet at
+  // all, and which gateway it leaves through.
+  routes() []alicloud.vpc.routeTable.route
+}
+
+// Route in a VPC route table
+//
+// A single route, keyed by routeEntryId. Reports the destination it matches and
+// the next hop traffic is handed to. A system route is created with the VPC and
+// a custom route was added deliberately, which the type field distinguishes.
+alicloud.vpc.routeTable.route @defaults("destinationCidrBlock nextHopType nextHopId status") {
+  // Route entry ID, used as the lookup key
+  routeEntryId string
+  // Route entry name
+  routeEntryName string
+  // Route description
+  description string
+  // Destination the route matches
+  //
+  // A CIDR block. 0.0.0.0/0 is the default route, which catches everything not
+  // matched by a more specific entry.
+  destinationCidrBlock string
+  // Kind of next hop traffic is handed to
+  //
+  // Values include Instance, NatGateway, VpnGateway, RouterInterface,
+  // NetworkInterface, IPv6Gateway, and Attachment. The kind decides whether the
+  // route leads out of the VPC.
+  nextHopType string
+  // ID of the next hop
+  nextHopId string
+  // Route status
+  status string
+  // How the route was created
+  //
+  // System for a route created with the VPC, Custom for one added afterwards.
+  type string
+  // IP version of the destination
+  ipVersion string
+  // Origin of the route
+  origin string
 }
 
 // VPC NAT gateway
@@ -1466,22 +1570,78 @@ alicloud.vpc.networkAcl {
   regionId string
   // ID of the Alibaba Cloud account that owns the network ACL
   ownerId int
-  // Inbound rule entries of the network ACL
+  // Inbound rule summaries
   //
-  // Each entry carries protocol, port, sourceCidrIp, policy, description,
-  // entryType, ipVersion, networkAclEntryId, and networkAclEntryName.
-  ingressAclEntries []dict
-  // Outbound rule entries of the network ACL
+  // Deprecated in favor of ingressEntries. Each entry carries protocol, port,
+  // sourceCidrIp, policy, description, entryType, ipVersion, networkAclEntryId,
+  // and networkAclEntryName.
+  ingressAclEntries @maturity("deprecated") []dict
+  // Outbound rule summaries
   //
-  // Each entry carries protocol, port, destinationCidrIp, policy, description,
-  // entryType, ipVersion, networkAclEntryId, and networkAclEntryName.
-  egressAclEntries []dict
+  // Deprecated in favor of egressEntries. Each entry carries protocol, port,
+  // destinationCidrIp, policy, description, entryType, ipVersion,
+  // networkAclEntryId, and networkAclEntryName.
+  egressAclEntries @maturity("deprecated") []dict
+  // Inbound rules of the network ACL
+  //
+  // Evaluated before security groups on traffic entering the attached
+  // vSwitches, so a rule here can admit traffic no security group was ever
+  // asked about.
+  ingressEntries []alicloud.vpc.networkAcl.entry
+  // Outbound rules of the network ACL
+  egressEntries []alicloud.vpc.networkAcl.entry
   // Resources the network ACL is bound to
   //
   // Each entry carries resourceId, resourceType, and status.
   resources []dict
   // Tags attached to the network ACL
   tags map[string]string
+}
+
+// Network ACL rule
+//
+// A single inbound or outbound rule, keyed by entryId. Network ACLs are
+// evaluated before security groups, so an accept rule here decides what reaches
+// the security groups at all and a drop rule overrides whatever they allow.
+// Ports arrive as a range string such as 22/22 or -1/-1 for every port.
+alicloud.vpc.networkAcl.entry @defaults("direction policy protocol port sourceCidrIp") {
+  // Rule ID, used as the lookup key
+  entryId string
+  // Rule name
+  name string
+  // Rule description
+  description string
+  // Which way the rule applies
+  //
+  // Either ingress or egress.
+  direction string
+  // What the rule does with matching traffic
+  //
+  // Either accept or drop.
+  policy string
+  // Protocol the rule matches
+  //
+  // One of icmp, gre, tcp, udp, or all.
+  protocol string
+  // Port range the rule matches
+  //
+  // Written as first/last, for example 22/22. A value of -1/-1 matches every
+  // port, which is the form a rule takes when the protocol is not tcp or udp.
+  port string
+  // Source addresses an inbound rule matches
+  //
+  // Empty on an egress rule. A value of 0.0.0.0/0 matches the whole internet.
+  sourceCidrIp string
+  // Destination addresses an outbound rule matches
+  //
+  // Empty on an ingress rule.
+  destinationCidrIp string
+  // How the rule was created
+  //
+  // custom for a rule added deliberately, system for one created with the ACL.
+  entryType string
+  // IP version the rule applies to
+  ipVersion string
 }
 
 // Object Storage Service

@@ -130,6 +130,31 @@ alicloud.ecs.securityGroups {
   permissions.where(sourceCidrIp == "0.0.0.0/0") { ipProtocol portRange }
 }
 
+# the same question for rules scoped to a prefix list, which carry no CIDR
+# of their own
+alicloud.ecs.securityGroups {
+  securityGroupName
+  permissions.where(sourcePrefixListId != "") {
+    ipProtocol portRange
+    sourcePrefixList { prefixListName cidrBlocks }
+  }
+}
+
+# network ACL rules that accept traffic from anywhere, evaluated before
+# security groups ever see it
+alicloud.vpc.networkAcls {
+  networkAclName
+  ingressEntries.where(policy == "accept" && sourceCidrIp == "0.0.0.0/0") {
+    protocol port description
+  }
+}
+
+# which route tables send everything out through a gateway
+alicloud.vpc.routeTables {
+  routeTableName
+  routes.where(destinationCidrBlock == "0.0.0.0/0") { nextHopType nextHopId }
+}
+
 # OSS buckets without block-public-access
 alicloud.oss.buckets.where(blockPublicAccess == false) { name acl policy }
 
