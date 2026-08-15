@@ -272,3 +272,22 @@ ip route 10.0.0.0/8 reject
 	assert.True(t, routes[1].Reject)
 	assert.False(t, routes[1].Blackhole)
 }
+
+// TestCommunityLists_SameNameDifferentType pins that a standard and an
+// expanded list of the same name stay two lists. One matches values, the
+// other matches a regular expression.
+func TestCommunityLists_SameNameDifferentType(t *testing.T) {
+	src := `hostname x
+bgp community-list standard FOO permit 65000:1
+bgp community-list expanded FOO permit ^65000:
+`
+	cfg, err := Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+	lists := cfg.CommunityLists()
+	require.Len(t, lists, 2)
+
+	assert.Equal(t, "standard", lists[0].Type)
+	assert.Equal(t, "65000:1", lists[0].Entries[0].Value)
+	assert.Equal(t, "expanded", lists[1].Type)
+	assert.Equal(t, "^65000:", lists[1].Entries[0].Value)
+}
