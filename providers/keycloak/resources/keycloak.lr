@@ -17,6 +17,8 @@ keycloak {
   realms() []keycloak.realm
   // Clients across every realm in scope
   clients() []keycloak.client
+  // Client scopes across every realm in scope
+  clientScopes() []keycloak.clientScope
   // Base URL of the Keycloak server
   serverUrl() string
 }
@@ -221,6 +223,15 @@ private keycloak.realm @defaults("name enabled sslRequired") {
   authenticationFlows() []keycloak.authenticationFlow
   // Components configured for the realm, including user federation providers
   components() []keycloak.component
+  // Client scopes defined in the realm
+  //
+  // The scopes named in defaultDefaultClientScopes are attached to every new
+  // client, so a mapper on one of those reaches the whole realm.
+  clientScopes() []keycloak.clientScope
+  // Names of the scopes attached to every new client by default
+  defaultDefaultClientScopes() []string
+  // Names of the scopes offered to every new client as optional
+  defaultOptionalClientScopes() []string
   // Actions a user can be asked to complete after login
   requiredActions() []keycloak.realm.requiredAction
 }
@@ -370,16 +381,139 @@ private keycloak.client @defaults("clientId enabled publicClient") {
   // `post.logout.redirect.uris`, `access.token.lifespan` or
   // `oauth2.device.authorization.grant.enabled`.
   attributes map[string]string
-  // Scopes every token for this client carries
+  // Names of the scopes every token for this client carries
   defaultClientScopes []string
-  // Scopes a request for this client may ask for
+  // Names of the scopes a request for this client may ask for
   optionalClientScopes []string
+  // Scopes every token for this client carries
+  //
+  // Their protocol mappers decide what a token issued to this client contains
+  // without the request asking for anything.
+  defaultScopes() []keycloak.clientScope
+  // Scopes a request for this client may ask for
+  optionalScopes() []keycloak.clientScope
+  // Protocol mappers defined on the client itself
+  //
+  // These run in addition to the mappers of the client's scopes, so a claim
+  // can be added here even when every scope is a stock one.
+  protocolMappers() []keycloak.protocolMapper
+  // Roles a token for this client may carry when the full scope is off
+  //
+  // Empty when fullScopeAllowed is true, since the token then carries every
+  // role the user holds. Otherwise these are the only roles that reach the
+  // token, which is what bounds a compromised client.
+  scopeMappings() []keycloak.role
   // Roles defined by the client
   roles() []keycloak.role
   // User the client authenticates as when it uses its service account
   serviceAccountUser() keycloak.user
   // Realm the client is registered in
   realm() keycloak.realm
+}
+
+// Keycloak Client Scope
+//
+// A named set of protocol mappers and role scope mappings that a client can
+// attach to its tokens. A scope in a client's default list is applied to every
+// token without the request asking for it, so a mapper added here reaches every
+// client that carries the scope. Query `protocolMappers` for what the scope
+// puts into a token, `includeInTokenScope` for whether the scope name appears
+// in the token's scope claim, and `scopeMappings` for the roles it lets
+// through. Select a scope with
+// `keycloak.realms.first.clientScopes.where(name == "profile")`.
+private keycloak.clientScope @defaults("name protocol") {
+  // Internal scope identifier
+  id string
+  // Scope name, which is what a client asks for
+  name string
+  // Description
+  description string
+  // Protocol the scope applies to, either openid-connect or saml
+  protocol string
+  // Whether the scope name is listed in the token's scope claim
+  includeInTokenScope bool
+  // Whether the scope is shown on the consent screen
+  displayOnConsentScreen bool
+  // Text shown for the scope on the consent screen
+  consentScreenText string
+  // Order the scope is shown in on the user interface
+  guiOrder string
+  // Full scope configuration as Keycloak stores it
+  //
+  // Keyed by the attribute name, such as `include.in.token.scope` or
+  // `display.on.consent.screen`. The settings that carry security meaning are
+  // modeled as fields.
+  attributes map[string]string
+  // Whether the realm attaches the scope to every new client by default
+  //
+  // A default scope reaches clients that never asked for it, so a mapper added
+  // to one is applied realm-wide.
+  isRealmDefault bool
+  // Whether the realm offers the scope to every new client as optional
+  isRealmOptional bool
+  // Protocol mappers the scope applies to a token
+  protocolMappers() []keycloak.protocolMapper
+  // Roles the scope lets through into a token
+  scopeMappings() []keycloak.role
+  // Realm the scope is defined in
+  realm() keycloak.realm
+}
+
+// Keycloak Protocol Mapper
+//
+// A rule that puts a value into a token, an ID token or the userinfo response.
+// A mapper is where a claim comes from, so it is what can leak an attribute or
+// widen a token's audience. Query `mapperType` for what the mapper does, for
+// example oidc-audience-mapper for one that adds an audience or
+// oidc-usermodel-attribute-mapper for one that copies a user attribute, and
+// `addToAccessToken` with `addToIdToken` and `addToUserInfo` for where the
+// value lands. The `claimName` field names the claim it writes.
+private keycloak.protocolMapper @defaults("name mapperType claimName") {
+  // Internal mapper identifier
+  id string
+  // Mapper name
+  name string
+  // Protocol the mapper applies to, either openid-connect or saml
+  protocol string
+  // Kind of mapper
+  //
+  // For example oidc-usermodel-attribute-mapper, oidc-audience-mapper,
+  // oidc-group-membership-mapper or oidc-hardcoded-claim-mapper. The kind
+  // decides what the mapper reads and therefore what it can expose.
+  mapperType string
+  // Name of the claim the mapper writes
+  //
+  // Empty for a mapper that writes no named claim, such as one that only adds
+  // an audience.
+  claimName string
+  // Whether the value is added to the access token
+  addToAccessToken bool
+  // Whether the value is added to the ID token
+  addToIdToken bool
+  // Whether the value is returned from the userinfo endpoint
+  addToUserInfo bool
+  // Whether the value is added to the token introspection response
+  addToIntrospection bool
+  // Audience the mapper adds to the token
+  //
+  // Set by an audience mapper, and empty otherwise. An audience naming another
+  // client lets a token issued for this client be accepted by that one.
+  includedClientAudience string
+  // Custom audience the mapper adds to the token
+  includedCustomAudience string
+  // User attribute the mapper reads
+  //
+  // Set by a mapper that copies a user attribute or property into a claim, and
+  // empty otherwise.
+  userAttribute string
+  // Whether the claim carries the user's full group path
+  fullPath bool
+  // Full mapper configuration as Keycloak stores it
+  //
+  // Keyed by the setting name, with the value as a string. Every value
+  // Keycloak stores here is a string, so a boolean setting reads as "true" or
+  // "false". The settings that carry security meaning are modeled as fields.
+  config map[string]string
 }
 
 // Keycloak Role

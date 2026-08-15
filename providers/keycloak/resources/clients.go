@@ -193,3 +193,86 @@ func (c *mqlKeycloakClient) serviceAccountUser() (*mqlKeycloakUser, error) {
 
 	return newKeycloakUser(c.MqlRuntime, c.parentRealm, &rec)
 }
+
+// defaultScopes resolves the scopes every token for this client carries.
+func (c *mqlKeycloakClient) defaultScopes() ([]any, error) {
+	return c.scopesByName(c.GetDefaultClientScopes())
+}
+
+// optionalScopes resolves the scopes a request for this client may ask for.
+func (c *mqlKeycloakClient) optionalScopes() ([]any, error) {
+	return c.scopesByName(c.GetOptionalClientScopes())
+}
+
+// scopesByName resolves scope names through the realm's cached scope list, so
+// resolving them on many clients costs one call for the scan rather than one
+// call per client.
+func (c *mqlKeycloakClient) scopesByName(names *plugin.TValue[[]any]) ([]any, error) {
+	if c.parentRealm == nil {
+		return nil, nil
+	}
+	if names.Error != nil {
+		return nil, names.Error
+	}
+
+	scopes := c.parentRealm.GetClientScopes()
+	if scopes.Error != nil {
+		return nil, scopes.Error
+	}
+
+	byName := make(map[string]*mqlKeycloakClientScope, len(scopes.Data))
+	for _, it := range scopes.Data {
+		if scope, ok := it.(*mqlKeycloakClientScope); ok {
+			byName[scope.Name.Data] = scope
+		}
+	}
+
+	// Every name is looked up. A name the realm list does not carry is skipped
+	// rather than ending the walk, so one unknown scope cannot hide the ones
+	// after it.
+	res := make([]any, 0, len(names.Data))
+	for _, it := range names.Data {
+		name, ok := it.(string)
+		if !ok {
+			continue
+		}
+		if scope, ok := byName[name]; ok {
+			res = append(res, scope)
+		}
+	}
+	return res, nil
+}
+
+// protocolMappers lists the mappers defined on the client itself, which run in
+// addition to the mappers of the client's scopes.
+func (c *mqlKeycloakClient) protocolMappers() ([]any, error) {
+	if c.parentRealm == nil {
+		return nil, nil
+	}
+
+	ctx := context.Background()
+	conn := keycloakConn(c.MqlRuntime)
+	path := connection.AdminPath(c.parentRealm.realmName(), "clients", c.Id.Data, "protocol-mappers", "models")
+
+	var records []protocolMapperRecord
+	if err := conn.Get(ctx, path, nil, &records); err != nil {
+		return nil, err
+	}
+
+	return newProtocolMappers(c.MqlRuntime, c.__id, records)
+}
+
+// scopeMappings lists the roles a token for this client may carry. With the
+// full scope allowed, the token carries every role the user holds, so the
+// mappings do not bound it and an empty list is the honest answer.
+func (c *mqlKeycloakClient) scopeMappings() ([]any, error) {
+	if c.parentRealm == nil || c.FullScopeAllowed.Data {
+		return nil, nil
+	}
+
+	ctx := context.Background()
+	conn := keycloakConn(c.MqlRuntime)
+	path := connection.AdminPath(c.parentRealm.realmName(), "clients", c.Id.Data, "scope-mappings")
+
+	return fetchScopeMappings(ctx, conn, c.MqlRuntime, c.parentRealm, path)
+}

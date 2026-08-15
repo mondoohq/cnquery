@@ -189,6 +189,45 @@ password in the clear.
 mql> keycloak.realms { name components.where(isUserFederation && connectionEncrypted == false) { name connectionUrl startTls } }
 ```
 
+**Find a mapper that widens a token's audience**
+
+An audience mapper lets a token issued for one client be accepted by another,
+so it moves trust between applications.
+
+```shell
+mql> keycloak.clientScopes.where(protocolMappers.any(mapperType == "oidc-audience-mapper")) { name protocolMappers { name includedClientAudience } }
+```
+
+**Find scopes attached to every client**
+
+A mapper added to a realm default scope reaches every client, including ones
+that never asked for it.
+
+```shell
+mql> keycloak.realms.first.clientScopes.where(isRealmDefault) { name protocolMappers { name claimName addToAccessToken } }
+```
+
+**Find mappers that copy a user attribute into a token**
+
+```shell
+mql> keycloak.clientScopes { name protocolMappers.where(userAttribute != "") { name userAttribute claimName addToAccessToken } }
+```
+
+**Find the roles a client's token may carry**
+
+With the full scope off, the scope mappings are what bound a compromised
+client.
+
+```shell
+mql> keycloak.clients.where(fullScopeAllowed == false) { clientId scopeMappings { name clientRole } }
+```
+
+**Find clients that carry every role of the user**
+
+```shell
+mql> keycloak.clients.where(enabled && fullScopeAllowed) { clientId }
+```
+
 **Follow a composite role**
 
 A role named after a team commonly carries `realm-admin` without saying so.
@@ -201,8 +240,9 @@ mql> keycloak.realms.first.roles.where(composite) { name composites { name clien
 
 The root resource is `keycloak`. It carries `realms`, and `clients` flattens
 every client across the realms in scope. A realm carries its `clients`, `roles`,
-`groups`, `users`, `identityProviders`, `authenticationFlows`, `components` and
-`requiredActions`. The full field reference is generated from the schema
+`groups`, `users`, `identityProviders`, `authenticationFlows`, `components`,
+`clientScopes` and `requiredActions`. A client scope carries its
+`protocolMappers`, which is where a token's claims come from. The full field reference is generated from the schema
 comments in `resources/keycloak.lr`.
 
 ## Verification

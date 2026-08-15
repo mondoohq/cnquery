@@ -182,3 +182,25 @@ func configBool(value string) bool {
 func setNullResource[T any](field *plugin.TValue[T]) {
 	field.State = plugin.StateIsSet | plugin.StateIsNull
 }
+
+// clientScopes flattens every client scope of every realm in scope.
+func (k *mqlKeycloak) clientScopes() ([]any, error) {
+	realms := k.GetRealms()
+	if realms.Error != nil {
+		return nil, realms.Error
+	}
+
+	var res []any
+	for _, it := range realms.Data {
+		realm, ok := it.(*mqlKeycloakRealm)
+		if !ok {
+			continue
+		}
+		scopes := realm.GetClientScopes()
+		if scopes.Error != nil {
+			return nil, scopes.Error
+		}
+		res = append(res, scopes.Data...)
+	}
+	return res, nil
+}

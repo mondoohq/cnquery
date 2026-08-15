@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -17,6 +18,13 @@ import (
 // with the realm itself rather than through a lookup of its own.
 type mqlKeycloakRealmInternal struct {
 	cacheDefaultRole *roleRecord
+
+	// The realm's default and optional scope lists are read once and shared by
+	// every scope resource, so the two endpoints are called once per realm
+	// rather than once per scope.
+	defaultScopesLock    sync.Mutex
+	defaultScopesFetched bool
+	cacheDefaultScopes   *realmDefaultScopes
 }
 
 type realmRecord struct {
@@ -453,4 +461,70 @@ func (r *mqlKeycloakRealm) flowByAlias(field *plugin.TValue[*mqlKeycloakAuthenti
 	// that as null rather than as a failure of the whole realm.
 	setNullResource(field)
 	return nil, nil
+}
+
+// clientScopes lists the scopes defined in the realm, marking which ones the
+// realm attaches to every new client.
+func (r *mqlKeycloakRealm) clientScopes() ([]any, error) {
+	ctx := context.Background()
+	c := keycloakConn(r.MqlRuntime)
+
+	var records []clientScopeRecord
+	if err := c.Get(ctx, connection.AdminPath(r.realmName(), "client-scopes"), nil, &records); err != nil {
+		return nil, err
+	}
+
+	realmScopes, err := r.defaultScopeSets()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(records))
+	for i := range records {
+		scope, err := newKeycloakClientScope(r.MqlRuntime, r, &records[i], realmScopes)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, scope)
+	}
+	return res, nil
+}
+
+// defaultScopeSets reads the realm's default and optional scope lists once and
+// keeps them, since every scope resource and both name fields need them.
+func (r *mqlKeycloakRealm) defaultScopeSets() (*realmDefaultScopes, error) {
+	if r.defaultScopesFetched {
+		return r.cacheDefaultScopes, nil
+	}
+
+	r.defaultScopesLock.Lock()
+	defer r.defaultScopesLock.Unlock()
+	if r.defaultScopesFetched {
+		return r.cacheDefaultScopes, nil
+	}
+
+	sets, err := fetchRealmDefaultScopes(context.Background(), keycloakConn(r.MqlRuntime), r.realmName())
+	if err != nil {
+		return nil, err
+	}
+
+	r.cacheDefaultScopes = sets
+	r.defaultScopesFetched = true
+	return sets, nil
+}
+
+func (r *mqlKeycloakRealm) defaultDefaultClientScopes() ([]any, error) {
+	sets, err := r.defaultScopeSets()
+	if err != nil {
+		return nil, err
+	}
+	return strSliceToAny(sets.names), nil
+}
+
+func (r *mqlKeycloakRealm) defaultOptionalClientScopes() ([]any, error) {
+	sets, err := r.defaultScopeSets()
+	if err != nil {
+		return nil, err
+	}
+	return strSliceToAny(sets.optNames), nil
 }

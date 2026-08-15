@@ -20,6 +20,8 @@ const (
 	ResourceKeycloakRealm                       string = "keycloak.realm"
 	ResourceKeycloakRealmRequiredAction         string = "keycloak.realm.requiredAction"
 	ResourceKeycloakClient                      string = "keycloak.client"
+	ResourceKeycloakClientScope                 string = "keycloak.clientScope"
+	ResourceKeycloakProtocolMapper              string = "keycloak.protocolMapper"
 	ResourceKeycloakRole                        string = "keycloak.role"
 	ResourceKeycloakGroup                       string = "keycloak.group"
 	ResourceKeycloakUser                        string = "keycloak.user"
@@ -48,6 +50,14 @@ func init() {
 		"keycloak.client": {
 			// to override args, implement: initKeycloakClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKeycloakClient,
+		},
+		"keycloak.clientScope": {
+			// to override args, implement: initKeycloakClientScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakClientScope,
+		},
+		"keycloak.protocolMapper": {
+			// to override args, implement: initKeycloakProtocolMapper(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKeycloakProtocolMapper,
 		},
 		"keycloak.role": {
 			// to override args, implement: initKeycloakRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -153,6 +163,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"keycloak.clients": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloak).GetClients()).ToDataRes(types.Array(types.Resource("keycloak.client")))
+	},
+	"keycloak.clientScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloak).GetClientScopes()).ToDataRes(types.Array(types.Resource("keycloak.clientScope")))
 	},
 	"keycloak.serverUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloak).GetServerUrl()).ToDataRes(types.String)
@@ -370,6 +383,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.realm.components": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakRealm).GetComponents()).ToDataRes(types.Array(types.Resource("keycloak.component")))
 	},
+	"keycloak.realm.clientScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetClientScopes()).ToDataRes(types.Array(types.Resource("keycloak.clientScope")))
+	},
+	"keycloak.realm.defaultDefaultClientScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetDefaultDefaultClientScopes()).ToDataRes(types.Array(types.String))
+	},
+	"keycloak.realm.defaultOptionalClientScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakRealm).GetDefaultOptionalClientScopes()).ToDataRes(types.Array(types.String))
+	},
 	"keycloak.realm.requiredActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakRealm).GetRequiredActions()).ToDataRes(types.Array(types.Resource("keycloak.realm.requiredAction")))
 	},
@@ -487,6 +509,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"keycloak.client.optionalClientScopes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakClient).GetOptionalClientScopes()).ToDataRes(types.Array(types.String))
 	},
+	"keycloak.client.defaultScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClient).GetDefaultScopes()).ToDataRes(types.Array(types.Resource("keycloak.clientScope")))
+	},
+	"keycloak.client.optionalScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClient).GetOptionalScopes()).ToDataRes(types.Array(types.Resource("keycloak.clientScope")))
+	},
+	"keycloak.client.protocolMappers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClient).GetProtocolMappers()).ToDataRes(types.Array(types.Resource("keycloak.protocolMapper")))
+	},
+	"keycloak.client.scopeMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClient).GetScopeMappings()).ToDataRes(types.Array(types.Resource("keycloak.role")))
+	},
 	"keycloak.client.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakClient).GetRoles()).ToDataRes(types.Array(types.Resource("keycloak.role")))
 	},
@@ -495,6 +529,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"keycloak.client.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakClient).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
+	"keycloak.clientScope.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetId()).ToDataRes(types.String)
+	},
+	"keycloak.clientScope.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetName()).ToDataRes(types.String)
+	},
+	"keycloak.clientScope.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetDescription()).ToDataRes(types.String)
+	},
+	"keycloak.clientScope.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetProtocol()).ToDataRes(types.String)
+	},
+	"keycloak.clientScope.includeInTokenScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetIncludeInTokenScope()).ToDataRes(types.Bool)
+	},
+	"keycloak.clientScope.displayOnConsentScreen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetDisplayOnConsentScreen()).ToDataRes(types.Bool)
+	},
+	"keycloak.clientScope.consentScreenText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetConsentScreenText()).ToDataRes(types.String)
+	},
+	"keycloak.clientScope.guiOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetGuiOrder()).ToDataRes(types.String)
+	},
+	"keycloak.clientScope.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetAttributes()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"keycloak.clientScope.isRealmDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetIsRealmDefault()).ToDataRes(types.Bool)
+	},
+	"keycloak.clientScope.isRealmOptional": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetIsRealmOptional()).ToDataRes(types.Bool)
+	},
+	"keycloak.clientScope.protocolMappers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetProtocolMappers()).ToDataRes(types.Array(types.Resource("keycloak.protocolMapper")))
+	},
+	"keycloak.clientScope.scopeMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetScopeMappings()).ToDataRes(types.Array(types.Resource("keycloak.role")))
+	},
+	"keycloak.clientScope.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakClientScope).GetRealm()).ToDataRes(types.Resource("keycloak.realm"))
+	},
+	"keycloak.protocolMapper.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetId()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetName()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetProtocol()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.mapperType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetMapperType()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.claimName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetClaimName()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.addToAccessToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetAddToAccessToken()).ToDataRes(types.Bool)
+	},
+	"keycloak.protocolMapper.addToIdToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetAddToIdToken()).ToDataRes(types.Bool)
+	},
+	"keycloak.protocolMapper.addToUserInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetAddToUserInfo()).ToDataRes(types.Bool)
+	},
+	"keycloak.protocolMapper.addToIntrospection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetAddToIntrospection()).ToDataRes(types.Bool)
+	},
+	"keycloak.protocolMapper.includedClientAudience": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetIncludedClientAudience()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.includedCustomAudience": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetIncludedCustomAudience()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.userAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetUserAttribute()).ToDataRes(types.String)
+	},
+	"keycloak.protocolMapper.fullPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetFullPath()).ToDataRes(types.Bool)
+	},
+	"keycloak.protocolMapper.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKeycloakProtocolMapper).GetConfig()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"keycloak.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKeycloakRole).GetId()).ToDataRes(types.String)
@@ -829,6 +947,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloak).Clients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"keycloak.clientScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloak).ClientScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"keycloak.serverUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloak).ServerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1121,6 +1243,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloakRealm).Components, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"keycloak.realm.clientScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).ClientScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.defaultDefaultClientScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).DefaultDefaultClientScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.realm.defaultOptionalClientScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakRealm).DefaultOptionalClientScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"keycloak.realm.requiredActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakRealm).RequiredActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1285,6 +1419,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKeycloakClient).OptionalClientScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"keycloak.client.defaultScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClient).DefaultScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.optionalScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClient).OptionalScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.protocolMappers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClient).ProtocolMappers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.client.scopeMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClient).ScopeMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"keycloak.client.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakClient).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1295,6 +1445,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"keycloak.client.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKeycloakClient).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.clientScope.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.includeInTokenScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).IncludeInTokenScope, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.displayOnConsentScreen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).DisplayOnConsentScreen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.consentScreenText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).ConsentScreenText, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.guiOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).GuiOrder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).Attributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.isRealmDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).IsRealmDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.isRealmOptional": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).IsRealmOptional, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.protocolMappers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).ProtocolMappers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.scopeMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).ScopeMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"keycloak.clientScope.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakClientScope).Realm, ok = plugin.RawToTValue[*mqlKeycloakRealm](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).__id, ok = v.Value.(string)
+		return
+	},
+	"keycloak.protocolMapper.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.mapperType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).MapperType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.claimName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).ClaimName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.addToAccessToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).AddToAccessToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.addToIdToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).AddToIdToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.addToUserInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).AddToUserInfo, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.addToIntrospection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).AddToIntrospection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.includedClientAudience": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).IncludedClientAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.includedCustomAudience": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).IncludedCustomAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.userAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).UserAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.fullPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).FullPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"keycloak.protocolMapper.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKeycloakProtocolMapper).Config, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"keycloak.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1766,9 +2036,10 @@ type mqlKeycloak struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlKeycloakInternal it will be used here
-	Realms    plugin.TValue[[]any]
-	Clients   plugin.TValue[[]any]
-	ServerUrl plugin.TValue[string]
+	Realms       plugin.TValue[[]any]
+	Clients      plugin.TValue[[]any]
+	ClientScopes plugin.TValue[[]any]
+	ServerUrl    plugin.TValue[string]
 }
 
 // createKeycloak creates a new instance of this resource
@@ -1837,6 +2108,22 @@ func (c *mqlKeycloak) GetClients() *plugin.TValue[[]any] {
 		}
 
 		return c.clients()
+	})
+}
+
+func (c *mqlKeycloak) GetClientScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientScopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak", c.__id, "clientScopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientScopes()
 	})
 }
 
@@ -1922,6 +2209,9 @@ type mqlKeycloakRealm struct {
 	IdentityProviders                  plugin.TValue[[]any]
 	AuthenticationFlows                plugin.TValue[[]any]
 	Components                         plugin.TValue[[]any]
+	ClientScopes                       plugin.TValue[[]any]
+	DefaultDefaultClientScopes         plugin.TValue[[]any]
+	DefaultOptionalClientScopes        plugin.TValue[[]any]
 	RequiredActions                    plugin.TValue[[]any]
 }
 
@@ -2414,6 +2704,34 @@ func (c *mqlKeycloakRealm) GetComponents() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlKeycloakRealm) GetClientScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientScopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.realm", c.__id, "clientScopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientScopes()
+	})
+}
+
+func (c *mqlKeycloakRealm) GetDefaultDefaultClientScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultDefaultClientScopes, func() ([]any, error) {
+		return c.defaultDefaultClientScopes()
+	})
+}
+
+func (c *mqlKeycloakRealm) GetDefaultOptionalClientScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultOptionalClientScopes, func() ([]any, error) {
+		return c.defaultOptionalClientScopes()
+	})
+}
+
 func (c *mqlKeycloakRealm) GetRequiredActions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.RequiredActions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -2556,6 +2874,10 @@ type mqlKeycloakClient struct {
 	Attributes                         plugin.TValue[map[string]any]
 	DefaultClientScopes                plugin.TValue[[]any]
 	OptionalClientScopes               plugin.TValue[[]any]
+	DefaultScopes                      plugin.TValue[[]any]
+	OptionalScopes                     plugin.TValue[[]any]
+	ProtocolMappers                    plugin.TValue[[]any]
+	ScopeMappings                      plugin.TValue[[]any]
 	Roles                              plugin.TValue[[]any]
 	ServiceAccountUser                 plugin.TValue[*mqlKeycloakUser]
 	Realm                              plugin.TValue[*mqlKeycloakRealm]
@@ -2718,6 +3040,70 @@ func (c *mqlKeycloakClient) GetOptionalClientScopes() *plugin.TValue[[]any] {
 	return &c.OptionalClientScopes
 }
 
+func (c *mqlKeycloakClient) GetDefaultScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultScopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.client", c.__id, "defaultScopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaultScopes()
+	})
+}
+
+func (c *mqlKeycloakClient) GetOptionalScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OptionalScopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.client", c.__id, "optionalScopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.optionalScopes()
+	})
+}
+
+func (c *mqlKeycloakClient) GetProtocolMappers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtocolMappers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.client", c.__id, "protocolMappers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protocolMappers()
+	})
+}
+
+func (c *mqlKeycloakClient) GetScopeMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScopeMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.client", c.__id, "scopeMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scopeMappings()
+	})
+}
+
 func (c *mqlKeycloakClient) GetRoles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -2764,6 +3150,270 @@ func (c *mqlKeycloakClient) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
 
 		return c.realm()
 	})
+}
+
+// mqlKeycloakClientScope for the keycloak.clientScope resource
+type mqlKeycloakClientScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlKeycloakClientScopeInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Protocol               plugin.TValue[string]
+	IncludeInTokenScope    plugin.TValue[bool]
+	DisplayOnConsentScreen plugin.TValue[bool]
+	ConsentScreenText      plugin.TValue[string]
+	GuiOrder               plugin.TValue[string]
+	Attributes             plugin.TValue[map[string]any]
+	IsRealmDefault         plugin.TValue[bool]
+	IsRealmOptional        plugin.TValue[bool]
+	ProtocolMappers        plugin.TValue[[]any]
+	ScopeMappings          plugin.TValue[[]any]
+	Realm                  plugin.TValue[*mqlKeycloakRealm]
+}
+
+// createKeycloakClientScope creates a new instance of this resource
+func createKeycloakClientScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakClientScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.clientScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakClientScope) MqlName() string {
+	return "keycloak.clientScope"
+}
+
+func (c *mqlKeycloakClientScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakClientScope) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlKeycloakClientScope) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKeycloakClientScope) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlKeycloakClientScope) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlKeycloakClientScope) GetIncludeInTokenScope() *plugin.TValue[bool] {
+	return &c.IncludeInTokenScope
+}
+
+func (c *mqlKeycloakClientScope) GetDisplayOnConsentScreen() *plugin.TValue[bool] {
+	return &c.DisplayOnConsentScreen
+}
+
+func (c *mqlKeycloakClientScope) GetConsentScreenText() *plugin.TValue[string] {
+	return &c.ConsentScreenText
+}
+
+func (c *mqlKeycloakClientScope) GetGuiOrder() *plugin.TValue[string] {
+	return &c.GuiOrder
+}
+
+func (c *mqlKeycloakClientScope) GetAttributes() *plugin.TValue[map[string]any] {
+	return &c.Attributes
+}
+
+func (c *mqlKeycloakClientScope) GetIsRealmDefault() *plugin.TValue[bool] {
+	return &c.IsRealmDefault
+}
+
+func (c *mqlKeycloakClientScope) GetIsRealmOptional() *plugin.TValue[bool] {
+	return &c.IsRealmOptional
+}
+
+func (c *mqlKeycloakClientScope) GetProtocolMappers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtocolMappers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.clientScope", c.__id, "protocolMappers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protocolMappers()
+	})
+}
+
+func (c *mqlKeycloakClientScope) GetScopeMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScopeMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.clientScope", c.__id, "scopeMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scopeMappings()
+	})
+}
+
+func (c *mqlKeycloakClientScope) GetRealm() *plugin.TValue[*mqlKeycloakRealm] {
+	return plugin.GetOrCompute[*mqlKeycloakRealm](&c.Realm, func() (*mqlKeycloakRealm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("keycloak.clientScope", c.__id, "realm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKeycloakRealm), nil
+			}
+		}
+
+		return c.realm()
+	})
+}
+
+// mqlKeycloakProtocolMapper for the keycloak.protocolMapper resource
+type mqlKeycloakProtocolMapper struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKeycloakProtocolMapperInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Protocol               plugin.TValue[string]
+	MapperType             plugin.TValue[string]
+	ClaimName              plugin.TValue[string]
+	AddToAccessToken       plugin.TValue[bool]
+	AddToIdToken           plugin.TValue[bool]
+	AddToUserInfo          plugin.TValue[bool]
+	AddToIntrospection     plugin.TValue[bool]
+	IncludedClientAudience plugin.TValue[string]
+	IncludedCustomAudience plugin.TValue[string]
+	UserAttribute          plugin.TValue[string]
+	FullPath               plugin.TValue[bool]
+	Config                 plugin.TValue[map[string]any]
+}
+
+// createKeycloakProtocolMapper creates a new instance of this resource
+func createKeycloakProtocolMapper(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKeycloakProtocolMapper{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("keycloak.protocolMapper", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKeycloakProtocolMapper) MqlName() string {
+	return "keycloak.protocolMapper"
+}
+
+func (c *mqlKeycloakProtocolMapper) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKeycloakProtocolMapper) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlKeycloakProtocolMapper) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKeycloakProtocolMapper) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlKeycloakProtocolMapper) GetMapperType() *plugin.TValue[string] {
+	return &c.MapperType
+}
+
+func (c *mqlKeycloakProtocolMapper) GetClaimName() *plugin.TValue[string] {
+	return &c.ClaimName
+}
+
+func (c *mqlKeycloakProtocolMapper) GetAddToAccessToken() *plugin.TValue[bool] {
+	return &c.AddToAccessToken
+}
+
+func (c *mqlKeycloakProtocolMapper) GetAddToIdToken() *plugin.TValue[bool] {
+	return &c.AddToIdToken
+}
+
+func (c *mqlKeycloakProtocolMapper) GetAddToUserInfo() *plugin.TValue[bool] {
+	return &c.AddToUserInfo
+}
+
+func (c *mqlKeycloakProtocolMapper) GetAddToIntrospection() *plugin.TValue[bool] {
+	return &c.AddToIntrospection
+}
+
+func (c *mqlKeycloakProtocolMapper) GetIncludedClientAudience() *plugin.TValue[string] {
+	return &c.IncludedClientAudience
+}
+
+func (c *mqlKeycloakProtocolMapper) GetIncludedCustomAudience() *plugin.TValue[string] {
+	return &c.IncludedCustomAudience
+}
+
+func (c *mqlKeycloakProtocolMapper) GetUserAttribute() *plugin.TValue[string] {
+	return &c.UserAttribute
+}
+
+func (c *mqlKeycloakProtocolMapper) GetFullPath() *plugin.TValue[bool] {
+	return &c.FullPath
+}
+
+func (c *mqlKeycloakProtocolMapper) GetConfig() *plugin.TValue[map[string]any] {
+	return &c.Config
 }
 
 // mqlKeycloakRole for the keycloak.role resource
