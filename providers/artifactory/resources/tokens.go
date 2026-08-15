@@ -63,7 +63,7 @@ func newArtifactoryAccessToken(runtime *plugin.Runtime, rec *tokenRecord) (*mqlA
 	res, err := CreateResource(runtime, "artifactory.accessToken", map[string]*llx.RawData{
 		"id":          llx.StringData(rec.TokenID),
 		"subject":     llx.StringData(rec.Subject),
-		"description": llx.StringData(rec.Description),
+		"description": optionalString(rec.Description),
 		"issuer":      llx.StringData(rec.Issuer),
 		"scope":       llx.ArrayData(strSliceToAny(scopes), types.String),
 		"grantsAdmin": llx.BoolData(grantsAdmin(scopes)),

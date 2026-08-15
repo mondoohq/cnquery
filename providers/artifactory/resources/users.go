@@ -65,9 +65,28 @@ func (a *mqlArtifactory) users() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Newer instances answer the list with the whole account. Taking it
+		// keeps a query over every account at one call instead of one call per
+		// account, which matters on an instance backed by a directory.
+		if userListIsComplete(&response.Users[i]) {
+			user.seedAccount(&response.Users[i])
+		}
 		res = append(res, user)
 	}
 	return res, nil
+}
+
+// userListIsComplete reports whether a list entry already carries the fields
+// that otherwise need the per-account read.
+//
+// Both markers must be present. The admin flag is absent from the short list
+// shape, and taking a stale false there would report an administrator as an
+// ordinary account. The group list is absent from it too, and taking a nil
+// slice there would report an account as belonging to no group, which is the
+// answer a permission review acts on. An entry that carries only one of them
+// is treated as short, so the account is read in full.
+func userListIsComplete(rec *userRecord) bool {
+	return rec.Admin != nil && rec.Groups != nil
 }
 
 // newArtifactoryUser builds the resource from a list entry. The entry carries
@@ -119,6 +138,18 @@ func userDetailURL(runtime *plugin.Runtime, name string) string {
 	return conn.AccessURL("/api/v2/users/" + url.PathEscape(name))
 }
 
+// seedAccount records an account that the list already reported in full, so
+// the per-account read never happens.
+func (u *mqlArtifactoryUser) seedAccount(rec *userRecord) {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+	if u.detailLoaded.Load() {
+		return
+	}
+	u.detail = rec
+	u.detailLoaded.Store(true)
+}
+
 // account reads the account once and shares it with every field that needs it.
 func (u *mqlArtifactoryUser) account() (*userRecord, error) {
 	if u.detailLoaded.Load() {
@@ -146,7 +177,7 @@ func (u *mqlArtifactoryUser) email() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return detail.Email, nil
+	return nullableString(detail.Email, &u.Email)
 }
 
 func (u *mqlArtifactoryUser) admin() (bool, error) {

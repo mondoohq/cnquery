@@ -51,6 +51,27 @@ func getArtifactory(runtime *plugin.Runtime) (*mqlArtifactory, error) {
 	return res.(*mqlArtifactory), nil
 }
 
+// optionalString reports a value the instance leaves unset as null rather than
+// as an empty string, so a schema that promises null keeps that promise. An
+// empty string and an absent value are the same thing in these responses, so
+// the empty case is the absent one.
+func optionalString(v string) *llx.RawData {
+	if v == "" {
+		return llx.NilData
+	}
+	return llx.StringData(v)
+}
+
+// nullableString does the same for a computed accessor, where the value is
+// reported by setting the field null rather than by passing raw data.
+func nullableString(v string, field *plugin.TValue[string]) (string, error) {
+	if v == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return v, nil
+}
+
 // strSliceToAny widens a string slice for llx.ArrayData.
 func strSliceToAny(in []string) []any {
 	out := make([]any, len(in))

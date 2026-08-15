@@ -117,6 +117,74 @@ private artifactory.repository @defaults("key type packageType") {
   // Null on repository types that do not proxy. When true, a build resolving
   // through the repository can reach a host that was never reviewed.
   externalDependenciesEnabled() bool
+  // Whether the repository refuses Docker image manifests of schema version 1
+  //
+  // Null on repository types and package formats that do not carry the
+  // setting. A schema 1 manifest is not content addressable, so a tag can be
+  // moved to different content without the digest changing.
+  blockPushingSchema1() bool
+  // Whether a client must authenticate to resolve NuGet packages
+  //
+  // Null on repository types and package formats that do not carry the
+  // setting.
+  forceNugetAuthentication() bool
+  // Whether the repository accepts an access token in place of a password
+  //
+  // Null on repository types and package formats that do not carry the
+  // setting.
+  enableTokenAuthentication() bool
+  // Whether a remote repository is configured with a credential for its upstream
+  //
+  // True when a user name is stored for the upstream. The credential itself is
+  // never exposed. A stored credential is what `allowAnyHostAuth` can leak to
+  // an unrelated host on a redirect. Null on repository types that do not
+  // proxy.
+  hasUpstreamCredential() bool
+  // Whether a remote repository keeps a copy of what it proxies
+  //
+  // Null on repository types that do not proxy. When false, the repository
+  // resolves from the upstream every time, so the upstream decides what a
+  // consumer receives on every request rather than only on the first.
+  storeArtifactsLocally() bool
+  // Whether a remote repository skips the HEAD request before a download
+  //
+  // Null on repository types that do not proxy.
+  bypassHeadRequests() bool
+  // Whether a remote repository mirrors the upstream continuously
+  //
+  // Null when the repository does not carry the setting. Continuous
+  // synchronization copies whatever the upstream publishes without a request
+  // for it.
+  contentSynchronisationEnabled() bool
+  // Whether a download is served by a redirect to another host
+  //
+  // Null when the repository does not carry the setting. A redirected download
+  // leaves the instance, so its access log does not record what was fetched.
+  downloadRedirect() bool
+  // Whether a download is served through a content delivery network
+  //
+  // Null when the repository does not carry the setting.
+  cdnRedirect() bool
+  // Whether a client may browse inside a stored archive
+  //
+  // Null when the repository does not carry the setting. Browsing extracts an
+  // archive on the instance and serves single entries from it.
+  archiveBrowsingEnabled() bool
+  // Whether the repository is resolved before others in a virtual repository
+  //
+  // Null when the repository does not carry the setting. A repository resolved
+  // first decides which copy of a package name a consumer receives.
+  priorityResolution() bool
+  // Seconds a signed download URL of the repository stays valid, or null when unset
+  signedUrlTtl() int
+  // Days Xray data for the repository is kept, or null when unset
+  xrayDataTtl() int
+  // Project the repository belongs to, or null when it is not in a project
+  projectKey() string
+  // Property sets applied to the artifacts of the repository
+  propertySets() []string
+  // Free-form notes stored with the repository, or null when unset
+  notes() string
   // Permission targets whose repository scope covers this repository
   permissionTargets() []artifactory.permissionTarget
   // Actions the anonymous user holds on the repository

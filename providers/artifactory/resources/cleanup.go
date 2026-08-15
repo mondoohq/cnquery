@@ -94,7 +94,7 @@ func newArtifactoryCleanupPolicy(runtime *plugin.Runtime, rec *cleanupPolicyReco
 
 	res, err := CreateResource(runtime, "artifactory.cleanupPolicy", map[string]*llx.RawData{
 		"key":                          llx.StringData(rec.Key),
-		"description":                  llx.StringData(rec.Description),
+		"description":                  optionalString(rec.Description),
 		"enabled":                      llx.BoolData(rec.Enabled),
 		"cronExpression":               llx.StringData(rec.CronExp),
 		"durationInMinutes":            optionalInt(rec.DurationInMinutes),

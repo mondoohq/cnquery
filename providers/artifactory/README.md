@@ -78,6 +78,21 @@ instance's service identifier, which survives a URL change.
 
 ## Examples
 
+**Docker repositories that still accept unsigned schema 1 manifests**
+
+A schema 1 manifest is not content addressable, so a tag can be moved to
+different content without the digest changing.
+
+```shell
+mql> artifactory.repositories.where(packageType == "docker" && blockPushingSchema1 != true) { key type }
+```
+
+**Remote repositories that hold a credential and may leak it on a redirect**
+
+```shell
+mql> artifactory.repositories.where(hasUpstreamCredential == true && allowAnyHostAuth == true) { key url }
+```
+
 **Anonymous access, and whether it can publish**
 
 The highest-value check. Both halves must hold: anonymous access is on
@@ -220,10 +235,19 @@ credential is valid but not an administrator.
 
 ## Notes
 
-**Repository, user, and group detail is read on demand.** The list endpoints
-report only the identifying fields, so a query that asks for a detail field
-costs one call per record. Query `key`, `name`, `type`, and `packageType` alone
-when a broad listing is enough.
+**Repository, user, and group detail is read in bulk when the instance allows
+it.** Repository configurations come from one call to
+`/api/repositories/configurations`, which needs an administrator and a recent
+product version. The user and group lists are used directly when they already
+carry the full record. When neither applies, the detail is read on demand, one
+call per record, so a query that asks only for `key`, `name`, `type`, and
+`packageType` stays cheap either way.
+
+A list entry is only taken as complete when it carries both of its markers, the
+administrative flag and the group or member list. An entry carrying one of them
+is treated as short and read in full, because taking a stale `false` would
+report an administrator as an ordinary account, and taking an absent list would
+report an account as belonging to no group.
 
 **`anonymousActions` is taken at repository level.** It unions what every
 permission target gives the anonymous user over a repository and does not
@@ -231,9 +255,10 @@ evaluate the targets' path patterns, so an action it lists may be limited to
 part of the repository. Read `permissionTargets` on the repository for the
 patterns.
 
-**Xray is not queried.** Whether a repository is scanned is read from the
-repository's own `xrayIndex` setting, which Artifactory serves, so no Xray
-credential or reachable Xray service is needed.
+**Settings that do not apply to a repository type stay null.** A local
+repository carries no upstream settings, and a package format carries only its
+own controls, so `allowAnyHostAuth`, `blockPushingSchema1`, and their peers are
+null rather than false there. Test them with `!= true`.
 
 **A permission target that cannot be read fails the field.** The list reports
 names only, and each grant is read separately. A target that is denied fails

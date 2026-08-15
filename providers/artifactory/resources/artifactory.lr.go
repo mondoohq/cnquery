@@ -229,6 +229,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"artifactory.repository.externalDependenciesEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetExternalDependenciesEnabled()).ToDataRes(types.Bool)
 	},
+	"artifactory.repository.blockPushingSchema1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetBlockPushingSchema1()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.forceNugetAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetForceNugetAuthentication()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.enableTokenAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetEnableTokenAuthentication()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.hasUpstreamCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetHasUpstreamCredential()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.storeArtifactsLocally": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetStoreArtifactsLocally()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.bypassHeadRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetBypassHeadRequests()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.contentSynchronisationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetContentSynchronisationEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.downloadRedirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetDownloadRedirect()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.cdnRedirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetCdnRedirect()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.archiveBrowsingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetArchiveBrowsingEnabled()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.priorityResolution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetPriorityResolution()).ToDataRes(types.Bool)
+	},
+	"artifactory.repository.signedUrlTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetSignedUrlTtl()).ToDataRes(types.Int)
+	},
+	"artifactory.repository.xrayDataTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetXrayDataTtl()).ToDataRes(types.Int)
+	},
+	"artifactory.repository.projectKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetProjectKey()).ToDataRes(types.String)
+	},
+	"artifactory.repository.propertySets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetPropertySets()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.repository.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetNotes()).ToDataRes(types.String)
+	},
 	"artifactory.repository.permissionTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetPermissionTargets()).ToDataRes(types.Array(types.Resource("artifactory.permissionTarget")))
 	},
@@ -605,6 +653,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.repository.externalDependenciesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactoryRepository).ExternalDependenciesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.blockPushingSchema1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).BlockPushingSchema1, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.forceNugetAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ForceNugetAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.enableTokenAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).EnableTokenAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.hasUpstreamCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).HasUpstreamCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.storeArtifactsLocally": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).StoreArtifactsLocally, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.bypassHeadRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).BypassHeadRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.contentSynchronisationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ContentSynchronisationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.downloadRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).DownloadRedirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.cdnRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).CdnRedirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.archiveBrowsingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ArchiveBrowsingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.priorityResolution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).PriorityResolution, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.signedUrlTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).SignedUrlTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.xrayDataTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).XrayDataTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.projectKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).ProjectKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.propertySets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).PropertySets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"artifactory.repository.permissionTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1240,23 +1352,39 @@ type mqlArtifactoryRepository struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlArtifactoryRepositoryInternal
-	Key                         plugin.TValue[string]
-	Type                        plugin.TValue[string]
-	PackageType                 plugin.TValue[string]
-	Description                 plugin.TValue[string]
-	Url                         plugin.TValue[string]
-	MemberRepositories          plugin.TValue[[]any]
-	MemberRepositoryRefs        plugin.TValue[[]any]
-	XrayIndex                   plugin.TValue[bool]
-	BlackedOut                  plugin.TValue[bool]
-	Offline                     plugin.TValue[bool]
-	IncludesPattern             plugin.TValue[string]
-	ExcludesPattern             plugin.TValue[string]
-	RepoLayoutRef               plugin.TValue[string]
-	AllowAnyHostAuth            plugin.TValue[bool]
-	ExternalDependenciesEnabled plugin.TValue[bool]
-	PermissionTargets           plugin.TValue[[]any]
-	AnonymousActions            plugin.TValue[[]any]
+	Key                           plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	PackageType                   plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	Url                           plugin.TValue[string]
+	MemberRepositories            plugin.TValue[[]any]
+	MemberRepositoryRefs          plugin.TValue[[]any]
+	XrayIndex                     plugin.TValue[bool]
+	BlackedOut                    plugin.TValue[bool]
+	Offline                       plugin.TValue[bool]
+	IncludesPattern               plugin.TValue[string]
+	ExcludesPattern               plugin.TValue[string]
+	RepoLayoutRef                 plugin.TValue[string]
+	AllowAnyHostAuth              plugin.TValue[bool]
+	ExternalDependenciesEnabled   plugin.TValue[bool]
+	BlockPushingSchema1           plugin.TValue[bool]
+	ForceNugetAuthentication      plugin.TValue[bool]
+	EnableTokenAuthentication     plugin.TValue[bool]
+	HasUpstreamCredential         plugin.TValue[bool]
+	StoreArtifactsLocally         plugin.TValue[bool]
+	BypassHeadRequests            plugin.TValue[bool]
+	ContentSynchronisationEnabled plugin.TValue[bool]
+	DownloadRedirect              plugin.TValue[bool]
+	CdnRedirect                   plugin.TValue[bool]
+	ArchiveBrowsingEnabled        plugin.TValue[bool]
+	PriorityResolution            plugin.TValue[bool]
+	SignedUrlTtl                  plugin.TValue[int64]
+	XrayDataTtl                   plugin.TValue[int64]
+	ProjectKey                    plugin.TValue[string]
+	PropertySets                  plugin.TValue[[]any]
+	Notes                         plugin.TValue[string]
+	PermissionTargets             plugin.TValue[[]any]
+	AnonymousActions              plugin.TValue[[]any]
 }
 
 // createArtifactoryRepository creates a new instance of this resource
@@ -1383,6 +1511,102 @@ func (c *mqlArtifactoryRepository) GetAllowAnyHostAuth() *plugin.TValue[bool] {
 func (c *mqlArtifactoryRepository) GetExternalDependenciesEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ExternalDependenciesEnabled, func() (bool, error) {
 		return c.externalDependenciesEnabled()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetBlockPushingSchema1() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockPushingSchema1, func() (bool, error) {
+		return c.blockPushingSchema1()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetForceNugetAuthentication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ForceNugetAuthentication, func() (bool, error) {
+		return c.forceNugetAuthentication()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetEnableTokenAuthentication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableTokenAuthentication, func() (bool, error) {
+		return c.enableTokenAuthentication()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetHasUpstreamCredential() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUpstreamCredential, func() (bool, error) {
+		return c.hasUpstreamCredential()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetStoreArtifactsLocally() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StoreArtifactsLocally, func() (bool, error) {
+		return c.storeArtifactsLocally()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetBypassHeadRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BypassHeadRequests, func() (bool, error) {
+		return c.bypassHeadRequests()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetContentSynchronisationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ContentSynchronisationEnabled, func() (bool, error) {
+		return c.contentSynchronisationEnabled()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetDownloadRedirect() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DownloadRedirect, func() (bool, error) {
+		return c.downloadRedirect()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetCdnRedirect() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CdnRedirect, func() (bool, error) {
+		return c.cdnRedirect()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetArchiveBrowsingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ArchiveBrowsingEnabled, func() (bool, error) {
+		return c.archiveBrowsingEnabled()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetPriorityResolution() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PriorityResolution, func() (bool, error) {
+		return c.priorityResolution()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetSignedUrlTtl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SignedUrlTtl, func() (int64, error) {
+		return c.signedUrlTtl()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetXrayDataTtl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.XrayDataTtl, func() (int64, error) {
+		return c.xrayDataTtl()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetProjectKey() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProjectKey, func() (string, error) {
+		return c.projectKey()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetPropertySets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PropertySets, func() ([]any, error) {
+		return c.propertySets()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetNotes() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Notes, func() (string, error) {
+		return c.notes()
 	})
 }
 
