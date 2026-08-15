@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	cloudflarev6 "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/shared"
+	cloudflare "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
 )
 
 func TestTimeOrNil(t *testing.T) {
-	// A zero time (how the v6 SDK models a JSON null timestamp) must resolve to
+	// A zero time (how the SDK models a JSON null timestamp) must resolve to
 	// MQL null, not the 0001-01-01 zero value — the basis of the null-time fix.
 	assert.Equal(t, llx.NilData, timeOrNil(time.Time{}))
 
@@ -45,8 +45,8 @@ func TestParseRFC3339(t *testing.T) {
 // apiErr builds a *cloudflare.Error carrying the per-error code/message the API
 // actually returns, which is what separates "product not enabled" from "this
 // token may not read it".
-func apiErr(status int, code int64, msg string) *cloudflarev6.Error {
-	return &cloudflarev6.Error{
+func apiErr(status int, code int64, msg string) *cloudflare.Error {
+	return &cloudflare.Error{
 		StatusCode: status,
 		Errors:     []shared.ErrorData{{Code: code, Message: msg}},
 	}
@@ -56,7 +56,7 @@ func TestIsUnavailable(t *testing.T) {
 	// 401/403/404 still degrade by default: an absent resource, an unprovisioned
 	// product, or a plan-gated feature genuinely has nothing to assess. Codes and
 	// messages below are copied from live API responses.
-	unavailable := []*cloudflarev6.Error{
+	unavailable := []*cloudflare.Error{
 		{StatusCode: http.StatusNotFound},
 		{StatusCode: http.StatusForbidden},
 		apiErr(http.StatusForbidden, 10042, "Please enable R2 through the Cloudflare Dashboard."),
@@ -73,7 +73,7 @@ func TestIsUnavailable(t *testing.T) {
 
 	// A failure the API blames on the credentials must NOT degrade. Swallowing
 	// these is what let an under-scoped token produce vacuous passes.
-	credentialScope := []*cloudflarev6.Error{
+	credentialScope := []*cloudflare.Error{
 		apiErr(http.StatusForbidden, 9109, "Valid user-level authentication not found"),
 		apiErr(http.StatusForbidden, 10002, "Authorization Failure: The authentication credentials are not authorized to perform the request."),
 		// The deny-list is keyed on the error code, not the status, so it applies
@@ -88,7 +88,7 @@ func TestIsUnavailable(t *testing.T) {
 	}
 
 	for _, code := range []int{http.StatusInternalServerError, http.StatusTooManyRequests, http.StatusBadRequest} {
-		assert.Falsef(t, isUnavailable(&cloudflarev6.Error{StatusCode: code}), "status %d should NOT be unavailable", code)
+		assert.Falsef(t, isUnavailable(&cloudflare.Error{StatusCode: code}), "status %d should NOT be unavailable", code)
 	}
 	assert.False(t, isUnavailable(errors.New("plain error")))
 	assert.False(t, isUnavailable(nil))
@@ -96,12 +96,12 @@ func TestIsUnavailable(t *testing.T) {
 
 func TestDegradedList(t *testing.T) {
 	// An unavailable-resource error degrades to an empty (non-nil) list.
-	got, err := degradedList(&cloudflarev6.Error{StatusCode: http.StatusForbidden})
+	got, err := degradedList(&cloudflare.Error{StatusCode: http.StatusForbidden})
 	require.NoError(t, err)
 	assert.Equal(t, []any{}, got)
 
 	// A 404 likewise degrades.
-	got, err = degradedList(&cloudflarev6.Error{StatusCode: http.StatusNotFound})
+	got, err = degradedList(&cloudflare.Error{StatusCode: http.StatusNotFound})
 	require.NoError(t, err)
 	assert.Empty(t, got)
 
@@ -113,7 +113,7 @@ func TestDegradedList(t *testing.T) {
 
 	// Any other error propagates unchanged (not swallowed).
 	sentinel := errors.New("rate limited")
-	got, err = degradedList(&cloudflarev6.Error{StatusCode: http.StatusTooManyRequests})
+	got, err = degradedList(&cloudflare.Error{StatusCode: http.StatusTooManyRequests})
 	assert.Nil(t, got)
 	require.Error(t, err)
 

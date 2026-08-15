@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/cloudflare/cloudflare-go/v6/user"
+	"github.com/cloudflare/cloudflare-go/v7/user"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -47,7 +47,7 @@ func (c *mqlCloudflare) apiTokens() ([]any, error) {
 					"name": pg.Name,
 				})
 			}
-			// The resources field is a polymorphic union in cloudflare-go v6;
+			// The resources field is a polymorphic union in cloudflare-go;
 			// round-trip it through JSON so the dict holds a plain decoded value
 			// matching the raw API shape.
 			var resources any

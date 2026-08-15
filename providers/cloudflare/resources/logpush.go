@@ -24,7 +24,7 @@ func (c *mqlCloudflareZoneLogpushJob) id() (string, error) {
 
 // logpushJob is the response shape of the zone logpush-jobs endpoint. We read it
 // via the client's generic Get rather than the typed service because
-// cloudflare-go v6 marks the logpull_options and frequency fields deprecated on
+// cloudflare-go marks the logpull_options and frequency fields deprecated on
 // its typed struct; decoding the raw payload keeps those values available
 // without referencing deprecated SDK symbols.
 type logpushJob struct {

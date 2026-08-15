@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	cloudflare "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/zero_trust"
+	cloudflare "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/zero_trust"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -21,7 +21,7 @@ func (c *mqlCloudflareOneDevice) id() (string, error) {
 }
 
 // teamsDevice is the response shape of the legacy WARP device inventory endpoint
-// (`/accounts/{id}/devices`). cloudflare-go v6 marks its typed device list as
+// (`/accounts/{id}/devices`). cloudflare-go marks its typed device list as
 // deprecated in favor of newer, differently-shaped endpoints, so we read the
 // legacy endpoint via the client's generic Get to preserve the MQL schema.
 type teamsDevice struct {

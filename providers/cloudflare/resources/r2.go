@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"sync"
 
-	cloudflare "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/r2"
+	cloudflare "github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/r2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -103,7 +103,7 @@ func (c *mqlCloudflareR2Bucket) id() (string, error) {
 	return c.accountID + "/" + c.GetName().Data, nil
 }
 
-// buckets enumerates R2 buckets across the account. The cloudflare-go v6 typed
+// buckets enumerates R2 buckets across the account. The cloudflare-go typed
 // bucket list response doesn't surface the pagination cursor, so we call the
 // endpoint directly via the client's generic Get and follow
 // `result_info.cursor` to walk every page.
