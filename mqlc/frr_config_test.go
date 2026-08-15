@@ -160,3 +160,42 @@ func TestFrrRIBQueriesCompile(t *testing.T) {
 		})
 	}
 }
+
+// The policy objects are what a router enforces. These pin one read of every
+// field plus the questions they exist to answer.
+func TestFrrPolicyQueriesCompile(t *testing.T) {
+	schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"}).
+		Add(testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"}))
+
+	queries := []string{
+		// the posture questions these resources exist to answer
+		`frr.config.staticRoutes.where(nexthopVrf != "").all(vrf == "cluster")`,
+		`frr.config.staticRoutes.all(blackhole || nexthop != "" || interface != "")`,
+		`frr.config.routeMaps.all(entries.all(action == "deny" || matchPrefixLists.length > 0 || matchCommunityLists.length > 0))`,
+		`frr.config.communityLists.where(kind == "extcommunity").length > 0`,
+		`frr.config.accessLists.all(entries.any(action == "deny"))`,
+		`frr.config.asPathAccessLists.all(entries.length > 1)`,
+
+		// static routes
+		`frr.config.staticRoutes { afi prefix nexthop interface vrf nexthopVrf blackhole reject distance table tag label file line raw }`,
+
+		// lists
+		`frr.config.communityLists { name kind type entries file line }`,
+		`frr.config.accessLists { name afi entries file line }`,
+		`frr.config.asPathAccessLists { name entries file line }`,
+
+		// typed route map clauses
+		`frr.config.routeMaps { entries { matchPrefixLists matchAccessLists matchCommunityLists matchLargeCommunities matchExtCommunities matchAsPathLists } }`,
+		`frr.config.routeMaps { entries { matchSourceVrf matchInterface matchPeer matchEvpnRouteType matchEvpnVni matchTag matchMetric matchLocalPreference } }`,
+		`frr.config.routeMaps { entries { setCommunities setCommunityAdditive setCommunityNone setLargeCommunities setExtCommunities setCommunityDelete } }`,
+		`frr.config.routeMaps { entries { setLocalPreference setMetric setWeight setOrigin setAsPathPrepend setAsPathExclude } }`,
+		`frr.config.routeMaps { entries { setNextHop setSourceAddress setTag setTable setDistance setAtomicAggregate } }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}
