@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 // newMqlMongodbatlasCluster maps a cluster to its resource, shared by the
@@ -98,6 +98,7 @@ func newMqlMongodbatlasCluster(runtime *plugin.Runtime, pid string, c admin.Clus
 		"clusterType":                      llx.StringData(c.GetClusterType()),
 		"stateName":                        llx.StringData(c.GetStateName()),
 		"backupEnabled":                    llx.BoolData(c.GetBackupEnabled()),
+		"retainBackups":                    llx.BoolData(c.GetRetainBackups()),
 		"pitEnabled":                       llx.BoolData(c.GetPitEnabled()),
 		"encryptionAtRestProvider":         llx.StringData(c.GetEncryptionAtRestProvider()),
 		"minimumEnabledTlsProtocol":        llx.StringData(tlsMin),
@@ -150,7 +151,7 @@ func initMongodbatlasCluster(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if err != nil {
 		return nil, nil, err
 	}
-	c, _, err := atlasClient(runtime).ClustersApi.GetCluster(context.Background(), pid, name).Execute()
+	c, _, err := atlasClient(runtime).ClustersAPI.GetCluster(context.Background(), pid, name).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -191,7 +192,7 @@ func (r *mqlMongodbatlas) clusters() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.ClustersApi.ListClusters(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.ClustersAPI.ListClusters(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}

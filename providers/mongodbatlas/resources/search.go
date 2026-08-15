@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/types"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 // searchIndexes lists the Atlas Search and Atlas Vector Search indexes defined
@@ -25,8 +25,8 @@ func (c *mqlMongodbatlasCluster) searchIndexes() ([]any, error) {
 	}
 	name := c.Name.Data
 
-	indexes, httpResp, err := atlasClient(c.MqlRuntime).AtlasSearchApi.
-		ListAtlasSearchIndexesCluster(context.Background(), pid, name).Execute()
+	indexes, httpResp, err := atlasClient(c.MqlRuntime).AtlasSearchAPI.
+		ListClusterSearchIndexes(context.Background(), pid, name).Execute()
 	if err != nil {
 		// A credential that may not read the endpoint has not established
 		// anything about the cluster's indexes, so the field renders null. An

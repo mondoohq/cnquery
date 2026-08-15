@@ -87,6 +87,7 @@ mongodbatlas.cluster.privateSrvConnectionString 13.1.4
 mongodbatlas.cluster.redactClientLogData 13.0.0
 mongodbatlas.cluster.regionConfigs 13.0.0
 mongodbatlas.cluster.replicaSetScalingStrategy 13.1.4
+mongodbatlas.cluster.retainBackups 13.3.1
 mongodbatlas.cluster.rootCertType 13.0.0
 mongodbatlas.cluster.searchIndexes 13.0.1
 mongodbatlas.cluster.standardSrvConnectionString 13.1.4
@@ -173,6 +174,16 @@ mongodbatlas.identityProvider.updatedAt 13.0.1
 mongodbatlas.identityProvider.userClaim 13.0.1
 mongodbatlas.ipAccessList 13.0.0
 mongodbatlas.maxServiceAccountSecretValidityInHours 13.0.0
+mongodbatlas.mcpConfiguration 13.3.1
+mongodbatlas.mcpConfiguration.clientId 13.3.1
+mongodbatlas.mcpConfiguration.egressClientId 13.3.1
+mongodbatlas.mcpConfiguration.id 13.3.1
+mongodbatlas.mcpConfiguration.ipAccessList 13.3.1
+mongodbatlas.mcpConfiguration.name 13.3.1
+mongodbatlas.mcpConfiguration.roles 13.3.1
+mongodbatlas.mcpConfiguration.scope 13.3.1
+mongodbatlas.mcpConfiguration.serviceAccount 13.3.1
+mongodbatlas.mcpConfigurations 13.3.1
 mongodbatlas.multiFactorAuthRequired 13.0.0
 mongodbatlas.networkAccessEntry 13.0.0
 mongodbatlas.networkAccessEntry.awsSecurityGroup 13.0.0
@@ -232,6 +243,7 @@ mongodbatlas.projectConfig.isExtendedStorageSizesEnabled 13.0.0
 mongodbatlas.projectConfig.isPerformanceAdvisorEnabled 13.0.0
 mongodbatlas.projectConfig.isRealtimePerformancePanelEnabled 13.0.0
 mongodbatlas.projectConfig.isSchemaAdvisorEnabled 13.0.0
+mongodbatlas.projectMcpConfigurations 13.3.1
 mongodbatlas.projectSettings 13.0.0
 mongodbatlas.projects 13.0.0
 mongodbatlas.pushBasedLogConfig 13.0.1
@@ -279,6 +291,7 @@ mongodbatlas.snapshotExportBucket.cloudProvider 13.1.4
 mongodbatlas.snapshotExportBucket.cloudProviderAccessRole 13.1.4
 mongodbatlas.snapshotExportBucket.id 13.1.4
 mongodbatlas.snapshotExportBucket.region 13.1.4
+mongodbatlas.snapshotExportBucket.requirePrivateNetworking 13.3.1
 mongodbatlas.snapshotExportBucket.serviceUrl 13.1.4
 mongodbatlas.snapshotExportBucket.tenantId 13.1.4
 mongodbatlas.snapshotExportBuckets 13.1.4

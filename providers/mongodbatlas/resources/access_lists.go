@@ -9,7 +9,7 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 // apiAccessListEntry is the normalized form of an access list entry. Atlas
@@ -92,8 +92,8 @@ func (r *mqlMongodbatlasApiKey) accessList() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, httpResp, err := client.ProgrammaticAPIKeysApi.
-			ListApiKeyAccessListsEntries(ctx, oid, r.cacheApiKeyID).
+		resp, httpResp, err := client.ProgrammaticAPIKeysAPI.
+			ListOrgAccessEntries(ctx, oid, r.cacheApiKeyID).
 			ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			// An empty access list is precisely the finding this accessor
@@ -135,8 +135,8 @@ func (r *mqlMongodbatlasServiceAccount) accessList() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, httpResp, err := client.ServiceAccountsApi.
-			ListServiceAccountAccessList(ctx, oid, clientID).
+		resp, httpResp, err := client.ServiceAccountsAPI.
+			ListOrgAccessList(ctx, oid, clientID).
 			ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			if isAccessDenied(httpResp) {
@@ -176,8 +176,8 @@ func (r *mqlMongodbatlasServiceAccount) projects() ([]any, error) {
 
 	groupIDs := []string{}
 	for page := 1; ; page++ {
-		resp, httpResp, err := client.ServiceAccountsApi.
-			ListServiceAccountProjects(ctx, oid, clientID).
+		resp, httpResp, err := client.ServiceAccountsAPI.
+			GetServiceAccountGroups(ctx, oid, clientID).
 			ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			// A denied read establishes nothing about the account's reach, so

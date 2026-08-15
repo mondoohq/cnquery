@@ -17,7 +17,7 @@ func (r *mqlMongodbatlas) resourcePolicies() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	policies, httpResp, err := atlasClient(r.MqlRuntime).ResourcePoliciesApi.ListOrgResourcePolicies(context.Background(), oid).Execute()
+	policies, httpResp, err := atlasClient(r.MqlRuntime).ResourcePoliciesAPI.ListOrgResourcePolicies(context.Background(), oid).Execute()
 	if err != nil {
 		// Resource policies are the org-wide guardrails, so an empty list says
 		// "nothing constrains this organization". A credential without access
