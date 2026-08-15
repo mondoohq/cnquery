@@ -91,7 +91,7 @@ func (r *mqlAlicloudAlbServerGroup) servers() ([]any, error) {
 			resource, err := CreateResource(r.MqlRuntime, "alicloud.alb.serverGroup.server", map[string]*llx.RawData{
 				// a server can be attached to one group on several ports, so the
 				// port is part of the key
-				"__id":            llx.StringData(albServerKey(r.region, r.serverGroupId, serverID, port)),
+				"__id":            llx.StringData(backendServerKey(r.region, r.serverGroupId, serverID, port)),
 				"serverId":        llx.StringData(serverID),
 				"serverType":      llx.StringDataPtr(s.ServerType),
 				"serverIp":        llx.StringDataPtr(s.ServerIp),
@@ -117,9 +117,13 @@ func (r *mqlAlicloudAlbServerGroup) servers() ([]any, error) {
 	return res, nil
 }
 
-// albServerKey builds the cache key for an ALB backend.
-func albServerKey(region, serverGroupID, serverID string, port int64) string {
-	return region + "/" + serverGroupID + "/" + serverID + "/" + strconv.FormatInt(port, 10)
+// backendServerKey builds the cache key for a load balancer backend, and is
+// shared by all three families. The owner is whatever holds the backend: a
+// server group for ALB and NLB, and either the load balancer or a vServer group
+// for CLB. Both the owner and the port are part of the key, because a server can
+// sit under one owner on several ports and can back several owners at once.
+func backendServerKey(region, ownerID, serverID string, port int64) string {
+	return region + "/" + ownerID + "/" + serverID + "/" + strconv.FormatInt(port, 10)
 }
 
 // mqlAlicloudAlbServerGroupServerInternal caches the region the backend was
@@ -169,7 +173,7 @@ func (r *mqlAlicloudNlbServerGroup) servers() ([]any, error) {
 			serverID := tea.StringValue(s.ServerId)
 			port := int64(tea.Int32Value(s.Port))
 			resource, err := CreateResource(r.MqlRuntime, "alicloud.nlb.serverGroup.server", map[string]*llx.RawData{
-				"__id":        llx.StringData(albServerKey(r.region, r.serverGroupId, serverID, port)),
+				"__id":        llx.StringData(backendServerKey(r.region, r.serverGroupId, serverID, port)),
 				"serverId":    llx.StringData(serverID),
 				"serverType":  llx.StringDataPtr(s.ServerType),
 				"serverIp":    llx.StringDataPtr(s.ServerIp),
@@ -213,12 +217,12 @@ func (r *mqlAlicloudNlbServerGroupServer) ecsInstance() (*mqlAlicloudEcsInstance
 // CLB (slb)
 // -----------------------------------------------------------------------------
 
-// newSlbBackendServer builds one alicloud.slb.backendServer. The key is scoped
-// by whatever holds the backend, because the same instance can sit both behind
-// the load balancer directly and inside one of its vServer groups.
-func newSlbBackendServer(runtime *plugin.Runtime, region, ownerKey, serverID, serverIP, serverType, description string, port, weight int64) (*mqlAlicloudSlbBackendServer, error) {
+// newSlbBackendServer builds one alicloud.slb.backendServer. The owner is either
+// the load balancer, for a directly attached backend, or a vServer group,
+// because the same instance can sit in both places at once.
+func newSlbBackendServer(runtime *plugin.Runtime, region, ownerID, serverID, serverIP, serverType, description string, port, weight int64) (*mqlAlicloudSlbBackendServer, error) {
 	resource, err := CreateResource(runtime, "alicloud.slb.backendServer", map[string]*llx.RawData{
-		"__id":        llx.StringData(region + "/" + ownerKey + "/" + serverID + "/" + strconv.FormatInt(port, 10)),
+		"__id":        llx.StringData(backendServerKey(region, ownerID, serverID, port)),
 		"serverId":    llx.StringData(serverID),
 		"serverIp":    llx.StringData(serverIP),
 		"port":        llx.IntData(port),
