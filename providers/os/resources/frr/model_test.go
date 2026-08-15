@@ -4,6 +4,7 @@
 package frr
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -298,4 +299,37 @@ func TestRouteMaps_EVPNSetup(t *testing.T) {
 	require.Len(t, importMap.Entries, 1)
 	assert.Equal(t, "rm_t-blue_import_cluster", importMap.Entries[0].Call)
 	assert.Equal(t, []string{"source-vrf cluster"}, importMap.Entries[0].Match)
+}
+
+// TestNeighbors_ListenRangeWithoutGroup pins that a listen range without a
+// peer group creates no neighbor. An empty name would show up as a real
+// peer and would swallow every later line that names no peer.
+func TestNeighbors_ListenRangeWithoutGroup(t *testing.T) {
+	src := `hostname x
+router bgp 65100
+ bgp listen range 10.50.0.0/16
+ neighbor swp1 interface remote-as 65000
+exit
+`
+	cfg, err := Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+	instances := cfg.BGPInstances()
+	require.Len(t, instances, 1)
+
+	require.Len(t, instances[0].Neighbors, 1)
+	assert.Equal(t, "swp1", instances[0].Neighbors[0].Name)
+
+	// The complete form still builds the dynamic group.
+	src = `hostname x
+router bgp 65100
+ bgp listen range 10.50.0.0/16 peer-group EVPN
+exit
+`
+	cfg, err = Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+	instances = cfg.BGPInstances()
+	require.Len(t, instances[0].Neighbors, 1)
+	assert.Equal(t, "EVPN", instances[0].Neighbors[0].Name)
+	assert.Equal(t, "10.50.0.0/16", instances[0].Neighbors[0].ListenRange)
+	assert.True(t, instances[0].Neighbors[0].IsPeerGroup)
 }
