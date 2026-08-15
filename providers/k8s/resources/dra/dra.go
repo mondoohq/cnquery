@@ -367,8 +367,10 @@ func requestDeviceClassNames(request map[string]any) []string {
 // requestBodies returns every place a request carries its device selection.
 //
 // A request holds the selection in an exactly object, or once per subrequest
-// in a firstAvailable list. A request written before that split carries the
-// selection directly, so the request itself is returned as well.
+// in a firstAvailable list. The request map itself is always returned as a
+// body as well, because a request written before that split carries
+// deviceClassName and adminAccess directly on the request. A reader of the
+// result therefore matches all three shapes.
 func requestBodies(request map[string]any) []map[string]any {
 	bodies := []map[string]any{request}
 	if exactly, ok := request["exactly"].(map[string]any); ok {

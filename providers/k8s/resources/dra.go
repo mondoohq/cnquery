@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -27,24 +26,20 @@ const (
 )
 
 type mqlK8sDeviceclassInternal struct {
-	lock sync.Mutex
-	obj  metav1.Object
+	obj metav1.Object
 }
 
 type mqlK8sResourcesliceInternal struct {
-	lock sync.Mutex
-	obj  metav1.Object
+	obj metav1.Object
 }
 
 type mqlK8sResourceclaimInternal struct {
-	lock             sync.Mutex
 	obj              metav1.Object
 	reservedPodNames []string
 }
 
 type mqlK8sResourceclaimtemplateInternal struct {
-	lock sync.Mutex
-	obj  metav1.Object
+	obj metav1.Object
 }
 
 func (k *mqlK8s) deviceClasses() ([]any, error) {
