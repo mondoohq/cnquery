@@ -1,0 +1,235 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"strings"
+	"sync"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/os/resources/ovs"
+	"go.mondoo.com/mql/v13/types"
+)
+
+// ovsTableDump reads the three tables that make up the switch topology in one
+// call, separated by a marker line. Listing only the columns the resource maps
+// keeps the output small on a node with hundreds of pod interfaces.
+const ovsTableDump = `ovs-vsctl --format=json --columns=_uuid,name,datapath_type,fail_mode,protocols,stp_enable,rstp_enable,external_ids,other_config,ports list Bridge
+echo '===OVSTABLE==='
+ovs-vsctl --format=json --columns=_uuid,name,vlan_mode,tag,trunks,external_ids,other_config,interfaces list Port
+echo '===OVSTABLE==='
+ovs-vsctl --format=json --columns=_uuid,name,type,admin_state,link_state,mac_in_use,mtu,ofport,error,external_ids,options list Interface`
+
+const ovsVersionCmd = `ovs-vsctl --version`
+
+// ovsTableSeparator splits the three documents of the table dump.
+const ovsTableSeparator = "===OVSTABLE==="
+
+type mqlOvsInternal struct {
+	lock               sync.Mutex
+	loaded             bool
+	loadErr            error
+	bridgeResources    []any
+	portResources      []any
+	interfaceResources []any
+}
+
+type mqlOvsBridgeInternal struct {
+	portResources []any
+}
+
+type mqlOvsPortInternal struct {
+	bridgeResource     *mqlOvsBridge
+	interfaceResources []any
+}
+
+type mqlOvsInterfaceInternal struct {
+	portResource *mqlOvsPort
+}
+
+func (o *mqlOvs) id() (string, error) {
+	return "ovs", nil
+}
+
+func (o *mqlOvs) version() (string, error) {
+	stdout, ok, err := runShellCmd(o.MqlRuntime, ovsVersionCmd)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", nil
+	}
+	return ovs.ParseVersion(stdout), nil
+}
+
+func (o *mqlOvs) load() error {
+	if o.loaded {
+		return o.loadErr
+	}
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	if o.loaded {
+		return o.loadErr
+	}
+	o.loadErr = o.doLoad()
+	o.loaded = true
+	return o.loadErr
+}
+
+func (o *mqlOvs) doLoad() error {
+	o.bridgeResources = []any{}
+	o.portResources = []any{}
+	o.interfaceResources = []any{}
+
+	stdout, ok, err := runShellCmd(o.MqlRuntime, ovsTableDump)
+	if err != nil {
+		return err
+	}
+	// A host without ovs-vsctl, or one where the database is not reachable,
+	// has no switch to report rather than a failed query.
+	if !ok {
+		return nil
+	}
+
+	documents := strings.Split(stdout, ovsTableSeparator)
+	if len(documents) != 3 {
+		return nil
+	}
+
+	topology, err := ovs.ParseTopology(documents[0], documents[1], documents[2])
+	if err != nil {
+		return err
+	}
+
+	bridgesByName := make(map[string]*mqlOvsBridge, len(topology.Bridges))
+	for _, bridge := range topology.Bridges {
+		resource, err := CreateResource(o.MqlRuntime, "ovs.bridge", map[string]*llx.RawData{
+			"__id":         llx.StringData(bridge.UUID),
+			"name":         llx.StringData(bridge.Name),
+			"uuid":         llx.StringData(bridge.UUID),
+			"datapathType": llx.StringData(bridge.DatapathType),
+			"failMode":     llx.StringData(bridge.FailMode),
+			"protocols":    llx.ArrayData(convert.SliceAnyToInterface(bridge.Protocols), types.String),
+			"stpEnabled":   llx.BoolData(bridge.STPEnabled),
+			"rstpEnabled":  llx.BoolData(bridge.RSTPEnabled),
+			"externalIds":  llx.MapData(convert.MapToInterfaceMap(bridge.ExternalIDs), types.String),
+			"otherConfig":  llx.MapData(convert.MapToInterfaceMap(bridge.OtherConfig), types.String),
+		})
+		if err != nil {
+			return err
+		}
+		mqlBridge := resource.(*mqlOvsBridge)
+		mqlBridge.portResources = []any{}
+		bridgesByName[bridge.Name] = mqlBridge
+		o.bridgeResources = append(o.bridgeResources, mqlBridge)
+	}
+
+	portsByName := make(map[string]*mqlOvsPort, len(topology.Ports))
+	for _, port := range topology.Ports {
+		resource, err := CreateResource(o.MqlRuntime, "ovs.port", map[string]*llx.RawData{
+			"__id":        llx.StringData(port.UUID),
+			"name":        llx.StringData(port.Name),
+			"uuid":        llx.StringData(port.UUID),
+			"bridgeName":  llx.StringData(port.BridgeName),
+			"vlanMode":    llx.StringData(port.VlanMode),
+			"vlanTag":     llx.IntData(port.Tag),
+			"tagged":      llx.BoolData(port.Tagged),
+			"trunks":      llx.ArrayData(convert.SliceAnyToInterface(port.Trunks), types.Int),
+			"externalIds": llx.MapData(convert.MapToInterfaceMap(port.ExternalIDs), types.String),
+			"otherConfig": llx.MapData(convert.MapToInterfaceMap(port.OtherConfig), types.String),
+		})
+		if err != nil {
+			return err
+		}
+		mqlPort := resource.(*mqlOvsPort)
+		mqlPort.interfaceResources = []any{}
+		mqlPort.bridgeResource = bridgesByName[port.BridgeName]
+		portsByName[port.Name] = mqlPort
+		o.portResources = append(o.portResources, mqlPort)
+
+		if mqlPort.bridgeResource != nil {
+			mqlPort.bridgeResource.portResources = append(mqlPort.bridgeResource.portResources, mqlPort)
+		}
+	}
+
+	for _, iface := range topology.Interfaces {
+		resource, err := CreateResource(o.MqlRuntime, "ovs.interface", map[string]*llx.RawData{
+			"__id":        llx.StringData(iface.UUID),
+			"name":        llx.StringData(iface.Name),
+			"uuid":        llx.StringData(iface.UUID),
+			"portName":    llx.StringData(iface.PortName),
+			"bridgeName":  llx.StringData(iface.BridgeName),
+			"type":        llx.StringData(iface.Type),
+			"adminState":  llx.StringData(iface.AdminState),
+			"linkState":   llx.StringData(iface.LinkState),
+			"macAddress":  llx.StringData(iface.MACInUse),
+			"mtu":         llx.IntData(iface.MTU),
+			"ofport":      llx.IntData(iface.OFPort),
+			"error":       llx.StringData(iface.Error),
+			"externalIds": llx.MapData(convert.MapToInterfaceMap(iface.ExternalIDs), types.String),
+			"options":     llx.MapData(convert.MapToInterfaceMap(iface.Options), types.String),
+		})
+		if err != nil {
+			return err
+		}
+		mqlInterface := resource.(*mqlOvsInterface)
+		mqlInterface.portResource = portsByName[iface.PortName]
+		o.interfaceResources = append(o.interfaceResources, mqlInterface)
+
+		if mqlInterface.portResource != nil {
+			mqlInterface.portResource.interfaceResources = append(mqlInterface.portResource.interfaceResources, mqlInterface)
+		}
+	}
+
+	return nil
+}
+
+func (o *mqlOvs) bridges() ([]any, error) {
+	if err := o.load(); err != nil {
+		return nil, err
+	}
+	return o.bridgeResources, nil
+}
+
+func (o *mqlOvs) ports() ([]any, error) {
+	if err := o.load(); err != nil {
+		return nil, err
+	}
+	return o.portResources, nil
+}
+
+func (o *mqlOvs) interfaces() ([]any, error) {
+	if err := o.load(); err != nil {
+		return nil, err
+	}
+	return o.interfaceResources, nil
+}
+
+func (b *mqlOvsBridge) ports() ([]any, error) {
+	return b.portResources, nil
+}
+
+func (p *mqlOvsPort) bridge() (*mqlOvsBridge, error) {
+	// A port the database keeps but no bridge references has no bridge to
+	// resolve. That is a real state, not an error.
+	if p.bridgeResource == nil {
+		p.Bridge.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return p.bridgeResource, nil
+}
+
+func (p *mqlOvsPort) interfaces() ([]any, error) {
+	return p.interfaceResources, nil
+}
+
+func (i *mqlOvsInterface) port() (*mqlOvsPort, error) {
+	if i.portResource == nil {
+		i.Port.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return i.portResource, nil
+}

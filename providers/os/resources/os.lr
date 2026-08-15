@@ -15309,3 +15309,134 @@ private sriov.virtualFunction @defaults("pciAddress index driver spoofChecking")
   // Transmit rate cap in Mbps, 0 when uncapped
   maxTxRate int
 }
+
+// Open vSwitch
+//
+// Software switch configured through the Open vSwitch database on this host.
+// The bridges, ports, and interfaces fields report the switch as it is running
+// now, joined into the topology the datapath uses, which is the dataplane a
+// CNI plugin builds and Kubernetes only records as intent. Empty on hosts
+// where ovs-vsctl is not installed or the database is not reachable.
+ovs {
+  // Open vSwitch version reported by ovs-vsctl
+  version() string
+  // Bridges configured on this host
+  bridges() []ovs.bridge
+  // Ports across every bridge
+  ports() []ovs.port
+  // Interfaces across every port
+  interfaces() []ovs.interface
+}
+
+// Open vSwitch bridge
+//
+// One bridge of the local switch, selected by name. The failMode field decides
+// what the bridge does when it loses its controller: `secure` keeps the
+// installed flows and forwards nothing new, `standalone` falls back to acting
+// as a learning switch, which forwards traffic no policy authorised. The
+// datapathType, protocols, stpEnabled, and rstpEnabled fields report how the
+// bridge switches, and externalIds carries the tags the CNI plugin or the
+// operator wrote. The ports field returns the ports attached to the bridge.
+private ovs.bridge @defaults("name datapathType failMode") {
+  // Bridge name (for example br-ex)
+  name string
+  // Database UUID of the bridge
+  uuid string
+  // Datapath the bridge runs on (system, netdev)
+  datapathType string
+  // Behaviour when the bridge has no controller connection
+  //
+  // `secure` keeps the installed flows, `standalone` falls back to a learning
+  // switch. Empty when no fail mode is set, which the switch treats as
+  // standalone.
+  failMode string
+  // OpenFlow versions the bridge accepts (for example OpenFlow13)
+  protocols []string
+  // Whether Spanning Tree Protocol is enabled
+  stpEnabled bool
+  // Whether Rapid Spanning Tree Protocol is enabled
+  rstpEnabled bool
+  // Tags written into the external_ids column
+  externalIds map[string]string
+  // Settings written into the other_config column
+  otherConfig map[string]string
+  // Ports attached to the bridge
+  ports() []ovs.port
+}
+
+// Open vSwitch port
+//
+// One port of a bridge, selected by name. The vlanMode and vlanTag fields
+// report how the port treats VLAN tags: an access port carries a single tag,
+// a trunk port carries the VLANs listed in trunks, and a port with neither
+// carries every VLAN the bridge sees. tagged is false when no tag is set, so
+// an untagged port is not read as VLAN 0. The interfaces field returns the
+// interfaces the port is built from, which is more than one for a bond.
+private ovs.port @defaults("name bridgeName vlanMode vlanTag") {
+  // Port name (for example veth-pod0)
+  name string
+  // Database UUID of the port
+  uuid string
+  // Name of the bridge the port is attached to, empty when no bridge claims it
+  bridgeName string
+  // Bridge the port is attached to (null when no bridge claims it)
+  bridge() ovs.bridge
+  // VLAN handling of the port (access, native-tagged, native-untagged, trunk)
+  vlanMode string
+  // VLAN ID of an access port, 0 when no tag is set
+  vlanTag int
+  // Whether a VLAN tag is set on the port
+  //
+  // False means the port carries every VLAN the bridge sees, which is not the
+  // same as carrying VLAN 0.
+  tagged bool
+  // VLAN IDs a trunk port carries
+  trunks []int
+  // Tags written into the external_ids column
+  externalIds map[string]string
+  // Settings written into the other_config column
+  otherConfig map[string]string
+  // Interfaces the port is built from
+  interfaces() []ovs.interface
+}
+
+// Open vSwitch interface
+//
+// One interface of a port, selected by name. The type field reports how the
+// interface reaches the network: an empty type is a system device, `internal`
+// is the bridge's own device, and `vxlan`, `geneve`, or `gre` is a tunnel
+// whose remote end is in options. The adminState and linkState fields report
+// whether the interface is up, and error carries the reason the switch could
+// not open the device, which is how a misconfigured attachment shows up.
+// externalIds carries the tags the CNI plugin wrote, which is what ties the
+// interface back to a pod.
+private ovs.interface @defaults("name type adminState linkState") {
+  // Interface name
+  name string
+  // Database UUID of the interface
+  uuid string
+  // Name of the port the interface belongs to, empty when no port claims it
+  portName string
+  // Port the interface belongs to (null when no port claims it)
+  port() ovs.port
+  // Name of the bridge the interface reaches, empty when no bridge claims it
+  bridgeName string
+  // Interface type, empty for a system device (internal, vxlan, geneve, gre, patch, ...)
+  type string
+  // Administrative state reported by the switch (up, down)
+  adminState string
+  // Link state reported by the switch (up, down)
+  linkState string
+  // MAC address the interface uses
+  macAddress string
+  // Maximum transmission unit of the interface
+  mtu int
+  // OpenFlow port number, -1 when the switch could not assign one
+  ofport int
+  // Reason the switch could not open the device, empty when it is healthy
+  error string
+  // Tags written into the external_ids column
+  externalIds map[string]string
+  // Type-specific settings, such as the remote_ip of a tunnel
+  options map[string]string
+}
