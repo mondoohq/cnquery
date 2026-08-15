@@ -53,30 +53,3 @@ func TestOssStrings(t *testing.T) {
 	assert.Equal(t, []any{"*"}, ossStrings([]string{"*", ""}))
 	assert.Equal(t, []any{"TLSv1.2", "TLSv1.3"}, ossStrings([]string{"TLSv1.2", "", "TLSv1.3"}))
 }
-
-// TestOssPolicyIsPublic covers how the two policy verdicts combine. The service
-// verdict wins whenever it could be read; the parsed fallback only applies when
-// it could not, so a credential that can read the policy document but not the
-// policy status still gets an answer rather than a silent false.
-func TestOssPolicyIsPublic(t *testing.T) {
-	boolPtr := func(b bool) *bool { return &b }
-
-	tests := []struct {
-		name    string
-		service *bool
-		parsed  bool
-		want    bool
-	}{
-		{"service says public", boolPtr(true), false, true},
-		{"service says private and overrides a parsed public", boolPtr(false), true, false},
-		{"service unavailable, parser says public", nil, true, true},
-		{"service unavailable, parser says private", nil, false, false},
-		{"both agree public", boolPtr(true), true, true},
-		{"both agree private", boolPtr(false), false, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, ossPolicyIsPublic(tt.service, tt.parsed))
-		})
-	}
-}

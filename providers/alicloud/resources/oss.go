@@ -190,6 +190,24 @@ type mqlAlicloudOssBucketInternal struct {
 	encLock   sync.Mutex
 	encLoaded atomic.Bool
 	encRule   *oss.ApplyServerSideEncryptionByDefault
+
+	// Each of the four below backs several accessors, so the result is memoized
+	// to keep a query that selects all of them to one call per configuration.
+	httpsLock   sync.Mutex
+	httpsLoaded atomic.Bool
+	httpsTLS    *oss.TLS
+
+	wormLock   sync.Mutex
+	wormLoaded atomic.Bool
+	wormConfig *oss.WormConfiguration
+
+	refererLock   sync.Mutex
+	refererLoaded atomic.Bool
+	refererConfig *oss.RefererConfiguration
+
+	websiteLock   sync.Mutex
+	websiteLoaded atomic.Bool
+	websiteConfig *oss.WebsiteConfiguration
 }
 
 func (a *mqlAlicloudOssBucket) id() (string, error) {
@@ -480,22 +498,21 @@ func (a *mqlAlicloudOssBucket) isPublic() (bool, error) {
 		return true, nil
 	}
 
-	// Object Storage Service publishes its own verdict on the policy, which is
-	// authoritative when it can be read.
-	var serviceVerdict *bool
-	if status := a.GetPolicyAllowsPublicAccess(); status.Error == nil {
-		serviceVerdict = &status.Data
-	} else {
-		log.Debug().Err(status.Error).Str("bucket", a.Name.Data).
-			Msg("alicloud: could not read the bucket policy status, falling back to parsing the policy")
+	// Object Storage Service publishes its own verdict on whether the policy
+	// opens the bucket. When it can be read it settles the question, so the
+	// policy document is neither fetched nor parsed.
+	status := a.GetPolicyAllowsPublicAccess()
+	if status.Error == nil {
+		return status.Data, nil
 	}
+	log.Debug().Err(status.Error).Str("bucket", a.Name.Data).
+		Msg("alicloud: could not read the bucket policy status, falling back to parsing the policy")
 
+	// The fallback exists because GetBucketPolicyStatus needs its own
+	// permission: a credential that can read the document but not the status
+	// still gets an answer rather than a silent false.
 	policy := a.GetPolicy()
 	if policy.Error != nil {
-		// With no policy document either, the service verdict is all there is.
-		if serviceVerdict != nil {
-			return *serviceVerdict, nil
-		}
 		return false, policy.Error
 	}
 	statements, err := parsePolicyDocument(policy.Data)
@@ -505,10 +522,10 @@ func (a *mqlAlicloudOssBucket) isPublic() (bool, error) {
 		// stay silent: the parsed verdict is skipped, so a bucket opened by its
 		// policy alone would read as not public.
 		log.Warn().Err(err).Str("bucket", a.Name.Data).
-			Msg("alicloud: could not parse bucket policy, isPublic reflects the acl and the service verdict only")
-		return ossPolicyIsPublic(serviceVerdict, false), nil
+			Msg("alicloud: could not parse bucket policy, isPublic reflects the acl only")
+		return false, nil
 	}
-	return ossPolicyIsPublic(serviceVerdict, policyGrantsAnonymousAccess(statements)), nil
+	return policyGrantsAnonymousAccess(statements), nil
 }
 
 // itoaInt renders a slice index for a synthetic cache key.

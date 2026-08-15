@@ -12,6 +12,7 @@ import (
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -68,8 +69,20 @@ func (a *mqlAlicloudOssBucket) policyAllowsPublicAccess() (bool, error) {
 	return *resp.PolicyStatus.IsPublic, nil
 }
 
-// fetchHttpsConfig loads the bucket's TLS version configuration.
+// fetchHttpsConfig loads and memoizes the bucket's TLS version configuration,
+// which both tlsEnforced and tlsVersions read. A transient error is not cached,
+// so a later access retries rather than permanently reporting a bucket whose
+// configuration was never read as having no TLS floor.
 func (a *mqlAlicloudOssBucket) fetchHttpsConfig() (*oss.TLS, error) {
+	if a.httpsLoaded.Load() {
+		return a.httpsTLS, nil
+	}
+	a.httpsLock.Lock()
+	defer a.httpsLock.Unlock()
+	if a.httpsLoaded.Load() {
+		return a.httpsTLS, nil
+	}
+
 	client, err := a.ossClient()
 	if err != nil {
 		return nil, err
@@ -78,15 +91,15 @@ func (a *mqlAlicloudOssBucket) fetchHttpsConfig() (*oss.TLS, error) {
 		Bucket: &a.Name.Data,
 	})
 	if err != nil {
-		if ossConfigAbsent(err) {
-			return nil, nil
+		if !ossConfigAbsent(err) {
+			return nil, err
 		}
-		return nil, err
+		// not configured is a real answer and is cached like one
+	} else if resp != nil && resp.HttpsConfiguration != nil {
+		a.httpsTLS = resp.HttpsConfiguration.TLS
 	}
-	if resp == nil || resp.HttpsConfiguration == nil {
-		return nil, nil
-	}
-	return resp.HttpsConfiguration.TLS, nil
+	a.httpsLoaded.Store(true)
+	return a.httpsTLS, nil
 }
 
 func (a *mqlAlicloudOssBucket) tlsEnforced() (bool, error) {
@@ -105,9 +118,19 @@ func (a *mqlAlicloudOssBucket) tlsVersions() ([]any, error) {
 	return ossStrings(tls.TLSVersions), nil
 }
 
-// fetchWorm loads the bucket's retention policy. A bucket without one answers
+// fetchWorm loads and memoizes the bucket's retention policy, which both
+// objectLockState and objectLockRetentionDays read. A bucket without one answers
 // 404, which the SDK documents explicitly for this call.
 func (a *mqlAlicloudOssBucket) fetchWorm() (*oss.WormConfiguration, error) {
+	if a.wormLoaded.Load() {
+		return a.wormConfig, nil
+	}
+	a.wormLock.Lock()
+	defer a.wormLock.Unlock()
+	if a.wormLoaded.Load() {
+		return a.wormConfig, nil
+	}
+
 	client, err := a.ossClient()
 	if err != nil {
 		return nil, err
@@ -116,15 +139,14 @@ func (a *mqlAlicloudOssBucket) fetchWorm() (*oss.WormConfiguration, error) {
 		Bucket: &a.Name.Data,
 	})
 	if err != nil {
-		if ossConfigAbsent(err) {
-			return nil, nil
+		if !ossConfigAbsent(err) {
+			return nil, err
 		}
-		return nil, err
+	} else if resp != nil {
+		a.wormConfig = resp.WormConfiguration
 	}
-	if resp == nil {
-		return nil, nil
-	}
-	return resp.WormConfiguration, nil
+	a.wormLoaded.Store(true)
+	return a.wormConfig, nil
 }
 
 func (a *mqlAlicloudOssBucket) objectLockState() (string, error) {
@@ -143,8 +165,18 @@ func (a *mqlAlicloudOssBucket) objectLockRetentionDays() (int64, error) {
 	return int64(*worm.RetentionPeriodInDays), nil
 }
 
-// fetchReferer loads the bucket's referer restriction.
+// fetchReferer loads and memoizes the bucket's referer restriction, which
+// allowEmptyReferer, refererAllowList and refererDenyList all read.
 func (a *mqlAlicloudOssBucket) fetchReferer() (*oss.RefererConfiguration, error) {
+	if a.refererLoaded.Load() {
+		return a.refererConfig, nil
+	}
+	a.refererLock.Lock()
+	defer a.refererLock.Unlock()
+	if a.refererLoaded.Load() {
+		return a.refererConfig, nil
+	}
+
 	client, err := a.ossClient()
 	if err != nil {
 		return nil, err
@@ -153,15 +185,14 @@ func (a *mqlAlicloudOssBucket) fetchReferer() (*oss.RefererConfiguration, error)
 		Bucket: &a.Name.Data,
 	})
 	if err != nil {
-		if ossConfigAbsent(err) {
-			return nil, nil
+		if !ossConfigAbsent(err) {
+			return nil, err
 		}
-		return nil, err
+	} else if resp != nil {
+		a.refererConfig = resp.RefererConfiguration
 	}
-	if resp == nil {
-		return nil, nil
-	}
-	return resp.RefererConfiguration, nil
+	a.refererLoaded.Store(true)
+	return a.refererConfig, nil
 }
 
 // allowEmptyReferer reports whether a request with no Referer header is
@@ -195,8 +226,18 @@ func (a *mqlAlicloudOssBucket) refererDenyList() ([]any, error) {
 	return ossStrings(cfg.RefererBlacklist.Referers), nil
 }
 
-// fetchWebsite loads the bucket's static website configuration.
+// fetchWebsite loads and memoizes the bucket's static website configuration,
+// which websiteEnabled and both document accessors read.
 func (a *mqlAlicloudOssBucket) fetchWebsite() (*oss.WebsiteConfiguration, error) {
+	if a.websiteLoaded.Load() {
+		return a.websiteConfig, nil
+	}
+	a.websiteLock.Lock()
+	defer a.websiteLock.Unlock()
+	if a.websiteLoaded.Load() {
+		return a.websiteConfig, nil
+	}
+
 	client, err := a.ossClient()
 	if err != nil {
 		return nil, err
@@ -205,15 +246,14 @@ func (a *mqlAlicloudOssBucket) fetchWebsite() (*oss.WebsiteConfiguration, error)
 		Bucket: &a.Name.Data,
 	})
 	if err != nil {
-		if ossConfigAbsent(err) {
-			return nil, nil
+		if !ossConfigAbsent(err) {
+			return nil, err
 		}
-		return nil, err
+	} else if resp != nil {
+		a.websiteConfig = resp.WebsiteConfiguration
 	}
-	if resp == nil {
-		return nil, nil
-	}
-	return resp.WebsiteConfiguration, nil
+	a.websiteLoaded.Store(true)
+	return a.websiteConfig, nil
 }
 
 func (a *mqlAlicloudOssBucket) websiteEnabled() (bool, error) {
@@ -305,8 +345,8 @@ func (a *mqlAlicloudOssBucket) replicationRules() ([]any, error) {
 	for i, rule := range resp.ReplicationConfiguration.Rules {
 		targetBucket, targetLocation := "", ""
 		if rule.Destination != nil {
-			targetBucket = ossStrVal(rule.Destination.Bucket)
-			targetLocation = ossStrVal(rule.Destination.Location)
+			targetBucket = convert.ToValue(rule.Destination.Bucket)
+			targetLocation = convert.ToValue(rule.Destination.Location)
 		}
 		prefixes := []any{}
 		if rule.PrefixSet != nil {
@@ -315,10 +355,10 @@ func (a *mqlAlicloudOssBucket) replicationRules() ([]any, error) {
 		}
 		kmsKeyID := ""
 		if rule.EncryptionConfiguration != nil {
-			kmsKeyID = ossStrVal(rule.EncryptionConfiguration.ReplicaKmsKeyID)
+			kmsKeyID = convert.ToValue(rule.EncryptionConfiguration.ReplicaKmsKeyID)
 		}
 
-		ruleID := ossStrVal(rule.ID)
+		ruleID := convert.ToValue(rule.ID)
 		key := ruleID
 		if key == "" {
 			key = itoaInt(i)
@@ -328,11 +368,11 @@ func (a *mqlAlicloudOssBucket) replicationRules() ([]any, error) {
 			"id":                          llx.StringData(ruleID),
 			"targetBucket":                llx.StringData(targetBucket),
 			"targetLocation":              llx.StringData(targetLocation),
-			"status":                      llx.StringData(ossStrVal(rule.Status)),
-			"action":                      llx.StringData(ossStrVal(rule.Action)),
+			"status":                      llx.StringData(convert.ToValue(rule.Status)),
+			"action":                      llx.StringData(convert.ToValue(rule.Action)),
 			"historicalObjectReplication": llx.StringData(string(rule.HistoricalObjectReplication)),
 			"prefixes":                    llx.ArrayData(prefixes, types.String),
-			"syncRole":                    llx.StringData(ossStrVal(rule.SyncRole)),
+			"syncRole":                    llx.StringData(convert.ToValue(rule.SyncRole)),
 			"replicaKmsKeyId":             llx.StringData(kmsKeyID),
 		})
 		if err != nil {
@@ -341,25 +381,4 @@ func (a *mqlAlicloudOssBucket) replicationRules() ([]any, error) {
 		res = append(res, resource)
 	}
 	return res, nil
-}
-
-// ossPolicyIsPublic decides the policy half of a bucket's public verdict.
-//
-// serviceVerdict is what GetBucketPolicyStatus reported and is authoritative
-// when it could be read. The parsed fallback exists because that call needs its
-// own permission: a credential that can read the policy document but not the
-// status still gets an answer rather than a silent false.
-func ossPolicyIsPublic(serviceVerdict *bool, parsedGrantsAnonymous bool) bool {
-	if serviceVerdict != nil {
-		return *serviceVerdict
-	}
-	return parsedGrantsAnonymous
-}
-
-// ossStrVal dereferences a *string, returning "" when nil.
-func ossStrVal(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }
