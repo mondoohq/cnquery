@@ -129,39 +129,15 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 					continue
 				}
 
-				resource, err := CreateResource(r.MqlRuntime, "alicloud.slb.loadBalancer", map[string]*llx.RawData{
-					"__id":                         llx.StringDataPtr(lb.LoadBalancerId),
-					"loadBalancerId":               llx.StringDataPtr(lb.LoadBalancerId),
-					"loadBalancerName":             llx.StringDataPtr(lb.LoadBalancerName),
-					"address":                      llx.StringDataPtr(lb.Address),
-					"addressType":                  llx.StringDataPtr(lb.AddressType),
-					"addressIPVersion":             llx.StringDataPtr(lb.AddressIPVersion),
-					"status":                       llx.StringDataPtr(lb.LoadBalancerStatus),
-					"regionId":                     llx.StringDataPtr(lb.RegionId),
-					"masterZoneId":                 llx.StringDataPtr(lb.MasterZoneId),
-					"slaveZoneId":                  llx.StringDataPtr(lb.SlaveZoneId),
-					"networkType":                  llx.StringDataPtr(lb.NetworkType),
-					"internetChargeType":           llx.StringDataPtr(lb.InternetChargeType),
-					"instanceChargeType":           llx.StringDataPtr(lb.InstanceChargeType),
-					"loadBalancerSpec":             llx.StringDataPtr(lb.LoadBalancerSpec),
-					"payType":                      llx.StringDataPtr(lb.PayType),
-					"bandwidth":                    llx.IntDataPtr(lb.Bandwidth),
-					"createTime":                   llx.TimeDataPtr(slbParseTime(lb.CreateTime)),
-					"deleteProtection":             llx.StringDataPtr(lb.DeleteProtection),
-					"modificationProtectionStatus": llx.StringDataPtr(lb.ModificationProtectionStatus),
-					"modificationProtectionReason": llx.StringDataPtr(lb.ModificationProtectionReason),
-					"resourceGroupId":              llx.StringDataPtr(lb.ResourceGroupId),
-					"tags":                         llx.MapData(slbLoadBalancerTags(lb.Tags), types.String),
-				})
+				mqlLb, err := newSlbLoadBalancer(r.MqlRuntime, region, lb)
 				if err != nil {
 					return nil, err
 				}
-
-				mqlLb := resource.(*mqlAlicloudSlbLoadBalancer)
-				mqlLb.region = region
-				mqlLb.cacheRegion = region
-				mqlLb.cacheVpcID = tea.StringValue(lb.VpcId)
-				mqlLb.cacheVswitchID = tea.StringValue(lb.VSwitchId)
+				// DescribeLoadBalancers returns tags inline, so the filter costs
+				// nothing beyond the listing already made
+				if filteredOutByTags(conn, mqlLb.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlLb)
 			}
 
@@ -172,6 +148,97 @@ func (r *mqlAlicloudSlb) loadBalancers() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// newSlbLoadBalancer builds a fully populated alicloud.slb.loadBalancer from a
+// DescribeLoadBalancers list item within a region. It is shared by the
+// loadBalancers list accessor and the by-id init so both produce identical
+// resources.
+func newSlbLoadBalancer(runtime *plugin.Runtime, region string, lb *slbclient.DescribeLoadBalancersResponseBodyLoadBalancersLoadBalancer) (*mqlAlicloudSlbLoadBalancer, error) {
+	resource, err := CreateResource(runtime, "alicloud.slb.loadBalancer", map[string]*llx.RawData{
+		"__id":                         llx.StringDataPtr(lb.LoadBalancerId),
+		"loadBalancerId":               llx.StringDataPtr(lb.LoadBalancerId),
+		"loadBalancerName":             llx.StringDataPtr(lb.LoadBalancerName),
+		"address":                      llx.StringDataPtr(lb.Address),
+		"addressType":                  llx.StringDataPtr(lb.AddressType),
+		"addressIPVersion":             llx.StringDataPtr(lb.AddressIPVersion),
+		"status":                       llx.StringDataPtr(lb.LoadBalancerStatus),
+		"regionId":                     llx.StringDataPtr(lb.RegionId),
+		"masterZoneId":                 llx.StringDataPtr(lb.MasterZoneId),
+		"slaveZoneId":                  llx.StringDataPtr(lb.SlaveZoneId),
+		"networkType":                  llx.StringDataPtr(lb.NetworkType),
+		"internetChargeType":           llx.StringDataPtr(lb.InternetChargeType),
+		"instanceChargeType":           llx.StringDataPtr(lb.InstanceChargeType),
+		"loadBalancerSpec":             llx.StringDataPtr(lb.LoadBalancerSpec),
+		"payType":                      llx.StringDataPtr(lb.PayType),
+		"bandwidth":                    llx.IntDataPtr(lb.Bandwidth),
+		"createTime":                   llx.TimeDataPtr(slbParseTime(lb.CreateTime)),
+		"deleteProtection":             llx.StringDataPtr(lb.DeleteProtection),
+		"modificationProtectionStatus": llx.StringDataPtr(lb.ModificationProtectionStatus),
+		"modificationProtectionReason": llx.StringDataPtr(lb.ModificationProtectionReason),
+		"resourceGroupId":              llx.StringDataPtr(lb.ResourceGroupId),
+		"tags":                         llx.MapData(slbLoadBalancerTags(lb.Tags), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlLb := resource.(*mqlAlicloudSlbLoadBalancer)
+	mqlLb.region = region
+	mqlLb.cacheRegion = region
+	mqlLb.cacheVpcID = tea.StringValue(lb.VpcId)
+	mqlLb.cacheVswitchID = tea.StringValue(lb.VSwitchId)
+	return mqlLb, nil
+}
+
+// initAlicloudSlbLoadBalancer resolves a CLB instance by its native load
+// balancer id within a region, reusing an already-listed instance from the
+// resource cache. It also backs the discovered slb asset, which scopes the
+// connection to one load balancer.
+func initAlicloudSlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	// on a discovered CLB asset, resolve the load balancer the asset is scoped to
+	args = scopedInitArgs(runtime, args, connection.OptionSlbID, "loadBalancerId")
+
+	lbID, err := requiredStringArg(args, "loadBalancerId", "alicloud.slb.loadBalancer")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.slb.loadBalancer")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.slb.loadBalancer\x00" + lbID); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.SlbClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeLoadBalancers(&slbclient.DescribeLoadBalancersRequest{
+		RegionId:       tea.String(region),
+		LoadBalancerId: tea.String(lbID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.LoadBalancers != nil {
+		for _, lb := range resp.Body.LoadBalancers.LoadBalancer {
+			if lb == nil || tea.StringValue(lb.LoadBalancerId) != lbID {
+				continue
+			}
+			res, err := newSlbLoadBalancer(runtime, region, lb)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.slb.loadBalancer %q not found in region %q", lbID, region)
 }
 
 func (r *mqlAlicloudSlbLoadBalancer) id() (string, error) {

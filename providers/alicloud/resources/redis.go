@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -97,43 +98,15 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 					continue
 				}
 
-				mqlInst, err := CreateResource(r.MqlRuntime, "alicloud.redis.instance", map[string]*llx.RawData{
-					"__id":             llx.StringDataPtr(inst.InstanceId),
-					"instanceId":       llx.StringDataPtr(inst.InstanceId),
-					"instanceName":     llx.StringDataPtr(inst.InstanceName),
-					"instanceStatus":   llx.StringDataPtr(inst.InstanceStatus),
-					"instanceType":     llx.StringDataPtr(inst.InstanceType),
-					"instanceClass":    llx.StringDataPtr(inst.InstanceClass),
-					"architectureType": llx.StringDataPtr(inst.ArchitectureType),
-					"engineVersion":    llx.StringDataPtr(inst.EngineVersion),
-					"regionId":         llx.StringDataPtr(inst.RegionId),
-					"zoneId":           llx.StringDataPtr(inst.ZoneId),
-					"secondaryZoneId":  llx.StringDataPtr(inst.SecondaryZoneId),
-					"networkType":      llx.StringDataPtr(inst.NetworkType),
-					"connectionDomain": llx.StringDataPtr(inst.ConnectionDomain),
-					"port":             llx.IntDataPtr(inst.Port),
-					"privateIp":        llx.StringDataPtr(inst.PrivateIp),
-					"capacity":         llx.IntDataPtr(inst.Capacity),
-					"bandwidth":        llx.IntDataPtr(inst.Bandwidth),
-					"qps":              llx.IntDataPtr(inst.QPS),
-					"connections":      llx.IntDataPtr(inst.Connections),
-					"chargeType":       llx.StringDataPtr(inst.ChargeType),
-					"nodeType":         llx.StringDataPtr(inst.NodeType),
-					"packageType":      llx.StringDataPtr(inst.PackageType),
-					"editionType":      llx.StringDataPtr(inst.EditionType),
-					"resourceGroupId":  llx.StringDataPtr(inst.ResourceGroupId),
-					"createTime":       llx.TimeDataPtr(redisParseTime(inst.CreateTime)),
-					"endTime":          llx.TimeDataPtr(redisParseTime(inst.EndTime)),
-					"tags":             llx.MapData(redisTagsToMap(inst.Tags), types.String),
-				})
+				mqlInst, err := newRedisInstance(r.MqlRuntime, region, inst)
 				if err != nil {
 					return nil, err
 				}
-				resInst := mqlInst.(*mqlAlicloudRedisInstance)
-				resInst.region = region
-				resInst.cacheRegion = region
-				resInst.cacheVpcID = tea.StringValue(inst.VpcId)
-				resInst.cacheVswitchID = tea.StringValue(inst.VSwitchId)
+				// DescribeInstances returns tags inline, so the filter costs
+				// nothing beyond the listing already made
+				if filteredOutByTags(conn, mqlInst.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlInst)
 			}
 
@@ -145,6 +118,102 @@ func (r *mqlAlicloudRedis) instances() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// newRedisInstance builds a fully populated alicloud.redis.instance from a
+// DescribeInstances list item within a region. It is shared by the instances
+// list accessor and the by-id init so both produce identical resources.
+func newRedisInstance(runtime *plugin.Runtime, region string, inst *rkvclient.DescribeInstancesResponseBodyInstancesKVStoreInstance) (*mqlAlicloudRedisInstance, error) {
+	resource, err := CreateResource(runtime, "alicloud.redis.instance", map[string]*llx.RawData{
+		"__id":             llx.StringDataPtr(inst.InstanceId),
+		"instanceId":       llx.StringDataPtr(inst.InstanceId),
+		"instanceName":     llx.StringDataPtr(inst.InstanceName),
+		"instanceStatus":   llx.StringDataPtr(inst.InstanceStatus),
+		"instanceType":     llx.StringDataPtr(inst.InstanceType),
+		"instanceClass":    llx.StringDataPtr(inst.InstanceClass),
+		"architectureType": llx.StringDataPtr(inst.ArchitectureType),
+		"engineVersion":    llx.StringDataPtr(inst.EngineVersion),
+		"regionId":         llx.StringDataPtr(inst.RegionId),
+		"zoneId":           llx.StringDataPtr(inst.ZoneId),
+		"secondaryZoneId":  llx.StringDataPtr(inst.SecondaryZoneId),
+		"networkType":      llx.StringDataPtr(inst.NetworkType),
+		"connectionDomain": llx.StringDataPtr(inst.ConnectionDomain),
+		"port":             llx.IntDataPtr(inst.Port),
+		"privateIp":        llx.StringDataPtr(inst.PrivateIp),
+		"capacity":         llx.IntDataPtr(inst.Capacity),
+		"bandwidth":        llx.IntDataPtr(inst.Bandwidth),
+		"qps":              llx.IntDataPtr(inst.QPS),
+		"connections":      llx.IntDataPtr(inst.Connections),
+		"chargeType":       llx.StringDataPtr(inst.ChargeType),
+		"nodeType":         llx.StringDataPtr(inst.NodeType),
+		"packageType":      llx.StringDataPtr(inst.PackageType),
+		"editionType":      llx.StringDataPtr(inst.EditionType),
+		"resourceGroupId":  llx.StringDataPtr(inst.ResourceGroupId),
+		"createTime":       llx.TimeDataPtr(redisParseTime(inst.CreateTime)),
+		"endTime":          llx.TimeDataPtr(redisParseTime(inst.EndTime)),
+		"tags":             llx.MapData(redisTagsToMap(inst.Tags), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlInst := resource.(*mqlAlicloudRedisInstance)
+	mqlInst.region = region
+	mqlInst.cacheRegion = region
+	mqlInst.cacheVpcID = tea.StringValue(inst.VpcId)
+	mqlInst.cacheVswitchID = tea.StringValue(inst.VSwitchId)
+	return mqlInst, nil
+}
+
+// initAlicloudRedisInstance resolves an ApsaraDB for Redis instance by its
+// native instance id within a region, reusing an already-listed instance from
+// the resource cache. It also backs the discovered redis-instance asset, which
+// scopes the connection to one instance.
+func initAlicloudRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	// on a discovered Redis instance asset, resolve the instance the asset is
+	// scoped to
+	args = scopedInitArgs(runtime, args, connection.OptionRedisInstanceID, "instanceId")
+
+	instanceID, err := requiredStringArg(args, "instanceId", "alicloud.redis.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.redis.instance")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if x, ok := runtime.Resources.Get("alicloud.redis.instance\x00" + instanceID); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.RedisClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeInstances(&rkvclient.DescribeInstancesRequest{
+		RegionId:    tea.String(region),
+		InstanceIds: tea.String(instanceID),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.Instances != nil {
+		for _, inst := range resp.Body.Instances.KVStoreInstance {
+			if inst == nil || tea.StringValue(inst.InstanceId) != instanceID {
+				continue
+			}
+			res, err := newRedisInstance(runtime, region, inst)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.redis.instance %q not found in region %q", instanceID, region)
 }
 
 func (r *mqlAlicloudRedisInstance) id() (string, error) {

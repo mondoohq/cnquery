@@ -22,6 +22,13 @@ func TestAlicloudPlatforms(t *testing.T) {
 	assert.True(t, PlatformByName("alicloud-vpc").Consistent(NewVpcPlatform("vpc-abc")))
 	assert.True(t, PlatformByName("alicloud-waf-instance").Consistent(NewWafInstancePlatform("waf-abc")))
 	assert.True(t, PlatformByName("alicloud-cloud-firewall").Consistent(NewCloudFirewallPlatform("1234567890")))
+	assert.True(t, PlatformByName("alicloud-oss-bucket").Consistent(NewOssBucketPlatform("audit-logs")))
+	assert.True(t, PlatformByName("alicloud-rds-instance").Consistent(NewRdsInstancePlatform("rm-abc")))
+	assert.True(t, PlatformByName("alicloud-slb-loadbalancer").Consistent(NewSlbPlatform("lb-abc")))
+	assert.True(t, PlatformByName("alicloud-redis-instance").Consistent(NewRedisInstancePlatform("r-abc")))
+	assert.True(t, PlatformByName("alicloud-mongodb-instance").Consistent(NewMongodbInstancePlatform("dds-abc")))
+	assert.True(t, PlatformByName("alicloud-polardb-cluster").Consistent(NewPolardbClusterPlatform("pc-abc")))
+	assert.True(t, PlatformByName("alicloud-fc-function").Consistent(NewFcFunctionPlatform("cn-hangzhou", "handler")))
 }
 
 // TestAlicloudIdentifiers pins the stable platform-id formats used for asset
@@ -34,4 +41,19 @@ func TestAlicloudIdentifiers(t *testing.T) {
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/vpc/network/vpc-abc", NewVpcIdentifier("vpc-abc"))
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/waf/instance/waf-abc", NewWafInstanceIdentifier("waf-abc"))
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/cloudfirewall/1234567890", NewCloudFirewallIdentifier("1234567890"))
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/oss/bucket/audit-logs", NewOssBucketIdentifier("audit-logs"))
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/rds/instance/rm-abc", NewRdsInstanceIdentifier("rm-abc"))
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/slb/loadbalancer/lb-abc", NewSlbIdentifier("lb-abc"))
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/redis/instance/r-abc", NewRedisInstanceIdentifier("r-abc"))
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/mongodb/instance/dds-abc", NewMongodbInstanceIdentifier("dds-abc"))
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/polardb/cluster/pc-abc", NewPolardbClusterIdentifier("pc-abc"))
+
+	// Function Compute names repeat across regions, so the region is part of the
+	// identity: two functions named "handler" in different regions must not
+	// collapse into one asset.
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/alicloud/fc/function/cn-hangzhou/handler",
+		NewFcFunctionIdentifier("cn-hangzhou", "handler"))
+	assert.NotEqual(t,
+		NewFcFunctionIdentifier("cn-hangzhou", "handler"),
+		NewFcFunctionIdentifier("ap-southeast-1", "handler"))
 }

@@ -242,7 +242,7 @@ func init() {
 			Create: createAlicloudSlb,
 		},
 		"alicloud.slb.loadBalancer": {
-			// to override args, implement: initAlicloudSlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudSlbLoadBalancer,
 			Create: createAlicloudSlbLoadBalancer,
 		},
 		"alicloud.slb.listener": {
@@ -262,7 +262,7 @@ func init() {
 			Create: createAlicloudRedis,
 		},
 		"alicloud.redis.instance": {
-			// to override args, implement: initAlicloudRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudRedisInstance,
 			Create: createAlicloudRedisInstance,
 		},
 		"alicloud.mongodb": {
@@ -270,7 +270,7 @@ func init() {
 			Create: createAlicloudMongodb,
 		},
 		"alicloud.mongodb.instance": {
-			// to override args, implement: initAlicloudMongodbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudMongodbInstance,
 			Create: createAlicloudMongodbInstance,
 		},
 		"alicloud.polardb": {
@@ -278,7 +278,7 @@ func init() {
 			Create: createAlicloudPolardb,
 		},
 		"alicloud.polardb.cluster": {
-			// to override args, implement: initAlicloudPolardbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudPolardbCluster,
 			Create: createAlicloudPolardbCluster,
 		},
 		"alicloud.vpc.flowLog": {

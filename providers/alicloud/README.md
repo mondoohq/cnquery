@@ -79,6 +79,11 @@ Scanning an account discovers one asset per major service object, each scoped to
 | `vpcs` | VPC networks |
 | `oss-buckets` | OSS buckets |
 | `rds-instances` | RDS instances |
+| `slbs` | Classic Load Balancers |
+| `redis-instances` | ApsaraDB for Redis instances |
+| `mongodb-instances` | ApsaraDB for MongoDB instances |
+| `polardb-clusters` | PolarDB clusters |
+| `fc-functions` | Function Compute functions |
 | `waf` | Web Application Firewall instances |
 | `cloud-firewall` | the account's Cloud Firewall, when provisioned |
 | `auto` / `all` | every target above |
@@ -104,7 +109,7 @@ cnspec scan alicloud --filters tag:Environment=production
 cnspec scan alicloud --filters tag:Team=platform,security --filters exclude:tag:Lifecycle=temporary
 ```
 
-An exclude filter always wins over an include filter. Tag filters apply to the objects that carry tags — ACK clusters, load balancers, VPCs, ECS instances, OSS buckets, and RDS instances. WAF and Cloud Firewall are untagged account-level services, so tag filters do not narrow them.
+An exclude filter always wins over an include filter. Tag filters apply to the objects that carry tags — ACK clusters, load balancers (ALB, NLB, and CLB), VPCs, ECS instances, OSS buckets, RDS/Redis/MongoDB instances, PolarDB clusters, and Function Compute functions. WAF and Cloud Firewall are untagged account-level services, so tag filters do not narrow them.
 
 Tag lookups that cost a separate API call (OSS buckets, RDS instances) are only performed when a tag filter is actually set.
 

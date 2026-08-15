@@ -73,6 +73,11 @@ func (r *mqlAlicloudFc) functions() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				// ListFunctions returns tags inline, so the filter costs nothing
+				// beyond the listing already made
+				if filteredOutByTags(conn, mqlFn.Tags.Data) {
+					continue
+				}
 				res = append(res, mqlFn)
 			}
 			if resp.Body.NextToken == nil || *resp.Body.NextToken == "" {
@@ -181,6 +186,9 @@ func initAlicloudFcFunction(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	// on a discovered function asset, resolve the function the asset is scoped to
+	args = scopedInitArgs(runtime, args, connection.OptionFcFunctionName, "functionName")
+
 	functionName, err := requiredStringArg(args, "functionName", "alicloud.fc.function")
 	if err != nil {
 		return nil, nil, err
