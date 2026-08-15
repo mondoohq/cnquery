@@ -2720,6 +2720,19 @@ alicloud.log.project {
   lastModifyTime time
   // Logstores contained in the project
   logstores() []alicloud.log.logstore
+  // Resource policy attached to the project
+  //
+  // The JSON policy document that grants principals outside the owning account
+  // access to the project and everything in it. Empty when no policy is
+  // attached, which leaves access governed by RAM alone. Audit logs delivered
+  // into a project are only as protected as this policy allows.
+  policy() string
+  // Whether the resource policy grants access to any principal
+  //
+  // True when a granting statement names a wildcard principal, which opens the
+  // project's log data to callers outside the account. False when no policy is
+  // attached or every grant is scoped to named principals.
+  isPublic() bool
 }
 
 // Log Service logstore
@@ -2804,10 +2817,29 @@ alicloud.config {
   complianceSummary() dict
   // Delivery channels that export configuration data and compliance results
   //
-  // Each entry lists the channelId, name, type (OSS, SLS, or MNS), targetArn,
-  // assumeRoleArn, and enabled state, plus the snapshot and notification
-  // toggles. Empty when no delivery channel is configured.
-  deliveryChannels() []dict
+  // A recording account that has no enabled delivery channel keeps its
+  // configuration history only inside the Cloud Config console, so nothing
+  // reaches the OSS bucket, logstore, or message topic an audit pipeline reads.
+  // Empty when no delivery channel is configured.
+  deliveryChannels() []alicloud.config.deliveryChannel
+  // Compliance packs applied in the account
+  //
+  // A compliance pack bundles Config rules into a single evaluated set. Reports
+  // the pack inventory, the risk level assigned to each, and the rules a pack
+  // carries.
+  compliancePacks() []alicloud.config.compliancePack
+  // Account groups that aggregate configuration data from member accounts
+  //
+  // An aggregator collects configuration and compliance data from other
+  // accounts into this one, either from the whole resource directory or from a
+  // hand-picked set of accounts.
+  aggregators() []alicloud.config.aggregator
+  // Non-compliant evaluation results across every rule in the account
+  //
+  // The resources that currently fail a Config rule, each carrying the rule
+  // that flagged it, the annotation explaining why, and the risk level. This is
+  // the evaluated outcome, whereas rules reports only which rules exist.
+  nonCompliantResults() []alicloud.config.evaluationResult
 }
 
 // Cloud Config rule
@@ -2863,6 +2895,208 @@ alicloud.config.rule {
   modifiedTime() time
   // Tags applied to the rule
   tags map[string]string
+  // Resources the rule has evaluated and the verdict for each
+  //
+  // The evaluated outcome of the rule, one entry per resource it examined,
+  // carrying the compliance verdict and the annotation explaining it.
+  evaluationResults() []alicloud.config.evaluationResult
+}
+
+// Cloud Config delivery channel
+//
+// A destination Cloud Config writes configuration snapshots, configuration
+// change notifications, and compliance results to, keyed by channelId. The
+// destination is an OSS bucket, a Log Service logstore, or a Message Service
+// topic, reached through ossBucket and logstore where the destination has a
+// resource of its own. The enabled flag reports whether delivery is running,
+// and the four notification toggles report which payload kinds are sent, so a
+// channel that exists but delivers nothing an audit pipeline reads is
+// distinguishable from one that is working.
+alicloud.config.deliveryChannel @defaults("name type enabled") {
+  // Delivery channel ID, used as the lookup key
+  channelId string
+  // Delivery channel name
+  name string
+  // Destination service
+  //
+  // One of OSS, MNS, or SLS.
+  type string
+  // ARN of the destination the channel writes to
+  //
+  // An OSS bucket, a Message Service topic, or a Log Service logstore. Message
+  // Service topics have no resource of their own, so this is the only complete
+  // view of the destination.
+  targetArn string
+  // OSS bucket the channel delivers to
+  //
+  // Null when the channel targets a Log Service logstore or a Message Service
+  // topic.
+  ossBucket() alicloud.oss.bucket
+  // Log Service logstore the channel delivers to
+  //
+  // Null when the channel targets an OSS bucket or a Message Service topic.
+  logstore() alicloud.log.logstore
+  // RAM role Cloud Config assumes to write to the destination
+  //
+  // Null when the channel is configured without an assume-role ARN.
+  assumeRole() alicloud.ram.role
+  // Whether the channel is delivering
+  //
+  // False when the channel exists but is disabled, in which case nothing
+  // reaches the destination.
+  enabled bool
+  // Delivery channel description
+  description string
+  // Filter that limits which resources the channel delivers
+  //
+  // A JSON expression evaluated against each configuration item. Empty when the
+  // channel delivers every item.
+  condition string
+  // Delivery time of the scheduled resource snapshot
+  //
+  // An ISO 8601 timestamp whose hour selects the daily delivery time, for
+  // example 2021-09-15T16:00:00Z. Empty when snapshot delivery is off.
+  snapshotTime string
+  // Whether configuration change notifications are delivered
+  configurationItemChangeNotification bool
+  // Whether the scheduled resource snapshot is delivered
+  configurationSnapshot bool
+  // Whether compliant evaluation results are delivered
+  compliantSnapshot bool
+  // Whether non-compliant evaluation results are delivered
+  nonCompliantNotification bool
+  // ARN of the OSS bucket that receives payloads too large for the channel
+  //
+  // Empty when no oversized-data bucket is configured, in which case an
+  // oversized payload is dropped rather than delivered elsewhere.
+  oversizedDataOssTargetArn string
+}
+
+// Cloud Config compliance pack
+//
+// A named bundle of Config rules evaluated together, keyed by compliancePackId.
+// Reports the pack definition, the template it was built from, the risk level
+// assigned to it, and the rules it carries, so a pack that is present but not
+// yet evaluating is distinguishable from one that is active.
+alicloud.config.compliancePack @defaults("compliancePackName status riskLevel") {
+  // Compliance pack ID, used as the lookup key
+  compliancePackId string
+  // Compliance pack name
+  compliancePackName string
+  // ID of the template the pack was built from
+  //
+  // Empty for a pack assembled from individual rules rather than a template.
+  compliancePackTemplateId string
+  // Compliance pack description
+  description string
+  // Risk level assigned to the pack
+  //
+  // One of 1 (high), 2 (medium), or 3 (low).
+  riskLevel int
+  // Compliance pack status
+  //
+  // Either ACTIVE, meaning the pack is evaluating, or CREATING.
+  status string
+  // Time the pack was created
+  createTime time
+  // Tags applied to the pack
+  tags map[string]string
+  // Config rules the pack evaluates
+  rules() []alicloud.config.rule
+}
+
+// Cloud Config aggregator
+//
+// An account group that collects configuration and compliance data from other
+// accounts into this one, keyed by aggregatorId. An RD aggregator covers a
+// folder of the resource directory and grows as accounts join it, while a
+// CUSTOM aggregator covers a fixed list of accounts and silently omits any
+// account added afterwards.
+alicloud.config.aggregator @defaults("aggregatorName aggregatorType accountCount") {
+  // Aggregator ID, used as the lookup key
+  aggregatorId string
+  // Aggregator name
+  aggregatorName string
+  // Aggregator type
+  //
+  // Either RD, covering a resource directory folder, or CUSTOM, covering a
+  // fixed set of accounts.
+  aggregatorType string
+  // Aggregator description
+  description string
+  // Aggregator status
+  //
+  // 0 while the account group is being created, and 1 once it is created.
+  status int
+  // Number of member accounts the aggregator collects from
+  accountCount int
+  // Resource directory folder the aggregator covers
+  //
+  // Null for a CUSTOM aggregator, which names accounts rather than a folder.
+  folder() alicloud.resourceManager.folder
+  // Time the aggregator was created
+  createTime time
+  // Tags applied to the aggregator
+  tags map[string]string
+}
+
+// Cloud Config rule evaluation result
+//
+// The outcome of one Config rule examining one resource. Reports the compliance
+// verdict, the annotation naming what failed, the rule and compliance pack that
+// produced it, and when the resource last failed and was last brought back into
+// compliance. Where rules describes the checks that exist, this describes what
+// they actually found.
+alicloud.config.evaluationResult @defaults("resourceName resourceType complianceType riskLevel") {
+  // Config rule that produced the result
+  configRule() alicloud.config.rule
+  // Compliance pack the rule was evaluated under
+  //
+  // Null when the rule does not belong to a pack.
+  compliancePack() alicloud.config.compliancePack
+  // Compliance verdict
+  //
+  // One of COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA, or
+  // IGNORED.
+  complianceType string
+  // Explanation of the verdict
+  //
+  // Names the setting that failed, such as the ports a security group leaves
+  // open. Empty for a compliant resource.
+  annotation string
+  // Risk level of the rule that produced the result
+  //
+  // One of 1 (high), 2 (medium), or 3 (low).
+  riskLevel int
+  // Whether a remediation is configured for the rule
+  //
+  // False means a failing resource stays failing until someone acts on it.
+  remediationEnabled bool
+  // ID of the evaluated resource
+  resourceId string
+  // Name of the evaluated resource
+  resourceName string
+  // Type of the evaluated resource
+  //
+  // An Alibaba Cloud resource type such as ACS::ECS::Instance.
+  resourceType string
+  // Region the evaluated resource lives in
+  regionId string
+  // Resource group the evaluated resource belongs to
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Time the rule last evaluated the resource
+  invokedTime time
+  // Time the result was recorded
+  resultRecordedTime time
+  // Time the resource was last recorded as non-compliant
+  lastNonCompliantTime time
+  // Time the resource was last brought back into compliance
+  lastCompliantFixedTime time
+  // Date the result was set to be ignored
+  //
+  // Formatted as yyyy-MM-dd. Empty unless the result has been ignored, which
+  // suppresses it from the compliance summary without fixing the resource.
+  ignoreDate string
 }
 
 // Alibaba Cloud Resource Directory

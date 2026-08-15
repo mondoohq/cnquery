@@ -4,13 +4,16 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	slsclient "github.com/alibabacloud-go/sls-20201230/v6/client"
 	tea "github.com/alibabacloud-go/tea/tea"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -105,9 +108,14 @@ func (r *mqlAlicloudLog) projects() ([]any, error) {
 }
 
 // mqlAlicloudLogProjectInternal caches the region needed to build the SLS client
-// for listing the project's logstores.
+// for listing the project's logstores, and memoizes the project's resource
+// policy so the policy and isPublic accessors share one read.
 type mqlAlicloudLogProjectInternal struct {
 	region string
+
+	policyLock    sync.Mutex
+	policyFetched atomic.Bool
+	policyDoc     string
 }
 
 // newLogProject builds a fully populated alicloud.log.project from an SLS
@@ -245,6 +253,76 @@ func (r *mqlAlicloudLogProject) logstores() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// slsPolicyAbsent reports whether a GetProjectPolicy error means the project has
+// no resource policy attached rather than that the read failed. SLS answers a
+// project without a policy with a 404, so the check is on the API's own error
+// envelope. A transport failure carries no SDKError and is deliberately not
+// matched: degrading a network blip to "no policy attached" would report the
+// project as not public without ever having read the policy.
+func slsPolicyAbsent(err error) bool {
+	var sdkErr *tea.SDKError
+	if !errors.As(err, &sdkErr) {
+		return false
+	}
+	return sdkErr.StatusCode != nil && *sdkErr.StatusCode == http.StatusNotFound
+}
+
+// fetchPolicy lazily loads and memoizes the project's resource policy. A
+// transient error is not cached, so a later access retries instead of
+// permanently reporting a project with an unread policy as having none.
+func (r *mqlAlicloudLogProject) fetchPolicy() (string, error) {
+	if r.policyFetched.Load() {
+		return r.policyDoc, nil
+	}
+	r.policyLock.Lock()
+	defer r.policyLock.Unlock()
+	if r.policyFetched.Load() {
+		return r.policyDoc, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.SlsClient(r.region)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.GetProjectPolicy(tea.String(r.Name.Data))
+	if err != nil {
+		if !slsPolicyAbsent(err) {
+			return "", err
+		}
+		// no policy attached is the common case, and is not a failure
+		r.policyFetched.Store(true)
+		return "", nil
+	}
+	if resp != nil {
+		r.policyDoc = tea.StringValue(resp.Body)
+	}
+	r.policyFetched.Store(true)
+	return r.policyDoc, nil
+}
+
+func (r *mqlAlicloudLogProject) policy() (string, error) {
+	return r.fetchPolicy()
+}
+
+// isPublic reports whether the project's resource policy grants any principal
+// access. An unparseable document is warned about and treated as not public,
+// because the alternative is failing every project in the account on one
+// malformed policy; the raw document stays readable through policy.
+func (r *mqlAlicloudLogProject) isPublic() (bool, error) {
+	doc, err := r.fetchPolicy()
+	if err != nil {
+		return false, err
+	}
+	statements, err := parsePolicyDocument(doc)
+	if err != nil {
+		log.Warn().Err(err).Str("project", r.Name.Data).
+			Msg("alicloud> unable to parse the log project resource policy")
+		return false, nil
+	}
+	return policyGrantsAnonymousAccess(statements), nil
 }
 
 // mqlAlicloudLogLogstoreInternal caches the keys needed to fetch the logstore
