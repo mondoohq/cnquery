@@ -744,8 +744,8 @@ private azure.subscription.computeService.vm.imageReference @defaults("publisher
 //
 // Azure Arc-enabled server (Microsoft.HybridCompute/machines), an
 // on-premises or other-cloud machine projected into Azure for
-// management. Surfaces the agent status (Connected, Disconnected,
-// Expired), agent version, OS name and version, last status check,
+// management. Surfaces the agent status (AwaitingConnection, Connected,
+// Disconnected, Error), agent version, OS name and version, last status check,
 // machine identity, attached extensions, private link scope, and the
 // `cloudMetadata` describing the underlying environment when the
 // machine is hosted on AWS, GCP, VMware, or another cloud.
@@ -760,7 +760,9 @@ azure.subscription.computeService.hybridMachine @defaults("name location osName 
   tags map[string]string
   // ARM resource type (Microsoft.HybridCompute/machines)
   type string
-  // Connection status of the Arc agent. Possible values: "Connected", "Disconnected", "Error"
+  // Connection status of the Arc agent
+  //
+  // One of AwaitingConnection, Connected, Disconnected, or Error.
   status string
   // Last time the Arc agent reported in
   lastStatusChange time
