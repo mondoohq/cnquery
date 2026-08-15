@@ -158,6 +158,15 @@ const pageSize = 100
 // loop until the realm's user count is multiplied by the cap.
 const maxPages = 500
 
+// FullRepresentation asks a list endpoint for the complete record. Several
+// endpoints, among them groups and roles, answer with a brief representation
+// by default, which omits the attributes and the role mappings. Reading those
+// fields from a brief response would report them as empty rather than as
+// absent.
+func FullRepresentation() url.Values {
+	return url.Values{"briefRepresentation": []string{"false"}}
+}
+
 // GetPaged walks the first and max pagination the admin API list endpoints use
 // and returns every record. Endpoints that ignore paging return their single
 // response unchanged.

@@ -88,7 +88,7 @@ func (g *mqlKeycloakGroup) subGroups() ([]any, error) {
 		conn := keycloakConn(g.MqlRuntime)
 		path := connection.AdminPath(g.parentRealm.realmName(), "groups", g.Id.Data, "children")
 
-		fetched, err := connection.GetPaged[groupRecord](ctx, conn, path, nil)
+		fetched, err := connection.GetPaged[groupRecord](ctx, conn, path, connection.FullRepresentation())
 		if err != nil {
 			return nil, err
 		}

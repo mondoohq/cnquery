@@ -152,7 +152,7 @@ func (u *mqlKeycloakUser) groups() ([]any, error) {
 	conn := keycloakConn(u.MqlRuntime)
 	path := connection.AdminPath(u.parentRealm.realmName(), "users", u.Id.Data, "groups")
 
-	records, err := connection.GetPaged[groupRecord](ctx, conn, path, nil)
+	records, err := connection.GetPaged[groupRecord](ctx, conn, path, connection.FullRepresentation())
 	if err != nil {
 		return nil, err
 	}

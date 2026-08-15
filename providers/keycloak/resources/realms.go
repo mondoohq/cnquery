@@ -223,7 +223,7 @@ func (r *mqlKeycloakRealm) roles() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	records, err := connection.GetPaged[roleRecord](ctx, c, connection.AdminPath(r.realmName(), "roles"), nil)
+	records, err := connection.GetPaged[roleRecord](ctx, c, connection.AdminPath(r.realmName(), "roles"), connection.FullRepresentation())
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func (r *mqlKeycloakRealm) groups() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	records, err := connection.GetPaged[groupRecord](ctx, c, connection.AdminPath(r.realmName(), "groups"), nil)
+	records, err := connection.GetPaged[groupRecord](ctx, c, connection.AdminPath(r.realmName(), "groups"), connection.FullRepresentation())
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func (r *mqlKeycloakRealm) users() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	records, err := connection.GetPaged[userRecord](ctx, c, connection.AdminPath(r.realmName(), "users"), nil)
+	records, err := connection.GetPaged[userRecord](ctx, c, connection.AdminPath(r.realmName(), "users"), connection.FullRepresentation())
 	if err != nil {
 		return nil, err
 	}

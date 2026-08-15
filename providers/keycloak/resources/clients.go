@@ -150,7 +150,7 @@ func (c *mqlKeycloakClient) roles() ([]any, error) {
 	conn := keycloakConn(c.MqlRuntime)
 	path := connection.AdminPath(c.parentRealm.realmName(), "clients", c.Id.Data, "roles")
 
-	records, err := connection.GetPaged[roleRecord](ctx, conn, path, nil)
+	records, err := connection.GetPaged[roleRecord](ctx, conn, path, connection.FullRepresentation())
 	if err != nil {
 		return nil, err
 	}

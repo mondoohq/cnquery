@@ -426,3 +426,13 @@ func TestNewKeycloakConnectionHonorsTheAuthRealm(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "https://kc.example.com/realms/master/protocol/openid-connect/token", conn.tokens.tokenURL)
 }
+
+func TestFullRepresentationIsAFreshCopy(t *testing.T) {
+	first := FullRepresentation()
+	assert.Equal(t, "false", first.Get("briefRepresentation"))
+
+	// Each caller must get its own map, since GetPaged and the callers add
+	// their own keys to it.
+	first.Set("max", "1")
+	assert.Empty(t, FullRepresentation().Get("max"))
+}
