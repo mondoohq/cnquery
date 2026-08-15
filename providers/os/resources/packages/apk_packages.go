@@ -24,6 +24,11 @@ const (
 	ApkDbInstalledUsr = "/usr/lib/apk/db/installed"
 )
 
+// apkMaxLine caps how long a single line of the apk database may be. The
+// dependency and provides lines of a metapackage are the long ones, and they
+// grow with the number of packages a distribution ships.
+const apkMaxLine = 4 * 1024 * 1024
+
 // apkField splits a line of the apk database into its one letter field key and
 // its value. It returns the same key and value as the regexp
 // `^([A-Za-z]):(.*)$`, which the parser used before.
@@ -81,6 +86,10 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 	}
 
 	scanner := bufio.NewScanner(input)
+	// A line longer than the 64KB default ends the scan, and the packages that
+	// follow it are lost without a word. Raise the cap so a long dependency
+	// line cannot shorten the package list.
+	scanner.Buffer(nil, apkMaxLine)
 	pkg := Package{}
 	for scanner.Scan() {
 		// Bytes avoids one string allocation per line. Most lines of the apk
@@ -122,8 +131,17 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 		}
 	}
 
+	// a read that stopped early leaves the package list short, so say so
+	if err := scanner.Err(); err != nil {
+		log.Error().Err(err).Msg("could not read the apk database to its end, the package list is incomplete")
+	}
+
 	// if the last line is not an empty line we have things in flight, lets check it
-	add(pkg)
+	// a database that ends with an empty line has nothing left, and reporting
+	// that empty package as ignored only reads like data loss
+	if pkg.Name != "" {
+		add(pkg)
+	}
 	return pkgs
 }
 
