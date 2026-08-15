@@ -77,7 +77,7 @@ func (s *mqlFrrConfig) communityLists(file *mqlFile) ([]any, error) {
 	for i := range lists {
 		l := &lists[i]
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.communityList", map[string]*llx.RawData{
-			"__id":    llx.StringData(s.__id + "#communityList/" + l.Kind + "/" + l.Name),
+			"__id":    llx.StringData(s.__id + "#communityList/" + l.Kind + "/" + l.Type + "/" + l.Name),
 			"name":    llx.StringData(l.Name),
 			"kind":    llx.StringData(l.Kind),
 			"type":    llx.StringData(l.Type),
