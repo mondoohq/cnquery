@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -367,6 +368,13 @@ func frrBGPNeighbors(runtime *plugin.Runtime, vrf string) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if frr.Refused(out) {
+		// A VRF that BGP does not serve has no sessions. The VRF device can
+		// still exist, which `frr.vrfs` reports.
+		log.Debug().Str("vrf", vrf).Str("answer", strings.TrimSpace(string(out))).
+			Msg("vtysh has no bgp summary for this vrf")
+		return []any{}, nil
+	}
 	peers, err := frr.ParseBGPSummary(vrf, out)
 	if err != nil {
 		return nil, err
@@ -582,7 +590,19 @@ func (s *mqlFrrRouteTable) load() (*frr.RouteTable, error) {
 			command, cmd.ExitStatus, strings.TrimSpace(string(stderr)))
 	}
 
-	table, err := frr.StreamRoutes(io.LimitReader(cmd.Stdout, frrRouteByteLimit), int(limit.Data))
+	// vtysh answers an unknown VRF with a percent sign and a zero exit
+	// status, so the first byte decides whether this is a result at all.
+	reader := bufio.NewReader(io.LimitReader(cmd.Stdout, frrRouteByteLimit))
+	if head, perr := reader.Peek(1); perr == nil && head[0] == '%' {
+		rest, _ := io.ReadAll(reader)
+		log.Debug().Str("vrf", vrf.Data).Str("answer", strings.TrimSpace(string(head)+string(rest))).
+			Msg("vtysh has no routes for this vrf")
+		s.table = &frr.RouteTable{}
+		s.loaded = true
+		return s.table, nil
+	}
+
+	table, err := frr.StreamRoutes(reader, int(limit.Data))
 	if err != nil {
 		return nil, err
 	}
