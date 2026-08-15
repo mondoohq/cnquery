@@ -25,6 +25,7 @@ const (
 	ResourceMongodbatlasApiKeyRoleAssignment    string = "mongodbatlas.apiKey.roleAssignment"
 	ResourceMongodbatlasApiAccessListEntry      string = "mongodbatlas.apiAccessListEntry"
 	ResourceMongodbatlasServiceAccount          string = "mongodbatlas.serviceAccount"
+	ResourceMongodbatlasMcpConfiguration        string = "mongodbatlas.mcpConfiguration"
 	ResourceMongodbatlasCluster                 string = "mongodbatlas.cluster"
 	ResourceMongodbatlasBackupScheduleConfig    string = "mongodbatlas.backupScheduleConfig"
 	ResourceMongodbatlasFlexCluster             string = "mongodbatlas.flexCluster"
@@ -85,6 +86,10 @@ func init() {
 		"mongodbatlas.serviceAccount": {
 			// to override args, implement: initMongodbatlasServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMongodbatlasServiceAccount,
+		},
+		"mongodbatlas.mcpConfiguration": {
+			// to override args, implement: initMongodbatlasMcpConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMongodbatlasMcpConfiguration,
 		},
 		"mongodbatlas.cluster": {
 			Init:   initMongodbatlasCluster,
@@ -275,6 +280,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("mongodbatlas.serviceAccount")))
 	},
+	"mongodbatlas.mcpConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlas).GetMcpConfigurations()).ToDataRes(types.Array(types.Resource("mongodbatlas.mcpConfiguration")))
+	},
+	"mongodbatlas.projectMcpConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlas).GetProjectMcpConfigurations()).ToDataRes(types.Array(types.Resource("mongodbatlas.mcpConfiguration")))
+	},
 	"mongodbatlas.resourcePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlas).GetResourcePolicies()).ToDataRes(types.Array(types.Resource("mongodbatlas.resourcePolicy")))
 	},
@@ -455,6 +466,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mongodbatlas.serviceAccount.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasServiceAccount).GetProjects()).ToDataRes(types.Array(types.Resource("mongodbatlas.project")))
 	},
+	"mongodbatlas.mcpConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.mcpConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"mongodbatlas.mcpConfiguration.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetScope()).ToDataRes(types.String)
+	},
+	"mongodbatlas.mcpConfiguration.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"mongodbatlas.mcpConfiguration.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetClientId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.mcpConfiguration.egressClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetEgressClientId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.mcpConfiguration.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetServiceAccount()).ToDataRes(types.Resource("mongodbatlas.serviceAccount"))
+	},
+	"mongodbatlas.mcpConfiguration.ipAccessList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasMcpConfiguration).GetIpAccessList()).ToDataRes(types.Array(types.Resource("mongodbatlas.apiAccessListEntry")))
+	},
 	"mongodbatlas.cluster.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetId()).ToDataRes(types.String)
 	},
@@ -475,6 +510,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.cluster.backupEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetBackupEnabled()).ToDataRes(types.Bool)
+	},
+	"mongodbatlas.cluster.retainBackups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasCluster).GetRetainBackups()).ToDataRes(types.Bool)
 	},
 	"mongodbatlas.cluster.pitEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasCluster).GetPitEnabled()).ToDataRes(types.Bool)
@@ -655,6 +693,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mongodbatlas.snapshotExportBucket.tenantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasSnapshotExportBucket).GetTenantId()).ToDataRes(types.String)
+	},
+	"mongodbatlas.snapshotExportBucket.requirePrivateNetworking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMongodbatlasSnapshotExportBucket).GetRequirePrivateNetworking()).ToDataRes(types.Bool)
 	},
 	"mongodbatlas.snapshotExportBucket.cloudProviderAccessRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMongodbatlasSnapshotExportBucket).GetCloudProviderAccessRole()).ToDataRes(types.Resource("mongodbatlas.cloudProviderAccessRole"))
@@ -1082,6 +1123,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlas).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.mcpConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlas).McpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.projectMcpConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlas).ProjectMcpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"mongodbatlas.resourcePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlas).ResourcePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1354,6 +1403,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMongodbatlasServiceAccount).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"mongodbatlas.mcpConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.egressClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).EgressClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).ServiceAccount, ok = plugin.RawToTValue[*mqlMongodbatlasServiceAccount](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.mcpConfiguration.ipAccessList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasMcpConfiguration).IpAccessList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"mongodbatlas.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasCluster).__id, ok = v.Value.(string)
 		return
@@ -1384,6 +1469,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.cluster.backupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasCluster).BackupEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.cluster.retainBackups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasCluster).RetainBackups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.cluster.pitEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1636,6 +1725,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mongodbatlas.snapshotExportBucket.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMongodbatlasSnapshotExportBucket).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mongodbatlas.snapshotExportBucket.requirePrivateNetworking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMongodbatlasSnapshotExportBucket).RequirePrivateNetworking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"mongodbatlas.snapshotExportBucket.cloudProviderAccessRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2213,6 +2306,8 @@ type mqlMongodbatlas struct {
 	Teams                                  plugin.TValue[[]any]
 	ApiKeys                                plugin.TValue[[]any]
 	ServiceAccounts                        plugin.TValue[[]any]
+	McpConfigurations                      plugin.TValue[[]any]
+	ProjectMcpConfigurations               plugin.TValue[[]any]
 	ResourcePolicies                       plugin.TValue[[]any]
 	Clusters                               plugin.TValue[[]any]
 	FlexClusters                           plugin.TValue[[]any]
@@ -2399,6 +2494,38 @@ func (c *mqlMongodbatlas) GetServiceAccounts() *plugin.TValue[[]any] {
 		}
 
 		return c.serviceAccounts()
+	})
+}
+
+func (c *mqlMongodbatlas) GetMcpConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas", c.__id, "mcpConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpConfigurations()
+	})
+}
+
+func (c *mqlMongodbatlas) GetProjectMcpConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProjectMcpConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas", c.__id, "projectMcpConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projectMcpConfigurations()
 	})
 }
 
@@ -3298,6 +3425,97 @@ func (c *mqlMongodbatlasServiceAccount) GetProjects() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlMongodbatlasMcpConfiguration for the mongodbatlas.mcpConfiguration resource
+type mqlMongodbatlasMcpConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMongodbatlasMcpConfigurationInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Scope          plugin.TValue[string]
+	Roles          plugin.TValue[[]any]
+	ClientId       plugin.TValue[string]
+	EgressClientId plugin.TValue[string]
+	ServiceAccount plugin.TValue[*mqlMongodbatlasServiceAccount]
+	IpAccessList   plugin.TValue[[]any]
+}
+
+// createMongodbatlasMcpConfiguration creates a new instance of this resource
+func createMongodbatlasMcpConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMongodbatlasMcpConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mongodbatlas.mcpConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) MqlName() string {
+	return "mongodbatlas.mcpConfiguration"
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetEgressClientId() *plugin.TValue[string] {
+	return &c.EgressClientId
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetServiceAccount() *plugin.TValue[*mqlMongodbatlasServiceAccount] {
+	return plugin.GetOrCompute[*mqlMongodbatlasServiceAccount](&c.ServiceAccount, func() (*mqlMongodbatlasServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mongodbatlas.mcpConfiguration", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMongodbatlasServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
+func (c *mqlMongodbatlasMcpConfiguration) GetIpAccessList() *plugin.TValue[[]any] {
+	return &c.IpAccessList
+}
+
 // mqlMongodbatlasCluster for the mongodbatlas.cluster resource
 type mqlMongodbatlasCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -3310,6 +3528,7 @@ type mqlMongodbatlasCluster struct {
 	ClusterType                               plugin.TValue[string]
 	StateName                                 plugin.TValue[string]
 	BackupEnabled                             plugin.TValue[bool]
+	RetainBackups                             plugin.TValue[bool]
 	PitEnabled                                plugin.TValue[bool]
 	EncryptionAtRestProvider                  plugin.TValue[string]
 	MinimumEnabledTlsProtocol                 plugin.TValue[string]
@@ -3398,6 +3617,10 @@ func (c *mqlMongodbatlasCluster) GetStateName() *plugin.TValue[string] {
 
 func (c *mqlMongodbatlasCluster) GetBackupEnabled() *plugin.TValue[bool] {
 	return &c.BackupEnabled
+}
+
+func (c *mqlMongodbatlasCluster) GetRetainBackups() *plugin.TValue[bool] {
+	return &c.RetainBackups
 }
 
 func (c *mqlMongodbatlasCluster) GetPitEnabled() *plugin.TValue[bool] {
@@ -3761,13 +3984,14 @@ type mqlMongodbatlasSnapshotExportBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlMongodbatlasSnapshotExportBucketInternal
-	Id                      plugin.TValue[string]
-	BucketName              plugin.TValue[string]
-	CloudProvider           plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	ServiceUrl              plugin.TValue[string]
-	TenantId                plugin.TValue[string]
-	CloudProviderAccessRole plugin.TValue[*mqlMongodbatlasCloudProviderAccessRole]
+	Id                       plugin.TValue[string]
+	BucketName               plugin.TValue[string]
+	CloudProvider            plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	ServiceUrl               plugin.TValue[string]
+	TenantId                 plugin.TValue[string]
+	RequirePrivateNetworking plugin.TValue[bool]
+	CloudProviderAccessRole  plugin.TValue[*mqlMongodbatlasCloudProviderAccessRole]
 }
 
 // createMongodbatlasSnapshotExportBucket creates a new instance of this resource
@@ -3824,6 +4048,10 @@ func (c *mqlMongodbatlasSnapshotExportBucket) GetServiceUrl() *plugin.TValue[str
 
 func (c *mqlMongodbatlasSnapshotExportBucket) GetTenantId() *plugin.TValue[string] {
 	return &c.TenantId
+}
+
+func (c *mqlMongodbatlasSnapshotExportBucket) GetRequirePrivateNetworking() *plugin.TValue[bool] {
+	return &c.RequirePrivateNetworking
 }
 
 func (c *mqlMongodbatlasSnapshotExportBucket) GetCloudProviderAccessRole() *plugin.TValue[*mqlMongodbatlasCloudProviderAccessRole] {

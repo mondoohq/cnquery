@@ -19,7 +19,7 @@ func (r *mqlMongodbatlas) customDatabaseRoles() ([]any, error) {
 	ctx := context.Background()
 
 	// ListCustomDatabaseRoles returns the full set in one call (no pagination).
-	roles, _, err := client.CustomDatabaseRolesApi.ListCustomDatabaseRoles(ctx, pid).Execute()
+	roles, _, err := client.CustomDatabaseRolesAPI.ListCustomDbRoles(ctx, pid).Execute()
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/mongodbatlas/connection"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 type mqlMongodbatlasInternal struct {
@@ -98,7 +98,7 @@ func (r *mqlMongodbatlas) fetchOrgSettings() (*admin.OrganizationSettings, error
 	if err != nil {
 		return nil, err
 	}
-	settings, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganizationSettings(context.Background(), oid).Execute()
+	settings, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsAPI.GetOrgSettings(context.Background(), oid).Execute()
 	if err != nil {
 		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
 			// Degrade: leave orgSettings nil and mark done. Each dependent
@@ -122,7 +122,7 @@ func (r *mqlMongodbatlas) organizationName() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	org, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsApi.GetOrganization(context.Background(), oid).Execute()
+	org, httpResp, err := atlasClient(r.MqlRuntime).OrganizationsAPI.GetOrg(context.Background(), oid).Execute()
 	if err != nil {
 		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
 			r.OrganizationName.State = plugin.StateIsSet | plugin.StateIsNull

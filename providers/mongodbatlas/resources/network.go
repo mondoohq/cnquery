@@ -44,7 +44,7 @@ func (r *mqlMongodbatlas) ipAccessList() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.ProjectIPAccessListApi.ListProjectIpAccessLists(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.ProjectIPAccessListAPI.ListAccessListEntries(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +88,7 @@ func (r *mqlMongodbatlas) privateEndpoints() ([]any, error) {
 
 	out := []any{}
 	for _, provider := range []string{"AWS", "AZURE", "GCP"} {
-		services, httpResp, err := client.PrivateEndpointServicesApi.ListPrivateEndpointServices(ctx, pid, provider).Execute()
+		services, httpResp, err := client.PrivateEndpointServicesAPI.ListPrivateEndpointService(ctx, pid, provider).Execute()
 		if err != nil {
 			// A provider without any configured private endpoint service returns
 			// 404; skip it, but surface auth, throttling, and other real errors.
@@ -127,7 +127,7 @@ func (r *mqlMongodbatlas) networkPeerings() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.NetworkPeeringApi.ListPeeringConnections(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.NetworkPeeringAPI.ListGroupPeers(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func (r *mqlMongodbatlas) cloudProviderAccessRoles() ([]any, error) {
 	client := atlasClient(r.MqlRuntime)
 	ctx := context.Background()
 
-	roles, _, err := client.CloudProviderAccessApi.ListCloudProviderAccessRoles(ctx, pid).Execute()
+	roles, _, err := client.CloudProviderAccessAPI.ListCloudProviderAccess(ctx, pid).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (r *mqlMongodbatlas) cloudProviderAccessRoles() ([]any, error) {
 // roles on each call; the only caller today is pushBasedLogConfig, of which
 // there is at most one per project, so the list call is bounded to one per scan.
 func resolveCloudProviderAccessRole(runtime *plugin.Runtime, pid, roleID string) (*mqlMongodbatlasCloudProviderAccessRole, error) {
-	roles, _, err := atlasClient(runtime).CloudProviderAccessApi.ListCloudProviderAccessRoles(context.Background(), pid).Execute()
+	roles, _, err := atlasClient(runtime).CloudProviderAccessAPI.ListCloudProviderAccess(context.Background(), pid).Execute()
 	if err != nil {
 		return nil, err
 	}

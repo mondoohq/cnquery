@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 const (
@@ -134,7 +134,7 @@ func (c *MongoDBAtlasConnection) EnsureOrgID(ctx context.Context) (string, error
 	if c.orgID != "" {
 		return c.orgID, nil
 	}
-	orgs, _, err := c.client.OrganizationsApi.ListOrganizations(ctx).Execute()
+	orgs, _, err := c.client.OrganizationsAPI.ListOrgs(ctx).Execute()
 	if err != nil {
 		return "", err
 	}

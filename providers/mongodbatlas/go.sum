@@ -134,8 +134,6 @@ github.com/elazarl/goproxy v1.7.2 h1:Y2o6urb7Eule09PjlhQRGNsqRfPmYI3KKQLFpCAV3+o
 github.com/elazarl/goproxy v1.7.2/go.mod h1:82vkLNir0ALaW14Rc399OTTjyNREgmdL2cVoIbS6XaE=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
-github.com/endobit/oui v0.7.0 h1:6/aPQPEA+HcCW+pvZcYBVa0EVcj1uOS9c7XJS33uyCg=
-github.com/endobit/oui v0.7.0/go.mod h1:Y40Y6pCm9rVd6L1OITp7WJp7+F3cSIfaYqohHvMreZs=
 github.com/facebookincubator/nvdtools v0.1.5 h1:jbmDT1nd6+k+rlvKhnkgMokrCAzHoASWE5LtHbX2qFQ=
 github.com/facebookincubator/nvdtools v0.1.5/go.mod h1:Kh55SAWnjckS96TBSrXI99KrEKH4iB0OJby3N8GRJO4=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
@@ -432,8 +430,8 @@ go.mondoo.com/mondoo-go v0.0.0-20260808001139-ef2a665833b7 h1:4XvjK+Hng0qCDb2i4L
 go.mondoo.com/mondoo-go v0.0.0-20260808001139-ef2a665833b7/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
 go.mondoo.com/ranger-rpc v0.8.1 h1:DynUWByDnxI4wMHbFpXUMw+lndYJ21BAHOxrhGyVCD4=
 go.mondoo.com/ranger-rpc v0.8.1/go.mod h1:HP3hjWjgRFxCFAnY86YLMiY0bU7eqhKuP8Qm+QlFBbI=
-go.mongodb.org/atlas-sdk/v20250312006 v20250312006.1.0 h1:PcVxslw4G7/I9SbUi5y81i4YZnL1dKRnGpeHVyNSTh4=
-go.mongodb.org/atlas-sdk/v20250312006 v20250312006.1.0/go.mod h1:UZYSaCimjGs3j+wMwgHSKUSIvoJXzmy/xrer0t5TLgo=
+go.mongodb.org/atlas-sdk/v20250312023 v20250312023.1.0 h1:7IIFoyOZvTp5CdS0FxXA2Nkb672/VrZxjsCbuUGWPk8=
+go.mongodb.org/atlas-sdk/v20250312023 v20250312023.1.0/go.mod h1:ZOQisJgGQ+iDbdSwgVU0ClrUlqUSpffW9pVX06+c7nc=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0 h1:LMuyCAyfalSjDyjdC65nK6N0zoTT63+E/u95X0JovZI=

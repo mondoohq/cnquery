@@ -24,7 +24,7 @@ func (r *mqlMongodbatlas) databaseUsers() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.DatabaseUsersApi.ListDatabaseUsers(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.DatabaseUsersAPI.ListDatabaseUsers(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}

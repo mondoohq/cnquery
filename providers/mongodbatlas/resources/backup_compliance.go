@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 func (r *mqlMongodbatlas) backupCompliancePolicy() (*mqlMongodbatlasBackupComplianceConfig, error) {
@@ -18,7 +18,7 @@ func (r *mqlMongodbatlas) backupCompliancePolicy() (*mqlMongodbatlasBackupCompli
 	if err != nil {
 		return nil, err
 	}
-	settings, httpResp, err := atlasClient(r.MqlRuntime).CloudBackupsApi.GetDataProtectionSettings(context.Background(), pid).Execute()
+	settings, httpResp, err := atlasClient(r.MqlRuntime).CloudBackupsAPI.GetCompliancePolicy(context.Background(), pid).Execute()
 	if err != nil {
 		// The Backup Compliance Policy is a feature-gated guardrail that is not
 		// configured on every project; degrade to null rather than failing the

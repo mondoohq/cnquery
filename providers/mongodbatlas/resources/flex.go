@@ -25,7 +25,7 @@ func (r *mqlMongodbatlas) flexClusters() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, httpResp, err := client.FlexClustersApi.ListFlexClusters(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, httpResp, err := client.FlexClustersAPI.ListFlexClusters(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			// Flex deployments are invisible in the clusters listing, so this
 			// call is the only thing that reports them. A credential that may

@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 type mqlMongodbatlasBackupScheduleConfigInternal struct {
@@ -38,7 +38,7 @@ func (r *mqlMongodbatlasCluster) backupSchedule() (*mqlMongodbatlasBackupSchedul
 		return nil, err
 	}
 
-	schedule, httpResp, err := atlasClient(r.MqlRuntime).CloudBackupsApi.
+	schedule, httpResp, err := atlasClient(r.MqlRuntime).CloudBackupsAPI.
 		GetBackupSchedule(context.Background(), pid, r.Name.Data).Execute()
 	if err != nil {
 		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
@@ -163,7 +163,7 @@ func (r *mqlMongodbatlas) snapshotExportBuckets() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, httpResp, err := client.CloudBackupsApi.ListExportBuckets(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, httpResp, err := client.CloudBackupsAPI.ListExportBuckets(ctx, pid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			// An export bucket is a path for backup data to leave Atlas, so an
 			// empty list is read as "no such path exists". A credential without
@@ -192,13 +192,14 @@ func (r *mqlMongodbatlas) snapshotExportBuckets() ([]any, error) {
 
 func newMqlMongodbatlasSnapshotExportBucket(runtime *plugin.Runtime, pid string, b admin.DiskBackupSnapshotExportBucketResponse) (*mqlMongodbatlasSnapshotExportBucket, error) {
 	res, err := CreateResource(runtime, "mongodbatlas.snapshotExportBucket", map[string]*llx.RawData{
-		"__id":          llx.StringData("mongodbatlas.snapshotExportBucket/" + pid + "/" + b.GetId()),
-		"id":            llx.StringData(b.GetId()),
-		"bucketName":    llx.StringData(b.GetBucketName()),
-		"cloudProvider": llx.StringData(b.GetCloudProvider()),
-		"region":        llx.StringDataPtr(b.Region),
-		"serviceUrl":    llx.StringDataPtr(b.ServiceUrl),
-		"tenantId":      llx.StringDataPtr(b.TenantId),
+		"__id":                     llx.StringData("mongodbatlas.snapshotExportBucket/" + pid + "/" + b.GetId()),
+		"id":                       llx.StringData(b.GetId()),
+		"bucketName":               llx.StringData(b.GetBucketName()),
+		"cloudProvider":            llx.StringData(b.GetCloudProvider()),
+		"region":                   llx.StringDataPtr(b.Region),
+		"serviceUrl":               llx.StringDataPtr(b.ServiceUrl),
+		"tenantId":                 llx.StringDataPtr(b.TenantId),
+		"requirePrivateNetworking": llx.BoolData(b.GetRequirePrivateNetworking()),
 	})
 	if err != nil {
 		return nil, err

@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 type mqlMongodbatlasFederationConfigInternal struct {
@@ -22,7 +22,7 @@ func (r *mqlMongodbatlas) federationSettings() (*mqlMongodbatlasFederationConfig
 	if err != nil {
 		return nil, err
 	}
-	fs, httpResp, err := atlasClient(r.MqlRuntime).FederatedAuthenticationApi.GetFederationSettings(context.Background(), oid).Execute()
+	fs, httpResp, err := atlasClient(r.MqlRuntime).FederatedAuthenticationAPI.GetFederationSettings(context.Background(), oid).Execute()
 	if err != nil {
 		// An organization without federation configured returns 404, and a
 		// credential without org-owner access returns 401/403; both degrade to
@@ -87,7 +87,7 @@ func (r *mqlMongodbatlasFederationConfig) identityProvider() (*mqlMongodbatlasId
 		return nil, nil
 	}
 	fedID := r.Id.Data
-	idp, httpResp, err := atlasClient(r.MqlRuntime).FederatedAuthenticationApi.GetIdentityProvider(context.Background(), fedID, r.cacheIdpID).Execute()
+	idp, httpResp, err := atlasClient(r.MqlRuntime).FederatedAuthenticationAPI.GetIdentityProvider(context.Background(), fedID, r.cacheIdpID).Execute()
 	if err != nil {
 		if isAccessDenied(httpResp) || (httpResp != nil && httpResp.StatusCode == http.StatusNotFound) {
 			r.IdentityProvider.State = plugin.StateIsSet | plugin.StateIsNull
@@ -105,7 +105,7 @@ func (r *mqlMongodbatlasFederationConfig) identityProviders() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.FederatedAuthenticationApi.ListIdentityProviders(ctx, fedID).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.FederatedAuthenticationAPI.ListIdentityProviders(ctx, fedID).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}

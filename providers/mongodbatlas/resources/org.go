@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
-	"go.mongodb.org/atlas-sdk/v20250312006/admin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 // pageSize is the per-request page size used for the SDK's manual pagination.
@@ -58,7 +58,7 @@ func initMongodbatlasProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if id == "" {
 		return nil, nil, fmt.Errorf("mongodbatlas.project requires a non-empty id")
 	}
-	p, _, err := atlasClient(runtime).ProjectsApi.GetProject(context.Background(), id).Execute()
+	p, _, err := atlasClient(runtime).ProjectsAPI.GetGroup(context.Background(), id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,7 +75,7 @@ func (r *mqlMongodbatlas) projects() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.ProjectsApi.ListProjects(ctx).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.ProjectsAPI.ListGroups(ctx).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +128,7 @@ func (r *mqlMongodbatlas) orgUsers() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.MongoDBCloudUsersApi.ListOrganizationUsers(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.MongoDBCloudUsersAPI.ListOrgUsers(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +257,7 @@ func (r *mqlMongodbatlas) orgTeamsByID() (map[string]admin.TeamResponse, error) 
 
 		m := map[string]admin.TeamResponse{}
 		for page := 1; ; page++ {
-			resp, httpResp, err := client.TeamsApi.ListOrganizationTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+			resp, httpResp, err := client.TeamsAPI.ListOrgTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 			if err != nil {
 				// A project-scoped credential without org privilege cannot list
 				// teams; record the denial rather than failing every user's
@@ -327,7 +327,7 @@ func (r *mqlMongodbatlas) teams() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.TeamsApi.ListOrganizationTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.TeamsAPI.ListOrgTeams(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -369,7 +369,7 @@ func (r *mqlMongodbatlasTeam) users() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.MongoDBCloudUsersApi.ListTeamUsers(ctx, oid, r.Id.Data).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.MongoDBCloudUsersAPI.ListTeamUsers(ctx, oid, r.Id.Data).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -398,7 +398,7 @@ func (r *mqlMongodbatlas) apiKeys() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.ProgrammaticAPIKeysApi.ListApiKeys(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.ProgrammaticAPIKeysAPI.ListOrgApiKeys(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}
@@ -481,7 +481,7 @@ func (r *mqlMongodbatlas) serviceAccounts() ([]any, error) {
 
 	out := []any{}
 	for page := 1; ; page++ {
-		resp, _, err := client.ServiceAccountsApi.ListServiceAccounts(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.ServiceAccountsAPI.ListOrgServiceAccounts(ctx, oid).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return nil, err
 		}

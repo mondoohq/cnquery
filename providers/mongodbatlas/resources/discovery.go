@@ -28,7 +28,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 	ctx := context.Background()
 
 	for page := 1; ; page++ {
-		resp, _, err := client.ProjectsApi.ListProjects(ctx).ItemsPerPage(pageSize).PageNum(page).Execute()
+		resp, _, err := client.ProjectsAPI.ListGroups(ctx).ItemsPerPage(pageSize).PageNum(page).Execute()
 		if err != nil {
 			return in, err
 		}

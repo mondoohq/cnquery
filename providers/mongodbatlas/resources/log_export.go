@@ -21,7 +21,12 @@ func (r *mqlMongodbatlas) pushBasedLogExport() (*mqlMongodbatlasPushBasedLogConf
 	if err != nil {
 		return nil, err
 	}
-	cfg, httpResp, err := atlasClient(r.MqlRuntime).PushBasedLogExportApi.GetPushBasedLogConfiguration(context.Background(), pid).Execute()
+	// GetLogExport is deprecated in favor of ListGroupLogIntegrations plus
+	// GetGroupLogIntegration, which model a project as holding several named
+	// integrations rather than one configuration. Adopting that would turn this
+	// singleton resource into a list, a schema change this upgrade does not
+	// carry; the deprecated call keeps reporting the same configuration.
+	cfg, httpResp, err := atlasClient(r.MqlRuntime).PushBasedLogExportAPI.GetLogExport(context.Background(), pid).Execute()
 	if err != nil {
 		// Push-based log export is an optional feature that is not configured on
 		// every project; degrade to null rather than failing the scan when it is

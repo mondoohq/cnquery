@@ -45,6 +45,17 @@ mongodbatlas {
   apiKeys() []mongodbatlas.apiKey
   // Service accounts in the organization
   serviceAccounts() []mongodbatlas.serviceAccount
+  // Remote MCP configurations defined at the organization
+  //
+  // Each configuration lets an MCP client reach Atlas with organization-wide
+  // roles, so this is the organization's inventory of agent access.
+  mcpConfigurations() []mongodbatlas.mcpConfiguration
+  // Remote MCP configurations defined on the project
+  //
+  // The project-scoped equivalent of the organization list. A project can carry
+  // its own configurations independently of the organization, so both have to
+  // be read to see every path an agent has into the data.
+  projectMcpConfigurations() []mongodbatlas.mcpConfiguration
   // Organization resource policies (Atlas Resource Policies)
   resourcePolicies() []mongodbatlas.resourcePolicy
   // Clusters in the project
@@ -254,6 +265,48 @@ mongodbatlas.serviceAccount @defaults("name clientId") {
   projects() []mongodbatlas.project
 }
 
+// MongoDB Atlas Remote MCP configuration
+//
+// A configuration that exposes Atlas through the Remote MCP endpoint, which is
+// how an MCP client such as an AI agent reads and acts on the deployment. Each
+// configuration authenticates as a service account and carries the roles that
+// account holds plus the addresses it may connect from, so it is a standing
+// non-human path into the data that outlives any individual session. Reports
+// the roles granted, the service account behind the configuration, and the
+// source restriction, which is the control that keeps the endpoint from being
+// reachable by anyone holding the credentials. Configurations exist at both
+// organization and project scope and the scope field says which this one is.
+// Keyed by id.
+mongodbatlas.mcpConfiguration @defaults("name scope") {
+  // Configuration id
+  id string
+  // Human-readable name identifying the configuration
+  name string
+  // Scope the configuration is defined at, ORGANIZATION or PROJECT
+  //
+  // An organization-scoped configuration grants organization roles and reaches
+  // every project beneath it; a project-scoped one is confined to its project.
+  scope string
+  // Roles the configuration grants
+  //
+  // Organization roles for an organization-scoped configuration and project
+  // roles for a project-scoped one. These are the permissions an MCP client
+  // acts with once it connects.
+  roles []string
+  // OAuth client id of the service account the MCP client authenticates as
+  clientId string
+  // OAuth client id of the egress service account MongoDB Atlas manages
+  egressClientId string
+  // Service account the MCP client authenticates as
+  serviceAccount() mongodbatlas.serviceAccount
+  // Addresses the MCP client may connect from
+  //
+  // Empty when the configuration carries no source restriction, which leaves
+  // the endpoint reachable from anywhere the Atlas API is, for anyone holding
+  // the service account credentials.
+  ipAccessList []mongodbatlas.apiAccessListEntry
+}
+
 // MongoDB Atlas cluster
 //
 // A database cluster (deployment) in the project, keyed by name. Covers the
@@ -282,6 +335,12 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   stateName string
   // Whether cloud backup is enabled
   backupEnabled bool
+  // Whether snapshots survive the cluster being deleted
+  //
+  // When false, deleting the cluster destroys its backups with it, so a
+  // deletion leaves nothing to restore from. Independent of backupEnabled,
+  // which only reports that backups are being taken.
+  retainBackups bool
   // Whether continuous point-in-time recovery is enabled
   pitEnabled bool
   // Encryption-at-rest provider (NONE, AWS, AZURE, or GCP)
@@ -471,6 +530,12 @@ mongodbatlas.snapshotExportBucket @defaults("bucketName cloudProvider") {
   serviceUrl string
   // Azure tenant id that owns the storage account, null for an AWS bucket
   tenantId string
+  // Whether snapshot export traffic is confined to private networking
+  //
+  // When false, exported snapshots travel to the bucket over the public
+  // internet, so backup data leaves Atlas across a path the project does not
+  // control.
+  requirePrivateNetworking bool
   // Cloud provider access role Atlas assumes to write snapshots to the bucket
   cloudProviderAccessRole() mongodbatlas.cloudProviderAccessRole
 }
