@@ -66,6 +66,10 @@ const (
 	ResourceAlicloudLogLogstore                  string = "alicloud.log.logstore"
 	ResourceAlicloudConfig                       string = "alicloud.config"
 	ResourceAlicloudConfigRule                   string = "alicloud.config.rule"
+	ResourceAlicloudConfigDeliveryChannel        string = "alicloud.config.deliveryChannel"
+	ResourceAlicloudConfigCompliancePack         string = "alicloud.config.compliancePack"
+	ResourceAlicloudConfigAggregator             string = "alicloud.config.aggregator"
+	ResourceAlicloudConfigEvaluationResult       string = "alicloud.config.evaluationResult"
 	ResourceAlicloudResourceManager              string = "alicloud.resourceManager"
 	ResourceAlicloudResourceManagerAccount       string = "alicloud.resourceManager.account"
 	ResourceAlicloudResourceManagerFolder        string = "alicloud.resourceManager.folder"
@@ -324,6 +328,22 @@ func init() {
 		"alicloud.config.rule": {
 			// to override args, implement: initAlicloudConfigRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudConfigRule,
+		},
+		"alicloud.config.deliveryChannel": {
+			// to override args, implement: initAlicloudConfigDeliveryChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudConfigDeliveryChannel,
+		},
+		"alicloud.config.compliancePack": {
+			// to override args, implement: initAlicloudConfigCompliancePack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudConfigCompliancePack,
+		},
+		"alicloud.config.aggregator": {
+			// to override args, implement: initAlicloudConfigAggregator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudConfigAggregator,
+		},
+		"alicloud.config.evaluationResult": {
+			// to override args, implement: initAlicloudConfigEvaluationResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudConfigEvaluationResult,
 		},
 		"alicloud.resourceManager": {
 			// to override args, implement: initAlicloudResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2930,6 +2950,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.log.project.logstores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudLogProject).GetLogstores()).ToDataRes(types.Array(types.Resource("alicloud.log.logstore")))
 	},
+	"alicloud.log.project.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogProject).GetPolicy()).ToDataRes(types.String)
+	},
+	"alicloud.log.project.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogProject).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"alicloud.log.logstore.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudLogLogstore).GetRegionId()).ToDataRes(types.String)
 	},
@@ -3002,6 +3028,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.config.deliveryChannels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudConfig).GetDeliveryChannels()).ToDataRes(types.Array(types.Dict))
 	},
+	"alicloud.config.deliveryChannelList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfig).GetDeliveryChannelList()).ToDataRes(types.Array(types.Resource("alicloud.config.deliveryChannel")))
+	},
+	"alicloud.config.compliancePacks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfig).GetCompliancePacks()).ToDataRes(types.Array(types.Resource("alicloud.config.compliancePack")))
+	},
+	"alicloud.config.aggregators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfig).GetAggregators()).ToDataRes(types.Array(types.Resource("alicloud.config.aggregator")))
+	},
+	"alicloud.config.nonCompliantResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfig).GetNonCompliantResults()).ToDataRes(types.Array(types.Resource("alicloud.config.evaluationResult")))
+	},
 	"alicloud.config.rule.configRuleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudConfigRule).GetConfigRuleId()).ToDataRes(types.String)
 	},
@@ -3052,6 +3090,159 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.config.rule.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudConfigRule).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.config.rule.evaluationResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigRule).GetEvaluationResults()).ToDataRes(types.Array(types.Resource("alicloud.config.evaluationResult")))
+	},
+	"alicloud.config.deliveryChannel.channelId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetChannelId()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetType()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.targetArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetTargetArn()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.ossBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetOssBucket()).ToDataRes(types.Resource("alicloud.oss.bucket"))
+	},
+	"alicloud.config.deliveryChannel.logstore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetLogstore()).ToDataRes(types.Resource("alicloud.log.logstore"))
+	},
+	"alicloud.config.deliveryChannel.assumeRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetAssumeRole()).ToDataRes(types.Resource("alicloud.ram.role"))
+	},
+	"alicloud.config.deliveryChannel.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.config.deliveryChannel.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetCondition()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.snapshotTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetSnapshotTime()).ToDataRes(types.String)
+	},
+	"alicloud.config.deliveryChannel.configurationItemChangeNotification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetConfigurationItemChangeNotification()).ToDataRes(types.Bool)
+	},
+	"alicloud.config.deliveryChannel.configurationSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetConfigurationSnapshot()).ToDataRes(types.Bool)
+	},
+	"alicloud.config.deliveryChannel.compliantSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetCompliantSnapshot()).ToDataRes(types.Bool)
+	},
+	"alicloud.config.deliveryChannel.nonCompliantNotification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetNonCompliantNotification()).ToDataRes(types.Bool)
+	},
+	"alicloud.config.deliveryChannel.oversizedDataOssTargetArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigDeliveryChannel).GetOversizedDataOssTargetArn()).ToDataRes(types.String)
+	},
+	"alicloud.config.compliancePack.compliancePackId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetCompliancePackId()).ToDataRes(types.String)
+	},
+	"alicloud.config.compliancePack.compliancePackName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetCompliancePackName()).ToDataRes(types.String)
+	},
+	"alicloud.config.compliancePack.compliancePackTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetCompliancePackTemplateId()).ToDataRes(types.String)
+	},
+	"alicloud.config.compliancePack.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.config.compliancePack.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetRiskLevel()).ToDataRes(types.Int)
+	},
+	"alicloud.config.compliancePack.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.config.compliancePack.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.config.compliancePack.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.config.compliancePack.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigCompliancePack).GetRules()).ToDataRes(types.Array(types.Resource("alicloud.config.rule")))
+	},
+	"alicloud.config.aggregator.aggregatorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetAggregatorId()).ToDataRes(types.String)
+	},
+	"alicloud.config.aggregator.aggregatorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetAggregatorName()).ToDataRes(types.String)
+	},
+	"alicloud.config.aggregator.aggregatorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetAggregatorType()).ToDataRes(types.String)
+	},
+	"alicloud.config.aggregator.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.config.aggregator.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.config.aggregator.accountCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetAccountCount()).ToDataRes(types.Int)
+	},
+	"alicloud.config.aggregator.folder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetFolder()).ToDataRes(types.Resource("alicloud.resourceManager.folder"))
+	},
+	"alicloud.config.aggregator.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.config.aggregator.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigAggregator).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.config.evaluationResult.configRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetConfigRule()).ToDataRes(types.Resource("alicloud.config.rule"))
+	},
+	"alicloud.config.evaluationResult.compliancePack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetCompliancePack()).ToDataRes(types.Resource("alicloud.config.compliancePack"))
+	},
+	"alicloud.config.evaluationResult.complianceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetComplianceType()).ToDataRes(types.String)
+	},
+	"alicloud.config.evaluationResult.annotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetAnnotation()).ToDataRes(types.String)
+	},
+	"alicloud.config.evaluationResult.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetRiskLevel()).ToDataRes(types.Int)
+	},
+	"alicloud.config.evaluationResult.remediationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetRemediationEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.config.evaluationResult.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetResourceId()).ToDataRes(types.String)
+	},
+	"alicloud.config.evaluationResult.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetResourceName()).ToDataRes(types.String)
+	},
+	"alicloud.config.evaluationResult.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetResourceType()).ToDataRes(types.String)
+	},
+	"alicloud.config.evaluationResult.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.config.evaluationResult.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.config.evaluationResult.invokedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetInvokedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.config.evaluationResult.resultRecordedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetResultRecordedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.config.evaluationResult.lastNonCompliantTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetLastNonCompliantTime()).ToDataRes(types.Time)
+	},
+	"alicloud.config.evaluationResult.lastCompliantFixedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetLastCompliantFixedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.config.evaluationResult.ignoreDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudConfigEvaluationResult).GetIgnoreDate()).ToDataRes(types.String)
 	},
 	"alicloud.resourceManager.resourceDirectoryId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudResourceManager).GetResourceDirectoryId()).ToDataRes(types.String)
@@ -8419,6 +8610,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudLogProject).Logstores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.log.project.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogProject).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.project.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogProject).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"alicloud.log.logstore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudLogLogstore).__id, ok = v.Value.(string)
 		return
@@ -8523,6 +8722,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudConfig).DeliveryChannels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.config.deliveryChannelList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfig).DeliveryChannelList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfig).CompliancePacks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfig).Aggregators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.nonCompliantResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfig).NonCompliantResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.config.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudConfigRule).__id, ok = v.Value.(string)
 		return
@@ -8593,6 +8808,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.config.rule.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudConfigRule).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.rule.evaluationResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigRule).EvaluationResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.config.deliveryChannel.channelId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).ChannelId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.targetArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).TargetArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.ossBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).OssBucket, ok = plugin.RawToTValue[*mqlAlicloudOssBucket](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.logstore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).Logstore, ok = plugin.RawToTValue[*mqlAlicloudLogLogstore](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.assumeRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).AssumeRole, ok = plugin.RawToTValue[*mqlAlicloudRamRole](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.snapshotTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).SnapshotTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.configurationItemChangeNotification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).ConfigurationItemChangeNotification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.configurationSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).ConfigurationSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.compliantSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).CompliantSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.nonCompliantNotification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).NonCompliantNotification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.deliveryChannel.oversizedDataOssTargetArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigDeliveryChannel).OversizedDataOssTargetArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.config.compliancePack.compliancePackId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).CompliancePackId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.compliancePackName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).CompliancePackName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.compliancePackTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).CompliancePackTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).RiskLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.compliancePack.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigCompliancePack).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.config.aggregator.aggregatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).AggregatorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.aggregatorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).AggregatorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.aggregatorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).AggregatorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).Status, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.accountCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).AccountCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.folder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).Folder, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerFolder](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.aggregator.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigAggregator).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.config.evaluationResult.configRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ConfigRule, ok = plugin.RawToTValue[*mqlAlicloudConfigRule](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.compliancePack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).CompliancePack, ok = plugin.RawToTValue[*mqlAlicloudConfigCompliancePack](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.complianceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ComplianceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.annotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).Annotation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).RiskLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.remediationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).RemediationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.invokedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).InvokedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.resultRecordedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).ResultRecordedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.lastNonCompliantTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).LastNonCompliantTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.lastCompliantFixedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).LastCompliantFixedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.config.evaluationResult.ignoreDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudConfigEvaluationResult).IgnoreDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.resourceManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18989,6 +19424,8 @@ type mqlAlicloudLogProject struct {
 	CreateTime         plugin.TValue[*time.Time]
 	LastModifyTime     plugin.TValue[*time.Time]
 	Logstores          plugin.TValue[[]any]
+	Policy             plugin.TValue[string]
+	IsPublic           plugin.TValue[bool]
 }
 
 // createAlicloudLogProject creates a new instance of this resource
@@ -19105,6 +19542,18 @@ func (c *mqlAlicloudLogProject) GetLogstores() *plugin.TValue[[]any] {
 		}
 
 		return c.logstores()
+	})
+}
+
+func (c *mqlAlicloudLogProject) GetPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
+		return c.policy()
+	})
+}
+
+func (c *mqlAlicloudLogProject) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -19303,6 +19752,10 @@ type mqlAlicloudConfig struct {
 	RecordedResourceTypes plugin.TValue[[]any]
 	ComplianceSummary     plugin.TValue[any]
 	DeliveryChannels      plugin.TValue[[]any]
+	DeliveryChannelList   plugin.TValue[[]any]
+	CompliancePacks       plugin.TValue[[]any]
+	Aggregators           plugin.TValue[[]any]
+	NonCompliantResults   plugin.TValue[[]any]
 }
 
 // createAlicloudConfig creates a new instance of this resource
@@ -19388,6 +19841,70 @@ func (c *mqlAlicloudConfig) GetDeliveryChannels() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAlicloudConfig) GetDeliveryChannelList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeliveryChannelList, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config", c.__id, "deliveryChannelList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deliveryChannelList()
+	})
+}
+
+func (c *mqlAlicloudConfig) GetCompliancePacks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CompliancePacks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config", c.__id, "compliancePacks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.compliancePacks()
+	})
+}
+
+func (c *mqlAlicloudConfig) GetAggregators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aggregators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config", c.__id, "aggregators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aggregators()
+	})
+}
+
+func (c *mqlAlicloudConfig) GetNonCompliantResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NonCompliantResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config", c.__id, "nonCompliantResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nonCompliantResults()
+	})
+}
+
 // mqlAlicloudConfigRule for the alicloud.config.rule resource
 type mqlAlicloudConfigRule struct {
 	MqlRuntime *plugin.Runtime
@@ -19410,6 +19927,7 @@ type mqlAlicloudConfigRule struct {
 	CreateTime                plugin.TValue[*time.Time]
 	ModifiedTime              plugin.TValue[*time.Time]
 	Tags                      plugin.TValue[map[string]any]
+	EvaluationResults         plugin.TValue[[]any]
 }
 
 // createAlicloudConfigRule creates a new instance of this resource
@@ -19521,6 +20039,544 @@ func (c *mqlAlicloudConfigRule) GetModifiedTime() *plugin.TValue[*time.Time] {
 
 func (c *mqlAlicloudConfigRule) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAlicloudConfigRule) GetEvaluationResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EvaluationResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.rule", c.__id, "evaluationResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.evaluationResults()
+	})
+}
+
+// mqlAlicloudConfigDeliveryChannel for the alicloud.config.deliveryChannel resource
+type mqlAlicloudConfigDeliveryChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudConfigDeliveryChannelInternal
+	ChannelId                           plugin.TValue[string]
+	Name                                plugin.TValue[string]
+	Type                                plugin.TValue[string]
+	TargetArn                           plugin.TValue[string]
+	OssBucket                           plugin.TValue[*mqlAlicloudOssBucket]
+	Logstore                            plugin.TValue[*mqlAlicloudLogLogstore]
+	AssumeRole                          plugin.TValue[*mqlAlicloudRamRole]
+	Enabled                             plugin.TValue[bool]
+	Description                         plugin.TValue[string]
+	Condition                           plugin.TValue[string]
+	SnapshotTime                        plugin.TValue[string]
+	ConfigurationItemChangeNotification plugin.TValue[bool]
+	ConfigurationSnapshot               plugin.TValue[bool]
+	CompliantSnapshot                   plugin.TValue[bool]
+	NonCompliantNotification            plugin.TValue[bool]
+	OversizedDataOssTargetArn           plugin.TValue[string]
+}
+
+// createAlicloudConfigDeliveryChannel creates a new instance of this resource
+func createAlicloudConfigDeliveryChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudConfigDeliveryChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.config.deliveryChannel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) MqlName() string {
+	return "alicloud.config.deliveryChannel"
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetChannelId() *plugin.TValue[string] {
+	return &c.ChannelId
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetTargetArn() *plugin.TValue[string] {
+	return &c.TargetArn
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetOssBucket() *plugin.TValue[*mqlAlicloudOssBucket] {
+	return plugin.GetOrCompute[*mqlAlicloudOssBucket](&c.OssBucket, func() (*mqlAlicloudOssBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.deliveryChannel", c.__id, "ossBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudOssBucket), nil
+			}
+		}
+
+		return c.ossBucket()
+	})
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetLogstore() *plugin.TValue[*mqlAlicloudLogLogstore] {
+	return plugin.GetOrCompute[*mqlAlicloudLogLogstore](&c.Logstore, func() (*mqlAlicloudLogLogstore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.deliveryChannel", c.__id, "logstore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudLogLogstore), nil
+			}
+		}
+
+		return c.logstore()
+	})
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetAssumeRole() *plugin.TValue[*mqlAlicloudRamRole] {
+	return plugin.GetOrCompute[*mqlAlicloudRamRole](&c.AssumeRole, func() (*mqlAlicloudRamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.deliveryChannel", c.__id, "assumeRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudRamRole), nil
+			}
+		}
+
+		return c.assumeRole()
+	})
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetSnapshotTime() *plugin.TValue[string] {
+	return &c.SnapshotTime
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetConfigurationItemChangeNotification() *plugin.TValue[bool] {
+	return &c.ConfigurationItemChangeNotification
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetConfigurationSnapshot() *plugin.TValue[bool] {
+	return &c.ConfigurationSnapshot
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetCompliantSnapshot() *plugin.TValue[bool] {
+	return &c.CompliantSnapshot
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetNonCompliantNotification() *plugin.TValue[bool] {
+	return &c.NonCompliantNotification
+}
+
+func (c *mqlAlicloudConfigDeliveryChannel) GetOversizedDataOssTargetArn() *plugin.TValue[string] {
+	return &c.OversizedDataOssTargetArn
+}
+
+// mqlAlicloudConfigCompliancePack for the alicloud.config.compliancePack resource
+type mqlAlicloudConfigCompliancePack struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudConfigCompliancePackInternal it will be used here
+	CompliancePackId         plugin.TValue[string]
+	CompliancePackName       plugin.TValue[string]
+	CompliancePackTemplateId plugin.TValue[string]
+	Description              plugin.TValue[string]
+	RiskLevel                plugin.TValue[int64]
+	Status                   plugin.TValue[string]
+	CreateTime               plugin.TValue[*time.Time]
+	Tags                     plugin.TValue[map[string]any]
+	Rules                    plugin.TValue[[]any]
+}
+
+// createAlicloudConfigCompliancePack creates a new instance of this resource
+func createAlicloudConfigCompliancePack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudConfigCompliancePack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.config.compliancePack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudConfigCompliancePack) MqlName() string {
+	return "alicloud.config.compliancePack"
+}
+
+func (c *mqlAlicloudConfigCompliancePack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetCompliancePackId() *plugin.TValue[string] {
+	return &c.CompliancePackId
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetCompliancePackName() *plugin.TValue[string] {
+	return &c.CompliancePackName
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetCompliancePackTemplateId() *plugin.TValue[string] {
+	return &c.CompliancePackTemplateId
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetRiskLevel() *plugin.TValue[int64] {
+	return &c.RiskLevel
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAlicloudConfigCompliancePack) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.compliancePack", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAlicloudConfigAggregator for the alicloud.config.aggregator resource
+type mqlAlicloudConfigAggregator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudConfigAggregatorInternal
+	AggregatorId   plugin.TValue[string]
+	AggregatorName plugin.TValue[string]
+	AggregatorType plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Status         plugin.TValue[int64]
+	AccountCount   plugin.TValue[int64]
+	Folder         plugin.TValue[*mqlAlicloudResourceManagerFolder]
+	CreateTime     plugin.TValue[*time.Time]
+	Tags           plugin.TValue[map[string]any]
+}
+
+// createAlicloudConfigAggregator creates a new instance of this resource
+func createAlicloudConfigAggregator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudConfigAggregator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.config.aggregator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudConfigAggregator) MqlName() string {
+	return "alicloud.config.aggregator"
+}
+
+func (c *mqlAlicloudConfigAggregator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudConfigAggregator) GetAggregatorId() *plugin.TValue[string] {
+	return &c.AggregatorId
+}
+
+func (c *mqlAlicloudConfigAggregator) GetAggregatorName() *plugin.TValue[string] {
+	return &c.AggregatorName
+}
+
+func (c *mqlAlicloudConfigAggregator) GetAggregatorType() *plugin.TValue[string] {
+	return &c.AggregatorType
+}
+
+func (c *mqlAlicloudConfigAggregator) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudConfigAggregator) GetStatus() *plugin.TValue[int64] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudConfigAggregator) GetAccountCount() *plugin.TValue[int64] {
+	return &c.AccountCount
+}
+
+func (c *mqlAlicloudConfigAggregator) GetFolder() *plugin.TValue[*mqlAlicloudResourceManagerFolder] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerFolder](&c.Folder, func() (*mqlAlicloudResourceManagerFolder, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.aggregator", c.__id, "folder")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerFolder), nil
+			}
+		}
+
+		return c.folder()
+	})
+}
+
+func (c *mqlAlicloudConfigAggregator) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudConfigAggregator) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAlicloudConfigEvaluationResult for the alicloud.config.evaluationResult resource
+type mqlAlicloudConfigEvaluationResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudConfigEvaluationResultInternal
+	ConfigRule             plugin.TValue[*mqlAlicloudConfigRule]
+	CompliancePack         plugin.TValue[*mqlAlicloudConfigCompliancePack]
+	ComplianceType         plugin.TValue[string]
+	Annotation             plugin.TValue[string]
+	RiskLevel              plugin.TValue[int64]
+	RemediationEnabled     plugin.TValue[bool]
+	ResourceId             plugin.TValue[string]
+	ResourceName           plugin.TValue[string]
+	ResourceType           plugin.TValue[string]
+	RegionId               plugin.TValue[string]
+	ResourceGroup          plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	InvokedTime            plugin.TValue[*time.Time]
+	ResultRecordedTime     plugin.TValue[*time.Time]
+	LastNonCompliantTime   plugin.TValue[*time.Time]
+	LastCompliantFixedTime plugin.TValue[*time.Time]
+	IgnoreDate             plugin.TValue[string]
+}
+
+// createAlicloudConfigEvaluationResult creates a new instance of this resource
+func createAlicloudConfigEvaluationResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudConfigEvaluationResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.config.evaluationResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) MqlName() string {
+	return "alicloud.config.evaluationResult"
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetConfigRule() *plugin.TValue[*mqlAlicloudConfigRule] {
+	return plugin.GetOrCompute[*mqlAlicloudConfigRule](&c.ConfigRule, func() (*mqlAlicloudConfigRule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.evaluationResult", c.__id, "configRule")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudConfigRule), nil
+			}
+		}
+
+		return c.configRule()
+	})
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetCompliancePack() *plugin.TValue[*mqlAlicloudConfigCompliancePack] {
+	return plugin.GetOrCompute[*mqlAlicloudConfigCompliancePack](&c.CompliancePack, func() (*mqlAlicloudConfigCompliancePack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.evaluationResult", c.__id, "compliancePack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudConfigCompliancePack), nil
+			}
+		}
+
+		return c.compliancePack()
+	})
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetComplianceType() *plugin.TValue[string] {
+	return &c.ComplianceType
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetAnnotation() *plugin.TValue[string] {
+	return &c.Annotation
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetRiskLevel() *plugin.TValue[int64] {
+	return &c.RiskLevel
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetRemediationEnabled() *plugin.TValue[bool] {
+	return &c.RemediationEnabled
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.config.evaluationResult", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetInvokedTime() *plugin.TValue[*time.Time] {
+	return &c.InvokedTime
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetResultRecordedTime() *plugin.TValue[*time.Time] {
+	return &c.ResultRecordedTime
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetLastNonCompliantTime() *plugin.TValue[*time.Time] {
+	return &c.LastNonCompliantTime
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetLastCompliantFixedTime() *plugin.TValue[*time.Time] {
+	return &c.LastCompliantFixedTime
+}
+
+func (c *mqlAlicloudConfigEvaluationResult) GetIgnoreDate() *plugin.TValue[string] {
+	return &c.IgnoreDate
 }
 
 // mqlAlicloudResourceManager for the alicloud.resourceManager resource
