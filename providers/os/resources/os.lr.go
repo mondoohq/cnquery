@@ -559,6 +559,10 @@ const (
 	ResourceSriov                                         string = "sriov"
 	ResourceSriovPhysicalFunction                         string = "sriov.physicalFunction"
 	ResourceSriovVirtualFunction                          string = "sriov.virtualFunction"
+	ResourceOvs                                           string = "ovs"
+	ResourceOvsBridge                                     string = "ovs.bridge"
+	ResourceOvsPort                                       string = "ovs.port"
+	ResourceOvsInterface                                  string = "ovs.interface"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2736,6 +2740,22 @@ func init() {
 		"sriov.virtualFunction": {
 			// to override args, implement: initSriovVirtualFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSriovVirtualFunction,
+		},
+		"ovs": {
+			// to override args, implement: initOvs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOvs,
+		},
+		"ovs.bridge": {
+			// to override args, implement: initOvsBridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOvsBridge,
+		},
+		"ovs.port": {
+			// to override args, implement: initOvsPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOvsPort,
+		},
+		"ovs.interface": {
+			// to override args, implement: initOvsInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOvsInterface,
 		},
 	}
 }
@@ -14381,6 +14401,123 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sriov.virtualFunction.maxTxRate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSriovVirtualFunction).GetMaxTxRate()).ToDataRes(types.Int)
+	},
+	"ovs.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvs).GetVersion()).ToDataRes(types.String)
+	},
+	"ovs.bridges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvs).GetBridges()).ToDataRes(types.Array(types.Resource("ovs.bridge")))
+	},
+	"ovs.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvs).GetPorts()).ToDataRes(types.Array(types.Resource("ovs.port")))
+	},
+	"ovs.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvs).GetInterfaces()).ToDataRes(types.Array(types.Resource("ovs.interface")))
+	},
+	"ovs.bridge.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetName()).ToDataRes(types.String)
+	},
+	"ovs.bridge.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetUuid()).ToDataRes(types.String)
+	},
+	"ovs.bridge.datapathType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetDatapathType()).ToDataRes(types.String)
+	},
+	"ovs.bridge.failMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetFailMode()).ToDataRes(types.String)
+	},
+	"ovs.bridge.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"ovs.bridge.stpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetStpEnabled()).ToDataRes(types.Bool)
+	},
+	"ovs.bridge.rstpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetRstpEnabled()).ToDataRes(types.Bool)
+	},
+	"ovs.bridge.externalIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetExternalIds()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"ovs.bridge.otherConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetOtherConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"ovs.bridge.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsBridge).GetPorts()).ToDataRes(types.Array(types.Resource("ovs.port")))
+	},
+	"ovs.port.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetName()).ToDataRes(types.String)
+	},
+	"ovs.port.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetUuid()).ToDataRes(types.String)
+	},
+	"ovs.port.bridgeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetBridgeName()).ToDataRes(types.String)
+	},
+	"ovs.port.bridge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetBridge()).ToDataRes(types.Resource("ovs.bridge"))
+	},
+	"ovs.port.vlanMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetVlanMode()).ToDataRes(types.String)
+	},
+	"ovs.port.vlanTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetVlanTag()).ToDataRes(types.Int)
+	},
+	"ovs.port.tagged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetTagged()).ToDataRes(types.Bool)
+	},
+	"ovs.port.trunks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetTrunks()).ToDataRes(types.Array(types.Int))
+	},
+	"ovs.port.externalIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetExternalIds()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"ovs.port.otherConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetOtherConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"ovs.port.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsPort).GetInterfaces()).ToDataRes(types.Array(types.Resource("ovs.interface")))
+	},
+	"ovs.interface.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetName()).ToDataRes(types.String)
+	},
+	"ovs.interface.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetUuid()).ToDataRes(types.String)
+	},
+	"ovs.interface.portName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetPortName()).ToDataRes(types.String)
+	},
+	"ovs.interface.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetPort()).ToDataRes(types.Resource("ovs.port"))
+	},
+	"ovs.interface.bridgeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetBridgeName()).ToDataRes(types.String)
+	},
+	"ovs.interface.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetType()).ToDataRes(types.String)
+	},
+	"ovs.interface.adminState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetAdminState()).ToDataRes(types.String)
+	},
+	"ovs.interface.linkState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetLinkState()).ToDataRes(types.String)
+	},
+	"ovs.interface.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetMacAddress()).ToDataRes(types.String)
+	},
+	"ovs.interface.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetMtu()).ToDataRes(types.Int)
+	},
+	"ovs.interface.ofport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetOfport()).ToDataRes(types.Int)
+	},
+	"ovs.interface.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetError()).ToDataRes(types.String)
+	},
+	"ovs.interface.externalIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetExternalIds()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"ovs.interface.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOvsInterface).GetOptions()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -31996,6 +32133,178 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"sriov.virtualFunction.maxTxRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSriovVirtualFunction).MaxTxRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ovs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvs).__id, ok = v.Value.(string)
+		return
+	},
+	"ovs.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvs).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.bridges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvs).Bridges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvs).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvs).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).__id, ok = v.Value.(string)
+		return
+	},
+	"ovs.bridge.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.datapathType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).DatapathType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.failMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).FailMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.stpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).StpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.rstpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).RstpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.externalIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).ExternalIds, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.otherConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).OtherConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ovs.bridge.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsBridge).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.port.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).__id, ok = v.Value.(string)
+		return
+	},
+	"ovs.port.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.port.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.port.bridgeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).BridgeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.port.bridge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).Bridge, ok = plugin.RawToTValue[*mqlOvsBridge](v.Value, v.Error)
+		return
+	},
+	"ovs.port.vlanMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).VlanMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.port.vlanTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).VlanTag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ovs.port.tagged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).Tagged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ovs.port.trunks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).Trunks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.port.externalIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).ExternalIds, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ovs.port.otherConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).OtherConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ovs.port.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsPort).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).__id, ok = v.Value.(string)
+		return
+	},
+	"ovs.interface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.portName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).PortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Port, ok = plugin.RawToTValue[*mqlOvsPort](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.bridgeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).BridgeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.adminState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).AdminState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.linkState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).LinkState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.ofport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Ofport, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.externalIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).ExternalIds, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ovs.interface.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOvsInterface).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -85408,4 +85717,446 @@ func (c *mqlSriovVirtualFunction) GetMinTxRate() *plugin.TValue[int64] {
 
 func (c *mqlSriovVirtualFunction) GetMaxTxRate() *plugin.TValue[int64] {
 	return &c.MaxTxRate
+}
+
+// mqlOvs for the ovs resource
+type mqlOvs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOvsInternal
+	Version    plugin.TValue[string]
+	Bridges    plugin.TValue[[]any]
+	Ports      plugin.TValue[[]any]
+	Interfaces plugin.TValue[[]any]
+}
+
+// createOvs creates a new instance of this resource
+func createOvs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOvs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ovs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOvs) MqlName() string {
+	return "ovs"
+}
+
+func (c *mqlOvs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOvs) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlOvs) GetBridges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bridges, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs", c.__id, "bridges")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bridges()
+	})
+}
+
+func (c *mqlOvs) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs", c.__id, "ports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ports()
+	})
+}
+
+func (c *mqlOvs) GetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs", c.__id, "interfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.interfaces()
+	})
+}
+
+// mqlOvsBridge for the ovs.bridge resource
+type mqlOvsBridge struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOvsBridgeInternal
+	Name         plugin.TValue[string]
+	Uuid         plugin.TValue[string]
+	DatapathType plugin.TValue[string]
+	FailMode     plugin.TValue[string]
+	Protocols    plugin.TValue[[]any]
+	StpEnabled   plugin.TValue[bool]
+	RstpEnabled  plugin.TValue[bool]
+	ExternalIds  plugin.TValue[map[string]any]
+	OtherConfig  plugin.TValue[map[string]any]
+	Ports        plugin.TValue[[]any]
+}
+
+// createOvsBridge creates a new instance of this resource
+func createOvsBridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOvsBridge{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ovs.bridge", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOvsBridge) MqlName() string {
+	return "ovs.bridge"
+}
+
+func (c *mqlOvsBridge) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOvsBridge) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOvsBridge) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlOvsBridge) GetDatapathType() *plugin.TValue[string] {
+	return &c.DatapathType
+}
+
+func (c *mqlOvsBridge) GetFailMode() *plugin.TValue[string] {
+	return &c.FailMode
+}
+
+func (c *mqlOvsBridge) GetProtocols() *plugin.TValue[[]any] {
+	return &c.Protocols
+}
+
+func (c *mqlOvsBridge) GetStpEnabled() *plugin.TValue[bool] {
+	return &c.StpEnabled
+}
+
+func (c *mqlOvsBridge) GetRstpEnabled() *plugin.TValue[bool] {
+	return &c.RstpEnabled
+}
+
+func (c *mqlOvsBridge) GetExternalIds() *plugin.TValue[map[string]any] {
+	return &c.ExternalIds
+}
+
+func (c *mqlOvsBridge) GetOtherConfig() *plugin.TValue[map[string]any] {
+	return &c.OtherConfig
+}
+
+func (c *mqlOvsBridge) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs.bridge", c.__id, "ports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ports()
+	})
+}
+
+// mqlOvsPort for the ovs.port resource
+type mqlOvsPort struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOvsPortInternal
+	Name        plugin.TValue[string]
+	Uuid        plugin.TValue[string]
+	BridgeName  plugin.TValue[string]
+	Bridge      plugin.TValue[*mqlOvsBridge]
+	VlanMode    plugin.TValue[string]
+	VlanTag     plugin.TValue[int64]
+	Tagged      plugin.TValue[bool]
+	Trunks      plugin.TValue[[]any]
+	ExternalIds plugin.TValue[map[string]any]
+	OtherConfig plugin.TValue[map[string]any]
+	Interfaces  plugin.TValue[[]any]
+}
+
+// createOvsPort creates a new instance of this resource
+func createOvsPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOvsPort{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ovs.port", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOvsPort) MqlName() string {
+	return "ovs.port"
+}
+
+func (c *mqlOvsPort) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOvsPort) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOvsPort) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlOvsPort) GetBridgeName() *plugin.TValue[string] {
+	return &c.BridgeName
+}
+
+func (c *mqlOvsPort) GetBridge() *plugin.TValue[*mqlOvsBridge] {
+	return plugin.GetOrCompute[*mqlOvsBridge](&c.Bridge, func() (*mqlOvsBridge, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs.port", c.__id, "bridge")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOvsBridge), nil
+			}
+		}
+
+		return c.bridge()
+	})
+}
+
+func (c *mqlOvsPort) GetVlanMode() *plugin.TValue[string] {
+	return &c.VlanMode
+}
+
+func (c *mqlOvsPort) GetVlanTag() *plugin.TValue[int64] {
+	return &c.VlanTag
+}
+
+func (c *mqlOvsPort) GetTagged() *plugin.TValue[bool] {
+	return &c.Tagged
+}
+
+func (c *mqlOvsPort) GetTrunks() *plugin.TValue[[]any] {
+	return &c.Trunks
+}
+
+func (c *mqlOvsPort) GetExternalIds() *plugin.TValue[map[string]any] {
+	return &c.ExternalIds
+}
+
+func (c *mqlOvsPort) GetOtherConfig() *plugin.TValue[map[string]any] {
+	return &c.OtherConfig
+}
+
+func (c *mqlOvsPort) GetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs.port", c.__id, "interfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.interfaces()
+	})
+}
+
+// mqlOvsInterface for the ovs.interface resource
+type mqlOvsInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOvsInterfaceInternal
+	Name        plugin.TValue[string]
+	Uuid        plugin.TValue[string]
+	PortName    plugin.TValue[string]
+	Port        plugin.TValue[*mqlOvsPort]
+	BridgeName  plugin.TValue[string]
+	Type        plugin.TValue[string]
+	AdminState  plugin.TValue[string]
+	LinkState   plugin.TValue[string]
+	MacAddress  plugin.TValue[string]
+	Mtu         plugin.TValue[int64]
+	Ofport      plugin.TValue[int64]
+	Error       plugin.TValue[string]
+	ExternalIds plugin.TValue[map[string]any]
+	Options     plugin.TValue[map[string]any]
+}
+
+// createOvsInterface creates a new instance of this resource
+func createOvsInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOvsInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ovs.interface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOvsInterface) MqlName() string {
+	return "ovs.interface"
+}
+
+func (c *mqlOvsInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOvsInterface) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOvsInterface) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlOvsInterface) GetPortName() *plugin.TValue[string] {
+	return &c.PortName
+}
+
+func (c *mqlOvsInterface) GetPort() *plugin.TValue[*mqlOvsPort] {
+	return plugin.GetOrCompute[*mqlOvsPort](&c.Port, func() (*mqlOvsPort, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ovs.interface", c.__id, "port")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOvsPort), nil
+			}
+		}
+
+		return c.port()
+	})
+}
+
+func (c *mqlOvsInterface) GetBridgeName() *plugin.TValue[string] {
+	return &c.BridgeName
+}
+
+func (c *mqlOvsInterface) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOvsInterface) GetAdminState() *plugin.TValue[string] {
+	return &c.AdminState
+}
+
+func (c *mqlOvsInterface) GetLinkState() *plugin.TValue[string] {
+	return &c.LinkState
+}
+
+func (c *mqlOvsInterface) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlOvsInterface) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlOvsInterface) GetOfport() *plugin.TValue[int64] {
+	return &c.Ofport
+}
+
+func (c *mqlOvsInterface) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlOvsInterface) GetExternalIds() *plugin.TValue[map[string]any] {
+	return &c.ExternalIds
+}
+
+func (c *mqlOvsInterface) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
 }
