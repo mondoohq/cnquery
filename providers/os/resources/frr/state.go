@@ -415,7 +415,9 @@ type RouteTable struct {
 	Entries []RouteEntry
 	// Total is how many prefixes the command reported.
 	Total int64
-	// Truncated is true when Total is larger than the number of entries.
+	// Truncated is true when the result does not hold everything the command
+	// reported, either because the limit was reached or because a prefix
+	// could not be read.
 	Truncated bool
 }
 
@@ -474,14 +476,20 @@ func StreamRoutes(r io.Reader, limit int) (*RouteTable, error) {
 		}
 		var entries []routeJSON
 		if err := json.Unmarshal(raw, &entries); err != nil {
-			// A single unreadable prefix must not drop the whole table.
+			// A single unreadable prefix must not drop the whole table, but
+			// the result no longer holds everything FRR reported.
+			res.Truncated = true
 			continue
 		}
 		for i := range entries {
-			res.Entries = append(res.Entries, convertRoute(&entries[i]))
+			// The check comes before the append, so a prefix with several
+			// entries cannot push the result past the limit. Anything left
+			// over marks the result as truncated.
 			if len(res.Entries) >= limit {
+				res.Truncated = true
 				break
 			}
+			res.Entries = append(res.Entries, convertRoute(&entries[i]))
 		}
 	}
 
