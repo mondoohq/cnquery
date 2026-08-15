@@ -41,8 +41,9 @@ func TestParseIpRouteJSON_TableFields(t *testing.T) {
 	assert.Equal(t, "1007", routes[2].Table)
 }
 
-// TestParseLinuxRoutesFromProc_MainTable pins that the proc source reports
-// the main table and the metric, so the new fields are not empty there.
+// TestParseLinuxRoutesFromProc_MainTable pins that the IPv4 proc source
+// reports the main table and the metric. That source really is main-only,
+// unlike the IPv6 one.
 func TestParseLinuxRoutesFromProc_MainTable(t *testing.T) {
 	detector := &linuxRouteDetector{}
 	// Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
@@ -55,4 +56,22 @@ func TestParseLinuxRoutesFromProc_MainTable(t *testing.T) {
 	assert.Equal(t, "main", routes[0].Table)
 	assert.Equal(t, int64(100), routes[0].Metric)
 	assert.Equal(t, "0.0.0.0/0", routes[0].Destination)
+}
+
+// TestParseLinuxIPv6RoutesFromProc_NoTableClaim pins that the IPv6 proc
+// source leaves the table empty. It holds the routes of every table and
+// names none of them, so claiming main would be wrong.
+func TestParseLinuxIPv6RoutesFromProc_NoTableClaim(t *testing.T) {
+	detector := &linuxRouteDetector{}
+	// destination prefixlen source srcprefixlen nexthop metric ref use flags device
+	output := "20010db8000000000000000000000000 20 " +
+		"00000000000000000000000000000000 00 " +
+		"00000000000000000000000000000000 00000400 00000000 00000000 00000001 swp1\n"
+
+	routes, err := detector.parseLinuxIPv6RoutesFromProc(output)
+	require.NoError(t, err)
+	require.Len(t, routes, 1)
+	assert.Equal(t, "", routes[0].Table)
+	assert.Equal(t, int64(1024), routes[0].Metric)
+	assert.Equal(t, "swp1", routes[0].Interface)
 }
