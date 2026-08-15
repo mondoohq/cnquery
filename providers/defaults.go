@@ -396,6 +396,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"dropbox": {
+		Provider: &plugin.Provider{
+			Name:            "dropbox",
+			ID:              "go.mondoo.com/mql/providers/dropbox",
+			ConnectionTypes: []string{"dropbox"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "dropbox",
+					Use:   "dropbox --token TEAM_TOKEN",
+					Short: "a Dropbox Business team",
+				},
+			},
+		},
+	},
+
 	"elasticsearch": {
 		Provider: &plugin.Provider{
 			Name:            "elasticsearch",

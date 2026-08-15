@@ -220,6 +220,7 @@ PROVIDERS := \
 	datadog \
 	depsdev \
 	digitalocean \
+	dropbox \
 	elasticsearch \
 	equinix \
 	gcp \

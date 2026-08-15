@@ -126,6 +126,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Datadog organization          | `datadog`                  | `mql shell datadog --api-key API_KEY --app-key APP_KEY`                                                                                         |
 | Dockerfiles                   | `docker`                   | `mql shell docker file FILENAME`                                                                                                                |
 | DNS records                   | `host`                     | `mql shell host mondoo.com`                                                                                                                     |
+| Dropbox Business teams        | `dropbox`                  | `mql shell dropbox --token TEAM_TOKEN`                                                                                                          |
 | Elasticsearch cluster         | `elasticsearch`            | `mql shell elasticsearch localhost --user elastic --ask-pass`                                                                                   |
 | Equinix Metal project         | `equinix`                  | `mql shell equinix project PROJECT_ID --token API_TOKEN`                                                                                        |
 | F5 BIG-IP load balancers      | `bigip`                    | `mql shell bigip --hostname HOST --user USER --password PASSWORD`                                                                               |
