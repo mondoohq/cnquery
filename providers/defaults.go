@@ -192,6 +192,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"bitwarden": {
+		Provider: &plugin.Provider{
+			Name:            "bitwarden",
+			ID:              "go.mondoo.com/mql/providers/bitwarden",
+			ConnectionTypes: []string{"bitwarden"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "bitwarden",
+					Use:   "bitwarden --client-id CLIENT_ID --client-secret CLIENT_SECRET",
+					Short: "a Bitwarden organization",
+				},
+			},
+		},
+	},
+
 	"cassandra": {
 		Provider: &plugin.Provider{
 			Name:            "cassandra",
