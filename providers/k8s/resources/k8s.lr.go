@@ -91,6 +91,10 @@ const (
 	ResourceK8sManagedField                              string = "k8s.managedField"
 	ResourceK8sAccessReview                              string = "k8s.accessReview"
 	ResourceK8sContext                                   string = "k8s.context"
+	ResourceK8sDeviceclass                               string = "k8s.deviceclass"
+	ResourceK8sResourceslice                             string = "k8s.resourceslice"
+	ResourceK8sResourceclaim                             string = "k8s.resourceclaim"
+	ResourceK8sResourceclaimtemplate                     string = "k8s.resourceclaimtemplate"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -397,6 +401,22 @@ func init() {
 			// to override args, implement: initK8sContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sContext,
 		},
+		"k8s.deviceclass": {
+			// to override args, implement: initK8sDeviceclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sDeviceclass,
+		},
+		"k8s.resourceslice": {
+			// to override args, implement: initK8sResourceslice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sResourceslice,
+		},
+		"k8s.resourceclaim": {
+			Init:   initK8sResourceclaim,
+			Create: createK8sResourceclaim,
+		},
+		"k8s.resourceclaimtemplate": {
+			Init:   initK8sResourceclaimtemplate,
+			Create: createK8sResourceclaimtemplate,
+		},
 	}
 }
 
@@ -626,6 +646,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ingressClasses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetIngressClasses()).ToDataRes(types.Array(types.Resource("k8s.ingressclass")))
+	},
+	"k8s.deviceClasses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetDeviceClasses()).ToDataRes(types.Array(types.Resource("k8s.deviceclass")))
+	},
+	"k8s.resourceSlices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetResourceSlices()).ToDataRes(types.Array(types.Resource("k8s.resourceslice")))
+	},
+	"k8s.resourceClaims": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetResourceClaims()).ToDataRes(types.Array(types.Resource("k8s.resourceclaim")))
+	},
+	"k8s.resourceClaimTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetResourceClaimTemplates()).ToDataRes(types.Array(types.Resource("k8s.resourceclaimtemplate")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -5280,6 +5312,246 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.context.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContext).GetContent()).ToDataRes(types.String)
 	},
+	"k8s.deviceclass.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetId()).ToDataRes(types.String)
+	},
+	"k8s.deviceclass.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.deviceclass.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.deviceclass.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.deviceclass.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.deviceclass.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.deviceclass.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.deviceclass.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetName()).ToDataRes(types.String)
+	},
+	"k8s.deviceclass.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.deviceclass.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.deviceclass.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.deviceclass.selectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetSelectors()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.deviceclass.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetConfig()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.deviceclass.extendedResourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetExtendedResourceName()).ToDataRes(types.String)
+	},
+	"k8s.deviceclass.selectsAllDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeviceclass).GetSelectsAllDevices()).ToDataRes(types.Bool)
+	},
+	"k8s.resourceslice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetId()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceslice.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceslice.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.resourceslice.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.resourceslice.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetName()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.resourceslice.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.resourceslice.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetDriver()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.poolName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetPoolName()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.poolGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetPoolGeneration()).ToDataRes(types.Int)
+	},
+	"k8s.resourceslice.poolResourceSliceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetPoolResourceSliceCount()).ToDataRes(types.Int)
+	},
+	"k8s.resourceslice.nodeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetNodeName()).ToDataRes(types.String)
+	},
+	"k8s.resourceslice.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetNode()).ToDataRes(types.Resource("k8s.node"))
+	},
+	"k8s.resourceslice.allNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetAllNodes()).ToDataRes(types.Bool)
+	},
+	"k8s.resourceslice.perDeviceNodeSelection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetPerDeviceNodeSelection()).ToDataRes(types.Bool)
+	},
+	"k8s.resourceslice.nodeSelector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetNodeSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.resourceslice.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceslice.deviceNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetDeviceNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.resourceslice.deviceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceslice).GetDeviceCount()).ToDataRes(types.Int)
+	},
+	"k8s.resourceclaim.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetId()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaim.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaim.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaim.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceclaim.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceclaim.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.resourceclaim.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.resourceclaim.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetName()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaim.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaim.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaim.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.resourceclaim.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.resourceclaim.requests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetRequests()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaim.requestNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetRequestNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.resourceclaim.deviceClassNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetDeviceClassNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.resourceclaim.constraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaim.allocated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetAllocated()).ToDataRes(types.Bool)
+	},
+	"k8s.resourceclaim.allocatedDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetAllocatedDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaim.allocationNodeSelector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetAllocationNodeSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.resourceclaim.reservedFor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetReservedFor()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaim.reservedForPods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetReservedForPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
+	"k8s.resourceclaim.usesAdminAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetUsesAdminAccess()).ToDataRes(types.Bool)
+	},
+	"k8s.resourceclaim.deviceStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaim).GetDeviceStatuses()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaimtemplate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetId()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaimtemplate.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaimtemplate.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaimtemplate.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceclaimtemplate.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceclaimtemplate.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.resourceclaimtemplate.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.resourceclaimtemplate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetName()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaimtemplate.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaimtemplate.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.resourceclaimtemplate.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.resourceclaimtemplate.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.resourceclaimtemplate.requests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetRequests()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaimtemplate.requestNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetRequestNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.resourceclaimtemplate.deviceClassNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetDeviceClassNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.resourceclaimtemplate.constraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.resourceclaimtemplate.usesAdminAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetUsesAdminAccess()).ToDataRes(types.Bool)
+	},
+	"k8s.resourceclaimtemplate.templateLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetTemplateLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourceclaimtemplate.templateAnnotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourceclaimtemplate).GetTemplateAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -5506,6 +5778,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.ingressClasses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).IngressClasses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceClasses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).DeviceClasses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceSlices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ResourceSlices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceClaims": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ResourceClaims, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceClaimTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ResourceClaimTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12008,6 +12296,342 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sContext).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"k8s.deviceclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.deviceclass.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.selectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Selectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).Config, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.extendedResourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).ExtendedResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deviceclass.selectsAllDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeviceclass).SelectsAllDevices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.resourceslice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.poolName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).PoolName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.poolGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).PoolGeneration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.poolResourceSliceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).PoolResourceSliceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.nodeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).NodeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Node, ok = plugin.RawToTValue[*mqlK8sNode](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.allNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).AllNodes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.perDeviceNodeSelection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).PerDeviceNodeSelection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.nodeSelector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).NodeSelector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.deviceNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).DeviceNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceslice.deviceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceslice).DeviceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.resourceclaim.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.requests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Requests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.requestNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).RequestNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.deviceClassNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).DeviceClassNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.constraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Constraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.allocated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).Allocated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.allocatedDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).AllocatedDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.allocationNodeSelector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).AllocationNodeSelector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.reservedFor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).ReservedFor, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.reservedForPods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).ReservedForPods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.usesAdminAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).UsesAdminAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaim.deviceStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaim).DeviceStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.resourceclaimtemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.requests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Requests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.requestNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).RequestNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.deviceClassNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).DeviceClassNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.constraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).Constraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.usesAdminAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).UsesAdminAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.templateLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).TemplateLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceclaimtemplate.templateAnnotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourceclaimtemplate).TemplateAnnotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -12090,6 +12714,10 @@ type mqlK8s struct {
 	CertificateSigningRequests        plugin.TValue[[]any]
 	ApiServices                       plugin.TValue[[]any]
 	IngressClasses                    plugin.TValue[[]any]
+	DeviceClasses                     plugin.TValue[[]any]
+	ResourceSlices                    plugin.TValue[[]any]
+	ResourceClaims                    plugin.TValue[[]any]
+	ResourceClaimTemplates            plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -12959,6 +13587,70 @@ func (c *mqlK8s) GetIngressClasses() *plugin.TValue[[]any] {
 		}
 
 		return c.ingressClasses()
+	})
+}
+
+func (c *mqlK8s) GetDeviceClasses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeviceClasses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "deviceClasses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deviceClasses()
+	})
+}
+
+func (c *mqlK8s) GetResourceSlices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceSlices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "resourceSlices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceSlices()
+	})
+}
+
+func (c *mqlK8s) GetResourceClaims() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceClaims, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "resourceClaims")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceClaims()
+	})
+}
+
+func (c *mqlK8s) GetResourceClaimTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceClaimTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "resourceClaimTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceClaimTemplates()
 	})
 }
 
@@ -28129,4 +28821,724 @@ func (c *mqlK8sContext) GetContent() *plugin.TValue[string] {
 
 		return c.content(vargPath.Data, vargRange.Data)
 	})
+}
+
+// mqlK8sDeviceclass for the k8s.deviceclass resource
+type mqlK8sDeviceclass struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sDeviceclassInternal
+	Id                   plugin.TValue[string]
+	Uid                  plugin.TValue[string]
+	ResourceVersion      plugin.TValue[string]
+	Labels               plugin.TValue[map[string]any]
+	Annotations          plugin.TValue[map[string]any]
+	OwnerReferences      plugin.TValue[[]any]
+	ManagedFields        plugin.TValue[[]any]
+	Name                 plugin.TValue[string]
+	Kind                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Manifest             plugin.TValue[any]
+	Selectors            plugin.TValue[[]any]
+	Config               plugin.TValue[[]any]
+	ExtendedResourceName plugin.TValue[string]
+	SelectsAllDevices    plugin.TValue[bool]
+}
+
+// createK8sDeviceclass creates a new instance of this resource
+func createK8sDeviceclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sDeviceclass{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.deviceclass", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sDeviceclass) MqlName() string {
+	return "k8s.deviceclass"
+}
+
+func (c *mqlK8sDeviceclass) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sDeviceclass) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sDeviceclass) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sDeviceclass) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sDeviceclass) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sDeviceclass) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sDeviceclass) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deviceclass", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sDeviceclass) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deviceclass", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sDeviceclass) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sDeviceclass) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sDeviceclass) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sDeviceclass) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sDeviceclass) GetSelectors() *plugin.TValue[[]any] {
+	return &c.Selectors
+}
+
+func (c *mqlK8sDeviceclass) GetConfig() *plugin.TValue[[]any] {
+	return &c.Config
+}
+
+func (c *mqlK8sDeviceclass) GetExtendedResourceName() *plugin.TValue[string] {
+	return &c.ExtendedResourceName
+}
+
+func (c *mqlK8sDeviceclass) GetSelectsAllDevices() *plugin.TValue[bool] {
+	return &c.SelectsAllDevices
+}
+
+// mqlK8sResourceslice for the k8s.resourceslice resource
+type mqlK8sResourceslice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sResourcesliceInternal
+	Id                     plugin.TValue[string]
+	Uid                    plugin.TValue[string]
+	ResourceVersion        plugin.TValue[string]
+	Labels                 plugin.TValue[map[string]any]
+	Annotations            plugin.TValue[map[string]any]
+	OwnerReferences        plugin.TValue[[]any]
+	ManagedFields          plugin.TValue[[]any]
+	Name                   plugin.TValue[string]
+	Kind                   plugin.TValue[string]
+	Created                plugin.TValue[*time.Time]
+	Manifest               plugin.TValue[any]
+	Driver                 plugin.TValue[string]
+	PoolName               plugin.TValue[string]
+	PoolGeneration         plugin.TValue[int64]
+	PoolResourceSliceCount plugin.TValue[int64]
+	NodeName               plugin.TValue[string]
+	Node                   plugin.TValue[*mqlK8sNode]
+	AllNodes               plugin.TValue[bool]
+	PerDeviceNodeSelection plugin.TValue[bool]
+	NodeSelector           plugin.TValue[any]
+	Devices                plugin.TValue[[]any]
+	DeviceNames            plugin.TValue[[]any]
+	DeviceCount            plugin.TValue[int64]
+}
+
+// createK8sResourceslice creates a new instance of this resource
+func createK8sResourceslice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sResourceslice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.resourceslice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sResourceslice) MqlName() string {
+	return "k8s.resourceslice"
+}
+
+func (c *mqlK8sResourceslice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sResourceslice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sResourceslice) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sResourceslice) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sResourceslice) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sResourceslice) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sResourceslice) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceslice", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sResourceslice) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceslice", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sResourceslice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sResourceslice) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sResourceslice) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sResourceslice) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sResourceslice) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlK8sResourceslice) GetPoolName() *plugin.TValue[string] {
+	return &c.PoolName
+}
+
+func (c *mqlK8sResourceslice) GetPoolGeneration() *plugin.TValue[int64] {
+	return &c.PoolGeneration
+}
+
+func (c *mqlK8sResourceslice) GetPoolResourceSliceCount() *plugin.TValue[int64] {
+	return &c.PoolResourceSliceCount
+}
+
+func (c *mqlK8sResourceslice) GetNodeName() *plugin.TValue[string] {
+	return &c.NodeName
+}
+
+func (c *mqlK8sResourceslice) GetNode() *plugin.TValue[*mqlK8sNode] {
+	return plugin.GetOrCompute[*mqlK8sNode](&c.Node, func() (*mqlK8sNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceslice", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sNode), nil
+			}
+		}
+
+		return c.node()
+	})
+}
+
+func (c *mqlK8sResourceslice) GetAllNodes() *plugin.TValue[bool] {
+	return &c.AllNodes
+}
+
+func (c *mqlK8sResourceslice) GetPerDeviceNodeSelection() *plugin.TValue[bool] {
+	return &c.PerDeviceNodeSelection
+}
+
+func (c *mqlK8sResourceslice) GetNodeSelector() *plugin.TValue[any] {
+	return &c.NodeSelector
+}
+
+func (c *mqlK8sResourceslice) GetDevices() *plugin.TValue[[]any] {
+	return &c.Devices
+}
+
+func (c *mqlK8sResourceslice) GetDeviceNames() *plugin.TValue[[]any] {
+	return &c.DeviceNames
+}
+
+func (c *mqlK8sResourceslice) GetDeviceCount() *plugin.TValue[int64] {
+	return &c.DeviceCount
+}
+
+// mqlK8sResourceclaim for the k8s.resourceclaim resource
+type mqlK8sResourceclaim struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sResourceclaimInternal
+	Id                     plugin.TValue[string]
+	Uid                    plugin.TValue[string]
+	ResourceVersion        plugin.TValue[string]
+	Labels                 plugin.TValue[map[string]any]
+	Annotations            plugin.TValue[map[string]any]
+	OwnerReferences        plugin.TValue[[]any]
+	ManagedFields          plugin.TValue[[]any]
+	Name                   plugin.TValue[string]
+	Namespace              plugin.TValue[string]
+	Kind                   plugin.TValue[string]
+	Created                plugin.TValue[*time.Time]
+	Manifest               plugin.TValue[any]
+	Requests               plugin.TValue[[]any]
+	RequestNames           plugin.TValue[[]any]
+	DeviceClassNames       plugin.TValue[[]any]
+	Constraints            plugin.TValue[[]any]
+	Allocated              plugin.TValue[bool]
+	AllocatedDevices       plugin.TValue[[]any]
+	AllocationNodeSelector plugin.TValue[any]
+	ReservedFor            plugin.TValue[[]any]
+	ReservedForPods        plugin.TValue[[]any]
+	UsesAdminAccess        plugin.TValue[bool]
+	DeviceStatuses         plugin.TValue[[]any]
+}
+
+// createK8sResourceclaim creates a new instance of this resource
+func createK8sResourceclaim(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sResourceclaim{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.resourceclaim", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sResourceclaim) MqlName() string {
+	return "k8s.resourceclaim"
+}
+
+func (c *mqlK8sResourceclaim) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sResourceclaim) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sResourceclaim) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sResourceclaim) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sResourceclaim) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sResourceclaim) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sResourceclaim) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceclaim", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sResourceclaim) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceclaim", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sResourceclaim) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sResourceclaim) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sResourceclaim) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sResourceclaim) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sResourceclaim) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sResourceclaim) GetRequests() *plugin.TValue[[]any] {
+	return &c.Requests
+}
+
+func (c *mqlK8sResourceclaim) GetRequestNames() *plugin.TValue[[]any] {
+	return &c.RequestNames
+}
+
+func (c *mqlK8sResourceclaim) GetDeviceClassNames() *plugin.TValue[[]any] {
+	return &c.DeviceClassNames
+}
+
+func (c *mqlK8sResourceclaim) GetConstraints() *plugin.TValue[[]any] {
+	return &c.Constraints
+}
+
+func (c *mqlK8sResourceclaim) GetAllocated() *plugin.TValue[bool] {
+	return &c.Allocated
+}
+
+func (c *mqlK8sResourceclaim) GetAllocatedDevices() *plugin.TValue[[]any] {
+	return &c.AllocatedDevices
+}
+
+func (c *mqlK8sResourceclaim) GetAllocationNodeSelector() *plugin.TValue[any] {
+	return &c.AllocationNodeSelector
+}
+
+func (c *mqlK8sResourceclaim) GetReservedFor() *plugin.TValue[[]any] {
+	return &c.ReservedFor
+}
+
+func (c *mqlK8sResourceclaim) GetReservedForPods() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReservedForPods, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceclaim", c.__id, "reservedForPods")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.reservedForPods()
+	})
+}
+
+func (c *mqlK8sResourceclaim) GetUsesAdminAccess() *plugin.TValue[bool] {
+	return &c.UsesAdminAccess
+}
+
+func (c *mqlK8sResourceclaim) GetDeviceStatuses() *plugin.TValue[[]any] {
+	return &c.DeviceStatuses
+}
+
+// mqlK8sResourceclaimtemplate for the k8s.resourceclaimtemplate resource
+type mqlK8sResourceclaimtemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sResourceclaimtemplateInternal
+	Id                  plugin.TValue[string]
+	Uid                 plugin.TValue[string]
+	ResourceVersion     plugin.TValue[string]
+	Labels              plugin.TValue[map[string]any]
+	Annotations         plugin.TValue[map[string]any]
+	OwnerReferences     plugin.TValue[[]any]
+	ManagedFields       plugin.TValue[[]any]
+	Name                plugin.TValue[string]
+	Namespace           plugin.TValue[string]
+	Kind                plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	Manifest            plugin.TValue[any]
+	Requests            plugin.TValue[[]any]
+	RequestNames        plugin.TValue[[]any]
+	DeviceClassNames    plugin.TValue[[]any]
+	Constraints         plugin.TValue[[]any]
+	UsesAdminAccess     plugin.TValue[bool]
+	TemplateLabels      plugin.TValue[map[string]any]
+	TemplateAnnotations plugin.TValue[map[string]any]
+}
+
+// createK8sResourceclaimtemplate creates a new instance of this resource
+func createK8sResourceclaimtemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sResourceclaimtemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.resourceclaimtemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sResourceclaimtemplate) MqlName() string {
+	return "k8s.resourceclaimtemplate"
+}
+
+func (c *mqlK8sResourceclaimtemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceclaimtemplate", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourceclaimtemplate", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetRequests() *plugin.TValue[[]any] {
+	return &c.Requests
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetRequestNames() *plugin.TValue[[]any] {
+	return &c.RequestNames
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetDeviceClassNames() *plugin.TValue[[]any] {
+	return &c.DeviceClassNames
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetConstraints() *plugin.TValue[[]any] {
+	return &c.Constraints
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetUsesAdminAccess() *plugin.TValue[bool] {
+	return &c.UsesAdminAccess
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetTemplateLabels() *plugin.TValue[map[string]any] {
+	return &c.TemplateLabels
+}
+
+func (c *mqlK8sResourceclaimtemplate) GetTemplateAnnotations() *plugin.TValue[map[string]any] {
+	return &c.TemplateAnnotations
 }

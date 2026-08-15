@@ -84,6 +84,23 @@ func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]a
 	return resp, nil
 }
 
+// k8sOptionalResourceToMql maps a kind the cluster does not have to serve.
+//
+// A cluster that predates the API, a feature gate that is off, or an RBAC rule
+// that hides the kind yields an empty list rather than failing the query. Any
+// other error is returned unchanged.
+func k8sOptionalResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]any, error) {
+	resources, err := k8sResourceToMql(r, kind, fn)
+	if err != nil {
+		if optionalResourceUnavailable(err) {
+			log.Debug().Err(err).Str("kind", kind).Msg("skipping optional Kubernetes resource")
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	return resources, nil
+}
+
 func getNameAndNamespace(runtime *plugin.Runtime) (string, string, error) {
 	asset := runtime.Connection.(shared.Connection).Asset()
 	return asset.Labels["k8s.mondoo.com/name"], asset.Labels["k8s.mondoo.com/namespace"], nil
