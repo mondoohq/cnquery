@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -286,7 +287,7 @@ func isRealmManagementClient(clientID string) bool {
 // maxCompositeLookups bounds how many composite expansions one admin check
 // performs. A realm can nest composites deeply, and the cap keeps a single
 // field from walking the whole role graph.
-const maxCompositeLookups = 100
+const maxCompositeLookups = 250
 
 // expandRoleRefs turns the direct role mappings into every role they grant,
 // following composites. A composite can nest further composites, so the walk
@@ -328,14 +329,31 @@ func expandRoleRefs(runtime *plugin.Runtime, realm *mqlKeycloakRealm, mappings *
 			visited[item.rec.ID] = struct{}{}
 		}
 
-		refs = append(refs, RoleRef{
+		ref := RoleRef{
 			Name:       item.rec.Name,
 			ClientRole: item.rec.ClientRole,
 			ClientID:   item.clientID,
-		})
+		}
+		refs = append(refs, ref)
 
-		if !item.rec.Composite || lookups >= maxCompositeLookups {
+		// One administering role settles the answer, so the rest of the graph
+		// does not need walking. This also keeps a deep role graph away from
+		// the lookup cap whenever the answer is yes.
+		if HoldsAdminRole([]RoleRef{ref}) {
+			return refs, nil
+		}
+
+		if !item.rec.Composite {
 			continue
+		}
+
+		// A composite left unexpanded leaves the roles it grants unknown, so
+		// the cap must not pass for an answer. Report it rather than let the
+		// caller read the truncated walk as "holds no administration role".
+		if lookups >= maxCompositeLookups {
+			return nil, fmt.Errorf(
+				"keycloak: stopped expanding composite roles after %d lookups, the roles of %q are not fully known",
+				maxCompositeLookups, item.rec.Name)
 		}
 		lookups++
 

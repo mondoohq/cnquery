@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"strconv"
 	"testing"
 	"time"
 
@@ -876,4 +877,31 @@ func TestSliceAndMapWidening(t *testing.T) {
 
 	assert.Equal(t, map[string]any{"k": "v"}, mapStrToAny(map[string]string{"k": "v"}))
 	assert.Equal(t, map[string]any{}, mapStrToAny(nil))
+}
+
+func TestHoldsAdminRoleEvaluatesTheWholeList(t *testing.T) {
+	// The administering role sits last, behind many ordinary ones. A check
+	// that stopped at the first non-matching entry would answer false.
+	roles := make([]RoleRef, 0, 51)
+	for i := 0; i < 50; i++ {
+		roles = append(roles, RoleRef{Name: "team-role-" + strconv.Itoa(i)})
+	}
+	roles = append(roles, RoleRef{Name: "realm-admin", ClientRole: true, ClientID: "realm-management"})
+
+	assert.True(t, HoldsAdminRole(roles))
+
+	// The same list without the last entry must answer false, which shows the
+	// result comes from that entry and not from the ordinary ones.
+	assert.False(t, HoldsAdminRole(roles[:50]))
+}
+
+func TestHoldsAdminRoleOnASingleRef(t *testing.T) {
+	// The walk settles the answer one ref at a time, so a single-entry list
+	// must give the same verdict as the same entry inside a longer one.
+	admin := RoleRef{Name: "manage-realm", ClientRole: true, ClientID: "realm-management"}
+	ordinary := RoleRef{Name: "developer"}
+
+	assert.True(t, HoldsAdminRole([]RoleRef{admin}))
+	assert.False(t, HoldsAdminRole([]RoleRef{ordinary}))
+	assert.True(t, HoldsAdminRole([]RoleRef{ordinary, admin}))
 }
