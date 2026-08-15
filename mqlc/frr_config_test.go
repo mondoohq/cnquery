@@ -248,3 +248,37 @@ func TestFrrDaemonQueriesCompile(t *testing.T) {
 		})
 	}
 }
+
+// The adjacencies and sessions of the other daemons decide whether the
+// fabric converges. These pin one read of every field plus the questions
+// they exist to answer.
+func TestFrrDaemonStateQueriesCompile(t *testing.T) {
+	schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"}).
+		Add(testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"}))
+
+	queries := []string{
+		// the posture questions these resources exist to answer
+		`frr.ospfNeighbors.all(full)`,
+		`frr.ospfNeighbors.all(retransmitCount == 0)`,
+		`frr.isisNeighbors.all(up)`,
+		`frr.bfdSessions.all(up)`,
+		`frr.bfdSessions.all(detectMultiplier <= remoteDetectMultiplier)`,
+		`frr.interfaces.where(adminUp).all(operUp)`,
+		`frr.interfaces.all(linkDowns < 5)`,
+		`frr.interfaces.where(vrf != "default").all(protocolDown == false)`,
+
+		// one read of every field
+		`frr.ospfNeighbors { version neighborId state full role priority address localAddress interface uptimeMsec deadTimeMsec retransmitCount details }`,
+		`frr.isisNeighbors { area systemId interface level state up expiresIn snpa details }`,
+		`frr.bfdSessions { peer local vrf interface multiHop status up uptimeSec diagnostic remoteDiagnostic }`,
+		`frr.bfdSessions { detectMultiplier receiveInterval transmitInterval echoInterval remoteDetectMultiplier remoteReceiveInterval remoteTransmitInterval details }`,
+		`frr.interfaces { name adminUp operUp vrf ifindex mtu speed type hardwareAddress addresses linkDowns linkUps protocolDown details }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}

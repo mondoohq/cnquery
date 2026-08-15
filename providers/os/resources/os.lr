@@ -3772,6 +3772,14 @@ frr {
   evpnRoutes() frr.evpn.routeTable
   // Policy routing rules of the kernel at scan time
   routingRules() []frr.routingRule
+  // OSPF and OSPFv3 adjacencies at scan time
+  ospfNeighbors() []frr.ospf.neighbor
+  // IS-IS adjacencies at scan time
+  isisNeighbors() []frr.isis.neighbor
+  // BFD sessions at scan time
+  bfdSessions() []frr.bfd.session
+  // Interfaces the routing daemon knows at scan time
+  interfaces() []frr.interface
 }
 
 // FRR configuration
@@ -4926,6 +4934,153 @@ private frr.bgp.route @defaults("prefix nexthop asPath bestPath") {
   extendedCommunities []string
   // Route targets of the path, taken from the extended communities
   routeTargets []string
+}
+
+// FRR OSPF adjacency
+//
+// One adjacency of OSPF or OSPFv3 at scan time. Only an adjacency in Full
+// carries traffic, so a neighbor stuck in ExStart or Init is a link that
+// looks connected and routes nothing.
+//
+// This is runtime state. It describes the moment of the scan.
+private frr.ospf.neighbor @defaults("neighborId state interface") {
+  // Protocol version: 2 for OSPF, 3 for OSPFv3
+  version int
+  // Router id of the neighbor
+  neighborId string
+  // Adjacency state (e.g. Full, ExStart, Init)
+  state string
+  // Adjacency reached Full and carries traffic
+  full bool
+  // Designated router role (e.g. DR, BDR, DROther)
+  role string
+  // Election priority of the neighbor
+  priority int
+  // Address of the neighbor
+  address string
+  // Address of the local side
+  localAddress string
+  // Interface the adjacency runs on
+  interface string
+  // How long the adjacency has held its state, in milliseconds
+  uptimeMsec int
+  // Time left before the neighbor is declared down, in milliseconds
+  deadTimeMsec int
+  // Length of the retransmit queue, which grows when a link drops packets
+  retransmitCount int
+  // Raw neighbor object, which keeps the fields a given FRR version adds
+  details dict
+}
+
+// FRR IS-IS adjacency
+//
+// One adjacency of IS-IS at scan time.
+//
+// This is runtime state. It describes the moment of the scan.
+private frr.isis.neighbor @defaults("systemId state interface") {
+  // Instance tag the adjacency belongs to
+  area string
+  // System id or hostname of the neighbor
+  systemId string
+  // Circuit the adjacency runs on
+  interface string
+  // IS-IS level of the adjacency (1, 2 or 1-2)
+  level string
+  // Adjacency state (e.g. Up, Init)
+  state string
+  // Adjacency is up
+  up bool
+  // Hold time left, as FRR prints it
+  expiresIn string
+  // Subnetwork point of attachment, which is the MAC address on Ethernet
+  snpa string
+  // Raw circuit object, which keeps the fields a given FRR version adds
+  details dict
+}
+
+// FRR BFD session
+//
+// One session of `show bfd peers json` at scan time. BFD drops a dead
+// neighbor faster than any protocol timer, so a session that is down, or
+// one whose timers were negotiated slower than intended, sets how long the
+// fabric keeps sending traffic into a black hole.
+//
+// This is runtime state. It describes the moment of the scan.
+private frr.bfd.session @defaults("peer status interface") {
+  // Peer address
+  peer string
+  // Local address of the session
+  local string
+  // VRF of the session
+  vrf string
+  // Interface the session runs on
+  interface string
+  // Session crosses more than one hop
+  multiHop bool
+  // Session status (up or down)
+  status string
+  // Session is up
+  up bool
+  // How long the session has been up, in seconds
+  uptimeSec int
+  // Local diagnostic of the last state change
+  diagnostic string
+  // Diagnostic the peer reported
+  remoteDiagnostic string
+  // Local detect multiplier
+  detectMultiplier int
+  // Local receive interval in milliseconds
+  receiveInterval int
+  // Local transmit interval in milliseconds
+  transmitInterval int
+  // Local echo interval in milliseconds
+  echoInterval int
+  // Detect multiplier the peer asked for
+  remoteDetectMultiplier int
+  // Receive interval the peer asked for, in milliseconds
+  remoteReceiveInterval int
+  // Transmit interval the peer asked for, in milliseconds
+  remoteTransmitInterval int
+  // Raw session object, which keeps the fields a given FRR version adds
+  details dict
+}
+
+// FRR interface
+//
+// One interface as the routing daemon sees it, from `show interface json`.
+// It differs from `networkInterface`, which is the kernel view: this one
+// carries the VRF binding and the protocol state that zebra tracks.
+//
+// This is runtime state. It describes the moment of the scan.
+private frr.interface @defaults("name vrf operUp") {
+  // Interface name
+  name string
+  // Interface is administratively up
+  adminUp bool
+  // Interface is operationally up
+  operUp bool
+  // VRF the interface belongs to
+  vrf string
+  // Interface index
+  ifindex int
+  // Maximum transmission unit
+  mtu int
+  // Link speed in megabits per second, 0 when the driver reports none
+  speed int
+  // Interface type as zebra reports it
+  type string
+  // Hardware address of the interface
+  hardwareAddress string
+  // Addresses zebra knows for the interface
+  addresses []string
+  // How often the link went down, which is how a flapping link shows up
+  linkDowns int
+  // How often the link came up
+  linkUps int
+  // A protocol has taken the interface down, which is not an operator shutdown
+  protocolDown bool
+  // Raw interface object, which keeps the fields a given FRR version adds
+  details dict
 }
 
 // HAProxy load balancer

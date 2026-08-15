@@ -192,6 +192,10 @@ const (
 	ResourceFrrEvpnRoute                                  string = "frr.evpn.route"
 	ResourceFrrBgpPeerRoutes                              string = "frr.bgp.peerRoutes"
 	ResourceFrrBgpRoute                                   string = "frr.bgp.route"
+	ResourceFrrOspfNeighbor                               string = "frr.ospf.neighbor"
+	ResourceFrrIsisNeighbor                               string = "frr.isis.neighbor"
+	ResourceFrrBfdSession                                 string = "frr.bfd.session"
+	ResourceFrrInterface                                  string = "frr.interface"
 	ResourceHaproxy                                       string = "haproxy"
 	ResourceHaproxyConfig                                 string = "haproxy.config"
 	ResourceHaproxyConfigSection                          string = "haproxy.config.section"
@@ -1372,6 +1376,22 @@ func init() {
 		"frr.bgp.route": {
 			// to override args, implement: initFrrBgpRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFrrBgpRoute,
+		},
+		"frr.ospf.neighbor": {
+			// to override args, implement: initFrrOspfNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrOspfNeighbor,
+		},
+		"frr.isis.neighbor": {
+			// to override args, implement: initFrrIsisNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrIsisNeighbor,
+		},
+		"frr.bfd.session": {
+			// to override args, implement: initFrrBfdSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrBfdSession,
+		},
+		"frr.interface": {
+			// to override args, implement: initFrrInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrInterface,
 		},
 		"haproxy": {
 			// to override args, implement: initHaproxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6268,6 +6288,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"frr.routingRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrr).GetRoutingRules()).ToDataRes(types.Array(types.Resource("frr.routingRule")))
 	},
+	"frr.ospfNeighbors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrr).GetOspfNeighbors()).ToDataRes(types.Array(types.Resource("frr.ospf.neighbor")))
+	},
+	"frr.isisNeighbors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrr).GetIsisNeighbors()).ToDataRes(types.Array(types.Resource("frr.isis.neighbor")))
+	},
+	"frr.bfdSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrr).GetBfdSessions()).ToDataRes(types.Array(types.Resource("frr.bfd.session")))
+	},
+	"frr.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrr).GetInterfaces()).ToDataRes(types.Array(types.Resource("frr.interface")))
+	},
 	"frr.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfig).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -7521,6 +7553,168 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"frr.bgp.route.routeTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrBgpRoute).GetRouteTargets()).ToDataRes(types.Array(types.String))
+	},
+	"frr.ospf.neighbor.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetVersion()).ToDataRes(types.Int)
+	},
+	"frr.ospf.neighbor.neighborId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetNeighborId()).ToDataRes(types.String)
+	},
+	"frr.ospf.neighbor.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetState()).ToDataRes(types.String)
+	},
+	"frr.ospf.neighbor.full": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetFull()).ToDataRes(types.Bool)
+	},
+	"frr.ospf.neighbor.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetRole()).ToDataRes(types.String)
+	},
+	"frr.ospf.neighbor.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetPriority()).ToDataRes(types.Int)
+	},
+	"frr.ospf.neighbor.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetAddress()).ToDataRes(types.String)
+	},
+	"frr.ospf.neighbor.localAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetLocalAddress()).ToDataRes(types.String)
+	},
+	"frr.ospf.neighbor.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetInterface()).ToDataRes(types.String)
+	},
+	"frr.ospf.neighbor.uptimeMsec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetUptimeMsec()).ToDataRes(types.Int)
+	},
+	"frr.ospf.neighbor.deadTimeMsec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetDeadTimeMsec()).ToDataRes(types.Int)
+	},
+	"frr.ospf.neighbor.retransmitCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetRetransmitCount()).ToDataRes(types.Int)
+	},
+	"frr.ospf.neighbor.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrOspfNeighbor).GetDetails()).ToDataRes(types.Dict)
+	},
+	"frr.isis.neighbor.area": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetArea()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.systemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetSystemId()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetInterface()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetLevel()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetState()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.up": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetUp()).ToDataRes(types.Bool)
+	},
+	"frr.isis.neighbor.expiresIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetExpiresIn()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.snpa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetSnpa()).ToDataRes(types.String)
+	},
+	"frr.isis.neighbor.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrIsisNeighbor).GetDetails()).ToDataRes(types.Dict)
+	},
+	"frr.bfd.session.peer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetPeer()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.local": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetLocal()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetVrf()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetInterface()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.multiHop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetMultiHop()).ToDataRes(types.Bool)
+	},
+	"frr.bfd.session.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetStatus()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.up": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetUp()).ToDataRes(types.Bool)
+	},
+	"frr.bfd.session.uptimeSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetUptimeSec()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.diagnostic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetDiagnostic()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.remoteDiagnostic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetRemoteDiagnostic()).ToDataRes(types.String)
+	},
+	"frr.bfd.session.detectMultiplier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetDetectMultiplier()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.receiveInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetReceiveInterval()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.transmitInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetTransmitInterval()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.echoInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetEchoInterval()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.remoteDetectMultiplier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetRemoteDetectMultiplier()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.remoteReceiveInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetRemoteReceiveInterval()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.remoteTransmitInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetRemoteTransmitInterval()).ToDataRes(types.Int)
+	},
+	"frr.bfd.session.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrBfdSession).GetDetails()).ToDataRes(types.Dict)
+	},
+	"frr.interface.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetName()).ToDataRes(types.String)
+	},
+	"frr.interface.adminUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetAdminUp()).ToDataRes(types.Bool)
+	},
+	"frr.interface.operUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetOperUp()).ToDataRes(types.Bool)
+	},
+	"frr.interface.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetVrf()).ToDataRes(types.String)
+	},
+	"frr.interface.ifindex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetIfindex()).ToDataRes(types.Int)
+	},
+	"frr.interface.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetMtu()).ToDataRes(types.Int)
+	},
+	"frr.interface.speed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetSpeed()).ToDataRes(types.Int)
+	},
+	"frr.interface.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetType()).ToDataRes(types.String)
+	},
+	"frr.interface.hardwareAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetHardwareAddress()).ToDataRes(types.String)
+	},
+	"frr.interface.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"frr.interface.linkDowns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetLinkDowns()).ToDataRes(types.Int)
+	},
+	"frr.interface.linkUps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetLinkUps()).ToDataRes(types.Int)
+	},
+	"frr.interface.protocolDown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetProtocolDown()).ToDataRes(types.Bool)
+	},
+	"frr.interface.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrInterface).GetDetails()).ToDataRes(types.Dict)
 	},
 	"haproxy.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHaproxy).GetVersion()).ToDataRes(types.String)
@@ -23003,6 +23197,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFrr).RoutingRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"frr.ospfNeighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrr).OspfNeighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.isisNeighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrr).IsisNeighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.bfdSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrr).BfdSessions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrr).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"frr.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrConfig).__id, ok = v.Value.(string)
 		return
@@ -24805,6 +25015,238 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"frr.bgp.route.routeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrBgpRoute).RouteTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.ospf.neighbor.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.neighborId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).NeighborId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.full": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Full, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.localAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).LocalAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.uptimeMsec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).UptimeMsec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.deadTimeMsec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).DeadTimeMsec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.retransmitCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).RetransmitCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.ospf.neighbor.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrOspfNeighbor).Details, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.isis.neighbor.area": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).Area, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.systemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).SystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.up": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).Up, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.expiresIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).ExpiresIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.snpa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).Snpa, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.isis.neighbor.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrIsisNeighbor).Details, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.bfd.session.peer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Peer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.local": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Local, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.multiHop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).MultiHop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.up": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Up, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.uptimeSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).UptimeSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.diagnostic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Diagnostic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.remoteDiagnostic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).RemoteDiagnostic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.detectMultiplier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).DetectMultiplier, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.receiveInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).ReceiveInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.transmitInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).TransmitInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.echoInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).EchoInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.remoteDetectMultiplier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).RemoteDetectMultiplier, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.remoteReceiveInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).RemoteReceiveInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.remoteTransmitInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).RemoteTransmitInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.bfd.session.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrBfdSession).Details, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"frr.interface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.interface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.interface.adminUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).AdminUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.interface.operUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).OperUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.interface.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.interface.ifindex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Ifindex, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.interface.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.interface.speed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Speed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.interface.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.interface.hardwareAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).HardwareAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.interface.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.interface.linkDowns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).LinkDowns, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.interface.linkUps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).LinkUps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.interface.protocolDown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).ProtocolDown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.interface.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrInterface).Details, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"haproxy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54427,12 +54869,16 @@ type mqlFrr struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlFrrInternal
-	Version      plugin.TValue[string]
-	Vrfs         plugin.TValue[[]any]
-	BgpNeighbors plugin.TValue[[]any]
-	EvpnVnis     plugin.TValue[[]any]
-	EvpnRoutes   plugin.TValue[*mqlFrrEvpnRouteTable]
-	RoutingRules plugin.TValue[[]any]
+	Version       plugin.TValue[string]
+	Vrfs          plugin.TValue[[]any]
+	BgpNeighbors  plugin.TValue[[]any]
+	EvpnVnis      plugin.TValue[[]any]
+	EvpnRoutes    plugin.TValue[*mqlFrrEvpnRouteTable]
+	RoutingRules  plugin.TValue[[]any]
+	OspfNeighbors plugin.TValue[[]any]
+	IsisNeighbors plugin.TValue[[]any]
+	BfdSessions   plugin.TValue[[]any]
+	Interfaces    plugin.TValue[[]any]
 }
 
 // createFrr creates a new instance of this resource
@@ -54550,6 +54996,70 @@ func (c *mqlFrr) GetRoutingRules() *plugin.TValue[[]any] {
 		}
 
 		return c.routingRules()
+	})
+}
+
+func (c *mqlFrr) GetOspfNeighbors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OspfNeighbors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr", c.__id, "ospfNeighbors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ospfNeighbors()
+	})
+}
+
+func (c *mqlFrr) GetIsisNeighbors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IsisNeighbors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr", c.__id, "isisNeighbors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.isisNeighbors()
+	})
+}
+
+func (c *mqlFrr) GetBfdSessions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BfdSessions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr", c.__id, "bfdSessions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bfdSessions()
+	})
+}
+
+func (c *mqlFrr) GetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr", c.__id, "interfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.interfaces()
 	})
 }
 
@@ -58392,6 +58902,432 @@ func (c *mqlFrrBgpRoute) GetExtendedCommunities() *plugin.TValue[[]any] {
 
 func (c *mqlFrrBgpRoute) GetRouteTargets() *plugin.TValue[[]any] {
 	return &c.RouteTargets
+}
+
+// mqlFrrOspfNeighbor for the frr.ospf.neighbor resource
+type mqlFrrOspfNeighbor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrOspfNeighborInternal it will be used here
+	Version         plugin.TValue[int64]
+	NeighborId      plugin.TValue[string]
+	State           plugin.TValue[string]
+	Full            plugin.TValue[bool]
+	Role            plugin.TValue[string]
+	Priority        plugin.TValue[int64]
+	Address         plugin.TValue[string]
+	LocalAddress    plugin.TValue[string]
+	Interface       plugin.TValue[string]
+	UptimeMsec      plugin.TValue[int64]
+	DeadTimeMsec    plugin.TValue[int64]
+	RetransmitCount plugin.TValue[int64]
+	Details         plugin.TValue[any]
+}
+
+// createFrrOspfNeighbor creates a new instance of this resource
+func createFrrOspfNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrOspfNeighbor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.ospf.neighbor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrOspfNeighbor) MqlName() string {
+	return "frr.ospf.neighbor"
+}
+
+func (c *mqlFrrOspfNeighbor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrOspfNeighbor) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlFrrOspfNeighbor) GetNeighborId() *plugin.TValue[string] {
+	return &c.NeighborId
+}
+
+func (c *mqlFrrOspfNeighbor) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlFrrOspfNeighbor) GetFull() *plugin.TValue[bool] {
+	return &c.Full
+}
+
+func (c *mqlFrrOspfNeighbor) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlFrrOspfNeighbor) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlFrrOspfNeighbor) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlFrrOspfNeighbor) GetLocalAddress() *plugin.TValue[string] {
+	return &c.LocalAddress
+}
+
+func (c *mqlFrrOspfNeighbor) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlFrrOspfNeighbor) GetUptimeMsec() *plugin.TValue[int64] {
+	return &c.UptimeMsec
+}
+
+func (c *mqlFrrOspfNeighbor) GetDeadTimeMsec() *plugin.TValue[int64] {
+	return &c.DeadTimeMsec
+}
+
+func (c *mqlFrrOspfNeighbor) GetRetransmitCount() *plugin.TValue[int64] {
+	return &c.RetransmitCount
+}
+
+func (c *mqlFrrOspfNeighbor) GetDetails() *plugin.TValue[any] {
+	return &c.Details
+}
+
+// mqlFrrIsisNeighbor for the frr.isis.neighbor resource
+type mqlFrrIsisNeighbor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrIsisNeighborInternal it will be used here
+	Area      plugin.TValue[string]
+	SystemId  plugin.TValue[string]
+	Interface plugin.TValue[string]
+	Level     plugin.TValue[string]
+	State     plugin.TValue[string]
+	Up        plugin.TValue[bool]
+	ExpiresIn plugin.TValue[string]
+	Snpa      plugin.TValue[string]
+	Details   plugin.TValue[any]
+}
+
+// createFrrIsisNeighbor creates a new instance of this resource
+func createFrrIsisNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrIsisNeighbor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.isis.neighbor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrIsisNeighbor) MqlName() string {
+	return "frr.isis.neighbor"
+}
+
+func (c *mqlFrrIsisNeighbor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrIsisNeighbor) GetArea() *plugin.TValue[string] {
+	return &c.Area
+}
+
+func (c *mqlFrrIsisNeighbor) GetSystemId() *plugin.TValue[string] {
+	return &c.SystemId
+}
+
+func (c *mqlFrrIsisNeighbor) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlFrrIsisNeighbor) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlFrrIsisNeighbor) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlFrrIsisNeighbor) GetUp() *plugin.TValue[bool] {
+	return &c.Up
+}
+
+func (c *mqlFrrIsisNeighbor) GetExpiresIn() *plugin.TValue[string] {
+	return &c.ExpiresIn
+}
+
+func (c *mqlFrrIsisNeighbor) GetSnpa() *plugin.TValue[string] {
+	return &c.Snpa
+}
+
+func (c *mqlFrrIsisNeighbor) GetDetails() *plugin.TValue[any] {
+	return &c.Details
+}
+
+// mqlFrrBfdSession for the frr.bfd.session resource
+type mqlFrrBfdSession struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrBfdSessionInternal it will be used here
+	Peer                   plugin.TValue[string]
+	Local                  plugin.TValue[string]
+	Vrf                    plugin.TValue[string]
+	Interface              plugin.TValue[string]
+	MultiHop               plugin.TValue[bool]
+	Status                 plugin.TValue[string]
+	Up                     plugin.TValue[bool]
+	UptimeSec              plugin.TValue[int64]
+	Diagnostic             plugin.TValue[string]
+	RemoteDiagnostic       plugin.TValue[string]
+	DetectMultiplier       plugin.TValue[int64]
+	ReceiveInterval        plugin.TValue[int64]
+	TransmitInterval       plugin.TValue[int64]
+	EchoInterval           plugin.TValue[int64]
+	RemoteDetectMultiplier plugin.TValue[int64]
+	RemoteReceiveInterval  plugin.TValue[int64]
+	RemoteTransmitInterval plugin.TValue[int64]
+	Details                plugin.TValue[any]
+}
+
+// createFrrBfdSession creates a new instance of this resource
+func createFrrBfdSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrBfdSession{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.bfd.session", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrBfdSession) MqlName() string {
+	return "frr.bfd.session"
+}
+
+func (c *mqlFrrBfdSession) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrBfdSession) GetPeer() *plugin.TValue[string] {
+	return &c.Peer
+}
+
+func (c *mqlFrrBfdSession) GetLocal() *plugin.TValue[string] {
+	return &c.Local
+}
+
+func (c *mqlFrrBfdSession) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlFrrBfdSession) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlFrrBfdSession) GetMultiHop() *plugin.TValue[bool] {
+	return &c.MultiHop
+}
+
+func (c *mqlFrrBfdSession) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlFrrBfdSession) GetUp() *plugin.TValue[bool] {
+	return &c.Up
+}
+
+func (c *mqlFrrBfdSession) GetUptimeSec() *plugin.TValue[int64] {
+	return &c.UptimeSec
+}
+
+func (c *mqlFrrBfdSession) GetDiagnostic() *plugin.TValue[string] {
+	return &c.Diagnostic
+}
+
+func (c *mqlFrrBfdSession) GetRemoteDiagnostic() *plugin.TValue[string] {
+	return &c.RemoteDiagnostic
+}
+
+func (c *mqlFrrBfdSession) GetDetectMultiplier() *plugin.TValue[int64] {
+	return &c.DetectMultiplier
+}
+
+func (c *mqlFrrBfdSession) GetReceiveInterval() *plugin.TValue[int64] {
+	return &c.ReceiveInterval
+}
+
+func (c *mqlFrrBfdSession) GetTransmitInterval() *plugin.TValue[int64] {
+	return &c.TransmitInterval
+}
+
+func (c *mqlFrrBfdSession) GetEchoInterval() *plugin.TValue[int64] {
+	return &c.EchoInterval
+}
+
+func (c *mqlFrrBfdSession) GetRemoteDetectMultiplier() *plugin.TValue[int64] {
+	return &c.RemoteDetectMultiplier
+}
+
+func (c *mqlFrrBfdSession) GetRemoteReceiveInterval() *plugin.TValue[int64] {
+	return &c.RemoteReceiveInterval
+}
+
+func (c *mqlFrrBfdSession) GetRemoteTransmitInterval() *plugin.TValue[int64] {
+	return &c.RemoteTransmitInterval
+}
+
+func (c *mqlFrrBfdSession) GetDetails() *plugin.TValue[any] {
+	return &c.Details
+}
+
+// mqlFrrInterface for the frr.interface resource
+type mqlFrrInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrInterfaceInternal it will be used here
+	Name            plugin.TValue[string]
+	AdminUp         plugin.TValue[bool]
+	OperUp          plugin.TValue[bool]
+	Vrf             plugin.TValue[string]
+	Ifindex         plugin.TValue[int64]
+	Mtu             plugin.TValue[int64]
+	Speed           plugin.TValue[int64]
+	Type            plugin.TValue[string]
+	HardwareAddress plugin.TValue[string]
+	Addresses       plugin.TValue[[]any]
+	LinkDowns       plugin.TValue[int64]
+	LinkUps         plugin.TValue[int64]
+	ProtocolDown    plugin.TValue[bool]
+	Details         plugin.TValue[any]
+}
+
+// createFrrInterface creates a new instance of this resource
+func createFrrInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.interface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrInterface) MqlName() string {
+	return "frr.interface"
+}
+
+func (c *mqlFrrInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrInterface) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFrrInterface) GetAdminUp() *plugin.TValue[bool] {
+	return &c.AdminUp
+}
+
+func (c *mqlFrrInterface) GetOperUp() *plugin.TValue[bool] {
+	return &c.OperUp
+}
+
+func (c *mqlFrrInterface) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlFrrInterface) GetIfindex() *plugin.TValue[int64] {
+	return &c.Ifindex
+}
+
+func (c *mqlFrrInterface) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlFrrInterface) GetSpeed() *plugin.TValue[int64] {
+	return &c.Speed
+}
+
+func (c *mqlFrrInterface) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlFrrInterface) GetHardwareAddress() *plugin.TValue[string] {
+	return &c.HardwareAddress
+}
+
+func (c *mqlFrrInterface) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlFrrInterface) GetLinkDowns() *plugin.TValue[int64] {
+	return &c.LinkDowns
+}
+
+func (c *mqlFrrInterface) GetLinkUps() *plugin.TValue[int64] {
+	return &c.LinkUps
+}
+
+func (c *mqlFrrInterface) GetProtocolDown() *plugin.TValue[bool] {
+	return &c.ProtocolDown
+}
+
+func (c *mqlFrrInterface) GetDetails() *plugin.TValue[any] {
+	return &c.Details
 }
 
 // mqlHaproxy for the haproxy resource
