@@ -35,6 +35,14 @@ func ValidateName(kind, name string) error {
 	return nil
 }
 
+// Refused reports whether vtysh printed an error instead of a result. vtysh
+// answers `% Unknown command` or `% VRF <name> not found` with a leading
+// percent sign and a zero exit status, so the text has to be read.
+func Refused(data []byte) bool {
+	trimmed := strings.TrimLeft(string(data), " \t\r\n")
+	return strings.HasPrefix(trimmed, "%")
+}
+
 // ======================================================================
 // BGP session state
 // ======================================================================
