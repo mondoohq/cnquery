@@ -25,13 +25,22 @@ func (s *mqlFrrConfig) staticRoutes(file *mqlFile) ([]any, error) {
 	for i := range routes {
 		r := &routes[i]
 		// The id is built from what the route is, not from where it sits,
-		// so inserting a line above it does not renumber the rest.
+		// so inserting a line above it does not renumber the rest. A
+		// discard route has no target, so the disposition joins the key to
+		// keep a blackhole and a reject for the same prefix apart.
 		target := r.Nexthop
 		if target == "" {
 			target = r.Interface
 		}
-		id := fmt.Sprintf("%s#staticRoute/%s/%s/%s/%s",
-			s.__id, r.AFI, vrfKey(r.VRF), r.Prefix, target)
+		disposition := ""
+		switch {
+		case r.Blackhole:
+			disposition = "blackhole"
+		case r.Reject:
+			disposition = "reject"
+		}
+		id := fmt.Sprintf("%s#staticRoute/%s/%s/%s/%s/%s",
+			s.__id, r.AFI, vrfKey(r.VRF), r.Prefix, target, disposition)
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.staticRoute", map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"afi":        llx.StringData(r.AFI),

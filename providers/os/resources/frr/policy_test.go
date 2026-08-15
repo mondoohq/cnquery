@@ -254,3 +254,21 @@ ip route 10.1.0.0/16 192.0.2.1 color 100 40
 	// A distance after the color is still read.
 	assert.Equal(t, int64(40), routes[1].Distance)
 }
+
+// TestStaticRoutes_DiscardDispositions pins that a blackhole and a reject
+// route for the same prefix stay two routes. They share an empty target, so
+// only the disposition tells them apart.
+func TestStaticRoutes_DiscardDispositions(t *testing.T) {
+	src := `hostname x
+ip route 10.0.0.0/8 blackhole
+ip route 10.0.0.0/8 reject
+`
+	cfg, err := Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+	routes := cfg.StaticRoutes()
+	require.Len(t, routes, 2)
+	assert.True(t, routes[0].Blackhole)
+	assert.False(t, routes[0].Reject)
+	assert.True(t, routes[1].Reject)
+	assert.False(t, routes[1].Blackhole)
+}
