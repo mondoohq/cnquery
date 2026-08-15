@@ -51,7 +51,25 @@ var knownKeywords = map[string]string{
 // statements are skipped.
 func tokenizeBicep(content string) []bicepStatement {
 	lines := strings.Split(content, "\n")
-	var statements []bicepStatement
+
+	// Every top-level construct starts at column 0 and its continuation lines
+	// are indented, so the unindented lines are a tight upper bound on the
+	// statement count. Sizing the slice from that one cheap pass beats growing
+	// it by doubling, which reallocates and copies the whole run of statements
+	// a dozen times on a large template.
+	starts := 0
+	for _, line := range lines {
+		if line != "" && line[0] != ' ' && line[0] != '\t' {
+			starts++
+		}
+	}
+	statements := make([]bicepStatement, 0, starts)
+
+	// One scratch slice for every statement's body: reset per statement rather
+	// than reallocated. strings.Join copies what it needs (and returns the
+	// single line unchanged when a statement is one line), so no statement
+	// keeps a reference to this backing array.
+	var bodyLines []string
 
 	i := 0
 	for i < len(lines) {
@@ -117,7 +135,7 @@ func tokenizeBicep(content string) []bicepStatement {
 		// pulling continuation lines until the running depth returns to zero.
 		startLine := i + 1 // 1-based
 		st := scanState{}
-		var bodyLines []string
+		bodyLines = bodyLines[:0]
 
 		bodyLines = append(bodyLines, lines[i])
 		st.feed(lines[i])

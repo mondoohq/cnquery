@@ -1671,14 +1671,16 @@ func stripOuter(s string, open, close byte) string {
 
 func splitTopLevelEntries(body string) []string {
 	var entries []string
-	var current strings.Builder
 	st := scanState{}
+	// An entry is the contiguous span body[start:end]. Nothing is copied: a
+	// top-level `// …` comment always runs to the newline that terminates the
+	// entry, so no entry content ever follows a comment and dropping one is
+	// just a matter of leaving `end` where it was.
+	start, end := 0, 0
 	flush := func() {
-		s := strings.TrimSpace(current.String())
-		if s != "" {
+		if s := strings.TrimSpace(body[start:end]); s != "" {
 			entries = append(entries, s)
 		}
-		current.Reset()
 	}
 	i := 0
 	for i < len(body) {
@@ -1690,6 +1692,7 @@ func splitTopLevelEntries(body string) []string {
 			if body[i] == '\n' || body[i] == ',' {
 				flush()
 				i++
+				start, end = i, i
 				continue
 			}
 			// Drop `// …` line comments without copying them into the
@@ -1704,10 +1707,10 @@ func splitTopLevelEntries(body string) []string {
 			}
 		}
 		next := st.stepAt(body, i)
-		// Copy the bytes we just walked into the running entry —
-		// escape sequences (`\'`, `\\`, …) are preserved verbatim
-		// because stepAt walks the escape pair as a single step.
-		current.WriteString(body[i:next])
+		// Extend the entry over the bytes we just walked — escape sequences
+		// (`\'`, `\\`, …) are preserved verbatim because stepAt walks the
+		// escape pair as a single step.
+		end = next
 		i = next
 	}
 	flush()
