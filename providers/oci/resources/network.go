@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -1294,9 +1295,27 @@ func (o *mqlOciNetwork) publicIps() ([]any, error) {
 				return nil, err
 			}
 
+			// A failure here fails the collection rather than returning the
+			// reserved IPs alone.
+			//
+			// Continuing would produce a list that is short by exactly the
+			// ephemeral addresses - which is the bug this call was added to
+			// fix, reintroduced with a warning in place of an error. Nothing
+			// downstream can tell a tenancy whose instances have no public IPs
+			// from one whose availability domains could not be listed, and an
+			// authoritative-looking short list is worse than a failure in an
+			// inventory tool; see ociRegionServiceUnavailable, which draws the
+			// same line for throttles and IAM gaps.
+			//
+			// The blast radius is one (region, compartment) job: the join
+			// tolerates a per-compartment denial, and ociRetryLazy does not
+			// cache the failure, so a throttle is retried rather than being
+			// sticky for the rest of the scan.
 			availabilityDomains, err := ociAvailabilityDomains(ctx, conn, region, compartmentID)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf(
+					"oci.network.publicIps: cannot list availability domains in %s, so ephemeral public IPs "+
+						"cannot be read and the result would omit them: %w", region, err)
 			}
 			for _, availabilityDomain := range availabilityDomains {
 				perDomain, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]core.PublicIp, *string, error) {
