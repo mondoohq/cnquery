@@ -491,7 +491,7 @@ func (s *mqlFrrConfig) interfaces(file *mqlFile) ([]any, error) {
 	res := make([]any, 0, len(ifaces))
 	for i := range ifaces {
 		iface := &ifaces[i]
-		obj, err := CreateResource(s.MqlRuntime, "frr.config.interface", map[string]*llx.RawData{
+		ifaceArgs := map[string]*llx.RawData{
 			"__id":          llx.StringData(s.__id + "#interface/" + iface.Name),
 			"name":          llx.StringData(iface.Name),
 			"vrf":           llx.StringData(iface.VRF),
@@ -504,7 +504,10 @@ func (s *mqlFrrConfig) interfaces(file *mqlFile) ([]any, error) {
 			"file":          llx.StringData(iface.File),
 			"startLine":     llx.IntData(int64(iface.StartLine)),
 			"raw":           llx.StringData(iface.Raw),
-		})
+		}
+		interfaceProtocolArgs(ifaceArgs, &iface.Protocols)
+
+		obj, err := CreateResource(s.MqlRuntime, "frr.config.interface", ifaceArgs)
 		if err != nil {
 			return nil, err
 		}
