@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -479,19 +480,38 @@ func (a *mqlAlicloudOssBucket) isPublic() (bool, error) {
 		return true, nil
 	}
 
+	// Object Storage Service publishes its own verdict on the policy, which is
+	// authoritative when it can be read.
+	var serviceVerdict *bool
+	if status := a.GetPolicyAllowsPublicAccess(); status.Error == nil {
+		serviceVerdict = &status.Data
+	} else {
+		log.Debug().Err(status.Error).Str("bucket", a.Name.Data).
+			Msg("alicloud: could not read the bucket policy status, falling back to parsing the policy")
+	}
+
 	policy := a.GetPolicy()
 	if policy.Error != nil {
+		// With no policy document either, the service verdict is all there is.
+		if serviceVerdict != nil {
+			return *serviceVerdict, nil
+		}
 		return false, policy.Error
 	}
 	statements, err := parsePolicyDocument(policy.Data)
 	if err != nil {
 		// an unparseable policy is not evidence of exposure, and the raw
 		// document stays available through the policy field. Warn rather than
-		// stay silent: the verdict below is skipped, so a bucket opened by its
+		// stay silent: the parsed verdict is skipped, so a bucket opened by its
 		// policy alone would read as not public.
 		log.Warn().Err(err).Str("bucket", a.Name.Data).
-			Msg("alicloud: could not parse bucket policy, isPublic reflects the acl only")
-		return false, nil
+			Msg("alicloud: could not parse bucket policy, isPublic reflects the acl and the service verdict only")
+		return ossPolicyIsPublic(serviceVerdict, false), nil
 	}
-	return policyGrantsAnonymousAccess(statements), nil
+	return ossPolicyIsPublic(serviceVerdict, policyGrantsAnonymousAccess(statements)), nil
+}
+
+// itoaInt renders a slice index for a synthetic cache key.
+func itoaInt(i int) string {
+	return strconv.Itoa(i)
 }
