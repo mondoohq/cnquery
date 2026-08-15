@@ -25,6 +25,7 @@ Most of what this provider reads is administrator-only:
 | `security` and its integrations | administrator |
 | `backups`                       | administrator |
 | `cleanupPolicies`               | administrator, and a product version that serves the endpoint |
+| `xray` and its watches, policies, and ignore rules | a reachable Xray, and the Manage Watches role |
 
 A token without those rights reports the field as an error rather than as an
 empty result, so an audit does not pass on data that was never read.
@@ -217,6 +218,61 @@ mql> artifactory.repositories { key replications.where(enabled) { url syncDelete
 mql> artifactory.repositories { key replications.where(enabled && usesEncryptedTransport == false) { url hasCredential } }
 ```
 
+**Repositories that are scanned but not protected**
+
+Being indexed is not the same as being covered. A repository is only acted on
+when an active watch names it and that watch carries a policy that blocks.
+
+```shell
+mql> artifactory.repositories.where(xrayIndex == true && xrayBlocksDownload == false) { key xrayWatches { name } }
+mql> artifactory.repositories.where(xrayWatches.length == 0) { key type packageType }
+```
+
+**Watches that cover every repository through a wildcard**
+
+Such a watch also reaches repositories created after it was written.
+
+```shell
+mql> artifactory.xray.watches.where(active && coversAllRepositories) { name policyNames }
+```
+
+**Watches that are configured but not enforced**
+
+```shell
+mql> artifactory.xray.watches.where(active == false) { name policyNames }
+```
+
+**Policies that record a violation without stopping anything**
+
+```shell
+mql> artifactory.xray.policies.where(blocksDownload == false && failsBuild == false) { name type }
+mql> artifactory.xray.policies.where(blocksUnscanned == false) { name }
+```
+
+**Policies no watch enforces**
+
+```shell
+mql> artifactory.xray.policies.where(watches.length == 0) { name type }
+```
+
+**Rules that only count a finding with a fix available**
+
+A vulnerability with no released fix is then not a violation, so it blocks
+nothing.
+
+```shell
+mql> artifactory.xray.policies { name rules.where(fixVersionDependant) { name minSeverity } }
+```
+
+**Suppressions that never expire**
+
+The suppression list is paged and the provider walks every page, so this counts
+all of them rather than the first page.
+
+```shell
+mql> artifactory.xray.ignoreRules.where(expires == false) { id notes vulnerabilities repositories }
+```
+
 **Repositories Xray does not index**
 
 An unindexed repository is never scanned, so a finding on an artifact stored
@@ -320,6 +376,22 @@ replicating is a normal state.
 configuration. It is not read into a struct field at all, so it cannot reach a
 resource field, a log line, or a recording. `hasCredential` reports whether one
 exists.
+
+**Xray reports null when the platform has no reachable Xray.** That is a
+different answer from an Xray with no watch: the first means nothing scans, the
+second means nothing is enforced. Query `artifactory.xray == null` to tell them
+apart.
+
+**A denied Xray read is an error, not a null.** Only a platform that serves no
+Xray at all reports null. A token that may not read Xray fails the field and
+names the rights it needs, because reporting null there would say the platform
+does not scan, and a policy asking whether a repository is protected would pass
+on an answer that was never read.
+
+**A policy acts only through a watch.** `artifactory.xray.policies` lists what
+is configured, and `artifactory.repositories { xrayPolicies }` lists what is
+enforced on a repository. A policy no watch names is enforced nowhere, whatever
+its rules say.
 
 **An integration the instance never configured reports null, not disabled.**
 `saml`, `oauth`, `httpSso`, and `crowd` are null when the instance descriptor

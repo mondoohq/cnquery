@@ -33,6 +33,8 @@ artifactory {
   cleanupPolicies() []artifactory.cleanupPolicy
   // Scheduled exports of the instance
   backups() []artifactory.backup
+  // Xray scanning configuration, or null when the platform has no reachable Xray
+  xray() artifactory.xray
   // Version and identity of the instance
   system() artifactory.systemInfo
 }
@@ -196,6 +198,22 @@ private artifactory.repository @defaults("key type packageType") {
   // when the repository replicates nothing. Read on demand, one call per
   // repository.
   replications() []artifactory.replication
+  // Active Xray watches that reach the repository
+  //
+  // A repository that no active watch names is scanned but never acted on, so
+  // this is the difference between being indexed and being covered. Includes
+  // the watches that reach it through a wildcard rather than by name.
+  xrayWatches() []artifactory.xray.watch
+  // Xray policies enforced on the repository
+  //
+  // The policies of every active watch that reaches the repository. Empty when
+  // nothing is enforced on it, whatever `xrayIndex` reports.
+  xrayPolicies() []artifactory.xray.policy
+  // Whether a policy enforced on the repository stops a download
+  //
+  // True when any enforced policy blocks an artifact that has a violation.
+  // When false, a violation is recorded and the artifact stays installable.
+  xrayBlocksDownload() bool
   // Actions the anonymous user holds on the repository
   //
   // The union of the actions every permission target grants to the anonymous
@@ -901,4 +919,216 @@ private artifactory.replication @defaults("repositoryKey url enabled") {
   excludePathPrefixPattern string
   // Milliseconds the replication waits on the other end, or null when unset
   socketTimeoutMillis int
+}
+
+// JFrog Xray
+//
+// The scanning service of the platform, and what it is configured to act on.
+// Being indexed is not the same as being covered: a repository is only acted on
+// when a watch names it and that watch carries a policy. The `watches` field
+// reports what each watch names, `policies` reports what each policy blocks,
+// and `ignoreRules` reports the findings that are suppressed. Null on a
+// platform with no reachable Xray, which is a different answer from a platform
+// whose Xray has no watch.
+private artifactory.xray @defaults("version") {
+  // Product version of the Xray service
+  version string
+  // Watches, each binding policies to a set of resources
+  watches() []artifactory.xray.watch
+  // Policies, each holding the rules that decide what is blocked
+  policies() []artifactory.xray.policy
+  // Rules that suppress a finding
+  ignoreRules() []artifactory.xray.ignoreRule
+}
+
+// Xray Watch
+//
+// A binding of policies to the resources they are enforced on. A watch is what
+// turns a policy into something that acts: a repository that no active watch
+// names is scanned but never blocked. The `resources` field reports what the
+// watch names, including the wildcard entries that cover repositories created
+// later, and `policies` reports what is enforced on them. Select a watch with
+// `artifactory.xray.watches.where(name == "example")`.
+private artifactory.xray.watch @defaults("name active") {
+  // Name of the watch, which is unique on the platform
+  name string
+  // Human-readable description, or null when unset
+  description string
+  // Whether the watch is enforced
+  //
+  // An inactive watch keeps its resources and its policies but acts on
+  // nothing, so a repository it names is not covered.
+  active bool
+  // Resources the watch names
+  resources() []artifactory.xray.watch.resource
+  // Names of the policies the watch enforces
+  policyNames []string
+  // Policies the watch enforces
+  //
+  // A watch that names a policy the platform does not hold reports fewer
+  // policies than `policyNames`, which is a watch that enforces nothing.
+  policies() []artifactory.xray.policy
+  // Whether the watch names every repository through a wildcard
+  //
+  // True when a resource covers all repositories rather than naming them. The
+  // watch then reaches repositories created after it was written.
+  coversAllRepositories bool
+}
+
+// Resource of an Xray Watch
+//
+// One entry of what a watch is enforced on. The `type` field separates a named
+// repository from a wildcard covering every repository, every build, or every
+// release bundle. The `filters` field narrows the entry further, so a watch
+// that names a repository may still act on only part of it.
+private artifactory.xray.watch.resource @defaults("type name") {
+  // Kind of resource
+  //
+  // One of repository, build, releaseBundle, releaseBundleV2, project,
+  // gitRepository, or one of the all-repos, all-builds, all-releaseBundles,
+  // all-releaseBundlesV2, and all-projects wildcards.
+  type string
+  // Name of the resource, or null on a wildcard entry
+  name string
+  // Repository the entry names, or null when it names none on this instance
+  repository() artifactory.repository
+  // Repository type the entry is limited to, for example local or remote
+  repoType string
+  // Project the entry belongs to, or null when unset
+  project string
+  // Whether the entry is a wildcard covering a whole class of resources
+  isWildcard bool
+  // Filters that narrow the entry
+  //
+  // Each entry is the filter type and its value, for example package-type or
+  // path-ant-patterns. A filtered resource is covered only where the filter
+  // matches, so a watch naming a repository may still act on part of it.
+  filters []dict
+}
+
+// Xray Policy
+//
+// A set of rules that decide what a violation is and what happens when one is
+// found. A policy only acts through a watch, so read `watches` for where it is
+// enforced. The `blocksDownload` and `failsBuild` fields reduce the rules to
+// whether the policy stops anything at all: a policy that only notifies leaves
+// the artifact installable. Select a policy with
+// `artifactory.xray.policies.where(name == "example")`.
+private artifactory.xray.policy @defaults("name type") {
+  // Name of the policy, which is unique on the platform
+  name string
+  // Kind of policy, one of security, license, or operational_risk
+  type string
+  // Human-readable description, or null when unset
+  description string
+  // Rules the policy holds
+  rules() []artifactory.xray.policy.rule
+  // Watches that enforce the policy
+  //
+  // A policy no watch names is not enforced anywhere, whatever its rules say.
+  watches() []artifactory.xray.watch
+  // Whether any rule blocks a download
+  //
+  // True when a rule blocks an artifact that has a violation. A policy that
+  // does not block leaves the artifact installable however severe the finding.
+  blocksDownload bool
+  // Whether any rule blocks an unscanned artifact
+  //
+  // An artifact Xray has not finished scanning has no findings yet. When this
+  // is false, it can be downloaded before anything is known about it.
+  blocksUnscanned bool
+  // Whether any rule fails a build
+  failsBuild bool
+  // Whether any rule blocks the distribution of a release bundle
+  blocksReleaseBundleDistribution bool
+}
+
+// Rule of an Xray Policy
+//
+// One condition of a policy and what happens when it matches. The criteria
+// fields report what counts as a violation, for example a minimum severity or a
+// CVSS range, and the action fields report what is stopped. A rule whose
+// actions stop nothing records the violation and leaves the artifact usable.
+private artifactory.xray.policy.rule @defaults("name priority minSeverity") {
+  // Name of the rule
+  name string
+  // Order the rule is evaluated in, or null when unset
+  priority int
+  // Lowest severity that counts as a violation, or null when the rule uses another criterion
+  //
+  // One of All, Low, Medium, High, or Critical.
+  minSeverity string
+  // Lowest CVSS score that counts as a violation, or null when unset
+  cvssRangeFrom float
+  // Highest CVSS score that counts as a violation, or null when unset
+  cvssRangeTo float
+  // Whether the rule only counts a finding that has a fix available
+  //
+  // When true, a vulnerability with no released fix is not a violation, so it
+  // does not block anything.
+  fixVersionDependant bool
+  // Whether the rule only counts a vulnerability reachable from the artifact
+  applicableCvesOnly bool
+  // Whether the rule counts a package flagged as malicious
+  maliciousPackage bool
+  // Licenses the rule refuses
+  bannedLicenses []string
+  // Licenses the rule permits
+  allowedLicenses []string
+  // Whether an unrecognized license counts as permitted
+  allowUnknownLicenses bool
+  // Whether a download of a matching artifact is blocked
+  blockDownload bool
+  // Whether a download is blocked before the scan has finished
+  blockUnscanned bool
+  // Whether the distribution of a release bundle is blocked
+  blockReleaseBundleDistribution bool
+  // Whether the promotion of a release bundle is blocked
+  blockReleaseBundlePromotion bool
+  // Whether a build that resolves a matching artifact fails
+  failBuild bool
+  // Days a build keeps passing after the rule starts matching, or null when unset
+  //
+  // A grace period leaves a build passing while the violation already exists.
+  buildFailureGracePeriodInDays int
+  // Whether the watch recipients are notified
+  notifyWatchRecipients bool
+  // Whether the account that deployed the artifact is notified
+  notifyDeployer bool
+  // Severity the rule records a violation as, or null when it uses the finding's own
+  customSeverity string
+}
+
+// Xray Ignore Rule
+//
+// A suppression that stops a finding from being reported. An ignore rule
+// without an expiry suppresses its finding until somebody removes it by hand,
+// so a policy that blocks on severity stops blocking for whatever the rule
+// covers. The scope fields report what is suppressed, and `expires` reports
+// whether the suppression ends on its own.
+private artifactory.xray.ignoreRule @defaults("id notes expiresAt") {
+  // Identifier of the rule
+  id string
+  // Reason recorded for the suppression, or null when unset
+  notes string
+  // Account that created the rule, or null when unset
+  author string
+  // Time the rule was created, or null when the platform does not report it
+  createdAt time
+  // Time the suppression ends, or null when it never does
+  expiresAt time
+  // Whether the suppression ends on its own
+  //
+  // False on a rule that suppresses its finding until somebody removes it.
+  expires bool
+  // Whether the rule is no longer in force
+  isExpired bool
+  // Vulnerability identifiers the rule suppresses
+  vulnerabilities []string
+  // Licenses the rule suppresses
+  licenses []string
+  // Repository keys the rule is limited to, empty when it is not limited
+  repositories []string
+  // Repositories the rule is limited to
+  repositoryRefs() []artifactory.repository
 }
