@@ -394,3 +394,32 @@ func TestStreamRoutes_BrokenEntryStopsCleanly(t *testing.T) {
 	_, err = StreamRoutes(strings.NewReader(`{"10.0.0.0/8":[{"prefix":`), 0)
 	require.Error(t, err)
 }
+
+// TestStreamRoutes_TruncatedOnDroppedEntries pins that a result which does
+// not hold everything FRR reported says so. A policy that reads a partial
+// table as a complete one would pass on missing data.
+func TestStreamRoutes_TruncatedOnDroppedEntries(t *testing.T) {
+	// The last prefix carries three entries and only one fits the limit.
+	src := `{"10.0.0.0/8":[{"prefix":"10.0.0.0/8","protocol":"bgp"}],` +
+		`"10.1.0.0/16":[{"prefix":"10.1.0.0/16","protocol":"bgp"},` +
+		`{"prefix":"10.1.0.0/16","protocol":"static"},` +
+		`{"prefix":"10.1.0.0/16","protocol":"kernel"}]}`
+	table, err := StreamRoutes(strings.NewReader(src), 2)
+	require.NoError(t, err)
+	assert.Len(t, table.Entries, 2)
+	assert.True(t, table.Truncated)
+	assert.Equal(t, int64(2), table.Total)
+
+	// A prefix that cannot be read is also missing data.
+	broken := `{"10.0.0.0/8":[{"prefix":"10.0.0.0/8"}],"10.1.0.0/16":["nope"]}`
+	table, err = StreamRoutes(strings.NewReader(broken), 0)
+	require.NoError(t, err)
+	assert.Len(t, table.Entries, 1)
+	assert.True(t, table.Truncated)
+
+	// A complete answer still reports false.
+	whole := `{"10.0.0.0/8":[{"prefix":"10.0.0.0/8"}]}`
+	table, err = StreamRoutes(strings.NewReader(whole), 0)
+	require.NoError(t, err)
+	assert.False(t, table.Truncated)
+}
