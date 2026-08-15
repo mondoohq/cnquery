@@ -183,8 +183,14 @@ func parseStaticRoute(d *Directive, vrf string) (StaticRoute, bool) {
 				r.Label = args[i+1]
 				i++
 			}
-		case "onlink", "color":
-			// Flags that carry no field of their own.
+		case "onlink":
+			// A bare flag with no field of its own.
+		case "color":
+			// `color` takes a numeric argument. Skipping it keeps the value
+			// from being read as the administrative distance.
+			if i+1 < len(args) {
+				i++
+			}
 		default:
 			// The first free token is the next hop, and a later free number
 			// is the administrative distance.
