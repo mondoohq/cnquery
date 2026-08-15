@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -142,6 +141,12 @@ func (a *mqlAwsApigatewayv2Api) id() (string, error) {
 	return apigatewayv2ApiArn(a.Region.Data, &a.ApiId.Data), nil
 }
 
+var apigatewayv2ApiArnSpec = arnSpec{
+	resource: ResourceAwsApigatewayv2Api,
+	services: []string{"apigateway"},
+	altKeys:  []string{"apiId"},
+}
+
 // initAwsApigatewayv2Api lets typed back-references like
 // aws.apigatewayv2.stage.api() resolve a previously-fetched api by apiId.
 // Without this init, NewResource would create an empty resource keyed on a
@@ -151,13 +156,9 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 	// Resolve a discovered asset (aws-apigatewayv2-api platform) by its ARN.
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["apiId"] == nil && args["arn"] == nil {
-		return args, nil, errors.New("apiId or arn required to fetch aws.apigatewayv2.api")
+	ref, err := apigatewayv2ApiArnSpec.resolve(runtime, args)
+	if err != nil {
+		return args, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.apigatewayv2", map[string]*llx.RawData{})
@@ -169,13 +170,11 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, apis.Error
 	}
 
-	var wantApiId, wantArn string
+	var wantApiId string
 	if args["apiId"] != nil {
 		wantApiId = args["apiId"].Value.(string)
 	}
-	if args["arn"] != nil {
-		wantArn = args["arn"].Value.(string)
-	}
+	wantArn := ref.RawArn
 	for _, r := range apis.Data {
 		api := r.(*mqlAwsApigatewayv2Api)
 		if (wantApiId != "" && api.ApiId.Data == wantApiId) || (wantArn != "" && api.Arn.Data == wantArn) {

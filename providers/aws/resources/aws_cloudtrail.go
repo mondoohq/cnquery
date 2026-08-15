@@ -46,17 +46,18 @@ func (a *mqlAwsCloudtrail) trails() ([]any, error) {
 	return res, nil
 }
 
+var cloudtrailTrailArnSpec = arnSpec{
+	resource: ResourceAwsCloudtrailTrail,
+	services: []string{"cloudtrail"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) >= 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch aws cloudtrail trail")
+	if _, err := cloudtrailTrailArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	// We match the requested trail by ARN when supplied, otherwise by name.

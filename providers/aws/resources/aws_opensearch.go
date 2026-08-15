@@ -108,20 +108,19 @@ func (a *mqlAwsOpensearchDomain) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var opensearchDomainArnSpec = arnSpec{
+	resource: ResourceAwsOpensearchDomain,
+	services: []string{"es"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	// Get asset identifier if no args provided
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch opensearch domain")
+	if _, err := opensearchDomainArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	// If we have an ARN but missing region or name, extract from ARN

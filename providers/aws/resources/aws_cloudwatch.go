@@ -700,22 +700,22 @@ func buildLogGroupResource(runtime *plugin.Runtime, region string, loggroup clou
 	return mqlLogGroup.(*mqlAwsCloudwatchLoggroup), nil
 }
 
+var cloudwatchLoggroupArnSpec = arnSpec{
+	resource: ResourceAwsCloudwatchLoggroup,
+	services: []string{"logs"},
+}
+
 func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
+	ref, err := cloudwatchLoggroupArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
-	arnVal := args["arn"].Value.(string)
 
 	// Targeted lookup: derive the region + group name from the ARN and fetch
 	// just this one log group (by name prefix) instead of describing every log
@@ -725,7 +725,7 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	region := ""
 	name := ""
 	sameAccount := true
-	if parsed, parseErr := arn.Parse(arnVal); parseErr == nil {
+	if parsed, parseErr := arn.Parse(ref.RawArn); parseErr == nil {
 		region = parsed.Region
 		name = strings.TrimSuffix(strings.TrimPrefix(parsed.Resource, "log-group:"), ":*")
 		sameAccount = parsed.AccountID == "" || parsed.AccountID == conn.AccountId()
@@ -780,12 +780,12 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	// other AWS services (e.g. EventBridge Pipes LogConfiguration) return the
 	// bare ARN without it. Compare both with and without the suffix so init
 	// resolves correctly regardless of which form the caller passes.
-	arnNoStar := strings.TrimSuffix(arnVal, ":*")
+	arnNoStar := strings.TrimSuffix(ref.RawArn, ":*")
 	for _, rawResource := range rawResources.Data {
 		logGroup := rawResource.(*mqlAwsCloudwatchLoggroup)
 		mqlLgArn := logGroup.Arn.Data
 
-		if mqlLgArn == arnVal || strings.TrimSuffix(mqlLgArn, ":*") == arnNoStar {
+		if mqlLgArn == ref.RawArn || strings.TrimSuffix(mqlLgArn, ":*") == arnNoStar {
 			return args, logGroup, nil
 		}
 	}
@@ -793,9 +793,9 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	// If the log group is in a different account (e.g., organizational trail referencing
 	// a log group in the management account), create a placeholder resource with basic
 	// info extracted from the ARN instead of failing.
-	if parsedArn, parseErr := arn.Parse(arnVal); parseErr == nil && parsedArn.AccountID != conn.AccountId() {
-		log.Warn().Str("arn", arnVal).Str("currentAccount", conn.AccountId()).Str("logGroupAccount", parsedArn.AccountID).Msg("cross-account CloudWatch log group reference")
-		grpRegion, groupName := parseLogGroupArn(arnVal)
+	if parsedArn, parseErr := arn.Parse(ref.RawArn); parseErr == nil && parsedArn.AccountID != conn.AccountId() {
+		log.Warn().Str("arn", ref.RawArn).Str("currentAccount", conn.AccountId()).Str("logGroupAccount", parsedArn.AccountID).Msg("cross-account CloudWatch log group reference")
+		grpRegion, groupName := parseLogGroupArn(ref.RawArn)
 		if grpRegion == "" || groupName == "" {
 			return nil, nil, errors.New("cloudwatch log group does not exist")
 		}

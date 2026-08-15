@@ -1484,26 +1484,38 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	return nil, nil, errors.New("subnet not found")
 }
 
+// VPC ARNs use the provider's custom vpcArnPattern service token "vpc" (see
+// deriveVpcTarget), not the "ec2" token real AWS would use. Only "vpc" is
+// accepted: allowing "ec2" here would let any EC2 asset (an instance, volume,
+// or security group) be adopted as this VPC's ARN.
+//
+// The spec declares no prefix because a "vpc" ARN with an unexpected resource
+// segment is not an error here, it just means the targeted lookup is skipped
+// in favour of scanning the cached list.
+// altKeys lists only "id", not "region": the fallback list-scan below matches
+// on arn or id alone, so a region-only args must still be rejected.
+var vpcArnSpec = arnSpec{
+	resource: ResourceAwsVpc,
+	services: []string{"vpc"},
+	altKeys:  []string{"id"},
+}
+
 // deriveVpcTarget resolves the region and VPC id to look up. It pulls the ARN
 // from the asset identifier when args are empty, then derives the id from the
 // ARN's resource segment or an explicit "id" arg — never from the asset name
 // (which may be a "Name" tag, not the vpc-id), keeping asset-name-vs-id
 // resolution correct. It may populate args["arn"] from the asset identifier.
-func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (region, vpcId string) {
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (region, vpcId string, err error) {
+	ref, err := vpcArnSpec.resolve(runtime, args)
+	if err != nil {
+		return "", "", err
 	}
-	if args["arn"] != nil {
-		arnVal := args["arn"].Value.(string)
-		// The VPC ARN uses a custom shape, vpcArnPattern =
-		// "arn:aws:vpc:<region>:<acct>:id/<vpc-id>", so the id lives behind an
-		// "id/" prefix (not the standard "vpc/").
-		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "id/") {
-			region = parsed.Region
-			vpcId = strings.TrimPrefix(parsed.Resource, "id/")
-		}
+	// The VPC ARN uses a custom shape, vpcArnPattern =
+	// "arn:aws:vpc:<region>:<acct>:id/<vpc-id>", so the id lives behind an
+	// "id/" prefix (not the standard "vpc/").
+	if strings.HasPrefix(ref.Resource, "id/") {
+		region = ref.Region
+		vpcId = strings.TrimPrefix(ref.Resource, "id/")
 	}
 	if args["id"] != nil && vpcId == "" {
 		vpcId = args["id"].Value.(string)
@@ -1513,7 +1525,7 @@ func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (reg
 			region = r
 		}
 	}
-	return region, vpcId
+	return region, vpcId, nil
 }
 
 func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1524,10 +1536,9 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	// Derive region + vpcId for a single targeted DescribeVpcs call instead of
 	// listing every VPC in every region. This also pulls the ARN from the asset
 	// identifier when args are empty.
-	region, vpcId := deriveVpcTarget(runtime, args)
-
-	if args["arn"] == nil && args["id"] == nil {
-		return nil, nil, errors.New("arn or id required to fetch aws vpc")
+	region, vpcId, err := deriveVpcTarget(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	if region != "" && vpcId != "" {

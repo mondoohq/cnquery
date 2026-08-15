@@ -604,6 +604,11 @@ func (a *mqlAwsBatch) jobDefinitions() ([]any, error) {
 	return res, nil
 }
 
+var batchJobDefinitionArnSpec = arnSpec{
+	resource: ResourceAwsBatchJobDefinition,
+	services: []string{"batch"},
+}
+
 // initAwsBatchJobDefinition resolves a single Batch job definition. When
 // invoked for a discovered asset (aws-batch-jobdefinition platform), no args
 // are passed, so the job definition ARN is read from the connection's asset
@@ -613,13 +618,9 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return args, nil, fmt.Errorf("arn required to fetch batch job definition")
+	ref, err := batchJobDefinitionArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.batch", map[string]*llx.RawData{})
@@ -631,17 +632,16 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, jds.Error
 	}
 
-	wantArn := args["arn"].Value.(string)
 	for _, r := range jds.Data {
 		jd := r.(*mqlAwsBatchJobDefinition)
-		if jd.Arn.Data == wantArn {
+		if jd.Arn.Data == ref.RawArn {
 			return args, jd, nil
 		}
 	}
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.batch.jobDefinition with arn %q not found", wantArn)
+	return nil, nil, fmt.Errorf("aws.batch.jobDefinition with arn %q not found", ref.RawArn)
 }
 
 func (a *mqlAwsBatch) getJobDefinitions(conn *connection.AwsConnection) []*jobpool.Job {

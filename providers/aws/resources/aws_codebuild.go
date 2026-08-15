@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	cbtypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/rs/zerolog/log"
@@ -105,6 +104,15 @@ func (a *mqlAwsCodebuildProject) id() (string, error) {
 	return a.Name.Data, nil
 }
 
+// aws.codebuild.project is identified by name + region rather than by ARN, so
+// the init reads the asset ARN through assetRef and never keeps it in args.
+var codebuildProjectArnSpec = arnSpec{
+	resource: ResourceAwsCodebuildProject,
+	services: []string{"codebuild"},
+	prefix:   "project/",
+	altKeys:  []string{"name", "region"},
+}
+
 func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -113,13 +121,9 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the project's region and name from the ARN carried on the asset.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			parsed, err := arn.Parse(assetArn)
-			if err != nil {
-				return nil, nil, err
-			}
-			args["region"] = llx.StringData(parsed.Region)
-			args["name"] = llx.StringData(strings.TrimPrefix(parsed.Resource, "project/"))
+		if ref := codebuildProjectArnSpec.assetRef(runtime); ref.RawArn != "" {
+			args["region"] = llx.StringData(ref.Region)
+			args["name"] = llx.StringData(ref.ResourceID)
 		}
 	}
 

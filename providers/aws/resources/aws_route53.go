@@ -188,6 +188,12 @@ func (a *mqlAwsRoute53) queryLoggingConfigs() ([]any, error) {
 	return res, nil
 }
 
+var route53HostedZoneArnSpec = arnSpec{
+	resource: ResourceAwsRoute53HostedZone,
+	services: []string{"route53"},
+	altKeys:  []string{"id", "name"},
+}
+
 // initAwsRoute53HostedZone resolves a hosted zone by ID, ARN, or asset
 // identifier (set during platform discovery).
 func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -195,14 +201,8 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["id"] == nil && args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("id, arn, or name required to fetch aws route53 hosted zone")
+	if _, err := route53HostedZoneArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.route53", map[string]*llx.RawData{})

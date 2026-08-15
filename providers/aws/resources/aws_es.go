@@ -423,19 +423,19 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 	return mqlDomain, nil
 }
 
+var esDomainArnSpec = arnSpec{
+	resource: ResourceAwsEsDomain,
+	services: []string{"es"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch es domain")
+	if _, err := esDomainArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	// If we have an ARN but missing region or name, extract from ARN

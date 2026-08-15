@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -50,23 +49,22 @@ func (a *mqlAwsSecretsmanagerSecret) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var secretsmanagerSecretArnSpec = arnSpec{
+	resource: ResourceAwsSecretsmanagerSecret,
+	services: []string{"secretsmanager"},
+}
+
 func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	ref, err := secretsmanagerSecretArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch secretsmanager secret")
-	}
-
-	arnVal := args["arn"].Value.(string)
-	region, err := GetRegionFromArn(arnVal)
+	region, err := GetRegionFromArn(ref.RawArn)
 	if err != nil {
 		// Returning (args, nil, nil) here would let the runtime create a
 		// resource whose fields are all unset, which surfaces as malformed
@@ -78,7 +76,7 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	svc := conn.Secretsmanager(region)
 	ctx := context.Background()
 
-	resp, err := svc.DescribeSecret(ctx, &secretsmanager.DescribeSecretInput{SecretId: &arnVal})
+	resp, err := svc.DescribeSecret(ctx, &secretsmanager.DescribeSecretInput{SecretId: &ref.RawArn})
 	if err != nil {
 		return nil, nil, err
 	}

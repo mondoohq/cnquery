@@ -688,17 +688,18 @@ func (a *mqlAwsMqBroker) subnets() ([]any, error) {
 	return res, nil
 }
 
+var mqBrokerArnSpec = arnSpec{
+	resource: ResourceAwsMqBroker,
+	services: []string{"mq"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch aws mq broker")
+	if _, err := mqBrokerArnSpec.resolve(runtime, args); err != nil {
+		return nil, nil, err
 	}
 
 	// When arn or name is supplied (e.g. via asset identifier from discovery),

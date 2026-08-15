@@ -6,10 +6,8 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/rs/zerolog/log"
@@ -42,6 +40,16 @@ func (a *mqlAwsDirectoryservice) directories() ([]any, error) {
 	return res, nil
 }
 
+// aws.directoryservice.directory is identified by directoryId rather than by
+// ARN, so the init reads the asset ARN through assetRef and never keeps it in
+// args.
+var directoryserviceDirectoryArnSpec = arnSpec{
+	resource: ResourceAwsDirectoryserviceDirectory,
+	services: []string{"ds"},
+	prefix:   "directory/",
+	altKeys:  []string{"directoryId"},
+}
+
 // initAwsDirectoryserviceDirectory resolves a single Directory Service
 // directory. When invoked for a discovered asset
 // (aws-directoryservice-directory platform), no args are passed, so the
@@ -53,10 +61,8 @@ func initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			if parsed, err := arn.Parse(assetArn); err == nil {
-				args["directoryId"] = llx.StringData(strings.TrimPrefix(parsed.Resource, "directory/"))
-			}
+		if ref := directoryserviceDirectoryArnSpec.assetRef(runtime); ref.RawArn != "" {
+			args["directoryId"] = llx.StringData(ref.ResourceID)
 		}
 	}
 	if args["directoryId"] == nil {

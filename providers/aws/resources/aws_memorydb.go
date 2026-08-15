@@ -90,6 +90,11 @@ func (a *mqlAwsMemorydbCluster) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var memorydbClusterArnSpec = arnSpec{
+	resource: ResourceAwsMemorydbCluster,
+	services: []string{"memorydb"},
+}
+
 func initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -97,17 +102,12 @@ func initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the cluster's region and name from the ARN carried on the asset.
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch memorydb cluster")
+	ref, err := memorydbClusterArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	arnVal := args["arn"].Value.(string)
-	parsed, err := arn.Parse(arnVal)
+	parsed, err := arn.Parse(ref.RawArn)
 	if err != nil {
 		return nil, nil, err
 	}

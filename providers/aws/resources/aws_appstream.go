@@ -7,12 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	appstreamtypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/rs/zerolog/log"
@@ -203,17 +201,23 @@ func (a *mqlAwsAppstreamFleet) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var appstreamFleetArnSpec = arnSpec{
+	resource: ResourceAwsAppstreamFleet,
+	services: []string{"appstream"},
+	prefix:   "fleet/",
+	altKeys:  []string{"name", "region"},
+}
+
 func initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 	// Resolve a discovered asset (aws-appstream-fleet platform) by its ARN.
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	ref, err := appstreamFleetArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
-	region, name, err := parseAppstreamRef(args, "fleet/")
+	region, name, err := parseAppstreamRef(args, ref)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -461,11 +465,22 @@ func (a *mqlAwsAppstreamStack) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+var appstreamStackArnSpec = arnSpec{
+	resource: ResourceAwsAppstreamStack,
+	services: []string{"appstream"},
+	prefix:   "stack/",
+	altKeys:  []string{"name", "region"},
+}
+
 func initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	region, name, err := parseAppstreamRef(args, "stack/")
+	ref, err := appstreamStackArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
+	}
+	region, name, err := parseAppstreamRef(args, ref)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -496,20 +511,11 @@ func initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 // parseAppstreamRef extracts region + resource name from init args. Supports
 // {arn}, {name + region}, or both. resourcePrefix is "fleet/" or "stack/".
-func parseAppstreamRef(args map[string]*llx.RawData, resourcePrefix string) (string, string, error) {
-	var region, name string
-	if a := args["arn"]; a != nil {
-		s, ok := a.Value.(string)
-		if !ok {
-			return "", "", errors.New("aws appstream init: arn must be a string")
-		}
-		parsed, err := arn.Parse(s)
-		if err != nil {
-			return "", "", err
-		}
-		region = parsed.Region
-		name = strings.TrimPrefix(parsed.Resource, resourcePrefix)
-	}
+// parseAppstreamRef resolves the region and resource name to describe, taking
+// them from the already-validated ARN and letting explicit region/name args
+// override.
+func parseAppstreamRef(args map[string]*llx.RawData, ref arnRef) (string, string, error) {
+	region, name := ref.Region, ref.ResourceID
 	if r := args["region"]; r != nil {
 		if s, ok := r.Value.(string); ok {
 			region = s
@@ -863,6 +869,13 @@ func (a *mqlAwsAppstream) getImages(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
+var appstreamImageArnSpec = arnSpec{
+	resource: ResourceAwsAppstreamImage,
+	services: []string{"appstream"},
+	prefix:   "image/",
+	altKeys:  []string{"name", "region"},
+}
+
 // initAwsAppstreamImage resolves a single AppStream image by ARN (or name +
 // region), enabling typed references such as aws.appstream.fleet.image to
 // return a populated image rather than an empty husk.
@@ -873,7 +886,11 @@ func initAwsAppstreamImage(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if args["arn"] == nil && args["name"] == nil {
 		return args, nil, nil
 	}
-	region, name, err := parseAppstreamRef(args, "image/")
+	ref, err := appstreamImageArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
+	}
+	region, name, err := parseAppstreamRef(args, ref)
 	if err != nil {
 		return nil, nil, err
 	}

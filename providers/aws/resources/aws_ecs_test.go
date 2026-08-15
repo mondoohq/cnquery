@@ -9,7 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateAndParseARN(t *testing.T) {
+// TestEcsArnSpecParse keeps the ARN-shape cases that used to guard the ECS
+// provider's own validateAndParseARN, now that arnSpec.parse does that work for
+// every resource.
+func TestEcsArnSpecParse(t *testing.T) {
 	tests := []struct {
 		name            string
 		arn             string
@@ -50,12 +53,13 @@ func TestValidateAndParseARN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := validateAndParseARN(tt.arn, tt.expectedService)
+			spec := arnSpec{resource: ResourceAwsEcsCluster, services: []string{tt.expectedService}}
+			got, err := spec.parse(tt.arn)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, got)
+				require.Equal(t, tt.arn, got.RawArn)
 				require.Equal(t, tt.expectedService, got.Service)
 			}
 		})

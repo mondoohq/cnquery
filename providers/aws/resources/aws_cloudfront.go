@@ -575,19 +575,19 @@ func (a *mqlAwsCloudfrontAnycastIpList) tags() (map[string]any, error) {
 	return tags, nil
 }
 
+var cloudfrontDistributionArnSpec = arnSpec{
+	resource: ResourceAwsCloudfrontDistribution,
+	services: []string{"cloudfront"},
+}
+
 func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch cloudfront distribution")
+	ref, err := cloudfrontDistributionArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.cloudfront", map[string]*llx.RawData{})
@@ -601,13 +601,9 @@ func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, ok := args["arn"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("arn must be a string")
-	}
 	for _, rawResource := range rawResources.Data {
 		distribution := rawResource.(*mqlAwsCloudfrontDistribution)
-		if distribution.Arn.Data == arnVal {
+		if distribution.Arn.Data == ref.RawArn {
 			return args, distribution, nil
 		}
 	}

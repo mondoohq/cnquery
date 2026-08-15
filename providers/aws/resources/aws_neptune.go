@@ -193,19 +193,19 @@ func (a *mqlAwsNeptuneCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
+var neptuneClusterArnSpec = arnSpec{
+	resource: ResourceAwsNeptuneCluster,
+	services: []string{"rds"},
+}
+
 func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch neptune cluster")
+	ref, err := neptuneClusterArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.neptune", map[string]*llx.RawData{})
@@ -219,13 +219,9 @@ func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, ok := args["arn"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("arn must be a string")
-	}
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsNeptuneCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

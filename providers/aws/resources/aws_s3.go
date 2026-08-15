@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -139,31 +138,29 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	return args, resource, nil
 }
 
+var s3BucketArnSpec = arnSpec{
+	resource: ResourceAwsS3Bucket,
+	services: []string{"s3"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// NOTE: bucket only initializes with arn and name
 	if len(args) >= 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch aws s3 bucket")
+	ref, err := s3BucketArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Resolve the bucket name and ARN. The bucket name is encoded directly in
 	// the ARN (arn:aws:s3:::<name>), so we can build the resource without
 	// listing every bucket in every region. Per-bucket fields lazy-load.
 	var arnVal, name string
-	if args["arn"] != nil {
-		arnVal = args["arn"].Value.(string)
-		parsed, err := arn.Parse(arnVal)
-		if err != nil || parsed.Service != "s3" {
-			return nil, nil, errors.Newf("not a valid bucket ARN '%s'", arnVal)
-		}
-		name = parsed.Resource
+	if ref.RawArn != "" {
+		arnVal = ref.RawArn
+		name = ref.Resource
 	} else {
 		name = args["name"].Value.(string)
 		arnVal = fmt.Sprintf(s3ArnPattern, name)

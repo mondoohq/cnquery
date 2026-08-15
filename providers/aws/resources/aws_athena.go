@@ -82,6 +82,12 @@ func (a *mqlAwsAthena) getWorkgroups(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+var athenaWorkgroupArnSpec = arnSpec{
+	resource: ResourceAwsAthenaWorkgroup,
+	services: []string{"athena"},
+	altKeys:  []string{"name"},
+}
+
 // initAwsAthenaWorkgroup resolves a single Athena workgroup. When invoked
 // for a discovered asset (aws-athena-workgroup platform), no args are passed,
 // so the workgroup ARN is read from the connection's asset identifier and used
@@ -90,13 +96,8 @@ func initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil && args["name"] == nil {
-		return args, nil, fmt.Errorf("arn or name required to fetch athena workgroup")
+	if _, err := athenaWorkgroupArnSpec.resolve(runtime, args); err != nil {
+		return args, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.athena", map[string]*llx.RawData{})

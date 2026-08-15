@@ -372,19 +372,19 @@ func (a *mqlAwsRedshiftCluster) cloudformationStack() (*mqlAwsCloudformationStac
 	return stack, nil
 }
 
+var redshiftClusterArnSpec = arnSpec{
+	resource: ResourceAwsRedshiftCluster,
+	services: []string{"redshift"},
+}
+
 func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch redshift cluster")
+	ref, err := redshiftClusterArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all rds db instances
@@ -399,10 +399,9 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsRedshiftCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

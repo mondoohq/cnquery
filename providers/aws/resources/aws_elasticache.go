@@ -684,19 +684,19 @@ func (a *mqlAwsElasticacheServerlessCache) subnets() ([]any, error) {
 	return res, nil
 }
 
+var elasticacheClusterArnSpec = arnSpec{
+	resource: ResourceAwsElasticacheCluster,
+	services: []string{"elasticache"},
+}
+
 func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch elasticache cluster")
+	ref, err := elasticacheClusterArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.elasticache", map[string]*llx.RawData{})
@@ -710,13 +710,9 @@ func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, ok := args["arn"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("arn must be a string")
-	}
 	for _, rawResource := range rawResources.Data {
 		cluster := rawResource.(*mqlAwsElasticacheCluster)
-		if cluster.Arn.Data == arnVal {
+		if cluster.Arn.Data == ref.RawArn {
 			return args, cluster, nil
 		}
 	}

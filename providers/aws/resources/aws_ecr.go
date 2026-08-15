@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
@@ -479,19 +478,19 @@ func (a *mqlAwsEcrImage) repository() (*mqlAwsEcrRepository, error) {
 	return res.(*mqlAwsEcrRepository), nil
 }
 
+var ecrImageArnSpec = arnSpec{
+	resource: ResourceAwsEcrImage,
+	services: []string{"ecr", "ecr-public"},
+}
+
 func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecr image")
+	ref, err := ecrImageArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.ecr", map[string]*llx.RawData{})
@@ -504,10 +503,9 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		image := rawResource.(*mqlAwsEcrImage)
-		if image.Arn.Data == arnVal {
+		if image.Arn.Data == ref.RawArn {
 			return args, image, nil
 		}
 	}
@@ -946,28 +944,29 @@ func (a *mqlAwsEcrScanningConfigurationRule) id() (string, error) {
 	return a.__id, nil
 }
 
+var ecrRepositoryArnSpec = arnSpec{
+	resource: ResourceAwsEcrRepository,
+	services: []string{"ecr", "ecr-public"},
+	altKeys:  []string{"name"},
+}
+
 func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch ecr repository")
+	ref, err := ecrRepositoryArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// When an ARN is supplied, the registry kind (private vs public), region,
 	// and repository name are all encoded in it, so we can issue a single
 	// targeted DescribeRepositories call instead of listing every repository in
 	// every region (plus all public repos).
-	if args["arn"] != nil {
-		arnVal, _ := args["arn"].Value.(string)
-		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "repository/") {
+	if ref.RawArn != "" {
+		parsed := ref.ARN
+		if strings.HasPrefix(parsed.Resource, "repository/") {
 			name := strings.TrimPrefix(parsed.Resource, "repository/")
 			conn := runtime.Connection.(*connection.AwsConnection)
 			switch parsed.Service {

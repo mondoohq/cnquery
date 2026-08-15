@@ -435,6 +435,11 @@ func newMqlAwsMskCluster(runtime *plugin.Runtime, region string, accountID strin
 	return mqlCluster, nil
 }
 
+var mskClusterArnSpec = arnSpec{
+	resource: ResourceAwsMskCluster,
+	services: []string{"kafka"},
+}
+
 // initAwsMskCluster tolerates a bare arn (for cross-account typed refs from Pipes/Firehose/Replicator).
 // When the cluster is accessible, DescribeClusterV2 populates all scalar fields; on access denied (cross-account)
 // the resource falls back to a minimal shell with just arn/__id so callers can still traverse other fields.
@@ -444,32 +449,27 @@ func initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if len(args) >= 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws msk cluster")
-	}
-	arnVal := args["arn"].Value.(string)
-	parsed, err := arn.Parse(arnVal)
+	ref, err := mskClusterArnSpec.resolve(runtime, args)
 	if err != nil {
-		args["__id"] = llx.StringData(arnVal)
+		return nil, nil, err
+	}
+	parsed, err := arn.Parse(ref.RawArn)
+	if err != nil {
+		args["__id"] = llx.StringData(ref.RawArn)
 		return args, nil, nil
 	}
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Kafka(parsed.Region)
-	out, err := svc.DescribeClusterV2(context.Background(), &kafka.DescribeClusterV2Input{ClusterArn: &arnVal})
+	out, err := svc.DescribeClusterV2(context.Background(), &kafka.DescribeClusterV2Input{ClusterArn: &ref.RawArn})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			args["__id"] = llx.StringData(arnVal)
+			args["__id"] = llx.StringData(ref.RawArn)
 			return args, nil, nil
 		}
 		return nil, nil, err
 	}
 	if out.ClusterInfo == nil {
-		args["__id"] = llx.StringData(arnVal)
+		args["__id"] = llx.StringData(ref.RawArn)
 		return args, nil, nil
 	}
 	mqlCluster, err := newMqlAwsMskCluster(runtime, parsed.Region, parsed.AccountID, *out.ClusterInfo)

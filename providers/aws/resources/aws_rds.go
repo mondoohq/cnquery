@@ -535,19 +535,19 @@ func (a *mqlAwsRdsDbinstanceAssociatedRole) iamRole() (*mqlAwsIamRole, error) {
 	return mqlRole.(*mqlAwsIamRole), nil
 }
 
+var rdsDbclusterArnSpec = arnSpec{
+	resource: ResourceAwsRdsDbcluster,
+	services: []string{"rds"},
+}
+
 func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch rds db cluster")
+	ref, err := rdsDbclusterArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all rds db clusters
@@ -562,14 +562,18 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsRdsDbcluster)
-		if dbInstance.Arn.Data == arnVal {
+		if dbInstance.Arn.Data == ref.RawArn {
 			return args, dbInstance, nil
 		}
 	}
 	return nil, nil, errors.New("rds db cluster does not exist")
+}
+
+var rdsDbinstanceArnSpec = arnSpec{
+	resource: ResourceAwsRdsDbinstance,
+	services: []string{"rds"},
 }
 
 func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -577,14 +581,9 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch rds db instance")
+	ref, err := rdsDbinstanceArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// load all rds db instances
@@ -599,10 +598,9 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsRdsDbinstance)
-		if dbInstance.Arn.Data == arnVal {
+		if dbInstance.Arn.Data == ref.RawArn {
 			return args, dbInstance, nil
 		}
 	}

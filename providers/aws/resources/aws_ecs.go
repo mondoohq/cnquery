@@ -152,34 +152,27 @@ func (a *mqlAwsEcs) getECSClusters(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
+var ecsClusterArnSpec = arnSpec{
+	resource: ResourceAwsEcsCluster,
+	services: []string{"ecs"},
+}
+
 func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecs cluster")
-	}
-	a := args["arn"].Value.(string)
-	conn := runtime.Connection.(*connection.AwsConnection)
-
-	// Validate and parse ARN if provided
-	parsedARN, err := validateAndParseARN(a, "ecs")
+	ref, err := ecsClusterArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
+	conn := runtime.Connection.(*connection.AwsConnection)
 
-	region := parsedARN.Region
+	region := ref.Region
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldSettings, ecstypes.ClusterFieldStatistics, ecstypes.ClusterFieldTags}})
+	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{ref.RawArn}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldSettings, ecstypes.ClusterFieldStatistics, ecstypes.ClusterFieldTags}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -222,7 +215,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 	args["statistics"] = llx.MapData(statisticsMap, types.String)
 
-	clusterArn := a
+	clusterArn := ref.RawArn
 	strategyItems := make([]any, 0, len(c.DefaultCapacityProviderStrategy))
 	for _, item := range c.DefaultCapacityProviderStrategy {
 		cpName := ""
@@ -427,37 +420,31 @@ func (s *mqlAwsEcsTask) id() (string, error) {
 	return s.Arn.Data, nil
 }
 
+var ecsTaskArnSpec = arnSpec{
+	resource: ResourceAwsEcsTask,
+	services: []string{"ecs"},
+}
+
 func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecs task")
-	}
-	a := args["arn"].Value.(string)
-	conn := runtime.Connection.(*connection.AwsConnection)
-
-	parsedARN, err := validateAndParseARN(a, "ecs")
+	ref, err := ecsTaskArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
+	conn := runtime.Connection.(*connection.AwsConnection)
 
-	region := parsedARN.Region
+	region := ref.Region
 	clusterName := ""
-	if res := strings.Split(parsedARN.Resource, "/"); len(res) == 3 {
+	if res := strings.Split(ref.Resource, "/"); len(res) == 3 {
 		clusterName = res[1]
 	}
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	params := &ecs.DescribeTasksInput{Tasks: []string{a}, Cluster: &clusterName, Include: []ecstypes.TaskField{ecstypes.TaskFieldTags}}
+	params := &ecs.DescribeTasksInput{Tasks: []string{ref.RawArn}, Cluster: &clusterName, Include: []ecstypes.TaskField{ecstypes.TaskFieldTags}}
 	taskDetails, err := svc.DescribeTasks(ctx, params)
 	if err != nil {
 		return nil, nil, err
@@ -771,27 +758,6 @@ func (s *mqlAwsEcsContainer) id() (string, error) {
 
 func ecsTagsToMap(tags []ecstypes.Tag) map[string]any {
 	return tagsToMap(tags, func(t ecstypes.Tag) *string { return t.Key }, func(t ecstypes.Tag) *string { return t.Value })
-}
-
-// validateAndParseARN validates that the given string is a valid ECS ARN
-// and returns the parsed ARN structure. Returns an error if the ARN is malformed
-// or does not belong to the expectedService.
-func validateAndParseARN(arnStr, expectedService string) (*arn.ARN, error) {
-	if !strings.HasPrefix(arnStr, "arn:") {
-		return nil, errors.Newf("invalid ARN format: %s", arnStr)
-	}
-
-	parsedArn, err := arn.Parse(arnStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if parsedArn.Service != expectedService {
-		return nil, errors.Newf("invalid ARN (service is %s, expected %s): %s",
-			parsedArn.Service, expectedService, arnStr)
-	}
-
-	return &parsedArn, nil
 }
 
 func (a *mqlAwsEcs) taskDefinitions() ([]any, error) {
@@ -2091,33 +2057,26 @@ func (n *mqlAwsEcsServiceNetworkConfiguration) awsVpcConfiguration() (*mqlAwsEcs
 	return n.AwsVpcConfiguration.Data, nil
 }
 
+var ecsServiceArnSpec = arnSpec{
+	resource: ResourceAwsEcsService,
+	services: []string{"ecs"},
+}
+
 func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch ecs service")
-	}
-	a := args["arn"].Value.(string)
-	conn := runtime.Connection.(*connection.AwsConnection)
-
-	// Validate and parse ARN if provided
-	parsedARN, err := validateAndParseARN(a, "ecs")
+	ref, err := ecsServiceArnSpec.resolve(runtime, args)
 	if err != nil {
 		return nil, nil, err
 	}
+	conn := runtime.Connection.(*connection.AwsConnection)
 
-	region := parsedARN.Region
+	region := ref.Region
 	clusterName := ""
 	serviceName := ""
-	if res := strings.Split(parsedARN.Resource, "/"); len(res) >= 2 {
+	if res := strings.Split(ref.Resource, "/"); len(res) >= 2 {
 		clusterName = res[1]
 		if len(res) >= 3 {
 			serviceName = res[2]
@@ -2126,7 +2085,7 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	// Extract service name from ARN
 
-	clusterArn := fmt.Sprintf("arn:aws:ecs:%s:%s:cluster/%s", region, parsedARN.AccountID, clusterName)
+	clusterArn := fmt.Sprintf("arn:aws:ecs:%s:%s:cluster/%s", region, ref.AccountID, clusterName)
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
@@ -2149,7 +2108,7 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	var deploymentConfigResource any
 	if s.DeploymentConfiguration != nil {
 		var err error
-		deploymentConfigResource, err = createDeploymentConfigurationResource(runtime, s.DeploymentConfiguration, a)
+		deploymentConfigResource, err = createDeploymentConfigurationResource(runtime, s.DeploymentConfiguration, ref.RawArn)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -2159,7 +2118,7 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	var networkConfigResource any
 	if s.NetworkConfiguration != nil {
 		var err error
-		networkConfigResource, err = createNetworkConfigurationResource(runtime, s.NetworkConfiguration, a)
+		networkConfigResource, err = createNetworkConfigurationResource(runtime, s.NetworkConfiguration, ref.RawArn)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -2602,19 +2561,19 @@ func (a *mqlAwsEcsTaskSet) service() (*mqlAwsEcsService, error) {
 	return res.(*mqlAwsEcsService), nil
 }
 
+var ecsTaskDefinitionArnSpec = arnSpec{
+	resource: ResourceAwsEcsTaskDefinition,
+	services: []string{"ecs"},
+}
+
 func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws ecs task definition")
+	ref, err := ecsTaskDefinitionArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, "aws.ecs", map[string]*llx.RawData{})
@@ -2628,14 +2587,13 @@ func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal, _ := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		td := rawResource.(*mqlAwsEcsTaskDefinition)
-		if td.Arn.Data == arnVal {
+		if td.Arn.Data == ref.RawArn {
 			return args, td, nil
 		}
 	}
-	return nil, nil, errors.New("aws ecs task definition does not exist: " + arnVal)
+	return nil, nil, errors.New("aws ecs task definition does not exist: " + ref.RawArn)
 }
 
 func (a *mqlAwsEcs) capacityProviders() ([]any, error) {

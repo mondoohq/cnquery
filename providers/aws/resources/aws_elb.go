@@ -444,37 +444,28 @@ func buildElbV2LoadBalancerResource(runtime *plugin.Runtime, region, accountID s
 	return res, nil
 }
 
+var elbLoadbalancerArnSpec = arnSpec{
+	resource: ResourceAwsElbLoadbalancer,
+	services: []string{"elasticloadbalancing"},
+}
+
 func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch elb loadbalancer")
-	}
-
-	arnVal := args["arn"].Value.(string)
-
-	// Quick check: if the ARN doesn't belong to elasticloadbalancing, this asset
-	// is not an ELB. This happens when the query runs against non-ELB discovered
-	// assets (e.g., DynamoDB tables, IAM users, S3 buckets).
-	if arnVal == "" || !strings.Contains(arnVal, ":elasticloadbalancing:") {
-		return nil, nil, errors.New("elb load balancer does not exist")
+	ref, err := elbLoadbalancerArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Issue a single targeted Describe against the ARN's region instead of
 	// listing every load balancer in every region. ELBv2 (app/net/gateway) and
 	// classic ELB live in different APIs; discriminate by the ARN form.
-	region, err := GetRegionFromArn(arnVal)
+	region, err := GetRegionFromArn(ref.RawArn)
 	if err == nil && region != "" {
 		conn := runtime.Connection.(*connection.AwsConnection)
-		if isV1LoadBalancerArn(arnVal) {
+		if isV1LoadBalancerArn(ref.RawArn) {
 			// Classic ELB: the synthetic ARN encodes the name as
 			// loadbalancer/classic/<name>.
 			name := ""
@@ -484,9 +475,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 				}
 			}
 			if name == "" {
-				if parsed, perr := arn.Parse(arnVal); perr == nil {
-					name = strings.TrimPrefix(parsed.Resource, "loadbalancer/classic/")
-				}
+				name = strings.TrimPrefix(ref.Resource, "loadbalancer/classic/")
 			}
 			if name != "" {
 				svc := conn.Elb(region)
@@ -510,7 +499,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		} else {
 			svc := conn.Elbv2(region)
 			resp, err := svc.DescribeLoadBalancers(context.Background(), &elasticloadbalancingv2.DescribeLoadBalancersInput{
-				LoadBalancerArns: []string{arnVal},
+				LoadBalancerArns: []string{ref.RawArn},
 			})
 			if err != nil {
 				// Surface unexpected errors; on access-denied or a stale ARN
@@ -542,7 +531,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	for _, rawResource := range rawResources.Data {
 		lb := rawResource.(*mqlAwsElbLoadbalancer)
-		if lb.Arn.Data == arnVal {
+		if lb.Arn.Data == ref.RawArn {
 			return args, lb, nil
 		}
 	}
@@ -553,7 +542,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	for _, rawResource := range classicResources.Data {
 		lb := rawResource.(*mqlAwsElbLoadbalancer)
-		if lb.Arn.Data == arnVal {
+		if lb.Arn.Data == ref.RawArn {
 			return args, lb, nil
 		}
 	}

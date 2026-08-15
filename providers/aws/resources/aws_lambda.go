@@ -310,22 +310,29 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 	return f, nil
 }
 
+var lambdaFunctionArnSpec = arnSpec{
+	resource: ResourceAwsLambdaFunction,
+	services: []string{"lambda"},
+	altKeys:  []string{"name", "region"},
+}
+
 func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	ref, err := lambdaFunctionArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	nameArg := args["name"]
 	regionArg := args["region"]
 
-	var arnVal string
-	if args["arn"] == nil {
+	// Without an ARN the function is identified by name + region, from which
+	// the ARN is synthesized.
+	arnVal := ref.RawArn
+	if arnVal == "" {
 		if nameArg == nil {
 			return nil, nil, errors.New("name required to fetch lambda function")
 		}
@@ -337,8 +344,6 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		if arnVal == "" {
 			return nil, nil, errors.New("arn required to fetch lambda function")
 		}
-	} else {
-		arnVal = args["arn"].Value.(string)
 	}
 
 	// Targeted lookup: derive the region + function name from the ARN and fetch

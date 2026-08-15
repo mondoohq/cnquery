@@ -66,19 +66,19 @@ func initAwsSagemakerExperiment(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return nil, nil, fmt.Errorf("aws.sagemaker.experiment with arn %q not found", arnVal)
 }
 
+var sagemakerModelArnSpec = arnSpec{
+	resource: ResourceAwsSagemakerModel,
+	services: []string{"sagemaker"},
+}
+
 func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	ref, err := sagemakerModelArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to resolve sagemaker model")
-	}
-	arnVal := args["arn"].Value.(string)
 
 	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
 	if err != nil {
@@ -90,7 +90,7 @@ func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if rawResources.Error == nil {
 		for _, rawResource := range rawResources.Data {
 			m := rawResource.(*mqlAwsSagemakerModel)
-			if m.Arn.Data == arnVal {
+			if m.Arn.Data == ref.RawArn {
 				return args, m, nil
 			}
 		}
@@ -99,7 +99,7 @@ func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.sagemaker.model with arn %q not found", arnVal)
+	return nil, nil, fmt.Errorf("aws.sagemaker.model with arn %q not found", ref.RawArn)
 }
 
 // ---- Experiments ----

@@ -870,25 +870,24 @@ func (a *mqlAwsKmsGrant) key() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+// allowRef is set because aws.kms.key accepts a bare key ID or an "alias/..."
+// name in the same "arn" arg, and normalizes them itself below.
+var kmsKeyArnSpec = arnSpec{
+	resource: ResourceAwsKmsKey,
+	services: []string{"kms"},
+	allowRef: true,
+}
+
 func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
+	ref, err := kmsKeyArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
-
-	r := args["arn"]
-	if r == nil {
-		return nil, nil, errors.New("arn required to fetch aws kms key")
-	}
-	keyRef, ok := r.Value.(string)
-	if !ok {
-		return nil, nil, errors.New("invalid arn")
-	}
+	keyRef := ref.RawArn
 
 	conn := runtime.Connection.(*connection.AwsConnection)
 	region := rawStringArg(args["region"])

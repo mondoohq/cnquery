@@ -123,19 +123,19 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 	return tasks
 }
 
+var apigatewayRestapiArnSpec = arnSpec{
+	resource: ResourceAwsApigatewayRestapi,
+	services: []string{"apigateway"},
+}
+
 func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch gateway restapi")
+	ref, err := apigatewayRestapiArnSpec.resolve(runtime, args)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	obj, err := CreateResource(runtime, ResourceAwsApigateway, map[string]*llx.RawData{})
@@ -149,10 +149,9 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		restApi := rawResource.(*mqlAwsApigatewayRestapi)
-		if restApi.Arn.Data == arnVal {
+		if restApi.Arn.Data == ref.RawArn {
 			return args, restApi, nil
 		}
 	}
