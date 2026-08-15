@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
 )
 
 // APIError captures a non-2xx response from the Keycloak admin API.
@@ -179,6 +181,7 @@ func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, qu
 
 	var results []T
 	var previous []byte
+	complete := false
 	for i := 0; i < maxPages; i++ {
 		page.Set("first", strconv.Itoa(i*pageSize))
 
@@ -191,6 +194,7 @@ func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, qu
 		// page. Detect that by the response repeating verbatim and stop,
 		// instead of appending the same records until the page cap is reached.
 		if previous != nil && bytes.Equal(previous, body) {
+			complete = true
 			break
 		}
 		previous = body
@@ -204,8 +208,20 @@ func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, qu
 
 		// A short page is the last page.
 		if len(batch) < pageSize {
+			complete = true
 			break
 		}
+	}
+
+	// Reaching the cap means the endpoint still had records to give. Say so,
+	// because a caller that reads a truncated list as the whole list reports
+	// an absence that was never established.
+	if !complete {
+		log.Warn().
+			Str("path", path).
+			Int("records", len(results)).
+			Int("pages", maxPages).
+			Msg("keycloak> stopped paging at the page cap, the list is incomplete")
 	}
 
 	return results, nil

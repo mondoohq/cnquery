@@ -5,6 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.5
 
 require (
+	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
 )
@@ -73,7 +74,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
-	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
