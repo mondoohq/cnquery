@@ -159,6 +159,53 @@ type mqlPackagesInternal struct {
 	packagesByName map[string]*mqlPackage
 }
 
+// fillPackageArgs resets args and fills in the resource arguments for one
+// package. It clears the map itself rather than expecting a fresh one, so
+// list() can reuse a single map for the whole package list: CreateResource
+// copies every value out via SetAllData and keeps no reference to it.
+//
+// The clear is load bearing. license is only set when the backend reported
+// one, so a leftover key would hand one package's license to the next.
+func fillPackageArgs(args map[string]*llx.RawData, osPkg *packages.Package, available string, cpes []any) {
+	clear(args)
+
+	args["name"] = llx.StringData(osPkg.Name)
+	args["version"] = llx.StringData(osPkg.Version)
+	args["available"] = llx.StringData(available)
+	args["arch"] = llx.StringData(osPkg.Arch)
+	args["status"] = llx.StringData(osPkg.Status)
+	args["description"] = llx.StringData(osPkg.Description)
+	args["format"] = llx.StringData(osPkg.Format)
+	args["installed"] = llx.BoolData(true)
+	args["origin"] = llx.StringData(osPkg.Origin)
+	args["epoch"] = llx.StringData(osPkg.Epoch)
+	args["purl"] = llx.StringData(osPkg.PUrl)
+	args["cpes"] = llx.ArrayData(cpes, types.Resource("cpe"))
+	args["vendor"] = llx.StringData(osPkg.Vendor)
+
+	// Only eagerly set license when the backend populated it (rpm, apk,
+	// pacman). dpkg leaves it empty here so the lazy `license()` method on
+	// mqlPackage can fire and read /usr/share/doc/<pkg>/copyright on demand.
+	// Setting "" here would short-circuit the GetOrCompute wrapper and the
+	// lazy fallback would never run.
+	if osPkg.License != "" {
+		args["license"] = llx.StringData(osPkg.License)
+	}
+
+	// Install date: explicit null via llx.NilData when the backend didn't
+	// report one (dpkg / apk / pacman / macOS / rpm gpg-pubkey). The generated
+	// dispatcher routes Nil through RawToTValue[time.Time] which yields
+	// State=StateIsSet|StateIsNull — MQL surfaces that as a real null. Leaving
+	// the key absent would leave the field in an entirely unset state and MQL
+	// fails with "no type information." Passing TimeData(zero) would surface
+	// the Go zero time (0001-01-01) as if it were a real install date.
+	if osPkg.InstallDate.IsZero() {
+		args["installDate"] = llx.NilData
+	} else {
+		args["installDate"] = llx.TimeData(osPkg.InstallDate)
+	}
+}
+
 func (x *mqlPackages) list() ([]any, error) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
@@ -200,6 +247,13 @@ func (x *mqlPackages) list() ([]any, error) {
 
 	// create MQL package os for each package
 	pkgs := make([]any, len(osPkgs))
+
+	// CreateResource copies every value out of this map (SetAllData) and keeps
+	// no reference to it, so one map serves the whole loop. clear() empties it
+	// while keeping the buckets, which matters because a package-heavy host
+	// would otherwise build and discard thousands of 15-entry maps.
+	pkgArgs := make(map[string]*llx.RawData, 15)
+
 	for i, osPkg := range osPkgs {
 		// check if we found a newer version
 		available := ""
@@ -220,44 +274,8 @@ func (x *mqlPackages) list() ([]any, error) {
 			cpes = append(cpes, cpe)
 		}
 
-		pkgArgs := map[string]*llx.RawData{
-			"name":        llx.StringData(osPkg.Name),
-			"version":     llx.StringData(osPkg.Version),
-			"available":   llx.StringData(available),
-			"arch":        llx.StringData(osPkg.Arch),
-			"status":      llx.StringData(osPkg.Status),
-			"description": llx.StringData(osPkg.Description),
-			"format":      llx.StringData(osPkg.Format),
-			"installed":   llx.BoolData(true),
-			"origin":      llx.StringData(osPkg.Origin),
-			"epoch":       llx.StringData(osPkg.Epoch),
-			"purl":        llx.StringData(osPkg.PUrl),
-			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
-			"vendor":      llx.StringData(osPkg.Vendor),
-		}
-		// Only eagerly set license when the backend populated it (rpm,
-		// apk, pacman). dpkg leaves it empty here so the lazy `license()`
-		// method on mqlPackage can fire and read
-		// /usr/share/doc/<pkg>/copyright on demand. Setting "" here
-		// would short-circuit the GetOrCompute wrapper and the lazy
-		// fallback would never run.
-		if osPkg.License != "" {
-			pkgArgs["license"] = llx.StringData(osPkg.License)
-		}
-		// Install date: explicit null via llx.NilData when the backend
-		// didn't report one (dpkg / apk / pacman / macOS / rpm
-		// gpg-pubkey). The generated dispatcher routes Nil through
-		// RawToTValue[time.Time] which yields State=StateIsSet|
-		// StateIsNull — MQL surfaces that as a real null. Leaving the
-		// key absent from pkgArgs would leave the field in an entirely
-		// unset state and MQL fails with "no type information."
-		// Passing TimeData(zero) would surface the Go zero time
-		// (0001-01-01) as if it were a real install date.
-		if osPkg.InstallDate.IsZero() {
-			pkgArgs["installDate"] = llx.NilData
-		} else {
-			pkgArgs["installDate"] = llx.TimeData(osPkg.InstallDate)
-		}
+		fillPackageArgs(pkgArgs, &osPkg, available, cpes)
+
 		pkg, err := CreateResource(x.MqlRuntime, "package", pkgArgs)
 		if err != nil {
 			return nil, err
