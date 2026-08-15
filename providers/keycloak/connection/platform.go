@@ -20,10 +20,11 @@ const (
 // and the same names appear on every stage of a deployment.
 const PlatformIdKeycloakRealm = "//platformid.api.mondoo.app/runtime/keycloak/host/"
 
-// OptionInsecure is the connection option that skips TLS verification. A
-// Keycloak server is commonly published under a private certificate authority,
-// which is the case this covers.
-const OptionInsecure = "insecure"
+// OptionCACert is the connection option naming the certificate authority to
+// trust, either as the PEM itself or as a path to it. A Keycloak server is
+// commonly published under a private authority, and trusting it keeps the
+// certificate checked.
+const OptionCACert = "ca-cert"
 
 func NewKeycloakRealmPlatform(host, realm string) *inventory.Platform {
 	pf := &inventory.Platform{

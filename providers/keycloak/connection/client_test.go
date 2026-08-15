@@ -5,14 +5,24 @@ package connection
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -520,51 +530,107 @@ func TestGetPagedKeepsEveryRecordFromANonPagingEndpoint(t *testing.T) {
 	assert.Equal(t, 2, calls)
 }
 
-func TestSkipTLSVerify(t *testing.T) {
-	assert.False(t, SkipTLSVerify(nil))
-	assert.False(t, SkipTLSVerify(&inventory.Config{}))
+func TestCACertificateReadsThePemDirectly(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
 
-	// The provider flag.
-	assert.True(t, SkipTLSVerify(&inventory.Config{Options: map[string]string{OptionInsecure: "true"}}))
-	assert.False(t, SkipTLSVerify(&inventory.Config{Options: map[string]string{OptionInsecure: "false"}}))
+	pem := "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n"
+	conf := &inventory.Config{Options: map[string]string{OptionCACert: pem}}
 
-	// The global --insecure, which the runtime surfaces on the config itself.
-	assert.True(t, SkipTLSVerify(&inventory.Config{Insecure: true}))
+	got, err := CACertificate(conf)
+	require.NoError(t, err)
+	assert.Equal(t, pem, string(got))
 }
 
-func TestNewHTTPClientAppliesInsecure(t *testing.T) {
-	// A default client keeps the standard transport, so TLS is verified.
-	plain := newHTTPClient(&inventory.Config{})
-	assert.Nil(t, plain.Transport)
-	assert.Equal(t, requestTimeout, plain.Timeout)
+func TestCACertificateReadsAPath(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
 
-	insecure := newHTTPClient(&inventory.Config{Options: map[string]string{OptionInsecure: "true"}})
-	transport, ok := insecure.Transport.(*http.Transport)
-	require.True(t, ok)
-	require.NotNil(t, transport.TLSClientConfig)
-	assert.True(t, transport.TLSClientConfig.InsecureSkipVerify)
-	assert.Equal(t, requestTimeout, insecure.Timeout)
+	pem := "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n"
+	path := filepath.Join(t.TempDir(), "ca.pem")
+	require.NoError(t, os.WriteFile(path, []byte(pem), 0o600))
+
+	conf := &inventory.Config{Options: map[string]string{OptionCACert: path}}
+	got, err := CACertificate(conf)
+	require.NoError(t, err)
+	assert.Equal(t, pem, string(got))
 }
 
-func TestNewKeycloakConnectionUsesTheInsecureClient(t *testing.T) {
-	t.Setenv("KEYCLOAK_PASSWORD", "")
+func TestCACertificateIsAbsentByDefault(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
 
-	conf := &inventory.Config{
-		Type: "keycloak",
-		Options: map[string]string{
-			"url": "https://kc.example.com", "client-id": "scanner",
-			OptionInsecure: "true",
-		},
-		Credentials: []*vault.Credential{vault.NewPasswordCredential("", "client-secret")},
-	}
+	got, err := CACertificate(nil)
+	require.NoError(t, err)
+	assert.Empty(t, got)
 
-	conn, err := NewKeycloakConnection(1, &inventory.Asset{}, conf)
+	got, err = CACertificate(&inventory.Config{})
+	require.NoError(t, err)
+	assert.Empty(t, got)
+}
+
+func TestCACertificateReportsAnUnreadablePath(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
+
+	conf := &inventory.Config{Options: map[string]string{OptionCACert: "/no/such/ca.pem"}}
+	_, err := CACertificate(conf)
+	require.Error(t, err)
+}
+
+func TestNewHTTPClientWithoutACertificateKeepsTheDefaultTransport(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
+
+	client, err := newHTTPClient(&inventory.Config{})
+	require.NoError(t, err)
+	// No custom transport means the system roots apply and the certificate is
+	// verified.
+	assert.Nil(t, client.Transport)
+	assert.Equal(t, requestTimeout, client.Timeout)
+}
+
+func TestNewHTTPClientTrustsTheNamedAuthority(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
+
+	// A real self-signed certificate, so the pool genuinely accepts it.
+	pem := selfSignedPEM(t)
+	conf := &inventory.Config{Options: map[string]string{OptionCACert: string(pem)}}
+
+	client, err := newHTTPClient(conf)
 	require.NoError(t, err)
 
-	// The token endpoint must use the same client, otherwise authentication
-	// fails against the private certificate authority the admin API works with.
-	assert.Same(t, conn.client, conn.tokens.client)
-	transport, ok := conn.client.Transport.(*http.Transport)
+	transport, ok := client.Transport.(*http.Transport)
 	require.True(t, ok)
-	assert.True(t, transport.TLSClientConfig.InsecureSkipVerify)
+	require.NotNil(t, transport.TLSClientConfig)
+	// Verification stays on. The authority is added, not bypassed.
+	assert.False(t, transport.TLSClientConfig.InsecureSkipVerify)
+	assert.NotNil(t, transport.TLSClientConfig.RootCAs)
+	assert.Equal(t, uint16(tls.VersionTLS12), transport.TLSClientConfig.MinVersion)
+}
+
+func TestNewHTTPClientRejectsAGarbageCertificate(t *testing.T) {
+	t.Setenv("KEYCLOAK_CA_CERT", "")
+
+	conf := &inventory.Config{Options: map[string]string{OptionCACert: "-----BEGIN CERTIFICATE-----\nnot base64\n-----END CERTIFICATE-----"}}
+	_, err := newHTTPClient(conf)
+	require.Error(t, err)
+}
+
+// selfSignedPEM builds a throwaway certificate authority for the trust tests.
+func selfSignedPEM(t *testing.T) []byte {
+	t.Helper()
+
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	tmpl := &x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: "keycloak-test-ca"},
+		NotBefore:             time.Now().Add(-time.Hour),
+		NotAfter:              time.Now().Add(time.Hour),
+		IsCA:                  true,
+		KeyUsage:              x509.KeyUsageCertSign,
+		BasicConstraintsValid: true,
+	}
+
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	require.NoError(t, err)
+
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
 }

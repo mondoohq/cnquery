@@ -54,12 +54,14 @@ Arguments:
   account authentication.
 - `--username` and `--password` - admin user, which selects password
   authentication.
-- `--insecure` (`-k`) - accept any server certificate. A Keycloak server is
-  commonly published under a private certificate authority, which is the case
-  this covers. It applies to the token endpoint as well as the admin API.
+- `--ca-cert` - certificate authority to trust for the server certificate,
+  either the PEM itself or a path to it. A Keycloak server is commonly
+  published under a private authority. Trusting that authority keeps the
+  certificate verified, which skipping verification would not. It applies to
+  the token endpoint as well as the admin API.
 
 `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_AUTH_REALM`, `KEYCLOAK_CLIENT_ID`,
-`KEYCLOAK_CLIENT_SECRET`, `KEYCLOAK_USERNAME` and `KEYCLOAK_PASSWORD` supply the
+`KEYCLOAK_CLIENT_SECRET`, `KEYCLOAK_CA_CERT`, `KEYCLOAK_USERNAME` and `KEYCLOAK_PASSWORD` supply the
 same values as the flags.
 
 Keycloak access tokens are short lived, one minute on a stock install. The

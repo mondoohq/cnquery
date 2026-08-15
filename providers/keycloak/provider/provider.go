@@ -58,6 +58,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		"auth-realm": "KEYCLOAK_AUTH_REALM",
 		"client-id":  "KEYCLOAK_CLIENT_ID",
 		"username":   "KEYCLOAK_USERNAME",
+		"ca-cert":    "KEYCLOAK_CA_CERT",
 	} {
 		value := flagValue(flags, flag)
 		if value == "" {
@@ -76,12 +77,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	if password != "" {
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(conf.Options["username"], password))
-	}
-
-	if x, ok := flags["insecure"]; ok {
-		if v, isBool := x.RawData().Value.(bool); isBool && v {
-			conf.Options[connection.OptionInsecure] = "true"
-		}
 	}
 
 	clientSecret := flagValue(flags, "client-secret")

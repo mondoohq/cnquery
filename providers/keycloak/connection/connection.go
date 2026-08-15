@@ -5,6 +5,7 @@ package connection
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"net/http"
 	"net/url"
@@ -47,8 +48,13 @@ func NewKeycloakConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
-		client:     newHTTPClient(conf),
 	}
+
+	httpClient, err := newHTTPClient(conf)
+	if err != nil {
+		return nil, err
+	}
+	conn.client = httpClient
 
 	rawURL := option(conf, "url")
 	if rawURL == "" {
@@ -116,27 +122,58 @@ func NewKeycloakConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 }
 
 // newHTTPClient builds the client both the token endpoint and the admin API are
-// called through. It honors the provider --insecure flag and the global
-// --insecure (-k), which the runtime surfaces as conf.Insecure, since a
-// Keycloak server is commonly published under a private certificate authority.
-func newHTTPClient(conf *inventory.Config) *http.Client {
+// called through.
+func newHTTPClient(conf *inventory.Config) (*http.Client, error) {
 	client := &http.Client{Timeout: requestTimeout}
 
-	if SkipTLSVerify(conf) {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // the operator asked for it with --insecure
-		}
+	// A Keycloak server is commonly published under a private certificate
+	// authority. Trusting that authority keeps the certificate checked, which
+	// skipping verification would not.
+	pem, err := CACertificate(conf)
+	if err != nil {
+		return nil, err
 	}
-	return client
+	if len(pem) == 0 {
+		return client, nil
+	}
+
+	roots, err := x509.SystemCertPool()
+	if err != nil || roots == nil {
+		// A system pool that cannot be read is replaced rather than dropped,
+		// so the named authority still applies.
+		roots = x509.NewCertPool()
+	}
+	if !roots.AppendCertsFromPEM(pem) {
+		return nil, errors.New("keycloak ca certificate holds no PEM certificate, check --ca-cert")
+	}
+
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12},
+	}
+	return client, nil
 }
 
-// SkipTLSVerify reports whether the connection was told to accept any server
-// certificate.
-func SkipTLSVerify(conf *inventory.Config) bool {
-	if conf == nil {
-		return false
+// CACertificate returns the certificate authority the connection was told to
+// trust. The option carries either the PEM itself or a path to it, since a
+// certificate is awkward to paste into a shell.
+func CACertificate(conf *inventory.Config) ([]byte, error) {
+	value := option(conf, OptionCACert)
+	if value == "" {
+		value = os.Getenv("KEYCLOAK_CA_CERT")
 	}
-	return conf.Insecure || option(conf, OptionInsecure) == "true"
+	if value == "" {
+		return nil, nil
+	}
+
+	if strings.Contains(value, "-----BEGIN") {
+		return []byte(value), nil
+	}
+
+	pem, err := os.ReadFile(value)
+	if err != nil {
+		return nil, errors.New("cannot read keycloak ca certificate: " + err.Error())
+	}
+	return pem, nil
 }
 
 // grantForm builds the token request for whichever credentials were supplied. A
