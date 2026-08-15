@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.5
 
 require (
-	github.com/openai/openai-go/v3 v3.50.0
+	github.com/openai/openai-go/v3 v3.51.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.32.2
 )
