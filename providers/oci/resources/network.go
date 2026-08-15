@@ -62,6 +62,7 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 					"cidrBlock":             llx.StringDataPtr(vcn.CidrBlock),
 					"cidrBlocks":            llx.ArrayData(convert.SliceAnyToInterface(vcn.CidrBlocks), types.String),
 					"vcnDomainName":         llx.StringDataPtr(vcn.VcnDomainName),
+					"securityAttributes":    llx.MapData(definedTagsToAny(vcn.SecurityAttributes), types.Dict),
 					"defaultDhcpOptionsId":  llx.StringDataPtr(vcn.DefaultDhcpOptionsId),
 					"defaultRouteTableId":   llx.StringDataPtr(vcn.DefaultRouteTableId),
 					"defaultSecurityListId": llx.StringDataPtr(vcn.DefaultSecurityListId),
@@ -159,6 +160,10 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 
 			for i := range securityLists {
 				securityList := securityLists[i]
+
+				if conn.Filters.IsFilteredOutByTags(securityList.FreeformTags, securityList.DefinedTags) {
+					continue
+				}
 
 				var created *time.Time
 				if securityList.TimeCreated != nil {
@@ -909,6 +914,7 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 		"hostnameLabel":       llx.StringDataPtr(vnic.HostnameLabel),
 		"nsgIds":              llx.ArrayData(convert.SliceAnyToInterface(vnic.NsgIds), types.String),
 		"skipSourceDestCheck": llx.BoolDataPtr(vnic.SkipSourceDestCheck),
+		"securityAttributes":  llx.MapData(definedTagsToAny(vnic.SecurityAttributes), types.Dict),
 		"state":               llx.StringData(string(vnic.LifecycleState)),
 		"created":             llx.TimeDataPtr(created),
 		"freeformTags":        llx.MapData(strMapToAny(vnic.FreeformTags), types.String),

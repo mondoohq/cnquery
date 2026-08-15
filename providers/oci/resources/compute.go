@@ -171,6 +171,8 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					"sourceDetails":               llx.DictData(sourceDetails),
 					"metadata":                    llx.MapData(metadata, types.String),
 					"timeMaintenanceRebootDue":    llx.TimeDataPtr(timeMaintenanceRebootDue),
+					"securityAttributes":          llx.MapData(definedTagsToAny(instance.SecurityAttributes), types.Dict),
+					"securityAttributesState":     llx.StringData(string(instance.SecurityAttributesState)),
 					"freeformTags":                llx.MapData(strMapToAny(instance.FreeformTags), types.String),
 					"definedTags":                 llx.MapData(definedTagsToAny(instance.DefinedTags), types.Any),
 					"systemTags":                  llx.MapData(definedTagsToAny(instance.SystemTags), types.Dict),

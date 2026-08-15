@@ -231,9 +231,15 @@ func (o *mqlOciAiGenerativeAi) fetchEndpoints(svc *generativeai.GenerativeAiClie
 		return nil, err
 	}
 
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
 	res := make([]any, 0, len(items))
 	for i := range items {
 		e := items[i]
+
+		if conn.Filters.IsFilteredOutByTags(e.FreeformTags, e.DefinedTags) {
+			continue
+		}
 
 		var cmEnabled, piEnabled, piiEnabled bool
 		var cmMode, piMode, piiMode string

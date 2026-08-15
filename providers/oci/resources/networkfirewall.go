@@ -362,7 +362,12 @@ func (o *mqlOciNetworkFirewallPolicy) securityRules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlRule)
+		// The rule's match criteria are not in the listing, and resolving the
+		// names they hold needs the policy's own collections; both reach them
+		// through this pointer.
+		typed := mqlRule.(*mqlOciNetworkFirewallPolicySecurityRule)
+		typed.cachePolicy = o
+		res = append(res, typed)
 	}
 	return res, nil
 }

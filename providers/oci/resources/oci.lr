@@ -889,6 +889,34 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   // udpOptions, icmpOptions}; network security group rules carry `isStateless`
   // while security list rules carry `stateless`.
   openIngressRules []dict
+  // Security attributes carried by the resource, keyed by namespace
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to the resource's values. Zero Trust Packet
+  // Routing decides what a resource may talk to from these attributes rather
+  // than from its address, so a resource carrying none is outside ZPR's reach
+  // no matter what policies the tenancy has written.
+  securityAttributes map[string]dict
+  // Whether Zero Trust Packet Routing is enforcing on this resource
+  //
+  // True when ZPR is enabled for the tenancy and the resource carries at least
+  // one security attribute from a namespace whose mode includes `enforce`.
+  // A namespace in `audit` mode reports its decisions without acting on them,
+  // so it does not make this true.
+  //
+  // ZPR sits above security lists and network security groups: where it
+  // enforces, traffic the other layers admit can still be denied. The other
+  // fields on this resource describe those layers only, so a resource can
+  // report `internetReachable` while ZPR blocks the traffic in practice. Read
+  // `internetReachable && !zprEnforced` when the question is whether an
+  // opening is genuinely reachable.
+  zprEnforced bool
+  // Zero Trust Packet Routing policies in the tenancy
+  //
+  // The policies that could govern this resource. Whether any given policy
+  // admits or denies its traffic depends on the Zero Trust Packet Routing
+  // Policy Language statements it carries, which are returned as written.
+  zprPolicies() []oci.zpr.policy
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute instance
@@ -1002,6 +1030,24 @@ private oci.compute.instance @defaults("name") {
   sshAuthorizedKeys() []dict
   // Expected maintenance reboot time, if scheduled
   timeMaintenanceRebootDue time
+  // Security attributes applied to the instance, keyed by namespace
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to this instance's values. Zero Trust Packet
+  // Routing authorizes traffic from these rather than from the instance's
+  // address, so an instance carrying none is outside ZPR's reach whatever
+  // policies the tenancy has written.
+  securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
+  // Whether the instance's security attributes have finished applying
+  //
+  // STABLE once applied, UPDATING while a change is still propagating. During
+  // an update the attributes reported here may not yet be the ones in force.
+  securityAttributesState string
   // Free-form tags for resource management
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
@@ -1070,6 +1116,18 @@ private oci.compute.vnic @defaults("name") {
   securityGroups() []oci.network.networkSecurityGroup
   // Whether source/destination check is skipped
   skipSourceDestCheck bool
+  // Security attributes applied to the VNIC, keyed by namespace
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to this VNIC's values. A VNIC can carry
+  // attributes its instance does not, so Zero Trust Packet Routing may govern
+  // one interface of a multi-homed instance and not another.
+  securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // Creation time
@@ -1331,6 +1389,18 @@ private oci.network.vcn @defaults("name") {
   cidrBlocks []string
   // VCN domain name for DNS resolution
   vcnDomainName string
+  // Security attributes applied to the VCN, keyed by namespace
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to this VCN's values. Zero Trust Packet
+  // Routing statements can name a whole VCN this way rather than naming the
+  // resources inside it.
+  securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Default DHCP options OCID for the VCN
   defaultDhcpOptionsId string
   // Default route table OCID for the VCN
@@ -3538,6 +3608,18 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   subnets() []oci.network.subnet
   // Lifecycle state (e.g., CREATING, ACTIVE, FAILED, DELETING, DELETED)
   state string
+  // Security attributes applied to the load balancer, keyed by namespace
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to this load balancer's values. Zero Trust
+  // Packet Routing decides what the load balancer may talk to from these
+  // rather than from its address.
+  securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Load balancer listeners
   listeners() []oci.loadBalancer.listener
   // Network Security Group OCIDs attached to the load balancer
@@ -3691,6 +3773,11 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   isSymmetricHashEnabled bool
   // Zero Trust Packet Routing security attributes applied to the load balancer
   securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (CREATING, UPDATING, ACTIVE, FAILED, DELETING, DELETED)
   state string
   // Detail explaining the current lifecycle state, for FAILED deployments
@@ -4749,6 +4836,11 @@ private oci.networkFirewall.firewall @defaults("name") {
   // Keyed by security-attribute namespace. Each value is a dict mapping
   // the attribute names within that namespace to their assigned values.
   securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
   // Overall firewall health status
   //
   // One of OK, WARNING, CRITICAL, or UNKNOWN.
@@ -4814,6 +4906,54 @@ private oci.networkFirewall.policy @defaults("name") {
   // The rules deciding which TLS sessions are decrypted for inspection, and
   // under which decryption profile.
   decryptionRules() []oci.networkFirewall.policy.decryptionRule
+  // Address lists the policy's rules match on
+  //
+  // Named groups of IP addresses or FQDNs. Security rules name these rather
+  // than carrying addresses inline, so a rule cannot be read as permissive or
+  // restrictive without them.
+  addressLists() []oci.networkFirewall.policy.addressList
+  // URL pattern lists the policy's rules match on
+  //
+  // Named groups of URL patterns evaluated against the HTTP(S) request target
+  // of decrypted traffic.
+  urlLists() []oci.networkFirewall.policy.urlList
+  // Services the policy's rules match on
+  //
+  // Named TCP or UDP port ranges. Together with applications these define the
+  // protocol side of what a security rule matches.
+  services() []oci.networkFirewall.policy.service
+  // Service lists the policy's rules match on
+  //
+  // Named groups of services, referenced by security rules in place of listing
+  // each service individually.
+  serviceLists() []oci.networkFirewall.policy.serviceList
+  // Applications the policy's rules match on
+  //
+  // Named ICMP and ICMPv6 message types and codes.
+  applications() []oci.networkFirewall.policy.application
+  // Application groups the policy's rules match on
+  //
+  // Named groups of applications, referenced by security rules in place of
+  // listing each application individually.
+  applicationGroups() []oci.networkFirewall.policy.applicationGroup
+  // Secrets mapped into the policy for TLS inspection
+  //
+  // The certificates and private keys, held in Vault, that the firewall uses to
+  // decrypt traffic. Each entry names the vault secret it reads, so these are
+  // the key material behind every decryption rule.
+  mappedSecrets() []oci.networkFirewall.policy.mappedSecret
+  // NAT rules the policy applies
+  //
+  // Source network address translation applied to matching traffic. A NAT rule
+  // changes the address a destination observes, so it also changes which
+  // address-based controls downstream apply.
+  natRules() []oci.networkFirewall.policy.natRule
+  // Tunnel inspection rules the policy applies
+  //
+  // Rules deciding which encapsulated traffic (VXLAN) is unwrapped and
+  // inspected. Traffic inside a tunnel that no rule matches passes through
+  // uninspected.
+  tunnelInspectionRules() []oci.networkFirewall.policy.tunnelInspectionRule
 }
 
 // Oracle Cloud Infrastructure (OCI) network firewall decryption profile
@@ -4849,6 +4989,220 @@ private oci.networkFirewall.policy.securityRule @defaults("name action inspectio
   priorityOrder int
   // Rule description
   description string
+  // Traffic the rule matches, by list name
+  //
+  // Keys are `sourceAddress`, `destinationAddress`, `application`, `service`
+  // and `url`, each holding the names of the lists the rule evaluates against.
+  // An absent or empty key matches anything, so a rule with no `sourceAddress`
+  // accepts every source. The names resolve through the accessors below.
+  condition() dict
+  // Address lists evaluated against the traffic source
+  sourceAddressLists() []oci.networkFirewall.policy.addressList
+  // Address lists evaluated against the traffic destination
+  destinationAddressLists() []oci.networkFirewall.policy.addressList
+  // Applications the rule matches
+  applications() []oci.networkFirewall.policy.application
+  // Services the rule matches
+  services() []oci.networkFirewall.policy.service
+  // URL pattern lists the rule matches
+  urlLists() []oci.networkFirewall.policy.urlList
+}
+
+// Named group of addresses in a network firewall policy
+//
+// A set of IP addresses or FQDNs that security and NAT rules match traffic
+// against by name. The `name` field selects the list as a rule references it,
+// for example `addressLists.where(name == "corp-ranges")`. An address list
+// admitting broad public ranges makes every rule that names it permissive.
+private oci.networkFirewall.policy.addressList @defaults("name type totalAddresses") {
+  // Name of the address list, unique within its policy
+  name string
+  // Kind of entries the list holds
+  //
+  // One of IP or FQDN.
+  type string
+  // Description of the address list
+  description string
+  // Number of addresses in the list
+  totalAddresses int
+  // The addresses themselves
+  //
+  // IP addresses in CIDR notation, or fully qualified domain names, depending
+  // on the list's type.
+  addresses() []string
+}
+
+// Named group of URL patterns in a network firewall policy
+//
+// A set of URL patterns evaluated against the request target of decrypted
+// HTTP(S) traffic. The `name` field selects the list as a security rule
+// references it.
+private oci.networkFirewall.policy.urlList @defaults("name totalUrls") {
+  // Name of the URL list, unique within its policy
+  name string
+  // Description of the URL list
+  description string
+  // Number of URL patterns in the list
+  totalUrls int
+  // The URL patterns themselves
+  //
+  // Each entry: {type, pattern}, where a `SIMPLE` type pattern may use `*` as
+  // a leading wildcard for subdomains and a trailing wildcard for paths.
+  urls() []dict
+}
+
+// TCP or UDP service in a network firewall policy
+//
+// A named set of port ranges that security rules match traffic against. The
+// `name` field selects the service as a rule references it.
+private oci.networkFirewall.policy.service @defaults("name type") {
+  // Name of the service, unique within its policy
+  name string
+  // Transport protocol
+  //
+  // One of TCP_SERVICE or UDP_SERVICE.
+  type string
+  // Description of the service
+  description string
+  // Port ranges the service covers
+  //
+  // Each entry: {minimumPort, maximumPort}. `maximumPort` is absent for a
+  // single-port range.
+  portRanges() []dict
+}
+
+// Named group of services in a network firewall policy
+//
+// A set of services referenced by security rules in place of listing each
+// service individually.
+private oci.networkFirewall.policy.serviceList @defaults("name totalServices") {
+  // Name of the service list, unique within its policy
+  name string
+  // Description of the service list
+  description string
+  // Number of services in the list
+  totalServices int
+  // Names of the services the list contains
+  services() []string
+}
+
+// ICMP application in a network firewall policy
+//
+// A named ICMP or ICMPv6 message type, and optionally a code, that security
+// rules match traffic against. The `name` field selects the application as a
+// rule references it.
+private oci.networkFirewall.policy.application @defaults("name type icmpType") {
+  // Name of the application, unique within its policy
+  name string
+  // Protocol the application describes
+  //
+  // One of ICMP or ICMP6.
+  type string
+  // Description of the application
+  description string
+  // ICMP message type
+  icmpType int
+  // ICMP message code (subtype)
+  //
+  // Null when the application matches every code of its type.
+  icmpCode int
+}
+
+// Named group of applications in a network firewall policy
+//
+// A set of applications referenced by security rules in place of listing each
+// application individually.
+private oci.networkFirewall.policy.applicationGroup @defaults("name totalApps") {
+  // Name of the application group, unique within its policy
+  name string
+  // Description of the application group
+  description string
+  // Number of applications in the group
+  totalApps int
+  // Names of the applications the group contains
+  applications() []string
+}
+
+// Secret mapped into a network firewall policy for TLS inspection
+//
+// The certificate and private key material the firewall uses to decrypt
+// traffic, held in Vault and referenced here by name. Every decryption rule
+// resolves to one of these, so this is where the trust placed in the firewall
+// becomes concrete.
+private oci.networkFirewall.policy.mappedSecret @defaults("name type source") {
+  // Name of the mapped secret, unique within its policy
+  name string
+  // What the secret is used for
+  //
+  // One of SSL_INBOUND_INSPECTION (inbound inspection) or SSL_FORWARD_PROXY
+  // (outbound forward-proxy inspection).
+  type string
+  // Where the secret is stored
+  //
+  // OCI_VAULT for secrets held in the Vault service.
+  source string
+  // Vault secret holding the certificate and key
+  vaultSecret() oci.vault.secret
+  // Version of the vault secret the policy reads
+  vaultSecretVersionNumber() int
+}
+
+// NAT rule in a network firewall policy
+//
+// Source network address translation applied to matching traffic. Because a
+// NAT rule changes the address a destination observes, it also changes which
+// address-based controls downstream see, so it belongs in any reading of what
+// a firewall policy actually does.
+private oci.networkFirewall.policy.natRule @defaults("name action priorityOrder") {
+  // Name of the NAT rule, unique within its policy
+  name string
+  // Translation applied to matching traffic
+  //
+  // DIPP_SRC_NAT performs dynamic-IP-and-port source translation.
+  action string
+  // Position in the policy's evaluation order
+  priorityOrder int
+  // Rule description
+  description string
+  // Traffic the rule matches, by list name
+  //
+  // Keys are `sourceAddress`, `destinationAddress` and `service`, each holding
+  // the names of the lists the rule evaluates against. An absent or empty key
+  // matches anything.
+  condition dict
+}
+
+// Tunnel inspection rule in a network firewall policy
+//
+// Decides which encapsulated traffic is unwrapped so the policy's other rules
+// can see inside it. Traffic in a tunnel that no rule matches passes through
+// uninspected, so the absence of a rule is itself the finding.
+private oci.networkFirewall.policy.tunnelInspectionRule @defaults("name protocol action priorityOrder") {
+  // Name of the tunnel inspection rule, unique within its policy
+  name string
+  // Encapsulation the rule inspects
+  //
+  // VXLAN is the only protocol currently supported.
+  protocol string
+  // Action taken on matching traffic
+  //
+  // INSPECT unwraps and inspects the traffic; INSPECT_AND_CAPTURE_LOG also
+  // records it.
+  action string
+  // Position in the policy's evaluation order
+  priorityOrder int
+  // Rule description
+  description string
+  // Traffic the rule matches, by list name
+  //
+  // Keys are `sourceAddress` and `destinationAddress`, each holding the names
+  // of the address lists the rule evaluates against.
+  condition dict
+  // Inspection profile applied to matching traffic
+  //
+  // Contains `mustReturnTrafficToSource`, which decides whether inspected
+  // traffic is returned along the path it arrived on.
+  profile dict
 }
 
 // Network firewall policy decryption rule
@@ -4995,6 +5349,11 @@ private oci.oke.cluster @defaults("name") {
   systemTags map[string]dict
   // Zero Trust Packet Routing security attributes on the cluster API endpoint
   securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
 }
 
 // Oracle Cloud Infrastructure (OCI) OKE node pool
@@ -7996,4 +8355,203 @@ private oci.ai.document.model @defaults("name modelType state") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+}
+
+// Zero Trust Packet Routing
+//
+// Network authorization written against the security attributes a resource
+// carries rather than against its address. ZPR policies sit above security
+// lists and network security groups: where a namespace enforces, traffic those
+// layers admit can still be denied, so a network posture read without them is
+// incomplete for any tenancy that has onboarded ZPR. Exposes the tenancy's
+// onboarding status and the policies written against it.
+oci.zpr {
+  // Zero Trust Packet Routing policies in the tenancy
+  policies() []oci.zpr.policy
+  // Tenancy-wide Zero Trust Packet Routing onboarding status
+  configuration() oci.zpr.configuration
+}
+
+// Zero Trust Packet Routing policy
+//
+// A named set of statements written in the Zero Trust Packet Routing Policy
+// Language, deciding which traffic between security-attributed resources is
+// permitted. Statements are returned as authored, so an audit reads the same
+// text an operator wrote. A policy only governs resources carrying the
+// security attributes its statements name.
+private oci.zpr.policy @defaults("name state") {
+  // Policy OCID
+  id string
+  // Name of the policy, unique across the tenancy
+  name string
+  // Policy description
+  description string
+  // Compartment containing the policy
+  compartment() oci.compartment
+  // Zero Trust Packet Routing Policy Language statements
+  //
+  // Up to 25 statements per policy, returned as written.
+  statements []string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Time the policy was last updated
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace.
+  systemTags map[string]dict
+}
+
+// Zero Trust Packet Routing tenancy configuration
+//
+// Whether Zero Trust Packet Routing has been onboarded to the tenancy. ZPR
+// policies have no effect until this reports an enabled status, so this is the
+// gate to check before reading any conclusion from the policies themselves.
+private oci.zpr.configuration @defaults("zprStatus state") {
+  // Configuration OCID
+  id string
+  // Compartment the configuration belongs to
+  compartment() oci.compartment
+  // Whether Zero Trust Packet Routing is enabled for the tenancy
+  //
+  // One of ENABLED or DISABLED. Policies do not take effect while disabled.
+  zprStatus string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Time Zero Trust Packet Routing was onboarded to the tenancy
+  created time
+  // Time the configuration was last updated
+  timeUpdated time
+}
+
+// Security attributes
+//
+// The vocabulary Zero Trust Packet Routing policies are written against.
+// Namespaces group attribute definitions and carry the mode that decides
+// whether their attributes are enforced or only audited; the attributes
+// themselves are the keys resources are labelled with.
+oci.securityAttributes {
+  // Security attribute namespaces in the tenancy
+  namespaces() []oci.securityAttributes.namespace
+  // Security attribute definitions across all namespaces
+  attributes() []oci.securityAttributes.attribute
+}
+
+// Security attribute applied to a resource
+//
+// One namespace/name/value labelling on a single resource, resolved against
+// the namespace and attribute definition that give it meaning. `isEnforcing`
+// reports whether the labelling constrains traffic or only records it, so a
+// query can separate resources Zero Trust Packet Routing governs from those
+// merely tagged. For example
+// `oci.compute.instances.where(appliedSecurityAttributes.any(isEnforcing))`.
+private oci.securityAttributes.applied @defaults("namespaceName name value isEnforcing") {
+  // Name of the namespace the attribute belongs to
+  namespaceName string
+  // Name of the attribute
+  name string
+  // Value assigned on this resource
+  //
+  // Rendered as text regardless of the attribute's declared type, so a numeric
+  // attribute compares against the string form of its value.
+  value string
+  // Whether the attribute's namespace enforces rather than audits
+  //
+  // True when the namespace's mode includes `enforce`. This describes the
+  // namespace only: whether Zero Trust Packet Routing is switched on for the
+  // tenancy is a separate fact, reported by `oci.zpr.configuration.zprStatus`
+  // and combined with this one in `oci.network.exposure.zprEnforced`.
+  isEnforcing bool
+  // Namespace defining the attribute
+  namespace() oci.securityAttributes.namespace
+  // Definition of the attribute, including its validator
+  attribute() oci.securityAttributes.attribute
+}
+
+// Security attribute namespace
+//
+// A named group of security attribute definitions, and the unit at which
+// enforcement is decided. The `mode` field is the load-bearing one: a
+// namespace in `enforce` mode has its attributes acted on by Zero Trust Packet
+// Routing, while one in `audit` mode reports what it would have done and
+// admits the traffic regardless.
+private oci.securityAttributes.namespace @defaults("name mode isRetired") {
+  // Namespace OCID
+  id string
+  // Name of the namespace, unique across the tenancy
+  name string
+  // Namespace description
+  description string
+  // Compartment containing the namespace
+  compartment() oci.compartment
+  // Modes the namespace's attributes can be set to
+  //
+  // Contains `enforce`, `audit`, or both. Attributes from a namespace that
+  // does not include `enforce` never block traffic.
+  mode []string
+  // Whether the namespace is retired
+  //
+  // A retired namespace cannot be applied to new resources, though resources
+  // already carrying its attributes keep them.
+  isRetired bool
+  // Lifecycle state (e.g., ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace.
+  systemTags map[string]dict
+}
+
+// Security attribute definition
+//
+// A single key within a security attribute namespace, and one of the terms a
+// Zero Trust Packet Routing statement can name. The validator records whether
+// the attribute accepts free-form values or is restricted to an enumerated
+// set, which is what stops a policy from being satisfied by an unexpected
+// value.
+private oci.securityAttributes.attribute @defaults("name isRetired") {
+  // Attribute OCID
+  id string
+  // Name of the attribute, unique within its namespace
+  name string
+  // Attribute description
+  description string
+  // Namespace containing the attribute
+  namespace() oci.securityAttributes.namespace
+  // Compartment containing the attribute definition
+  compartment() oci.compartment
+  // Data type of the attribute
+  type string
+  // Whether the attribute is retired
+  //
+  // A retired attribute cannot be applied to new resources, though resources
+  // already carrying it keep it.
+  isRetired() bool
+  // Value validator applied to the attribute
+  //
+  // Shape varies by validator type: {validatorType: "DEFAULT"} accepts any
+  // value, while {validatorType: "ENUM", values: [...]} restricts the
+  // attribute to the listed values. An attribute a Zero Trust Packet Routing
+  // statement depends on is only as reliable as the values it will accept.
+  validator() dict
+  // Lifecycle state (e.g., ACTIVE, INACTIVE, DELETING, DELETED)
+  state() string
+  // Creation time
+  created() time
 }

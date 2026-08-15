@@ -82,19 +82,21 @@ func ociCollect(runtime *plugin.Runtime, scope ociScope, list ociLister) ([]any,
 		return nil, err
 	}
 
+	// Already narrowed by the region filters: ociRegionsFor is the one source
+	// every fan-out draws from, so the filter is applied there rather than at
+	// each of the places a job list gets built.
+	regionIDs, err := ociRegionIDs(regions)
+	if err != nil {
+		return nil, err
+	}
+
 	compartmentIDs, err := scope.compartmentIDs(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
 
-	jobs := make([]*jobpool.Job, 0, len(regions)*len(compartmentIDs))
-	for _, raw := range regions {
-		region, ok := raw.(*mqlOciRegion)
-		if !ok {
-			return nil, errors.New("invalid region type")
-		}
-		regionID := region.Id.Data
-
+	jobs := make([]*jobpool.Job, 0, len(regionIDs)*len(compartmentIDs))
+	for _, regionID := range regionIDs {
 		for _, compartmentID := range compartmentIDs {
 			jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
 				items, err := list(ctx, regionID, compartmentID)
@@ -109,23 +111,36 @@ func ociCollect(runtime *plugin.Runtime, scope ociScope, list ociLister) ([]any,
 	return scope.join(jobs)
 }
 
-// compartmentIDs resolves the scope to the compartments to ask.
+// ociRegionIDs extracts the region keys from the resolved region collection.
+func ociRegionIDs(regions []any) ([]string, error) {
+	ids := make([]string, 0, len(regions))
+	for _, raw := range regions {
+		region, ok := raw.(*mqlOciRegion)
+		if !ok {
+			return nil, errors.New("invalid region type")
+		}
+		ids = append(ids, region.Id.Data)
+	}
+	return ids, nil
+}
+
+// compartmentIDs resolves the scope to the compartments to ask, after the
+// compartment filters have been applied.
+//
+// The filter applies under both scopes. The tenancy root is a compartment like
+// any other, so a scan told to look at one child compartment must not fall back
+// to reporting the root's contents - under the root scope that would be a
+// different set of resources presented as if it were the requested one.
 func (s ociScope) compartmentIDs(ctx context.Context, conn *connection.OciConnection) ([]string, error) {
 	if s == ociScopeTenancyRoot {
-		return []string{conn.TenantID()}, nil
+		return conn.SelectTenancyRoot(ctx), nil
 	}
 
 	compartments, err := conn.GetCompartments(ctx)
 	if err != nil {
 		return nil, err
 	}
-	ids := make([]string, 0, len(compartments))
-	for i := range compartments {
-		if id := stringValue(compartments[i].Id); id != "" {
-			ids = append(ids, id)
-		}
-	}
-	return ids, nil
+	return conn.Filters.SelectCompartments(compartments), nil
 }
 
 // join collects the fan-out under the scope's error policy.

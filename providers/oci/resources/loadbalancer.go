@@ -57,6 +57,10 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 			for i := range lbs {
 				lb := lbs[i]
 
+				if conn.Filters.IsFilteredOutByTags(lb.FreeformTags, lb.DefinedTags) {
+					continue
+				}
+
 				var created *time.Time
 				if lb.TimeCreated != nil {
 					created = &lb.TimeCreated.Time
@@ -88,6 +92,7 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
 					"nsgIds":                    llx.ArrayData(convert.SliceAnyToInterface(lb.NetworkSecurityGroupIds), types.String),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
+					"securityAttributes":        llx.MapData(definedTagsToAny(lb.SecurityAttributes), types.Dict),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),
 					"freeformTags":              llx.MapData(strMapToAny(lb.FreeformTags), types.String),

@@ -52,6 +52,10 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 			for i := range clusters {
 				cluster := clusters[i]
 
+				if conn.Filters.IsFilteredOutByTags(cluster.FreeformTags, cluster.DefinedTags) {
+					continue
+				}
+
 				var created *time.Time
 				if cluster.Metadata != nil && cluster.Metadata.TimeCreated != nil {
 					created = &cluster.Metadata.TimeCreated.Time

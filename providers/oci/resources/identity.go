@@ -71,6 +71,10 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 		for i := range users {
 			user := users[i]
 
+			if conn.Filters.IsFilteredOutByTags(user.FreeformTags, user.DefinedTags) {
+				continue
+			}
+
 			var created *time.Time
 			if user.TimeCreated != nil {
 				created = &user.TimeCreated.Time
@@ -527,6 +531,10 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 
 		for i := range policies {
 			policy := policies[i]
+
+			if conn.Filters.IsFilteredOutByTags(policy.FreeformTags, policy.DefinedTags) {
+				continue
+			}
 
 			var created *time.Time
 			if policy.TimeCreated != nil {

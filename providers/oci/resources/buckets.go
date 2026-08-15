@@ -56,14 +56,9 @@ func (o *mqlOciObjectStorage) buckets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	// fetch regions
-	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	regions, err := ociRegionsFor(o.MqlRuntime)
 	if err != nil {
 		return nil, err
-	}
-	oci := ociResource.(*mqlOci)
-	list := oci.GetRegions()
-	if list.Error != nil {
-		return nil, list.Error
 	}
 
 	// fetch buckets
@@ -72,7 +67,7 @@ func (o *mqlOciObjectStorage) buckets() ([]any, error) {
 		return nil, err
 	}
 
-	return ociRunRegionPool(o.getBuckets(conn, namespace, list.Data))
+	return ociRunRegionPool(o.getBuckets(conn, namespace, regions))
 }
 
 func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectStorageClient *objectstorage.ObjectStorageClient, compartmentID string, namespace string) ([]objectstorage.BucketSummary, error) {
@@ -121,6 +116,10 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 
 			for i := range buckets {
 				bucket := buckets[i]
+
+				if conn.Filters.IsFilteredOutByTags(bucket.FreeformTags, bucket.DefinedTags) {
+					continue
+				}
 
 				var created *time.Time
 				if bucket.TimeCreated != nil {

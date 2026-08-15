@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
@@ -19,9 +20,18 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// ociRegionsFor resolves the tenancy's subscribed regions, which every
-// compartment fan-out needs before it can build its jobs.
+// ociRegionsFor resolves the regions a fan-out should cover: the tenancy's
+// subscribed regions, narrowed by the region filters.
+//
+// Every fan-out draws its regions from here so the filter is applied once. The
+// `oci.regions` resource itself is deliberately left unfiltered - it answers
+// "which regions is this tenancy subscribed to", which is a fact about the
+// tenancy rather than a description of the current scan, and init_refs resolves
+// typed region references through it. A region reference must not stop
+// resolving because a scan was scoped elsewhere.
 func ociRegionsFor(runtime *plugin.Runtime) ([]any, error) {
+	conn := runtime.Connection.(*connection.OciConnection)
+
 	ociResource, err := CreateResource(runtime, "oci", nil)
 	if err != nil {
 		return nil, err
@@ -30,7 +40,22 @@ func ociRegionsFor(runtime *plugin.Runtime) ([]any, error) {
 	if regions.Error != nil {
 		return nil, regions.Error
 	}
-	return regions.Data, nil
+	if !conn.Filters.HasRegions() {
+		return regions.Data, nil
+	}
+
+	res := make([]any, 0, len(regions.Data))
+	for _, raw := range regions.Data {
+		region, ok := raw.(*mqlOciRegion)
+		if !ok {
+			return nil, errors.New("invalid region type")
+		}
+		if !conn.Filters.AdmitsRegion(region.Id.Data, region.Name.Data) {
+			continue
+		}
+		res = append(res, raw)
+	}
+	return res, nil
 }
 
 // ----- MySQL HeatWave -----

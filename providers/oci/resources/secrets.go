@@ -57,6 +57,10 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 			for i := range secrets {
 				s := secrets[i]
 
+				if conn.Filters.IsFilteredOutByTags(s.FreeformTags, s.DefinedTags) {
+					continue
+				}
+
 				var created *time.Time
 				if s.TimeCreated != nil {
 					created = &s.TimeCreated.Time
