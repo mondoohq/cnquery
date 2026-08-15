@@ -24,7 +24,14 @@ func (s *mqlFrrConfig) staticRoutes(file *mqlFile) ([]any, error) {
 	res := make([]any, 0, len(routes))
 	for i := range routes {
 		r := &routes[i]
-		id := fmt.Sprintf("%s#staticRoute/%d/%s/%s", s.__id, i, r.VRF, r.Prefix)
+		// The id is built from what the route is, not from where it sits,
+		// so inserting a line above it does not renumber the rest.
+		target := r.Nexthop
+		if target == "" {
+			target = r.Interface
+		}
+		id := fmt.Sprintf("%s#staticRoute/%s/%s/%s/%s",
+			s.__id, r.AFI, vrfKey(r.VRF), r.Prefix, target)
 		obj, err := CreateResource(s.MqlRuntime, "frr.config.staticRoute", map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"afi":        llx.StringData(r.AFI),
