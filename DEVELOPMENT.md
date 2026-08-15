@@ -203,6 +203,7 @@ use (
    ./mql/providers/arista
    ./mql/providers/artifactory
    ./mql/providers/atlassian
+   ./mql/providers/auth0
    ./mql/providers/aws
    ./mql/providers/azure
    ./mql/providers/bitwarden

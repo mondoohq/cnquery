@@ -205,6 +205,7 @@ PROVIDERS := \
 	arista \
 	artifactory \
 	atlassian \
+	auth0 \
 	aws \
 	azure \
 	bicep \

@@ -117,6 +117,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"auth0": {
+		Provider: &plugin.Provider{
+			Name:            "auth0",
+			ID:              "go.mondoo.com/mql/providers/auth0",
+			ConnectionTypes: []string{"auth0"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "auth0",
+					Use:   "auth0",
+					Short: "an Auth0 tenant",
+				},
+			},
+		},
+	},
+
 	"bigip": {
 		Provider: &plugin.Provider{
 			Name:            "bigip",
