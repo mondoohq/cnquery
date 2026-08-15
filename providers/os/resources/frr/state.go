@@ -24,7 +24,11 @@ import (
 
 // reSafeName matches a VRF or table name that is safe to place in a command
 // line. Names come from MQL queries, so they are validated before use.
-var reSafeName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`)
+//
+// The dash is escaped so the class cannot be read as a range. It is the last
+// character either way, which RE2 already takes literally, but the escape
+// says so without the reader having to know that.
+var reSafeName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-]{0,63}$`)
 
 // ValidateName rejects a VRF or table name that could change the meaning of
 // the command it is placed in.
