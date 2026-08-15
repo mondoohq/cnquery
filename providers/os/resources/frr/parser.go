@@ -350,12 +350,15 @@ func makeDirective(file string, line int, raw string, fields []string) Directive
 	return d
 }
 
-// stripComment removes a `!` or `#` comment. FRR has no quoting rules that
-// protect these characters outside of `description` text, which the parser
-// keeps as raw args anyway.
+// stripComment removes a `!` or `#` comment.
+//
+// A comment marker only starts a comment at the beginning of a line, which
+// is what FRR itself accepts. A marker inside a line is part of the command,
+// so `description Transit peer! Primary path` keeps its text.
 func stripComment(line string) string {
-	if i := strings.IndexAny(line, "!#"); i >= 0 {
-		return line[:i]
+	trimmed := strings.TrimLeft(line, " \t")
+	if strings.HasPrefix(trimmed, "!") || strings.HasPrefix(trimmed, "#") {
+		return ""
 	}
 	return line
 }
