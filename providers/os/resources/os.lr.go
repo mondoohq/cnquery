@@ -462,6 +462,8 @@ const (
 	ResourceChromeExtensionContentScript                  string = "chrome.extensionContentScript"
 	ResourceFirefox                                       string = "firefox"
 	ResourceFirefoxAddon                                  string = "firefox.addon"
+	ResourceFirefoxPolicies                               string = "firefox.policies"
+	ResourceFirefoxPoliciesInput                          string = "firefox.policies.input"
 	ResourceUsb                                           string = "usb"
 	ResourceUsbDevice                                     string = "usb.device"
 	ResourceCrontab                                       string = "crontab"
@@ -2343,6 +2345,14 @@ func init() {
 		"firefox.addon": {
 			// to override args, implement: initFirefoxAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFirefoxAddon,
+		},
+		"firefox.policies": {
+			// to override args, implement: initFirefoxPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirefoxPolicies,
+		},
+		"firefox.policies.input": {
+			// to override args, implement: initFirefoxPoliciesInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirefoxPoliciesInput,
 		},
 		"usb": {
 			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12472,6 +12482,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"firefox.addon.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefoxAddon).GetUid()).ToDataRes(types.Int)
+	},
+	"firefox.policies.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPolicies).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"firefox.policies.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPolicies).GetSource()).ToDataRes(types.String)
+	},
+	"firefox.policies.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPolicies).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"firefox.policies.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPolicies).GetParams()).ToDataRes(types.Dict)
+	},
+	"firefox.policies.inputs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPolicies).GetInputs()).ToDataRes(types.Array(types.Resource("firefox.policies.input")))
+	},
+	"firefox.policies.input.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPoliciesInput).GetSource()).ToDataRes(types.String)
+	},
+	"firefox.policies.input.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPoliciesInput).GetPath()).ToDataRes(types.String)
+	},
+	"firefox.policies.input.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxPoliciesInput).GetParams()).ToDataRes(types.Dict)
 	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
@@ -28951,6 +28985,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"firefox.addon.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirefoxAddon).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPolicies).__id, ok = v.Value.(string)
+		return
+	},
+	"firefox.policies.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPolicies).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPolicies).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPolicies).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPolicies).Params, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.inputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPolicies).Inputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.input.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPoliciesInput).__id, ok = v.Value.(string)
+		return
+	},
+	"firefox.policies.input.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPoliciesInput).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.input.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPoliciesInput).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.policies.input.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxPoliciesInput).Params, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -76120,6 +76194,164 @@ func (c *mqlFirefoxAddon) GetPermissions() *plugin.TValue[[]any] {
 
 func (c *mqlFirefoxAddon) GetUid() *plugin.TValue[int64] {
 	return &c.Uid
+}
+
+// mqlFirefoxPolicies for the firefox.policies resource
+type mqlFirefoxPolicies struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlFirefoxPoliciesInternal
+	Configured plugin.TValue[bool]
+	Source     plugin.TValue[string]
+	File       plugin.TValue[*mqlFile]
+	Params     plugin.TValue[any]
+	Inputs     plugin.TValue[[]any]
+}
+
+// createFirefoxPolicies creates a new instance of this resource
+func createFirefoxPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirefoxPolicies{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firefox.policies", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirefoxPolicies) MqlName() string {
+	return "firefox.policies"
+}
+
+func (c *mqlFirefoxPolicies) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirefoxPolicies) GetConfigured() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Configured, func() (bool, error) {
+		return c.configured()
+	})
+}
+
+func (c *mqlFirefoxPolicies) GetSource() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Source, func() (string, error) {
+		return c.source()
+	})
+}
+
+func (c *mqlFirefoxPolicies) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firefox.policies", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlFirefoxPolicies) GetParams() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Params, func() (any, error) {
+		return c.params()
+	})
+}
+
+func (c *mqlFirefoxPolicies) GetInputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Inputs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firefox.policies", c.__id, "inputs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inputs()
+	})
+}
+
+// mqlFirefoxPoliciesInput for the firefox.policies.input resource
+type mqlFirefoxPoliciesInput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirefoxPoliciesInputInternal it will be used here
+	Source plugin.TValue[string]
+	Path   plugin.TValue[string]
+	Params plugin.TValue[any]
+}
+
+// createFirefoxPoliciesInput creates a new instance of this resource
+func createFirefoxPoliciesInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirefoxPoliciesInput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firefox.policies.input", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirefoxPoliciesInput) MqlName() string {
+	return "firefox.policies.input"
+}
+
+func (c *mqlFirefoxPoliciesInput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirefoxPoliciesInput) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlFirefoxPoliciesInput) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlFirefoxPoliciesInput) GetParams() *plugin.TValue[any] {
+	return &c.Params
 }
 
 // mqlUsb for the usb resource

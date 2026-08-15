@@ -859,6 +859,16 @@ firefox.addon.userDisabled 11.4.86
 firefox.addon.version 11.4.86
 firefox.addon.visible 11.4.86
 firefox.addons 11.4.86
+firefox.policies 13.40.8
+firefox.policies.configured 13.40.8
+firefox.policies.file 13.40.8
+firefox.policies.input 13.40.8
+firefox.policies.input.params 13.40.8
+firefox.policies.input.path 13.40.8
+firefox.policies.input.source 13.40.8
+firefox.policies.inputs 13.40.8
+firefox.policies.params 13.40.8
+firefox.policies.source 13.40.8
 firewalld 13.2.9
 firewalld.defaultZone 13.2.9
 firewalld.richrule 13.2.9
