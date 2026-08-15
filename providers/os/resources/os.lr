@@ -3837,6 +3837,12 @@ frr.config {
   segmentRouting(file) frr.config.segmentRoutingSettings
   // Settings of the daemon itself: logging, shell passwords and SNMP
   service(file) frr.config.serviceSettings
+  // Key chains that the routing protocols authenticate with
+  keyChains(file) []frr.config.keyChain
+  // vty lines, which carry the shell of the router
+  vtyLines(file) []frr.config.vtyLine
+  // RPKI block, which decides whether BGP validates what it hears
+  rpki(file) frr.config.rpkiSettings
   // Every top-level block in source order, including bfd, pbr-map and other types without a dedicated resource
   blocks(file) []frr.config.block
   // Every top-level line outside a block, such as community lists and static routes (entries: {name, args, negated, line, file, raw})
@@ -4539,6 +4545,78 @@ private frr.config.serviceSettings @defaults("passwordSet enablePasswordSet agen
   logCommands bool
   // Local shell users (entries: {name, nopassword, privilege})
   users []dict
+}
+
+// FRR key chain
+//
+// One `key chain` block. A key chain holds the keys the interior gateway
+// protocols and BFD authenticate with, so an interface that names a chain
+// is only as protected as the chain is. A key without a lifetime never
+// rotates, and one without an algorithm falls back to plain text.
+private frr.config.keyChain @defaults("name") {
+  // Chain name, which an interface or a protocol refers to
+  name string
+  // Keys of the chain (entries: {id, keyStringSet, algorithm, sendLifetime, acceptLifetime, line})
+  keys []dict
+  // Source file path
+  file string
+  // 1-based source line of the block header
+  startLine int
+  // Raw text of the block
+  raw string
+}
+
+// FRR vty line
+//
+// One `line vty` block, which carries the shell of the router. The access
+// class decides who may open a session, and the idle timeout closes a
+// forgotten one.
+private frr.config.vtyLine @defaults("accessClass execTimeout") {
+  // IPv4 access list applied to the line, empty when the line accepts every source
+  accessClass string
+  // IPv6 access list applied to the line
+  accessClassIpv6 string
+  // Idle timeout as the line spells it (e.g. "10 0"). An explicit "0 0" never times out.
+  execTimeout string
+  // The line prompts for a password. It is false when the line carries `no login`.
+  loginEnabled bool
+  // A line password is set. The value stays out of the resource.
+  passwordSet bool
+  // Flat directive map of the block (name -> value)
+  params map[string]string
+  // Source file path
+  file string
+  // 1-based source line of the block header
+  startLine int
+  // Raw text of the block
+  raw string
+}
+
+// FRR RPKI
+//
+// The `rpki` block. RPKI tells BGP which announcements are signed by the
+// holder of the prefix, so a router without a reachable cache validates
+// nothing. It is reported as not configured when the file has no block,
+// which is itself the answer to whether the router validates.
+private frr.config.rpkiSettings @defaults("configured") {
+  // The configuration has an rpki block
+  configured bool
+  // Polling period in seconds, -1 when the block leaves it at the default
+  pollingPeriod int
+  // Expire interval in seconds, -1 when the block leaves it at the default
+  expireInterval int
+  // Retry interval in seconds, -1 when the block leaves it at the default
+  retryInterval int
+  // Validation caches (entries: {address, port, transport, sshUser, preference, raw})
+  caches []dict
+  // Flat directive map of the block (name -> value)
+  params map[string]string
+  // Source file path
+  file string
+  // 1-based source line of the block header
+  startLine int
+  // Raw text of the block
+  raw string
 }
 
 // FRR vtysh configuration

@@ -338,13 +338,13 @@ func blockHeader(fields []string, stack []frame) (string, string, []string, bloc
 		}
 		return "router " + fields[1], name, fields[2:], kindTop, true
 
-	case "vrf", "interface", "route-map", "pbr-map", "nexthop-group", "rpki":
+	case "vrf", "interface", "route-map", "pbr-map", "nexthop-group":
 		if len(fields) < 2 {
 			return "", "", nil, kindTop, false
 		}
 		return fields[0], fields[1], fields[1:], kindTop, true
 
-	case "bfd", "segment-routing":
+	case "bfd", "segment-routing", "rpki":
 		// These take no name of their own, and they only start a block at
 		// the top level. Inside an interface block `bfd` is a directive that
 		// enables a session on the link.
@@ -354,9 +354,13 @@ func blockHeader(fields []string, stack []frame) (string, string, []string, bloc
 		return fields[0], "", nil, kindTop, true
 
 	case "key", "line":
-		// `key chain <name>` and `line vty`.
+		// `key chain <name>` and `line vty` at the top level, and `key <id>`
+		// inside a key chain.
 		if len(fields) < 2 {
 			return "", "", nil, kindTop, false
+		}
+		if fields[0] == "key" && len(stack) > 0 && stack[len(stack)-1].block.Type == "key chain" {
+			return "key", fields[1], fields[1:], kindNested, true
 		}
 		name := ""
 		if len(fields) > 2 {

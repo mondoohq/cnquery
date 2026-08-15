@@ -282,3 +282,33 @@ func TestFrrDaemonStateQueriesCompile(t *testing.T) {
 		})
 	}
 }
+
+// The key chains, the vty lines and the RPKI block decide who reaches the
+// router and what it trusts. These pin one read of every field plus the
+// questions they exist to answer.
+func TestFrrAccessQueriesCompile(t *testing.T) {
+	schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"}).
+		Add(testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"}))
+
+	queries := []string{
+		// the posture questions these resources exist to answer
+		`frr.config.vtyLines.all(accessClass != "")`,
+		`frr.config.vtyLines.all(execTimeout != "0 0")`,
+		`frr.config.vtyLines.all(loginEnabled)`,
+		`frr.config.keyChains.all(keys.length > 0)`,
+		`frr.config.rpki.configured`,
+		`frr.config.rpki.caches.length > 1`,
+
+		// one read of every field
+		`frr.config.keyChains { name keys file startLine raw }`,
+		`frr.config.vtyLines { accessClass accessClassIpv6 execTimeout loginEnabled passwordSet params file startLine raw }`,
+		`frr.config.rpki { configured pollingPeriod expireInterval retryInterval caches params file startLine raw }`,
+	}
+
+	for _, query := range queries {
+		t.Run(query, func(t *testing.T) {
+			_, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
+			require.NoError(t, err, "query %q should compile", query)
+		})
+	}
+}

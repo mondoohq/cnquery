@@ -180,6 +180,9 @@ const (
 	ResourceFrrConfigPbrMap                               string = "frr.config.pbrMap"
 	ResourceFrrConfigSegmentRoutingSettings               string = "frr.config.segmentRoutingSettings"
 	ResourceFrrConfigServiceSettings                      string = "frr.config.serviceSettings"
+	ResourceFrrConfigKeyChain                             string = "frr.config.keyChain"
+	ResourceFrrConfigVtyLine                              string = "frr.config.vtyLine"
+	ResourceFrrConfigRpkiSettings                         string = "frr.config.rpkiSettings"
 	ResourceFrrVtyshConfig                                string = "frr.vtysh.config"
 	ResourceFrrVrf                                        string = "frr.vrf"
 	ResourceFrrRouteTable                                 string = "frr.routeTable"
@@ -1328,6 +1331,18 @@ func init() {
 		"frr.config.serviceSettings": {
 			// to override args, implement: initFrrConfigServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFrrConfigServiceSettings,
+		},
+		"frr.config.keyChain": {
+			// to override args, implement: initFrrConfigKeyChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigKeyChain,
+		},
+		"frr.config.vtyLine": {
+			// to override args, implement: initFrrConfigVtyLine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigVtyLine,
+		},
+		"frr.config.rpkiSettings": {
+			// to override args, implement: initFrrConfigRpkiSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigRpkiSettings,
 		},
 		"frr.vtysh.config": {
 			Init:   initFrrVtyshConfig,
@@ -6360,6 +6375,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"frr.config.service": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfig).GetService()).ToDataRes(types.Resource("frr.config.serviceSettings"))
 	},
+	"frr.config.keyChains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetKeyChains()).ToDataRes(types.Array(types.Resource("frr.config.keyChain")))
+	},
+	"frr.config.vtyLines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetVtyLines()).ToDataRes(types.Array(types.Resource("frr.config.vtyLine")))
+	},
+	"frr.config.rpki": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetRpki()).ToDataRes(types.Resource("frr.config.rpkiSettings"))
+	},
 	"frr.config.blocks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfig).GetBlocks()).ToDataRes(types.Array(types.Resource("frr.config.block")))
 	},
@@ -7175,6 +7199,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"frr.config.serviceSettings.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfigServiceSettings).GetUsers()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.keyChain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigKeyChain).GetName()).ToDataRes(types.String)
+	},
+	"frr.config.keyChain.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigKeyChain).GetKeys()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.keyChain.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigKeyChain).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.keyChain.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigKeyChain).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.keyChain.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigKeyChain).GetRaw()).ToDataRes(types.String)
+	},
+	"frr.config.vtyLine.accessClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetAccessClass()).ToDataRes(types.String)
+	},
+	"frr.config.vtyLine.accessClassIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetAccessClassIpv6()).ToDataRes(types.String)
+	},
+	"frr.config.vtyLine.execTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetExecTimeout()).ToDataRes(types.String)
+	},
+	"frr.config.vtyLine.loginEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetLoginEnabled()).ToDataRes(types.Bool)
+	},
+	"frr.config.vtyLine.passwordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetPasswordSet()).ToDataRes(types.Bool)
+	},
+	"frr.config.vtyLine.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"frr.config.vtyLine.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.vtyLine.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.vtyLine.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigVtyLine).GetRaw()).ToDataRes(types.String)
+	},
+	"frr.config.rpkiSettings.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"frr.config.rpkiSettings.pollingPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetPollingPeriod()).ToDataRes(types.Int)
+	},
+	"frr.config.rpkiSettings.expireInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetExpireInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.rpkiSettings.retryInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetRetryInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.rpkiSettings.caches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetCaches()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.rpkiSettings.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"frr.config.rpkiSettings.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.rpkiSettings.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.rpkiSettings.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigRpkiSettings).GetRaw()).ToDataRes(types.String)
 	},
 	"frr.vtysh.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrVtyshConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -23297,6 +23390,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFrrConfig).Service, ok = plugin.RawToTValue[*mqlFrrConfigServiceSettings](v.Value, v.Error)
 		return
 	},
+	"frr.config.keyChains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).KeyChains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).VtyLines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpki": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).Rpki, ok = plugin.RawToTValue[*mqlFrrConfigRpkiSettings](v.Value, v.Error)
+		return
+	},
 	"frr.config.blocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrConfig).Blocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -24463,6 +24568,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"frr.config.serviceSettings.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrConfigServiceSettings).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.keyChain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigKeyChain).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.keyChain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigKeyChain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.keyChain.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigKeyChain).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.keyChain.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigKeyChain).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.keyChain.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigKeyChain).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.keyChain.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigKeyChain).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.vtyLine.accessClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).AccessClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.accessClassIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).AccessClassIpv6, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.execTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).ExecTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.loginEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).LoginEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.passwordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).PasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.vtyLine.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigVtyLine).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.rpkiSettings.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.pollingPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).PollingPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.expireInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).ExpireInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.retryInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).RetryInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.caches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).Caches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.rpkiSettings.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigRpkiSettings).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"frr.vtysh.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55088,6 +55297,9 @@ type mqlFrrConfig struct {
 	PbrMaps               plugin.TValue[[]any]
 	SegmentRouting        plugin.TValue[*mqlFrrConfigSegmentRoutingSettings]
 	Service               plugin.TValue[*mqlFrrConfigServiceSettings]
+	KeyChains             plugin.TValue[[]any]
+	VtyLines              plugin.TValue[[]any]
+	Rpki                  plugin.TValue[*mqlFrrConfigRpkiSettings]
 	Blocks                plugin.TValue[[]any]
 	Directives            plugin.TValue[[]any]
 }
@@ -55501,6 +55713,69 @@ func (c *mqlFrrConfig) GetService() *plugin.TValue[*mqlFrrConfigServiceSettings]
 		}
 
 		return c.service(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetKeyChains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeyChains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "keyChains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.keyChains(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetVtyLines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VtyLines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "vtyLines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.vtyLines(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetRpki() *plugin.TValue[*mqlFrrConfigRpkiSettings] {
+	return plugin.GetOrCompute[*mqlFrrConfigRpkiSettings](&c.Rpki, func() (*mqlFrrConfigRpkiSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "rpki")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFrrConfigRpkiSettings), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.rpki(vargFile.Data)
 	})
 }
 
@@ -57664,6 +57939,238 @@ func (c *mqlFrrConfigServiceSettings) GetLogCommands() *plugin.TValue[bool] {
 
 func (c *mqlFrrConfigServiceSettings) GetUsers() *plugin.TValue[[]any] {
 	return &c.Users
+}
+
+// mqlFrrConfigKeyChain for the frr.config.keyChain resource
+type mqlFrrConfigKeyChain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigKeyChainInternal it will be used here
+	Name      plugin.TValue[string]
+	Keys      plugin.TValue[[]any]
+	File      plugin.TValue[string]
+	StartLine plugin.TValue[int64]
+	Raw       plugin.TValue[string]
+}
+
+// createFrrConfigKeyChain creates a new instance of this resource
+func createFrrConfigKeyChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigKeyChain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.keyChain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigKeyChain) MqlName() string {
+	return "frr.config.keyChain"
+}
+
+func (c *mqlFrrConfigKeyChain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigKeyChain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFrrConfigKeyChain) GetKeys() *plugin.TValue[[]any] {
+	return &c.Keys
+}
+
+func (c *mqlFrrConfigKeyChain) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigKeyChain) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigKeyChain) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFrrConfigVtyLine for the frr.config.vtyLine resource
+type mqlFrrConfigVtyLine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigVtyLineInternal it will be used here
+	AccessClass     plugin.TValue[string]
+	AccessClassIpv6 plugin.TValue[string]
+	ExecTimeout     plugin.TValue[string]
+	LoginEnabled    plugin.TValue[bool]
+	PasswordSet     plugin.TValue[bool]
+	Params          plugin.TValue[map[string]any]
+	File            plugin.TValue[string]
+	StartLine       plugin.TValue[int64]
+	Raw             plugin.TValue[string]
+}
+
+// createFrrConfigVtyLine creates a new instance of this resource
+func createFrrConfigVtyLine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigVtyLine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.vtyLine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigVtyLine) MqlName() string {
+	return "frr.config.vtyLine"
+}
+
+func (c *mqlFrrConfigVtyLine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigVtyLine) GetAccessClass() *plugin.TValue[string] {
+	return &c.AccessClass
+}
+
+func (c *mqlFrrConfigVtyLine) GetAccessClassIpv6() *plugin.TValue[string] {
+	return &c.AccessClassIpv6
+}
+
+func (c *mqlFrrConfigVtyLine) GetExecTimeout() *plugin.TValue[string] {
+	return &c.ExecTimeout
+}
+
+func (c *mqlFrrConfigVtyLine) GetLoginEnabled() *plugin.TValue[bool] {
+	return &c.LoginEnabled
+}
+
+func (c *mqlFrrConfigVtyLine) GetPasswordSet() *plugin.TValue[bool] {
+	return &c.PasswordSet
+}
+
+func (c *mqlFrrConfigVtyLine) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlFrrConfigVtyLine) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigVtyLine) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigVtyLine) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFrrConfigRpkiSettings for the frr.config.rpkiSettings resource
+type mqlFrrConfigRpkiSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigRpkiSettingsInternal it will be used here
+	Configured     plugin.TValue[bool]
+	PollingPeriod  plugin.TValue[int64]
+	ExpireInterval plugin.TValue[int64]
+	RetryInterval  plugin.TValue[int64]
+	Caches         plugin.TValue[[]any]
+	Params         plugin.TValue[map[string]any]
+	File           plugin.TValue[string]
+	StartLine      plugin.TValue[int64]
+	Raw            plugin.TValue[string]
+}
+
+// createFrrConfigRpkiSettings creates a new instance of this resource
+func createFrrConfigRpkiSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigRpkiSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.rpkiSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigRpkiSettings) MqlName() string {
+	return "frr.config.rpkiSettings"
+}
+
+func (c *mqlFrrConfigRpkiSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetConfigured() *plugin.TValue[bool] {
+	return &c.Configured
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetPollingPeriod() *plugin.TValue[int64] {
+	return &c.PollingPeriod
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetExpireInterval() *plugin.TValue[int64] {
+	return &c.ExpireInterval
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetRetryInterval() *plugin.TValue[int64] {
+	return &c.RetryInterval
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetCaches() *plugin.TValue[[]any] {
+	return &c.Caches
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigRpkiSettings) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
 }
 
 // mqlFrrVtyshConfig for the frr.vtysh.config resource
