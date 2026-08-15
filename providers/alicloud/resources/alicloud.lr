@@ -1765,6 +1765,122 @@ alicloud.oss.bucket {
   // which overrides both. Use it to find buckets exposed to the internet
   // regardless of which of the two mechanisms opened them.
   isPublic() bool
+  // Whether the bucket policy allows public access
+  //
+  // Object Storage Service's own verdict on the attached policy, independent of
+  // the ACL. False when no policy is attached.
+  policyAllowsPublicAccess() bool
+  // Whether the bucket restricts which TLS versions clients may use
+  //
+  // False means every TLS version the service accepts is allowed, including
+  // versions no longer considered safe.
+  tlsEnforced() bool
+  // TLS versions clients may use
+  //
+  // For example TLSv1.2 and TLSv1.3. Empty when tlsEnforced is false, which
+  // does not mean TLS is off, only that the bucket sets no floor of its own.
+  tlsVersions() []string
+  // State of the retention policy applied to the bucket
+  //
+  // InProgress for a policy that can still be withdrawn, Locked for one that
+  // cannot. Empty when no retention policy is configured, meaning objects can
+  // be deleted or overwritten at any time. A locked policy is what makes stored
+  // objects survive an attacker holding valid credentials.
+  objectLockState() string
+  // Days objects are retained under the retention policy
+  //
+  // Zero when no retention policy is configured.
+  objectLockRetentionDays() int
+  // Whether requests carrying no Referer header are allowed
+  //
+  // True by default. Combined with an otherwise restrictive referer list, this
+  // being true leaves the restriction trivially bypassed, since the client
+  // chooses whether to send the header.
+  allowEmptyReferer() bool
+  // Referer values allowed to reach the bucket
+  //
+  // Empty when no referer restriction is configured.
+  refererAllowList() []string
+  // Referer values refused by the bucket
+  refererDenyList() []string
+  // Whether the bucket serves a static website
+  //
+  // Static hosting is an intentional public surface, so a bucket with it
+  // enabled is meant to be read anonymously.
+  websiteEnabled() bool
+  // Default page served for the static website
+  websiteIndexDocument() string
+  // Page served for errors on the static website
+  websiteErrorDocument() string
+  // Cross-origin resource sharing rules
+  //
+  // Which other origins a browser may read the bucket from. Empty when CORS is
+  // not configured, which refuses every cross-origin browser request.
+  corsRules() []alicloud.oss.bucket.corsRule
+  // Rules that copy objects to another bucket
+  //
+  // Replication moves object data out of this bucket, and the destination can
+  // be in another region or owned by another account.
+  replicationRules() []alicloud.oss.bucket.replicationRule
+}
+
+// OSS bucket cross-origin resource sharing rule
+//
+// One CORS rule, deciding which origins a browser may read the bucket from and
+// with which methods and headers. An allowed origin of `*` lets a page on any
+// site read whatever the requesting browser is allowed to read.
+alicloud.oss.bucket.corsRule @defaults("allowedOrigins allowedMethods maxAgeSeconds") {
+  // Origins a browser may issue cross-origin requests from
+  //
+  // A value of `*` allows every site.
+  allowedOrigins []string
+  // Methods allowed in a cross-origin request
+  allowedMethods []string
+  // Request headers allowed in a cross-origin request
+  //
+  // A value of `*` allows every header.
+  allowedHeaders []string
+  // Response headers exposed to the requesting page
+  exposeHeaders []string
+  // Seconds a browser may cache the preflight response
+  maxAgeSeconds int
+}
+
+// OSS bucket replication rule
+//
+// One rule copying objects to another bucket, keyed by its rule ID. Reports
+// where the copies land and what is copied, so a rule sending object data to
+// another region or another account is visible as one.
+alicloud.oss.bucket.replicationRule @defaults("id targetBucket targetLocation status") {
+  // Replication rule ID, used as the lookup key
+  id string
+  // Bucket objects are copied to
+  targetBucket string
+  // Region the destination bucket sits in
+  targetLocation string
+  // Replication status
+  //
+  // One of starting, doing, or closing.
+  status string
+  // Operations copied to the destination
+  //
+  // ALL covers writes, deletes and aborted uploads. PUT covers writes only, so
+  // an object deleted here survives at the destination.
+  action string
+  // Whether objects that predate the rule are copied
+  //
+  // Either enabled or disabled.
+  historicalObjectReplication string
+  // Object name prefixes the rule covers
+  //
+  // Empty when the rule covers the whole bucket.
+  prefixes []string
+  // RAM role Object Storage Service assumes to perform the replication
+  syncRole string
+  // KMS key ID used to encrypt the replicated objects
+  //
+  // Empty when the destination objects are not encrypted with a customer key.
+  replicaKmsKeyId string
 }
 
 // Server Load Balancer

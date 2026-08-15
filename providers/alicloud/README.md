@@ -178,6 +178,18 @@ alicloud.vpc.routeTables {
 # OSS buckets without block-public-access
 alicloud.oss.buckets.where(blockPublicAccess == false) { name acl policy }
 
+# buckets a browser on any site can read, and buckets with no TLS floor
+alicloud.oss.buckets { name corsRules.where(allowedOrigins.contains("*")) { allowedMethods } }
+alicloud.oss.buckets.where(tlsEnforced == false) { name }
+
+# objects that can still be deleted or overwritten, and object data leaving
+# the bucket
+alicloud.oss.buckets.where(objectLockState == "") { name versioning }
+alicloud.oss.buckets { name replicationRules { targetBucket targetLocation action } }
+
+# a referer restriction that any client can sidestep by omitting the header
+alicloud.oss.buckets.where(refererAllowList != [] && allowEmptyReferer) { name }
+
 # RDS instances allowing connections from anywhere
 alicloud.rds.instances.where(securityIPList.contains("0.0.0.0/0")) {
   dbInstanceId engine sslEnabled tdeEnabled

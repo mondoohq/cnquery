@@ -100,6 +100,11 @@ attemps = "attemps"
 iz = "iz"
 bussiness = "bussiness"
 setted = "setted"
+# Alibaba Cloud OSS Go SDK fields RefererList.Referers and
+# RefererBlacklist.Referers. "Referer" is the HTTP header's own historical
+# misspelling, which the SDK then pluralizes; both are the SDK's spelling, so
+# reads of them cannot be renamed.
+referers = "referers"
 # Alibaba Cloud API enum value: SecurityEnhancementStrategy is either "Active"
 # or "Deactive". Documenting it any other way would not match what the API
 # returns.

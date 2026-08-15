@@ -47,6 +47,8 @@ const (
 	ResourceAlicloudVpcNetworkAclEntry           string = "alicloud.vpc.networkAcl.entry"
 	ResourceAlicloudOss                          string = "alicloud.oss"
 	ResourceAlicloudOssBucket                    string = "alicloud.oss.bucket"
+	ResourceAlicloudOssBucketCorsRule            string = "alicloud.oss.bucket.corsRule"
+	ResourceAlicloudOssBucketReplicationRule     string = "alicloud.oss.bucket.replicationRule"
 	ResourceAlicloudSlb                          string = "alicloud.slb"
 	ResourceAlicloudSlbLoadBalancer              string = "alicloud.slb.loadBalancer"
 	ResourceAlicloudSlbListener                  string = "alicloud.slb.listener"
@@ -267,6 +269,14 @@ func init() {
 		"alicloud.oss.bucket": {
 			Init:   initAlicloudOssBucket,
 			Create: createAlicloudOssBucket,
+		},
+		"alicloud.oss.bucket.corsRule": {
+			// to override args, implement: initAlicloudOssBucketCorsRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudOssBucketCorsRule,
+		},
+		"alicloud.oss.bucket.replicationRule": {
+			// to override args, implement: initAlicloudOssBucketReplicationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudOssBucketReplicationRule,
 		},
 		"alicloud.slb": {
 			// to override args, implement: initAlicloudSlb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2181,6 +2191,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.oss.bucket.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudOssBucket).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"alicloud.oss.bucket.policyAllowsPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetPolicyAllowsPublicAccess()).ToDataRes(types.Bool)
+	},
+	"alicloud.oss.bucket.tlsEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetTlsEnforced()).ToDataRes(types.Bool)
+	},
+	"alicloud.oss.bucket.tlsVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetTlsVersions()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.objectLockState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetObjectLockState()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.objectLockRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetObjectLockRetentionDays()).ToDataRes(types.Int)
+	},
+	"alicloud.oss.bucket.allowEmptyReferer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetAllowEmptyReferer()).ToDataRes(types.Bool)
+	},
+	"alicloud.oss.bucket.refererAllowList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetRefererAllowList()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.refererDenyList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetRefererDenyList()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.websiteEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetWebsiteEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.oss.bucket.websiteIndexDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetWebsiteIndexDocument()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.websiteErrorDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetWebsiteErrorDocument()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.corsRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetCorsRules()).ToDataRes(types.Array(types.Resource("alicloud.oss.bucket.corsRule")))
+	},
+	"alicloud.oss.bucket.replicationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucket).GetReplicationRules()).ToDataRes(types.Array(types.Resource("alicloud.oss.bucket.replicationRule")))
+	},
+	"alicloud.oss.bucket.corsRule.allowedOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketCorsRule).GetAllowedOrigins()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.corsRule.allowedMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketCorsRule).GetAllowedMethods()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.corsRule.allowedHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketCorsRule).GetAllowedHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.corsRule.exposeHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketCorsRule).GetExposeHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.corsRule.maxAgeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketCorsRule).GetMaxAgeSeconds()).ToDataRes(types.Int)
+	},
+	"alicloud.oss.bucket.replicationRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetId()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.targetBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetTargetBucket()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.targetLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetTargetLocation()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetAction()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.historicalObjectReplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetHistoricalObjectReplication()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.prefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.oss.bucket.replicationRule.syncRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetSyncRole()).ToDataRes(types.String)
+	},
+	"alicloud.oss.bucket.replicationRule.replicaKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudOssBucketReplicationRule).GetReplicaKmsKeyId()).ToDataRes(types.String)
 	},
 	"alicloud.slb.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudSlb).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("alicloud.slb.loadBalancer")))
@@ -8032,6 +8123,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.oss.bucket.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudOssBucket).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.policyAllowsPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).PolicyAllowsPublicAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.tlsEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).TlsEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.tlsVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).TlsVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.objectLockState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).ObjectLockState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.objectLockRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).ObjectLockRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.allowEmptyReferer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).AllowEmptyReferer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.refererAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).RefererAllowList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.refererDenyList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).RefererDenyList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.websiteEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).WebsiteEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.websiteIndexDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).WebsiteIndexDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.websiteErrorDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).WebsiteErrorDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.corsRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).CorsRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucket).ReplicationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.corsRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketCorsRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.oss.bucket.corsRule.allowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketCorsRule).AllowedOrigins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.corsRule.allowedMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketCorsRule).AllowedMethods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.corsRule.allowedHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketCorsRule).AllowedHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.corsRule.exposeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketCorsRule).ExposeHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.corsRule.maxAgeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketCorsRule).MaxAgeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.targetBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).TargetBucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.targetLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).TargetLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.historicalObjectReplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).HistoricalObjectReplication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.prefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).Prefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.syncRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).SyncRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.oss.bucket.replicationRule.replicaKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudOssBucketReplicationRule).ReplicaKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.slb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18077,30 +18284,43 @@ type mqlAlicloudOssBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudOssBucketInternal
-	Name                   plugin.TValue[string]
-	Region                 plugin.TValue[string]
-	Location               plugin.TValue[string]
-	StorageClass           plugin.TValue[string]
-	CreationDate           plugin.TValue[*time.Time]
-	IntranetEndpoint       plugin.TValue[string]
-	ExtranetEndpoint       plugin.TValue[string]
-	ResourceGroupId        plugin.TValue[string]
-	ResourceGroup          plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
-	Acl                    plugin.TValue[string]
-	Versioning             plugin.TValue[string]
-	Encryption             plugin.TValue[any]
-	SseAlgorithm           plugin.TValue[string]
-	KmsKey                 plugin.TValue[*mqlAlicloudKmsKey]
-	Logging                plugin.TValue[any]
-	Policy                 plugin.TValue[string]
-	Tags                   plugin.TValue[map[string]any]
-	PublicAccessBlock      plugin.TValue[any]
-	BucketInfo             plugin.TValue[any]
-	TransferAcceleration   plugin.TValue[string]
-	CrossRegionReplication plugin.TValue[string]
-	DataRedundancyType     plugin.TValue[string]
-	BlockPublicAccess      plugin.TValue[bool]
-	IsPublic               plugin.TValue[bool]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Location                 plugin.TValue[string]
+	StorageClass             plugin.TValue[string]
+	CreationDate             plugin.TValue[*time.Time]
+	IntranetEndpoint         plugin.TValue[string]
+	ExtranetEndpoint         plugin.TValue[string]
+	ResourceGroupId          plugin.TValue[string]
+	ResourceGroup            plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Acl                      plugin.TValue[string]
+	Versioning               plugin.TValue[string]
+	Encryption               plugin.TValue[any]
+	SseAlgorithm             plugin.TValue[string]
+	KmsKey                   plugin.TValue[*mqlAlicloudKmsKey]
+	Logging                  plugin.TValue[any]
+	Policy                   plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	PublicAccessBlock        plugin.TValue[any]
+	BucketInfo               plugin.TValue[any]
+	TransferAcceleration     plugin.TValue[string]
+	CrossRegionReplication   plugin.TValue[string]
+	DataRedundancyType       plugin.TValue[string]
+	BlockPublicAccess        plugin.TValue[bool]
+	IsPublic                 plugin.TValue[bool]
+	PolicyAllowsPublicAccess plugin.TValue[bool]
+	TlsEnforced              plugin.TValue[bool]
+	TlsVersions              plugin.TValue[[]any]
+	ObjectLockState          plugin.TValue[string]
+	ObjectLockRetentionDays  plugin.TValue[int64]
+	AllowEmptyReferer        plugin.TValue[bool]
+	RefererAllowList         plugin.TValue[[]any]
+	RefererDenyList          plugin.TValue[[]any]
+	WebsiteEnabled           plugin.TValue[bool]
+	WebsiteIndexDocument     plugin.TValue[string]
+	WebsiteErrorDocument     plugin.TValue[string]
+	CorsRules                plugin.TValue[[]any]
+	ReplicationRules         plugin.TValue[[]any]
 }
 
 // createAlicloudOssBucket creates a new instance of this resource
@@ -18286,6 +18506,252 @@ func (c *mqlAlicloudOssBucket) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
 	})
+}
+
+func (c *mqlAlicloudOssBucket) GetPolicyAllowsPublicAccess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PolicyAllowsPublicAccess, func() (bool, error) {
+		return c.policyAllowsPublicAccess()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetTlsEnforced() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsEnforced, func() (bool, error) {
+		return c.tlsEnforced()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetTlsVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsVersions, func() ([]any, error) {
+		return c.tlsVersions()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetObjectLockState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObjectLockState, func() (string, error) {
+		return c.objectLockState()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetObjectLockRetentionDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObjectLockRetentionDays, func() (int64, error) {
+		return c.objectLockRetentionDays()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetAllowEmptyReferer() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowEmptyReferer, func() (bool, error) {
+		return c.allowEmptyReferer()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetRefererAllowList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RefererAllowList, func() ([]any, error) {
+		return c.refererAllowList()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetRefererDenyList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RefererDenyList, func() ([]any, error) {
+		return c.refererDenyList()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetWebsiteEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WebsiteEnabled, func() (bool, error) {
+		return c.websiteEnabled()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetWebsiteIndexDocument() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebsiteIndexDocument, func() (string, error) {
+		return c.websiteIndexDocument()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetWebsiteErrorDocument() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebsiteErrorDocument, func() (string, error) {
+		return c.websiteErrorDocument()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetCorsRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CorsRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.oss.bucket", c.__id, "corsRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.corsRules()
+	})
+}
+
+func (c *mqlAlicloudOssBucket) GetReplicationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.oss.bucket", c.__id, "replicationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationRules()
+	})
+}
+
+// mqlAlicloudOssBucketCorsRule for the alicloud.oss.bucket.corsRule resource
+type mqlAlicloudOssBucketCorsRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudOssBucketCorsRuleInternal it will be used here
+	AllowedOrigins plugin.TValue[[]any]
+	AllowedMethods plugin.TValue[[]any]
+	AllowedHeaders plugin.TValue[[]any]
+	ExposeHeaders  plugin.TValue[[]any]
+	MaxAgeSeconds  plugin.TValue[int64]
+}
+
+// createAlicloudOssBucketCorsRule creates a new instance of this resource
+func createAlicloudOssBucketCorsRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudOssBucketCorsRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.oss.bucket.corsRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) MqlName() string {
+	return "alicloud.oss.bucket.corsRule"
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) GetAllowedOrigins() *plugin.TValue[[]any] {
+	return &c.AllowedOrigins
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) GetAllowedMethods() *plugin.TValue[[]any] {
+	return &c.AllowedMethods
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) GetAllowedHeaders() *plugin.TValue[[]any] {
+	return &c.AllowedHeaders
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) GetExposeHeaders() *plugin.TValue[[]any] {
+	return &c.ExposeHeaders
+}
+
+func (c *mqlAlicloudOssBucketCorsRule) GetMaxAgeSeconds() *plugin.TValue[int64] {
+	return &c.MaxAgeSeconds
+}
+
+// mqlAlicloudOssBucketReplicationRule for the alicloud.oss.bucket.replicationRule resource
+type mqlAlicloudOssBucketReplicationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudOssBucketReplicationRuleInternal it will be used here
+	Id                          plugin.TValue[string]
+	TargetBucket                plugin.TValue[string]
+	TargetLocation              plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	Action                      plugin.TValue[string]
+	HistoricalObjectReplication plugin.TValue[string]
+	Prefixes                    plugin.TValue[[]any]
+	SyncRole                    plugin.TValue[string]
+	ReplicaKmsKeyId             plugin.TValue[string]
+}
+
+// createAlicloudOssBucketReplicationRule creates a new instance of this resource
+func createAlicloudOssBucketReplicationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudOssBucketReplicationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.oss.bucket.replicationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) MqlName() string {
+	return "alicloud.oss.bucket.replicationRule"
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetTargetBucket() *plugin.TValue[string] {
+	return &c.TargetBucket
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetTargetLocation() *plugin.TValue[string] {
+	return &c.TargetLocation
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetHistoricalObjectReplication() *plugin.TValue[string] {
+	return &c.HistoricalObjectReplication
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetPrefixes() *plugin.TValue[[]any] {
+	return &c.Prefixes
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetSyncRole() *plugin.TValue[string] {
+	return &c.SyncRole
+}
+
+func (c *mqlAlicloudOssBucketReplicationRule) GetReplicaKmsKeyId() *plugin.TValue[string] {
+	return &c.ReplicaKmsKeyId
 }
 
 // mqlAlicloudSlb for the alicloud.slb resource
