@@ -218,9 +218,53 @@ See /usr/share/common-licenses/GPL-2 for the full license text.
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(nil, "bash"))
 }
 
+// Both shapes that used to cost a package its description, in the form they
+// appear on a real host: libc6 carries a colon in its summary, and
+// gpg-wks-client carries one in a continuation line.
+func TestDpkgParserDescriptionWithColons(t *testing.T) {
+	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
+
+	status := `Package: libc6
+Status: install ok installed
+Architecture: amd64
+Version: 2.39-0ubuntu8.6
+Description: GNU C Library: Shared libraries
+ Contains the standard libraries that are used by nearly all programs on
+ the system. This package includes shared versions of the standard C library
+ and the standard math library, as well as many others.
+
+Package: gpg-wks-client
+Status: install ok installed
+Architecture: amd64
+Version: 2.4.4-2ubuntu17
+Description: GNU privacy guard - Web Key Service client
+ GnuPG is GNU's tool for secure communication and data storage.
+ For more information see: https://wiki.gnupg.org/WKS
+ It is a tool to provide digital encryption.
+`
+
+	pkgs, err := ParseDpkgPackages(pf, bytes.NewReader([]byte(status)))
+	require.NoError(t, err)
+	require.Len(t, pkgs, 2)
+
+	// The summary keeps the colon that used to be read as the separator, and
+	// the continuation lines that used to be dropped with it are still here.
+	assert.Equal(t, `GNU C Library: Shared libraries
+Contains the standard libraries that are used by nearly all programs on
+the system. This package includes shared versions of the standard C library
+and the standard math library, as well as many others.`, pkgs[0].Description)
+
+	// A continuation line is a continuation whatever it contains, so the
+	// description does not end at the colon in the middle of it.
+	assert.Equal(t, `GNU privacy guard - Web Key Service client
+GnuPG is GNU's tool for secure communication and data storage.
+For more information see: https://wiki.gnupg.org/WKS
+It is a tool to provide digital encryption.`, pkgs[1].Description)
+}
+
 func TestDpkgControlField(t *testing.T) {
-	// The previous implementation used the regexp `^(.+):\s(.+)$`. The greedy
-	// first group binds it to the last colon that is followed by whitespace.
+	// A field name carries neither space nor colon, so the first colon ends it,
+	// and a line starting with a space or a tab continues the field above it.
 	tests := []struct {
 		line  string
 		key   string
@@ -231,7 +275,11 @@ func TestDpkgControlField(t *testing.T) {
 		// the epoch colon has no whitespace after it, so it is not a split point
 		{"Version: 2:5.2-2ubuntu1", "Version", "2:5.2-2ubuntu1", true},
 		{"Depends: libc6 (>= 2.34), libtinfo6", "Depends", "libc6 (>= 2.34), libtinfo6", true},
-		{"Description: the GNU shell: a thing", "Description: the GNU shell", "a thing", true},
+		// A colon inside the value is part of the value. Reading the last one
+		// as the separator is what used to leave every package whose summary
+		// carries a colon -- libc6 among them -- with no description at all.
+		{"Description: the GNU shell: a thing", "Description", "the GNU shell: a thing", true},
+		{"Description: GNU C Library: Shared libraries", "Description", "GNU C Library: Shared libraries", true},
 		{"Field:\tvalue", "Field", "value", true},
 		{"Field:  padded", "Field", " padded", true},
 		// no whitespace after the colon
@@ -240,8 +288,10 @@ func TestDpkgControlField(t *testing.T) {
 		{"a: ", "", "", false},
 		// nothing before the colon
 		{": b", "", "", false},
-		// continuation lines carry no field
+		// continuation lines carry no field, whatever they contain
 		{" /etc/bash.bashrc 1234", "", "", false},
+		{" For more information see: https://wiki.gnupg.org/WKS", "", "", false},
+		{"\tindented continuation: with a colon", "", "", false},
 		{"Conffiles:", "", "", false},
 		{"", "", "", false},
 		// multi-byte runes around the split point

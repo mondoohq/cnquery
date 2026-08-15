@@ -35,11 +35,13 @@ func isDpkgFieldSpace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r'
 }
 
-// dpkgControlField splits a dpkg control line into its field name and value.
-// It returns the same key and value as the regexp `^(.+):\s(.+)$`. The greedy
-// first group binds that regexp to the last colon followed by a whitespace
-// character. At least one byte must precede the colon, and at least one byte
-// must follow the whitespace.
+// dpkgControlField splits a dpkg control line into its field name and value,
+// following the Debian control file format: a field name carries neither space
+// nor colon, so the first colon ends it, and a line that starts with a space or
+// a tab is a continuation of the field above it rather than a field of its own.
+//
+// At least one byte must precede the colon, and at least one byte must follow
+// the whitespace that separates the name from the value.
 //
 // The colon and the whitespace bytes are ASCII, so they never appear inside a
 // multi-byte UTF-8 sequence. A byte scan therefore finds the same split point
@@ -48,12 +50,15 @@ func isDpkgFieldSpace(c byte) bool {
 //
 // The returned slices alias line. The caller must copy what it keeps.
 func dpkgControlField(line []byte) (key []byte, value []byte, ok bool) {
-	for i := len(line) - 3; i >= 1; i-- {
-		if line[i] == ':' && isDpkgFieldSpace(line[i+1]) {
-			return line[:i], line[i+2:], true
-		}
+	// a continuation line belongs to the field above it
+	if len(line) == 0 || line[0] == ' ' || line[0] == '\t' {
+		return nil, nil, false
 	}
-	return nil, nil, false
+	i := bytes.IndexByte(line, ':')
+	if i < 1 || i+2 > len(line)-1 || !isDpkgFieldSpace(line[i+1]) {
+		return nil, nil, false
+	}
+	return line[:i], line[i+2:], true
 }
 
 // ParseDpkgPackages parses the dpkg database content located in /var/lib/dpkg/status
