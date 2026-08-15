@@ -157,10 +157,12 @@ type Interface struct {
 	IPv6Addresses []string
 	Shutdown      bool
 	PBRPolicy     string
-	Params        map[string]string
-	File          string
-	StartLine     int
-	Raw           string
+	// Protocols holds the routing protocol settings of the interface.
+	Protocols InterfaceProtocols
+	Params    map[string]string
+	File      string
+	StartLine int
+	Raw       string
 }
 
 // PrefixList groups every `ip prefix-list <name> ...` line of one name.
@@ -690,6 +692,7 @@ func (c *Config) Interfaces() []Interface {
 		iface := Interface{
 			Name:      blk.Name,
 			VRF:       argAfter(blk.Args, "vrf"),
+			Protocols: parseInterfaceProtocols(blk.Directives),
 			Params:    map[string]string{},
 			File:      blk.File,
 			StartLine: blk.StartLine,
