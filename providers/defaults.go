@@ -1291,6 +1291,21 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"zoom": {
+		Provider: &plugin.Provider{
+			Name:            "zoom",
+			ID:              "go.mondoo.com/mql/providers/zoom",
+			ConnectionTypes: []string{"zoom"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "zoom",
+					Use:   "zoom --account-id ACCOUNT_ID --client-id CLIENT_ID --client-secret CLIENT_SECRET",
+					Short: "a Zoom account",
+				},
+			},
+		},
+	},
+
 	"networkdiscovery": {
 		Provider: &plugin.Provider{
 			Name:            "networkdiscovery",

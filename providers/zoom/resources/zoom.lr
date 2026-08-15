@@ -1,0 +1,191 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/zoom"
+option go_package = "go.mondoo.com/mql/v13/providers/zoom/resources"
+
+// Zoom account root
+//
+// Entry point for a Zoom account reached through Server-to-Server OAuth.
+// Exposes the account's users, the roles those users can hold, and the
+// groups they belong to. The account's security-relevant configuration is
+// available through the `zoom.account` resource.
+// Groups and roles both carry their own meeting-security overrides and
+// membership lists, so admin-equivalent access and account-wide meeting
+// defaults can be audited from a single query surface.
+zoom @maturity("experimental") {
+  // Active users provisioned on the account (excludes inactive and pending)
+  users() []zoom.user
+  // Roles that can be assigned to users
+  roles() []zoom.role
+  // User groups, each with its own meeting-security overrides
+  groups() []zoom.group
+}
+
+// Zoom account settings
+//
+// Account-wide configuration reached through the authenticated
+// Server-to-Server OAuth account, selected by `id` (the Zoom account ID
+// tied to the credentials used to connect). Covers the meeting-security
+// defaults applied to every meeting on the account (waiting room,
+// passcode requirements, encryption type), cloud-recording encryption,
+// whether only authenticated or account-internal users may join
+// meetings, and the sign-in session timeout enforced for the workforce.
+// The account's single sign-on configuration is available through the
+// `zoom.account.sso` resource.
+zoom.account @defaults("id accountName") @maturity("experimental") {
+  // Zoom account ID
+  id string
+  // Account (company) name
+  accountName string
+  // Email address of the account owner
+  ownerEmail string
+  // Whether the waiting room is enabled by default for new meetings
+  meetingWaitingRoomEnabled() bool
+  // Whether a passcode is required to join meetings by default
+  meetingPasscodeRequired() bool
+  // Whether a passcode is required to join a user's Personal Meeting ID (PMI)
+  meetingPmiPasscodeRequired() bool
+  // Default meeting encryption type
+  //
+  // One of `enhanced_encryption` (encrypted in transit and at rest on
+  // Zoom's servers) or `end_to_end_encryption` (E2EE, only the meeting
+  // participants hold the decryption keys).
+  meetingEncryptionType() string
+  // Whether end-to-end encryption (E2EE) is available to hosts on this account
+  meetingE2eeAvailable() bool
+  // Whether meetings require participants to be authenticated before joining
+  meetingAuthenticationRequired() bool
+  // Whether meeting participation is restricted to users signed in on this account (blocks external/guest participants)
+  meetingOnlyAccountUsersCanJoin() bool
+  // Whether cloud recording is enabled for the account
+  cloudRecordingEnabled() bool
+  // Whether cloud recordings are encrypted at rest
+  cloudRecordingEncryptionEnabled() bool
+  // Sign-in session timeout, in minutes, before a user is forced to re-authenticate (0 means no timeout is enforced)
+  signInSessionTimeoutMinutes() int
+}
+
+// Zoom single sign-on (SSO) configuration
+//
+// Account-wide SSO settings: whether SSO is enabled, the email domains
+// provisioned through it, whether group membership is synced from the
+// identity provider, and the identity provider's issuer and login URL.
+zoom.account.sso @defaults("enabled") @maturity("experimental") {
+  // Whether SSO is enabled for the account
+  enabled bool
+  // Email domains provisioned through SSO
+  domains []string
+  // Whether group membership is mapped from the identity provider
+  groupMappingEnabled bool
+  // Identity provider issuer URL
+  idpIssuer string
+  // Identity provider single sign-on URL
+  idpSsoUrl string
+}
+
+// Zoom user
+//
+// A single user provisioned on the account, selected by `id`, for
+// example `zoom.user(id: "z9f8...")`. Carries the user's licensing
+// `type`, `status`, and sign-in method (`loginType` and `ssoLinked`),
+// along with the `role` that governs their admin privileges and the
+// `groups` whose meeting-security overrides apply to their meetings.
+zoom.user @defaults("id email type") @maturity("experimental") {
+  init(id? string)
+  // Zoom user ID
+  id string
+  // User's email address
+  email string
+  // First name
+  firstName string
+  // Last name
+  lastName string
+  // Display name
+  displayName string
+  // License type
+  //
+  // 1 (Basic), 2 (Licensed), or 99 (None, for API-created users on some
+  // plans). Check the Zoom Users API docs for the current complete set.
+  type int
+  // Account status
+  //
+  // One of `active`, `inactive`, or `pending`.
+  status string
+  // Whether the user's email address has been verified
+  verified bool
+  // Sign-in method
+  //
+  // 1 (Google OAuth), 24 (Apple), 27 (Microsoft OAuth), 99 (API), 100
+  // (SSO), or 101 (Zoom Work Email), among others. Check the Zoom Users
+  // API docs for the current complete set.
+  loginType int
+  // Whether the user authenticates through the account's SSO configuration
+  ssoLinked bool
+  // Timestamp of the user's last login
+  lastLoginTime time
+  // Timestamp the user was created
+  createdAt time
+  // Role ID assigned to the user
+  //
+  // Deprecated in favor of role.
+  roleId @maturity("deprecated") string
+  // Role assigned to the user, governing their admin privileges
+  role() zoom.role
+  // Group IDs the user belongs to
+  //
+  // Deprecated in favor of groups.
+  groupIds @maturity("deprecated") []string
+  // Groups the user belongs to
+  groups() []zoom.group
+}
+
+// Zoom role
+//
+// A role that can be assigned to users, selected by `id`, for example
+// `zoom.role(id: "0")`. The built-in `Owner` and `Admin` roles carry
+// full account privileges; custom roles carry whatever subset of
+// `privileges` was granted to them. Use `members` to audit how many
+// users hold admin-equivalent access.
+zoom.role @defaults("id name") @maturity("experimental") {
+  // Role ID
+  id string
+  // Role name
+  name string
+  // Role description
+  description string
+  // Number of users assigned this role
+  totalMembers int
+  // Privileges (permission scopes) granted by this role
+  privileges []string
+  // Users assigned this role
+  members() []zoom.user
+}
+
+// Zoom group
+//
+// A user group, selected by `id`, for example `zoom.group(id: "abc")`.
+// Groups carry their own meeting-security overrides
+// (`settingsWaitingRoomEnabled`, `settingsMeetingPasscodeRequired`,
+// `settingsE2eeAvailable`, `settingsOnlyAuthenticatedUsersCanJoin`) that
+// take precedence over the account defaults in `zoom.account` for
+// members of the group, so a group's members can end up on a weaker (or
+// stronger) meeting-security posture than the account as a whole.
+zoom.group @defaults("id name") @maturity("experimental") {
+  // Group ID
+  id string
+  // Group name
+  name string
+  // Number of users in the group
+  totalMembers int
+  // Users in the group
+  members() []zoom.user
+  // Whether the waiting room is enabled by default for the group's meetings
+  settingsWaitingRoomEnabled() bool
+  // Whether a passcode is required to join the group's meetings
+  settingsMeetingPasscodeRequired() bool
+  // Whether end-to-end encryption (E2EE) is available to the group's hosts
+  settingsE2eeAvailable() bool
+  // Whether the group's meetings are restricted to users signed in on this account
+  settingsOnlyAuthenticatedUsersCanJoin() bool
+}
