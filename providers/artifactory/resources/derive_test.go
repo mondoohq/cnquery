@@ -593,30 +593,15 @@ func TestUsesEncryptedLdapTransport(t *testing.T) {
 // Every string field whose schema promises null must be built with
 // optionalString. Returning an empty string instead makes "not configured"
 // indistinguishable from "configured to nothing", so a query filtering on null
-// matches neither. This walks the schema and the code together, so a field
-// added later cannot quietly break the promise.
+// matches neither.
+//
+// The check is per resource, because the same field name means different
+// things on different resources: name is the identifier of a watch and is
+// always set, but on a watch resource entry it is null on a wildcard. It walks
+// the schema and the code together, so a field added later cannot quietly
+// break the promise.
 func TestSchemaNullPromisesAreHonoured(t *testing.T) {
-	schema, err := os.ReadFile("artifactory.lr")
-	if err != nil {
-		t.Fatalf("read the schema: %v", err)
-	}
-
-	promised := map[string]bool{}
-	var doc []string
-	for _, line := range strings.Split(string(schema), "\n") {
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "//") {
-			doc = append(doc, trimmed)
-			continue
-		}
-		if m := regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9_]*)\(?\)? +string\b`).FindStringSubmatch(trimmed); m != nil {
-			blob := strings.ToLower(strings.Join(doc, " "))
-			if strings.Contains(blob, "null when") || strings.Contains(blob, "null on") {
-				promised[m[1]] = true
-			}
-		}
-		doc = nil
-	}
+	promised := schemaNullPromises(t)
 	if len(promised) == 0 {
 		t.Fatal("no field promises null; the schema scan is broken")
 	}
@@ -626,7 +611,9 @@ func TestSchemaNullPromisesAreHonoured(t *testing.T) {
 		t.Fatalf("list the sources: %v", err)
 	}
 
+	create := regexp.MustCompile(`CreateResource\([^,]+,\s*"([a-zA-Z0-9_.]+)"`)
 	plain := regexp.MustCompile(`"([a-zA-Z][a-zA-Z0-9_]*)":\s*llx\.StringData\(`)
+
 	for _, source := range sources {
 		if strings.HasSuffix(source, "_test.go") || strings.HasSuffix(source, ".lr.go") {
 			continue
@@ -635,10 +622,80 @@ func TestSchemaNullPromisesAreHonoured(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read %s: %v", source, err)
 		}
-		for _, m := range plain.FindAllStringSubmatch(string(body), -1) {
-			if promised[m[1]] {
-				t.Errorf("%s builds %q with llx.StringData, but the schema promises null; use optionalString", source, m[1])
+
+		// Each CreateResource call owns the argument map that follows it, up to
+		// the next call, so the fields are attributed to the right resource.
+		calls := create.FindAllStringSubmatchIndex(string(body), -1)
+		for i, call := range calls {
+			resource := string(body)[call[2]:call[3]]
+			end := len(body)
+			if i+1 < len(calls) {
+				end = calls[i+1][0]
 			}
+			for _, m := range plain.FindAllStringSubmatch(string(body)[call[1]:end], -1) {
+				if promised[resource+"."+m[1]] {
+					t.Errorf("%s builds %s.%s with llx.StringData, but the schema promises null; use optionalString",
+						source, resource, m[1])
+				}
+			}
+		}
+	}
+}
+
+// schemaNullPromises returns the "<resource>.<field>" keys whose doc comment
+// says the field is null when it is not set.
+func schemaNullPromises(t *testing.T) map[string]bool {
+	t.Helper()
+
+	schema, err := os.ReadFile("artifactory.lr")
+	if err != nil {
+		t.Fatalf("read the schema: %v", err)
+	}
+
+	resourceStart := regexp.MustCompile(`^(?:private\s+)?([a-zA-Z][a-zA-Z0-9_.]*)\s*(?:@[^{]*)?\{`)
+	field := regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9_]*)\(?\)? +string\b`)
+
+	promised := map[string]bool{}
+	resource := ""
+	var doc []string
+	for _, line := range strings.Split(string(schema), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "//") {
+			doc = append(doc, trimmed)
+			continue
+		}
+		if m := resourceStart.FindStringSubmatch(trimmed); m != nil {
+			resource = m[1]
+			doc = nil
+			continue
+		}
+		if m := field.FindStringSubmatch(trimmed); m != nil && resource != "" {
+			blob := strings.ToLower(strings.Join(doc, " "))
+			if strings.Contains(blob, "null when") || strings.Contains(blob, "null on") {
+				promised[resource+"."+m[1]] = true
+			}
+		}
+		doc = nil
+	}
+	return promised
+}
+
+func TestUsesEncryptedReplicationTransport(t *testing.T) {
+	tests := []struct {
+		url  string
+		want bool
+	}{
+		{url: "https://artifactory.example.com/artifactory/example-docker", want: true},
+		{url: "HTTPS://artifactory.example.com/artifactory/example-docker", want: true},
+		{url: "  https://artifactory.example.com  ", want: true},
+		{url: "http://artifactory.example.com/artifactory/example-docker"},
+		{url: "http://https.example.com/artifactory/example-docker"},
+		{url: ""},
+	}
+
+	for _, tt := range tests {
+		if got := usesEncryptedReplicationTransport(tt.url); got != tt.want {
+			t.Errorf("usesEncryptedReplicationTransport(%q) = %v, want %v", tt.url, got, tt.want)
 		}
 	}
 }

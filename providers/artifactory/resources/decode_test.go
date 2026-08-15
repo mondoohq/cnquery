@@ -6,6 +6,8 @@ package resources
 import (
 	"encoding/json"
 	"encoding/xml"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -749,5 +751,93 @@ func TestSecurityConfigDistinguishesEmptyFromAbsent(t *testing.T) {
 	}
 	if boolValue(config.Security.SamlSettings.EnableIntegration) {
 		t.Error("an empty SAML element decoded as enabled")
+	}
+}
+
+// The instance also returns the stored password in this response. It is left
+// out of the fixture on purpose, because the record has no field for it and a
+// secret-shaped literal in a test is worth avoiding.
+//
+// The replication endpoint answers with one object for a single replication and
+// an array for several. Reading only one shape would drop every replication on
+// a repository configured with more than one, which is the push case that
+// matters most.
+func TestReplicationsDecodeBothShapes(t *testing.T) {
+	const single = `{
+		"url": "https://artifactory.example.com/artifactory/example-docker",
+		"socketTimeoutMillis": 15000,
+		"username": "replicator",
+		"enableEventReplication": true,
+		"enabled": true,
+		"cronExp": "0 0 12 * * ?",
+		"syncDeletes": true,
+		"syncProperties": true,
+		"syncStatistics": false,
+		"repoKey": "example-docker",
+		"replicationKey": "example-docker_https_1234",
+		"includePathPrefixPattern": "/example",
+		"excludePathPrefixPattern": "/private"
+	}`
+
+	for _, tc := range []struct {
+		name string
+		body string
+		want int
+	}{
+		{name: "single object", body: single, want: 1},
+		{name: "array", body: "[" + single + "," + single + "]", want: 2},
+		{name: "empty body", body: "", want: 0},
+		{name: "null body", body: "null", want: 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			records, err := decodeReplications([]byte(tc.body))
+			if err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+			if len(records) != tc.want {
+				t.Fatalf("expected %d replications, got %d", tc.want, len(records))
+			}
+			if tc.want == 0 {
+				return
+			}
+
+			rec := records[0]
+			if rec.RepoKey != "example-docker" || rec.ReplicationKey != "example-docker_https_1234" {
+				t.Errorf("replication identity decoded wrong: %+v", rec)
+			}
+			if rec.URL != "https://artifactory.example.com/artifactory/example-docker" {
+				t.Errorf("replication URL decoded wrong: %q", rec.URL)
+			}
+			if !boolValue(rec.Enabled) || !boolValue(rec.SyncDeletes) || !boolValue(rec.EnableEventReplication) {
+				t.Errorf("replication flags decoded wrong: %+v", rec)
+			}
+			if boolValue(rec.SyncStatistics) {
+				t.Error("syncStatistics decoded as true, want false")
+			}
+			if rec.Username != "replicator" {
+				t.Errorf("replication user name decoded wrong: %q", rec.Username)
+			}
+			if rec.SocketTimeoutMillis == nil || *rec.SocketTimeoutMillis != 15000 {
+				t.Errorf("socket timeout decoded wrong: %v", rec.SocketTimeoutMillis)
+			}
+			if rec.IncludePathPrefixPattern != "/example" || rec.ExcludePathPrefixPattern != "/private" {
+				t.Errorf("replication path patterns decoded wrong: %+v", rec)
+			}
+		})
+	}
+}
+
+// The instance returns the stored password with the replication. It must not
+// reach a struct field, so it cannot reach a resource field, a log line, or a
+// recording.
+func TestReplicationRecordHasNoPasswordField(t *testing.T) {
+	value := reflect.TypeOf(replicationRecord{})
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		tag := strings.ToLower(field.Tag.Get("json"))
+		name := strings.ToLower(field.Name)
+		if strings.Contains(tag, "password") || strings.Contains(name, "password") {
+			t.Errorf("replicationRecord decodes the stored password in field %s", field.Name)
+		}
 	}
 }
