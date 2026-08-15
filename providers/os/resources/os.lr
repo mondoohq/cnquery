@@ -15115,3 +15115,119 @@ private qwen.code.skill @defaults("name") @maturity("preview") {
   // known-good skill definition against a baseline.
   sha256() string
 }
+
+// SR-IOV network devices
+//
+// Single-root I/O virtualization state of the host's network hardware. The
+// physicalFunctions field lists every SR-IOV capable interface with the number
+// of virtual functions it has enabled against the number it supports, and
+// virtualFunctions flattens every virtual function across all of them. This is
+// the realised hardware inventory, so it shows the PCI address, the bound
+// driver, and the per-device link settings that a Kubernetes device plugin
+// only reports as an aggregate count. Empty on hosts with no SR-IOV capable
+// interface.
+sriov {
+  // SR-IOV capable network interfaces
+  physicalFunctions() []sriov.physicalFunction
+  // Virtual functions across every physical function
+  virtualFunctions() []sriov.virtualFunction
+}
+
+// SR-IOV physical function
+//
+// Network interface that supports SR-IOV, selected by its interface name. The
+// numVfs and totalVfs fields report how many virtual functions are enabled
+// against how many the hardware supports, so an interface with numVfs of 0 is
+// capable but unused. The pciAddress, vendorId, deviceId, and driver fields
+// identify the device the way a device-plugin selector does, and macAddress,
+// mtu, and operationalState report the link. The virtualFunctions field
+// returns the virtual functions carved out of this interface.
+private sriov.physicalFunction @defaults("interface pciAddress numVfs totalVfs") {
+  // Kernel name of the network interface (for example enp25s0f0)
+  interface string
+  // PCI address of the device (for example 0000:19:00.0)
+  pciAddress string
+  // Kernel driver bound to the device (for example i40e or mlx5_core)
+  driver string
+  // PCI vendor ID in lowercase hex without the 0x prefix (for example 8086)
+  vendorId string
+  // PCI device ID in lowercase hex without the 0x prefix (for example 1572)
+  deviceId string
+  // Number of virtual functions currently enabled
+  numVfs int
+  // Number of virtual functions the hardware supports
+  totalVfs int
+  // MAC address of the interface
+  macAddress string
+  // Maximum transmission unit of the interface
+  mtu int
+  // Link state reported by the kernel (up, down, unknown)
+  operationalState string
+  // NUMA node the device is attached to, or -1 when it has no affinity
+  numaNode int
+  // Virtual functions carved out of this physical function
+  virtualFunctions() []sriov.virtualFunction
+}
+
+// SR-IOV virtual function
+//
+// One virtual function of an SR-IOV capable interface, selected by its PCI
+// address. The driver field reports what the function is bound to, and
+// usesPassthroughDriver marks a function handed to a userspace datapath such
+// as DPDK, which leaves it with no kernel network interface and therefore
+// outside host packet filtering. The spoofChecking, trusted, macAddress,
+// vlanId, and rate fields report the configuration the physical function
+// enforces on the guest, which is the part a workload cannot override.
+// linkConfigured is false when the kernel reports no configuration for the
+// function, so an unreported function is not read as an unprotected one.
+private sriov.virtualFunction @defaults("pciAddress index driver spoofChecking") {
+  // PCI address of the virtual function (for example 0000:19:02.0)
+  pciAddress string
+  // Index of the virtual function within its physical function
+  index int
+  // Physical function this virtual function belongs to
+  physicalFunction() sriov.physicalFunction
+  // Kernel driver bound to the virtual function (for example iavf or vfio-pci)
+  driver string
+  // Kernel name of the network interface, empty when no kernel driver is bound
+  interface string
+  // PCI vendor ID in lowercase hex without the 0x prefix
+  vendorId string
+  // PCI device ID in lowercase hex without the 0x prefix
+  deviceId string
+  // NUMA node the device is attached to, or -1 when it has no affinity
+  numaNode int
+  // Whether the function is bound to a userspace passthrough driver
+  //
+  // True for vfio-pci, uio_pci_generic, igb_uio, and vfio. Such a function has
+  // no kernel network interface, so the host stack cannot filter its traffic.
+  usesPassthroughDriver bool
+  // Whether the kernel reports link configuration for this function
+  //
+  // False when the physical function's driver exposes no per-function
+  // settings. The configuration fields below then carry their zero values and
+  // must not be read as the enforced setting.
+  linkConfigured bool
+  // MAC address the physical function assigns, empty when the guest chooses it
+  macAddress string
+  // VLAN ID the physical function enforces, 0 when no VLAN is set
+  vlanId int
+  // 802.1p priority applied together with the VLAN
+  qos int
+  // Whether the physical function drops frames with a foreign source address
+  //
+  // Spoof checking is what stops a workload on the virtual function from
+  // sending traffic as another MAC address.
+  spoofChecking bool
+  // Whether the function may change its MAC address and program multicast filters
+  //
+  // A trusted function can leave the address the physical function assigned,
+  // and can enable promiscuous mode.
+  trusted bool
+  // Administrative link state (auto, enable, disable)
+  linkState string
+  // Guaranteed transmit rate in Mbps, 0 when unset
+  minTxRate int
+  // Transmit rate cap in Mbps, 0 when uncapped
+  maxTxRate int
+}
