@@ -189,3 +189,13 @@ func TestGetJSONReportsADecodeFailure(t *testing.T) {
 		t.Fatal("expected a decode error")
 	}
 }
+
+// Xray is a separate service of the same platform, so its URL must be built
+// from the same base rather than from the Artifactory service prefix.
+func TestXrayURL(t *testing.T) {
+	conn := testConnection(t, "https://artifactory.example.com/artifactory", "token", "")
+
+	if got, want := conn.XrayURL("/api/v2/watches"), "https://artifactory.example.com/xray/api/v2/watches"; got != want {
+		t.Errorf("XrayURL = %q, want %q", got, want)
+	}
+}

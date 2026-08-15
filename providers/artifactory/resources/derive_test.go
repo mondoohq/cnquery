@@ -5,6 +5,9 @@ package resources
 
 import (
 	"encoding/json"
+	"errors"
+	"go.mondoo.com/mql/v13/providers/artifactory/connection"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -697,5 +700,172 @@ func TestUsesEncryptedReplicationTransport(t *testing.T) {
 		if got := usesEncryptedReplicationTransport(tt.url); got != tt.want {
 			t.Errorf("usesEncryptedReplicationTransport(%q) = %v, want %v", tt.url, got, tt.want)
 		}
+	}
+}
+
+// A policy's rules are alternatives. Stopping at the first rule that does not
+// block would report a policy as toothless because of the order its rules
+// happen to be in, which is the dangerous direction to be wrong in.
+func TestPolicyActionsReadEveryRule(t *testing.T) {
+	blocking := xrayPolicyRuleRecord{}
+	blocking.Actions.BlockDownload = &struct {
+		Unscanned *bool `json:"unscanned"`
+		Active    *bool `json:"active"`
+	}{Unscanned: boolPtr(true), Active: boolPtr(true)}
+	blocking.Actions.FailBuild = boolPtr(true)
+	blocking.Actions.BlockReleaseBundleDistribution = boolPtr(true)
+
+	notifying := xrayPolicyRuleRecord{}
+	notifying.Actions.NotifyWatchRecipients = boolPtr(true)
+
+	tests := []struct {
+		name  string
+		rules []xrayPolicyRuleRecord
+		want  bool
+	}{
+		{name: "no rules", rules: nil},
+		{name: "only a notifying rule", rules: []xrayPolicyRuleRecord{notifying}},
+		{name: "blocking rule first", rules: []xrayPolicyRuleRecord{blocking, notifying}, want: true},
+		{name: "blocking rule last", rules: []xrayPolicyRuleRecord{notifying, blocking}, want: true},
+		{name: "blocking rule between two others", rules: []xrayPolicyRuleRecord{notifying, blocking, notifying}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := policyBlocksDownload(tt.rules); got != tt.want {
+				t.Errorf("policyBlocksDownload = %v, want %v", got, tt.want)
+			}
+			if got := policyBlocksUnscanned(tt.rules); got != tt.want {
+				t.Errorf("policyBlocksUnscanned = %v, want %v", got, tt.want)
+			}
+			if got := policyFailsBuild(tt.rules); got != tt.want {
+				t.Errorf("policyFailsBuild = %v, want %v", got, tt.want)
+			}
+			if got := policyBlocksReleaseBundleDistribution(tt.rules); got != tt.want {
+				t.Errorf("policyBlocksReleaseBundleDistribution = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// A rule that records a violation without stopping anything leaves the artifact
+// installable. It must not read as blocking.
+func TestPolicyThatOnlyRecordsDoesNotBlock(t *testing.T) {
+	rule := xrayPolicyRuleRecord{}
+	rule.Criteria.MinSeverity = "Critical"
+
+	rules := []xrayPolicyRuleRecord{rule}
+	if policyBlocksDownload(rules) || policyBlocksUnscanned(rules) || policyFailsBuild(rules) {
+		t.Errorf("a rule with no actions read as blocking: %+v", rule.Actions)
+	}
+}
+
+// An action block the platform omits must not read as enabled.
+func TestPolicyBlockDownloadHandlesAnAbsentAction(t *testing.T) {
+	rule := xrayPolicyRuleRecord{}
+	if rule.Actions.BlockDownload != nil {
+		t.Fatal("an absent block_download decoded as present")
+	}
+	if policyBlocksDownload([]xrayPolicyRuleRecord{rule}) || policyBlocksUnscanned([]xrayPolicyRuleRecord{rule}) {
+		t.Error("an absent block_download read as blocking")
+	}
+}
+
+// The watch resource entries are alternatives too, so a wildcard anywhere in
+// the list covers every repository.
+func TestWatchCoversAllRepositories(t *testing.T) {
+	named := xrayWatchResourceRecord{Type: "repository", Name: "example-docker"}
+	wildcard := xrayWatchResourceRecord{Type: "all-repos"}
+	builds := xrayWatchResourceRecord{Type: "all-builds"}
+
+	tests := []struct {
+		name      string
+		resources []xrayWatchResourceRecord
+		want      bool
+	}{
+		{name: "no resources", resources: nil},
+		{name: "named only", resources: []xrayWatchResourceRecord{named}},
+		{name: "another wildcard class", resources: []xrayWatchResourceRecord{builds}},
+		{name: "wildcard first", resources: []xrayWatchResourceRecord{wildcard, named}, want: true},
+		{name: "wildcard last", resources: []xrayWatchResourceRecord{named, builds, wildcard}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := watchCoversAllRepositories(tt.resources); got != tt.want {
+				t.Errorf("watchCoversAllRepositories = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestWatchResourceRepositoryKey(t *testing.T) {
+	tests := []struct {
+		name string
+		rec  xrayWatchResourceRecord
+		want string
+	}{
+		{name: "named repository", rec: xrayWatchResourceRecord{Type: "repository", Name: "example-docker"}, want: "example-docker"},
+		{name: "wildcard names no repository", rec: xrayWatchResourceRecord{Type: "all-repos", Name: "ignored"}},
+		{name: "build entry", rec: xrayWatchResourceRecord{Type: "build", Name: "example-build"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := watchResourceRepositoryKey(&tt.rec); got != tt.want {
+				t.Errorf("watchResourceRepositoryKey = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestWatchWildcardTypes(t *testing.T) {
+	for _, typ := range []string{"all-repos", "all-builds", "all-releaseBundles", "all-releaseBundlesV2", "all-projects"} {
+		if !watchWildcardTypes[typ] {
+			t.Errorf("%q is not recognised as a wildcard", typ)
+		}
+	}
+	for _, typ := range []string{"repository", "build", "releaseBundle", "project", ""} {
+		if watchWildcardTypes[typ] {
+			t.Errorf("%q was recognised as a wildcard", typ)
+		}
+	}
+}
+
+func boolPtr(v bool) *bool { return &v }
+
+// A platform with no Xray and a platform whose Xray the token may not read are
+// different answers. Reporting the denial as an absent Xray would say "this
+// platform does not scan", and a policy asking whether a repository is
+// protected would pass on data that was never read.
+func TestXrayAbsentIsNotTheSameAsDenied(t *testing.T) {
+	notFound := &connection.APIError{StatusCode: http.StatusNotFound, URL: "/xray/api/v1/system/version"}
+	forbidden := &connection.APIError{StatusCode: http.StatusForbidden, URL: "/xray/api/v1/system/version"}
+	unauthorized := &connection.APIError{StatusCode: http.StatusUnauthorized, URL: "/xray/api/v1/system/version"}
+	broken := errors.New("connection reset")
+
+	if !xrayIsAbsent(notFound) {
+		t.Error("a 404 was not treated as an absent Xray")
+	}
+	for name, err := range map[string]error{"403": forbidden, "401": unauthorized, "transport": broken} {
+		if xrayIsAbsent(err) {
+			t.Errorf("a %s error was treated as an absent Xray", name)
+		}
+	}
+
+	// A denial must name the rights it needs, so the failure reads as a
+	// permission problem rather than as a broken provider.
+	denied := xrayReadError(forbidden)
+	if denied == nil || !strings.Contains(denied.Error(), "may not read Xray") {
+		t.Errorf("a denied read produced %v", denied)
+	}
+	if !errors.Is(denied, forbidden) {
+		t.Error("the denial dropped the underlying error")
+	}
+
+	// Anything else is passed through unchanged, so a transport failure is not
+	// dressed up as a permission problem.
+	if got := xrayReadError(broken); got != broken {
+		t.Errorf("a transport error produced %v", got)
 	}
 }

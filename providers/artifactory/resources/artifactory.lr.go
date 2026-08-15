@@ -36,6 +36,12 @@ const (
 	ResourceArtifactoryBackup                    string = "artifactory.backup"
 	ResourceArtifactoryCleanupPolicy             string = "artifactory.cleanupPolicy"
 	ResourceArtifactoryReplication               string = "artifactory.replication"
+	ResourceArtifactoryXray                      string = "artifactory.xray"
+	ResourceArtifactoryXrayWatch                 string = "artifactory.xray.watch"
+	ResourceArtifactoryXrayWatchResource         string = "artifactory.xray.watch.resource"
+	ResourceArtifactoryXrayPolicy                string = "artifactory.xray.policy"
+	ResourceArtifactoryXrayPolicyRule            string = "artifactory.xray.policy.rule"
+	ResourceArtifactoryXrayIgnoreRule            string = "artifactory.xray.ignoreRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -121,6 +127,30 @@ func init() {
 		"artifactory.replication": {
 			// to override args, implement: initArtifactoryReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createArtifactoryReplication,
+		},
+		"artifactory.xray": {
+			// to override args, implement: initArtifactoryXray(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryXray,
+		},
+		"artifactory.xray.watch": {
+			// to override args, implement: initArtifactoryXrayWatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryXrayWatch,
+		},
+		"artifactory.xray.watch.resource": {
+			// to override args, implement: initArtifactoryXrayWatchResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryXrayWatchResource,
+		},
+		"artifactory.xray.policy": {
+			// to override args, implement: initArtifactoryXrayPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryXrayPolicy,
+		},
+		"artifactory.xray.policy.rule": {
+			// to override args, implement: initArtifactoryXrayPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryXrayPolicyRule,
+		},
+		"artifactory.xray.ignoreRule": {
+			// to override args, implement: initArtifactoryXrayIgnoreRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createArtifactoryXrayIgnoreRule,
 		},
 	}
 }
@@ -216,6 +246,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"artifactory.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactory).GetBackups()).ToDataRes(types.Array(types.Resource("artifactory.backup")))
+	},
+	"artifactory.xray": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactory).GetXray()).ToDataRes(types.Resource("artifactory.xray"))
 	},
 	"artifactory.system": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactory).GetSystem()).ToDataRes(types.Resource("artifactory.systemInfo"))
@@ -330,6 +363,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"artifactory.repository.replications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetReplications()).ToDataRes(types.Array(types.Resource("artifactory.replication")))
+	},
+	"artifactory.repository.xrayWatches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetXrayWatches()).ToDataRes(types.Array(types.Resource("artifactory.xray.watch")))
+	},
+	"artifactory.repository.xrayPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetXrayPolicies()).ToDataRes(types.Array(types.Resource("artifactory.xray.policy")))
+	},
+	"artifactory.repository.xrayBlocksDownload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryRepository).GetXrayBlocksDownload()).ToDataRes(types.Bool)
 	},
 	"artifactory.repository.anonymousActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryRepository).GetAnonymousActions()).ToDataRes(types.Array(types.String))
@@ -862,6 +904,180 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"artifactory.replication.socketTimeoutMillis": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlArtifactoryReplication).GetSocketTimeoutMillis()).ToDataRes(types.Int)
 	},
+	"artifactory.xray.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXray).GetVersion()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXray).GetWatches()).ToDataRes(types.Array(types.Resource("artifactory.xray.watch")))
+	},
+	"artifactory.xray.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXray).GetPolicies()).ToDataRes(types.Array(types.Resource("artifactory.xray.policy")))
+	},
+	"artifactory.xray.ignoreRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXray).GetIgnoreRules()).ToDataRes(types.Array(types.Resource("artifactory.xray.ignoreRule")))
+	},
+	"artifactory.xray.watch.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watch.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetDescription()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watch.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetActive()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.watch.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetResources()).ToDataRes(types.Array(types.Resource("artifactory.xray.watch.resource")))
+	},
+	"artifactory.xray.watch.policyNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetPolicyNames()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.xray.watch.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetPolicies()).ToDataRes(types.Array(types.Resource("artifactory.xray.policy")))
+	},
+	"artifactory.xray.watch.coversAllRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatch).GetCoversAllRepositories()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.watch.resource.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetType()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watch.resource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watch.resource.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetRepository()).ToDataRes(types.Resource("artifactory.repository"))
+	},
+	"artifactory.xray.watch.resource.repoType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetRepoType()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watch.resource.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetProject()).ToDataRes(types.String)
+	},
+	"artifactory.xray.watch.resource.isWildcard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetIsWildcard()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.watch.resource.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayWatchResource).GetFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"artifactory.xray.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.xray.policy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetType()).ToDataRes(types.String)
+	},
+	"artifactory.xray.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"artifactory.xray.policy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetRules()).ToDataRes(types.Array(types.Resource("artifactory.xray.policy.rule")))
+	},
+	"artifactory.xray.policy.watches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetWatches()).ToDataRes(types.Array(types.Resource("artifactory.xray.watch")))
+	},
+	"artifactory.xray.policy.blocksDownload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetBlocksDownload()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.blocksUnscanned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetBlocksUnscanned()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.failsBuild": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetFailsBuild()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.blocksReleaseBundleDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicy).GetBlocksReleaseBundleDistribution()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetName()).ToDataRes(types.String)
+	},
+	"artifactory.xray.policy.rule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"artifactory.xray.policy.rule.minSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetMinSeverity()).ToDataRes(types.String)
+	},
+	"artifactory.xray.policy.rule.cvssRangeFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetCvssRangeFrom()).ToDataRes(types.Float)
+	},
+	"artifactory.xray.policy.rule.cvssRangeTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetCvssRangeTo()).ToDataRes(types.Float)
+	},
+	"artifactory.xray.policy.rule.fixVersionDependant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetFixVersionDependant()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.applicableCvesOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetApplicableCvesOnly()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.maliciousPackage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetMaliciousPackage()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.bannedLicenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetBannedLicenses()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.xray.policy.rule.allowedLicenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetAllowedLicenses()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.xray.policy.rule.allowUnknownLicenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetAllowUnknownLicenses()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.blockDownload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetBlockDownload()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.blockUnscanned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetBlockUnscanned()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.blockReleaseBundleDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetBlockReleaseBundleDistribution()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.blockReleaseBundlePromotion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetBlockReleaseBundlePromotion()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.failBuild": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetFailBuild()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.buildFailureGracePeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetBuildFailureGracePeriodInDays()).ToDataRes(types.Int)
+	},
+	"artifactory.xray.policy.rule.notifyWatchRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetNotifyWatchRecipients()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.notifyDeployer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetNotifyDeployer()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.policy.rule.customSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayPolicyRule).GetCustomSeverity()).ToDataRes(types.String)
+	},
+	"artifactory.xray.ignoreRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetId()).ToDataRes(types.String)
+	},
+	"artifactory.xray.ignoreRule.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetNotes()).ToDataRes(types.String)
+	},
+	"artifactory.xray.ignoreRule.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetAuthor()).ToDataRes(types.String)
+	},
+	"artifactory.xray.ignoreRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"artifactory.xray.ignoreRule.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"artifactory.xray.ignoreRule.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetExpires()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.ignoreRule.isExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetIsExpired()).ToDataRes(types.Bool)
+	},
+	"artifactory.xray.ignoreRule.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetVulnerabilities()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.xray.ignoreRule.licenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetLicenses()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.xray.ignoreRule.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetRepositories()).ToDataRes(types.Array(types.String))
+	},
+	"artifactory.xray.ignoreRule.repositoryRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlArtifactoryXrayIgnoreRule).GetRepositoryRefs()).ToDataRes(types.Array(types.Resource("artifactory.repository")))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -908,6 +1124,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactory).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactory).Xray, ok = plugin.RawToTValue[*mqlArtifactoryXray](v.Value, v.Error)
 		return
 	},
 	"artifactory.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1068,6 +1288,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"artifactory.repository.replications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlArtifactoryRepository).Replications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.xrayWatches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).XrayWatches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.xrayPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).XrayPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.repository.xrayBlocksDownload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryRepository).XrayBlocksDownload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"artifactory.repository.anonymousActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1846,6 +2078,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlArtifactoryReplication).SocketTimeoutMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"artifactory.xray.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXray).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.xray.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXray).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXray).Watches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXray).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXray).IgnoreRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.xray.watch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.policyNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).PolicyNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.coversAllRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatch).CoversAllRepositories, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.xray.watch.resource.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).Repository, ok = plugin.RawToTValue[*mqlArtifactoryRepository](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.repoType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).RepoType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.isWildcard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).IsWildcard, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.watch.resource.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayWatchResource).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.xray.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.watches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).Watches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.blocksDownload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).BlocksDownload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.blocksUnscanned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).BlocksUnscanned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.failsBuild": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).FailsBuild, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.blocksReleaseBundleDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicy).BlocksReleaseBundleDistribution, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.xray.policy.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.minSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).MinSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.cvssRangeFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).CvssRangeFrom, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.cvssRangeTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).CvssRangeTo, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.fixVersionDependant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).FixVersionDependant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.applicableCvesOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).ApplicableCvesOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.maliciousPackage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).MaliciousPackage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.bannedLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).BannedLicenses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.allowedLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).AllowedLicenses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.allowUnknownLicenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).AllowUnknownLicenses, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.blockDownload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).BlockDownload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.blockUnscanned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).BlockUnscanned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.blockReleaseBundleDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).BlockReleaseBundleDistribution, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.blockReleaseBundlePromotion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).BlockReleaseBundlePromotion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.failBuild": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).FailBuild, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.buildFailureGracePeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).BuildFailureGracePeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.notifyWatchRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).NotifyWatchRecipients, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.notifyDeployer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).NotifyDeployer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.policy.rule.customSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayPolicyRule).CustomSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).__id, ok = v.Value.(string)
+		return
+	},
+	"artifactory.xray.ignoreRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Expires, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.isExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).IsExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Licenses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"artifactory.xray.ignoreRule.repositoryRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlArtifactoryXrayIgnoreRule).RepositoryRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1883,6 +2371,7 @@ type mqlArtifactory struct {
 	Security          plugin.TValue[*mqlArtifactorySecuritySettings]
 	CleanupPolicies   plugin.TValue[[]any]
 	Backups           plugin.TValue[[]any]
+	Xray              plugin.TValue[*mqlArtifactoryXray]
 	System            plugin.TValue[*mqlArtifactorySystemInfo]
 }
 
@@ -2051,6 +2540,22 @@ func (c *mqlArtifactory) GetBackups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlArtifactory) GetXray() *plugin.TValue[*mqlArtifactoryXray] {
+	return plugin.GetOrCompute[*mqlArtifactoryXray](&c.Xray, func() (*mqlArtifactoryXray, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory", c.__id, "xray")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryXray), nil
+			}
+		}
+
+		return c.xray()
+	})
+}
+
 func (c *mqlArtifactory) GetSystem() *plugin.TValue[*mqlArtifactorySystemInfo] {
 	return plugin.GetOrCompute[*mqlArtifactorySystemInfo](&c.System, func() (*mqlArtifactorySystemInfo, error) {
 		if c.MqlRuntime.HasRecording {
@@ -2169,6 +2674,9 @@ type mqlArtifactoryRepository struct {
 	Notes                         plugin.TValue[string]
 	PermissionTargets             plugin.TValue[[]any]
 	Replications                  plugin.TValue[[]any]
+	XrayWatches                   plugin.TValue[[]any]
+	XrayPolicies                  plugin.TValue[[]any]
+	XrayBlocksDownload            plugin.TValue[bool]
 	AnonymousActions              plugin.TValue[[]any]
 }
 
@@ -2424,6 +2932,44 @@ func (c *mqlArtifactoryRepository) GetReplications() *plugin.TValue[[]any] {
 		}
 
 		return c.replications()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetXrayWatches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.XrayWatches, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.repository", c.__id, "xrayWatches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.xrayWatches()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetXrayPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.XrayPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.repository", c.__id, "xrayPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.xrayPolicies()
+	})
+}
+
+func (c *mqlArtifactoryRepository) GetXrayBlocksDownload() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.XrayBlocksDownload, func() (bool, error) {
+		return c.xrayBlocksDownload()
 	})
 }
 
@@ -4395,4 +4941,666 @@ func (c *mqlArtifactoryReplication) GetExcludePathPrefixPattern() *plugin.TValue
 
 func (c *mqlArtifactoryReplication) GetSocketTimeoutMillis() *plugin.TValue[int64] {
 	return &c.SocketTimeoutMillis
+}
+
+// mqlArtifactoryXray for the artifactory.xray resource
+type mqlArtifactoryXray struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlArtifactoryXrayInternal it will be used here
+	Version     plugin.TValue[string]
+	Watches     plugin.TValue[[]any]
+	Policies    plugin.TValue[[]any]
+	IgnoreRules plugin.TValue[[]any]
+}
+
+// createArtifactoryXray creates a new instance of this resource
+func createArtifactoryXray(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryXray{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.xray", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryXray) MqlName() string {
+	return "artifactory.xray"
+}
+
+func (c *mqlArtifactoryXray) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryXray) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlArtifactoryXray) GetWatches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Watches, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray", c.__id, "watches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.watches()
+	})
+}
+
+func (c *mqlArtifactoryXray) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlArtifactoryXray) GetIgnoreRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IgnoreRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray", c.__id, "ignoreRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ignoreRules()
+	})
+}
+
+// mqlArtifactoryXrayWatch for the artifactory.xray.watch resource
+type mqlArtifactoryXrayWatch struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryXrayWatchInternal
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Active                plugin.TValue[bool]
+	Resources             plugin.TValue[[]any]
+	PolicyNames           plugin.TValue[[]any]
+	Policies              plugin.TValue[[]any]
+	CoversAllRepositories plugin.TValue[bool]
+}
+
+// createArtifactoryXrayWatch creates a new instance of this resource
+func createArtifactoryXrayWatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryXrayWatch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.xray.watch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryXrayWatch) MqlName() string {
+	return "artifactory.xray.watch"
+}
+
+func (c *mqlArtifactoryXrayWatch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryXrayWatch) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryXrayWatch) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlArtifactoryXrayWatch) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlArtifactoryXrayWatch) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray.watch", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
+}
+
+func (c *mqlArtifactoryXrayWatch) GetPolicyNames() *plugin.TValue[[]any] {
+	return &c.PolicyNames
+}
+
+func (c *mqlArtifactoryXrayWatch) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray.watch", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlArtifactoryXrayWatch) GetCoversAllRepositories() *plugin.TValue[bool] {
+	return &c.CoversAllRepositories
+}
+
+// mqlArtifactoryXrayWatchResource for the artifactory.xray.watch.resource resource
+type mqlArtifactoryXrayWatchResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryXrayWatchResourceInternal
+	Type       plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Repository plugin.TValue[*mqlArtifactoryRepository]
+	RepoType   plugin.TValue[string]
+	Project    plugin.TValue[string]
+	IsWildcard plugin.TValue[bool]
+	Filters    plugin.TValue[[]any]
+}
+
+// createArtifactoryXrayWatchResource creates a new instance of this resource
+func createArtifactoryXrayWatchResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryXrayWatchResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.xray.watch.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryXrayWatchResource) MqlName() string {
+	return "artifactory.xray.watch.resource"
+}
+
+func (c *mqlArtifactoryXrayWatchResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetRepository() *plugin.TValue[*mqlArtifactoryRepository] {
+	return plugin.GetOrCompute[*mqlArtifactoryRepository](&c.Repository, func() (*mqlArtifactoryRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray.watch.resource", c.__id, "repository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlArtifactoryRepository), nil
+			}
+		}
+
+		return c.repository()
+	})
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetRepoType() *plugin.TValue[string] {
+	return &c.RepoType
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetProject() *plugin.TValue[string] {
+	return &c.Project
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetIsWildcard() *plugin.TValue[bool] {
+	return &c.IsWildcard
+}
+
+func (c *mqlArtifactoryXrayWatchResource) GetFilters() *plugin.TValue[[]any] {
+	return &c.Filters
+}
+
+// mqlArtifactoryXrayPolicy for the artifactory.xray.policy resource
+type mqlArtifactoryXrayPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryXrayPolicyInternal
+	Name                            plugin.TValue[string]
+	Type                            plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	Rules                           plugin.TValue[[]any]
+	Watches                         plugin.TValue[[]any]
+	BlocksDownload                  plugin.TValue[bool]
+	BlocksUnscanned                 plugin.TValue[bool]
+	FailsBuild                      plugin.TValue[bool]
+	BlocksReleaseBundleDistribution plugin.TValue[bool]
+}
+
+// createArtifactoryXrayPolicy creates a new instance of this resource
+func createArtifactoryXrayPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryXrayPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.xray.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryXrayPolicy) MqlName() string {
+	return "artifactory.xray.policy"
+}
+
+func (c *mqlArtifactoryXrayPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray.policy", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetWatches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Watches, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray.policy", c.__id, "watches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.watches()
+	})
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetBlocksDownload() *plugin.TValue[bool] {
+	return &c.BlocksDownload
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetBlocksUnscanned() *plugin.TValue[bool] {
+	return &c.BlocksUnscanned
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetFailsBuild() *plugin.TValue[bool] {
+	return &c.FailsBuild
+}
+
+func (c *mqlArtifactoryXrayPolicy) GetBlocksReleaseBundleDistribution() *plugin.TValue[bool] {
+	return &c.BlocksReleaseBundleDistribution
+}
+
+// mqlArtifactoryXrayPolicyRule for the artifactory.xray.policy.rule resource
+type mqlArtifactoryXrayPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryXrayPolicyRuleInternal
+	Name                           plugin.TValue[string]
+	Priority                       plugin.TValue[int64]
+	MinSeverity                    plugin.TValue[string]
+	CvssRangeFrom                  plugin.TValue[float64]
+	CvssRangeTo                    plugin.TValue[float64]
+	FixVersionDependant            plugin.TValue[bool]
+	ApplicableCvesOnly             plugin.TValue[bool]
+	MaliciousPackage               plugin.TValue[bool]
+	BannedLicenses                 plugin.TValue[[]any]
+	AllowedLicenses                plugin.TValue[[]any]
+	AllowUnknownLicenses           plugin.TValue[bool]
+	BlockDownload                  plugin.TValue[bool]
+	BlockUnscanned                 plugin.TValue[bool]
+	BlockReleaseBundleDistribution plugin.TValue[bool]
+	BlockReleaseBundlePromotion    plugin.TValue[bool]
+	FailBuild                      plugin.TValue[bool]
+	BuildFailureGracePeriodInDays  plugin.TValue[int64]
+	NotifyWatchRecipients          plugin.TValue[bool]
+	NotifyDeployer                 plugin.TValue[bool]
+	CustomSeverity                 plugin.TValue[string]
+}
+
+// createArtifactoryXrayPolicyRule creates a new instance of this resource
+func createArtifactoryXrayPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryXrayPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.xray.policy.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) MqlName() string {
+	return "artifactory.xray.policy.rule"
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetMinSeverity() *plugin.TValue[string] {
+	return &c.MinSeverity
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetCvssRangeFrom() *plugin.TValue[float64] {
+	return &c.CvssRangeFrom
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetCvssRangeTo() *plugin.TValue[float64] {
+	return &c.CvssRangeTo
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetFixVersionDependant() *plugin.TValue[bool] {
+	return &c.FixVersionDependant
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetApplicableCvesOnly() *plugin.TValue[bool] {
+	return &c.ApplicableCvesOnly
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetMaliciousPackage() *plugin.TValue[bool] {
+	return &c.MaliciousPackage
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetBannedLicenses() *plugin.TValue[[]any] {
+	return &c.BannedLicenses
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetAllowedLicenses() *plugin.TValue[[]any] {
+	return &c.AllowedLicenses
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetAllowUnknownLicenses() *plugin.TValue[bool] {
+	return &c.AllowUnknownLicenses
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetBlockDownload() *plugin.TValue[bool] {
+	return &c.BlockDownload
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetBlockUnscanned() *plugin.TValue[bool] {
+	return &c.BlockUnscanned
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetBlockReleaseBundleDistribution() *plugin.TValue[bool] {
+	return &c.BlockReleaseBundleDistribution
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetBlockReleaseBundlePromotion() *plugin.TValue[bool] {
+	return &c.BlockReleaseBundlePromotion
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetFailBuild() *plugin.TValue[bool] {
+	return &c.FailBuild
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetBuildFailureGracePeriodInDays() *plugin.TValue[int64] {
+	return &c.BuildFailureGracePeriodInDays
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetNotifyWatchRecipients() *plugin.TValue[bool] {
+	return &c.NotifyWatchRecipients
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetNotifyDeployer() *plugin.TValue[bool] {
+	return &c.NotifyDeployer
+}
+
+func (c *mqlArtifactoryXrayPolicyRule) GetCustomSeverity() *plugin.TValue[string] {
+	return &c.CustomSeverity
+}
+
+// mqlArtifactoryXrayIgnoreRule for the artifactory.xray.ignoreRule resource
+type mqlArtifactoryXrayIgnoreRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlArtifactoryXrayIgnoreRuleInternal
+	Id              plugin.TValue[string]
+	Notes           plugin.TValue[string]
+	Author          plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	ExpiresAt       plugin.TValue[*time.Time]
+	Expires         plugin.TValue[bool]
+	IsExpired       plugin.TValue[bool]
+	Vulnerabilities plugin.TValue[[]any]
+	Licenses        plugin.TValue[[]any]
+	Repositories    plugin.TValue[[]any]
+	RepositoryRefs  plugin.TValue[[]any]
+}
+
+// createArtifactoryXrayIgnoreRule creates a new instance of this resource
+func createArtifactoryXrayIgnoreRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlArtifactoryXrayIgnoreRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("artifactory.xray.ignoreRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) MqlName() string {
+	return "artifactory.xray.ignoreRule"
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetExpires() *plugin.TValue[bool] {
+	return &c.Expires
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetIsExpired() *plugin.TValue[bool] {
+	return &c.IsExpired
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetVulnerabilities() *plugin.TValue[[]any] {
+	return &c.Vulnerabilities
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetLicenses() *plugin.TValue[[]any] {
+	return &c.Licenses
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetRepositories() *plugin.TValue[[]any] {
+	return &c.Repositories
+}
+
+func (c *mqlArtifactoryXrayIgnoreRule) GetRepositoryRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RepositoryRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("artifactory.xray.ignoreRule", c.__id, "repositoryRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositoryRefs()
+	})
 }

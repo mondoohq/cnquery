@@ -4,8 +4,15 @@
 package resources
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers/artifactory/connection"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -839,5 +846,289 @@ func TestReplicationRecordHasNoPasswordField(t *testing.T) {
 		if strings.Contains(tag, "password") || strings.Contains(name, "password") {
 			t.Errorf("replicationRecord decodes the stored password in field %s", field.Name)
 		}
+	}
+}
+
+func TestXrayWatchRecordDecodes(t *testing.T) {
+	const payload = `[
+	  {
+	    "general_data": {"id":"1","name":"example-watch","description":"platform repositories","active":true},
+	    "project_resources": {"resources":[
+	      {"type":"repository","name":"example-docker","bin_mgr_id":"default","repo_type":"local",
+	       "filters":[{"type":"package-type","value":"docker"},{"type":"path-ant-patterns","value":["example/**"]}]},
+	      {"type":"all-builds","bin_mgr_id":"default"}
+	    ]},
+	    "assigned_policies": [{"name":"example-security","type":"security"},{"name":"example-license","type":"license"}]
+	  }
+	]`
+
+	var records []xrayWatchRecord
+	if err := json.Unmarshal([]byte(payload), &records); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("expected 1 watch, got %d", len(records))
+	}
+
+	rec := records[0]
+	if rec.GeneralData.Name != "example-watch" || !boolValue(rec.GeneralData.Active) {
+		t.Errorf("watch identity decoded wrong: %+v", rec.GeneralData)
+	}
+	if len(rec.ProjectResources.Resources) != 2 {
+		t.Fatalf("watch resources decoded wrong: %+v", rec.ProjectResources)
+	}
+	repo := rec.ProjectResources.Resources[0]
+	if repo.Type != "repository" || repo.Name != "example-docker" || repo.RepoType != "local" {
+		t.Errorf("repository resource decoded wrong: %+v", repo)
+	}
+	if len(repo.Filters) != 2 || repo.Filters[0].Type != "package-type" {
+		t.Errorf("resource filters decoded wrong: %+v", repo.Filters)
+	}
+	if len(rec.AssignedPolicies) != 2 || rec.AssignedPolicies[1].Name != "example-license" {
+		t.Errorf("assigned policies decoded wrong: %+v", rec.AssignedPolicies)
+	}
+}
+
+func TestXrayPolicyRecordDecodes(t *testing.T) {
+	const payload = `[
+	  {
+	    "name": "example-security",
+	    "type": "security",
+	    "description": "blocks critical findings",
+	    "rules": [
+	      {
+	        "name": "critical",
+	        "priority": 1,
+	        "criteria": {"min_severity":"Critical","fix_version_dependant":true,"applicable_cves_only":false,"malicious_package":true},
+	        "actions": {
+	          "block_download": {"unscanned": true, "active": true},
+	          "fail_build": true,
+	          "block_release_bundle_distribution": true,
+	          "build_failure_grace_period_in_days": 5,
+	          "notify_watch_recipients": true,
+	          "custom_severity": "High"
+	        }
+	      },
+	      {
+	        "name": "cvss",
+	        "criteria": {"cvss_range":{"from":7.0,"to":10.0}},
+	        "actions": {"block_download": {"unscanned": false, "active": false}}
+	      }
+	    ]
+	  }
+	]`
+
+	var records []xrayPolicyRecord
+	if err := json.Unmarshal([]byte(payload), &records); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(records) != 1 || len(records[0].Rules) != 2 {
+		t.Fatalf("policy decoded wrong: %+v", records)
+	}
+
+	first := records[0].Rules[0]
+	if first.Criteria.MinSeverity != "Critical" || !boolValue(first.Criteria.FixVersionDependant) || !boolValue(first.Criteria.MaliciousPackage) {
+		t.Errorf("criteria decoded wrong: %+v", first.Criteria)
+	}
+	if first.Actions.BlockDownload == nil || !boolValue(first.Actions.BlockDownload.Active) || !boolValue(first.Actions.BlockDownload.Unscanned) {
+		t.Errorf("block download decoded wrong: %+v", first.Actions.BlockDownload)
+	}
+	if !boolValue(first.Actions.FailBuild) || first.Actions.CustomSeverity != "High" {
+		t.Errorf("actions decoded wrong: %+v", first.Actions)
+	}
+	if first.Actions.BuildFailureGracePeriodInDays == nil || *first.Actions.BuildFailureGracePeriodInDays != 5 {
+		t.Errorf("grace period decoded wrong: %v", first.Actions.BuildFailureGracePeriodInDays)
+	}
+	if first.Priority == nil || *first.Priority != 1 {
+		t.Errorf("priority decoded wrong: %v", first.Priority)
+	}
+
+	second := records[0].Rules[1]
+	if second.Criteria.CvssRange == nil || second.Criteria.CvssRange.From == nil || *second.Criteria.CvssRange.From != 7.0 {
+		t.Errorf("CVSS range decoded wrong: %+v", second.Criteria.CvssRange)
+	}
+	// A rule without a severity criterion must leave it empty rather than
+	// inventing one, and a rule without a grace period must stay null.
+	if second.Criteria.MinSeverity != "" || second.Actions.BuildFailureGracePeriodInDays != nil {
+		t.Errorf("absent criteria decoded as present: %+v", second)
+	}
+}
+
+func TestXrayIgnoreRuleRecordDecodes(t *testing.T) {
+	const payload = `{"data":[
+	  {"id":"rule-1","author":"example-admin","notes":"accepted","created":"2026-01-02T03:04:05Z","expires_at":"2026-06-02T03:04:05Z",
+	   "is_expired":false,"vulnerabilities":["CVE-2026-0001"],"ignore_filters":{"repositories":["example-docker"]}},
+	  {"id":"rule-2","author":"example-admin","notes":"permanent","vulnerabilities":["CVE-2026-0002"]}
+	]}`
+
+	var response xrayIgnoreRulesResponse
+	if err := json.Unmarshal([]byte(payload), &response); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(response.Data) != 2 {
+		t.Fatalf("expected 2 ignore rules, got %d", len(response.Data))
+	}
+
+	first := response.Data[0]
+	if first.ID != "rule-1" || first.Notes != "accepted" || len(first.Vulnerabilities) != 1 {
+		t.Errorf("ignore rule decoded wrong: %+v", first)
+	}
+	if first.ExpiresAt.Time() == nil {
+		t.Error("an expiry decoded as null")
+	}
+	if len(first.IgnoreFilters.Repositories) != 1 || first.IgnoreFilters.Repositories[0] != "example-docker" {
+		t.Errorf("ignore scope decoded wrong: %+v", first.IgnoreFilters)
+	}
+
+	// A rule with no expiry suppresses its finding until somebody removes it.
+	// That must stay null so a policy can find it.
+	if response.Data[1].ExpiresAt.Time() != nil {
+		t.Errorf("an absent expiry produced %v", response.Data[1].ExpiresAt.Time())
+	}
+}
+
+// The suppression list is paged. Reading the first page only would report
+// fewer permanent suppressions than exist, and an audit looking for them would
+// pass because the rest were never fetched.
+func TestIgnoreRulesPaginationWalksEveryPage(t *testing.T) {
+	var requested []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requested = append(requested, r.URL.Query().Get("page_num"))
+
+		page := r.URL.Query().Get("page_num")
+		rows := 100
+		start := 0
+		if page == "2" {
+			start = rows
+			rows = 30
+		}
+
+		entries := make([]string, 0, rows)
+		for i := 0; i < rows; i++ {
+			entries = append(entries, fmt.Sprintf(`{"id":"rule-%d"}`, start+i))
+		}
+		fmt.Fprintf(w, `{"total_count":130,"page_num":%s,"num_of_rows":%d,"data":[%s]}`, page, rows, strings.Join(entries, ","))
+	}))
+	defer server.Close()
+
+	records, err := fetchXrayIgnoreRules(context.Background(), testXrayConnection(t, server.URL))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(records) != 130 {
+		t.Fatalf("expected 130 suppressions across both pages, got %d", len(records))
+	}
+	if len(requested) != 2 || requested[0] != "1" || requested[1] != "2" {
+		t.Errorf("pages requested: %v", requested)
+	}
+	if records[129].ID != "rule-129" {
+		t.Errorf("last suppression is %q", records[129].ID)
+	}
+}
+
+// An endpoint that ignores the page parameter answers every request with the
+// first page. That must stop the walk rather than multiply every suppression
+// up to the page cap.
+func TestIgnoreRulesPaginationStopsOnARepeatedPage(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		entries := make([]string, 0, 100)
+		for i := 0; i < 100; i++ {
+			entries = append(entries, fmt.Sprintf(`{"id":"rule-%d"}`, i))
+		}
+		fmt.Fprintf(w, `{"total_count":0,"data":[%s]}`, strings.Join(entries, ","))
+	}))
+	defer server.Close()
+
+	records, err := fetchXrayIgnoreRules(context.Background(), testXrayConnection(t, server.URL))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(records) != 100 {
+		t.Fatalf("a repeated page produced %d suppressions, want 100", len(records))
+	}
+	if calls != 2 {
+		t.Errorf("the walk made %d calls, want it to stop after the repeat", calls)
+	}
+}
+
+// An empty first page is an instance with no suppressions at all.
+func TestIgnoreRulesPaginationHandlesAnEmptyList(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"total_count":0,"data":[]}`)
+	}))
+	defer server.Close()
+
+	records, err := fetchXrayIgnoreRules(context.Background(), testXrayConnection(t, server.URL))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(records) != 0 {
+		t.Errorf("an empty list produced %d suppressions", len(records))
+	}
+}
+
+func testXrayConnection(t *testing.T, baseURL string) *connection.ArtifactoryConnection {
+	t.Helper()
+
+	conf := &inventory.Config{
+		Options: map[string]string{connection.OptionURL: baseURL},
+		Credentials: []*vault.Credential{
+			{Type: vault.CredentialType_bearer, Secret: []byte("example-token")},
+		},
+	}
+	conn, err := connection.NewArtifactoryConnection(1, &inventory.Asset{}, conf)
+	if err != nil {
+		t.Fatalf("could not build the connection: %v", err)
+	}
+	return conn
+}
+
+// A page of records the platform reports without an identifier cannot be
+// deduplicated by identifier. If the endpoint also ignores the page parameter,
+// counting those as new would run the walk to the page cap and multiply every
+// suppression. The page marker stops it instead.
+func TestIgnoreRulesPaginationStopsOnRepeatedIdentifierlessRecords(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		entries := make([]string, 0, 100)
+		for i := 0; i < 100; i++ {
+			entries = append(entries, `{"notes":"accepted"}`)
+		}
+		fmt.Fprintf(w, `{"total_count":0,"data":[%s]}`, strings.Join(entries, ","))
+	}))
+	defer server.Close()
+
+	records, err := fetchXrayIgnoreRules(context.Background(), testXrayConnection(t, server.URL))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(records) != 100 {
+		t.Fatalf("a repeated identifier-less page produced %d suppressions, want 100", len(records))
+	}
+	if calls != 2 {
+		t.Errorf("the walk made %d calls, want it to stop after the repeat", calls)
+	}
+}
+
+func TestPageMarkerDistinguishesPages(t *testing.T) {
+	first := []xrayIgnoreRuleRecord{{ID: "a"}, {ID: "b"}}
+	same := []xrayIgnoreRuleRecord{{ID: "a"}, {ID: "b"}}
+	other := []xrayIgnoreRuleRecord{{ID: "c"}, {ID: "d"}}
+	shorter := []xrayIgnoreRuleRecord{{ID: "a"}}
+
+	if pageMarker(first) != pageMarker(same) {
+		t.Error("the same page produced different markers")
+	}
+	if pageMarker(first) == pageMarker(other) {
+		t.Error("different pages produced the same marker")
+	}
+	if pageMarker(first) == pageMarker(shorter) {
+		t.Error("a shorter page produced the same marker")
+	}
+	if pageMarker(nil) == pageMarker(shorter) {
+		t.Error("an empty page produced the same marker as a page with a record")
 	}
 }

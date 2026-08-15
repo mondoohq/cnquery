@@ -135,6 +135,13 @@ func (c *ArtifactoryConnection) ArtifactoryURL(path string) string {
 	return c.baseURL + "/artifactory" + path
 }
 
+// XrayURL builds a URL under the Xray service, whose path must start with a
+// slash. Xray is a separate service of the same platform, so it is reached
+// under the same base as Artifactory and Access.
+func (c *ArtifactoryConnection) XrayURL(path string) string {
+	return c.baseURL + "/xray" + path
+}
+
 // AccessURL builds a URL under the Access service, whose path must start with
 // a slash. Access serves users, groups, and tokens for the whole platform.
 func (c *ArtifactoryConnection) AccessURL(path string) string {
