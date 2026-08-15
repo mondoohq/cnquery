@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"path"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v89/github"
+	"github.com/google/go-github/v90/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
@@ -377,6 +378,40 @@ func newMqlGithubLicense(runtime *plugin.Runtime, license *github.License) (*mql
 	return res.(*mqlGithubLicense), nil
 }
 
+// pullRequestStackFields maps a pull request's stacked-pull-request membership.
+//
+// Every field stays null when the pull request is not part of a stack, and the
+// base fields stay null independently of the counters. Reporting zeros instead
+// would read as a real stack of size 0 at position 0 to any policy comparing
+// the numbers, which is worse than reporting nothing.
+func pullRequestStackFields(pr *github.PullRequest) map[string]*llx.RawData {
+	fields := map[string]*llx.RawData{
+		"stackId":         llx.NilData,
+		"stackNumber":     llx.NilData,
+		"stackSize":       llx.NilData,
+		"stackPosition":   llx.NilData,
+		"stackBaseBranch": llx.NilData,
+		"stackBaseSha":    llx.NilData,
+	}
+
+	stack := pr.GetStack()
+	if stack == nil {
+		return fields
+	}
+
+	fields["stackId"] = llx.IntDataPtr(stack.ID)
+	fields["stackNumber"] = llx.IntDataPtr(stack.Number)
+	fields["stackSize"] = llx.IntDataPtr(stack.Size)
+	fields["stackPosition"] = llx.IntDataPtr(stack.Position)
+
+	if base := stack.Base; base != nil {
+		fields["stackBaseBranch"] = llx.StringData(base.Ref)
+		fields["stackBaseSha"] = llx.StringData(base.SHA)
+	}
+
+	return fields
+}
+
 func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	ownerLogin, repoName, err := repoOwnerAndName(g)
@@ -469,7 +504,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			mergedBy = r
 		}
 
-		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", map[string]*llx.RawData{
+		args := map[string]*llx.RawData{
 			"id":                 llx.IntDataPtr(pr.ID),
 			"repoOwnerLogin":     llx.StringData(ownerLogin),
 			"number":             llx.IntData(int64(pr.GetNumber())),
@@ -487,7 +522,10 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			"merged":             llx.BoolDataPtr(pr.Merged),
 			"mergedAt":           llx.TimeDataPtr(githubTimestamp(pr.MergedAt)),
 			"mergedBy":           llx.AnyData(mergedBy),
-		})
+		}
+		maps.Copy(args, pullRequestStackFields(pr))
+
+		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", args)
 		if err != nil {
 			return nil, err
 		}

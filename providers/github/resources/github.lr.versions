@@ -291,6 +291,12 @@ github.mergeRequest.repoName 9.0.0
 github.mergeRequest.repoOwnerLogin 13.7.6
 github.mergeRequest.requestedReviewers 13.1.1
 github.mergeRequest.reviews 9.0.0
+github.mergeRequest.stackBaseBranch 13.8.3
+github.mergeRequest.stackBaseSha 13.8.3
+github.mergeRequest.stackId 13.8.3
+github.mergeRequest.stackNumber 13.8.3
+github.mergeRequest.stackPosition 13.8.3
+github.mergeRequest.stackSize 13.8.3
 github.mergeRequest.state 9.0.0
 github.mergeRequest.title 9.0.0
 github.mergeRequest.updatedAt 13.1.1

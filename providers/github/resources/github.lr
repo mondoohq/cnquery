@@ -1839,6 +1839,28 @@ private github.mergeRequest @defaults("id state") {
   mergedAt time
   // User who merged the pull request
   mergedBy github.user
+  // Identifier of the stack this pull request belongs to
+  //
+  // A stack is an ordered chain of pull requests that split one change into
+  // reviewable steps, each targeting the one below it and the whole chain
+  // targeting a single base branch. Null when the pull request is not part
+  // of a stack.
+  stackId int
+  // Number of the stack this pull request belongs to
+  stackNumber int
+  // Count of pull requests in the stack
+  stackSize int
+  // Position of this pull request within the stack
+  //
+  // Counts from 1 at the bottom of the stack, the pull request closest to
+  // the base branch. Every entry above it builds on the ones below, so a
+  // change merged out of order reaches the base branch without the review
+  // recorded against its predecessors.
+  stackPosition int
+  // Branch the whole stack targets
+  stackBaseBranch string
+  // Commit SHA the whole stack targets
+  stackBaseSha string
 }
 
 // GitHub pull request review

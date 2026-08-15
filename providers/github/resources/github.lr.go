@@ -2081,6 +2081,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.mergeRequest.mergedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetMergedBy()).ToDataRes(types.Resource("github.user"))
 	},
+	"github.mergeRequest.stackId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetStackId()).ToDataRes(types.Int)
+	},
+	"github.mergeRequest.stackNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetStackNumber()).ToDataRes(types.Int)
+	},
+	"github.mergeRequest.stackSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetStackSize()).ToDataRes(types.Int)
+	},
+	"github.mergeRequest.stackPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetStackPosition()).ToDataRes(types.Int)
+	},
+	"github.mergeRequest.stackBaseBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetStackBaseBranch()).ToDataRes(types.String)
+	},
+	"github.mergeRequest.stackBaseSha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetStackBaseSha()).ToDataRes(types.String)
+	},
 	"github.review.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubReview).GetUrl()).ToDataRes(types.String)
 	},
@@ -5112,6 +5130,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.mergeRequest.mergedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubMergeRequest).MergedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.stackId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).StackId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.stackNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).StackNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.stackSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).StackSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.stackPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).StackPosition, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.stackBaseBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).StackBaseBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.stackBaseSha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).StackBaseSha, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.review.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11925,6 +11967,12 @@ type mqlGithubMergeRequest struct {
 	Merged             plugin.TValue[bool]
 	MergedAt           plugin.TValue[*time.Time]
 	MergedBy           plugin.TValue[*mqlGithubUser]
+	StackId            plugin.TValue[int64]
+	StackNumber        plugin.TValue[int64]
+	StackSize          plugin.TValue[int64]
+	StackPosition      plugin.TValue[int64]
+	StackBaseBranch    plugin.TValue[string]
+	StackBaseSha       plugin.TValue[string]
 }
 
 // createGithubMergeRequest creates a new instance of this resource
@@ -12062,6 +12110,30 @@ func (c *mqlGithubMergeRequest) GetMergedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlGithubMergeRequest) GetMergedBy() *plugin.TValue[*mqlGithubUser] {
 	return &c.MergedBy
+}
+
+func (c *mqlGithubMergeRequest) GetStackId() *plugin.TValue[int64] {
+	return &c.StackId
+}
+
+func (c *mqlGithubMergeRequest) GetStackNumber() *plugin.TValue[int64] {
+	return &c.StackNumber
+}
+
+func (c *mqlGithubMergeRequest) GetStackSize() *plugin.TValue[int64] {
+	return &c.StackSize
+}
+
+func (c *mqlGithubMergeRequest) GetStackPosition() *plugin.TValue[int64] {
+	return &c.StackPosition
+}
+
+func (c *mqlGithubMergeRequest) GetStackBaseBranch() *plugin.TValue[string] {
+	return &c.StackBaseBranch
+}
+
+func (c *mqlGithubMergeRequest) GetStackBaseSha() *plugin.TValue[string] {
+	return &c.StackBaseSha
 }
 
 // mqlGithubReview for the github.review resource
