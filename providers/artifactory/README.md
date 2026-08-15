@@ -25,6 +25,7 @@ Most of what this provider reads is administrator-only:
 | `security` and its integrations | administrator |
 | `backups`                       | administrator |
 | `cleanupPolicies`               | administrator, and a product version that serves the endpoint |
+| `projects` and their members    | administrator, or a project administrator for their own projects |
 | `xray` and its watches, policies, and ignore rules | a reachable Xray, and the Manage Watches role |
 
 A token without those rights reports the field as an error rather than as an
@@ -273,6 +274,17 @@ all of them rather than the first page.
 mql> artifactory.xray.ignoreRules.where(expires == false) { id notes vulnerabilities repositories }
 ```
 
+**Projects that delegate access decisions to their own administrators**
+
+A project administrator with `manageMembers` decides who reaches the project's
+repositories, and one with `manageResources` decides which repositories the
+project holds. Neither decision appears in the instance's permission targets.
+
+```shell
+mql> artifactory.projects.where(manageMembers) { key members.where(isAdmin) { name roles } }
+mql> artifactory.projects.where(manageResources) { key repositories { key type } }
+```
+
 **Repositories Xray does not index**
 
 An unindexed repository is never scanned, so a finding on an artifact stored
@@ -392,6 +404,14 @@ on an answer that was never read.
 is configured, and `artifactory.repositories { xrayPolicies }` lists what is
 enforced on a repository. A policy no watch names is enforced nowhere, whatever
 its rules say.
+
+**A project is a second path to access.** The instance's permission targets do
+not show what a project administrator granted inside a project. Read
+`artifactory.projects { members }` together with
+`artifactory.permissionTargets` to see both.
+
+**Project membership is read per project.** The instance serves the roster per
+project, so `members` is one call for each project it is asked about.
 
 **An integration the instance never configured reports null, not disabled.**
 `saml`, `oauth`, `httpSso`, and `crowd` are null when the instance descriptor
