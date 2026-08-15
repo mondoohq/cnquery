@@ -174,6 +174,12 @@ const (
 	ResourceFrrConfigCommunityList                        string = "frr.config.communityList"
 	ResourceFrrConfigAccessList                           string = "frr.config.accessList"
 	ResourceFrrConfigAsPathAccessList                     string = "frr.config.asPathAccessList"
+	ResourceFrrConfigOspfInstance                         string = "frr.config.ospfInstance"
+	ResourceFrrConfigIsisInstance                         string = "frr.config.isisInstance"
+	ResourceFrrConfigBfdPeer                              string = "frr.config.bfdPeer"
+	ResourceFrrConfigPbrMap                               string = "frr.config.pbrMap"
+	ResourceFrrConfigSegmentRoutingSettings               string = "frr.config.segmentRoutingSettings"
+	ResourceFrrConfigServiceSettings                      string = "frr.config.serviceSettings"
 	ResourceFrrVtyshConfig                                string = "frr.vtysh.config"
 	ResourceFrrVrf                                        string = "frr.vrf"
 	ResourceFrrRouteTable                                 string = "frr.routeTable"
@@ -1294,6 +1300,30 @@ func init() {
 		"frr.config.asPathAccessList": {
 			// to override args, implement: initFrrConfigAsPathAccessList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFrrConfigAsPathAccessList,
+		},
+		"frr.config.ospfInstance": {
+			// to override args, implement: initFrrConfigOspfInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigOspfInstance,
+		},
+		"frr.config.isisInstance": {
+			// to override args, implement: initFrrConfigIsisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigIsisInstance,
+		},
+		"frr.config.bfdPeer": {
+			// to override args, implement: initFrrConfigBfdPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigBfdPeer,
+		},
+		"frr.config.pbrMap": {
+			// to override args, implement: initFrrConfigPbrMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigPbrMap,
+		},
+		"frr.config.segmentRoutingSettings": {
+			// to override args, implement: initFrrConfigSegmentRoutingSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigSegmentRoutingSettings,
+		},
+		"frr.config.serviceSettings": {
+			// to override args, implement: initFrrConfigServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFrrConfigServiceSettings,
 		},
 		"frr.vtysh.config": {
 			Init:   initFrrVtyshConfig,
@@ -6280,6 +6310,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"frr.config.asPathAccessLists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfig).GetAsPathAccessLists()).ToDataRes(types.Array(types.Resource("frr.config.asPathAccessList")))
 	},
+	"frr.config.ospf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetOspf()).ToDataRes(types.Array(types.Resource("frr.config.ospfInstance")))
+	},
+	"frr.config.isis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetIsis()).ToDataRes(types.Array(types.Resource("frr.config.isisInstance")))
+	},
+	"frr.config.bfdPeers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetBfdPeers()).ToDataRes(types.Array(types.Resource("frr.config.bfdPeer")))
+	},
+	"frr.config.pbrMaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetPbrMaps()).ToDataRes(types.Array(types.Resource("frr.config.pbrMap")))
+	},
+	"frr.config.segmentRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetSegmentRouting()).ToDataRes(types.Resource("frr.config.segmentRoutingSettings"))
+	},
+	"frr.config.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfig).GetService()).ToDataRes(types.Resource("frr.config.serviceSettings"))
+	},
 	"frr.config.blocks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfig).GetBlocks()).ToDataRes(types.Array(types.Resource("frr.config.block")))
 	},
@@ -6577,6 +6625,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"frr.config.interface.pbrPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfigInterface).GetPbrPolicy()).ToDataRes(types.String)
 	},
+	"frr.config.interface.ospfArea": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfArea()).ToDataRes(types.String)
+	},
+	"frr.config.interface.ospfAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfAuthentication()).ToDataRes(types.String)
+	},
+	"frr.config.interface.ospfAuthenticationKeySet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfAuthenticationKeySet()).ToDataRes(types.Bool)
+	},
+	"frr.config.interface.ospfMessageDigestKeySet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfMessageDigestKeySet()).ToDataRes(types.Bool)
+	},
+	"frr.config.interface.ospfCost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfCost()).ToDataRes(types.Int)
+	},
+	"frr.config.interface.ospfPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfPriority()).ToDataRes(types.Int)
+	},
+	"frr.config.interface.ospfHelloInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfHelloInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.interface.ospfDeadInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfDeadInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.interface.ospfNetworkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfNetworkType()).ToDataRes(types.String)
+	},
+	"frr.config.interface.ospfPassive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetOspfPassive()).ToDataRes(types.Bool)
+	},
+	"frr.config.interface.isisTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetIsisTag()).ToDataRes(types.String)
+	},
+	"frr.config.interface.isisPasswordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetIsisPasswordSet()).ToDataRes(types.Bool)
+	},
+	"frr.config.interface.isisAuthenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetIsisAuthenticationMode()).ToDataRes(types.String)
+	},
+	"frr.config.interface.isisNetworkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetIsisNetworkType()).ToDataRes(types.String)
+	},
+	"frr.config.interface.isisCircuitType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetIsisCircuitType()).ToDataRes(types.String)
+	},
+	"frr.config.interface.pimEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetPimEnabled()).ToDataRes(types.Bool)
+	},
+	"frr.config.interface.igmpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetIgmpEnabled()).ToDataRes(types.Bool)
+	},
+	"frr.config.interface.bfdEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigInterface).GetBfdEnabled()).ToDataRes(types.Bool)
+	},
 	"frr.config.interface.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfigInterface).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -6831,6 +6933,216 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"frr.config.asPathAccessList.line": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrConfigAsPathAccessList).GetLine()).ToDataRes(types.Int)
+	},
+	"frr.config.ospfInstance.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetVersion()).ToDataRes(types.Int)
+	},
+	"frr.config.ospfInstance.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetVrf()).ToDataRes(types.String)
+	},
+	"frr.config.ospfInstance.routerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetRouterId()).ToDataRes(types.String)
+	},
+	"frr.config.ospfInstance.areas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetAreas()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.ospfInstance.networks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetNetworks()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.ospfInstance.passiveInterfaceDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetPassiveInterfaceDefault()).ToDataRes(types.Bool)
+	},
+	"frr.config.ospfInstance.passiveInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetPassiveInterfaces()).ToDataRes(types.Array(types.String))
+	},
+	"frr.config.ospfInstance.noPassiveInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetNoPassiveInterfaces()).ToDataRes(types.Array(types.String))
+	},
+	"frr.config.ospfInstance.redistribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetRedistribute()).ToDataRes(types.Array(types.String))
+	},
+	"frr.config.ospfInstance.defaultInformationOriginate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetDefaultInformationOriginate()).ToDataRes(types.Bool)
+	},
+	"frr.config.ospfInstance.logAdjacencyChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetLogAdjacencyChanges()).ToDataRes(types.Bool)
+	},
+	"frr.config.ospfInstance.maxMetricRouterLsa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetMaxMetricRouterLsa()).ToDataRes(types.String)
+	},
+	"frr.config.ospfInstance.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"frr.config.ospfInstance.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.ospfInstance.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.ospfInstance.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigOspfInstance).GetRaw()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetTag()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetVrf()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.net": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetNet()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.isType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetIsType()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.metricStyle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetMetricStyle()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.areaPasswordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetAreaPasswordSet()).ToDataRes(types.Bool)
+	},
+	"frr.config.isisInstance.areaPasswordMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetAreaPasswordMode()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.domainPasswordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetDomainPasswordSet()).ToDataRes(types.Bool)
+	},
+	"frr.config.isisInstance.domainPasswordMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetDomainPasswordMode()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetAuthenticationMode()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.redistribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetRedistribute()).ToDataRes(types.Array(types.String))
+	},
+	"frr.config.isisInstance.logAdjacencyChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetLogAdjacencyChanges()).ToDataRes(types.Bool)
+	},
+	"frr.config.isisInstance.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"frr.config.isisInstance.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.isisInstance.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.isisInstance.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigIsisInstance).GetRaw()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetKind()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetName()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetInterface()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.localAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetLocalAddress()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetVrf()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.multiHop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetMultiHop()).ToDataRes(types.Bool)
+	},
+	"frr.config.bfdPeer.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetProfile()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.detectMultiplier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetDetectMultiplier()).ToDataRes(types.Int)
+	},
+	"frr.config.bfdPeer.receiveInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetReceiveInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.bfdPeer.transmitInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetTransmitInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.bfdPeer.echoMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetEchoMode()).ToDataRes(types.Bool)
+	},
+	"frr.config.bfdPeer.echoInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetEchoInterval()).ToDataRes(types.Int)
+	},
+	"frr.config.bfdPeer.passiveMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetPassiveMode()).ToDataRes(types.Bool)
+	},
+	"frr.config.bfdPeer.shutdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetShutdown()).ToDataRes(types.Bool)
+	},
+	"frr.config.bfdPeer.minimumTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetMinimumTtl()).ToDataRes(types.Int)
+	},
+	"frr.config.bfdPeer.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"frr.config.bfdPeer.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.bfdPeer.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.bfdPeer.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigBfdPeer).GetRaw()).ToDataRes(types.String)
+	},
+	"frr.config.pbrMap.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigPbrMap).GetName()).ToDataRes(types.String)
+	},
+	"frr.config.pbrMap.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigPbrMap).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.pbrMap.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigPbrMap).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.pbrMap.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigPbrMap).GetLine()).ToDataRes(types.Int)
+	},
+	"frr.config.segmentRoutingSettings.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"frr.config.segmentRoutingSettings.mplsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetMplsEnabled()).ToDataRes(types.Bool)
+	},
+	"frr.config.segmentRoutingSettings.srv6Locators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetSrv6Locators()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.segmentRoutingSettings.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"frr.config.segmentRoutingSettings.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetFile()).ToDataRes(types.String)
+	},
+	"frr.config.segmentRoutingSettings.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetStartLine()).ToDataRes(types.Int)
+	},
+	"frr.config.segmentRoutingSettings.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigSegmentRoutingSettings).GetRaw()).ToDataRes(types.String)
+	},
+	"frr.config.serviceSettings.logTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetLogTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"frr.config.serviceSettings.passwordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetPasswordSet()).ToDataRes(types.Bool)
+	},
+	"frr.config.serviceSettings.enablePasswordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetEnablePasswordSet()).ToDataRes(types.Bool)
+	},
+	"frr.config.serviceSettings.agentxEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetAgentxEnabled()).ToDataRes(types.Bool)
+	},
+	"frr.config.serviceSettings.integratedVtyshConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetIntegratedVtyshConfig()).ToDataRes(types.Bool)
+	},
+	"frr.config.serviceSettings.advancedVty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetAdvancedVty()).ToDataRes(types.Bool)
+	},
+	"frr.config.serviceSettings.logCommands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetLogCommands()).ToDataRes(types.Bool)
+	},
+	"frr.config.serviceSettings.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFrrConfigServiceSettings).GetUsers()).ToDataRes(types.Array(types.Dict))
 	},
 	"frr.vtysh.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFrrVtyshConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -22751,6 +23063,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFrrConfig).AsPathAccessLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"frr.config.ospf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).Ospf, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.isis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).Isis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).BfdPeers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.pbrMaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).PbrMaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).SegmentRouting, ok = plugin.RawToTValue[*mqlFrrConfigSegmentRoutingSettings](v.Value, v.Error)
+		return
+	},
+	"frr.config.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfig).Service, ok = plugin.RawToTValue[*mqlFrrConfigServiceSettings](v.Value, v.Error)
+		return
+	},
 	"frr.config.blocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrConfig).Blocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -23175,6 +23511,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFrrConfigInterface).PbrPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"frr.config.interface.ospfArea": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfArea, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfAuthentication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfAuthenticationKeySet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfAuthenticationKeySet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfMessageDigestKeySet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfMessageDigestKeySet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfCost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfCost, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfPriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfHelloInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfHelloInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfDeadInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfDeadInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfNetworkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfNetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.ospfPassive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).OspfPassive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.isisTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).IsisTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.isisPasswordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).IsisPasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.isisAuthenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).IsisAuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.isisNetworkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).IsisNetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.isisCircuitType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).IsisCircuitType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.pimEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).PimEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.igmpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).IgmpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.interface.bfdEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigInterface).BfdEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"frr.config.interface.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrConfigInterface).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -23541,6 +23949,310 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"frr.config.asPathAccessList.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFrrConfigAsPathAccessList).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.ospfInstance.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.routerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).RouterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.areas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Areas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.passiveInterfaceDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).PassiveInterfaceDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.passiveInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).PassiveInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.noPassiveInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).NoPassiveInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.redistribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Redistribute, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.defaultInformationOriginate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).DefaultInformationOriginate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.logAdjacencyChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).LogAdjacencyChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.maxMetricRouterLsa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).MaxMetricRouterLsa, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.ospfInstance.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigOspfInstance).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.isisInstance.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.net": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).Net, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.isType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).IsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.metricStyle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).MetricStyle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.areaPasswordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).AreaPasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.areaPasswordMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).AreaPasswordMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.domainPasswordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).DomainPasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.domainPasswordMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).DomainPasswordMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.redistribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).Redistribute, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.logAdjacencyChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).LogAdjacencyChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.isisInstance.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigIsisInstance).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.bfdPeer.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.localAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).LocalAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.multiHop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).MultiHop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.detectMultiplier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).DetectMultiplier, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.receiveInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).ReceiveInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.transmitInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).TransmitInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.echoMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).EchoMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.echoInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).EchoInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.passiveMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).PassiveMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.shutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Shutdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.minimumTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).MinimumTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.bfdPeer.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigBfdPeer).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.pbrMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigPbrMap).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.pbrMap.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigPbrMap).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.pbrMap.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigPbrMap).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.pbrMap.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigPbrMap).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.pbrMap.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigPbrMap).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.segmentRoutingSettings.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.mplsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).MplsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.srv6Locators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).Srv6Locators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"frr.config.segmentRoutingSettings.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigSegmentRoutingSettings).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"frr.config.serviceSettings.logTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).LogTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.passwordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).PasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.enablePasswordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).EnablePasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.agentxEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).AgentxEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.integratedVtyshConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).IntegratedVtyshConfig, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.advancedVty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).AdvancedVty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.logCommands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).LogCommands, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"frr.config.serviceSettings.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFrrConfigServiceSettings).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"frr.vtysh.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53860,6 +54572,12 @@ type mqlFrrConfig struct {
 	CommunityLists        plugin.TValue[[]any]
 	AccessLists           plugin.TValue[[]any]
 	AsPathAccessLists     plugin.TValue[[]any]
+	Ospf                  plugin.TValue[[]any]
+	Isis                  plugin.TValue[[]any]
+	BfdPeers              plugin.TValue[[]any]
+	PbrMaps               plugin.TValue[[]any]
+	SegmentRouting        plugin.TValue[*mqlFrrConfigSegmentRoutingSettings]
+	Service               plugin.TValue[*mqlFrrConfigServiceSettings]
 	Blocks                plugin.TValue[[]any]
 	Directives            plugin.TValue[[]any]
 }
@@ -54147,6 +54865,132 @@ func (c *mqlFrrConfig) GetAsPathAccessLists() *plugin.TValue[[]any] {
 		}
 
 		return c.asPathAccessLists(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetOspf() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ospf, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "ospf")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.ospf(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetIsis() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Isis, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "isis")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.isis(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetBfdPeers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BfdPeers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "bfdPeers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.bfdPeers(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetPbrMaps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PbrMaps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "pbrMaps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.pbrMaps(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetSegmentRouting() *plugin.TValue[*mqlFrrConfigSegmentRoutingSettings] {
+	return plugin.GetOrCompute[*mqlFrrConfigSegmentRoutingSettings](&c.SegmentRouting, func() (*mqlFrrConfigSegmentRoutingSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "segmentRouting")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFrrConfigSegmentRoutingSettings), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.segmentRouting(vargFile.Data)
+	})
+}
+
+func (c *mqlFrrConfig) GetService() *plugin.TValue[*mqlFrrConfigServiceSettings] {
+	return plugin.GetOrCompute[*mqlFrrConfigServiceSettings](&c.Service, func() (*mqlFrrConfigServiceSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("frr.config", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFrrConfigServiceSettings), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.service(vargFile.Data)
 	})
 }
 
@@ -54871,17 +55715,35 @@ type mqlFrrConfigInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlFrrConfigInterfaceInternal it will be used here
-	Name          plugin.TValue[string]
-	Vrf           plugin.TValue[string]
-	Description   plugin.TValue[string]
-	IpAddresses   plugin.TValue[[]any]
-	Ipv6Addresses plugin.TValue[[]any]
-	Shutdown      plugin.TValue[bool]
-	PbrPolicy     plugin.TValue[string]
-	Params        plugin.TValue[map[string]any]
-	File          plugin.TValue[string]
-	StartLine     plugin.TValue[int64]
-	Raw           plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Vrf                      plugin.TValue[string]
+	Description              plugin.TValue[string]
+	IpAddresses              plugin.TValue[[]any]
+	Ipv6Addresses            plugin.TValue[[]any]
+	Shutdown                 plugin.TValue[bool]
+	PbrPolicy                plugin.TValue[string]
+	OspfArea                 plugin.TValue[string]
+	OspfAuthentication       plugin.TValue[string]
+	OspfAuthenticationKeySet plugin.TValue[bool]
+	OspfMessageDigestKeySet  plugin.TValue[bool]
+	OspfCost                 plugin.TValue[int64]
+	OspfPriority             plugin.TValue[int64]
+	OspfHelloInterval        plugin.TValue[int64]
+	OspfDeadInterval         plugin.TValue[int64]
+	OspfNetworkType          plugin.TValue[string]
+	OspfPassive              plugin.TValue[bool]
+	IsisTag                  plugin.TValue[string]
+	IsisPasswordSet          plugin.TValue[bool]
+	IsisAuthenticationMode   plugin.TValue[string]
+	IsisNetworkType          plugin.TValue[string]
+	IsisCircuitType          plugin.TValue[string]
+	PimEnabled               plugin.TValue[bool]
+	IgmpEnabled              plugin.TValue[bool]
+	BfdEnabled               plugin.TValue[bool]
+	Params                   plugin.TValue[map[string]any]
+	File                     plugin.TValue[string]
+	StartLine                plugin.TValue[int64]
+	Raw                      plugin.TValue[string]
 }
 
 // createFrrConfigInterface creates a new instance of this resource
@@ -54942,6 +55804,78 @@ func (c *mqlFrrConfigInterface) GetShutdown() *plugin.TValue[bool] {
 
 func (c *mqlFrrConfigInterface) GetPbrPolicy() *plugin.TValue[string] {
 	return &c.PbrPolicy
+}
+
+func (c *mqlFrrConfigInterface) GetOspfArea() *plugin.TValue[string] {
+	return &c.OspfArea
+}
+
+func (c *mqlFrrConfigInterface) GetOspfAuthentication() *plugin.TValue[string] {
+	return &c.OspfAuthentication
+}
+
+func (c *mqlFrrConfigInterface) GetOspfAuthenticationKeySet() *plugin.TValue[bool] {
+	return &c.OspfAuthenticationKeySet
+}
+
+func (c *mqlFrrConfigInterface) GetOspfMessageDigestKeySet() *plugin.TValue[bool] {
+	return &c.OspfMessageDigestKeySet
+}
+
+func (c *mqlFrrConfigInterface) GetOspfCost() *plugin.TValue[int64] {
+	return &c.OspfCost
+}
+
+func (c *mqlFrrConfigInterface) GetOspfPriority() *plugin.TValue[int64] {
+	return &c.OspfPriority
+}
+
+func (c *mqlFrrConfigInterface) GetOspfHelloInterval() *plugin.TValue[int64] {
+	return &c.OspfHelloInterval
+}
+
+func (c *mqlFrrConfigInterface) GetOspfDeadInterval() *plugin.TValue[int64] {
+	return &c.OspfDeadInterval
+}
+
+func (c *mqlFrrConfigInterface) GetOspfNetworkType() *plugin.TValue[string] {
+	return &c.OspfNetworkType
+}
+
+func (c *mqlFrrConfigInterface) GetOspfPassive() *plugin.TValue[bool] {
+	return &c.OspfPassive
+}
+
+func (c *mqlFrrConfigInterface) GetIsisTag() *plugin.TValue[string] {
+	return &c.IsisTag
+}
+
+func (c *mqlFrrConfigInterface) GetIsisPasswordSet() *plugin.TValue[bool] {
+	return &c.IsisPasswordSet
+}
+
+func (c *mqlFrrConfigInterface) GetIsisAuthenticationMode() *plugin.TValue[string] {
+	return &c.IsisAuthenticationMode
+}
+
+func (c *mqlFrrConfigInterface) GetIsisNetworkType() *plugin.TValue[string] {
+	return &c.IsisNetworkType
+}
+
+func (c *mqlFrrConfigInterface) GetIsisCircuitType() *plugin.TValue[string] {
+	return &c.IsisCircuitType
+}
+
+func (c *mqlFrrConfigInterface) GetPimEnabled() *plugin.TValue[bool] {
+	return &c.PimEnabled
+}
+
+func (c *mqlFrrConfigInterface) GetIgmpEnabled() *plugin.TValue[bool] {
+	return &c.IgmpEnabled
+}
+
+func (c *mqlFrrConfigInterface) GetBfdEnabled() *plugin.TValue[bool] {
+	return &c.BfdEnabled
 }
 
 func (c *mqlFrrConfigInterface) GetParams() *plugin.TValue[map[string]any] {
@@ -55636,6 +56570,590 @@ func (c *mqlFrrConfigAsPathAccessList) GetFile() *plugin.TValue[string] {
 
 func (c *mqlFrrConfigAsPathAccessList) GetLine() *plugin.TValue[int64] {
 	return &c.Line
+}
+
+// mqlFrrConfigOspfInstance for the frr.config.ospfInstance resource
+type mqlFrrConfigOspfInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigOspfInstanceInternal it will be used here
+	Version                     plugin.TValue[int64]
+	Vrf                         plugin.TValue[string]
+	RouterId                    plugin.TValue[string]
+	Areas                       plugin.TValue[[]any]
+	Networks                    plugin.TValue[[]any]
+	PassiveInterfaceDefault     plugin.TValue[bool]
+	PassiveInterfaces           plugin.TValue[[]any]
+	NoPassiveInterfaces         plugin.TValue[[]any]
+	Redistribute                plugin.TValue[[]any]
+	DefaultInformationOriginate plugin.TValue[bool]
+	LogAdjacencyChanges         plugin.TValue[bool]
+	MaxMetricRouterLsa          plugin.TValue[string]
+	Params                      plugin.TValue[map[string]any]
+	File                        plugin.TValue[string]
+	StartLine                   plugin.TValue[int64]
+	Raw                         plugin.TValue[string]
+}
+
+// createFrrConfigOspfInstance creates a new instance of this resource
+func createFrrConfigOspfInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigOspfInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.ospfInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigOspfInstance) MqlName() string {
+	return "frr.config.ospfInstance"
+}
+
+func (c *mqlFrrConfigOspfInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigOspfInstance) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlFrrConfigOspfInstance) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlFrrConfigOspfInstance) GetRouterId() *plugin.TValue[string] {
+	return &c.RouterId
+}
+
+func (c *mqlFrrConfigOspfInstance) GetAreas() *plugin.TValue[[]any] {
+	return &c.Areas
+}
+
+func (c *mqlFrrConfigOspfInstance) GetNetworks() *plugin.TValue[[]any] {
+	return &c.Networks
+}
+
+func (c *mqlFrrConfigOspfInstance) GetPassiveInterfaceDefault() *plugin.TValue[bool] {
+	return &c.PassiveInterfaceDefault
+}
+
+func (c *mqlFrrConfigOspfInstance) GetPassiveInterfaces() *plugin.TValue[[]any] {
+	return &c.PassiveInterfaces
+}
+
+func (c *mqlFrrConfigOspfInstance) GetNoPassiveInterfaces() *plugin.TValue[[]any] {
+	return &c.NoPassiveInterfaces
+}
+
+func (c *mqlFrrConfigOspfInstance) GetRedistribute() *plugin.TValue[[]any] {
+	return &c.Redistribute
+}
+
+func (c *mqlFrrConfigOspfInstance) GetDefaultInformationOriginate() *plugin.TValue[bool] {
+	return &c.DefaultInformationOriginate
+}
+
+func (c *mqlFrrConfigOspfInstance) GetLogAdjacencyChanges() *plugin.TValue[bool] {
+	return &c.LogAdjacencyChanges
+}
+
+func (c *mqlFrrConfigOspfInstance) GetMaxMetricRouterLsa() *plugin.TValue[string] {
+	return &c.MaxMetricRouterLsa
+}
+
+func (c *mqlFrrConfigOspfInstance) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlFrrConfigOspfInstance) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigOspfInstance) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigOspfInstance) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFrrConfigIsisInstance for the frr.config.isisInstance resource
+type mqlFrrConfigIsisInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigIsisInstanceInternal it will be used here
+	Tag                 plugin.TValue[string]
+	Vrf                 plugin.TValue[string]
+	Net                 plugin.TValue[string]
+	IsType              plugin.TValue[string]
+	MetricStyle         plugin.TValue[string]
+	AreaPasswordSet     plugin.TValue[bool]
+	AreaPasswordMode    plugin.TValue[string]
+	DomainPasswordSet   plugin.TValue[bool]
+	DomainPasswordMode  plugin.TValue[string]
+	AuthenticationMode  plugin.TValue[string]
+	Redistribute        plugin.TValue[[]any]
+	LogAdjacencyChanges plugin.TValue[bool]
+	Params              plugin.TValue[map[string]any]
+	File                plugin.TValue[string]
+	StartLine           plugin.TValue[int64]
+	Raw                 plugin.TValue[string]
+}
+
+// createFrrConfigIsisInstance creates a new instance of this resource
+func createFrrConfigIsisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigIsisInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.isisInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigIsisInstance) MqlName() string {
+	return "frr.config.isisInstance"
+}
+
+func (c *mqlFrrConfigIsisInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigIsisInstance) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlFrrConfigIsisInstance) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlFrrConfigIsisInstance) GetNet() *plugin.TValue[string] {
+	return &c.Net
+}
+
+func (c *mqlFrrConfigIsisInstance) GetIsType() *plugin.TValue[string] {
+	return &c.IsType
+}
+
+func (c *mqlFrrConfigIsisInstance) GetMetricStyle() *plugin.TValue[string] {
+	return &c.MetricStyle
+}
+
+func (c *mqlFrrConfigIsisInstance) GetAreaPasswordSet() *plugin.TValue[bool] {
+	return &c.AreaPasswordSet
+}
+
+func (c *mqlFrrConfigIsisInstance) GetAreaPasswordMode() *plugin.TValue[string] {
+	return &c.AreaPasswordMode
+}
+
+func (c *mqlFrrConfigIsisInstance) GetDomainPasswordSet() *plugin.TValue[bool] {
+	return &c.DomainPasswordSet
+}
+
+func (c *mqlFrrConfigIsisInstance) GetDomainPasswordMode() *plugin.TValue[string] {
+	return &c.DomainPasswordMode
+}
+
+func (c *mqlFrrConfigIsisInstance) GetAuthenticationMode() *plugin.TValue[string] {
+	return &c.AuthenticationMode
+}
+
+func (c *mqlFrrConfigIsisInstance) GetRedistribute() *plugin.TValue[[]any] {
+	return &c.Redistribute
+}
+
+func (c *mqlFrrConfigIsisInstance) GetLogAdjacencyChanges() *plugin.TValue[bool] {
+	return &c.LogAdjacencyChanges
+}
+
+func (c *mqlFrrConfigIsisInstance) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlFrrConfigIsisInstance) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigIsisInstance) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigIsisInstance) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFrrConfigBfdPeer for the frr.config.bfdPeer resource
+type mqlFrrConfigBfdPeer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigBfdPeerInternal it will be used here
+	Kind             plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Interface        plugin.TValue[string]
+	LocalAddress     plugin.TValue[string]
+	Vrf              plugin.TValue[string]
+	MultiHop         plugin.TValue[bool]
+	Profile          plugin.TValue[string]
+	DetectMultiplier plugin.TValue[int64]
+	ReceiveInterval  plugin.TValue[int64]
+	TransmitInterval plugin.TValue[int64]
+	EchoMode         plugin.TValue[bool]
+	EchoInterval     plugin.TValue[int64]
+	PassiveMode      plugin.TValue[bool]
+	Shutdown         plugin.TValue[bool]
+	MinimumTtl       plugin.TValue[int64]
+	Params           plugin.TValue[map[string]any]
+	File             plugin.TValue[string]
+	StartLine        plugin.TValue[int64]
+	Raw              plugin.TValue[string]
+}
+
+// createFrrConfigBfdPeer creates a new instance of this resource
+func createFrrConfigBfdPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigBfdPeer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.bfdPeer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigBfdPeer) MqlName() string {
+	return "frr.config.bfdPeer"
+}
+
+func (c *mqlFrrConfigBfdPeer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigBfdPeer) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlFrrConfigBfdPeer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFrrConfigBfdPeer) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlFrrConfigBfdPeer) GetLocalAddress() *plugin.TValue[string] {
+	return &c.LocalAddress
+}
+
+func (c *mqlFrrConfigBfdPeer) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlFrrConfigBfdPeer) GetMultiHop() *plugin.TValue[bool] {
+	return &c.MultiHop
+}
+
+func (c *mqlFrrConfigBfdPeer) GetProfile() *plugin.TValue[string] {
+	return &c.Profile
+}
+
+func (c *mqlFrrConfigBfdPeer) GetDetectMultiplier() *plugin.TValue[int64] {
+	return &c.DetectMultiplier
+}
+
+func (c *mqlFrrConfigBfdPeer) GetReceiveInterval() *plugin.TValue[int64] {
+	return &c.ReceiveInterval
+}
+
+func (c *mqlFrrConfigBfdPeer) GetTransmitInterval() *plugin.TValue[int64] {
+	return &c.TransmitInterval
+}
+
+func (c *mqlFrrConfigBfdPeer) GetEchoMode() *plugin.TValue[bool] {
+	return &c.EchoMode
+}
+
+func (c *mqlFrrConfigBfdPeer) GetEchoInterval() *plugin.TValue[int64] {
+	return &c.EchoInterval
+}
+
+func (c *mqlFrrConfigBfdPeer) GetPassiveMode() *plugin.TValue[bool] {
+	return &c.PassiveMode
+}
+
+func (c *mqlFrrConfigBfdPeer) GetShutdown() *plugin.TValue[bool] {
+	return &c.Shutdown
+}
+
+func (c *mqlFrrConfigBfdPeer) GetMinimumTtl() *plugin.TValue[int64] {
+	return &c.MinimumTtl
+}
+
+func (c *mqlFrrConfigBfdPeer) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlFrrConfigBfdPeer) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigBfdPeer) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigBfdPeer) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFrrConfigPbrMap for the frr.config.pbrMap resource
+type mqlFrrConfigPbrMap struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigPbrMapInternal it will be used here
+	Name  plugin.TValue[string]
+	Rules plugin.TValue[[]any]
+	File  plugin.TValue[string]
+	Line  plugin.TValue[int64]
+}
+
+// createFrrConfigPbrMap creates a new instance of this resource
+func createFrrConfigPbrMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigPbrMap{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.pbrMap", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigPbrMap) MqlName() string {
+	return "frr.config.pbrMap"
+}
+
+func (c *mqlFrrConfigPbrMap) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigPbrMap) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFrrConfigPbrMap) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlFrrConfigPbrMap) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigPbrMap) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+// mqlFrrConfigSegmentRoutingSettings for the frr.config.segmentRoutingSettings resource
+type mqlFrrConfigSegmentRoutingSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigSegmentRoutingSettingsInternal it will be used here
+	Configured   plugin.TValue[bool]
+	MplsEnabled  plugin.TValue[bool]
+	Srv6Locators plugin.TValue[[]any]
+	Params       plugin.TValue[map[string]any]
+	File         plugin.TValue[string]
+	StartLine    plugin.TValue[int64]
+	Raw          plugin.TValue[string]
+}
+
+// createFrrConfigSegmentRoutingSettings creates a new instance of this resource
+func createFrrConfigSegmentRoutingSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigSegmentRoutingSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.segmentRoutingSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) MqlName() string {
+	return "frr.config.segmentRoutingSettings"
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetConfigured() *plugin.TValue[bool] {
+	return &c.Configured
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetMplsEnabled() *plugin.TValue[bool] {
+	return &c.MplsEnabled
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetSrv6Locators() *plugin.TValue[[]any] {
+	return &c.Srv6Locators
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlFrrConfigSegmentRoutingSettings) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFrrConfigServiceSettings for the frr.config.serviceSettings resource
+type mqlFrrConfigServiceSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFrrConfigServiceSettingsInternal it will be used here
+	LogTargets            plugin.TValue[[]any]
+	PasswordSet           plugin.TValue[bool]
+	EnablePasswordSet     plugin.TValue[bool]
+	AgentxEnabled         plugin.TValue[bool]
+	IntegratedVtyshConfig plugin.TValue[bool]
+	AdvancedVty           plugin.TValue[bool]
+	LogCommands           plugin.TValue[bool]
+	Users                 plugin.TValue[[]any]
+}
+
+// createFrrConfigServiceSettings creates a new instance of this resource
+func createFrrConfigServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFrrConfigServiceSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("frr.config.serviceSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFrrConfigServiceSettings) MqlName() string {
+	return "frr.config.serviceSettings"
+}
+
+func (c *mqlFrrConfigServiceSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFrrConfigServiceSettings) GetLogTargets() *plugin.TValue[[]any] {
+	return &c.LogTargets
+}
+
+func (c *mqlFrrConfigServiceSettings) GetPasswordSet() *plugin.TValue[bool] {
+	return &c.PasswordSet
+}
+
+func (c *mqlFrrConfigServiceSettings) GetEnablePasswordSet() *plugin.TValue[bool] {
+	return &c.EnablePasswordSet
+}
+
+func (c *mqlFrrConfigServiceSettings) GetAgentxEnabled() *plugin.TValue[bool] {
+	return &c.AgentxEnabled
+}
+
+func (c *mqlFrrConfigServiceSettings) GetIntegratedVtyshConfig() *plugin.TValue[bool] {
+	return &c.IntegratedVtyshConfig
+}
+
+func (c *mqlFrrConfigServiceSettings) GetAdvancedVty() *plugin.TValue[bool] {
+	return &c.AdvancedVty
+}
+
+func (c *mqlFrrConfigServiceSettings) GetLogCommands() *plugin.TValue[bool] {
+	return &c.LogCommands
+}
+
+func (c *mqlFrrConfigServiceSettings) GetUsers() *plugin.TValue[[]any] {
+	return &c.Users
 }
 
 // mqlFrrVtyshConfig for the frr.vtysh.config resource

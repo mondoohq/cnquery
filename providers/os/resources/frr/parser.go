@@ -114,6 +114,10 @@ const (
 	kindAddressFamily
 	kindVNI
 	kindBFDPeer
+	// kindNested is a block that lives inside another block and closes only
+	// on its own terminator or when a new top-level block starts. The
+	// segment routing tree uses it.
+	kindNested
 )
 
 // blockTerminators maps an explicit terminator to the block type it closes.
@@ -190,6 +194,8 @@ func parseInto(filename string, r io.Reader, cfg *Config) error {
 				stack[len(stack)-1].kind != kindTop {
 				closeTop(endLine)
 			}
+		case kindNested:
+			// A nested block stays inside whatever is open.
 		}
 	}
 
@@ -276,7 +282,29 @@ func parseInto(filename string, r io.Reader, cfg *Config) error {
 
 // blockHeader decides whether fields start a block. It returns the block
 // type, its primary name, the header arguments and where the block may nest.
+// nestedKeywords are the block keywords of the segment routing tree. They
+// only start a block inside another block.
+var nestedKeywords = map[string]bool{
+	"srv6":           true,
+	"locators":       true,
+	"locator":        true,
+	"traffic-eng":    true,
+	"policy":         true,
+	"candidate-path": true,
+	"segment-list":   true,
+}
+
 func blockHeader(fields []string, stack []frame) (string, string, []string, blockKind, bool) {
+	// The segment routing tree nests several levels deep, and its keywords
+	// mean nothing at the top level.
+	if len(stack) > 0 && nestedKeywords[fields[0]] {
+		name := ""
+		if len(fields) > 1 {
+			name = fields[1]
+		}
+		return fields[0], name, fields[1:], kindNested, true
+	}
+
 	switch fields[0] {
 	case "address-family":
 		if len(fields) < 2 {
@@ -310,18 +338,20 @@ func blockHeader(fields []string, stack []frame) (string, string, []string, bloc
 		}
 		return "router " + fields[1], name, fields[2:], kindTop, true
 
-	case "vrf", "interface", "route-map", "pbr-map", "nexthop-group",
-		"segment-routing", "srv6", "rpki":
+	case "vrf", "interface", "route-map", "pbr-map", "nexthop-group", "rpki":
 		if len(fields) < 2 {
 			return "", "", nil, kindTop, false
 		}
 		return fields[0], fields[1], fields[1:], kindTop, true
 
-	case "bfd":
-		if len(fields) != 1 {
+	case "bfd", "segment-routing":
+		// These take no name of their own, and they only start a block at
+		// the top level. Inside an interface block `bfd` is a directive that
+		// enables a session on the link.
+		if len(fields) != 1 || len(stack) > 0 {
 			return "", "", nil, kindTop, false
 		}
-		return "bfd", "", nil, kindTop, true
+		return fields[0], "", nil, kindTop, true
 
 	case "key", "line":
 		// `key chain <name>` and `line vty`.
