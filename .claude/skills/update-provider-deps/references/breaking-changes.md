@@ -76,7 +76,10 @@ A method that still exists but is marked `// Deprecated:` is a judgment call, no
 Take the replacement when it is shaped the same. Leave the deprecated call when adopting
 the replacement would change the MQL schema — for example when a singleton getter is
 replaced by a list-plus-get pair, turning one resource into a collection. That is a schema
-change that deserves its own PR and its own review, not a rider on a dependency bump.
+change nobody chose in this run, so it belongs in a PR of its own rather than being absorbed
+into the migration. (This is not in tension with bundling the Phase 6 additions into the
+provider's PR: those were picked deliberately and reviewed as part of the upgrade. This one
+would arrive unannounced, as a side effect of a call-site edit.)
 
 Either way, leave a comment at the call site saying which it is and why, so the next
 upgrade doesn't have to re-derive the reasoning.

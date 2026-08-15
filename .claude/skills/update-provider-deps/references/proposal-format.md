@@ -98,3 +98,8 @@ waiting — the point of the phase is that the choice is theirs.
 Confirm the selection back in one line, then implement per `schema-additions.md`. If a
 chosen item turns out to be unbuildable once you're in the code, say so and stop rather
 than substituting something else.
+
+The selection also decides the PR split (Phase 0). Each provider the user picks a field on
+gets its own PR carrying both the schema work and that provider's SDK bump; the providers
+nobody picked stay in the single combined dependency PR. This is why the combined PR cannot
+be opened before the user answers.
