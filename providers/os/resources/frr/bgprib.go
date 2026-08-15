@@ -70,7 +70,10 @@ type RouteSet struct {
 	Routes []BGPRoute
 	// Total counts every prefix the command reported, including the ones
 	// past the limit.
-	Total     int64
+	Total int64
+	// Truncated is true when the result does not hold everything the command
+	// reported, either because the limit was reached or because a prefix
+	// could not be read.
 	Truncated bool
 	// FilteredCount is the `filteredPrefixCounter` of the command, which
 	// says how many prefixes the policy dropped. It is -1 when the command
@@ -80,8 +83,12 @@ type RouteSet struct {
 
 // EVPNRouteSet is the bounded result of one EVPN table query.
 type EVPNRouteSet struct {
-	Routes    []EVPNRoute
-	Total     int64
+	Routes []EVPNRoute
+	// Total counts every prefix the command reported.
+	Total int64
+	// Truncated is true when the result does not hold everything the command
+	// reported, either because the limit was reached or because a prefix
+	// could not be read.
 	Truncated bool
 }
 
@@ -164,8 +171,9 @@ func StreamEVPNRoutes(r io.Reader, limit int) (*EVPNRouteSet, error) {
 			var entry map[string]json.RawMessage
 			if err := json.Unmarshal(raw, &entry); err != nil {
 				// The prefix was printed, so it counts even though its
-				// paths cannot be read.
+				// paths cannot be read, and the result is not complete.
 				res.Total++
+				res.Truncated = true
 				continue
 			}
 			res.addEVPNPrefix("", key, entry, limit)
@@ -229,8 +237,9 @@ func (s *EVPNRouteSet) streamEVPNSection(dec *json.Decoder, sectionKey string, l
 		var entry map[string]json.RawMessage
 		if err := json.Unmarshal(raw, &entry); err != nil {
 			// A single unreadable prefix must not drop the section. It was
-			// printed, so it still counts.
+			// printed, so it still counts, and the result is not complete.
 			s.Total++
+			s.Truncated = true
 			continue
 		}
 		s.addEVPNPrefix(rd, key, entry, limit)
@@ -466,9 +475,15 @@ func streamRouteMap(dec *json.Decoder, res *RouteSet, limit int) error {
 		// A prefix holds either one path object or a list of them.
 		var raw json.RawMessage
 		if err := dec.Decode(&raw); err != nil {
+			return fmt.Errorf("cannot read the paths of a prefix: %w", err)
+		}
+		paths := decodePaths(raw)
+		if len(paths) == 0 {
+			// The prefix was printed but nothing could be read from it.
+			res.Truncated = true
 			continue
 		}
-		for _, path := range decodePaths(raw) {
+		for _, path := range paths {
 			// A prefix with several paths must not push the result past the
 			// limit, so the check comes before the append.
 			if len(res.Routes) >= limit {
