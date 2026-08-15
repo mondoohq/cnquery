@@ -278,6 +278,8 @@ func (l linkVF) virtualFunction() VirtualFunction {
 	if l.Trust != nil {
 		vf.Trusted = *l.Trust
 	}
+	// A build that reports both shapes writes the same VLAN twice, so the flat
+	// field wins and the reading is the same either way.
 	if len(l.VlanList) > 0 {
 		vf.VlanID = l.VlanList[0].Vlan
 		vf.QoS = l.VlanList[0].QoS
@@ -288,6 +290,7 @@ func (l linkVF) virtualFunction() VirtualFunction {
 	if l.QoS != nil {
 		vf.QoS = *l.QoS
 	}
+	// Same precedence for the rates.
 	if l.Rate != nil {
 		vf.MaxTxRate = l.Rate.MaxTxRate
 		vf.MinTxRate = l.Rate.MinTxRate

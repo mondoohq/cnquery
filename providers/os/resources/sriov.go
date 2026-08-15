@@ -105,9 +105,11 @@ func (s *mqlSriov) doLoad() error {
 		return nil
 	}
 
-	// The link call is best effort. A host without iproute2, or one where the
-	// driver exposes no per-function settings, still reports the inventory,
-	// and linkConfigured stays false for those functions.
+	// A host without iproute2, or one where the driver exposes no per-function
+	// settings, still reports the inventory, and linkConfigured stays false for
+	// those functions. Output the reader cannot parse is a different case and
+	// fails the query, because dropping it would report spoofChecking as off on
+	// functions that in fact enforce it.
 	linkStdout, ok, err := runShellCmd(s.MqlRuntime, sriovLinkShow)
 	if err != nil {
 		return err
