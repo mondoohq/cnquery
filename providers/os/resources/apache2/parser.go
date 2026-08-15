@@ -119,7 +119,7 @@ func ParseWithGlob(rootPath string, fileContent fileContentFunc, globExpand glob
 }
 
 func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent fileContentFunc, globExpand globExpandFunc, vars map[string]string, visited map[string]bool) {
-	lines := splitAndClean(content)
+	lines := flattenTransparentBlocks(splitAndClean(content))
 	i := 0
 	for i < len(lines) {
 		line := lines[i]
@@ -135,8 +135,9 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 			case "virtualhost":
 				vh := parseVirtualHost(blockArg, blockLines, vars)
 				cfg.VHosts = append(cfg.VHosts, vh)
-				// VirtualHosts can contain their own <Location> blocks + Header directives.
-				collectScopedHeadersAndLocations(cfg, blockLines)
+				// VirtualHosts can contain their own <Directory>/<Location>
+				// blocks and Header directives.
+				collectScopedBlocks(cfg, blockLines, vars)
 			case "directory", "directorymatch":
 				d := parseDirectory(blockArg, blockLines, vars)
 				cfg.Dirs = append(cfg.Dirs, d)
@@ -188,20 +189,25 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 	}
 }
 
-// collectScopedHeadersAndLocations walks the lines inside a containing block
-// (typically a VirtualHost) and extracts any nested <Location> blocks and
+// collectScopedBlocks walks the lines inside a containing block (typically a
+// VirtualHost) and extracts any nested <Directory> and <Location> blocks and
 // `Header always set` directives so they're reachable from the top-level
 // Config aggregates without forcing the caller to walk the tree again.
-func collectScopedHeadersAndLocations(cfg *Config, lines []string) {
+func collectScopedBlocks(cfg *Config, lines []string, vars map[string]string) {
+	lines = flattenTransparentBlocks(lines)
 	for i := 0; i < len(lines); i++ {
 		line := lines[i]
 		if strings.HasPrefix(line, "<") {
 			blockTag, blockArg := parseBlockOpen(line)
+			blockArg = expandApacheVars(blockArg, vars)
 			blockLines, end := collectBlock(lines, i+1, blockTag)
 			switch strings.ToLower(blockTag) {
 			case "location", "locationmatch":
-				loc := parseLocation(blockArg, blockLines, nil, strings.EqualFold(blockTag, "locationmatch"))
+				loc := parseLocation(blockArg, blockLines, vars, strings.EqualFold(blockTag, "locationmatch"))
 				cfg.Locations = append(cfg.Locations, loc)
+			case "directory", "directorymatch":
+				d := parseDirectory(blockArg, blockLines, vars)
+				cfg.Dirs = append(cfg.Dirs, d)
 			}
 			i = end
 			continue
@@ -291,7 +297,8 @@ func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, glo
 
 // parseLines parses lines at the top level (no glob expansion).
 func parseLines(cfg *Config, lines []string, start int) {
-	i := start
+	lines = flattenTransparentBlocks(lines[start:])
+	i := 0
 	for i < len(lines) {
 		line := lines[i]
 
@@ -304,7 +311,7 @@ func parseLines(cfg *Config, lines []string, start int) {
 			case "virtualhost":
 				vh := parseVirtualHost(blockArg, blockLines, nil)
 				cfg.VHosts = append(cfg.VHosts, vh)
-				collectScopedHeadersAndLocations(cfg, blockLines)
+				collectScopedBlocks(cfg, blockLines, nil)
 			case "directory", "directorymatch":
 				d := parseDirectory(blockArg, blockLines, nil)
 				cfg.Dirs = append(cfg.Dirs, d)
@@ -352,6 +359,7 @@ func parseVirtualHost(address string, lines []string, vars map[string]string) Vi
 		Params:  map[string]any{},
 	}
 
+	lines = flattenTransparentBlocks(lines)
 	depth := 0
 	for _, line := range lines {
 		if strings.HasPrefix(line, "<") {
@@ -462,6 +470,7 @@ func parseDirectory(path string, lines []string, vars map[string]string) Directo
 		Params: map[string]any{},
 	}
 
+	lines = flattenTransparentBlocks(lines)
 	depth := 0
 	for _, line := range lines {
 		if strings.HasPrefix(line, "<") {
@@ -507,6 +516,7 @@ func parseLocation(path string, lines []string, vars map[string]string, isMatch 
 		Params:  map[string]any{},
 	}
 
+	lines = flattenTransparentBlocks(lines)
 	depth := 0
 	for _, line := range lines {
 		if strings.HasPrefix(line, "<") {
@@ -657,6 +667,69 @@ func parseBlockOpen(line string) (string, string) {
 
 // collectBlock collects lines until the matching </tag> closing tag.
 // Returns the inner lines and the index of the closing tag line.
+// transparentContainers are block directives whose contents belong to the
+// enclosing scope rather than introducing a scope of their own.
+//
+// The conditional containers cannot be evaluated from the configuration text
+// alone — whether a module is loaded or a define is set is runtime state — so
+// their contents are always included. That matches the daemon whenever the
+// condition holds, which is the case for any config that ships them: Debian's
+// default-ssl.conf wraps its entire <VirtualHost> in <IfModule mod_ssl.c>, and
+// ports.conf wraps `Listen 443` in <IfModule ssl_module>.
+//
+// The Require containers group access-control directives; the grants inside
+// them are the access-control answer, so they are hoisted into the parent
+// <Directory>/<Location> rather than dropped.
+var transparentContainers = map[string]bool{
+	"ifmodule":    true,
+	"ifdefine":    true,
+	"ifversion":   true,
+	"iffile":      true,
+	"ifdirective": true,
+	"ifsection":   true,
+	"requireall":  true,
+	"requireany":  true,
+	"requirenone": true,
+}
+
+// maxTransparentNesting bounds the recursion in flattenTransparentBlocks so a
+// pathologically nested config cannot exhaust the stack.
+const maxTransparentNesting = 64
+
+// flattenTransparentBlocks splices the contents of transparent container blocks
+// into the enclosing level, dropping the container's own open/close lines. Any
+// other block is passed through untouched — open and close lines included — so
+// scope-aware callers still see it as a block.
+func flattenTransparentBlocks(lines []string) []string {
+	return flattenTransparentBlocksDepth(lines, 0)
+}
+
+func flattenTransparentBlocksDepth(lines []string, depth int) []string {
+	if depth > maxTransparentNesting {
+		return lines
+	}
+
+	out := make([]string, 0, len(lines))
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		if !strings.HasPrefix(line, "<") || strings.HasPrefix(line, "</") {
+			out = append(out, line)
+			continue
+		}
+
+		tag, _ := parseBlockOpen(line)
+		if !transparentContainers[strings.ToLower(tag)] {
+			out = append(out, line)
+			continue
+		}
+
+		inner, end := collectBlock(lines, i+1, tag)
+		out = append(out, flattenTransparentBlocksDepth(inner, depth+1)...)
+		i = end
+	}
+	return out
+}
+
 func collectBlock(lines []string, start int, tag string) ([]string, int) {
 	closeTag := "</" + strings.ToLower(tag)
 	depth := 1
@@ -682,13 +755,40 @@ func collectBlock(lines []string, start int, tag string) ([]string, int) {
 // setParam sets a directive value. For directives that can appear multiple
 // times (Listen, Header, etc.), values are comma-concatenated.
 func setParam(m map[string]any, key string, value string) {
-	if isMultiParam[strings.ToLower(key)] {
-		if v, ok := m[key]; ok {
-			m[key] = v.(string) + "," + value
-			return
+	// Apache directive names are case-insensitive, so fold onto whichever
+	// spelling was seen first. Without this, `Listen 80` in ports.conf and
+	// `listen 443` in a fragment land in two different keys, so neither the
+	// multi-value join below nor a lookup by either spelling finds both.
+	canonical := key
+	for k := range m {
+		if strings.EqualFold(k, key) {
+			canonical = k
+			break
 		}
 	}
-	m[key] = value
+
+	if isMultiParam[strings.ToLower(key)] {
+		if v, ok := m[canonical]; ok {
+			if s, ok := v.(string); ok {
+				m[canonical] = s + "," + value
+				return
+			}
+		}
+	}
+	m[canonical] = value
+}
+
+// ParamValue looks up a directive value case-insensitively, matching Apache's
+// case-insensitive directive names.
+func ParamValue(m map[string]any, key string) (string, bool) {
+	for k, v := range m {
+		if !strings.EqualFold(k, key) {
+			continue
+		}
+		s, ok := v.(string)
+		return s, ok
+	}
+	return "", false
 }
 
 // isMultiParam lists directives that can appear multiple times and should
