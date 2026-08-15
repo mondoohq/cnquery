@@ -22,9 +22,33 @@ P=.claude/skills/update-provider-deps
 
 ## Phase 0 — Scope
 
-Work in a worktree, and **one provider per branch and PR**. Bumps across providers are
-independent, they get reviewed by different people, and a single failing migration
-shouldn't hold up four clean ones.
+Work in worktrees. How the run splits into PRs depends on **what each provider's diff
+touches**, not on how many providers the run spans:
+
+- **A provider whose diff touches anything beyond `go.mod`/`go.sum` gets its own worktree,
+  branch, and PR.** That means the Phase 6 schema additions the user picked, the code edits
+  a major-version migration forces, and `.lr` enum-drift fixes. **Bundle that provider's SDK
+  bump into the same PR** — the bump is what unlocked the fields, and splitting them makes
+  a reviewer reconstruct the connection from two places.
+- **Everything else goes in one combined PR**, covering every provider whose entire diff is
+  a dependency bump with no code change at all.
+
+The test is what the review actually costs: reading logic and judging a schema decision, or
+confirming a green build. The first needs a domain reviewer and a thread of its own; the
+second needs a glance — and N of them need N glances plus N context switches for no added
+safety. Review cost per PR is close to constant regardless of diff size, so a run that opens
+eleven PRs where nine are a one-line `go.mod` bump saying the same thing has spent most of
+its review budget on ceremony.
+
+**A failing bump leaves the combined PR rather than sinking it.** If one provider in the
+combined set won't build, pull it out and give it its own PR — by definition it now has a
+code change. The combined PR should only ever hold changes that cannot fail in interesting
+ways.
+
+**Sequencing consequence: do not open the combined PR until the Phase 6 selections are in.**
+A provider moves out of the combined PR the moment the user picks a field on it, and you
+cannot know that before Phase 6. Apply and verify everything first, decide the split last.
+Opening PRs as each provider goes green feels like progress and forces a rewrite.
 
 Pick the providers with the user. `python3 $P/probe.py --list` shows every known provider
 and the module prefixes it scans. For a provider that isn't in that table (a DB driver, a
@@ -205,21 +229,43 @@ criteria.
 Present the list, ask which numbers they want, and wait. The user picks — that's the point
 of the phase.
 
+Their answer also settles the PR split from Phase 0: every provider they pick a field on
+leaves the combined PR and gets its own. A provider they pick nothing on stays in the
+combined PR unless its bump already needed a code edit.
+
 ## Phase 7 — Implement the selection, verify, PR
 
 For each chosen item, follow `references/schema-additions.md`: `.lr` entry, `.lr.versions`
 at the provider's current version plus a patch, regenerate, map the field, and handle the
 null-versus-zero question honestly.
 
-Verify before claiming anything:
+Verify before claiming anything, and verify **per provider** — including every provider
+riding in the combined PR, which is a set of independent modules rather than one build:
 
 ```bash
 cd providers/<name> && go build ./... && go test ./... && gofmt -l .
 ```
 
-Then commit and open a PR. Say plainly in the PR what was **not** verified — none of this
-can be checked against live infrastructure without credentials, and a reviewer needs to
-know which claims rest on the compiler and which on an actual API response.
+Then open PRs in the two shapes Phase 0 set out.
+
+**Per-provider PRs.** One for each provider whose diff has a code change. The body carries
+the SDK bump and the schema work together, and should state which breaking changes in the
+new version did *not* reach a shipped field, and why. That is the reasoning a reviewer would
+otherwise have to redo from the changelog.
+
+**The combined PR.** One PR for all the pure bumps, titled for the sweep rather than for any
+one provider (`🧹 providers: refresh SDK dependencies`). Its body needs:
+
+- a table of every provider and module bumped, with from/to versions, so the change is
+  readable without expanding `go.sum`;
+- confirmation that each provider was built and tested **separately**;
+- an explicit note on any `go mod tidy` side effect that rode along. An unrelated indirect
+  dependency dropped because `main` was untidy is not a consequence of the bump, and it
+  reads as one unless you say so.
+
+Say plainly in every PR what was **not** verified — none of this can be checked against live
+infrastructure without credentials, and a reviewer needs to know which claims rest on the
+compiler and which on an actual API response.
 
 Provider versions in `config/config.go` are **not** bumped here; that's the release flow.
 
