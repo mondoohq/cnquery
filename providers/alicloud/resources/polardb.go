@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	polardb "github.com/alibabacloud-go/polardb-20170801/v7/client"
+	polardb "github.com/alibabacloud-go/polardb-20170801/v8/client"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"

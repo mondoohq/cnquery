@@ -1909,6 +1909,35 @@ alicloud.rds.instance {
   // Traverse to permissions to see the allowed source ranges and ports
   // alongside securityIPList, which controls the database whitelist separately.
   securityGroups() []alicloud.ecs.securitygroup
+  // Name of the blue-green deployment the instance takes part in
+  //
+  // Empty when the instance is not part of one. A blue-green deployment runs a
+  // second instance holding the same data as the one serving traffic, so both
+  // halves have to be hardened alike: the standby is a live copy of production
+  // data that a whitelist or encryption setting applied only to the original
+  // does not cover.
+  blueGreenDeploymentName() string
+  // Name of the blue instance in the deployment, empty when not part of one
+  //
+  // The blue instance is the one currently serving traffic.
+  blueInstanceName() string
+  // Name of the green instance in the deployment, empty when not part of one
+  //
+  // The green instance is the standby the deployment will switch to.
+  greenInstanceName() string
+  // Whether compute burst is enabled for the instance
+  //
+  // A burst-enabled instance may exceed its purchased compute for short
+  // periods, so its effective capacity is not the class alone.
+  computeBurstEnabled() bool
+  // Whether the instance supports vector storage and search
+  //
+  // Reports the state of the vector extension, which turns the instance into a
+  // store for embeddings and therefore a data surface an AI application reads
+  // from. Empty when the engine does not report it.
+  vectorSupportStatus() string
+  // Read-only state of the instance, empty when it reports none
+  readOnlyStatus() string
 }
 
 // ApsaraDB for Redis

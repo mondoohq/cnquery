@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v6/client"
+	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/v13/llx"

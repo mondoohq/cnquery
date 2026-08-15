@@ -11,7 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	csclient "github.com/alibabacloud-go/cs-20151215/v6/client"
+	csclient "github.com/alibabacloud-go/cs-20151215/v8/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
 

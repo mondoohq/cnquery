@@ -2219,6 +2219,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.rds.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
 	},
+	"alicloud.rds.instance.blueGreenDeploymentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetBlueGreenDeploymentName()).ToDataRes(types.String)
+	},
+	"alicloud.rds.instance.blueInstanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetBlueInstanceName()).ToDataRes(types.String)
+	},
+	"alicloud.rds.instance.greenInstanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetGreenInstanceName()).ToDataRes(types.String)
+	},
+	"alicloud.rds.instance.computeBurstEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetComputeBurstEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.rds.instance.vectorSupportStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetVectorSupportStatus()).ToDataRes(types.String)
+	},
+	"alicloud.rds.instance.readOnlyStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetReadOnlyStatus()).ToDataRes(types.String)
+	},
 	"alicloud.redis.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedis).GetInstances()).ToDataRes(types.Array(types.Resource("alicloud.redis.instance")))
 	},
@@ -7395,6 +7413,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.rds.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRdsInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.blueGreenDeploymentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).BlueGreenDeploymentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.blueInstanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).BlueInstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.greenInstanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).GreenInstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.computeBurstEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).ComputeBurstEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.vectorSupportStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).VectorSupportStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.readOnlyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).ReadOnlyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16553,41 +16595,47 @@ type mqlAlicloudRdsInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudRdsInstanceInternal
-	DbInstanceId          plugin.TValue[string]
-	DbInstanceDescription plugin.TValue[string]
-	Engine                plugin.TValue[string]
-	EngineVersion         plugin.TValue[string]
-	DbInstanceStatus      plugin.TValue[string]
-	DbInstanceType        plugin.TValue[string]
-	DbInstanceClass       plugin.TValue[string]
-	DbInstanceStorageType plugin.TValue[string]
-	DbInstanceNetType     plugin.TValue[string]
-	ConnectionMode        plugin.TValue[string]
-	ConnectionString      plugin.TValue[string]
-	RegionId              plugin.TValue[string]
-	ZoneId                plugin.TValue[string]
-	Vpc                   plugin.TValue[*mqlAlicloudVpcNetwork]
-	Vswitch               plugin.TValue[*mqlAlicloudVpcVswitch]
-	InstanceNetworkType   plugin.TValue[string]
-	PayType               plugin.TValue[string]
-	CreateTime            plugin.TValue[*time.Time]
-	ExpireTime            plugin.TValue[*time.Time]
-	LockMode              plugin.TValue[string]
-	LockReason            plugin.TValue[string]
-	Category              plugin.TValue[string]
-	DeletionProtection    plugin.TValue[bool]
-	MasterInstance        plugin.TValue[*mqlAlicloudRdsInstance]
-	ResourceGroupId       plugin.TValue[string]
-	ResourceGroup         plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
-	DbInstanceStorage     plugin.TValue[int64]
-	Port                  plugin.TValue[int64]
-	Tags                  plugin.TValue[map[string]any]
-	SslEnabled            plugin.TValue[bool]
-	SslExpireTime         plugin.TValue[*time.Time]
-	TdeEnabled            plugin.TValue[bool]
-	SecurityIPList        plugin.TValue[[]any]
-	SecurityGroupIds      plugin.TValue[[]any]
-	SecurityGroups        plugin.TValue[[]any]
+	DbInstanceId            plugin.TValue[string]
+	DbInstanceDescription   plugin.TValue[string]
+	Engine                  plugin.TValue[string]
+	EngineVersion           plugin.TValue[string]
+	DbInstanceStatus        plugin.TValue[string]
+	DbInstanceType          plugin.TValue[string]
+	DbInstanceClass         plugin.TValue[string]
+	DbInstanceStorageType   plugin.TValue[string]
+	DbInstanceNetType       plugin.TValue[string]
+	ConnectionMode          plugin.TValue[string]
+	ConnectionString        plugin.TValue[string]
+	RegionId                plugin.TValue[string]
+	ZoneId                  plugin.TValue[string]
+	Vpc                     plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch                 plugin.TValue[*mqlAlicloudVpcVswitch]
+	InstanceNetworkType     plugin.TValue[string]
+	PayType                 plugin.TValue[string]
+	CreateTime              plugin.TValue[*time.Time]
+	ExpireTime              plugin.TValue[*time.Time]
+	LockMode                plugin.TValue[string]
+	LockReason              plugin.TValue[string]
+	Category                plugin.TValue[string]
+	DeletionProtection      plugin.TValue[bool]
+	MasterInstance          plugin.TValue[*mqlAlicloudRdsInstance]
+	ResourceGroupId         plugin.TValue[string]
+	ResourceGroup           plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	DbInstanceStorage       plugin.TValue[int64]
+	Port                    plugin.TValue[int64]
+	Tags                    plugin.TValue[map[string]any]
+	SslEnabled              plugin.TValue[bool]
+	SslExpireTime           plugin.TValue[*time.Time]
+	TdeEnabled              plugin.TValue[bool]
+	SecurityIPList          plugin.TValue[[]any]
+	SecurityGroupIds        plugin.TValue[[]any]
+	SecurityGroups          plugin.TValue[[]any]
+	BlueGreenDeploymentName plugin.TValue[string]
+	BlueInstanceName        plugin.TValue[string]
+	GreenInstanceName       plugin.TValue[string]
+	ComputeBurstEnabled     plugin.TValue[bool]
+	VectorSupportStatus     plugin.TValue[string]
+	ReadOnlyStatus          plugin.TValue[string]
 }
 
 // createAlicloudRdsInstance creates a new instance of this resource
@@ -16840,6 +16888,42 @@ func (c *mqlAlicloudRdsInstance) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetBlueGreenDeploymentName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlueGreenDeploymentName, func() (string, error) {
+		return c.blueGreenDeploymentName()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetBlueInstanceName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlueInstanceName, func() (string, error) {
+		return c.blueInstanceName()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetGreenInstanceName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GreenInstanceName, func() (string, error) {
+		return c.greenInstanceName()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetComputeBurstEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ComputeBurstEnabled, func() (bool, error) {
+		return c.computeBurstEnabled()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetVectorSupportStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VectorSupportStatus, func() (string, error) {
+		return c.vectorSupportStatus()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetReadOnlyStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReadOnlyStatus, func() (string, error) {
+		return c.readOnlyStatus()
 	})
 }
 

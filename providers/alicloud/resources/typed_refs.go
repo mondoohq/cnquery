@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	vpcclient "github.com/alibabacloud-go/vpc-20160428/v6/client"
+	vpcclient "github.com/alibabacloud-go/vpc-20160428/v7/client"
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
