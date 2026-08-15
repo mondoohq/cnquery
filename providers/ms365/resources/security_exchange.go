@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -173,35 +174,51 @@ func (r *mqlMicrosoftSecurityExchange) getHostedConnectionFilterPolicyReport() (
 		return errHandler(err)
 	}
 
-	fmtScript := fmt.Sprintf(hostedConnectionFilterPolicyScript, conn.ClientId(), organization, conn.TenantId(), outlookToken.Token)
-	res, err := conn.CheckAndRunPowershellScript(fmtScript)
+	client := newExchangeRestClient(exchangeAdminApiHost, conn.TenantId(), organization, outlookToken.Token)
+	report, err := fetchHostedConnectionFilterPolicyViaRest(ctx, client)
 	if err != nil {
-		return errHandler(err)
-	}
-
-	report := &HostedConnectionFilterPolicyReport{}
-	if res.ExitStatus == 0 {
-		data, err := io.ReadAll(res.Stdout)
+		// PowerShell is a client for this same endpoint, so a throttle or an
+		// outage would only repeat itself over a slower transport and be
+		// reported as a PowerShell failure. Surface the real cause instead.
+		if exchangeErrorIsTransient(err) {
+			return errHandler(err)
+		}
+		log.Warn().Err(err).Msg("exchange online admin endpoint unavailable, falling back to powershell")
+		report, err = fetchHostedConnectionFilterPolicyViaPowershell(conn, organization, outlookToken.Token)
 		if err != nil {
 			return errHandler(err)
 		}
-		logger.DebugDumpJSON("hosted-connection-filter-policy-report", data)
-
-		err = json.Unmarshal(data, report)
-		if err != nil {
-			return errHandler(err)
-		}
-	} else {
-		data, err := io.ReadAll(res.Stderr)
-		if err != nil {
-			return errHandler(err)
-		}
-
-		err = fmt.Errorf("failed to generate hosted connection filter policy report (exit code %d): %s", res.ExitStatus, string(data))
-		return errHandler(err)
 	}
 
 	r.report = report
 	r.fetched = true
+	return report, nil
+}
+
+func fetchHostedConnectionFilterPolicyViaPowershell(conn *connection.Ms365Connection, organization string, token string) (*HostedConnectionFilterPolicyReport, error) {
+	fmtScript := fmt.Sprintf(hostedConnectionFilterPolicyScript, conn.ClientId(), organization, conn.TenantId(), token)
+	res, err := conn.CheckAndRunPowershellScript(fmtScript)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.ExitStatus != 0 {
+		data, err := io.ReadAll(res.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("failed to generate hosted connection filter policy report (exit code %d): %s", res.ExitStatus, string(data))
+	}
+
+	data, err := io.ReadAll(res.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	logger.DebugDumpJSON("hosted-connection-filter-policy-report", data)
+
+	report := &HostedConnectionFilterPolicyReport{}
+	if err := json.Unmarshal(data, report); err != nil {
+		return nil, err
+	}
 	return report, nil
 }

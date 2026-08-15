@@ -393,6 +393,70 @@ func convertRetentionPolicies(r *mqlMs365Exchangeonline, data []RetentionPolicy)
 	return result, nil
 }
 
+// fetchExchangeReport prefers the Exchange admin endpoint and falls back to the
+// PowerShell module when that endpoint cannot serve the tenant, so a scan that
+// works today keeps working. Both paths produce the same report: the module is
+// a client for the same endpoint, so the cmdlet objects and their property
+// names are identical either way.
+func (r *mqlMs365Exchangeonline) fetchExchangeReport(ctx context.Context, conn *connection.Ms365Connection, organization string, token string) (*ExchangeOnlineReport, error) {
+	client := newExchangeRestClient(exchangeAdminApiHost, conn.TenantId(), organization, token)
+
+	report, failures, err := fetchExchangeReportViaRest(ctx, client)
+	if err == nil {
+		// a cmdlet that failed leaves its field null, which is what the
+		// PowerShell report did with a cmdlet that errored mid-script
+		for name, failure := range failures {
+			log.Warn().Err(failure).Str("section", name).
+				Msg("unable to collect exchange online section, the matching field will be null")
+		}
+		return report, nil
+	}
+
+	// PowerShell is a client for this same endpoint, so a throttle or an outage
+	// would only repeat itself over a slower transport and be reported as a
+	// PowerShell failure. Surface the real cause instead.
+	if exchangeErrorIsTransient(err) {
+		return nil, err
+	}
+
+	log.Warn().Err(err).Msg("exchange online admin endpoint unavailable, falling back to powershell")
+	return r.fetchExchangeReportViaPowershell(conn, organization, token)
+}
+
+func (r *mqlMs365Exchangeonline) fetchExchangeReportViaPowershell(conn *connection.Ms365Connection, organization string, token string) (*ExchangeOnlineReport, error) {
+	fmtScript := fmt.Sprintf(exchangeReport, conn.ClientId(), organization, conn.TenantId(), token)
+	res, err := conn.CheckAndRunPowershellScript(fmtScript)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.ExitStatus != 0 {
+		data, err := io.ReadAll(res.Stderr)
+		if err != nil {
+			return nil, err
+		}
+
+		if strings.Contains(strings.ToLower(string(data)), "unauthorized") {
+			return nil, errors.New("access denied, please ensure the credentials have the right permissions in Azure AD")
+		}
+
+		logger.DebugDumpJSON("exchange-online-report", data)
+		return nil, fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
+	}
+
+	data, err := io.ReadAll(res.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	logger.DebugDumpJSON("exchange-online-report", data)
+
+	report := &ExchangeOnlineReport{}
+	if err := json.Unmarshal(data, report); err != nil {
+		return nil, err
+	}
+	return report, nil
+}
+
 func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
 
@@ -424,36 +488,8 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		return errHandler(err)
 	}
 
-	fmtScript := fmt.Sprintf(exchangeReport, conn.ClientId(), organization, conn.TenantId(), outlookToken.Token)
-	res, err := conn.CheckAndRunPowershellScript(fmtScript)
+	report, err := r.fetchExchangeReport(ctx, conn, organization, outlookToken.Token)
 	if err != nil {
-		return errHandler(err)
-	}
-	report := &ExchangeOnlineReport{}
-	if res.ExitStatus == 0 {
-		data, err := io.ReadAll(res.Stdout)
-		if err != nil {
-			return errHandler(err)
-		}
-		logger.DebugDumpJSON("exchange-online-report", data)
-
-		err = json.Unmarshal(data, report)
-		if err != nil {
-			return errHandler(err)
-		}
-	} else {
-		data, err := io.ReadAll(res.Stderr)
-		if err != nil {
-			return errHandler(err)
-		}
-
-		str := string(data)
-		if strings.Contains(strings.ToLower(str), "unauthorized") {
-			return errHandler(errors.New("access denied, please ensure the credentials have the right permissions in Azure AD"))
-		}
-
-		logger.DebugDumpJSON("exchange-online-report", data)
-		err = fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
 		return errHandler(err)
 	}
 
