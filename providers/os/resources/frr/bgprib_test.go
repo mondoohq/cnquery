@@ -268,3 +268,40 @@ func TestStreamEVPNRoutes_BrokenEntryStopsCleanly(t *testing.T) {
 	_, err = StreamEVPNRoutes(strings.NewReader(`{"192.0.2.30:2":{"rd":`), 0)
 	require.Error(t, err)
 }
+
+// TestStreamPeerRoutes_LimitWithManyPaths pins that a prefix with several
+// paths cannot push the result past the limit.
+func TestStreamPeerRoutes_LimitWithManyPaths(t *testing.T) {
+	var buf bytes.Buffer
+	buf.WriteString(`{"routes":{`)
+	for i := 0; i < 10; i++ {
+		if i > 0 {
+			buf.WriteString(",")
+		}
+		fmt.Fprintf(&buf, `"10.0.%d.0/24":[`, i)
+		for j := 0; j < 5; j++ {
+			if j > 0 {
+				buf.WriteString(",")
+			}
+			fmt.Fprintf(&buf, `{"network":"10.0.%d.0/24","valid":true,"nexthops":[{"ip":"192.0.2.%d"}]}`, i, j+1)
+		}
+		buf.WriteString("]")
+	}
+	buf.WriteString(`},"totalPrefixCounter":10}`)
+
+	set, err := StreamPeerRoutes(bytes.NewReader(buf.Bytes()), 7)
+	require.NoError(t, err)
+	assert.Len(t, set.Routes, 7)
+	assert.True(t, set.Truncated)
+	assert.Equal(t, int64(10), set.Total)
+}
+
+// TestFillEVPNPrefixParts_ExtraFields pins that the prefix length of a type
+// 5 route is read next to the IP, so a version that appends further fields
+// does not move it.
+func TestFillEVPNPrefixParts_ExtraFields(t *testing.T) {
+	route := EVPNRoute{Prefix: "[5]:[0]:[24]:[10.20.0.0]:[extra]"}
+	fillEVPNPrefixParts(&route)
+	assert.Equal(t, int64(5), route.RouteType)
+	assert.Equal(t, "10.20.0.0/24", route.IP)
+}
