@@ -373,6 +373,12 @@ func (s *mqlFrrBgpPeerRoutes) load() (*frr.RouteSet, bool, error) {
 			return nil, false, err
 		}
 	}
+	if direction.Data != "advertised" && direction.Data != "received" {
+		return nil, false, fmt.Errorf("unsupported direction %q for frr.bgp.peerRoutes, use advertised or received", direction.Data)
+	}
+	if afi.Data != "ipv4" && afi.Data != "ipv6" && afi.Data != "l2vpn" {
+		return nil, false, fmt.Errorf("unsupported address family %q for frr.bgp.peerRoutes, use ipv4, ipv6 or l2vpn", afi.Data)
+	}
 
 	command := "show bgp"
 	if vrf.Data != "" {
