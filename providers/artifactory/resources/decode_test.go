@@ -550,3 +550,204 @@ func TestRepositoryDetailCarriesTheListFields(t *testing.T) {
 		t.Errorf("description decoded wrong: %q", detail.Description)
 	}
 }
+
+// The identity integrations decide who becomes a principal on the instance.
+// A mistyped element name decodes to a nil pointer, which this provider reports
+// as null rather than as "off", so the tags are pinned against the descriptor
+// shape.
+func TestSecurityConfigDecodesTheIdentityIntegrations(t *testing.T) {
+	const payload = `<config>
+  <security>
+    <anonAccessEnabled>false</anonAccessEnabled>
+    <buildGlobalBasicReadAllowed>true</buildGlobalBasicReadAllowed>
+    <buildGlobalBasicReadForAnonymous>false</buildGlobalBasicReadForAnonymous>
+    <ldapSettings>
+      <ldapSetting>
+        <key>example-ldap</key>
+        <enabled>true</enabled>
+        <ldapUrl>ldaps://ldap.example.com:636/dc=example,dc=com</ldapUrl>
+        <userDnPattern>uid={0},ou=People</userDnPattern>
+        <autoCreateUser>true</autoCreateUser>
+        <emailAttribute>mail</emailAttribute>
+        <ldapPoisoningProtection>true</ldapPoisoningProtection>
+        <allowUserToAccessProfile>false</allowUserToAccessProfile>
+        <search>
+          <searchFilter>(uid={0})</searchFilter>
+          <searchBase>ou=users</searchBase>
+          <searchSubTree>true</searchSubTree>
+          <managerDn>cn=reader,dc=example,dc=com</managerDn>
+        </search>
+      </ldapSetting>
+    </ldapSettings>
+    <ldapGroupSettings>
+      <ldapGroupSetting>
+        <name>example-groups</name>
+        <groupBaseDn>ou=groups,dc=example,dc=com</groupBaseDn>
+        <groupNameAttribute>cn</groupNameAttribute>
+        <groupMemberAttribute>uniqueMember</groupMemberAttribute>
+        <filter>(objectClass=groupOfNames)</filter>
+        <strategy>STATIC</strategy>
+        <subTree>true</subTree>
+        <enabledLdap>example-ldap</enabledLdap>
+      </ldapGroupSetting>
+    </ldapGroupSettings>
+    <samlSettings>
+      <enableIntegration>true</enableIntegration>
+      <loginUrl>https://idp.example.com/sso</loginUrl>
+      <serviceProviderName>artifactory</serviceProviderName>
+      <noAutoUserCreation>false</noAutoUserCreation>
+      <autoRedirect>true</autoRedirect>
+      <syncGroups>true</syncGroups>
+      <verifyAudienceRestriction>true</verifyAudienceRestriction>
+      <certificate>MIIBExample</certificate>
+    </samlSettings>
+    <oauthSettings>
+      <enableIntegration>true</enableIntegration>
+      <persistUsers>true</persistUsers>
+      <oauthProvidersSettings>
+        <oauthProviderSettings>
+          <name>example-github</name>
+          <enabled>true</enabled>
+          <providerType>github</providerType>
+          <id>example-client-id</id>
+          <apiUrl>https://api.github.com/user</apiUrl>
+          <domain>example</domain>
+        </oauthProviderSettings>
+      </oauthProvidersSettings>
+    </oauthSettings>
+    <httpSsoSettings>
+      <httpSsoProxied>true</httpSsoProxied>
+      <remoteUserRequestVariable>REMOTE_USER</remoteUserRequestVariable>
+      <noAutoUserCreation>false</noAutoUserCreation>
+    </httpSsoSettings>
+    <crowdSettings>
+      <enableIntegration>true</enableIntegration>
+      <serverUrl>https://crowd.example.com</serverUrl>
+      <applicationName>artifactory</applicationName>
+      <sessionValidationInterval>60</sessionValidationInterval>
+      <directAuthentication>true</directAuthentication>
+    </crowdSettings>
+  </security>
+  <backups>
+    <backup>
+      <key>backup-daily</key>
+      <enabled>true</enabled>
+      <cronExp>0 0 2 ? * MON-FRI</cronExp>
+      <retentionPeriodHours>168</retentionPeriodHours>
+      <createArchive>false</createArchive>
+      <excludeBuilds>false</excludeBuilds>
+      <excludeNewRepositories>true</excludeNewRepositories>
+      <sendMailOnError>true</sendMailOnError>
+      <excludedRepositories>
+        <repositoryRef>example-docker</repositoryRef>
+        <repositoryRef>example-generic</repositoryRef>
+      </excludedRepositories>
+    </backup>
+  </backups>
+</config>`
+
+	var config securityConfig
+	if err := xml.Unmarshal([]byte(payload), &config); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	security := config.Security
+
+	if !boolValue(security.BuildGlobalBasicReadAllowed) || boolValue(security.BuildGlobalBasicReadForAnonymous) {
+		t.Errorf("global build read decoded wrong: %+v", security)
+	}
+
+	if len(security.LdapSettings) != 1 {
+		t.Fatalf("expected 1 LDAP server, got %d", len(security.LdapSettings))
+	}
+	ldap := security.LdapSettings[0]
+	if ldap.Key != "example-ldap" || !boolValue(ldap.Enabled) || !boolValue(ldap.AutoCreateUser) {
+		t.Errorf("LDAP server decoded wrong: %+v", ldap)
+	}
+	if ldap.Search.SearchFilter != "(uid={0})" || ldap.Search.ManagerDn == "" || !boolValue(ldap.Search.SearchSubTree) {
+		t.Errorf("LDAP search decoded wrong: %+v", ldap.Search)
+	}
+
+	if len(security.LdapGroupSettings) != 1 {
+		t.Fatalf("expected 1 LDAP group mapping, got %d", len(security.LdapGroupSettings))
+	}
+	if security.LdapGroupSettings[0].EnabledLdap != "example-ldap" || security.LdapGroupSettings[0].Strategy != "STATIC" {
+		t.Errorf("LDAP group mapping decoded wrong: %+v", security.LdapGroupSettings[0])
+	}
+
+	if security.SamlSettings == nil {
+		t.Fatal("SAML settings decoded as absent")
+	}
+	if !boolValue(security.SamlSettings.EnableIntegration) || !boolValue(security.SamlSettings.AutoRedirect) ||
+		!boolValue(security.SamlSettings.VerifyAudienceRestriction) || security.SamlSettings.Certificate == "" {
+		t.Errorf("SAML settings decoded wrong: %+v", security.SamlSettings)
+	}
+
+	if security.OauthSettings == nil || len(security.OauthSettings.Providers) != 1 {
+		t.Fatalf("OAuth providers decoded wrong: %+v", security.OauthSettings)
+	}
+	provider := security.OauthSettings.Providers[0]
+	if provider.Name != "example-github" || provider.ProviderType != "github" || provider.ID != "example-client-id" || provider.Domain != "example" {
+		t.Errorf("OAuth provider decoded wrong: %+v", provider)
+	}
+
+	if security.HttpSsoSettings == nil || !boolValue(security.HttpSsoSettings.HttpSsoProxied) ||
+		security.HttpSsoSettings.RemoteUserRequestVariable != "REMOTE_USER" {
+		t.Errorf("HTTP single sign-on decoded wrong: %+v", security.HttpSsoSettings)
+	}
+
+	if security.CrowdSettings == nil || !boolValue(security.CrowdSettings.EnableIntegration) ||
+		security.CrowdSettings.SessionValidationInterval == nil || *security.CrowdSettings.SessionValidationInterval != 60 {
+		t.Errorf("Crowd settings decoded wrong: %+v", security.CrowdSettings)
+	}
+
+	if len(config.Backups) != 1 {
+		t.Fatalf("expected 1 backup, got %d", len(config.Backups))
+	}
+	backup := config.Backups[0]
+	if backup.Key != "backup-daily" || !boolValue(backup.Enabled) || !boolValue(backup.ExcludeNewRepositories) {
+		t.Errorf("backup decoded wrong: %+v", backup)
+	}
+	if len(backup.ExcludedRepositories) != 2 || backup.ExcludedRepositories[1] != "example-generic" {
+		t.Errorf("excluded repositories decoded wrong: %v", backup.ExcludedRepositories)
+	}
+	if backup.RetentionPeriodHours == nil || *backup.RetentionPeriodHours != 168 {
+		t.Errorf("retention decoded wrong: %v", backup.RetentionPeriodHours)
+	}
+}
+
+// An instance that never configured an integration carries no element for it.
+// That must stay absent rather than decoding to a zero block, which the
+// provider would report as a configured but disabled integration.
+func TestSecurityConfigKeepsAbsentIntegrationsNull(t *testing.T) {
+	var config securityConfig
+	if err := xml.Unmarshal([]byte(`<config><security><anonAccessEnabled>false</anonAccessEnabled></security></config>`), &config); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	security := config.Security
+	if security.SamlSettings != nil || security.OauthSettings != nil ||
+		security.HttpSsoSettings != nil || security.CrowdSettings != nil {
+		t.Errorf("an absent integration decoded as present: %+v", security)
+	}
+	if len(security.LdapSettings) != 0 || len(security.LdapGroupSettings) != 0 {
+		t.Errorf("an absent LDAP block decoded as configured: %+v", security)
+	}
+	if len(config.Backups) != 0 {
+		t.Errorf("an absent backup block decoded as %d backups", len(config.Backups))
+	}
+}
+
+// An empty integration element is a configured integration, which is a
+// different answer from an absent one.
+func TestSecurityConfigDistinguishesEmptyFromAbsent(t *testing.T) {
+	var config securityConfig
+	if err := xml.Unmarshal([]byte(`<config><security><samlSettings></samlSettings></security></config>`), &config); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if config.Security.SamlSettings == nil {
+		t.Fatal("an empty SAML element decoded as absent")
+	}
+	if boolValue(config.Security.SamlSettings.EnableIntegration) {
+		t.Error("an empty SAML element decoded as enabled")
+	}
+}

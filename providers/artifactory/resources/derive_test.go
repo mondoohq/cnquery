@@ -5,6 +5,10 @@ package resources
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"testing"
 
@@ -563,5 +567,78 @@ func TestNullableStringMarksTheFieldNull(t *testing.T) {
 	}
 	if set.State&plugin.StateIsNull != 0 {
 		t.Error("a set value was marked null")
+	}
+}
+
+func TestUsesEncryptedLdapTransport(t *testing.T) {
+	tests := []struct {
+		url  string
+		want bool
+	}{
+		{url: "ldaps://ldap.example.com:636/dc=example,dc=com", want: true},
+		{url: "LDAPS://ldap.example.com/dc=example,dc=com", want: true},
+		{url: "  ldaps://ldap.example.com  ", want: true},
+		{url: "ldap://ldap.example.com:389/dc=example,dc=com"},
+		{url: "ldap://ldaps.example.com/dc=example,dc=com"},
+		{url: ""},
+	}
+
+	for _, tt := range tests {
+		if got := usesEncryptedLdapTransport(tt.url); got != tt.want {
+			t.Errorf("usesEncryptedLdapTransport(%q) = %v, want %v", tt.url, got, tt.want)
+		}
+	}
+}
+
+// Every string field whose schema promises null must be built with
+// optionalString. Returning an empty string instead makes "not configured"
+// indistinguishable from "configured to nothing", so a query filtering on null
+// matches neither. This walks the schema and the code together, so a field
+// added later cannot quietly break the promise.
+func TestSchemaNullPromisesAreHonoured(t *testing.T) {
+	schema, err := os.ReadFile("artifactory.lr")
+	if err != nil {
+		t.Fatalf("read the schema: %v", err)
+	}
+
+	promised := map[string]bool{}
+	var doc []string
+	for _, line := range strings.Split(string(schema), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "//") {
+			doc = append(doc, trimmed)
+			continue
+		}
+		if m := regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9_]*)\(?\)? +string\b`).FindStringSubmatch(trimmed); m != nil {
+			blob := strings.ToLower(strings.Join(doc, " "))
+			if strings.Contains(blob, "null when") || strings.Contains(blob, "null on") {
+				promised[m[1]] = true
+			}
+		}
+		doc = nil
+	}
+	if len(promised) == 0 {
+		t.Fatal("no field promises null; the schema scan is broken")
+	}
+
+	sources, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("list the sources: %v", err)
+	}
+
+	plain := regexp.MustCompile(`"([a-zA-Z][a-zA-Z0-9_]*)":\s*llx\.StringData\(`)
+	for _, source := range sources {
+		if strings.HasSuffix(source, "_test.go") || strings.HasSuffix(source, ".lr.go") {
+			continue
+		}
+		body, err := os.ReadFile(source)
+		if err != nil {
+			t.Fatalf("read %s: %v", source, err)
+		}
+		for _, m := range plain.FindAllStringSubmatch(string(body), -1) {
+			if promised[m[1]] {
+				t.Errorf("%s builds %q with llx.StringData, but the schema promises null; use optionalString", source, m[1])
+			}
+		}
 	}
 }

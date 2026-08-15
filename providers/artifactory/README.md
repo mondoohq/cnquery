@@ -22,7 +22,8 @@ Most of what this provider reads is administrator-only:
 | `permissionTargets`             | administrator |
 | `users`, `groups`               | administrator |
 | `accessTokens`                  | administrator to see every token, otherwise only the caller's own |
-| `security`                      | administrator |
+| `security` and its integrations | administrator |
+| `backups`                       | administrator |
 | `cleanupPolicies`               | administrator, and a product version that serves the endpoint |
 
 A token without those rights reports the field as an error rather than as an
@@ -91,6 +92,45 @@ mql> artifactory.repositories.where(packageType == "docker" && blockPushingSchem
 
 ```shell
 mql> artifactory.repositories.where(hasUpstreamCredential == true && allowAnyHostAuth == true) { key url }
+```
+
+**Identity integrations that create an account on first sign-in**
+
+Auto-creation makes every principal the directory or identity provider accepts
+a principal here, so what it may do is whatever the auto-join groups and the
+anonymous grants give it.
+
+```shell
+mql> artifactory.security.ldapSettings.where(enabled && autoCreateUser) { key ldapUrl }
+mql> artifactory.security { saml { enabled noAutoUserCreation } oauth { enabled persistUsers } }
+```
+
+**Header-based sign-in, which a caller can set itself**
+
+HTTP single sign-on trusts a request header. A deployment that also accepts
+requests that did not pass through the proxy lets a caller choose any account.
+
+```shell
+mql> artifactory.security.httpSso { httpSsoProxied remoteUserRequestVariable noAutoUserCreation }
+```
+
+**LDAP servers reached without transport encryption**
+
+```shell
+mql> artifactory.security.ldapSettings.where(enabled && usesEncryptedTransport == false) { key ldapUrl }
+```
+
+**Build info readable without a permission target**
+
+```shell
+mql> artifactory.security { buildGlobalBasicReadAllowed buildGlobalBasicReadForAnonymous }
+```
+
+**Backups that leave new repositories out, or are kept forever**
+
+```shell
+mql> artifactory.backups.where(enabled && excludeNewRepositories) { key cronExpression }
+mql> artifactory.backups.where(enabled && retentionPeriodHours == null) { key }
 ```
 
 **Anonymous access, and whether it can publish**
@@ -254,6 +294,12 @@ permission target gives the anonymous user over a repository and does not
 evaluate the targets' path patterns, so an action it lists may be limited to
 part of the repository. Read `permissionTargets` on the repository for the
 patterns.
+
+**An integration the instance never configured reports null, not disabled.**
+`saml`, `oauth`, `httpSso`, and `crowd` are null when the instance descriptor
+carries no block for them. An instance that configured an integration and
+turned it off reports the resource with `enabled` false, which is a different
+answer.
 
 **Settings that do not apply to a repository type stay null.** A local
 repository carries no upstream settings, and a package format carries only its
