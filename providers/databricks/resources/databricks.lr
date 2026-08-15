@@ -916,18 +916,18 @@ databricks.connection @defaults("name connectionType credentialType owner") {
   fullName string
   // External system the connection reaches
   //
-  // One of BIGQUERY, CONFLUENCE, DATABRICKS, GITHUB, GLUE, HIVE_METASTORE,
-  // HTTP, HUBSPOT, JDBC, META_MARKETING, MYSQL, ORACLE, OUTLOOK, POSTGRESQL,
-  // POWER_BI, REDSHIFT, SALESFORCE, SALESFORCE_DATA_CLOUD, SERVICENOW,
-  // SMARTSHEET, SNOWFLAKE, SQLDW, SQLSERVER, TERADATA, WORKDAY_RAAS, ZENDESK,
-  // or UNKNOWN_CONNECTION_TYPE.
+  // One of BIGQUERY, CONFLUENCE, DATABRICKS, DYNAMICS365, GA4_RAW_DATA,
+  // GITHUB, GLUE, HIVE_METASTORE, HTTP, HUBSPOT, JDBC, META_MARKETING, MYSQL,
+  // NETSUITE, ORACLE, OUTLOOK, POSTGRESQL, POWER_BI, REDSHIFT, SALESFORCE,
+  // SALESFORCE_DATA_CLOUD, SERVICENOW, SMARTSHEET, SNOWFLAKE, SQLDW,
+  // SQLSERVER, TERADATA, WORKDAY_RAAS, ZENDESK, or UNKNOWN_CONNECTION_TYPE.
   connectionType string
   // Kind of credential the connection authenticates with
   //
   // One of ANY_STATIC_CREDENTIAL, BEARER_TOKEN, EDGEGRID_AKAMAI,
-  // OAUTH_ACCESS_TOKEN, OAUTH_MTLS, OAUTH_REFRESH_TOKEN,
-  // OAUTH_RESOURCE_OWNER_PASSWORD, OIDC_TOKEN, PEM_PRIVATE_KEY,
-  // SERVICE_CREDENTIAL, SSWS_TOKEN, USERNAME_PASSWORD, or
+  // OAUTH_ACCESS_TOKEN, OAUTH_M2M, OAUTH_MTLS, OAUTH_REFRESH_TOKEN,
+  // OAUTH_RESOURCE_OWNER_PASSWORD, OAUTH_U2M, OAUTH_U2M_MAPPING, OIDC_TOKEN,
+  // PEM_PRIVATE_KEY, SERVICE_CREDENTIAL, SSWS_TOKEN, USERNAME_PASSWORD, or
   // UNKNOWN_CREDENTIAL_TYPE.
   credentialType string
   // URL of the external system, when the connection type carries one
@@ -1615,7 +1615,7 @@ private databricks.job.trigger @defaults("triggerType pauseStatus") {
   periodicInterval int
   // Unit of the periodic interval
   //
-  // One of DAYS, HOURS, or MINUTES. Empty for other kinds.
+  // One of DAYS, HOURS, MINUTES, or WEEKS. Empty for other kinds.
   periodicUnit string
   // URL a file arrival trigger monitors, empty for other kinds
   //

@@ -163,11 +163,21 @@ silently loses a value costs them rows they should have matched.
 python3 $P/enumdrift.py providers/databricks/resources/databricks.lr "$NEW"
 ```
 
-It pairs each enumerating comment with the SDK const block whose values overlap most, and
-reports what the SDK has that the comment omits. Treat every hit as a candidate, not a
-verdict — confirm the paired enum is the one the field carries, and that the omission
-isn't deliberate (a comment may list only the values we map). Fix the genuine ones in the
-same PR; they are cheap and they are documentation the user relies on.
+It pairs each enumerating comment with the SDK const block whose values it quotes, and
+reports what the SDK has that the comment omits. Only comments that claim completeness
+("One of A, B, or C") are reported; ones phrased as examples ("such as A or B") are
+allowed to be partial and are counted separately.
+
+Treat every hit as a candidate, not a verdict — confirm the paired enum is the one the
+field carries, and that the omission isn't deliberate. Fix the genuine ones in the same
+PR; they are cheap, and they are documentation a policy author relies on when deciding
+which `where()` clauses to write.
+
+**A clean run is not always a clean bill of health.** The check needs the SDK to declare
+typed string constants. Azure, Databricks, GCP and Nutanix do; several OpenAPI-generated
+SDKs — go-github, okta, the Atlas SDK — type every enum field as a plain string, and the
+tool will tell you it has nothing to compare against. For those, enumerated values have to
+be checked against the vendor's API docs by hand, or left alone.
 
 ## Phase 6 — Propose additions, then stop
 
