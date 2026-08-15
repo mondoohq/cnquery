@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
@@ -34,6 +35,14 @@ func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 	return &resp.Tenancy, nil
 }
 
+// compartmentFetchRetryAfter is how long a failed tenancy tree fetch is held
+// before the next caller tries again.
+//
+// Long enough that a throttled scan retries a handful of times rather than
+// once per resource, short enough that a transient failure early on does not
+// decide the compartment of everything read afterwards.
+const compartmentFetchRetryAfter = 30 * time.Second
+
 // GetCompartments returns the tenancy root plus every active compartment
 // beneath it.
 //
@@ -41,16 +50,51 @@ func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 // fan out over the compartment tree, and each one asking for it separately
 // meant walking the same paginated ListCompartments a dozen times per scan.
 //
-// A failure is not cached: an Identity call that fails on a throttle should be
-// retried by the next lister rather than turning one bad moment into a scan
-// with no compartments at all.
+// A failure is held only for compartmentFetchRetryAfter rather than for the
+// life of the connection: an Identity call that fails on a throttle should be
+// retried rather than turning one bad moment into a scan with no compartments
+// at all. But it is held, because the callers are no longer only the dozen
+// listers. Every resource that reports its compartment reaches this, so an
+// uncached failure would answer a throttle by walking the paginated listing
+// again for each of them - hundreds of retries of the call that was already
+// being rate limited, on top of the direct read each one then falls back to.
 func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compartment, error) {
 	c.compartmentLock.Lock()
 	defer c.compartmentLock.Unlock()
 	if c.compartmentsDone {
 		return c.compartmentList, nil
 	}
+	if c.compartmentFetchBlocked(time.Now()) {
+		return nil, c.compartmentFetchErr
+	}
 
+	compartments, err := c.fetchCompartments(ctx)
+	if err != nil {
+		c.compartmentFetchErr = err
+		c.compartmentFetchAt = time.Now()
+		return nil, err
+	}
+
+	c.compartmentFetchErr = nil
+	c.compartmentList = compartments
+	c.compartmentsDone = true
+	return compartments, nil
+}
+
+// compartmentFetchBlocked reports whether a recorded tree fetch failure is
+// recent enough to be reused instead of retried. The caller holds
+// compartmentLock.
+func (c *OciConnection) compartmentFetchBlocked(now time.Time) bool {
+	if c.compartmentFetchErr == nil {
+		return false
+	}
+	return now.Sub(c.compartmentFetchAt) < compartmentFetchRetryAfter
+}
+
+// fetchCompartments reads the tenancy root and walks the paginated listing of
+// every active compartment beneath it. Callers go through GetCompartments,
+// which owns the memoizing and the retry window.
+func (c *OciConnection) fetchCompartments(ctx context.Context) ([]identity.Compartment, error) {
 	oClient, err := c.IdentityClient()
 	if err != nil {
 		return nil, err
@@ -92,9 +136,63 @@ func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compart
 		}
 	}
 
-	c.compartmentList = compartments
-	c.compartmentsDone = true
 	return compartments, nil
+}
+
+// CompartmentByID returns the compartment with the given OCID out of the
+// memoized tenancy tree, or nil when the tree does not contain it.
+//
+// Almost every resource in the provider reports the compartment it lives in,
+// and resolving that through the Identity API is one GetCompartment call per
+// resource: five hundred instances in five compartments cost five hundred
+// calls. The tree those five compartments come from is already fetched once per
+// connection, walks the whole subtree, and cannot change mid-scan, so the
+// answer is nearly always sitting in it.
+//
+// A nil result is not an error. An OCID outside this tenancy, or one belonging
+// to a compartment deleted since the listing, legitimately misses; the caller
+// falls back to the direct read for those.
+func (c *OciConnection) CompartmentByID(ctx context.Context, id string) (*identity.Compartment, error) {
+	if id == "" {
+		return nil, nil
+	}
+
+	// Taken before the lock: GetCompartments locks for itself, and it is a
+	// no-op once the tree has been fetched.
+	if _, err := c.GetCompartments(ctx); err != nil {
+		return nil, err
+	}
+
+	c.compartmentLock.Lock()
+	defer c.compartmentLock.Unlock()
+	if c.compartmentIndex == nil {
+		c.compartmentIndex = compartmentIndexByID(c.compartmentList)
+	}
+
+	compartment, ok := c.compartmentIndex[id]
+	if !ok {
+		return nil, nil
+	}
+	// A copy, so a caller cannot reach into the memoized tree.
+	return &compartment, nil
+}
+
+// compartmentIndexByID keys a compartment list by OCID, skipping entries
+// without one. The first entry wins, which matters only if the tenancy root
+// were to repeat in the listing.
+func compartmentIndexByID(compartments []identity.Compartment) map[string]identity.Compartment {
+	index := make(map[string]identity.Compartment, len(compartments))
+	for i := range compartments {
+		id := compartments[i].Id
+		if id == nil || *id == "" {
+			continue
+		}
+		if _, seen := index[*id]; seen {
+			continue
+		}
+		index[*id] = compartments[i]
+	}
+	return index
 }
 
 func (c *OciConnection) GetRegions(ctx context.Context) ([]identity.RegionSubscription, error) {

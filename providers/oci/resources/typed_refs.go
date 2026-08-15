@@ -4,12 +4,15 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"strings"
 
+	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
 // A resource that points at another one - an instance at its image, a key at
@@ -97,10 +100,126 @@ func resolveOciSubnet(runtime *plugin.Runtime, id string, field *plugin.TValue[*
 	return resolveRef(runtime, "oci.network.subnet", id, field)
 }
 
+// compartmentLookup reports the compartment record for an OCID, or nil when the
+// tenancy tree the connection already holds does not contain it.
+type compartmentLookup func(id string) (*identity.Compartment, error)
+
+// ociCompartmentLookup returns a lookup backed by the connection's memoized
+// compartment tree, or nil when the runtime has no OCI connection to ask.
+func ociCompartmentLookup(runtime *plugin.Runtime) compartmentLookup {
+	if runtime == nil {
+		return nil
+	}
+	conn, ok := runtime.Connection.(*connection.OciConnection)
+	if !ok {
+		return nil
+	}
+	return func(id string) (*identity.Compartment, error) {
+		return conn.CompartmentByID(context.Background(), id)
+	}
+}
+
 // resolveOciCompartment resolves the compartment a resource lives in. It is by
 // far the most used of these, since almost every resource reports its owner.
 func resolveOciCompartment(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciCompartment]) (*mqlOciCompartment, error) {
-	return resolveRef(runtime, "oci.compartment", id, field)
+	return resolveCompartment(runtime, ociCompartmentLookup(runtime), id, field)
+}
+
+// resolveCompartment resolves a compartment from the tenancy tree the
+// connection already holds, and only asks the Identity API for an OCID that
+// tree does not cover.
+//
+// The difference is not marginal. Going through NewResource runs
+// initOciCompartment before the runtime cache is consulted, so a GetCompartment
+// call is issued for every resource that reports an owner - five hundred
+// instances across five compartments cost five hundred calls for five distinct
+// answers. The tree is fetched once per connection and already walks the whole
+// subtree, so those five answers are in hand before the first instance is read.
+//
+// The fallback stays for the OCIDs the tree cannot cover: a compartment in
+// another tenancy, or one deleted between the listing and the read. Those keep
+// the direct read, including its behaviour of reporting an unreadable
+// compartment by id with the rest of its fields null.
+func resolveCompartment(runtime *plugin.Runtime, lookup compartmentLookup, id string, field *plugin.TValue[*mqlOciCompartment]) (*mqlOciCompartment, error) {
+	// resolveRef owns the null marking for an absent reference, and the empty
+	// id is exactly that case; it has no business reaching a lookup.
+	if id == "" {
+		return resolveRef(runtime, "oci.compartment", id, field)
+	}
+
+	cached, err := cachedCompartment(runtime, lookup, id)
+	if err != nil {
+		return nil, err
+	}
+	if cached == nil {
+		return resolveRef(runtime, "oci.compartment", id, field)
+	}
+	return cached, nil
+}
+
+// cachedCompartment builds the compartment for an OCID out of the tenancy tree
+// the connection already holds, or reports nil when the tree cannot answer for
+// it - an unknown OCID, an unreadable tree, or a runtime with no connection to
+// ask. A nil result means "ask the API", not "no compartment"; only a real
+// failure to build the resource is an error.
+func cachedCompartment(runtime *plugin.Runtime, lookup compartmentLookup, id string) (*mqlOciCompartment, error) {
+	if lookup == nil || id == "" {
+		return nil, nil
+	}
+
+	compartment, err := lookup(id)
+	if err != nil {
+		// The tree could not be read at all - a throttled or denied
+		// ListCompartments. That is not an answer about this compartment, so
+		// let the direct read speak for it.
+		log.Debug().Err(err).Str("compartment", id).
+			Msg("oci compartment tree unavailable, resolving compartment directly")
+		return nil, nil
+	}
+	if compartment == nil {
+		return nil, nil
+	}
+
+	// Built from the same args as the oci.compartments lister, so the __id
+	// matches and CreateResource hands back the instance the runtime already
+	// holds rather than a second copy of it.
+	res, err := CreateResource(runtime, "oci.compartment", ociCompartmentArgs(*compartment))
+	if err != nil {
+		return nil, err
+	}
+	typed, ok := res.(*mqlOciCompartment)
+	if !ok {
+		return nil, errors.New("oci: oci.compartment resolved to an unexpected resource type")
+	}
+	return typed, nil
+}
+
+// ociCompartmentRef resolves the compartment a lister embeds in the resource it
+// is building, rather than one read later through an accessor.
+//
+// These are the costliest copies of the same call: the compartment is resolved
+// while the list is built, so the GetCompartment per resource is paid whether
+// or not anything asks for the field. The tree answers them for free, and an
+// OCID it does not cover keeps the direct read - which is what fills in a
+// compartment outside the listing.
+func ociCompartmentRef(runtime *plugin.Runtime, id *string) (plugin.Resource, error) {
+	return compartmentRef(runtime, ociCompartmentLookup(runtime), id)
+}
+
+func compartmentRef(runtime *plugin.Runtime, lookup compartmentLookup, id *string) (plugin.Resource, error) {
+	if id != nil {
+		cached, err := cachedCompartment(runtime, lookup, *id)
+		if err != nil {
+			return nil, err
+		}
+		if cached != nil {
+			return cached, nil
+		}
+	}
+
+	return NewResource(runtime, "oci.compartment", map[string]*llx.RawData{
+		"id": llx.StringDataPtr(id),
+	})
 }
 
 // resolveOciSecurityGroups resolves a list of typed network security group
