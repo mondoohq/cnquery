@@ -15542,6 +15542,10 @@ private networkRoute @defaults("destination flags"){
   // Route type (e.g. unicast, blackhole, unreachable); empty when the source does not report it
   type string
   // Name of the network interface this route applies to
+  //
+  // `iface` returns the same interface as a resource. This field is the
+  // plain name, so a query that only filters or groups by interface does
+  // not build a networkInterface resource per route.
   device string
 }
 
