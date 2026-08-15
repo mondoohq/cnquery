@@ -305,3 +305,30 @@ func TestFillEVPNPrefixParts_ExtraFields(t *testing.T) {
 	assert.Equal(t, int64(5), route.RouteType)
 	assert.Equal(t, "10.20.0.0/24", route.IP)
 }
+
+// TestRIBTruncatedOnDroppedEntries pins that a RIB result which does not
+// hold everything the command reported says so, whichever reason applies.
+func TestRIBTruncatedOnDroppedEntries(t *testing.T) {
+	// An EVPN prefix that cannot be read is missing data.
+	evpn := `{"192.0.2.30:2":{"rd":"192.0.2.30:2",` +
+		`"[2]:[0]:[48]:[aa:bb:cc:00:10:01]":{"prefix":"[2]:[0]:[48]:[aa:bb:cc:00:10:01]","paths":[]},` +
+		`"[2]:[0]:[48]:[aa:bb:cc:00:10:02]":"nope"}}`
+	set, err := StreamEVPNRoutes(strings.NewReader(evpn), 0)
+	require.NoError(t, err)
+	assert.Len(t, set.Routes, 1)
+	assert.Equal(t, int64(2), set.Total)
+	assert.True(t, set.Truncated)
+
+	// A peer route whose paths cannot be read is missing data too.
+	peer := `{"routes":{"10.0.0.0/8":[{"network":"10.0.0.0/8"}],"10.1.0.0/16":"nope"}}`
+	routes, err := StreamPeerRoutes(strings.NewReader(peer), 0)
+	require.NoError(t, err)
+	assert.Len(t, routes.Routes, 1)
+	assert.True(t, routes.Truncated)
+
+	// A complete answer still reports false.
+	whole := `{"routes":{"10.0.0.0/8":[{"network":"10.0.0.0/8"}]}}`
+	routes, err = StreamPeerRoutes(strings.NewReader(whole), 0)
+	require.NoError(t, err)
+	assert.False(t, routes.Truncated)
+}
