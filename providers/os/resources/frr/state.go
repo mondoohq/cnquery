@@ -305,10 +305,21 @@ func summaryKeyFor(afi, safi string) string {
 	case afi == "l2vpn" && safi == "evpn":
 		return "l2VpnEvpn"
 	case afi == "l2vpn":
-		return "l2Vpn" + title(strings.ReplaceAll(safi, "-", ""))
+		return "l2Vpn" + camelSafi(safi)
 	default:
-		return afi + title(strings.ReplaceAll(safi, "-", ""))
+		return afi + camelSafi(safi)
 	}
+}
+
+// camelSafi renders a SAFI the way FRR writes it inside a key. A compound
+// name keeps its word boundaries, so `labeled-unicast` becomes
+// `LabeledUnicast`.
+func camelSafi(safi string) string {
+	parts := strings.Split(safi, "-")
+	for i := range parts {
+		parts[i] = title(parts[i])
+	}
+	return strings.Join(parts, "")
 }
 
 func title(s string) string {
@@ -459,8 +470,15 @@ func StreamRoutes(r io.Reader, limit int) (*RouteTable, error) {
 			continue
 		}
 
+		// The value is read as a raw message first, which always consumes
+		// exactly one value. Decoding it afterwards can fail without
+		// leaving the decoder in the middle of the table.
+		var raw json.RawMessage
+		if err := dec.Decode(&raw); err != nil {
+			return nil, fmt.Errorf("cannot read the routes of a prefix: %w", err)
+		}
 		var entries []routeJSON
-		if err := dec.Decode(&entries); err != nil {
+		if err := json.Unmarshal(raw, &entries); err != nil {
 			// A single unreadable prefix must not drop the whole table.
 			continue
 		}

@@ -360,8 +360,9 @@ func TestSummaryKeyFor(t *testing.T) {
 	assert.Equal(t, "ipv4Unicast", summaryKeyFor("ipv4", "unicast"))
 	assert.Equal(t, "ipv6Multicast", summaryKeyFor("ipv6", "multicast"))
 	assert.Equal(t, "l2VpnEvpn", summaryKeyFor("l2vpn", "evpn"))
-	// The dash of a SAFI never appears in a JSON key.
-	assert.Equal(t, "ipv4Labeledunicast", summaryKeyFor("ipv4", "labeled-unicast"))
+	// A compound SAFI keeps its word boundaries, the way FRR writes the key.
+	assert.Equal(t, "ipv4LabeledUnicast", summaryKeyFor("ipv4", "labeled-unicast"))
+	assert.Equal(t, "l2VpnVpls", summaryKeyFor("l2vpn", "vpls"))
 }
 
 // TestRefused covers the answer vtysh gives for a VRF that a daemon does
@@ -371,4 +372,25 @@ func TestRefused(t *testing.T) {
 	assert.True(t, Refused([]byte("\n  % Unknown command: show bgp vrf x summary json\n")))
 	assert.False(t, Refused([]byte(`{"ipv4Unicast":{}}`)))
 	assert.False(t, Refused([]byte("")))
+}
+
+// TestStreamRoutes_BrokenEntryStopsCleanly covers a value that cannot be
+// decoded. The decoder must not carry on from the middle of the table,
+// because everything after that point would be read as noise.
+func TestStreamRoutes_BrokenEntryStopsCleanly(t *testing.T) {
+	// The second prefix holds an entry whose type does not match, so it is
+	// skipped, and the third prefix is still read.
+	src := `{"10.0.0.0/8":[{"prefix":"10.0.0.0/8","protocol":"bgp"}],` +
+		`"10.1.0.0/16":["not an object"],` +
+		`"10.2.0.0/16":[{"prefix":"10.2.0.0/16","protocol":"static"}]}`
+	table, err := StreamRoutes(strings.NewReader(src), 0)
+	require.NoError(t, err)
+	assert.Equal(t, int64(3), table.Total)
+	require.Len(t, table.Entries, 2)
+	assert.Equal(t, "10.0.0.0/8", table.Entries[0].Prefix)
+	assert.Equal(t, "10.2.0.0/16", table.Entries[1].Prefix)
+
+	// A truncated document is an error rather than a partial answer.
+	_, err = StreamRoutes(strings.NewReader(`{"10.0.0.0/8":[{"prefix":`), 0)
+	require.Error(t, err)
 }
