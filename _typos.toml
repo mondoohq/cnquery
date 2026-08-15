@@ -68,6 +68,10 @@ sur = "sur"
 thr = "thr"
 tre = "tre"
 ue = "ue"
+# Tomcat's logging package, org.apache.juli (Java Util Logging Implementation).
+# It appears verbatim in every Tomcat logging.properties and in the jar name
+# bin/tomcat-juli.jar, so references to it cannot be respelled.
+juli = "juli"
 # Company name.
 automattic = "automattic"
 # Python package on PyPI providing Mozilla's CA bundle. The project spells it

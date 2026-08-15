@@ -1690,6 +1690,297 @@ private nginx.conf.location @defaults("path") {
   params map[string]string
 }
 
+// Apache Tomcat
+//
+// Locates a Tomcat installation through CATALINA_HOME / CATALINA_BASE and
+// exposes its on-disk configuration: server.xml, the global web.xml and
+// context.xml, catalina.properties, logging.properties, tomcat-users.xml,
+// and the applications deployed under each Host's appBase. Nothing here
+// needs a running JVM, so it also works against container images and
+// filesystem snapshots.
+//
+// Every nested collection (services, connectors, engines, hosts, valves,
+// realms, listeners, contexts, users, webapps) is a list whenever the
+// element is present — including when the XML holds exactly one — and an
+// empty list when it is absent. It is never null and never a bare map, so a
+// check written against a single-Connector server keeps working when a
+// second Connector is added.
+//
+// Pass `init(home: "...", base: "...")` to point at a non-default layout.
+tomcat @defaults("home version") {
+  init(home? string, base? string)
+  // Installation directory (CATALINA_HOME); empty when no installation is found
+  home() string
+  // Instance directory (CATALINA_BASE); equals home in a single-instance install
+  base() string
+  // Tomcat version (e.g., "10.1.34"); empty when it cannot be read from disk
+  version() string
+  // Parsed conf/server.xml; null when the installation has none
+  server() tomcat.server
+  // Parsed conf/web.xml, the global deployment descriptor; null when absent
+  webXml() tomcat.webxml
+  // Parsed conf/context.xml, the global context defaults; null when absent
+  context() tomcat.context
+  // conf/catalina.properties, with ${catalina.home} / ${catalina.base} expanded
+  properties() map[string]string
+  // conf/logging.properties, with ${catalina.home} / ${catalina.base} expanded
+  logging() map[string]string
+  // Users declared in conf/tomcat-users.xml
+  users() []tomcat.user
+  // Applications deployed under each Host's appBase (exploded directories)
+  webapps() []tomcat.webapp
+}
+
+// Tomcat <Server> element of server.xml
+private tomcat.server @defaults("port shutdown") {
+  // File the server configuration was parsed from
+  file file
+  // Shutdown port (@port); -1 disables the shutdown listener, 0 when unset
+  port int
+  // Shutdown command string (@shutdown)
+  shutdown string
+  // <Listener> children of <Server>
+  listeners []tomcat.listener
+  // <Service> children of <Server>
+  services []tomcat.service
+}
+
+// Tomcat <Listener> element
+private tomcat.listener @defaults("className") {
+  // Listener implementation class (@className)
+  className string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// Tomcat <Service> element
+private tomcat.service @defaults("name") {
+  // Service name (@name)
+  name string
+  // <Connector> children
+  connectors []tomcat.connector
+  // <Engine> children
+  engines []tomcat.engine
+}
+
+// Tomcat <Connector> element
+//
+// Boolean and numeric fields carry Tomcat's documented default when the
+// attribute is absent, so they describe the connector's effective behavior.
+// Use `params` to tell an absent attribute from an explicitly declared one.
+private tomcat.connector @defaults("port protocol sslEnabled") {
+  // Listen port (@port)
+  port int
+  // Bind address (@address); empty binds every address
+  address string
+  // Protocol handler or, on older configurations, the TLS version (@protocol)
+  protocol string
+  // Whether TLS is enabled on this connector (@SSLEnabled); false when unset
+  sslEnabled bool
+  // Request scheme reported to the application (@scheme)
+  scheme string
+  // Whether requests are reported as secure (@secure); false when unset
+  secure bool
+  // Whether the TRACE method is accepted (@allowTrace); false when unset
+  allowTrace bool
+  // Whether an X-Powered-By response header is sent (@xpoweredBy); false when unset
+  xpoweredBy bool
+  // Whether remote host names are resolved via DNS (@enableLookups); false when unset
+  enableLookups bool
+  // Idle timeout in milliseconds (@connectionTimeout); 60000 when unset
+  connectionTimeout int
+  // Maximum request header size in bytes (@maxHttpHeaderSize); 8192 when unset
+  maxHttpHeaderSize int
+  // Server response header override (@server); empty leaves Tomcat's own value
+  server string
+  // Permitted cipher suites (@ciphers)
+  ciphers string
+  // TLS version, in the single-protocol spelling (@sslProtocol)
+  sslProtocol string
+  // TLS versions, in the list spelling (@sslEnabledProtocols / @SSLEnabledProtocols)
+  sslEnabledProtocols string
+  // Client certificate requirement (@clientAuth: true, false, want)
+  clientAuth string
+  // Nested <SSLHostConfig> elements
+  //
+  // Each entry holds the element's attributes plus a `certificates` list
+  // carrying the attributes of its <Certificate> children.
+  sslHostConfigs []dict
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// Tomcat <Engine> element
+private tomcat.engine @defaults("name") {
+  // Engine name (@name)
+  name string
+  // Host that serves requests for unrecognized names (@defaultHost)
+  defaultHost string
+  // <Host> children
+  hosts []tomcat.host
+  // <Realm> children
+  realms []tomcat.realm
+  // <Valve> children
+  valves []tomcat.valve
+}
+
+// Tomcat <Host> element
+//
+// Boolean fields carry Tomcat's documented default when the attribute is
+// absent — autoDeploy, deployOnStartup, deployXML and unpackWARs all default
+// to true. Use `params` to tell an absent attribute from a declared one.
+private tomcat.host @defaults("name appBase") {
+  // Host name (@name)
+  name string
+  // Application base directory (@appBase), as written
+  appBase string
+  // Absolute application base directory, resolved against CATALINA_BASE
+  appBaseDir string
+  // Whether applications are deployed while running (@autoDeploy); true when unset
+  autoDeploy bool
+  // Whether applications are deployed at startup (@deployOnStartup); true when unset
+  deployOnStartup bool
+  // Whether an application's META-INF/context.xml is honored (@deployXML); true when unset
+  deployXML bool
+  // Whether WAR files are expanded on deployment (@unpackWARs); true when unset
+  unpackWARs bool
+  // <Valve> children
+  valves []tomcat.valve
+  // <Context> children declared inline on this Host
+  contexts []tomcat.context
+}
+
+// Tomcat <Valve> element, wherever it is declared (Engine, Host or Context)
+private tomcat.valve @defaults("className") {
+  // Valve implementation class (@className)
+  className string
+  // Access log format (@pattern, AccessLogValve)
+  pattern string
+  // Log directory (@directory, AccessLogValve), with ${catalina.*} expanded
+  directory string
+  // Log file name prefix (@prefix, AccessLogValve)
+  prefix string
+  // Log file name suffix (@suffix, AccessLogValve)
+  suffix string
+  // Whether error pages disclose the server version (@showServerInfo, ErrorReportValve); true when unset on an ErrorReportValve
+  showServerInfo bool
+  // Whether error pages disclose stack traces (@showReport, ErrorReportValve); true when unset on an ErrorReportValve
+  showReport bool
+  // Allowed clients (@allow, RemoteAddrValve / RemoteCIDRValve / RemoteHostValve)
+  allow string
+  // Denied clients (@deny, RemoteAddrValve / RemoteCIDRValve / RemoteHostValve)
+  deny string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// Tomcat <Realm> element
+//
+// Realms nest: a LockOutRealm wraps the realm that actually authenticates,
+// so `realms` walks the inner realms instead of leaving them unreachable.
+private tomcat.realm @defaults("className") {
+  // Realm implementation class (@className)
+  className string
+  // Password digest algorithm (@digest)
+  digest string
+  // Directory connection URL (@connectionURL, JNDIRealm / DataSourceRealm)
+  connectionURL string
+  // Failed attempts before lockout (@failureCount, LockOutRealm); 0 when unset
+  failureCount int
+  // Lockout duration in seconds (@lockOutTime, LockOutRealm); 0 when unset
+  lockOutTime int
+  // Nested <Realm> children
+  realms []tomcat.realm
+  // <CredentialHandler> children, each as its attributes
+  credentialHandlers []dict
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// Tomcat <Context> element
+//
+// The same element appears in three places — inline on a Host in server.xml,
+// as the global defaults in conf/context.xml, and as an application's
+// META-INF/context.xml — and this resource gives all three one shape. `file`
+// reports which of them it was parsed from.
+private tomcat.context @defaults("path privileged crossContext") {
+  // File the context was parsed from
+  file file
+  // Context path (@path), empty when the element does not declare one
+  path string
+  // Whether the application may use container internals (@privileged); false when unset
+  privileged bool
+  // Whether the application may access other contexts (@crossContext); false when unset
+  crossContext bool
+  // Whether the effective web.xml is written to the log (@logEffectiveWebXml); false when unset
+  logEffectiveWebXml bool
+  // Whether the nested <Resources> element permits symlinks (@allowLinking); false when unset
+  allowLinking bool
+  // <Valve> children
+  valves []tomcat.valve
+  // All attributes of the <Context> element, verbatim and unexpanded
+  params map[string]string
+}
+
+// Tomcat deployment descriptor (conf/web.xml or an application's WEB-INF/web.xml)
+//
+// Nested XML is exposed as dicts whose keys are the camelCase spelling of the
+// element name, so `<transport-guarantee>` reads as `transportGuarantee`.
+private tomcat.webxml @defaults("file.path") {
+  // File the descriptor was parsed from
+  file file
+  // Whether annotation scanning is disabled (web-app/@metadata-complete)
+  metadataComplete bool
+  // <error-page> entries (errorCode, exceptionType, location)
+  errorPages []dict
+  // <security-constraint> entries (displayName, webResourceCollections, authConstraint, userDataConstraint)
+  securityConstraints []dict
+  // <login-config> (authMethod, realmName, formLoginPage, formErrorPage); empty when the element is absent
+  loginConfig dict
+  // Session timeout in minutes (session-config/session-timeout); 0 when unset
+  sessionTimeout int
+  // Whether session cookies are HttpOnly (session-config/cookie-config/http-only); false when absent
+  cookieHttpOnly bool
+  // Whether session cookies are Secure (session-config/cookie-config/secure); false when absent
+  cookieSecure bool
+  // <servlet> entries, joined with their <servlet-mapping>
+  //
+  // Keys: name, class, jspFile, loadOnStartup, initParams, urlPatterns.
+  // initParams is a list of {name, value} entries so that a parameter declared
+  // twice is not collapsed to one.
+  servlets []dict
+  // <filter> entries, joined with their <filter-mapping>
+  //
+  // Keys: name, class, initParams, urlPatterns.
+  filters []dict
+}
+
+// Tomcat user declared in conf/tomcat-users.xml
+private tomcat.user @defaults("username roles") {
+  // User name (@username)
+  username string
+  // Password or password digest as stored (@password)
+  password string
+  // Roles granted to the user (@roles, split on commas)
+  roles []string
+}
+
+// Application deployed under a Tomcat Host's appBase
+private tomcat.webapp @defaults("name path") {
+  // Application directory name, which is also its context path segment
+  name string
+  // Absolute directory on disk
+  path string
+  // Name of the Host the application is deployed under
+  host string
+  // META-INF/context.xml, or null when the application does not ship one
+  context() tomcat.context
+  // WEB-INF/web.xml, or null when the application does not ship one
+  webXml() tomcat.webxml
+  // WEB-INF/classes/logging.properties, with ${catalina.*} expanded
+  logging() map[string]string
+}
+
 // Squid caching proxy
 //
 // Squid proxy server version reported by the daemon binary. Use
