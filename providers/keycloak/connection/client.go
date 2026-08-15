@@ -227,10 +227,30 @@ func GetPaged[T any](ctx context.Context, c *KeycloakConnection, path string, qu
 	return results, nil
 }
 
-// IncludeGlobals asks a client policy endpoint for the profiles and policies
-// Keycloak ships alongside the realm's own. A policy may name a built-in
-// profile, so reading only the realm's own would report that profile as
-// missing.
-func IncludeGlobals() url.Values {
-	return url.Values{"include-global-profiles": []string{"true"}}
+// Query parameters that ask a client policy endpoint for the profiles and
+// policies Keycloak ships alongside the realm's own. The two endpoints spell
+// the parameter differently, and the policies endpoint has used more than one
+// spelling across versions.
+const (
+	IncludeGlobalProfilesParam = "include-global-profiles"
+	IncludeGlobalPoliciesParam = "include-global-policies"
+	// IncludeGlobalClientPoliciesParam is the spelling some versions use for
+	// the policies endpoint.
+	IncludeGlobalClientPoliciesParam = "include-global-client-policies"
+)
+
+// IncludeGlobals asks an endpoint for the built-in records as well as the
+// realm's own. A policy may name a built-in profile, so reading only the
+// realm's own would report that profile as missing.
+//
+// Every given key is sent. Keycloak ignores a query parameter it does not
+// know, so naming both spellings of the policies parameter is harmless and
+// avoids silently dropping the built-in records on whichever version spells it
+// the other way.
+func IncludeGlobals(keys ...string) url.Values {
+	query := url.Values{}
+	for _, key := range keys {
+		query.Set(key, "true")
+	}
+	return query
 }

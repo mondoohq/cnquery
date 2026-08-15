@@ -200,7 +200,7 @@ func (r *mqlKeycloakRealm) clientProfiles() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	query := connection.IncludeGlobals()
+	query := connection.IncludeGlobals(connection.IncludeGlobalProfilesParam)
 	var resp clientProfilesResponse
 	if err := c.Get(ctx, connection.AdminPath(r.realmName(), "client-policies", "profiles"), query, &resp); err != nil {
 		return nil, err
@@ -271,7 +271,10 @@ func (r *mqlKeycloakRealm) clientPolicies() ([]any, error) {
 	ctx := context.Background()
 	c := keycloakConn(r.MqlRuntime)
 
-	query := connection.IncludeGlobals()
+	query := connection.IncludeGlobals(
+		connection.IncludeGlobalPoliciesParam,
+		connection.IncludeGlobalClientPoliciesParam,
+	)
 	var resp clientPoliciesResponse
 	if err := c.Get(ctx, connection.AdminPath(r.realmName(), "client-policies", "policies"), query, &resp); err != nil {
 		return nil, err

@@ -634,3 +634,29 @@ func selfSignedPEM(t *testing.T) []byte {
 
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
 }
+
+func TestIncludeGlobals(t *testing.T) {
+	// The profiles endpoint takes one spelling.
+	profiles := IncludeGlobals(IncludeGlobalProfilesParam)
+	assert.Equal(t, "true", profiles.Get(IncludeGlobalProfilesParam))
+	assert.Len(t, profiles, 1)
+
+	// The policies endpoint has used two spellings across versions. Both are
+	// sent, since Keycloak ignores a parameter it does not know and the
+	// alternative is silently dropping the built-in policies.
+	policies := IncludeGlobals(IncludeGlobalPoliciesParam, IncludeGlobalClientPoliciesParam)
+	assert.Equal(t, "true", policies.Get(IncludeGlobalPoliciesParam))
+	assert.Equal(t, "true", policies.Get(IncludeGlobalClientPoliciesParam))
+	assert.Len(t, policies, 2)
+
+	// The two endpoints must not share a spelling, which is the bug this
+	// replaced.
+	assert.NotEqual(t, IncludeGlobalProfilesParam, IncludeGlobalPoliciesParam)
+
+	// Each call returns its own map, since GetPaged and callers add keys.
+	first := IncludeGlobals(IncludeGlobalProfilesParam)
+	first.Set("max", "1")
+	assert.Empty(t, IncludeGlobals(IncludeGlobalProfilesParam).Get("max"))
+
+	assert.Empty(t, IncludeGlobals())
+}
