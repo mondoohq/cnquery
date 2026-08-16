@@ -94,9 +94,21 @@ func TestToOSProcessDoesNotScaleWithPathDepth(t *testing.T) {
 	shallowBytes := allocatedBytes(1000, func() { processSink = shallow.ToOSProcess() })
 	deepBytes := allocatedBytes(1000, func() { processSink = deep.ToOSProcess() })
 
-	assert.Equal(t, shallowBytes, deepBytes,
-		"memory grew with path depth (%d -> %d bytes over 1000 calls), so the path is still being split",
-		shallowBytes, deepBytes)
+	// Compared with a tolerance, not for equality. TotalAlloc is a process-wide
+	// counter, so anything else allocating between the two reads moves it --
+	// which made this fail intermittently, in both directions, by 16 bytes over
+	// 1000 calls.
+	//
+	// The tolerance is far below what a regression costs. Measured on the same
+	// inputs: taking the last segment allocates 0 bytes either way, while
+	// splitting allocates 32,000 for the shallow path and 176,000 for the deep
+	// one -- a difference of 144,000. Anything between the 16 bytes of noise and
+	// those 144,000 works; 8 KiB is ~500x the noise and ~1/17th of the signal.
+	const tolerance = 8 << 10
+
+	assert.InDelta(t, shallowBytes, deepBytes, tolerance,
+		"memory scaled with path depth (%d bytes shallow vs %d deep over 1000 calls), "+
+			"so the path is being split into a slice again", shallowBytes, deepBytes)
 }
 
 // processSink keeps the results reachable so the allocations are not optimized
