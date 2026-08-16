@@ -29,9 +29,6 @@ type DNSSECKey struct {
 	// Created is when dnssec-keygen generated the key. Zero when the file
 	// records no Created: line.
 	Created time.Time
-	// Path of the public key file, and of the private half when it is present.
-	Path        string
-	PrivatePath string
 }
 
 // dnssecKeyFile matches the name dnssec-keygen writes:

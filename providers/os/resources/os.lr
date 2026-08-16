@@ -1796,8 +1796,11 @@ private bind9.dnssecKey @defaults("zone keyTag isKeySigningKey") {
   file() file
   // The private key file
   //
-  // Null when it is absent, which is the expected state on a server whose
-  // key signing key is kept offline. The key material is never read.
+  // Always returned, because its path is known whether or not the file is
+  // there: ask `privateFile.exists`. A key signing key whose private half
+  // has been moved off the server -- the state worth checking for -- reports
+  // a file that does not exist, which is a different thing from a key with
+  // no private half defined at all. The key material is never read.
   privateFile() file
 }
 
