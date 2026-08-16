@@ -17,6 +17,7 @@ import (
 	"io"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -48,6 +49,76 @@ func (s *Statement) Arg(i int) string {
 		return ""
 	}
 	return s.Args[i]
+}
+
+// ArgValue returns the argument that follows key, which is how the grammar
+// attaches modifiers to a statement:
+//
+//	listen-on port 53 { 127.0.0.1; };   -> ArgValue("port")     == "53"
+//	file "audit.log" versions 3 size 5m -> ArgValue("versions") == "3"
+//
+// The empty string means the modifier is absent, which is not the same as a
+// modifier set to zero.
+func (s *Statement) ArgValue(key string) string {
+	for i := 0; i < len(s.Args)-1; i++ {
+		if strings.EqualFold(s.Args[i], key) {
+			return s.Args[i+1]
+		}
+	}
+	return ""
+}
+
+// Unlimited is what a size or a count reports when the configuration says
+// `unlimited`, which is a real setting and not an absent one.
+const Unlimited = -1
+
+// ParseSize reads a BIND size specification: a number with an optional k, m or
+// g suffix, or the words `unlimited` and `default`. It returns the size in
+// bytes, Unlimited for `unlimited`, and 0 when the value is absent or
+// unreadable, so a caller can tell "no cap" from "no setting".
+func ParseSize(v string) int64 {
+	v = strings.TrimSpace(strings.ToLower(v))
+	switch v {
+	case "":
+		return 0
+	case "unlimited":
+		return Unlimited
+	case "default":
+		return 0
+	}
+
+	multiplier := int64(1)
+	switch v[len(v)-1] {
+	case 'k':
+		multiplier = 1024
+		v = v[:len(v)-1]
+	case 'm':
+		multiplier = 1024 * 1024
+		v = v[:len(v)-1]
+	case 'g':
+		multiplier = 1024 * 1024 * 1024
+		v = v[:len(v)-1]
+	}
+
+	n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n * multiplier
+}
+
+// ParseCount reads a count that may also be the word `unlimited`, as the
+// versions modifier of a log channel is. 0 means absent.
+func ParseCount(v string) int64 {
+	v = strings.TrimSpace(strings.ToLower(v))
+	if v == "unlimited" {
+		return Unlimited
+	}
+	n, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 // Config is a parsed named.conf together with every file that contributed to

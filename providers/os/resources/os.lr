@@ -1566,8 +1566,8 @@ private apache2.conf.location @defaults("path") {
 // top level or inside a view, named address-match lists, and TSIG keys.
 // The files field lists every file that contributed, so permission and
 // ownership checks reach the whole configuration rather than the entry
-// point. Pass `init(path: "...")` to read a config outside the default
-// locations.
+// point. Pass a path, as in `bind9("/etc/named.conf")`, to read a config
+// outside the default locations.
 bind9 {
   init(path? string)
   // Primary configuration file
@@ -1608,8 +1608,25 @@ bind9 {
   allowUpdate() []string
   // Addresses the server listens on for IPv4 (listen-on)
   listenOn() []string
+  // Port the IPv4 listener is bound to
+  //
+  // The port modifier of listen-on, as in `listen-on port 5353 { ... }`.
+  // 0 when the statement does not set one, in which case BIND listens on
+  // 53.
+  listenOnPort() int
   // Addresses the server listens on for IPv6 (listen-on-v6)
   listenOnV6() []string
+  // Port the IPv6 listener is bound to
+  //
+  // 0 when listen-on-v6 does not set one, in which case BIND listens on
+  // 53.
+  listenOnV6Port() int
+  // Secondaries notified of zone changes beyond the zone NS records (also-notify)
+  //
+  // Notifications carry the fact that a zone changed, so the list is
+  // worth checking against the secondaries that are supposed to receive
+  // them.
+  alsoNotify() []string
   // Servers queries are forwarded to (forwarders)
   forwarders() []string
   // Every scalar statement of the options block, as written
@@ -1629,8 +1646,10 @@ bind9 {
   acls() []bind9.acl
   // TSIG keys declared with key
   //
-  // The shared secret of a key is deliberately not exposed. Reading it
-  // would copy key material into scan results.
+  // A key reports its name and algorithm. The shared secret is left
+  // behind, so this field carries no key material. The file the key is
+  // declared in is still a file like any other, and its content is
+  // readable through it.
   keys() []bind9.key
   // Logging channels declared inside the logging block
   channels() []bind9.channel
@@ -1668,6 +1687,8 @@ private bind9.zone @defaults("name type view") {
   allowQuery []string
   // Servers this zone is transferred from (primaries, or masters on older configurations)
   primaries []string
+  // Secondaries notified of changes to this zone (also-notify)
+  alsoNotify []string
   // Every scalar statement in the zone declaration, as written
   params map[string]string
 }
@@ -1687,7 +1708,7 @@ private bind9.acl @defaults("name") {
 // BIND 9 TSIG key
 //
 // A key used to authenticate transfers, dynamic updates, and rndc. The
-// shared secret is deliberately not exposed.
+// shared secret is not among the fields.
 private bind9.key @defaults("name algorithm") {
   // Key name
   name string
@@ -1706,6 +1727,17 @@ private bind9.channel @defaults("name severity") {
   path string
   // Destination when it is not a file: "syslog", "stderr", or "null"
   target string
+  // Rotated copies of the log file that are kept (versions)
+  //
+  // -1 when the channel keeps unlimited copies, and 0 when the modifier
+  // is absent, which is not the same: without it BIND keeps a single file
+  // and never rotates.
+  versions int
+  // Size at which the log file is rotated, in bytes (size)
+  //
+  // The k, m and g suffixes are expanded, so `size 5m` reads 5242880.
+  // -1 when the channel says unlimited, 0 when the modifier is absent.
+  sizeLimit int
   // Severity threshold, e.g. "info", "notice", "warning", or "debug"
   severity string
   // Syslog facility when the channel logs to syslog

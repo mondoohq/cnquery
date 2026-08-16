@@ -222,6 +222,7 @@ bind9.allowQuery 13.40.8
 bind9.allowRecursion 13.40.8
 bind9.allowTransfer 13.40.8
 bind9.allowUpdate 13.40.8
+bind9.alsoNotify 13.40.8
 bind9.channel 13.40.8
 bind9.channel.name 13.40.8
 bind9.channel.path 13.40.8
@@ -229,8 +230,10 @@ bind9.channel.printCategory 13.40.8
 bind9.channel.printSeverity 13.40.8
 bind9.channel.printTime 13.40.8
 bind9.channel.severity 13.40.8
+bind9.channel.sizeLimit 13.40.8
 bind9.channel.syslogFacility 13.40.8
 bind9.channel.target 13.40.8
+bind9.channel.versions 13.40.8
 bind9.channels 13.40.8
 bind9.directory 13.40.8
 bind9.dnssecValidation 13.40.8
@@ -242,7 +245,9 @@ bind9.key.algorithm 13.40.8
 bind9.key.name 13.40.8
 bind9.keys 13.40.8
 bind9.listenOn 13.40.8
+bind9.listenOnPort 13.40.8
 bind9.listenOnV6 13.40.8
+bind9.listenOnV6Port 13.40.8
 bind9.logCategories 13.40.8
 bind9.minimalResponses 13.40.8
 bind9.params 13.40.8
@@ -252,6 +257,7 @@ bind9.zone 13.40.8
 bind9.zone.allowQuery 13.40.8
 bind9.zone.allowTransfer 13.40.8
 bind9.zone.allowUpdate 13.40.8
+bind9.zone.alsoNotify 13.40.8
 bind9.zone.class 13.40.8
 bind9.zone.file 13.40.8
 bind9.zone.name 13.40.8

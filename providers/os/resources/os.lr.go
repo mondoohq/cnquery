@@ -4008,8 +4008,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bind9.listenOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9).GetListenOn()).ToDataRes(types.Array(types.String))
 	},
+	"bind9.listenOnPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetListenOnPort()).ToDataRes(types.Int)
+	},
 	"bind9.listenOnV6": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9).GetListenOnV6()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.listenOnV6Port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetListenOnV6Port()).ToDataRes(types.Int)
+	},
+	"bind9.alsoNotify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAlsoNotify()).ToDataRes(types.Array(types.String))
 	},
 	"bind9.forwarders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9).GetForwarders()).ToDataRes(types.Array(types.String))
@@ -4062,6 +4071,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bind9.zone.primaries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Zone).GetPrimaries()).ToDataRes(types.Array(types.String))
 	},
+	"bind9.zone.alsoNotify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetAlsoNotify()).ToDataRes(types.Array(types.String))
+	},
 	"bind9.zone.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Zone).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -4085,6 +4097,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bind9.channel.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Channel).GetTarget()).ToDataRes(types.String)
+	},
+	"bind9.channel.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetVersions()).ToDataRes(types.Int)
+	},
+	"bind9.channel.sizeLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetSizeLimit()).ToDataRes(types.Int)
 	},
 	"bind9.channel.severity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Channel).GetSeverity()).ToDataRes(types.String)
@@ -16533,8 +16551,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBind9).ListenOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"bind9.listenOnPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).ListenOnPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"bind9.listenOnV6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9).ListenOnV6, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.listenOnV6Port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).ListenOnV6Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.alsoNotify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).AlsoNotify, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bind9.forwarders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16609,6 +16639,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBind9Zone).Primaries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"bind9.zone.alsoNotify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).AlsoNotify, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"bind9.zone.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9Zone).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -16651,6 +16685,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bind9.channel.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9Channel).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).Versions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.sizeLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).SizeLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"bind9.channel.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39221,7 +39263,10 @@ type mqlBind9 struct {
 	AllowTransfer    plugin.TValue[[]any]
 	AllowUpdate      plugin.TValue[[]any]
 	ListenOn         plugin.TValue[[]any]
+	ListenOnPort     plugin.TValue[int64]
 	ListenOnV6       plugin.TValue[[]any]
+	ListenOnV6Port   plugin.TValue[int64]
+	AlsoNotify       plugin.TValue[[]any]
 	Forwarders       plugin.TValue[[]any]
 	Params           plugin.TValue[map[string]any]
 	Zones            plugin.TValue[[]any]
@@ -39360,9 +39405,27 @@ func (c *mqlBind9) GetListenOn() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlBind9) GetListenOnPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ListenOnPort, func() (int64, error) {
+		return c.listenOnPort()
+	})
+}
+
 func (c *mqlBind9) GetListenOnV6() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ListenOnV6, func() ([]any, error) {
 		return c.listenOnV6()
+	})
+}
+
+func (c *mqlBind9) GetListenOnV6Port() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ListenOnV6Port, func() (int64, error) {
+		return c.listenOnV6Port()
+	})
+}
+
+func (c *mqlBind9) GetAlsoNotify() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlsoNotify, func() ([]any, error) {
+		return c.alsoNotify()
 	})
 }
 
@@ -39463,6 +39526,7 @@ type mqlBind9Zone struct {
 	AllowUpdate   plugin.TValue[[]any]
 	AllowQuery    plugin.TValue[[]any]
 	Primaries     plugin.TValue[[]any]
+	AlsoNotify    plugin.TValue[[]any]
 	Params        plugin.TValue[map[string]any]
 }
 
@@ -39548,6 +39612,10 @@ func (c *mqlBind9Zone) GetAllowQuery() *plugin.TValue[[]any] {
 
 func (c *mqlBind9Zone) GetPrimaries() *plugin.TValue[[]any] {
 	return &c.Primaries
+}
+
+func (c *mqlBind9Zone) GetAlsoNotify() *plugin.TValue[[]any] {
+	return &c.AlsoNotify
 }
 
 func (c *mqlBind9Zone) GetParams() *plugin.TValue[map[string]any] {
@@ -39660,6 +39728,8 @@ type mqlBind9Channel struct {
 	Name           plugin.TValue[string]
 	Path           plugin.TValue[string]
 	Target         plugin.TValue[string]
+	Versions       plugin.TValue[int64]
+	SizeLimit      plugin.TValue[int64]
 	Severity       plugin.TValue[string]
 	SyslogFacility plugin.TValue[string]
 	PrintTime      plugin.TValue[bool]
@@ -39709,6 +39779,14 @@ func (c *mqlBind9Channel) GetPath() *plugin.TValue[string] {
 
 func (c *mqlBind9Channel) GetTarget() *plugin.TValue[string] {
 	return &c.Target
+}
+
+func (c *mqlBind9Channel) GetVersions() *plugin.TValue[int64] {
+	return &c.Versions
+}
+
+func (c *mqlBind9Channel) GetSizeLimit() *plugin.TValue[int64] {
+	return &c.SizeLimit
 }
 
 func (c *mqlBind9Channel) GetSeverity() *plugin.TValue[string] {

@@ -255,6 +255,24 @@ func (b *mqlBind9) allowUpdate() ([]any, error)    { return b.optionList("allow-
 func (b *mqlBind9) listenOn() ([]any, error)       { return b.optionList("listen-on") }
 func (b *mqlBind9) listenOnV6() ([]any, error)     { return b.optionList("listen-on-v6") }
 func (b *mqlBind9) forwarders() ([]any, error)     { return b.optionList("forwarders") }
+func (b *mqlBind9) alsoNotify() ([]any, error)     { return b.optionList("also-notify") }
+
+// optionPort reads the port modifier of a listen statement. 0 means the
+// statement does not set one, which leaves BIND on 53.
+func (b *mqlBind9) optionPort(name string) (int64, error) {
+	block, err := b.optionsBlock()
+	if err != nil {
+		return 0, err
+	}
+	s := bind9.First(block, name)
+	if s == nil {
+		return 0, nil
+	}
+	return bind9.ParseCount(s.ArgValue("port")), nil
+}
+
+func (b *mqlBind9) listenOnPort() (int64, error)   { return b.optionPort("listen-on") }
+func (b *mqlBind9) listenOnV6Port() (int64, error) { return b.optionPort("listen-on-v6") }
 
 func (b *mqlBind9) params() (map[string]any, error) {
 	block, err := b.optionsBlock()
@@ -331,6 +349,7 @@ func (b *mqlBind9) zones() ([]any, error) {
 			"allowUpdate":   llx.ArrayData(bind9StringList(z.Block, "allow-update"), types.String),
 			"allowQuery":    llx.ArrayData(bind9StringList(z.Block, "allow-query"), types.String),
 			"primaries":     llx.ArrayData(primaries, types.String),
+			"alsoNotify":    llx.ArrayData(bind9StringList(z.Block, "also-notify"), types.String),
 			"params":        llx.MapData(params, types.String),
 		})
 		if err != nil {
@@ -463,8 +482,15 @@ func (b *mqlBind9) channels() ([]any, error) {
 
 		path := ""
 		target := ""
+		versions := int64(0)
+		sizeLimit := int64(0)
 		if f := bind9.First(ch.Block, "file"); f != nil {
 			path = f.Arg(0)
+			// `file "audit.log" versions 3 size 5m;` carries retention as
+			// modifiers of the file statement rather than statements of
+			// their own.
+			versions = bind9.ParseCount(f.ArgValue("versions"))
+			sizeLimit = bind9.ParseSize(f.ArgValue("size"))
 		}
 		for _, t := range []string{"syslog", "stderr", "null"} {
 			if bind9.First(ch.Block, t) != nil {
@@ -482,6 +508,8 @@ func (b *mqlBind9) channels() ([]any, error) {
 			"name":           llx.StringData(name),
 			"path":           llx.StringData(path),
 			"target":         llx.StringData(target),
+			"versions":       llx.IntData(versions),
+			"sizeLimit":      llx.IntData(sizeLimit),
 			"severity":       llx.StringData(bind9.Value(ch.Block, "severity")),
 			"syslogFacility": llx.StringData(syslogFacility),
 			"printTime":      llx.BoolData(bind9IsYes(bind9.Value(ch.Block, "print-time"))),

@@ -222,3 +222,60 @@ func TestParseFilesMissingRoot(t *testing.T) {
 	assert.Empty(t, cfg.Statements)
 	assert.Empty(t, cfg.Files)
 }
+
+func TestArgValue(t *testing.T) {
+	// The grammar hangs modifiers off a statement as bare argument pairs, both
+	// before a block and after a value.
+	stmts, err := Parse(`
+options {
+	listen-on port 5353 { 127.0.0.1; };
+	listen-on-v6 { any; };
+};
+logging {
+	channel "audit" { file "/var/log/named/audit.log" versions 3 size 5m; };
+};
+`)
+	require.NoError(t, err)
+
+	listen := First(stmts[0].Block, "listen-on")
+	require.NotNil(t, listen)
+	assert.Equal(t, "5353", listen.ArgValue("port"))
+	// an absent modifier is not a zero one
+	assert.Equal(t, "", First(stmts[0].Block, "listen-on-v6").ArgValue("port"))
+
+	channel := First(stmts[1].Block, "channel")
+	require.NotNil(t, channel)
+	file := First(channel.Block, "file")
+	require.NotNil(t, file)
+	assert.Equal(t, "/var/log/named/audit.log", file.Arg(0))
+	assert.Equal(t, "3", file.ArgValue("versions"))
+	assert.Equal(t, "5m", file.ArgValue("size"))
+	assert.Equal(t, "", file.ArgValue("suffix"), "a modifier that is not there reads empty")
+}
+
+func TestParseSize(t *testing.T) {
+	tests := map[string]int64{
+		"5m":        5 * 1024 * 1024,
+		"20M":       20 * 1024 * 1024,
+		"512k":      512 * 1024,
+		"2g":        2 * 1024 * 1024 * 1024,
+		"1024":      1024,
+		"unlimited": Unlimited,
+		// `default` and an absent value both mean the channel carries no cap
+		// of its own, which is a different answer from "no rotation".
+		"default":  0,
+		"":         0,
+		"nonsense": 0,
+	}
+	for in, expected := range tests {
+		assert.Equal(t, expected, ParseSize(in), "size %q", in)
+	}
+}
+
+func TestParseCount(t *testing.T) {
+	assert.Equal(t, int64(3), ParseCount("3"))
+	assert.Equal(t, int64(Unlimited), ParseCount("unlimited"))
+	// absent, which for versions means BIND keeps one file and never rotates
+	assert.Equal(t, int64(0), ParseCount(""))
+	assert.Equal(t, int64(0), ParseCount("garbage"))
+}
