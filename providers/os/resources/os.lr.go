@@ -594,6 +594,9 @@ const (
 	ResourceOvsBridge                                     string = "ovs.bridge"
 	ResourceOvsPort                                       string = "ovs.port"
 	ResourceOvsInterface                                  string = "ovs.interface"
+	ResourceJavaKeystore                                  string = "java.keystore"
+	ResourceJavaKeystoreEntry                             string = "java.keystore.entry"
+	ResourceJavaTruststores                               string = "java.truststores"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2911,6 +2914,18 @@ func init() {
 		"ovs.interface": {
 			// to override args, implement: initOvsInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOvsInterface,
+		},
+		"java.keystore": {
+			Init:   initJavaKeystore,
+			Create: createJavaKeystore,
+		},
+		"java.keystore.entry": {
+			// to override args, implement: initJavaKeystoreEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJavaKeystoreEntry,
+		},
+		"java.truststores": {
+			// to override args, implement: initJavaTruststores(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJavaTruststores,
 		},
 	}
 }
@@ -15462,6 +15477,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ovs.interface.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOvsInterface).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"java.keystore.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystore).GetPath()).ToDataRes(types.String)
+	},
+	"java.keystore.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystore).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"java.keystore.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystore).GetFormat()).ToDataRes(types.String)
+	},
+	"java.keystore.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystore).GetEntries()).ToDataRes(types.Array(types.Resource("java.keystore.entry")))
+	},
+	"java.keystore.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystore).GetCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"java.keystore.unreadableCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystore).GetUnreadableCertificates()).ToDataRes(types.Int)
+	},
+	"java.keystore.entry.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystoreEntry).GetAlias()).ToDataRes(types.String)
+	},
+	"java.keystore.entry.isTrustedCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystoreEntry).GetIsTrustedCertificate()).ToDataRes(types.Bool)
+	},
+	"java.keystore.entry.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystoreEntry).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"java.keystore.entry.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaKeystoreEntry).GetCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"java.truststores.paths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaTruststores).GetPaths()).ToDataRes(types.Array(types.String))
+	},
+	"java.truststores.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaTruststores).GetList()).ToDataRes(types.Array(types.Resource("java.keystore")))
 	},
 }
 
@@ -34425,6 +34476,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ovs.interface.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOvsInterface).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"java.keystore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).__id, ok = v.Value.(string)
+		return
+	},
+	"java.keystore.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.keystore.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"java.keystore.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.keystore.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.keystore.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.keystore.unreadableCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystore).UnreadableCertificates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"java.keystore.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystoreEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"java.keystore.entry.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystoreEntry).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.keystore.entry.isTrustedCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystoreEntry).IsTrustedCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"java.keystore.entry.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystoreEntry).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"java.keystore.entry.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaKeystoreEntry).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.truststores.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaTruststores).__id, ok = v.Value.(string)
+		return
+	},
+	"java.truststores.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaTruststores).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.truststores.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaTruststores).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -91055,4 +91166,267 @@ func (c *mqlOvsInterface) GetExternalIds() *plugin.TValue[map[string]any] {
 
 func (c *mqlOvsInterface) GetOptions() *plugin.TValue[map[string]any] {
 	return &c.Options
+}
+
+// mqlJavaKeystore for the java.keystore resource
+type mqlJavaKeystore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJavaKeystoreInternal
+	Path                   plugin.TValue[string]
+	File                   plugin.TValue[*mqlFile]
+	Format                 plugin.TValue[string]
+	Entries                plugin.TValue[[]any]
+	Certificates           plugin.TValue[[]any]
+	UnreadableCertificates plugin.TValue[int64]
+}
+
+// createJavaKeystore creates a new instance of this resource
+func createJavaKeystore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJavaKeystore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("java.keystore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJavaKeystore) MqlName() string {
+	return "java.keystore"
+}
+
+func (c *mqlJavaKeystore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJavaKeystore) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJavaKeystore) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.keystore", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlJavaKeystore) GetFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Format, func() (string, error) {
+		return c.format()
+	})
+}
+
+func (c *mqlJavaKeystore) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.keystore", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+func (c *mqlJavaKeystore) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.keystore", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
+func (c *mqlJavaKeystore) GetUnreadableCertificates() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UnreadableCertificates, func() (int64, error) {
+		return c.unreadableCertificates()
+	})
+}
+
+// mqlJavaKeystoreEntry for the java.keystore.entry resource
+type mqlJavaKeystoreEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJavaKeystoreEntryInternal
+	Alias                plugin.TValue[string]
+	IsTrustedCertificate plugin.TValue[bool]
+	CreatedAt            plugin.TValue[*time.Time]
+	Certificates         plugin.TValue[[]any]
+}
+
+// createJavaKeystoreEntry creates a new instance of this resource
+func createJavaKeystoreEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJavaKeystoreEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("java.keystore.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJavaKeystoreEntry) MqlName() string {
+	return "java.keystore.entry"
+}
+
+func (c *mqlJavaKeystoreEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJavaKeystoreEntry) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlJavaKeystoreEntry) GetIsTrustedCertificate() *plugin.TValue[bool] {
+	return &c.IsTrustedCertificate
+}
+
+func (c *mqlJavaKeystoreEntry) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlJavaKeystoreEntry) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.keystore.entry", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
+// mqlJavaTruststores for the java.truststores resource
+type mqlJavaTruststores struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJavaTruststoresInternal it will be used here
+	Paths plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createJavaTruststores creates a new instance of this resource
+func createJavaTruststores(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJavaTruststores{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("java.truststores", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJavaTruststores) MqlName() string {
+	return "java.truststores"
+}
+
+func (c *mqlJavaTruststores) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJavaTruststores) GetPaths() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
+		return c.paths()
+	})
+}
+
+func (c *mqlJavaTruststores) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.truststores", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargPaths := c.GetPaths()
+		if vargPaths.Error != nil {
+			return nil, vargPaths.Error
+		}
+
+		return c.list(vargPaths.Data)
+	})
 }

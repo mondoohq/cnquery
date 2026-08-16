@@ -16269,3 +16269,74 @@ private ovs.interface @defaults("name type adminState linkState") {
   // Type-specific settings, such as the remote_ip of a tunnel
   options map[string]string
 }
+
+// Java keystore or trust store
+//
+// The certificates a JVM trusts, and the ones it presents. Select a store
+// with `java.keystore("/opt/java/lib/security/cacerts")`, or reach every
+// trust store the asset has with `java.truststores`.
+//
+// The store is read straight from the file. A JKS store keeps its
+// certificates unencrypted — only private keys are protected, and the
+// store password guards an integrity digest rather than the contents —
+// so no credential is needed and the store is readable on a container
+// image or a mounted filesystem, where nothing can be executed.
+java.keystore @defaults("path format entries.length") {
+  init(path string)
+  // Path of the keystore file
+  path string
+  // Keystore file, for ownership and permission checks
+  file() file
+  // Store format: "jks", "jceks", or "pkcs12"
+  format() string
+  // Entries the store holds, one per alias
+  entries() []java.keystore.entry
+  // Every certificate in the store, across all entries
+  //
+  // The flat view, for asking a question of the whole store: which
+  // authorities it trusts, whether any of them has expired, what
+  // algorithms they sign with.
+  certificates() []network.certificate
+  // Certificates in the store that could not be parsed
+  //
+  // A store built up over years holds certificates that no longer parse —
+  // a negative serial number is the usual reason, legal when the
+  // certificate was issued and rejected now. Those are left out of
+  // `certificates` so one of them cannot blind every check, and counted
+  // here so leaving them out is not a silent loss.
+  unreadableCertificates() int
+}
+
+// One alias in a Java keystore
+private java.keystore.entry @defaults("alias isTrustedCertificate") {
+  // Alias the entry is filed under
+  //
+  // Lower-cased by keytool when the entry is written, so a store written
+  // by the tool reports lower-case aliases whatever was typed.
+  alias string
+  // Whether the entry holds someone else's certificate, not a private key
+  //
+  // A trust store is made of these. An entry that is not one holds a
+  // private key together with the chain that vouches for it.
+  isTrustedCertificate bool
+  // When the entry was added to the store
+  //
+  // Null when the store records no date, as PKCS#12 does not.
+  createdAt time
+  // Certificates the entry holds
+  //
+  // One for a trusted certificate entry, and the chain for a private key
+  // entry. The key material itself is never exposed.
+  certificates() []network.certificate
+}
+
+// Trust stores of every JVM installed on the asset
+//
+// Finds the `cacerts` file of each JDK or JRE on the asset and reads it,
+// so a check can ask what the machine's Java runtimes trust without
+// knowing where any of them is installed.
+java.truststores {
+  []java.keystore(paths)
+  // Paths of the trust stores that were found
+  paths() []string
+}
