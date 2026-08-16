@@ -11,9 +11,27 @@ This directory contains information to help Claude AI assistants understand and 
 *   **cnspec**: The security scanning tool built *on top* of mql. It implements **policy assertions**, vulnerability checks, **scanning** (`scan`), and **SBOM generation** (`sbom`).
 *   **Rule of Thumb:** For resource development (adding fields, new assets), you only need to work within **mql**.
 
+## 1.5 Skills
+
+This repo ships skills for its recurring tasks. They carry the procedure — the commands to run and the traps that bite — while this file carries the rules. Invoke the skill when the task matches; don't reconstruct the steps from scratch.
+
+| skill | use when |
+|---|---|
+| `new-resource` | adding or changing a resource or field in an existing provider, or a resource returns null/empty and the schema is the suspect |
+| `new-provider` | bootstrapping a provider that does not exist yet (hands off to `new-resource`) |
+| `provider-verification` | proving a PR or commit range against provisioned cloud infrastructure |
+| `provider-bug-review` | auditing a shipped provider by reading code: nil handling, pagination, `__id` collisions |
+| `provider-api-call-dedup` | a scan is slow, times out, or trips rate limits |
+| `provider-release` | bumping provider versions and preparing a release |
+| `update-provider-deps` | upgrading vendored SDKs and finding what the new version unlocks |
+| `staged-discovery` | adding staged/phased discovery to a provider |
+| `check-querypack-deprecations` | checking `content/` query packs against deprecated resources or fields |
+
 ## 2. Resource Development Guide
 
-The primary task in this repo is adding or modifying resources. Follow this lifecycle:
+The primary task in this repo is adding or modifying resources. Follow this lifecycle.
+
+**Use the `new-resource` skill for this.** It covers the parts this guide does not: grounding the schema in a real artifact, the identity dimensions an `__id` has to carry, testing a build without clobbering the installed provider, and verifying field by field against a live target.
 
 ### Step 1: Definition (`.lr` schema)
 Resources are defined in `.lr` files (e.g., `providers/aws/resources/aws.lr`). This acts as the GraphQL-like schema.
@@ -134,6 +152,8 @@ This is a manual gate, not a build-time one — there is no linter that catches 
 
 ### Step 2: Code Generation
 **Crucial:** You must generate Go interfaces after modifying `.lr` files.
+
+Two naming traps fire at this step and look like Go bugs rather than schema mistakes (a field whose every value reads null, a list that is not a list). The `new-resource` skill indexes them by symptom.
 ```bash
 # Generate all code (slow)
 make mql/generate
@@ -344,6 +364,8 @@ Put decode tests in `resources/decode_test.go` and client tests in `connection/c
 
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard**, and it complements rather than replaces the unit tests in Step 3.6.
+
+To test a build without overwriting your installed provider, and to A/B a change against `main`, see the `PROVIDERS_PATH` recipe in the `new-resource` skill. For proving a PR against provisioned cloud infrastructure, use `provider-verification`.
 
 1.  **Install**: `make mql/install` (one-time, or when changing mql core).
 2.  **Provider**: `make providers/build/<provider> && make providers/install/<provider>` (after each provider change).
@@ -661,7 +683,7 @@ Key directories for user-facing functionality:
 
 ## 7. Pre-PR Checklist
 
-When work appears complete, present this checklist to the user for local verification:
+When work appears complete, present this checklist to the user for local verification. For a resource change, the `new-resource` skill adds the checks specific to one: the absent-host case, invented defaults, and secret sweeps.
 
 ### Essential Checks (Run These)
 ```bash

@@ -75,6 +75,7 @@ Show the user:
    make providers/build/<provider-id> && make providers/install/<provider-id>
    mql shell <provider-id>
    ```
+4. That the work from here on is resource development, and the **`new-resource`** skill covers it: grounding the schema in a real artifact, the traps that fire at codegen, and verifying each field against a live target.
 
 ## Important Reminders
 
