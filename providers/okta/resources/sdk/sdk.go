@@ -13,7 +13,7 @@ import (
 )
 
 // ApiExtension handles cases where Okta's SDK doesn't expose a particular API.
-// The v5 SDK no longer ships a public RequestExecutor, so we issue the raw
+// The SDK no longer ships a public RequestExecutor, so we issue the raw
 // authenticated requests ourselves against the org host carried by the
 // connection.
 type ApiExtension struct {

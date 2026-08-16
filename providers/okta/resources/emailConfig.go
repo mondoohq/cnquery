@@ -6,11 +6,12 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
+	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -50,8 +51,8 @@ func newMqlOktaEmailDomain(runtime *plugin.Runtime, entry *okta.EmailDomainRespo
 		"domain":               llx.StringData(oktaStr(entry.Domain)),
 		"validationSubdomain":  llx.StringData(oktaStr(entry.ValidationSubdomain)),
 		"validationStatus":     llx.StringData(oktaStr(entry.ValidationStatus)),
-		"displayName":          llx.StringData(oktaStr(entry.DisplayName)),
-		"userName":             llx.StringData(oktaStr(entry.UserName)),
+		"displayName":          llx.StringData(entry.DisplayName),
+		"userName":             llx.StringData(entry.UserName),
 		"dnsValidationRecords": llx.ArrayData(records, types.Dict),
 	})
 }
@@ -84,7 +85,7 @@ func (o *mqlOkta) emailServers() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaEmailServer(runtime *plugin.Runtime, entry *okta.EmailServerResponse) (any, error) {
+func newMqlOktaEmailServer(runtime *plugin.Runtime, entry *sdk.EmailServer) (any, error) {
 	var port *int64
 	if entry.Port != nil {
 		p := int64(*entry.Port)

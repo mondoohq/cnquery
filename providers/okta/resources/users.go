@@ -8,7 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -114,7 +115,7 @@ func (o *mqlOkta) users() ([]any, error) {
 	return list, nil
 }
 
-// oktaUserFromAny normalizes any of the v5 SDK's user-shaped types (User,
+// oktaUserFromAny normalizes any of the SDK's user-shaped types (User,
 // UserGetSingleton, GroupMember) into an okta.User. They share the same JSON
 // shape, so routing everything through one normalized type keeps a single code
 // path for every place a user is materialized.
@@ -213,17 +214,22 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 	if o.Id.Error != nil {
 		return nil, o.Id.Error
 	}
-	roles, resp, err := client.RoleAssignmentAPI.ListAssignedRolesForUser(ctx, o.Id.Data).Execute()
+	roles, resp, err := client.RoleAssignmentAUserAPI.ListAssignedRolesForUser(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
 	res := []any{}
 
-	appendEntry := func(datalist []okta.Role) error {
+	appendEntry := func(datalist []okta.ListGroupAssignedRoles200ResponseInner) error {
 		for i := range datalist {
-			mqlOktaRole, err := newMqlOktaRole(o.MqlRuntime, &datalist[i], "user", o.Id.Data)
+			mqlOktaRole, err := newMqlOktaAssignedRole(o.MqlRuntime, &datalist[i], "user", o.Id.Data)
 			if err != nil {
 				return err
+			}
+			if mqlOktaRole == nil {
+				log.Warn().Str("user", o.Id.Data).
+					Msg("skipping a role assignment of an unrecognized kind")
+				continue
 			}
 			res = append(res, mqlOktaRole)
 		}
@@ -234,7 +240,7 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 		return nil, err
 	}
 	for resp != nil && resp.HasNextPage() {
-		var userRoles []okta.Role
+		var userRoles []okta.ListGroupAssignedRoles200ResponseInner
 		resp, err = resp.Next(&userRoles)
 		if err != nil {
 			return nil, err
@@ -267,7 +273,7 @@ func (o *mqlOktaUser) groups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	slice, resp, err := client.UserAPI.ListUserGroups(ctx, o.Id.Data).Limit(queryLimit).Execute()
+	slice, resp, err := client.UserResourcesAPI.ListUserGroups(ctx, o.Id.Data).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
 			return oktaUnreadableList(&o.Groups)
@@ -301,7 +307,7 @@ func (o *mqlOktaUser) identityProviders() ([]any, error) {
 	ctx := context.Background()
 	// No .Limit here: the SDK request type for this endpoint offers only
 	// Execute, so the API sets the page size.
-	slice, resp, err := client.UserAPI.ListUserIdentityProviders(ctx, o.Id.Data).Execute()
+	slice, resp, err := client.IdentityProviderUsersAPI.ListUserIdentityProviders(ctx, o.Id.Data).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
 			return oktaUnreadableList(&o.IdentityProviders)

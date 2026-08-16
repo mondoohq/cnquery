@@ -7,11 +7,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 )
 
 // ListClientRoles fetches the administrator roles assigned to an OAuth 2.0
-// service client, hitting `/oauth2/v1/clients/{clientId}/roles`. The v5 SDK's
+// service client, hitting `/oauth2/v1/clients/{clientId}/roles`. The SDK's
 // generated RoleAssignmentAPI.ListRolesForClient types this endpoint's
 // response as a single Client object, which does not carry the returned roles
 // array, so we issue the request ourselves and decode it into the role type

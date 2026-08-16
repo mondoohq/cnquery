@@ -16,7 +16,7 @@ type AttackProtectionSettings struct {
 
 // GetAttackProtectionSettings fetches the org's attack-protection settings.
 //
-// The v5 SDK's AttackProtectionAPI.GetUserLockoutSettings and
+// The SDK's AttackProtectionAPI.GetUserLockoutSettings and
 // GetAuthenticatorSettings type their responses as slices, but both endpoints
 // return a single JSON object (for example
 // `{"preventBruteForceLockoutFromUnknownDevices":false}`), so the SDK's

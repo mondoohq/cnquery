@@ -67,7 +67,7 @@ func initOktaCustomRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	client := conn.Client()
 	ctx := context.Background()
 
-	role, resp, err := client.RoleAPI.GetRole(ctx, id).Execute()
+	role, resp, err := client.RoleECustomAPI.GetRole(ctx, id).Execute()
 	if err != nil {
 		if isOktaNotFound(resp) {
 			return nil, nil, fmt.Errorf("%w: okta.customRole %q", errOktaResourceNotFound, id)
@@ -106,7 +106,7 @@ func (o *mqlOktaCustomRole) permissions() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	perms, _, err := client.RoleAPI.ListRolePermissions(ctx, o.Id.Data).Execute()
+	perms, _, err := client.RoleECustomPermissionAPI.ListRolePermissions(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}

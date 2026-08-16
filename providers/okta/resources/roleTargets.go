@@ -7,7 +7,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
@@ -42,7 +42,7 @@ func (o *mqlOktaRole) groupTargets() ([]any, error) {
 	var groups []okta.Group
 	switch {
 	case o.cacheUserID != "":
-		slice, resp, err := conn.Client().RoleTargetAPI.
+		slice, resp, err := conn.Client().RoleBTargetAdminAPI.
 			ListGroupTargetsForRole(ctx, o.cacheUserID, roleID).Limit(queryLimit).Execute()
 		if err != nil {
 			// An unscoped assignment has no targets resource at all.
@@ -57,7 +57,7 @@ func (o *mqlOktaRole) groupTargets() ([]any, error) {
 		}
 
 	case o.cacheGroupID != "":
-		slice, resp, err := conn.Client().RoleTargetAPI.
+		slice, resp, err := conn.Client().RoleBTargetBGroupAPI.
 			ListGroupTargetsForGroupRole(ctx, o.cacheGroupID, roleID).Limit(queryLimit).Execute()
 		if err != nil {
 			if isOktaFeatureUnavailable(resp, err) {
@@ -110,7 +110,7 @@ func (o *mqlOktaRole) appTargets() ([]any, error) {
 	var apps []okta.CatalogApplication
 	switch {
 	case o.cacheUserID != "":
-		slice, resp, err := conn.Client().RoleTargetAPI.
+		slice, resp, err := conn.Client().RoleBTargetAdminAPI.
 			ListApplicationTargetsForApplicationAdministratorRoleForUser(ctx, o.cacheUserID, roleID).
 			Limit(queryLimit).Execute()
 		if err != nil {
@@ -125,7 +125,7 @@ func (o *mqlOktaRole) appTargets() ([]any, error) {
 		}
 
 	case o.cacheGroupID != "":
-		slice, resp, err := conn.Client().RoleTargetAPI.
+		slice, resp, err := conn.Client().RoleBTargetBGroupAPI.
 			ListApplicationTargetsForApplicationAdministratorRoleForGroup(ctx, o.cacheGroupID, roleID).
 			Limit(queryLimit).Execute()
 		if err != nil {

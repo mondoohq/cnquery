@@ -8,19 +8,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
 
-// oktaAppLinkRaw is the app link wire shape. The v5 SDK's AppLink struct types
-// only the `login` and `logo` HAL links; every attribute that identifies the
-// application, including the ids this resource is keyed on, lands in its
-// untyped AdditionalProperties map. Its MarshalJSON writes that map back out,
-// so re-marshaling an SDK AppLink and decoding it here recovers the full
-// object. Decoding straight off the SDK struct would leave every field empty
-// without erroring.
+// oktaAppLinkRaw is the app link wire shape, with each value as a plain type
+// rather than a pointer. The SDK models every attribute as optional, so
+// normalizing through JSON gives the mapper one shape to read and keeps the
+// zero-value semantics the resource fields already report.
 //
 // The tags carry no omitempty: this struct is only ever decoded into, where the
 // option has no effect, and every zero value here is a real reading. A link at
@@ -47,9 +44,9 @@ type mqlOktaUserAppLinkInternal struct {
 	cacheAppInstanceId string
 }
 
-// decodeOktaAppLink normalizes an SDK AppLink through JSON into the full wire
-// shape. See oktaAppLinkRaw for why the SDK type is not enough.
-func decodeOktaAppLink(src *okta.AppLink) (*oktaAppLinkRaw, error) {
+// decodeOktaAppLink normalizes an SDK app link through JSON into the wire
+// shape the mapper reads. See oktaAppLinkRaw.
+func decodeOktaAppLink(src *okta.AssignedAppLink) (*oktaAppLinkRaw, error) {
 	raw, err := json.Marshal(src)
 	if err != nil {
 		return nil, err
@@ -83,7 +80,7 @@ func (o *mqlOktaUser) appLinks() ([]any, error) {
 	// No .Limit here: the SDK request type for this endpoint offers only
 	// Execute, so the API sets the page size. The paging loop below still
 	// applies, since the response can carry a next link either way.
-	slice, resp, err := client.UserAPI.ListAppLinks(ctx, userID).Execute()
+	slice, resp, err := client.UserResourcesAPI.ListAppLinks(ctx, userID).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
 			return oktaUnreadableList(&o.AppLinks)
@@ -146,7 +143,7 @@ func (o *mqlOktaUser) grants() ([]any, error) {
 	userID := o.Id.Data
 
 	ctx := context.Background()
-	slice, resp, err := client.UserAPI.ListUserGrants(ctx, userID).Limit(queryLimit).Execute()
+	slice, resp, err := client.UserGrantAPI.ListUserGrants(ctx, userID).Limit(queryLimit).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
 			return oktaUnreadableList(&o.Grants)
@@ -194,7 +191,7 @@ func (o *mqlOktaUser) clients() ([]any, error) {
 
 	ctx := context.Background()
 	// No .Limit here, for the same reason as appLinks above.
-	slice, resp, err := client.UserAPI.ListUserClients(ctx, userID).Execute()
+	slice, resp, err := client.UserResourcesAPI.ListUserClients(ctx, userID).Execute()
 	if err != nil {
 		if isOktaFeatureUnavailable(resp, err) {
 			return oktaUnreadableList(&o.Clients)

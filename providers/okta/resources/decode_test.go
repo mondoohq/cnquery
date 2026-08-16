@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,13 +67,13 @@ func TestOktaUserArgs_FromUser(t *testing.T) {
 
 // TestOktaUserArgs_FromGroupMember exercises the JSON-normalization branch used
 // for the non-okta.User user-shaped types (GroupMember, UserGetSingleton).
-func TestOktaUserArgs_FromGroupMember(t *testing.T) {
+func TestOktaUserArgs_FromGroupMembership(t *testing.T) {
 	const payload = `{
 		"id": "00u9zzz",
 		"status": "ACTIVE",
 		"profile": {"firstName": "Sam", "login": "sam@example.com"}
 	}`
-	var m okta.GroupMember
+	var m okta.User
 	require.NoError(t, json.Unmarshal([]byte(payload), &m))
 
 	user, err := oktaUserFromAny(&m)
@@ -172,7 +172,7 @@ func TestOktaPolicyRuleRawDecode(t *testing.T) {
 }
 
 // TestAuthzServerPolicyRawDecode verifies that the authorization-server policy
-// scalars (which v5 keeps only in AdditionalProperties) decode from the
+// scalars (which the SDK keeps only in AdditionalProperties) decode from the
 // canonical JSON.
 func TestAuthzServerPolicyRawDecode(t *testing.T) {
 	const payload = `{

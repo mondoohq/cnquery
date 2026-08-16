@@ -10,7 +10,7 @@ import (
 
 // ListBehaviorRules fetches behavior detection rules from `/api/v1/behaviors`.
 //
-// The v5 SDK's BehaviorAPI.ListBehaviorDetectionRules cannot be used here: the
+// The SDK's BehaviorAPI.ListBehaviorDetectionRules cannot be used here: the
 // generated BehaviorRule type declares created/lastUpdated as time.Time with
 // strict RFC3339 unmarshaling, but this legacy endpoint returns timestamps in
 // Okta's space-separated form (for example "2026-07-20 17:34:59.0"), so the

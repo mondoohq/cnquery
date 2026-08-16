@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -88,7 +88,7 @@ func (o *mqlOktaEventHook) id() (string, error) {
 // --- inline hooks ---
 
 // oktaInlineHookChannelRaw flattens the inline hook's channel, whose config
-// (uri, authScheme) the v5 SDK carries in the generic channel's untyped
+// (uri, authScheme) the SDK carries in the generic channel's untyped
 // AdditionalProperties rather than a typed field. Marshaling the channel to
 // JSON gives one stable path to the fields regardless of the concrete channel
 // variant. This mirrors the shape of the marshaled channel object itself
@@ -168,12 +168,7 @@ func newMqlOktaInlineHook(runtime *plugin.Runtime, entry *okta.InlineHook) (any,
 		return nil, err
 	}
 
-	metadata := map[string]any{}
-	if entry.Metadata != nil {
-		for k, v := range *entry.Metadata {
-			metadata[k] = v
-		}
-	}
+	metadata := oktaStringMapFrom(entry.AdditionalProperties["metadata"])
 
 	return CreateResource(runtime, "okta.inlineHook", map[string]*llx.RawData{
 		"id":                llx.StringData(oktaStr(entry.Id)),
@@ -235,7 +230,7 @@ func (o *mqlOkta) hookKeys() ([]any, error) {
 }
 
 func newMqlOktaHookKey(runtime *plugin.Runtime, entry *okta.HookKey) (any, error) {
-	embedded, err := convert.JsonToDict(entry.Embedded)
+	embedded, err := convert.JsonToDict(entry.AdditionalProperties["_embedded"])
 	if err != nil {
 		return nil, err
 	}
@@ -252,8 +247,8 @@ func newMqlOktaHookKey(runtime *plugin.Runtime, entry *okta.HookKey) (any, error
 		"keyId":       llx.StringData(oktaStr(entry.KeyId)),
 		"isUsed":      llx.BoolData(isUsed),
 		"publicKey":   llx.DictData(publicKey),
-		"created":     llx.TimeDataPtr(entry.Created),
-		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
+		"created":     llx.TimeDataPtr(entry.Created.Get()),
+		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated.Get()),
 	})
 }
 
@@ -262,7 +257,7 @@ func (o *mqlOktaHookKey) id() (string, error) {
 }
 
 // oktaHookKeyPublicKey narrows a hook key's `_embedded` payload to the public
-// JWK. Okta nests the key under `_embedded.publicKey`, but the v5 SDK types
+// JWK. Okta nests the key under `_embedded.publicKey`, but the SDK types
 // `_embedded` as a bare JsonWebKey, so the wrapper lands in the JWK's
 // AdditionalProperties and survives the dict conversion. Unwrap the publicKey
 // sub-object when present so the dict is the JWK itself; otherwise return the

@@ -7,7 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -103,11 +104,7 @@ func oktaGroupArgs(entry *okta.Group) (map[string]*llx.RawData, error) {
 		return nil, err
 	}
 
-	var name, description string
-	if entry.Profile != nil {
-		name = oktaStr(entry.Profile.Name)
-		description = oktaStr(entry.Profile.Description)
-	}
+	name, description := oktaGroupProfileNameAndDescription(entry.Profile)
 
 	return map[string]*llx.RawData{
 		"id":                    llx.StringData(oktaStr(entry.Id)),
@@ -119,6 +116,26 @@ func oktaGroupArgs(entry *okta.Group) (map[string]*llx.RawData, error) {
 		"lastUpdated":           llx.TimeDataPtr(entry.LastUpdated),
 		"profile":               llx.DictData(profile),
 	}, nil
+}
+
+// oktaGroupProfileNameAndDescription reads the name and description out of a
+// group profile. The profile is a union of an Okta-sourced group and one
+// mastered by Active Directory; both carry the two fields, so either member
+// answers. A profile of neither kind yields empty values.
+func oktaGroupProfileNameAndDescription(profile *okta.GroupProfile) (name, description string) {
+	if profile == nil {
+		return "", ""
+	}
+	switch {
+	case profile.OktaUserGroupProfile != nil:
+		return oktaStr(profile.OktaUserGroupProfile.Name),
+			oktaStr(profile.OktaUserGroupProfile.Description)
+	case profile.OktaActiveDirectoryGroupProfile != nil:
+		return oktaStr(profile.OktaActiveDirectoryGroupProfile.Name),
+			oktaStr(profile.OktaActiveDirectoryGroupProfile.Description)
+	default:
+		return "", ""
+	}
 }
 
 func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
@@ -149,7 +166,7 @@ func (o *mqlOktaGroup) members() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []okta.GroupMember) error {
+	appendEntry := func(datalist []okta.User) error {
 		for i := range datalist {
 			r, err := newMqlOktaUser(o.MqlRuntime, &datalist[i])
 			if err != nil {
@@ -167,7 +184,7 @@ func (o *mqlOktaGroup) members() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []okta.GroupMember
+		var slice []okta.User
 		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
@@ -187,7 +204,7 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 
 	ctx := context.Background()
 	groupID := o.Id.Data
-	slice, resp, err := client.RoleAssignmentAPI.ListGroupAssignedRoles(ctx, groupID).Execute()
+	slice, resp, err := client.RoleAssignmentBGroupAPI.ListGroupAssignedRoles(ctx, groupID).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -197,11 +214,16 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []okta.Role) error {
+	appendEntry := func(datalist []okta.ListGroupAssignedRoles200ResponseInner) error {
 		for i := range datalist {
-			r, err := newMqlOktaRole(o.MqlRuntime, &datalist[i], "group", o.Id.Data)
+			r, err := newMqlOktaAssignedRole(o.MqlRuntime, &datalist[i], "group", o.Id.Data)
 			if err != nil {
 				return err
+			}
+			if r == nil {
+				log.Warn().Str("group", o.Id.Data).
+					Msg("skipping a role assignment of an unrecognized kind")
+				continue
 			}
 			list = append(list, r)
 		}
@@ -215,7 +237,7 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []okta.Role
+		var slice []okta.ListGroupAssignedRoles200ResponseInner
 		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
@@ -233,7 +255,7 @@ func (o *mqlOkta) groupRules() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.GroupAPI.ListGroupRules(ctx).Limit(queryLimit).Execute()
+	slice, resp, err := client.GroupRuleAPI.ListGroupRules(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
