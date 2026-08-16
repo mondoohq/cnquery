@@ -765,6 +765,28 @@ private okta.application @defaults("name") {
   // `autoSubmitToolbar`, `appLinks` (per-link enablement), and `hide`
   // (`iOS` and `web` booleans that suppress the app chiclet).
   visibility dict
+  // Whether Universal Logout is in effect for the application
+  //
+  // Universal Logout lets Okta end the application's own sessions when it
+  // ends the user's Okta session. Where it is not in effect, revoking
+  // access in Okta leaves the application's session running until that
+  // session expires on its own, so offboarding and session revocation stop
+  // at the Okta boundary.
+  universalLogoutStatus string
+  // Extent of the application's Universal Logout support
+  //
+  // Distinguishes an application that terminates every session from one
+  // that terminates only some, which is the difference between a logout
+  // that finishes and one that appears to.
+  universalLogoutSupportType string
+  // Protocol Okta uses to signal Universal Logout to the application
+  universalLogoutProtocol string
+  // Shared identity stack behind the application
+  //
+  // Set when the application shares a sign-in stack with other applications
+  // from the same vendor, in which case ending this session can end the
+  // user's sessions in those too.
+  universalLogoutIdentityStack string
   // Signing keys/certificates published for this application (for SAML/OIDC signing)
   signingKeys() []okta.application.key
   // Users assigned to the application
@@ -1279,6 +1301,12 @@ private okta.resourceSet.resource @defaults("orn href") {
   href string
   // Parsed Okta Resource Name (ORN) of the target, when available
   orn string
+  // Resources carved out of this entry
+  //
+  // Okta Resource Names excluded from the grant, which narrow what the
+  // entry actually covers. An entry naming a whole group of resources
+  // grants less than it appears to when this list is not empty.
+  excludedOrns []string
   // Target group, when the resource is a group
   group() okta.group
   // Target application, when the resource is an application
@@ -1452,6 +1480,24 @@ private okta.authorizationServer @defaults("name status issuer") {
   claims() []okta.authorizationServer.claim
   // Published signing keys for access tokens issued by this server
   keys() []okta.authorizationServer.key
+  // Algorithm used to encrypt access tokens
+  //
+  // When set, an access token is signed and then encrypted, so it reaches
+  // the client as a nested JWT. Empty when the server issues signed tokens
+  // that are not encrypted, which is the default.
+  accessTokenEncryptedResponseAlgorithm string
+  // URL of the key set used to encrypt tokens
+  //
+  // References the JSON Web Key Set this server encrypts issued tokens
+  // against. Distinct from keys, which are the signing keys the server
+  // publishes.
+  jwksUri string
+  // Key set used to encrypt tokens
+  //
+  // The encryption keys as served, each carrying kid, kty, use, status and
+  // the RSA values n and e. Null when the server does not encrypt tokens,
+  // which is the default and the common case.
+  jwks dict
 }
 
 // Okta Authorization Server Policy
@@ -1815,6 +1861,11 @@ private okta.apiServiceIntegration @defaults("name type") {
   createdBy string
   // Timestamp when the integration instance was created
   createdAt time
+  // Configuration properties set on the integration instance
+  //
+  // Keyed by property name, holding the value configured for it. Empty when
+  // the integration takes no configuration or none has been set.
+  properties map[string]string
 }
 
 // Okta Attack Protection Settings
@@ -2069,6 +2120,18 @@ private okta.agentPool @defaults("name type operationalStatus") {
   //
   // One of ACTIVE, INACTIVE, DEGRADED, or UNKNOWN.
   operationalStatus string
+  // Number of agents in the pool that are disrupted
+  //
+  // Agents that reached Okta but are not working correctly. A pool serving
+  // authentication or directory sync with disrupted agents is degraded even
+  // while its operationalStatus still reads ACTIVE.
+  disruptedAgents int
+  // Number of agents in the pool that are inactive
+  //
+  // Agents that are not currently connected to Okta. Read alongside
+  // disruptedAgents to tell a pool that lost capacity from one that never
+  // had it.
+  inactiveAgents int
   // Agents enrolled in the pool
   agents []okta.agentPool.agent
 }

@@ -72,6 +72,8 @@ func newMqlOktaAgentPool(runtime *plugin.Runtime, entry *okta.AgentPool) (any, e
 		"name":              llx.StringData(oktaStr(entry.Name)),
 		"type":              llx.StringData(oktaStr(entry.Type)),
 		"operationalStatus": llx.StringData(oktaStr(entry.OperationalStatus)),
+		"disruptedAgents":   llx.IntDataPtr(oktaInt64(entry.DisruptedAgents)),
+		"inactiveAgents":    llx.IntDataPtr(oktaInt64(entry.InactiveAgents)),
 		"agents":            llx.ArrayData(agents, types.Resource("okta.agentPool.agent")),
 	})
 }

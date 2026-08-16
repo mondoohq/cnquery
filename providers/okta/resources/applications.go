@@ -36,6 +36,20 @@ type oktaApplicationRaw struct {
 	Profile     json.RawMessage `json:"profile,omitempty"`
 	Settings    json.RawMessage `json:"settings,omitempty"`
 	Visibility  json.RawMessage `json:"visibility,omitempty"`
+
+	UniversalLogout *oktaUniversalLogoutRaw `json:"universalLogout,omitempty"`
+}
+
+// oktaUniversalLogoutRaw is the application's Universal Logout block. It is
+// absent on applications Okta cannot sign the user out of, which is why the
+// pointer is kept rather than flattened: the whole block missing and every
+// value within it being empty are the same reading, but only one of them is
+// worth telling apart from a value the API declined to report.
+type oktaUniversalLogoutRaw struct {
+	IdentityStack string `json:"identityStack,omitempty"`
+	Protocol      string `json:"protocol,omitempty"`
+	Status        string `json:"status,omitempty"`
+	SupportType   string `json:"supportType,omitempty"`
 }
 
 func oktaApplicationFromUnion(item okta.ListApplications200ResponseInner) (*oktaApplicationRaw, error) {
@@ -164,25 +178,36 @@ func oktaApplicationArgs(entry *oktaApplicationRaw) (map[string]*llx.RawData, er
 		return nil, err
 	}
 
+	// An application without the block reports empty rather than null, which
+	// matches how every other absent string on this resource reads.
+	ul := entry.UniversalLogout
+	if ul == nil {
+		ul = &oktaUniversalLogoutRaw{}
+	}
+
 	visibility, err := convert.JsonToDict(entry.Visibility)
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]*llx.RawData{
-		"id":          llx.StringData(entry.Id),
-		"name":        llx.StringData(entry.Name),
-		"label":       llx.StringData(entry.Label),
-		"created":     llx.TimeDataPtr(entry.Created),
-		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
-		"credentials": llx.DictData(credentials),
-		"features":    llx.ArrayData(convert.SliceAnyToInterface(entry.Features), types.String),
-		"licensing":   llx.DictData(licensing),
-		"profile":     llx.DictData(profile),
-		"settings":    llx.DictData(settings),
-		"signOnMode":  llx.StringData(entry.SignOnMode),
-		"status":      llx.StringData(entry.Status),
-		"visibility":  llx.DictData(visibility),
+		"id":                           llx.StringData(entry.Id),
+		"name":                         llx.StringData(entry.Name),
+		"label":                        llx.StringData(entry.Label),
+		"created":                      llx.TimeDataPtr(entry.Created),
+		"lastUpdated":                  llx.TimeDataPtr(entry.LastUpdated),
+		"credentials":                  llx.DictData(credentials),
+		"features":                     llx.ArrayData(convert.SliceAnyToInterface(entry.Features), types.String),
+		"licensing":                    llx.DictData(licensing),
+		"profile":                      llx.DictData(profile),
+		"settings":                     llx.DictData(settings),
+		"signOnMode":                   llx.StringData(entry.SignOnMode),
+		"status":                       llx.StringData(entry.Status),
+		"visibility":                   llx.DictData(visibility),
+		"universalLogoutStatus":        llx.StringData(ul.Status),
+		"universalLogoutSupportType":   llx.StringData(ul.SupportType),
+		"universalLogoutProtocol":      llx.StringData(ul.Protocol),
+		"universalLogoutIdentityStack": llx.StringData(ul.IdentityStack),
 	}, nil
 }
 
