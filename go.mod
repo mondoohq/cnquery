@@ -126,6 +126,7 @@ require (
 	github.com/moby/moby/api v1.55.0
 	github.com/moby/moby/client v0.5.1
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f
+	software.sslmate.com/src/go-pkcs12 v0.7.0
 )
 
 require (
