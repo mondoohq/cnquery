@@ -1557,6 +1557,167 @@ private apache2.conf.location @defaults("path") {
   params map[string]string
 }
 
+// BIND 9 DNS Server
+//
+// Parsed named.conf configuration with every include expanded, which is
+// where distributions keep the parts worth auditing: named.conf.options
+// and named.conf.local on Debian and Ubuntu, /etc/named.conf.local on
+// Red Hat. Covers the global options block, every zone declared at the
+// top level or inside a view, named address-match lists, and TSIG keys.
+// The files field lists every file that contributed, so permission and
+// ownership checks reach the whole configuration rather than the entry
+// point. Pass `init(path: "...")` to read a config outside the default
+// locations.
+bind9 {
+  init(path? string)
+  // Primary configuration file
+  file() file
+  // Every file that contributes to the running configuration
+  //
+  // The primary file plus each one it pulls in, directly or through a
+  // chain of includes, so ownership and permission checks cover the
+  // fragments a zone or a key is actually declared in.
+  files() []file
+  // Whether the server answers recursive queries
+  //
+  // BIND defaults to recursion for a server that does not say otherwise,
+  // so this reads true when the statement is absent. An authoritative
+  // server that has not turned recursion off is an open resolver.
+  recursion() bool
+  // dnssec-validation setting ("yes", "no", or "auto"; empty when unset)
+  dnssecValidation() string
+  // Working directory for relative paths (directory)
+  directory() string
+  // Version string reported in a version.bind query
+  //
+  // Empty when the statement is absent, which means the real version is
+  // reported. A server that hides it sets this, often to "".
+  version() string
+  // minimal-responses setting ("yes", "no", "no-auth", or "no-auth-recursive")
+  minimalResponses() string
+  // Hosts allowed to query the server (allow-query)
+  allowQuery() []string
+  // Hosts allowed to query recursively (allow-recursion)
+  allowRecursion() []string
+  // Hosts allowed to transfer zones (allow-transfer)
+  //
+  // An unrestricted transfer hands a copy of every zone to anyone who
+  // asks, which is why hardening guidance starts here.
+  allowTransfer() []string
+  // Hosts allowed to submit dynamic updates (allow-update)
+  allowUpdate() []string
+  // Addresses the server listens on for IPv4 (listen-on)
+  listenOn() []string
+  // Addresses the server listens on for IPv6 (listen-on-v6)
+  listenOnV6() []string
+  // Servers queries are forwarded to (forwarders)
+  forwarders() []string
+  // Every scalar statement of the options block, as written
+  //
+  // Carries the settings without a field of their own here, so a check
+  // can reach a statement this resource does not model. A list-valued
+  // statement is not in here: its value is a block, and flattening it to
+  // a string would invent a value the file does not have.
+  params() map[string]string
+  // Zones this server answers for
+  //
+  // Zones declared at the top level and inside every view. The view a
+  // zone belongs to is on the zone itself, so a server that splits its
+  // answers still reports one list.
+  zones() []bind9.zone
+  // Named address-match lists declared with acl
+  acls() []bind9.acl
+  // TSIG keys declared with key
+  //
+  // The shared secret of a key is deliberately not exposed. Reading it
+  // would copy key material into scan results.
+  keys() []bind9.key
+  // Logging channels declared inside the logging block
+  channels() []bind9.channel
+  // Logging categories and the channels each is sent to
+  //
+  // The category name maps to its channel list, so `queries` mapping to
+  // a channel is what says query logging is on.
+  logCategories() map[string][]string
+}
+
+// BIND 9 zone
+//
+// One zone declaration. The name field selects the zone as it appears in
+// named.conf, for example `bind9.zones.where(name == "example.com")`.
+private bind9.zone @defaults("name type view") {
+  // Zone name, e.g. "example.com" or "." for the root hints
+  name string
+  // Zone class, "IN" when the declaration omits it
+  class string
+  // View the zone is declared in, empty for a top-level zone
+  view string
+  // Zone type, e.g. "master", "primary", "slave", "secondary", "hint", "forward", or "stub"
+  type string
+  // Zone file as written in the declaration, relative or absolute
+  path string
+  // Zone file, resolved against the directory option when relative
+  //
+  // Null when the zone declares no file, as a forward or stub zone does.
+  file() file
+  // Hosts allowed to transfer this zone (allow-transfer)
+  allowTransfer []string
+  // Hosts allowed to submit dynamic updates for this zone (allow-update)
+  allowUpdate []string
+  // Hosts allowed to query this zone (allow-query)
+  allowQuery []string
+  // Servers this zone is transferred from (primaries, or masters on older configurations)
+  primaries []string
+  // Every scalar statement in the zone declaration, as written
+  params map[string]string
+}
+
+// BIND 9 address-match list
+//
+// A list declared with acl and referenced by name from the options block
+// or a zone, so a check that resolves a name like "trusted" can see what
+// it stands for.
+private bind9.acl @defaults("name") {
+  // ACL name
+  name string
+  // Entries of the list, e.g. "localhost", "10.0.0.0/8", or "!192.0.2.1"
+  entries []string
+}
+
+// BIND 9 TSIG key
+//
+// A key used to authenticate transfers, dynamic updates, and rndc. The
+// shared secret is deliberately not exposed.
+private bind9.key @defaults("name algorithm") {
+  // Key name
+  name string
+  // Signing algorithm, e.g. "hmac-sha256"
+  algorithm string
+}
+
+// BIND 9 logging channel
+//
+// One channel of the logging block, naming where records go and how much
+// of them is kept.
+private bind9.channel @defaults("name severity") {
+  // Channel name
+  name string
+  // Destination file, empty when the channel logs to syslog, stderr, or null
+  path string
+  // Destination when it is not a file: "syslog", "stderr", or "null"
+  target string
+  // Severity threshold, e.g. "info", "notice", "warning", or "debug"
+  severity string
+  // Syslog facility when the channel logs to syslog
+  syslogFacility string
+  // Whether each record carries its timestamp (print-time)
+  printTime bool
+  // Whether each record carries its category (print-category)
+  printCategory bool
+  // Whether each record carries its severity (print-severity)
+  printSeverity bool
+}
+
 // Nginx HTTP Server
 //
 // Nginx daemon version and the modules compiled into the binary. Use
