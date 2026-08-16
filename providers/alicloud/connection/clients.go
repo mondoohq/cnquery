@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -34,10 +35,12 @@ import (
 	slbclient "github.com/alibabacloud-go/slb-20140515/v4/client"
 	slsclient "github.com/alibabacloud-go/sls-20201230/v6/client"
 	stsclient "github.com/alibabacloud-go/sts-20150401/v2/client"
+	tea "github.com/alibabacloud-go/tea/tea"
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v7/client"
 	wafclient "github.com/alibabacloud-go/waf-openapi-20211001/v7/client"
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	osscred "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+	credential "github.com/aliyun/credentials-go/credentials"
 )
 
 // endpoint builds the public Alibaba Cloud service endpoint for a region. A few
@@ -256,21 +259,46 @@ func (c *AlicloudConnection) PolarDBClient(region string) (*polardbclient.Client
 	return client.(*polardbclient.Client), nil
 }
 
-// OssClient returns an Object Storage Service client for a region. OSS uses its
-// own SDK and credential provider type, so it is built from the retained static
-// credential (falling back to the OSS environment credential provider when no
-// static credential was supplied).
+// darabonbaOssCredentials adapts the Darabonba credential every other service
+// client uses to the credential provider type the OSS SDK expects.
+//
+// It exists because those two SDKs resolve credentials independently. Without
+// the adapter OSS can only see a static access key, so the two credential
+// sources that never produce one, the shared credentials file and an ECS
+// instance RAM role, reach every service except OSS. The failure is silent and
+// misleading: OSS reports "access key id or access key secret is empty" on an
+// account whose credentials are working everywhere else.
+type darabonbaOssCredentials struct {
+	cred credential.Credential
+}
+
+// GetCredentials resolves the current credential on every call rather than
+// caching it, so a session token that the Darabonba credential refreshes (an
+// assumed RAM role, an instance role) stays valid for OSS too.
+func (p *darabonbaOssCredentials) GetCredentials(ctx context.Context) (osscred.Credentials, error) {
+	model, err := p.cred.GetCredential()
+	if err != nil {
+		return osscred.Credentials{}, err
+	}
+	if model == nil {
+		return osscred.Credentials{}, errors.New("alicloud: no credential available for OSS")
+	}
+	return osscred.Credentials{
+		AccessKeyID:     tea.StringValue(model.AccessKeyId),
+		AccessKeySecret: tea.StringValue(model.AccessKeySecret),
+		SecurityToken:   tea.StringValue(model.SecurityToken),
+	}, nil
+}
+
+// OssClient returns an Object Storage Service client for a region. OSS ships its
+// own SDK with its own credential provider type, so the shared Darabonba
+// credential is adapted rather than rebuilt, which keeps all four documented
+// auth methods working for OSS exactly as they do for every other service.
 func (c *AlicloudConnection) OssClient(region string) (*oss.Client, error) {
 	client, err := c.cachedClient("oss/"+region, func() (any, error) {
-		var provider osscred.CredentialsProvider
-		if c.accessKeyID != "" && c.accessKeySecret != "" {
-			provider = osscred.NewStaticCredentialsProvider(c.accessKeyID, c.accessKeySecret, c.securityToken)
-		} else {
-			provider = osscred.NewEnvironmentVariableCredentialsProvider()
-		}
 		cfg := oss.LoadDefaultConfig().
 			WithRegion(region).
-			WithCredentialsProvider(provider)
+			WithCredentialsProvider(&darabonbaOssCredentials{cred: c.cred})
 		return oss.NewClient(cfg), nil
 	})
 	if err != nil {
