@@ -158,19 +158,80 @@ func TestParseRejectsGarbage(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// keytool has written a SHA-256 integrity MAC for years and the PKCS#12 reader
-// available here only verifies SHA-1, so such a store cannot be opened with any
-// password. Reporting it as a credential problem would send someone looking for
-// a password that was never the issue, so it gets its own error — classified by
-// the upstream error type rather than its wording.
-func TestParsePKCS12ReportsAnUnsupportedMACDistinctly(t *testing.T) {
+// keytool has written a SHA-256 integrity MAC for years, and PKCS#12 has been
+// the default format for the stores it creates since JDK 9, so this is the
+// shape of most keystores made this decade. golang.org/x/crypto/pkcs12 verifies
+// only SHA-1 MACs and cannot open any of them.
+func TestParsePKCS12WithASHA256MAC(t *testing.T) {
 	data, err := os.ReadFile("testdata/keystore-sha256mac.p12")
-	if err != nil {
-		t.Skip("no PKCS#12 fixture")
+	require.NoError(t, err)
+
+	ks, err := java.Parse(data, "changeit")
+	require.NoError(t, err, "a SHA-256 MAC is not a reason to refuse a store")
+	assert.Equal(t, java.FormatPKCS12, ks.Format)
+	require.NotEmpty(t, ks.Entries)
+
+	for _, entry := range ks.Entries {
+		require.NotEmpty(t, entry.Certs)
+		for _, der := range entry.Certs {
+			_, err := x509.ParseCertificate(der)
+			require.NoError(t, err, "every entry carries valid DER")
+		}
 	}
-	_, err = java.Parse(data, "changeit")
+}
+
+// A store keytool writes with a private key. Read through ToPEM, which is the
+// only entry point that carries friendlyName, so the alias survives.
+func TestParsePKCS12KeystoreKeepsTheAlias(t *testing.T) {
+	data, err := os.ReadFile("testdata/ks-modern.p12")
+	require.NoError(t, err)
+
+	ks, err := java.Parse(data, "changeit")
+	require.NoError(t, err)
+	require.NotEmpty(t, ks.Entries)
+
+	aliases := map[string]bool{}
+	for _, entry := range ks.Entries {
+		aliases[entry.Alias] = true
+		assert.False(t, entry.Trusted,
+			"a certificate that belongs to a private key's chain is not a trust anchor")
+	}
+	assert.True(t, aliases["mykey"], "the alias keytool recorded is readable, got %v", aliases)
+}
+
+// A store of trust anchors, which is the shape ToPEM refuses because keytool
+// marks each certificate with an attribute it does not know.
+func TestParsePKCS12TrustStore(t *testing.T) {
+	data, err := os.ReadFile("testdata/truststore.p12")
+	require.NoError(t, err)
+
+	ks, err := java.Parse(data, "changeit")
+	require.NoError(t, err)
+	require.Len(t, ks.Entries, 1)
+	assert.True(t, ks.Entries[0].Trusted, "every certificate in a trust store is a trust anchor")
+	_, err = x509.ParseCertificate(ks.Entries[0].Certs[0])
+	require.NoError(t, err)
+}
+
+// The property the reader has to keep whatever it is built on: an unreadable
+// store and a wrong password stay distinguishable, so nobody goes looking for a
+// credential that was never the problem, and an unreadable store is never
+// reported as an empty one.
+func TestParsePKCS12WrongPasswordIsNotAnUnsupportedStore(t *testing.T) {
+	// A store whose password is not one of the documented defaults: Parse falls
+	// back to those, so a store protected with "changeit" opens no matter what
+	// the caller passes and cannot show this property.
+	data, err := os.ReadFile("testdata/ks-custompass.p12")
+	require.NoError(t, err)
+
+	_, err = java.Parse(data, "definitely-not-the-password")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, java.ErrUnsupportedPKCS12)
-	assert.NotErrorIs(t, err, java.ErrPasswordRequired,
-		"an unverifiable MAC is not a wrong password")
+	assert.ErrorIs(t, err, java.ErrPasswordRequired)
+	assert.NotErrorIs(t, err, java.ErrUnsupportedPKCS12,
+		"a wrong password is not an unimplemented feature")
+
+	// and the right one opens it
+	ks, err := java.Parse(data, "s3cr3t-store-pw")
+	require.NoError(t, err)
+	assert.NotEmpty(t, ks.Entries)
 }

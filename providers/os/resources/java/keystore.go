@@ -20,7 +20,7 @@ import (
 	"time"
 	"unicode/utf16"
 
-	"golang.org/x/crypto/pkcs12"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 const (
@@ -66,11 +66,13 @@ var ErrPasswordRequired = errors.New("keystore contents are encrypted and no pas
 // ErrUnsupportedPKCS12 reports a store built with PKCS#12 features the reader
 // does not implement, which no password will open.
 //
-// The common case is the integrity MAC: keytool has written a SHA-256 one for
-// years, and golang.org/x/crypto/pkcs12 verifies the MAC before it will decrypt
-// anything and accepts only SHA-1 (`mac.go`, and still so in v0.55.0, the newest
-// release). Reporting that as a wrong password would send someone hunting for a
-// credential that was never the problem, so the two are kept apart.
+// It no longer covers the common case it was written for. golang.org/x/crypto/
+// pkcs12 verifies the integrity MAC before decrypting anything and accepts only
+// SHA-1, so it could not open a store keytool has written since JDK 9; the
+// reader here verifies SHA-256, SHA-384 and SHA-512 as well. The error stays
+// because a store can still use something unimplemented, and because reporting
+// that as a wrong password would send someone hunting for a credential that was
+// never the problem.
 var ErrUnsupportedPKCS12 = errors.New("PKCS#12 store uses features this reader does not implement")
 
 // Entry is one alias in a keystore.
@@ -284,6 +286,11 @@ func readJKSCert(r *reader, version uint32) ([]byte, error) {
 // ParsePKCS12 reads the standard format. Unlike JKS the bags are encrypted, so
 // this needs the password. When none is given the documented defaults are tried
 // before giving up.
+//
+// The reader is software.sslmate.com/src/go-pkcs12 rather than
+// golang.org/x/crypto/pkcs12, which verifies only SHA-1 MACs and so cannot open
+// a store keytool has written since JDK 9. See readPKCS12 for why three entry
+// points are tried rather than one.
 func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 	passwords := DefaultPasswords
 	if password != "" {
@@ -292,55 +299,114 @@ func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 
 	var lastErr error
 	for _, candidate := range passwords {
-		blocks, err := pkcs12.ToPEM(data, candidate)
-		if err != nil {
-			lastErr = err
-			// Something unimplemented fails identically for every password, so
-			// stop rather than working through the list and then blaming the
-			// credential. The upstream package types these, so this reads the
-			// type rather than the message — the wording is an internal detail
-			// and would change without notice.
-			var notImplemented pkcs12.NotImplementedError
-			if errors.As(err, &notImplemented) {
-				return nil, fmt.Errorf("%w: %v", ErrUnsupportedPKCS12, err)
-			}
-			continue
+		entries, err := readPKCS12(data, candidate)
+		if err == nil {
+			return &Keystore{Format: FormatPKCS12, Entries: entries}, nil
 		}
+		lastErr = err
 
-		// A certificate that belongs to a private key's chain is not a trust
-		// anchor, and PKCS#12 ties the two together with a localKeyId rather
-		// than by position. Collect the keys' ids first so the certificates can
-		// be classified the same way the JKS entry tags classify them.
-		keyIDs := map[string]struct{}{}
-		for _, block := range blocks {
-			if block.Type == "PRIVATE KEY" {
-				if id, ok := block.Headers["localKeyId"]; ok {
-					keyIDs[id] = struct{}{}
-				}
-			}
+		// Something unimplemented fails identically for every password, so stop
+		// rather than working through the list and then blaming the credential.
+		// The reader types these, so this reads the type rather than the
+		// message: the wording is an internal detail and would change without
+		// notice.
+		var notImplemented pkcs12.NotImplementedError
+		if errors.As(err, &notImplemented) {
+			return nil, fmt.Errorf("%w: %v", ErrUnsupportedPKCS12, err)
 		}
-
-		ks := &Keystore{Format: FormatPKCS12}
-		for _, block := range blocks {
-			// Only certificates are surfaced. A shrouded key bag decodes to key
-			// material, which has no place in a scan result.
-			if block.Type != "CERTIFICATE" {
-				continue
-			}
-			_, belongsToAKey := keyIDs[block.Headers["localKeyId"]]
-			ks.Entries = append(ks.Entries, Entry{
-				// friendlyName is where keytool records the alias. A store
-				// written by something else may not set one, which is why the
-				// resource does not identify an entry by its alias alone.
-				Alias:   block.Headers["friendlyName"],
-				Trusted: !belongsToAKey,
-				Certs:   [][]byte{block.Bytes},
-			})
-		}
-		return ks, nil
 	}
 
 	return nil, fmt.Errorf("%w: %v", ErrPasswordRequired, lastErr)
+}
+
+// readPKCS12 reads the certificates of a store with the one entry point that
+// fits its shape. No single one covers the three shapes that occur in practice:
+//
+//   - ToPEM carries friendlyName and localKeyId, which is the only way to
+//     recover an alias and to tell a trust anchor from a certificate that
+//     belongs to a private key's chain. It refuses any bag attribute it does
+//     not know, including the one keytool writes on a trusted certificate.
+//   - DecodeTrustStore reads a store of trust anchors, the shape ToPEM refuses.
+//     It reports no aliases.
+//   - DecodeChain reads a keystore whose bags carry attributes ToPEM rejects.
+//     Everything it returns belongs to the private key's chain.
+//
+// Only the error from DecodeChain describes the store. The other two reject by
+// shape, and they report a shape they cannot handle as NotImplementedError as
+// well: DecodeTrustStore answers "expected exactly 1 items in the authenticated
+// safe" for an ordinary keystore. Classifying on that would report every
+// keystore as unreadable. DecodeChain imposes the fewest constraints, so its
+// failure is the store's rather than the entry point's.
+func readPKCS12(data []byte, password string) ([]Entry, error) {
+	if entries, err := pkcs12EntriesFromPEM(data, password); err == nil {
+		return entries, nil
+	}
+
+	if certs, err := pkcs12.DecodeTrustStore(data, password); err == nil {
+		entries := make([]Entry, 0, len(certs))
+		for _, cert := range certs {
+			// Every certificate in a trust store is a trust anchor by
+			// definition. The alias is not recoverable through this path.
+			entries = append(entries, Entry{Trusted: true, Certs: [][]byte{cert.Raw}})
+		}
+		return entries, nil
+	}
+
+	_, leaf, cas, err := pkcs12.DecodeChain(data, password)
+	if err != nil {
+		return nil, err
+	}
+	entries := make([]Entry, 0, len(cas)+1)
+	if leaf != nil {
+		entries = append(entries, Entry{Certs: [][]byte{leaf.Raw}})
+	}
+	for _, ca := range cas {
+		// These belong to the key's chain, not to the trust anchors, which is
+		// the classification ToPEM reaches through localKeyId.
+		entries = append(entries, Entry{Certs: [][]byte{ca.Raw}})
+	}
+	return entries, nil
+}
+
+// pkcs12EntriesFromPEM reads the store through ToPEM, the only entry point that
+// carries the bag attributes an alias and a trust classification come from.
+func pkcs12EntriesFromPEM(data []byte, password string) ([]Entry, error) {
+	blocks, err := pkcs12.ToPEM(data, password)
+	if err != nil {
+		return nil, err
+	}
+
+	// A certificate that belongs to a private key's chain is not a trust
+	// anchor, and PKCS#12 ties the two together with a localKeyId rather than
+	// by position. Collect the keys' ids first so the certificates can be
+	// classified the same way the JKS entry tags classify them.
+	keyIDs := map[string]struct{}{}
+	for _, block := range blocks {
+		if block.Type == "PRIVATE KEY" {
+			if id, ok := block.Headers["localKeyId"]; ok {
+				keyIDs[id] = struct{}{}
+			}
+		}
+	}
+
+	var entries []Entry
+	for _, block := range blocks {
+		// Only certificates are surfaced. A shrouded key bag decodes to key
+		// material, which has no place in a scan result.
+		if block.Type != "CERTIFICATE" {
+			continue
+		}
+		_, belongsToAKey := keyIDs[block.Headers["localKeyId"]]
+		entries = append(entries, Entry{
+			// friendlyName is where keytool records the alias. A store written
+			// by something else may not set one, which is why the resource does
+			// not identify an entry by its alias alone.
+			Alias:   block.Headers["friendlyName"],
+			Trusted: !belongsToAKey,
+			Certs:   [][]byte{block.Bytes},
+		})
+	}
+	return entries, nil
 }
 
 // reader walks a byte slice, refusing to run past the end.
