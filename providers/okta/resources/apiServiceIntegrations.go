@@ -63,6 +63,15 @@ func newMqlOktaApiServiceIntegration(runtime *plugin.Runtime, entry *okta.APISer
 		}
 	}
 
+	// Properties are a name-to-value list on the wire; the name is the key a
+	// query would look the value up by.
+	properties := map[string]any{}
+	if entry.Properties != nil {
+		for key, prop := range *entry.Properties {
+			properties[key] = oktaStr(prop.Value)
+		}
+	}
+
 	return CreateResource(runtime, "okta.apiServiceIntegration", map[string]*llx.RawData{
 		"id":             llx.StringData(oktaStr(entry.Id)),
 		"name":           llx.StringData(oktaStr(entry.Name)),
@@ -71,6 +80,7 @@ func newMqlOktaApiServiceIntegration(runtime *plugin.Runtime, entry *okta.APISer
 		"configGuideUrl": llx.StringData(oktaStr(entry.ConfigGuideUrl)),
 		"createdBy":      llx.StringData(oktaStr(entry.CreatedBy)),
 		"createdAt":      llx.TimeDataPtr(created),
+		"properties":     llx.MapData(properties, types.String),
 	})
 }
 

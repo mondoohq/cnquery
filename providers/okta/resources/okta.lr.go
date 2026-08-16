@@ -953,6 +953,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.application.visibility": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApplication).GetVisibility()).ToDataRes(types.Dict)
 	},
+	"okta.application.universalLogoutStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetUniversalLogoutStatus()).ToDataRes(types.String)
+	},
+	"okta.application.universalLogoutSupportType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetUniversalLogoutSupportType()).ToDataRes(types.String)
+	},
+	"okta.application.universalLogoutProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetUniversalLogoutProtocol()).ToDataRes(types.String)
+	},
+	"okta.application.universalLogoutIdentityStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApplication).GetUniversalLogoutIdentityStack()).ToDataRes(types.String)
+	},
 	"okta.application.signingKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApplication).GetSigningKeys()).ToDataRes(types.Array(types.Resource("okta.application.key")))
 	},
@@ -1316,6 +1328,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.resourceSet.resource.orn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaResourceSetResource).GetOrn()).ToDataRes(types.String)
 	},
+	"okta.resourceSet.resource.excludedOrns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaResourceSetResource).GetExcludedOrns()).ToDataRes(types.Array(types.String))
+	},
 	"okta.resourceSet.resource.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaResourceSetResource).GetGroup()).ToDataRes(types.Resource("okta.group"))
 	},
@@ -1468,6 +1483,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.authorizationServer.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAuthorizationServer).GetKeys()).ToDataRes(types.Array(types.Resource("okta.authorizationServer.key")))
+	},
+	"okta.authorizationServer.accessTokenEncryptedResponseAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAuthorizationServer).GetAccessTokenEncryptedResponseAlgorithm()).ToDataRes(types.String)
+	},
+	"okta.authorizationServer.jwksUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAuthorizationServer).GetJwksUri()).ToDataRes(types.String)
+	},
+	"okta.authorizationServer.jwks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAuthorizationServer).GetJwks()).ToDataRes(types.Dict)
 	},
 	"okta.authorizationServer.policy.authorizationServerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAuthorizationServerPolicy).GetAuthorizationServerId()).ToDataRes(types.String)
@@ -1778,6 +1802,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.apiServiceIntegration.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApiServiceIntegration).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"okta.apiServiceIntegration.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaApiServiceIntegration).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"okta.attackProtection.preventBruteForceLockoutFromUnknownDevices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAttackProtection).GetPreventBruteForceLockoutFromUnknownDevices()).ToDataRes(types.Bool)
 	},
@@ -1945,6 +1972,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.agentPool.operationalStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAgentPool).GetOperationalStatus()).ToDataRes(types.String)
+	},
+	"okta.agentPool.disruptedAgents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetDisruptedAgents()).ToDataRes(types.Int)
+	},
+	"okta.agentPool.inactiveAgents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaAgentPool).GetInactiveAgents()).ToDataRes(types.Int)
 	},
 	"okta.agentPool.agents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAgentPool).GetAgents()).ToDataRes(types.Array(types.Resource("okta.agentPool.agent")))
@@ -2884,6 +2917,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaApplication).Visibility, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"okta.application.universalLogoutStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).UniversalLogoutStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.universalLogoutSupportType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).UniversalLogoutSupportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.universalLogoutProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).UniversalLogoutProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.application.universalLogoutIdentityStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApplication).UniversalLogoutIdentityStack, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"okta.application.signingKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaApplication).SigningKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3424,6 +3473,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaResourceSetResource).Orn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"okta.resourceSet.resource.excludedOrns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaResourceSetResource).ExcludedOrns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"okta.resourceSet.resource.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaResourceSetResource).Group, ok = plugin.RawToTValue[*mqlOktaGroup](v.Value, v.Error)
 		return
@@ -3642,6 +3695,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.authorizationServer.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaAuthorizationServer).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.authorizationServer.accessTokenEncryptedResponseAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAuthorizationServer).AccessTokenEncryptedResponseAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.authorizationServer.jwksUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAuthorizationServer).JwksUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.authorizationServer.jwks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAuthorizationServer).Jwks, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.authorizationServer.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4096,6 +4161,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaApiServiceIntegration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"okta.apiServiceIntegration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaApiServiceIntegration).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"okta.attackProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaAttackProtection).__id, ok = v.Value.(string)
 		return
@@ -4354,6 +4423,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.agentPool.operationalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaAgentPool).OperationalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.disruptedAgents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).DisruptedAgents, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"okta.agentPool.inactiveAgents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaAgentPool).InactiveAgents, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"okta.agentPool.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6862,25 +6939,29 @@ type mqlOktaApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOktaApplicationInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Label              plugin.TValue[string]
-	Created            plugin.TValue[*time.Time]
-	LastUpdated        plugin.TValue[*time.Time]
-	Credentials        plugin.TValue[any]
-	Features           plugin.TValue[[]any]
-	Licensing          plugin.TValue[any]
-	Profile            plugin.TValue[any]
-	Settings           plugin.TValue[any]
-	SignOnMode         plugin.TValue[string]
-	Status             plugin.TValue[string]
-	Visibility         plugin.TValue[any]
-	SigningKeys        plugin.TValue[[]any]
-	AssignedUsers      plugin.TValue[[]any]
-	AssignedGroups     plugin.TValue[[]any]
-	ScopeConsentGrants plugin.TValue[[]any]
-	AdminRoles         plugin.TValue[[]any]
-	Tokens             plugin.TValue[[]any]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Label                        plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	LastUpdated                  plugin.TValue[*time.Time]
+	Credentials                  plugin.TValue[any]
+	Features                     plugin.TValue[[]any]
+	Licensing                    plugin.TValue[any]
+	Profile                      plugin.TValue[any]
+	Settings                     plugin.TValue[any]
+	SignOnMode                   plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	Visibility                   plugin.TValue[any]
+	UniversalLogoutStatus        plugin.TValue[string]
+	UniversalLogoutSupportType   plugin.TValue[string]
+	UniversalLogoutProtocol      plugin.TValue[string]
+	UniversalLogoutIdentityStack plugin.TValue[string]
+	SigningKeys                  plugin.TValue[[]any]
+	AssignedUsers                plugin.TValue[[]any]
+	AssignedGroups               plugin.TValue[[]any]
+	ScopeConsentGrants           plugin.TValue[[]any]
+	AdminRoles                   plugin.TValue[[]any]
+	Tokens                       plugin.TValue[[]any]
 }
 
 // createOktaApplication creates a new instance of this resource
@@ -6970,6 +7051,22 @@ func (c *mqlOktaApplication) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlOktaApplication) GetVisibility() *plugin.TValue[any] {
 	return &c.Visibility
+}
+
+func (c *mqlOktaApplication) GetUniversalLogoutStatus() *plugin.TValue[string] {
+	return &c.UniversalLogoutStatus
+}
+
+func (c *mqlOktaApplication) GetUniversalLogoutSupportType() *plugin.TValue[string] {
+	return &c.UniversalLogoutSupportType
+}
+
+func (c *mqlOktaApplication) GetUniversalLogoutProtocol() *plugin.TValue[string] {
+	return &c.UniversalLogoutProtocol
+}
+
+func (c *mqlOktaApplication) GetUniversalLogoutIdentityStack() *plugin.TValue[string] {
+	return &c.UniversalLogoutIdentityStack
 }
 
 func (c *mqlOktaApplication) GetSigningKeys() *plugin.TValue[[]any] {
@@ -8266,13 +8363,14 @@ type mqlOktaResourceSetResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOktaResourceSetResourceInternal
-	Id          plugin.TValue[string]
-	Description plugin.TValue[string]
-	Href        plugin.TValue[string]
-	Orn         plugin.TValue[string]
-	Group       plugin.TValue[*mqlOktaGroup]
-	Application plugin.TValue[*mqlOktaApplication]
-	User        plugin.TValue[*mqlOktaUser]
+	Id           plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Href         plugin.TValue[string]
+	Orn          plugin.TValue[string]
+	ExcludedOrns plugin.TValue[[]any]
+	Group        plugin.TValue[*mqlOktaGroup]
+	Application  plugin.TValue[*mqlOktaApplication]
+	User         plugin.TValue[*mqlOktaUser]
 }
 
 // createOktaResourceSetResource creates a new instance of this resource
@@ -8321,6 +8419,10 @@ func (c *mqlOktaResourceSetResource) GetHref() *plugin.TValue[string] {
 
 func (c *mqlOktaResourceSetResource) GetOrn() *plugin.TValue[string] {
 	return &c.Orn
+}
+
+func (c *mqlOktaResourceSetResource) GetExcludedOrns() *plugin.TValue[[]any] {
+	return &c.ExcludedOrns
 }
 
 func (c *mqlOktaResourceSetResource) GetGroup() *plugin.TValue[*mqlOktaGroup] {
@@ -8696,25 +8798,28 @@ type mqlOktaAuthorizationServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOktaAuthorizationServerInternal it will be used here
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Description         plugin.TValue[string]
-	Status              plugin.TValue[string]
-	Default             plugin.TValue[bool]
-	Issuer              plugin.TValue[string]
-	IssuerMode          plugin.TValue[string]
-	Audiences           plugin.TValue[[]any]
-	SigningKid          plugin.TValue[string]
-	SigningRotationMode plugin.TValue[string]
-	SigningLastRotated  plugin.TValue[*time.Time]
-	SigningNextRotation plugin.TValue[*time.Time]
-	SigningUse          plugin.TValue[string]
-	Created             plugin.TValue[*time.Time]
-	LastUpdated         plugin.TValue[*time.Time]
-	Policies            plugin.TValue[[]any]
-	Scopes              plugin.TValue[[]any]
-	Claims              plugin.TValue[[]any]
-	Keys                plugin.TValue[[]any]
+	Id                                    plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	Status                                plugin.TValue[string]
+	Default                               plugin.TValue[bool]
+	Issuer                                plugin.TValue[string]
+	IssuerMode                            plugin.TValue[string]
+	Audiences                             plugin.TValue[[]any]
+	SigningKid                            plugin.TValue[string]
+	SigningRotationMode                   plugin.TValue[string]
+	SigningLastRotated                    plugin.TValue[*time.Time]
+	SigningNextRotation                   plugin.TValue[*time.Time]
+	SigningUse                            plugin.TValue[string]
+	Created                               plugin.TValue[*time.Time]
+	LastUpdated                           plugin.TValue[*time.Time]
+	Policies                              plugin.TValue[[]any]
+	Scopes                                plugin.TValue[[]any]
+	Claims                                plugin.TValue[[]any]
+	Keys                                  plugin.TValue[[]any]
+	AccessTokenEncryptedResponseAlgorithm plugin.TValue[string]
+	JwksUri                               plugin.TValue[string]
+	Jwks                                  plugin.TValue[any]
 }
 
 // createOktaAuthorizationServer creates a new instance of this resource
@@ -8876,6 +8981,18 @@ func (c *mqlOktaAuthorizationServer) GetKeys() *plugin.TValue[[]any] {
 
 		return c.keys()
 	})
+}
+
+func (c *mqlOktaAuthorizationServer) GetAccessTokenEncryptedResponseAlgorithm() *plugin.TValue[string] {
+	return &c.AccessTokenEncryptedResponseAlgorithm
+}
+
+func (c *mqlOktaAuthorizationServer) GetJwksUri() *plugin.TValue[string] {
+	return &c.JwksUri
+}
+
+func (c *mqlOktaAuthorizationServer) GetJwks() *plugin.TValue[any] {
+	return &c.Jwks
 }
 
 // mqlOktaAuthorizationServerPolicy for the okta.authorizationServer.policy resource
@@ -9778,6 +9895,7 @@ type mqlOktaApiServiceIntegration struct {
 	ConfigGuideUrl plugin.TValue[string]
 	CreatedBy      plugin.TValue[string]
 	CreatedAt      plugin.TValue[*time.Time]
+	Properties     plugin.TValue[map[string]any]
 }
 
 // createOktaApiServiceIntegration creates a new instance of this resource
@@ -9843,6 +9961,10 @@ func (c *mqlOktaApiServiceIntegration) GetCreatedBy() *plugin.TValue[string] {
 
 func (c *mqlOktaApiServiceIntegration) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlOktaApiServiceIntegration) GetProperties() *plugin.TValue[map[string]any] {
+	return &c.Properties
 }
 
 // mqlOktaAttackProtection for the okta.attackProtection resource
@@ -10523,6 +10645,8 @@ type mqlOktaAgentPool struct {
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
 	OperationalStatus plugin.TValue[string]
+	DisruptedAgents   plugin.TValue[int64]
+	InactiveAgents    plugin.TValue[int64]
 	Agents            plugin.TValue[[]any]
 }
 
@@ -10577,6 +10701,14 @@ func (c *mqlOktaAgentPool) GetType() *plugin.TValue[string] {
 
 func (c *mqlOktaAgentPool) GetOperationalStatus() *plugin.TValue[string] {
 	return &c.OperationalStatus
+}
+
+func (c *mqlOktaAgentPool) GetDisruptedAgents() *plugin.TValue[int64] {
+	return &c.DisruptedAgents
+}
+
+func (c *mqlOktaAgentPool) GetInactiveAgents() *plugin.TValue[int64] {
+	return &c.InactiveAgents
 }
 
 func (c *mqlOktaAgentPool) GetAgents() *plugin.TValue[[]any] {

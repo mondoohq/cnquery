@@ -216,3 +216,44 @@ func TestUserFactorRawDecode(t *testing.T) {
 	assert.Equal(t, "+1 555 0100", f.Profile["phoneNumber"])
 	require.NotNil(t, f.Created)
 }
+
+// TestOktaApplicationRawUniversalLogout pins the Universal Logout decode.
+//
+// These four values decide whether ending an Okta session actually ends the
+// application's session. A mistyped tag would read empty on every app, which
+// is indistinguishable from an app that does not support Universal Logout at
+// all, so the wrong answer would look like a plausible one.
+func TestOktaApplicationRawUniversalLogout(t *testing.T) {
+	t.Parallel()
+
+	const payload = `{
+		"id": "0oa1",
+		"label": "Workspace",
+		"universalLogout": {
+			"status": "ACTIVE",
+			"supportType": "FULL",
+			"protocol": "OIDC_BACKCHANNEL",
+			"identityStack": "google"
+		}
+	}`
+
+	entry := &oktaApplicationRaw{}
+	require.NoError(t, json.Unmarshal([]byte(payload), entry))
+
+	require.NotNil(t, entry.UniversalLogout)
+	assert.Equal(t, "ACTIVE", entry.UniversalLogout.Status)
+	assert.Equal(t, "FULL", entry.UniversalLogout.SupportType)
+	assert.Equal(t, "OIDC_BACKCHANNEL", entry.UniversalLogout.Protocol)
+	assert.Equal(t, "google", entry.UniversalLogout.IdentityStack)
+}
+
+// TestOktaApplicationRawWithoutUniversalLogout covers an application Okta
+// cannot sign the user out of, which omits the block entirely.
+func TestOktaApplicationRawWithoutUniversalLogout(t *testing.T) {
+	t.Parallel()
+
+	entry := &oktaApplicationRaw{}
+	require.NoError(t, json.Unmarshal([]byte(`{"id":"0oa2","label":"Legacy"}`), entry))
+	assert.Nil(t, entry.UniversalLogout,
+		"an absent block must not decode to a populated one")
+}
