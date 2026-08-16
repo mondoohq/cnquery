@@ -954,12 +954,12 @@ func ParseLogging(s *Subsystem) (*Logging, error) {
 
 // ParseWeb decodes the web subsystem out of a subsystem element.
 func ParseWeb(s *Subsystem) (*Web, error) {
-	res := &Web{Attrs: s.Attrs}
+	res := &Web{}
 	if err := xml.Unmarshal(s.Body(), res); err != nil {
 		return nil, err
 	}
-	// Unmarshalling the re-wrapped body overwrites Attrs with the wrapper's
-	// (empty) attribute list, so the subsystem's own attributes are restored.
+	// Assigned after unmarshalling, not before: the re-wrapped body carries the
+	// wrapper's own (empty) attribute list, which would overwrite these.
 	res.Attrs = s.Attrs
 	return res, nil
 }
