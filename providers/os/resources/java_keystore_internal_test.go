@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"fmt"
 	"math/big"
 	"os"
 	"testing"
@@ -96,4 +97,21 @@ func TestJavaTruststoreDiscoveryCoversKnownLayouts(t *testing.T) {
 
 	assert.Contains(t, javaTruststoreFiles, "/etc/pki/java/cacerts", "the Red Hat distribution store")
 	assert.Contains(t, javaTruststoreFiles, "/etc/ssl/certs/java/cacerts", "the Debian distribution store")
+}
+
+// Two entries can carry the same alias: a PKCS#12 store may repeat a
+// friendlyName, or omit it entirely and leave several entries aliased "". An id
+// built from the alias alone would collide, and a collision does not merely
+// return the wrong entry — the second entry's certificates overwrite the cached
+// first one's, so one entry is reported where there are two, with the wrong
+// contents. The index is what keeps them apart.
+func TestJavaKeystoreEntryIDsAreUniqueWhenAliasesCollide(t *testing.T) {
+	ids := map[string]struct{}{}
+	for i, alias := range []string{"", "", "dup", "dup", "unique"} {
+		id := fmt.Sprintf("%s/%s#%d", "/etc/pki/java/cacerts", alias, i)
+		_, seen := ids[id]
+		assert.False(t, seen, "id %q collided", id)
+		ids[id] = struct{}{}
+	}
+	assert.Len(t, ids, 5)
 }

@@ -71,6 +71,15 @@ var ErrPasswordRequired = errors.New("keystore contents are encrypted and no pas
 // send someone hunting for a credential that was never the problem.
 var ErrUnsupportedPKCS12MAC = errors.New("PKCS#12 store uses an integrity algorithm this cannot verify (only SHA-1 MACs are supported)")
 
+// unsupportedDigestMarker is how golang.org/x/crypto/pkcs12 reports a MAC
+// algorithm it does not implement. It returns a plain error rather than a typed
+// one, so matching the text is the only way to tell that case apart from a wrong
+// password — which matters, because the two need opposite responses. Pinned here
+// so there is one place to fix if the wording upstream ever changes; the tests
+// cover the classification, so a change would fail rather than silently degrade
+// into blaming the credential.
+const unsupportedDigestMarker = "unknown digest algorithm"
+
 // Entry is one alias in a keystore.
 type Entry struct {
 	Alias string
@@ -296,10 +305,23 @@ func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 			// A MAC we cannot verify fails identically for every password, so
 			// stop rather than working through the list and then blaming the
 			// credential.
-			if strings.Contains(err.Error(), "unknown digest algorithm") {
+			if strings.Contains(err.Error(), unsupportedDigestMarker) {
 				return nil, fmt.Errorf("%w: %v", ErrUnsupportedPKCS12MAC, err)
 			}
 			continue
+		}
+
+		// A certificate that belongs to a private key's chain is not a trust
+		// anchor, and PKCS#12 ties the two together with a localKeyId rather
+		// than by position. Collect the keys' ids first so the certificates can
+		// be classified the same way the JKS entry tags classify them.
+		keyIDs := map[string]struct{}{}
+		for _, block := range blocks {
+			if block.Type == "PRIVATE KEY" {
+				if id, ok := block.Headers["localKeyId"]; ok {
+					keyIDs[id] = struct{}{}
+				}
+			}
 		}
 
 		ks := &Keystore{Format: FormatPKCS12}
@@ -309,11 +331,13 @@ func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 			if block.Type != "CERTIFICATE" {
 				continue
 			}
+			_, belongsToAKey := keyIDs[block.Headers["localKeyId"]]
 			ks.Entries = append(ks.Entries, Entry{
 				// friendlyName is where keytool records the alias. A store
-				// written by something else may not set one.
+				// written by something else may not set one, which is why the
+				// resource does not identify an entry by its alias alone.
 				Alias:   block.Headers["friendlyName"],
-				Trusted: true,
+				Trusted: !belongsToAKey,
 				Certs:   [][]byte{block.Bytes},
 			})
 		}

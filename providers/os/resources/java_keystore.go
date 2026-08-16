@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
 	"path"
 	"sort"
@@ -24,6 +25,12 @@ type mqlJavaKeystoreInternal struct {
 	lock     sync.Mutex
 	parsed   *java.Keystore
 	parseErr error
+	// readable and unreadable cache the X.509 pass over the store's
+	// certificates. A policy that asks for both certificates and
+	// unreadableCertificates would otherwise parse every certificate twice.
+	readable   [][]byte
+	unreadable int
+	splitDone  bool
 }
 
 type mqlJavaKeystoreEntryInternal struct {
@@ -128,7 +135,13 @@ func (s *mqlJavaKeystore) entries() ([]any, error) {
 		}
 
 		raw, err := CreateResource(s.MqlRuntime, "java.keystore.entry", map[string]*llx.RawData{
-			"__id":                 llx.StringData(s.Path.Data + "/" + entry.Alias),
+			// The index is part of the id, not decoration. Two entries can carry
+			// the same alias — a PKCS#12 store may repeat a friendlyName or omit
+			// it entirely, leaving several entries aliased "" — and an id that
+			// collided would hand back the cached first entry, whose certificates
+			// the second would then overwrite. One entry would be reported where
+			// there are two, with the wrong contents.
+			"__id":                 llx.StringData(fmt.Sprintf("%s/%s#%d", s.Path.Data, entry.Alias, i)),
 			"alias":                llx.StringData(entry.Alias),
 			"isTrustedCertificate": llx.BoolData(entry.Trusted),
 			"createdAt":            createdAt,
@@ -143,31 +156,41 @@ func (s *mqlJavaKeystore) entries() ([]any, error) {
 	return res, nil
 }
 
-func (s *mqlJavaKeystore) certificates() ([]any, error) {
+// split runs the X.509 pass over the whole store once and caches the result.
+func (s *mqlJavaKeystore) split() ([][]byte, int, error) {
 	ks, err := s.read()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if !s.splitDone {
+		var der [][]byte
+		for i := range ks.Entries {
+			der = append(der, ks.Entries[i].Certs...)
+		}
+		s.readable, s.unreadable = readableDER(der)
+		s.splitDone = true
+	}
+	return s.readable, s.unreadable, nil
+}
+
+func (s *mqlJavaKeystore) certificates() ([]any, error) {
+	readable, _, err := s.split()
 	if err != nil {
 		return nil, err
 	}
-
-	var der [][]byte
-	for i := range ks.Entries {
-		der = append(der, ks.Entries[i].Certs...)
-	}
-	return certificatesFromDER(s.MqlRuntime, der)
+	return certificatesToMql(s.MqlRuntime, readable)
 }
 
 // unreadableCertificates counts what certificates() had to skip.
 func (s *mqlJavaKeystore) unreadableCertificates() (int64, error) {
-	ks, err := s.read()
+	_, unreadable, err := s.split()
 	if err != nil {
 		return 0, err
 	}
-
-	var der [][]byte
-	for i := range ks.Entries {
-		der = append(der, ks.Entries[i].Certs...)
-	}
-	_, unreadable := readableDER(der)
 	return int64(unreadable), nil
 }
 
@@ -206,7 +229,12 @@ func readableDER(der [][]byte) ([][]byte, int) {
 // `certificates` resource, which is what produces `network.certificate`. The
 // bytes are PEM-wrapped first because that is the interface it takes.
 func certificatesFromDER(runtime *plugin.Runtime, der [][]byte) ([]any, error) {
-	der, _ = readableDER(der)
+	readable, _ := readableDER(der)
+	return certificatesToMql(runtime, readable)
+}
+
+// certificatesToMql wraps already-validated DER as network.certificate.
+func certificatesToMql(runtime *plugin.Runtime, der [][]byte) ([]any, error) {
 	if len(der) == 0 {
 		return []any{}, nil
 	}
