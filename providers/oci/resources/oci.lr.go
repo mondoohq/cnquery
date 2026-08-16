@@ -263,6 +263,23 @@ const (
 	ResourceOciArtifactsContainerImageSignature                      string = "oci.artifacts.containerImageSignature"
 	ResourceOciArtifactsRepository                                   string = "oci.artifacts.repository"
 	ResourceOciArtifactsGenericArtifact                              string = "oci.artifacts.genericArtifact"
+	ResourceOciOperatorAccessControl                                 string = "oci.operatorAccessControl"
+	ResourceOciOperatorAccessControlControl                          string = "oci.operatorAccessControl.control"
+	ResourceOciOperatorAccessControlControlAssignment                string = "oci.operatorAccessControl.controlAssignment"
+	ResourceOciOperatorAccessControlAccessRequest                    string = "oci.operatorAccessControl.accessRequest"
+	ResourceOciOperatorAccessControlAction                           string = "oci.operatorAccessControl.action"
+	ResourceOciDelegateAccessControl                                 string = "oci.delegateAccessControl"
+	ResourceOciDelegateAccessControlDelegationControl                string = "oci.delegateAccessControl.delegationControl"
+	ResourceOciDelegateAccessControlDelegationSubscription           string = "oci.delegateAccessControl.delegationSubscription"
+	ResourceOciDelegateAccessControlAccessRequest                    string = "oci.delegateAccessControl.accessRequest"
+	ResourceOciDelegateAccessControlServiceProvider                  string = "oci.delegateAccessControl.serviceProvider"
+	ResourceOciApiAccessControl                                      string = "oci.apiAccessControl"
+	ResourceOciApiAccessControlPrivilegedApiControl                  string = "oci.apiAccessControl.privilegedApiControl"
+	ResourceOciApiAccessControlPrivilegedApiRequest                  string = "oci.apiAccessControl.privilegedApiRequest"
+	ResourceOciLockbox                                               string = "oci.lockbox"
+	ResourceOciLockboxLockbox                                        string = "oci.lockbox.lockbox"
+	ResourceOciLockboxApprovalTemplate                               string = "oci.lockbox.approvalTemplate"
+	ResourceOciLockboxAccessRequest                                  string = "oci.lockbox.accessRequest"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1256,6 +1273,74 @@ func init() {
 		"oci.artifacts.genericArtifact": {
 			// to override args, implement: initOciArtifactsGenericArtifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciArtifactsGenericArtifact,
+		},
+		"oci.operatorAccessControl": {
+			// to override args, implement: initOciOperatorAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOperatorAccessControl,
+		},
+		"oci.operatorAccessControl.control": {
+			Init:   initOciOperatorAccessControlControl,
+			Create: createOciOperatorAccessControlControl,
+		},
+		"oci.operatorAccessControl.controlAssignment": {
+			// to override args, implement: initOciOperatorAccessControlControlAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOperatorAccessControlControlAssignment,
+		},
+		"oci.operatorAccessControl.accessRequest": {
+			// to override args, implement: initOciOperatorAccessControlAccessRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOperatorAccessControlAccessRequest,
+		},
+		"oci.operatorAccessControl.action": {
+			// to override args, implement: initOciOperatorAccessControlAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOperatorAccessControlAction,
+		},
+		"oci.delegateAccessControl": {
+			// to override args, implement: initOciDelegateAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDelegateAccessControl,
+		},
+		"oci.delegateAccessControl.delegationControl": {
+			Init:   initOciDelegateAccessControlDelegationControl,
+			Create: createOciDelegateAccessControlDelegationControl,
+		},
+		"oci.delegateAccessControl.delegationSubscription": {
+			// to override args, implement: initOciDelegateAccessControlDelegationSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDelegateAccessControlDelegationSubscription,
+		},
+		"oci.delegateAccessControl.accessRequest": {
+			// to override args, implement: initOciDelegateAccessControlAccessRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDelegateAccessControlAccessRequest,
+		},
+		"oci.delegateAccessControl.serviceProvider": {
+			Init:   initOciDelegateAccessControlServiceProvider,
+			Create: createOciDelegateAccessControlServiceProvider,
+		},
+		"oci.apiAccessControl": {
+			// to override args, implement: initOciApiAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciApiAccessControl,
+		},
+		"oci.apiAccessControl.privilegedApiControl": {
+			// to override args, implement: initOciApiAccessControlPrivilegedApiControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciApiAccessControlPrivilegedApiControl,
+		},
+		"oci.apiAccessControl.privilegedApiRequest": {
+			// to override args, implement: initOciApiAccessControlPrivilegedApiRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciApiAccessControlPrivilegedApiRequest,
+		},
+		"oci.lockbox": {
+			// to override args, implement: initOciLockbox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciLockbox,
+		},
+		"oci.lockbox.lockbox": {
+			Init:   initOciLockboxLockbox,
+			Create: createOciLockboxLockbox,
+		},
+		"oci.lockbox.approvalTemplate": {
+			Init:   initOciLockboxApprovalTemplate,
+			Create: createOciLockboxApprovalTemplate,
+		},
+		"oci.lockbox.accessRequest": {
+			// to override args, implement: initOciLockboxAccessRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciLockboxAccessRequest,
 		},
 	}
 }
@@ -9946,6 +10031,621 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.artifacts.genericArtifact.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciArtifactsGenericArtifact).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.operatorAccessControl.controls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControl).GetControls()).ToDataRes(types.Array(types.Resource("oci.operatorAccessControl.control")))
+	},
+	"oci.operatorAccessControl.controlAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControl).GetControlAssignments()).ToDataRes(types.Array(types.Resource("oci.operatorAccessControl.controlAssignment")))
+	},
+	"oci.operatorAccessControl.accessRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControl).GetAccessRequests()).ToDataRes(types.Array(types.Resource("oci.operatorAccessControl.accessRequest")))
+	},
+	"oci.operatorAccessControl.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControl).GetActions()).ToDataRes(types.Array(types.Resource("oci.operatorAccessControl.action")))
+	},
+	"oci.operatorAccessControl.control.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.control.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetName()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.control.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.operatorAccessControl.control.isFullyPreApproved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetIsFullyPreApproved()).ToDataRes(types.Bool)
+	},
+	"oci.operatorAccessControl.control.numberOfApprovers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetNumberOfApprovers()).ToDataRes(types.Int)
+	},
+	"oci.operatorAccessControl.control.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.control.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetState()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.control.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.control.timeOfModification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetTimeOfModification()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.control.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.operatorAccessControl.control.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControl).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.operatorAccessControl.controlAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.operatorControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetOperatorControl()).ToDataRes(types.Resource("oci.operatorAccessControl.control"))
+	},
+	"oci.operatorAccessControl.controlAssignment.operatorControlName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetOperatorControlName()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.operatorAccessControl.controlAssignment.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetResourceId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetResourceName()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.isEnforcedAlways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetIsEnforcedAlways()).ToDataRes(types.Bool)
+	},
+	"oci.operatorAccessControl.controlAssignment.timeAssignmentFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetTimeAssignmentFrom()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.controlAssignment.timeAssignmentTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetTimeAssignmentTo()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.controlAssignment.isLogForwarded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetIsLogForwarded()).ToDataRes(types.Bool)
+	},
+	"oci.operatorAccessControl.controlAssignment.remoteSyslogServerAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetRemoteSyslogServerAddress()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.remoteSyslogServerPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetRemoteSyslogServerPort()).ToDataRes(types.Int)
+	},
+	"oci.operatorAccessControl.controlAssignment.isHypervisorLogForwarded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetIsHypervisorLogForwarded()).ToDataRes(types.Bool)
+	},
+	"oci.operatorAccessControl.controlAssignment.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetState()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.controlAssignment.timeOfAssignment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetTimeOfAssignment()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.controlAssignment.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.operatorAccessControl.controlAssignment.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlControlAssignment).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.operatorAccessControl.accessRequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.requestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetRequestId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.operatorAccessControl.accessRequest.accessReasonSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetAccessReasonSummary()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetResourceId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetResourceName()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.subResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetSubResources()).ToDataRes(types.Array(types.String))
+	},
+	"oci.operatorAccessControl.accessRequest.actionRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetActionRequests()).ToDataRes(types.Array(types.String))
+	},
+	"oci.operatorAccessControl.accessRequest.isAutoApproved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetIsAutoApproved()).ToDataRes(types.Bool)
+	},
+	"oci.operatorAccessControl.accessRequest.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.duration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetDuration()).ToDataRes(types.Int)
+	},
+	"oci.operatorAccessControl.accessRequest.extendDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetExtendDuration()).ToDataRes(types.Int)
+	},
+	"oci.operatorAccessControl.accessRequest.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetState()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.accessRequest.timeRequestedForFutureAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetTimeRequestedForFutureAccess()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.accessRequest.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.accessRequest.timeOfModification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetTimeOfModification()).ToDataRes(types.Time)
+	},
+	"oci.operatorAccessControl.accessRequest.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.operatorAccessControl.accessRequest.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAccessRequest).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.operatorAccessControl.action.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetId()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.action.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetName()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.action.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.action.component": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetComponent()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.action.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.operatorAccessControl.action.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.operatorAccessControl.action.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOperatorAccessControlAction).GetState()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControl).GetDelegationControls()).ToDataRes(types.Array(types.Resource("oci.delegateAccessControl.delegationControl")))
+	},
+	"oci.delegateAccessControl.delegationSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControl).GetDelegationSubscriptions()).ToDataRes(types.Array(types.Resource("oci.delegateAccessControl.delegationSubscription")))
+	},
+	"oci.delegateAccessControl.accessRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControl).GetAccessRequests()).ToDataRes(types.Array(types.Resource("oci.delegateAccessControl.accessRequest")))
+	},
+	"oci.delegateAccessControl.serviceProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControl).GetServiceProviders()).ToDataRes(types.Array(types.Resource("oci.delegateAccessControl.serviceProvider")))
+	},
+	"oci.delegateAccessControl.delegationControl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetId()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationControl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetName()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationControl.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.delegateAccessControl.delegationControl.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationControl.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetState()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationControl.lifecycleStateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetLifecycleStateDetails()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationControl.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.delegationControl.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.delegationControl.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.delegateAccessControl.delegationControl.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.delegateAccessControl.delegationControl.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationControl).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.delegateAccessControl.delegationSubscription.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetId()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationSubscription.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetName()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationSubscription.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.delegateAccessControl.delegationSubscription.serviceProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetServiceProvider()).ToDataRes(types.Resource("oci.delegateAccessControl.serviceProvider"))
+	},
+	"oci.delegateAccessControl.delegationSubscription.subscribedServiceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetSubscribedServiceType()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationSubscription.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetState()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationSubscription.lifecycleStateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetLifecycleStateDetails()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.delegationSubscription.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.delegationSubscription.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.delegationSubscription.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.delegateAccessControl.delegationSubscription.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.delegateAccessControl.delegationSubscription.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlDelegationSubscription).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.delegateAccessControl.accessRequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetId()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetName()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.delegateAccessControl.accessRequest.delegationControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetDelegationControl()).ToDataRes(types.Resource("oci.delegateAccessControl.delegationControl"))
+	},
+	"oci.delegateAccessControl.accessRequest.reasonForRequest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetReasonForRequest()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetResourceId()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetResourceName()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.ticketNumbers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetTicketNumbers()).ToDataRes(types.Array(types.String))
+	},
+	"oci.delegateAccessControl.accessRequest.requestedActionNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetRequestedActionNames()).ToDataRes(types.Array(types.String))
+	},
+	"oci.delegateAccessControl.accessRequest.requesterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetRequesterType()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.durationInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetDurationInHours()).ToDataRes(types.Int)
+	},
+	"oci.delegateAccessControl.accessRequest.extendDurationInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetExtendDurationInHours()).ToDataRes(types.Int)
+	},
+	"oci.delegateAccessControl.accessRequest.isAutoApproved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetIsAutoApproved()).ToDataRes(types.Bool)
+	},
+	"oci.delegateAccessControl.accessRequest.requestStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetRequestStatus()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetState()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.lifecycleStateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetLifecycleStateDetails()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.accessRequest.timeAccessRequested": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetTimeAccessRequested()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.accessRequest.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.accessRequest.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.accessRequest.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.delegateAccessControl.accessRequest.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.delegateAccessControl.accessRequest.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlAccessRequest).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.delegateAccessControl.serviceProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetId()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.serviceProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetName()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.serviceProvider.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.delegateAccessControl.serviceProvider.serviceProviderType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetServiceProviderType()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.serviceProvider.serviceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetServiceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"oci.delegateAccessControl.serviceProvider.supportedResourceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetSupportedResourceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"oci.delegateAccessControl.serviceProvider.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetState()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.serviceProvider.lifecycleStateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetLifecycleStateDetails()).ToDataRes(types.String)
+	},
+	"oci.delegateAccessControl.serviceProvider.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.serviceProvider.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.delegateAccessControl.serviceProvider.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.delegateAccessControl.serviceProvider.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.delegateAccessControl.serviceProvider.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDelegateAccessControlServiceProvider).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.apiAccessControl.privilegedApiControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControl).GetPrivilegedApiControls()).ToDataRes(types.Array(types.Resource("oci.apiAccessControl.privilegedApiControl")))
+	},
+	"oci.apiAccessControl.privilegedApiRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControl).GetPrivilegedApiRequests()).ToDataRes(types.Array(types.Resource("oci.apiAccessControl.privilegedApiRequest")))
+	},
+	"oci.apiAccessControl.privilegedApiControl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetId()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiControl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetName()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiControl.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.apiAccessControl.privilegedApiControl.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiControl.numberOfApprovers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetNumberOfApprovers()).ToDataRes(types.Int)
+	},
+	"oci.apiAccessControl.privilegedApiControl.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetState()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiControl.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiControl.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.apiAccessControl.privilegedApiControl.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.apiAccessControl.privilegedApiControl.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.apiAccessControl.privilegedApiControl.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.apiAccessControl.privilegedApiControl.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiControl).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.apiAccessControl.privilegedApiRequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetId()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetName()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.requestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetRequestId()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.apiAccessControl.privilegedApiRequest.reasonSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetReasonSummary()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetResourceId()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetResourceName()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetResourceType()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.subResourceNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetSubResourceNames()).ToDataRes(types.Array(types.String))
+	},
+	"oci.apiAccessControl.privilegedApiRequest.privilegedOperations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetPrivilegedOperations()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.apiAccessControl.privilegedApiRequest.requestState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetRequestState()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetState()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.durationInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetDurationInHours()).ToDataRes(types.Int)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.timeRequestedForFutureAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetTimeRequestedForFutureAccess()).ToDataRes(types.Time)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.apiAccessControl.privilegedApiRequest.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.apiAccessControl.privilegedApiRequest.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.apiAccessControl.privilegedApiRequest.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciApiAccessControlPrivilegedApiRequest).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.lockbox.lockboxes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockbox).GetLockboxes()).ToDataRes(types.Array(types.Resource("oci.lockbox.lockbox")))
+	},
+	"oci.lockbox.approvalTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockbox).GetApprovalTemplates()).ToDataRes(types.Array(types.Resource("oci.lockbox.approvalTemplate")))
+	},
+	"oci.lockbox.lockbox.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetName()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.lockbox.lockbox.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetResourceId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.approvalTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetApprovalTemplate()).ToDataRes(types.Resource("oci.lockbox.approvalTemplate"))
+	},
+	"oci.lockbox.lockbox.lockboxPartner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetLockboxPartner()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.partnerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetPartnerId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.partnerCompartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetPartnerCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.maxAccessDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetMaxAccessDuration()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.accessRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetAccessRequests()).ToDataRes(types.Array(types.Resource("oci.lockbox.accessRequest")))
+	},
+	"oci.lockbox.lockbox.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetState()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.lockbox.lockbox.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.lockbox.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.lockbox.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.lockbox.lockbox.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.lockbox.lockbox.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxLockbox).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.lockbox.approvalTemplate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.approvalTemplate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetName()).ToDataRes(types.String)
+	},
+	"oci.lockbox.approvalTemplate.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.lockbox.approvalTemplate.autoApprovalState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetAutoApprovalState()).ToDataRes(types.String)
+	},
+	"oci.lockbox.approvalTemplate.approverLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetApproverLevels()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.lockbox.approvalTemplate.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetState()).ToDataRes(types.String)
+	},
+	"oci.lockbox.approvalTemplate.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.approvalTemplate.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.approvalTemplate.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.lockbox.approvalTemplate.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.lockbox.approvalTemplate.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxApprovalTemplate).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.lockbox.accessRequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetName()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.lockbox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetLockbox()).ToDataRes(types.Resource("oci.lockbox.lockbox"))
+	},
+	"oci.lockbox.accessRequest.requestorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetRequestorId()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.requestorLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetRequestorLocation()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.accessDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetAccessDuration()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.ticketNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetTicketNumber()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetState()).ToDataRes(types.String)
+	},
+	"oci.lockbox.accessRequest.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.accessRequest.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.accessRequest.timeExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetTimeExpired()).ToDataRes(types.Time)
+	},
+	"oci.lockbox.accessRequest.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.lockbox.accessRequest.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.lockbox.accessRequest.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLockboxAccessRequest).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
 	},
 }
 
@@ -22437,6 +23137,894 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.artifacts.genericArtifact.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciArtifactsGenericArtifact).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControl).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.operatorAccessControl.controls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControl).Controls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControl).ControlAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControl).AccessRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControl).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.operatorAccessControl.control.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.isFullyPreApproved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).IsFullyPreApproved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.numberOfApprovers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).NumberOfApprovers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.timeOfModification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).TimeOfModification, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.control.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControl).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.operatorControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).OperatorControl, ok = plugin.RawToTValue[*mqlOciOperatorAccessControlControl](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.operatorControlName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).OperatorControlName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.isEnforcedAlways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).IsEnforcedAlways, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.timeAssignmentFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).TimeAssignmentFrom, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.timeAssignmentTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).TimeAssignmentTo, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.isLogForwarded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).IsLogForwarded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.remoteSyslogServerAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).RemoteSyslogServerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.remoteSyslogServerPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).RemoteSyslogServerPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.isHypervisorLogForwarded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).IsHypervisorLogForwarded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.timeOfAssignment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).TimeOfAssignment, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.controlAssignment.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlControlAssignment).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.requestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).RequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.accessReasonSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).AccessReasonSummary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.subResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).SubResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.actionRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).ActionRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.isAutoApproved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).IsAutoApproved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.duration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).Duration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.extendDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).ExtendDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.timeRequestedForFutureAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).TimeRequestedForFutureAccess, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.timeOfModification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).TimeOfModification, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.accessRequest.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAccessRequest).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.operatorAccessControl.action.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.component": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).Component, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.operatorAccessControl.action.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOperatorAccessControlAction).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControl).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.delegateAccessControl.delegationControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControl).DelegationControls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControl).DelegationSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControl).AccessRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControl).ServiceProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.lifecycleStateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).LifecycleStateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationControl.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationControl).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.serviceProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).ServiceProvider, ok = plugin.RawToTValue[*mqlOciDelegateAccessControlServiceProvider](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.subscribedServiceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).SubscribedServiceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.lifecycleStateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).LifecycleStateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.delegationSubscription.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlDelegationSubscription).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.delegationControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).DelegationControl, ok = plugin.RawToTValue[*mqlOciDelegateAccessControlDelegationControl](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.reasonForRequest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).ReasonForRequest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.ticketNumbers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).TicketNumbers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.requestedActionNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).RequestedActionNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.requesterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).RequesterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.durationInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).DurationInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.extendDurationInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).ExtendDurationInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.isAutoApproved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).IsAutoApproved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.requestStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).RequestStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.lifecycleStateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).LifecycleStateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.timeAccessRequested": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).TimeAccessRequested, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.accessRequest.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlAccessRequest).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.serviceProviderType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).ServiceProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.serviceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).ServiceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.supportedResourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).SupportedResourceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.lifecycleStateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).LifecycleStateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.delegateAccessControl.serviceProvider.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDelegateAccessControlServiceProvider).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControl).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControl).PrivilegedApiControls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControl).PrivilegedApiRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.numberOfApprovers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).NumberOfApprovers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiControl.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiControl).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.requestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).RequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.reasonSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).ReasonSummary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.subResourceNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).SubResourceNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.privilegedOperations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).PrivilegedOperations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.requestState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).RequestState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.durationInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).DurationInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.timeRequestedForFutureAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).TimeRequestedForFutureAccess, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.apiAccessControl.privilegedApiRequest.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciApiAccessControlPrivilegedApiRequest).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockbox).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.lockbox.lockboxes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockbox).Lockboxes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockbox).ApprovalTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.lockbox.lockbox.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.approvalTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).ApprovalTemplate, ok = plugin.RawToTValue[*mqlOciLockboxApprovalTemplate](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.lockboxPartner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).LockboxPartner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.partnerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).PartnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.partnerCompartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).PartnerCompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.maxAccessDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).MaxAccessDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.accessRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).AccessRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.lockbox.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxLockbox).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.lockbox.approvalTemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.autoApprovalState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).AutoApprovalState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.approverLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).ApproverLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.approvalTemplate.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxApprovalTemplate).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.lockbox.accessRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.lockbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).Lockbox, ok = plugin.RawToTValue[*mqlOciLockboxLockbox](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.requestorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).RequestorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.requestorLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).RequestorLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.accessDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).AccessDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.ticketNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).TicketNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.timeExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).TimeExpired, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.lockbox.accessRequest.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLockboxAccessRequest).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -54416,4 +56004,2137 @@ func (c *mqlOciArtifactsGenericArtifact) GetFreeformTags() *plugin.TValue[map[st
 
 func (c *mqlOciArtifactsGenericArtifact) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+// mqlOciOperatorAccessControl for the oci.operatorAccessControl resource
+type mqlOciOperatorAccessControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciOperatorAccessControlInternal it will be used here
+	Controls           plugin.TValue[[]any]
+	ControlAssignments plugin.TValue[[]any]
+	AccessRequests     plugin.TValue[[]any]
+	Actions            plugin.TValue[[]any]
+}
+
+// createOciOperatorAccessControl creates a new instance of this resource
+func createOciOperatorAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOperatorAccessControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.operatorAccessControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOperatorAccessControl) MqlName() string {
+	return "oci.operatorAccessControl"
+}
+
+func (c *mqlOciOperatorAccessControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOperatorAccessControl) GetControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Controls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl", c.__id, "controls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controls()
+	})
+}
+
+func (c *mqlOciOperatorAccessControl) GetControlAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ControlAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl", c.__id, "controlAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controlAssignments()
+	})
+}
+
+func (c *mqlOciOperatorAccessControl) GetAccessRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl", c.__id, "accessRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessRequests()
+	})
+}
+
+func (c *mqlOciOperatorAccessControl) GetActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Actions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl", c.__id, "actions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actions()
+	})
+}
+
+// mqlOciOperatorAccessControlControl for the oci.operatorAccessControl.control resource
+type mqlOciOperatorAccessControlControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciOperatorAccessControlControlInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Compartment        plugin.TValue[*mqlOciCompartment]
+	IsFullyPreApproved plugin.TValue[bool]
+	NumberOfApprovers  plugin.TValue[int64]
+	ResourceType       plugin.TValue[string]
+	State              plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	TimeOfModification plugin.TValue[*time.Time]
+	FreeformTags       plugin.TValue[map[string]any]
+	DefinedTags        plugin.TValue[map[string]any]
+}
+
+// createOciOperatorAccessControlControl creates a new instance of this resource
+func createOciOperatorAccessControlControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOperatorAccessControlControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.operatorAccessControl.control", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOperatorAccessControlControl) MqlName() string {
+	return "oci.operatorAccessControl.control"
+}
+
+func (c *mqlOciOperatorAccessControlControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl.control", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetIsFullyPreApproved() *plugin.TValue[bool] {
+	return &c.IsFullyPreApproved
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetNumberOfApprovers() *plugin.TValue[int64] {
+	return &c.NumberOfApprovers
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetTimeOfModification() *plugin.TValue[*time.Time] {
+	return &c.TimeOfModification
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciOperatorAccessControlControl) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciOperatorAccessControlControlAssignment for the oci.operatorAccessControl.controlAssignment resource
+type mqlOciOperatorAccessControlControlAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciOperatorAccessControlControlAssignmentInternal
+	Id                        plugin.TValue[string]
+	OperatorControl           plugin.TValue[*mqlOciOperatorAccessControlControl]
+	OperatorControlName       plugin.TValue[string]
+	Compartment               plugin.TValue[*mqlOciCompartment]
+	ResourceId                plugin.TValue[string]
+	ResourceName              plugin.TValue[string]
+	ResourceType              plugin.TValue[string]
+	IsEnforcedAlways          plugin.TValue[bool]
+	TimeAssignmentFrom        plugin.TValue[*time.Time]
+	TimeAssignmentTo          plugin.TValue[*time.Time]
+	IsLogForwarded            plugin.TValue[bool]
+	RemoteSyslogServerAddress plugin.TValue[string]
+	RemoteSyslogServerPort    plugin.TValue[int64]
+	IsHypervisorLogForwarded  plugin.TValue[bool]
+	State                     plugin.TValue[string]
+	LifecycleDetails          plugin.TValue[string]
+	TimeOfAssignment          plugin.TValue[*time.Time]
+	FreeformTags              plugin.TValue[map[string]any]
+	DefinedTags               plugin.TValue[map[string]any]
+}
+
+// createOciOperatorAccessControlControlAssignment creates a new instance of this resource
+func createOciOperatorAccessControlControlAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOperatorAccessControlControlAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.operatorAccessControl.controlAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) MqlName() string {
+	return "oci.operatorAccessControl.controlAssignment"
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetOperatorControl() *plugin.TValue[*mqlOciOperatorAccessControlControl] {
+	return plugin.GetOrCompute[*mqlOciOperatorAccessControlControl](&c.OperatorControl, func() (*mqlOciOperatorAccessControlControl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl.controlAssignment", c.__id, "operatorControl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciOperatorAccessControlControl), nil
+			}
+		}
+
+		return c.operatorControl()
+	})
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetOperatorControlName() *plugin.TValue[string] {
+	return &c.OperatorControlName
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl.controlAssignment", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetIsEnforcedAlways() *plugin.TValue[bool] {
+	return &c.IsEnforcedAlways
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetTimeAssignmentFrom() *plugin.TValue[*time.Time] {
+	return &c.TimeAssignmentFrom
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetTimeAssignmentTo() *plugin.TValue[*time.Time] {
+	return &c.TimeAssignmentTo
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetIsLogForwarded() *plugin.TValue[bool] {
+	return &c.IsLogForwarded
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetRemoteSyslogServerAddress() *plugin.TValue[string] {
+	return &c.RemoteSyslogServerAddress
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetRemoteSyslogServerPort() *plugin.TValue[int64] {
+	return &c.RemoteSyslogServerPort
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetIsHypervisorLogForwarded() *plugin.TValue[bool] {
+	return &c.IsHypervisorLogForwarded
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetTimeOfAssignment() *plugin.TValue[*time.Time] {
+	return &c.TimeOfAssignment
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciOperatorAccessControlControlAssignment) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciOperatorAccessControlAccessRequest for the oci.operatorAccessControl.accessRequest resource
+type mqlOciOperatorAccessControlAccessRequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciOperatorAccessControlAccessRequestInternal
+	Id                           plugin.TValue[string]
+	RequestId                    plugin.TValue[string]
+	Compartment                  plugin.TValue[*mqlOciCompartment]
+	AccessReasonSummary          plugin.TValue[string]
+	ResourceId                   plugin.TValue[string]
+	ResourceName                 plugin.TValue[string]
+	ResourceType                 plugin.TValue[string]
+	SubResources                 plugin.TValue[[]any]
+	ActionRequests               plugin.TValue[[]any]
+	IsAutoApproved               plugin.TValue[bool]
+	Severity                     plugin.TValue[string]
+	Duration                     plugin.TValue[int64]
+	ExtendDuration               plugin.TValue[int64]
+	State                        plugin.TValue[string]
+	LifecycleDetails             plugin.TValue[string]
+	TimeRequestedForFutureAccess plugin.TValue[*time.Time]
+	Created                      plugin.TValue[*time.Time]
+	TimeOfModification           plugin.TValue[*time.Time]
+	FreeformTags                 plugin.TValue[map[string]any]
+	DefinedTags                  plugin.TValue[map[string]any]
+}
+
+// createOciOperatorAccessControlAccessRequest creates a new instance of this resource
+func createOciOperatorAccessControlAccessRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOperatorAccessControlAccessRequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.operatorAccessControl.accessRequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) MqlName() string {
+	return "oci.operatorAccessControl.accessRequest"
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetRequestId() *plugin.TValue[string] {
+	return &c.RequestId
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl.accessRequest", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetAccessReasonSummary() *plugin.TValue[string] {
+	return &c.AccessReasonSummary
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetSubResources() *plugin.TValue[[]any] {
+	return &c.SubResources
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetActionRequests() *plugin.TValue[[]any] {
+	return &c.ActionRequests
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetIsAutoApproved() *plugin.TValue[bool] {
+	return &c.IsAutoApproved
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetDuration() *plugin.TValue[int64] {
+	return &c.Duration
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetExtendDuration() *plugin.TValue[int64] {
+	return &c.ExtendDuration
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetTimeRequestedForFutureAccess() *plugin.TValue[*time.Time] {
+	return &c.TimeRequestedForFutureAccess
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetTimeOfModification() *plugin.TValue[*time.Time] {
+	return &c.TimeOfModification
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciOperatorAccessControlAccessRequest) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciOperatorAccessControlAction for the oci.operatorAccessControl.action resource
+type mqlOciOperatorAccessControlAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciOperatorAccessControlActionInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Component    plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	ResourceType plugin.TValue[string]
+	State        plugin.TValue[string]
+}
+
+// createOciOperatorAccessControlAction creates a new instance of this resource
+func createOciOperatorAccessControlAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOperatorAccessControlAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.operatorAccessControl.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOperatorAccessControlAction) MqlName() string {
+	return "oci.operatorAccessControl.action"
+}
+
+func (c *mqlOciOperatorAccessControlAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetComponent() *plugin.TValue[string] {
+	return &c.Component
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.operatorAccessControl.action", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciOperatorAccessControlAction) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+// mqlOciDelegateAccessControl for the oci.delegateAccessControl resource
+type mqlOciDelegateAccessControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDelegateAccessControlInternal it will be used here
+	DelegationControls      plugin.TValue[[]any]
+	DelegationSubscriptions plugin.TValue[[]any]
+	AccessRequests          plugin.TValue[[]any]
+	ServiceProviders        plugin.TValue[[]any]
+}
+
+// createOciDelegateAccessControl creates a new instance of this resource
+func createOciDelegateAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDelegateAccessControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.delegateAccessControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDelegateAccessControl) MqlName() string {
+	return "oci.delegateAccessControl"
+}
+
+func (c *mqlOciDelegateAccessControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDelegateAccessControl) GetDelegationControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DelegationControls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl", c.__id, "delegationControls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.delegationControls()
+	})
+}
+
+func (c *mqlOciDelegateAccessControl) GetDelegationSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DelegationSubscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl", c.__id, "delegationSubscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.delegationSubscriptions()
+	})
+}
+
+func (c *mqlOciDelegateAccessControl) GetAccessRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl", c.__id, "accessRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessRequests()
+	})
+}
+
+func (c *mqlOciDelegateAccessControl) GetServiceProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl", c.__id, "serviceProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceProviders()
+	})
+}
+
+// mqlOciDelegateAccessControlDelegationControl for the oci.delegateAccessControl.delegationControl resource
+type mqlOciDelegateAccessControlDelegationControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciDelegateAccessControlDelegationControlInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	ResourceType          plugin.TValue[string]
+	State                 plugin.TValue[string]
+	LifecycleStateDetails plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	TimeUpdated           plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+	SystemTags            plugin.TValue[map[string]any]
+}
+
+// createOciDelegateAccessControlDelegationControl creates a new instance of this resource
+func createOciDelegateAccessControlDelegationControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDelegateAccessControlDelegationControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.delegateAccessControl.delegationControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) MqlName() string {
+	return "oci.delegateAccessControl.delegationControl"
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl.delegationControl", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetLifecycleStateDetails() *plugin.TValue[string] {
+	return &c.LifecycleStateDetails
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciDelegateAccessControlDelegationControl) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciDelegateAccessControlDelegationSubscription for the oci.delegateAccessControl.delegationSubscription resource
+type mqlOciDelegateAccessControlDelegationSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciDelegateAccessControlDelegationSubscriptionInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	ServiceProvider       plugin.TValue[*mqlOciDelegateAccessControlServiceProvider]
+	SubscribedServiceType plugin.TValue[string]
+	State                 plugin.TValue[string]
+	LifecycleStateDetails plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	TimeUpdated           plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+	SystemTags            plugin.TValue[map[string]any]
+}
+
+// createOciDelegateAccessControlDelegationSubscription creates a new instance of this resource
+func createOciDelegateAccessControlDelegationSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDelegateAccessControlDelegationSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.delegateAccessControl.delegationSubscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) MqlName() string {
+	return "oci.delegateAccessControl.delegationSubscription"
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl.delegationSubscription", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetServiceProvider() *plugin.TValue[*mqlOciDelegateAccessControlServiceProvider] {
+	return plugin.GetOrCompute[*mqlOciDelegateAccessControlServiceProvider](&c.ServiceProvider, func() (*mqlOciDelegateAccessControlServiceProvider, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl.delegationSubscription", c.__id, "serviceProvider")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciDelegateAccessControlServiceProvider), nil
+			}
+		}
+
+		return c.serviceProvider()
+	})
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetSubscribedServiceType() *plugin.TValue[string] {
+	return &c.SubscribedServiceType
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetLifecycleStateDetails() *plugin.TValue[string] {
+	return &c.LifecycleStateDetails
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciDelegateAccessControlDelegationSubscription) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciDelegateAccessControlAccessRequest for the oci.delegateAccessControl.accessRequest resource
+type mqlOciDelegateAccessControlAccessRequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciDelegateAccessControlAccessRequestInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	DelegationControl     plugin.TValue[*mqlOciDelegateAccessControlDelegationControl]
+	ReasonForRequest      plugin.TValue[string]
+	ResourceId            plugin.TValue[string]
+	ResourceName          plugin.TValue[string]
+	ResourceType          plugin.TValue[string]
+	TicketNumbers         plugin.TValue[[]any]
+	RequestedActionNames  plugin.TValue[[]any]
+	RequesterType         plugin.TValue[string]
+	Severity              plugin.TValue[string]
+	DurationInHours       plugin.TValue[int64]
+	ExtendDurationInHours plugin.TValue[int64]
+	IsAutoApproved        plugin.TValue[bool]
+	RequestStatus         plugin.TValue[string]
+	State                 plugin.TValue[string]
+	LifecycleStateDetails plugin.TValue[string]
+	TimeAccessRequested   plugin.TValue[*time.Time]
+	Created               plugin.TValue[*time.Time]
+	TimeUpdated           plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+	SystemTags            plugin.TValue[map[string]any]
+}
+
+// createOciDelegateAccessControlAccessRequest creates a new instance of this resource
+func createOciDelegateAccessControlAccessRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDelegateAccessControlAccessRequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.delegateAccessControl.accessRequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) MqlName() string {
+	return "oci.delegateAccessControl.accessRequest"
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl.accessRequest", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetDelegationControl() *plugin.TValue[*mqlOciDelegateAccessControlDelegationControl] {
+	return plugin.GetOrCompute[*mqlOciDelegateAccessControlDelegationControl](&c.DelegationControl, func() (*mqlOciDelegateAccessControlDelegationControl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl.accessRequest", c.__id, "delegationControl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciDelegateAccessControlDelegationControl), nil
+			}
+		}
+
+		return c.delegationControl()
+	})
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetReasonForRequest() *plugin.TValue[string] {
+	return &c.ReasonForRequest
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetTicketNumbers() *plugin.TValue[[]any] {
+	return &c.TicketNumbers
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetRequestedActionNames() *plugin.TValue[[]any] {
+	return &c.RequestedActionNames
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetRequesterType() *plugin.TValue[string] {
+	return &c.RequesterType
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetDurationInHours() *plugin.TValue[int64] {
+	return &c.DurationInHours
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetExtendDurationInHours() *plugin.TValue[int64] {
+	return &c.ExtendDurationInHours
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetIsAutoApproved() *plugin.TValue[bool] {
+	return &c.IsAutoApproved
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetRequestStatus() *plugin.TValue[string] {
+	return &c.RequestStatus
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetLifecycleStateDetails() *plugin.TValue[string] {
+	return &c.LifecycleStateDetails
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetTimeAccessRequested() *plugin.TValue[*time.Time] {
+	return &c.TimeAccessRequested
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciDelegateAccessControlAccessRequest) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciDelegateAccessControlServiceProvider for the oci.delegateAccessControl.serviceProvider resource
+type mqlOciDelegateAccessControlServiceProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciDelegateAccessControlServiceProviderInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Compartment            plugin.TValue[*mqlOciCompartment]
+	ServiceProviderType    plugin.TValue[string]
+	ServiceTypes           plugin.TValue[[]any]
+	SupportedResourceTypes plugin.TValue[[]any]
+	State                  plugin.TValue[string]
+	LifecycleStateDetails  plugin.TValue[string]
+	Created                plugin.TValue[*time.Time]
+	TimeUpdated            plugin.TValue[*time.Time]
+	FreeformTags           plugin.TValue[map[string]any]
+	DefinedTags            plugin.TValue[map[string]any]
+	SystemTags             plugin.TValue[map[string]any]
+}
+
+// createOciDelegateAccessControlServiceProvider creates a new instance of this resource
+func createOciDelegateAccessControlServiceProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDelegateAccessControlServiceProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.delegateAccessControl.serviceProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) MqlName() string {
+	return "oci.delegateAccessControl.serviceProvider"
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.delegateAccessControl.serviceProvider", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetServiceProviderType() *plugin.TValue[string] {
+	return &c.ServiceProviderType
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetServiceTypes() *plugin.TValue[[]any] {
+	return &c.ServiceTypes
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetSupportedResourceTypes() *plugin.TValue[[]any] {
+	return &c.SupportedResourceTypes
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetLifecycleStateDetails() *plugin.TValue[string] {
+	return &c.LifecycleStateDetails
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciDelegateAccessControlServiceProvider) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciApiAccessControl for the oci.apiAccessControl resource
+type mqlOciApiAccessControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciApiAccessControlInternal it will be used here
+	PrivilegedApiControls plugin.TValue[[]any]
+	PrivilegedApiRequests plugin.TValue[[]any]
+}
+
+// createOciApiAccessControl creates a new instance of this resource
+func createOciApiAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciApiAccessControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.apiAccessControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciApiAccessControl) MqlName() string {
+	return "oci.apiAccessControl"
+}
+
+func (c *mqlOciApiAccessControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciApiAccessControl) GetPrivilegedApiControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivilegedApiControls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.apiAccessControl", c.__id, "privilegedApiControls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privilegedApiControls()
+	})
+}
+
+func (c *mqlOciApiAccessControl) GetPrivilegedApiRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivilegedApiRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.apiAccessControl", c.__id, "privilegedApiRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privilegedApiRequests()
+	})
+}
+
+// mqlOciApiAccessControlPrivilegedApiControl for the oci.apiAccessControl.privilegedApiControl resource
+type mqlOciApiAccessControlPrivilegedApiControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciApiAccessControlPrivilegedApiControlInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Compartment       plugin.TValue[*mqlOciCompartment]
+	ResourceType      plugin.TValue[string]
+	NumberOfApprovers plugin.TValue[int64]
+	State             plugin.TValue[string]
+	LifecycleDetails  plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	TimeUpdated       plugin.TValue[*time.Time]
+	FreeformTags      plugin.TValue[map[string]any]
+	DefinedTags       plugin.TValue[map[string]any]
+	SystemTags        plugin.TValue[map[string]any]
+}
+
+// createOciApiAccessControlPrivilegedApiControl creates a new instance of this resource
+func createOciApiAccessControlPrivilegedApiControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciApiAccessControlPrivilegedApiControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.apiAccessControl.privilegedApiControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) MqlName() string {
+	return "oci.apiAccessControl.privilegedApiControl"
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.apiAccessControl.privilegedApiControl", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetNumberOfApprovers() *plugin.TValue[int64] {
+	return &c.NumberOfApprovers
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiControl) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciApiAccessControlPrivilegedApiRequest for the oci.apiAccessControl.privilegedApiRequest resource
+type mqlOciApiAccessControlPrivilegedApiRequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciApiAccessControlPrivilegedApiRequestInternal
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	RequestId                    plugin.TValue[string]
+	Compartment                  plugin.TValue[*mqlOciCompartment]
+	ReasonSummary                plugin.TValue[string]
+	ResourceId                   plugin.TValue[string]
+	ResourceName                 plugin.TValue[string]
+	ResourceType                 plugin.TValue[string]
+	SubResourceNames             plugin.TValue[[]any]
+	PrivilegedOperations         plugin.TValue[[]any]
+	RequestState                 plugin.TValue[string]
+	State                        plugin.TValue[string]
+	LifecycleDetails             plugin.TValue[string]
+	Severity                     plugin.TValue[string]
+	DurationInHours              plugin.TValue[int64]
+	TimeRequestedForFutureAccess plugin.TValue[*time.Time]
+	Created                      plugin.TValue[*time.Time]
+	TimeUpdated                  plugin.TValue[*time.Time]
+	FreeformTags                 plugin.TValue[map[string]any]
+	DefinedTags                  plugin.TValue[map[string]any]
+	SystemTags                   plugin.TValue[map[string]any]
+}
+
+// createOciApiAccessControlPrivilegedApiRequest creates a new instance of this resource
+func createOciApiAccessControlPrivilegedApiRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciApiAccessControlPrivilegedApiRequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.apiAccessControl.privilegedApiRequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) MqlName() string {
+	return "oci.apiAccessControl.privilegedApiRequest"
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetRequestId() *plugin.TValue[string] {
+	return &c.RequestId
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.apiAccessControl.privilegedApiRequest", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetReasonSummary() *plugin.TValue[string] {
+	return &c.ReasonSummary
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetSubResourceNames() *plugin.TValue[[]any] {
+	return &c.SubResourceNames
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetPrivilegedOperations() *plugin.TValue[[]any] {
+	return &c.PrivilegedOperations
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetRequestState() *plugin.TValue[string] {
+	return &c.RequestState
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetDurationInHours() *plugin.TValue[int64] {
+	return &c.DurationInHours
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetTimeRequestedForFutureAccess() *plugin.TValue[*time.Time] {
+	return &c.TimeRequestedForFutureAccess
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciApiAccessControlPrivilegedApiRequest) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciLockbox for the oci.lockbox resource
+type mqlOciLockbox struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciLockboxInternal it will be used here
+	Lockboxes         plugin.TValue[[]any]
+	ApprovalTemplates plugin.TValue[[]any]
+}
+
+// createOciLockbox creates a new instance of this resource
+func createOciLockbox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLockbox{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.lockbox", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLockbox) MqlName() string {
+	return "oci.lockbox"
+}
+
+func (c *mqlOciLockbox) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLockbox) GetLockboxes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Lockboxes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox", c.__id, "lockboxes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lockboxes()
+	})
+}
+
+func (c *mqlOciLockbox) GetApprovalTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApprovalTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox", c.__id, "approvalTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.approvalTemplates()
+	})
+}
+
+// mqlOciLockboxLockbox for the oci.lockbox.lockbox resource
+type mqlOciLockboxLockbox struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciLockboxLockboxInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
+	ResourceId           plugin.TValue[string]
+	ApprovalTemplate     plugin.TValue[*mqlOciLockboxApprovalTemplate]
+	LockboxPartner       plugin.TValue[string]
+	PartnerId            plugin.TValue[string]
+	PartnerCompartmentId plugin.TValue[string]
+	MaxAccessDuration    plugin.TValue[string]
+	AccessRequests       plugin.TValue[[]any]
+	State                plugin.TValue[string]
+	LifecycleDetails     plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	TimeUpdated          plugin.TValue[*time.Time]
+	FreeformTags         plugin.TValue[map[string]any]
+	DefinedTags          plugin.TValue[map[string]any]
+	SystemTags           plugin.TValue[map[string]any]
+}
+
+// createOciLockboxLockbox creates a new instance of this resource
+func createOciLockboxLockbox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLockboxLockbox{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.lockbox.lockbox", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLockboxLockbox) MqlName() string {
+	return "oci.lockbox.lockbox"
+}
+
+func (c *mqlOciLockboxLockbox) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLockboxLockbox) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciLockboxLockbox) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciLockboxLockbox) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox.lockbox", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciLockboxLockbox) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOciLockboxLockbox) GetApprovalTemplate() *plugin.TValue[*mqlOciLockboxApprovalTemplate] {
+	return plugin.GetOrCompute[*mqlOciLockboxApprovalTemplate](&c.ApprovalTemplate, func() (*mqlOciLockboxApprovalTemplate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox.lockbox", c.__id, "approvalTemplate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLockboxApprovalTemplate), nil
+			}
+		}
+
+		return c.approvalTemplate()
+	})
+}
+
+func (c *mqlOciLockboxLockbox) GetLockboxPartner() *plugin.TValue[string] {
+	return &c.LockboxPartner
+}
+
+func (c *mqlOciLockboxLockbox) GetPartnerId() *plugin.TValue[string] {
+	return &c.PartnerId
+}
+
+func (c *mqlOciLockboxLockbox) GetPartnerCompartmentId() *plugin.TValue[string] {
+	return &c.PartnerCompartmentId
+}
+
+func (c *mqlOciLockboxLockbox) GetMaxAccessDuration() *plugin.TValue[string] {
+	return &c.MaxAccessDuration
+}
+
+func (c *mqlOciLockboxLockbox) GetAccessRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox.lockbox", c.__id, "accessRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessRequests()
+	})
+}
+
+func (c *mqlOciLockboxLockbox) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciLockboxLockbox) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciLockboxLockbox) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciLockboxLockbox) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciLockboxLockbox) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciLockboxLockbox) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciLockboxLockbox) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciLockboxApprovalTemplate for the oci.lockbox.approvalTemplate resource
+type mqlOciLockboxApprovalTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciLockboxApprovalTemplateInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Compartment       plugin.TValue[*mqlOciCompartment]
+	AutoApprovalState plugin.TValue[string]
+	ApproverLevels    plugin.TValue[[]any]
+	State             plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	TimeUpdated       plugin.TValue[*time.Time]
+	FreeformTags      plugin.TValue[map[string]any]
+	DefinedTags       plugin.TValue[map[string]any]
+	SystemTags        plugin.TValue[map[string]any]
+}
+
+// createOciLockboxApprovalTemplate creates a new instance of this resource
+func createOciLockboxApprovalTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLockboxApprovalTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.lockbox.approvalTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLockboxApprovalTemplate) MqlName() string {
+	return "oci.lockbox.approvalTemplate"
+}
+
+func (c *mqlOciLockboxApprovalTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox.approvalTemplate", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetAutoApprovalState() *plugin.TValue[string] {
+	return &c.AutoApprovalState
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetApproverLevels() *plugin.TValue[[]any] {
+	return &c.ApproverLevels
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciLockboxApprovalTemplate) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciLockboxAccessRequest for the oci.lockbox.accessRequest resource
+type mqlOciLockboxAccessRequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciLockboxAccessRequestInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Lockbox           plugin.TValue[*mqlOciLockboxLockbox]
+	RequestorId       plugin.TValue[string]
+	RequestorLocation plugin.TValue[string]
+	AccessDuration    plugin.TValue[string]
+	TicketNumber      plugin.TValue[string]
+	State             plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	TimeUpdated       plugin.TValue[*time.Time]
+	TimeExpired       plugin.TValue[*time.Time]
+	FreeformTags      plugin.TValue[map[string]any]
+	DefinedTags       plugin.TValue[map[string]any]
+	SystemTags        plugin.TValue[map[string]any]
+}
+
+// createOciLockboxAccessRequest creates a new instance of this resource
+func createOciLockboxAccessRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLockboxAccessRequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.lockbox.accessRequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLockboxAccessRequest) MqlName() string {
+	return "oci.lockbox.accessRequest"
+}
+
+func (c *mqlOciLockboxAccessRequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLockboxAccessRequest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciLockboxAccessRequest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciLockboxAccessRequest) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciLockboxAccessRequest) GetLockbox() *plugin.TValue[*mqlOciLockboxLockbox] {
+	return plugin.GetOrCompute[*mqlOciLockboxLockbox](&c.Lockbox, func() (*mqlOciLockboxLockbox, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.lockbox.accessRequest", c.__id, "lockbox")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLockboxLockbox), nil
+			}
+		}
+
+		return c.lockbox()
+	})
+}
+
+func (c *mqlOciLockboxAccessRequest) GetRequestorId() *plugin.TValue[string] {
+	return &c.RequestorId
+}
+
+func (c *mqlOciLockboxAccessRequest) GetRequestorLocation() *plugin.TValue[string] {
+	return &c.RequestorLocation
+}
+
+func (c *mqlOciLockboxAccessRequest) GetAccessDuration() *plugin.TValue[string] {
+	return &c.AccessDuration
+}
+
+func (c *mqlOciLockboxAccessRequest) GetTicketNumber() *plugin.TValue[string] {
+	return &c.TicketNumber
+}
+
+func (c *mqlOciLockboxAccessRequest) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciLockboxAccessRequest) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciLockboxAccessRequest) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciLockboxAccessRequest) GetTimeExpired() *plugin.TValue[*time.Time] {
+	return &c.TimeExpired
+}
+
+func (c *mqlOciLockboxAccessRequest) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciLockboxAccessRequest) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciLockboxAccessRequest) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
 }

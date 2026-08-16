@@ -9462,3 +9462,648 @@ private oci.artifacts.genericArtifact @defaults("name version sizeInBytes") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Oracle Cloud Infrastructure (OCI) Operator Access Control
+//
+// Gate on Oracle's own operators reaching customer infrastructure. Exadata
+// Cloud@Customer, Autonomous Database and the other managed platforms are
+// serviced by Oracle staff, and an operator control decides whether that
+// access needs an approval, how many approvers, and for how long. `controls`
+// holds the rules, `controlAssignments` records which resources each rule is
+// actually attached to, and `accessRequests` is the history of who asked for
+// what and whether it was granted. The history is the evidence: a control
+// that has never denied anything and a control nobody has ever tested look
+// the same until the requests are read.
+oci.operatorAccessControl {
+  // Operator controls defined in the tenancy
+  controls() []oci.operatorAccessControl.control
+  // Assignments attaching a control to a resource
+  controlAssignments() []oci.operatorAccessControl.controlAssignment
+  // Access requests raised against controlled resources
+  accessRequests() []oci.operatorAccessControl.accessRequest
+  // Operator actions that can be requested
+  actions() []oci.operatorAccessControl.action
+}
+
+// Oracle Cloud Infrastructure (OCI) operator control
+//
+// Rule governing Oracle operator access to a class of resource.
+// `isFullyPreApproved` is the setting that matters most: with it set, every
+// operator action proceeds without anyone approving it, so the control exists
+// while enforcing nothing. `numberOfApprovers` is how many people must agree
+// when it is not pre-approved.
+private oci.operatorAccessControl.control @defaults("name isFullyPreApproved numberOfApprovers") {
+  // Operator control OCID
+  id string
+  // Operator control name
+  name string
+  // Compartment containing the operator control
+  compartment() oci.compartment
+  // Whether every request under this control is approved without review
+  isFullyPreApproved bool
+  // Approvers required before an operator action proceeds
+  numberOfApprovers int
+  // Kind of resource the control governs (e.g., EXACC, EXADATAINFRASTRUCTURE, AUTONOMOUSVMCLUSTER, CCCINFRASTRUCTURE)
+  resourceType string
+  // Operator control lifecycle state (e.g., CREATED, ASSIGNED, UNASSIGNED, DELETED)
+  state string
+  // Operator control creation time
+  created time
+  // Last modification time
+  timeOfModification time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) operator control assignment
+//
+// Attachment of an operator control to one resource, and the only thing that
+// puts a control into effect. An unassigned control governs nothing, so this
+// is where coverage is proved. `isEnforcedAlways` separates a permanent
+// assignment from one bounded by `timeAssignmentFrom` and `timeAssignmentTo`,
+// and `isLogForwarded` with `remoteSyslogServerAddress` reports whether
+// operator activity is streamed off the resource for independent review.
+private oci.operatorAccessControl.controlAssignment @defaults("resourceName operatorControlName state") {
+  // Assignment OCID
+  id string
+  // Operator control this assignment applies
+  operatorControl() oci.operatorAccessControl.control
+  // Name of the operator control this assignment applies
+  operatorControlName string
+  // Compartment containing the assignment
+  compartment() oci.compartment
+  // OCID of the resource the control is attached to
+  //
+  // Which kind of resource this identifies is given by `resourceType`, and
+  // the platforms it covers are managed database and Cloud@Customer
+  // infrastructure rather than resources this provider models.
+  resourceId string
+  // Name of the resource the control is attached to
+  resourceName string
+  // Kind of resource the control is attached to (e.g., EXACC, EXADATAINFRASTRUCTURE, AUTONOMOUSVMCLUSTER, CCCINFRASTRUCTURE)
+  resourceType string
+  // Whether the control applies at all times rather than for a bounded window
+  isEnforcedAlways bool
+  // Start of the assignment window
+  timeAssignmentFrom time
+  // End of the assignment window
+  timeAssignmentTo time
+  // Whether operator activity is forwarded to a remote syslog server
+  isLogForwarded bool
+  // Address of the syslog server operator activity is forwarded to
+  remoteSyslogServerAddress string
+  // Port of the syslog server operator activity is forwarded to
+  remoteSyslogServerPort int
+  // Whether hypervisor logs are forwarded as well
+  isHypervisorLogForwarded bool
+  // Assignment lifecycle state (e.g., CREATED, APPLIED, APPLYFAILED, DELETED)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleDetails string
+  // Time the control was assigned
+  timeOfAssignment time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) operator access request
+//
+// One request by an Oracle operator to reach a controlled resource, and the
+// record of what happened to it. `isAutoApproved` marks a request nobody
+// reviewed, `severity` and `duration` state how urgent and how long, and
+// `actionRequests` names the specific operator actions asked for. Reading
+// these is how an assertion about operator access moves from what the control
+// permits to what actually took place.
+private oci.operatorAccessControl.accessRequest @defaults("resourceName severity state") {
+  // Access request OCID
+  id string
+  // Human-readable request identifier
+  requestId string
+  // Compartment containing the access request
+  compartment() oci.compartment
+  // Reason the operator gave for the request
+  accessReasonSummary string
+  // OCID of the resource access was requested to
+  //
+  // Which kind of resource this identifies is given by `resourceType`.
+  resourceId string
+  // Name of the resource access was requested to
+  resourceName string
+  // Kind of resource access was requested to (e.g., EXACC, EXADATAINFRASTRUCTURE, AUTONOMOUSVMCLUSTER, CCCINFRASTRUCTURE)
+  resourceType string
+  // Sub-resources named in the request
+  subResources []string
+  // Operator actions the request asks to perform
+  actionRequests []string
+  // Whether the request was approved without human review
+  isAutoApproved bool
+  // Urgency the operator claimed (e.g., S1, S2, S3, S4)
+  severity string
+  // Hours of access requested
+  duration int
+  // Additional hours requested as an extension
+  extendDuration int
+  // Access request lifecycle state (e.g., CREATED, APPROVED, APPROVEDFORFUTURE, REJECTED, DEPLOYED, CLOSED, EXPIRED, REVOKED)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleDetails string
+  // Time access was requested for, when scheduled ahead
+  timeRequestedForFutureAccess time
+  // Access request creation time
+  created time
+  // Last modification time
+  timeOfModification time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) operator action
+//
+// One operation an Oracle operator can ask to perform, as published by the
+// service. The catalog is what an operator control is written against, so it
+// is the denominator for any question about which operations a control
+// actually restricts. `component` names the part of the platform the action
+// touches.
+private oci.operatorAccessControl.action @defaults("name component resourceType") {
+  // Operator action OCID
+  id string
+  // Operator action name
+  name string
+  // Operator action description
+  description string
+  // Part of the platform the action operates on
+  component string
+  // Compartment the action was listed from
+  compartment() oci.compartment
+  // Kind of resource the action applies to (e.g., EXACC, EXADATAINFRASTRUCTURE, AUTONOMOUSVMCLUSTER, CCCINFRASTRUCTURE)
+  resourceType string
+  // Operator action lifecycle state (e.g., ACTIVE, INACTIVE)
+  state string
+}
+
+// Oracle Cloud Infrastructure (OCI) Delegate Access Control
+//
+// Gate on a managed service provider reaching customer infrastructure. Where
+// operator access control covers Oracle's own staff, this covers third
+// parties the tenancy has subscribed to: `serviceProviders` is who they are,
+// `delegationSubscriptions` records which of them the tenancy has accepted,
+// `delegationControls` is the rule attached to the resources they may reach,
+// and `accessRequests` is what they asked for and what happened. A
+// subscription with no matching delegation control is a provider admitted
+// without a rule governing it.
+oci.delegateAccessControl {
+  // Delegation controls defined in the tenancy
+  delegationControls() []oci.delegateAccessControl.delegationControl
+  // Subscriptions to service providers
+  delegationSubscriptions() []oci.delegateAccessControl.delegationSubscription
+  // Access requests raised by service providers
+  accessRequests() []oci.delegateAccessControl.accessRequest
+  // Service providers offered to the tenancy
+  serviceProviders() []oci.delegateAccessControl.serviceProvider
+}
+
+// Oracle Cloud Infrastructure (OCI) delegation control
+//
+// Rule governing which resources a subscribed service provider may reach and
+// what it may do there. `resourceType` fixes the class of resource it covers,
+// and the control has to exist and be active for delegated access to be
+// governed at all.
+private oci.delegateAccessControl.delegationControl @defaults("name resourceType state") {
+  // Delegation control OCID
+  id string
+  // Delegation control display name
+  name string
+  // Compartment containing the delegation control
+  compartment() oci.compartment
+  // Kind of resource the control governs (e.g., VMCLUSTER, CLOUDVMCLUSTER)
+  resourceType string
+  // Delegation control lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleStateDetails string
+  // Delegation control creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) delegation subscription
+//
+// The tenancy's acceptance of one service provider for one class of service.
+// A subscription is what admits an outside party at all, so the set of active
+// subscriptions is the list of organizations that can be granted access to
+// this tenancy's managed resources.
+private oci.delegateAccessControl.delegationSubscription @defaults("name subscribedServiceType state") {
+  // Delegation subscription OCID
+  id string
+  // Delegation subscription display name
+  name string
+  // Compartment containing the subscription
+  compartment() oci.compartment
+  // Service provider the tenancy is subscribed to
+  serviceProvider() oci.delegateAccessControl.serviceProvider
+  // Class of service the subscription covers (e.g., TROUBLESHOOTING, ASSISTED_PATCHING)
+  subscribedServiceType string
+  // Subscription lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleStateDetails string
+  // Subscription creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) delegated resource access request
+//
+// One request by a subscribed service provider to reach a customer resource.
+// `isAutoApproved` marks a request nobody reviewed, `requesterType` separates
+// a request raised by the provider from one raised on the customer's behalf,
+// and `ticketNumbers` links it to the support case it claims to serve.
+private oci.delegateAccessControl.accessRequest @defaults("name resourceName state") {
+  // Access request OCID
+  id string
+  // Access request display name
+  name string
+  // Compartment containing the access request
+  compartment() oci.compartment
+  // Delegation control governing the request
+  delegationControl() oci.delegateAccessControl.delegationControl
+  // Reason the provider gave for the request
+  reasonForRequest string
+  // OCID of the resource access was requested to
+  //
+  // Which kind of resource this identifies is given by `resourceType`.
+  resourceId string
+  // Name of the resource access was requested to
+  resourceName string
+  // Kind of resource access was requested to (e.g., VMCLUSTER, CLOUDVMCLUSTER)
+  resourceType string
+  // Support tickets the request is associated with
+  ticketNumbers []string
+  // Actions the request asks to perform
+  requestedActionNames []string
+  // Who raised the request (e.g., CUSTOMER, DELEGATEE)
+  requesterType string
+  // Urgency claimed for the request (e.g., S1, S2, S3, S4)
+  severity string
+  // Hours of access requested
+  durationInHours int
+  // Additional hours requested as an extension
+  extendDurationInHours int
+  // Whether the request was approved without human review
+  isAutoApproved bool
+  // Where the request stands (e.g., CREATED, APPROVAL_WAITING, APPROVED, REJECTED, CLOSED, EXPIRED, REVOKED)
+  requestStatus string
+  // Access request lifecycle state (e.g., ACCEPTED, IN_PROGRESS, WAITING, FAILED, SUCCEEDED, CANCELING, CANCELED)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleStateDetails string
+  // Time access was requested
+  timeAccessRequested time
+  // Access request creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) delegate access service provider
+//
+// An organization the tenancy can subscribe to for delegated access.
+// `serviceTypes` is what it may be engaged for and `supportedResourceTypes`
+// what it may be engaged on, so together they bound what a subscription to it
+// can ever permit.
+private oci.delegateAccessControl.serviceProvider @defaults("name serviceProviderType state") {
+  // Service provider OCID
+  id string
+  // Service provider name
+  name string
+  // Compartment the service provider was listed from
+  compartment() oci.compartment
+  // Kind of provider (e.g., ORACLE_PROVIDED, THIRD_PARTY)
+  serviceProviderType string
+  // Classes of service the provider offers (e.g., TROUBLESHOOTING, ASSISTED_PATCHING)
+  serviceTypes []string
+  // Kinds of resource the provider can be engaged on (e.g., VMCLUSTER, CLOUDVMCLUSTER)
+  supportedResourceTypes []string
+  // Service provider lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleStateDetails string
+  // Service provider creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Privileged API Control
+//
+// Approval gate on individual API operations. Where the other controls in
+// this family govern who may reach a resource, this governs which operations
+// may be called on it at all without someone signing off first.
+// `privilegedApiControls` holds the rules and `privilegedApiRequests` the
+// operations that were actually asked for, each naming the API and the
+// attributes it would touch.
+oci.apiAccessControl {
+  // Privileged API controls defined in the tenancy
+  privilegedApiControls() []oci.apiAccessControl.privilegedApiControl
+  // Requests to invoke a privileged API operation
+  privilegedApiRequests() []oci.apiAccessControl.privilegedApiRequest
+}
+
+// Oracle Cloud Infrastructure (OCI) privileged API control
+//
+// Rule putting a set of API operations behind approval. `numberOfApprovers`
+// is the strength of the gate: a control requiring none is a record that the
+// operations are watched rather than a constraint on calling them.
+private oci.apiAccessControl.privilegedApiControl @defaults("name resourceType numberOfApprovers") {
+  // Privileged API control OCID
+  id string
+  // Privileged API control display name
+  name string
+  // Compartment containing the control
+  compartment() oci.compartment
+  // Kind of resource the control governs
+  resourceType string
+  // Approvers required before a privileged operation proceeds
+  numberOfApprovers int
+  // Control lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleDetails string
+  // Control creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) privileged API request
+//
+// One request to invoke API operations that a privileged API control has put
+// behind approval. `privilegedOperations` names each API and the attributes
+// it would read or change, which is the closest thing OCI offers to a record
+// of what a privileged caller intended to touch.
+private oci.apiAccessControl.privilegedApiRequest @defaults("name resourceName state") {
+  // Privileged API request OCID
+  id string
+  // Privileged API request display name
+  name string
+  // Human-readable request identifier
+  requestId string
+  // Compartment containing the request
+  compartment() oci.compartment
+  // Reason the caller gave for the request
+  reasonSummary string
+  // OCID of the resource the operations would be called on
+  //
+  // Which kind of resource this identifies is given by `resourceType`.
+  resourceId string
+  // Name of the resource the operations would be called on
+  resourceName string
+  // Kind of resource the operations would be called on
+  resourceType string
+  // Sub-resources named in the request
+  subResourceNames []string
+  // API operations the request asks to invoke
+  //
+  // Each entry carries `apiName` and, where the operation is attribute
+  // scoped, `attributeNames` listing what it would touch.
+  privilegedOperations []dict
+  // Where the request stands (e.g., CREATED, APPROVAL_WAITING, APPROVED, REJECTED, CLOSED, EXPIRED, REVOKED)
+  requestState string
+  // Request lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleDetails string
+  // Urgency claimed for the request (e.g., S1, S2, S3, S4)
+  severity string
+  // Hours of access requested
+  durationInHours int
+  // Time access was requested for, when scheduled ahead
+  timeRequestedForFutureAccess time
+  // Request creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Managed Access
+//
+// Approval workflow for Oracle access to a resource, known as Lockbox. A
+// lockbox wraps one resource and points at the approval template deciding who
+// must sign off before access is granted. `lockboxes` is what is wrapped and
+// `approvalTemplates` the workflows, and each lockbox carries its own
+// `accessRequests` history. A lockbox whose template auto-approves is a
+// workflow that records access rather than gating it.
+oci.lockbox {
+  // Lockboxes protecting resources in the tenancy
+  lockboxes() []oci.lockbox.lockbox
+  // Approval templates lockboxes are governed by
+  approvalTemplates() []oci.lockbox.approvalTemplate
+}
+
+// Oracle Cloud Infrastructure (OCI) lockbox
+//
+// Approval gate wrapping one resource. `maxAccessDuration` bounds how long a
+// granted access lasts, and `approvalTemplate` is who has to agree before it
+// is granted at all. `lockboxPartner` names which Oracle organization the
+// lockbox admits.
+private oci.lockbox.lockbox @defaults("name lockboxPartner state") {
+  // Lockbox OCID
+  id string
+  // Lockbox display name
+  name string
+  // Compartment containing the lockbox
+  compartment() oci.compartment
+  // OCID of the resource the lockbox protects
+  //
+  // The lockbox wraps whichever service resource it was created for, which
+  // may be of a kind this provider does not model.
+  resourceId string
+  // Approval template deciding who must sign off on access
+  approvalTemplate() oci.lockbox.approvalTemplate
+  // Oracle organization the lockbox admits (e.g., FAAAS, FUSIONAAAS)
+  lockboxPartner string
+  // OCID identifying the partner
+  partnerId string
+  // Compartment OCID on the partner side
+  //
+  // A compartment in the partner's tenancy rather than this one, so it is
+  // reported as an identifier rather than resolved.
+  partnerCompartmentId string
+  // Longest access a single request can be granted
+  maxAccessDuration string
+  // Access requests raised against this lockbox
+  accessRequests() []oci.lockbox.accessRequest
+  // Lockbox lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail behind the current lifecycle state
+  lifecycleDetails string
+  // Lockbox creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) lockbox approval template
+//
+// Workflow deciding who signs off on a lockbox access request.
+// `autoApprovalState` is the setting that decides whether the workflow gates
+// anything: with it enabled, requests are granted without anyone reviewing
+// them. `approverLevels` is the chain of approvers when it is not, and the
+// number of levels is the two-person rule made explicit.
+private oci.lockbox.approvalTemplate @defaults("name autoApprovalState state") {
+  // Approval template OCID
+  id string
+  // Approval template display name
+  name string
+  // Compartment containing the approval template
+  compartment() oci.compartment
+  // Whether requests are granted without review (e.g., ENABLED, DISABLED)
+  autoApprovalState string
+  // Chain of approvers a request passes through
+  //
+  // Each entry carries `level` as its position in the chain, `approverType`
+  // as the kind of principal, `approverId` naming it, and `domainId` for the
+  // identity domain it belongs to. More than one level means no single
+  // approver can grant access alone.
+  approverLevels []dict
+  // Approval template lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Approval template creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) lockbox access request
+//
+// One request to reach the resource a lockbox protects, and what happened to
+// it. `requestorLocation` and `ticketNumber` are the claimed origin and the
+// support case behind it, `accessDuration` how long was asked for, and
+// `timeExpired` when the granted access lapses. These are the evidence that a
+// lockbox is exercised rather than merely configured.
+private oci.lockbox.accessRequest @defaults("name state accessDuration") {
+  // Access request OCID
+  id string
+  // Access request display name
+  name string
+  // Reason given for the request
+  description string
+  // Lockbox the request was raised against
+  lockbox() oci.lockbox.lockbox
+  // Identifier of the principal that raised the request
+  //
+  // An Oracle-side identity rather than a user in this tenancy.
+  requestorId string
+  // Location the requestor claimed to be operating from
+  requestorLocation string
+  // Access duration asked for
+  accessDuration string
+  // Support ticket the request is associated with
+  ticketNumber string
+  // Access request lifecycle state (e.g., CREATING, IN_PROGRESS, WAITING, SUCCEEDED, CANCELING, CANCELED, FAILED, EXPIRED)
+  state string
+  // Access request creation time
+  created time
+  // Last modification time
+  timeUpdated time
+  // Time the granted access lapses
+  timeExpired time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}

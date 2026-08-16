@@ -13,6 +13,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/ailanguage"
 	"github.com/oracle/oci-go-sdk/v65/aispeech"
 	"github.com/oracle/oci-go-sdk/v65/aivision"
+	"github.com/oracle/oci-go-sdk/v65/apiaccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
 	"github.com/oracle/oci-go-sdk/v65/artifacts"
 	"github.com/oracle/oci-go-sdk/v65/audit"
@@ -26,6 +27,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/oracle/oci-go-sdk/v65/datasafe"
 	"github.com/oracle/oci-go-sdk/v65/datascience"
+	"github.com/oracle/oci-go-sdk/v65/delegateaccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/dns"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
@@ -37,6 +39,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
+	"github.com/oracle/oci-go-sdk/v65/lockbox"
 	"github.com/oracle/oci-go-sdk/v65/logging"
 	"github.com/oracle/oci-go-sdk/v65/managedkafka"
 	"github.com/oracle/oci-go-sdk/v65/monitoring"
@@ -47,6 +50,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/opensearch"
+	"github.com/oracle/oci-go-sdk/v65/operatoraccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/psql"
 	"github.com/oracle/oci-go-sdk/v65/queue"
 	"github.com/oracle/oci-go-sdk/v65/redis"
@@ -427,6 +431,52 @@ func (c *OciConnection) ResourceManagerClient(region string) (*resourcemanager.R
 
 func (c *OciConnection) VulnerabilityScanningClient(region string) (*vulnerabilityscanning.VulnerabilityScanningClient, error) {
 	return regionalClient(c, "vulnerabilityscanning", region, vulnerabilityscanning.NewVulnerabilityScanningClientWithConfigurationProvider)
+}
+
+// --- Access by parties outside the tenancy ----------------------------------
+//
+// Four services answering one question, and each publishes its own client
+// rather than one per package - operator access control alone has four. The
+// cache key is the service string, and it is not compiler-checked, so each of
+// these needs a distinct one even though several build from the same package.
+
+func (c *OciConnection) OperatorControlClient(region string) (*operatoraccesscontrol.OperatorControlClient, error) {
+	return regionalClient(c, "operatoraccesscontrol-control", region,
+		operatoraccesscontrol.NewOperatorControlClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) OperatorControlAssignmentClient(region string) (*operatoraccesscontrol.OperatorControlAssignmentClient, error) {
+	return regionalClient(c, "operatoraccesscontrol-assignment", region,
+		operatoraccesscontrol.NewOperatorControlAssignmentClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) OperatorAccessRequestsClient(region string) (*operatoraccesscontrol.AccessRequestsClient, error) {
+	return regionalClient(c, "operatoraccesscontrol-accessrequests", region,
+		operatoraccesscontrol.NewAccessRequestsClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) OperatorActionsClient(region string) (*operatoraccesscontrol.OperatorActionsClient, error) {
+	return regionalClient(c, "operatoraccesscontrol-actions", region,
+		operatoraccesscontrol.NewOperatorActionsClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) DelegateAccessControlClient(region string) (*delegateaccesscontrol.DelegateAccessControlClient, error) {
+	return regionalClient(c, "delegateaccesscontrol", region,
+		delegateaccesscontrol.NewDelegateAccessControlClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) PrivilegedApiControlClient(region string) (*apiaccesscontrol.PrivilegedApiControlClient, error) {
+	return regionalClient(c, "apiaccesscontrol-control", region,
+		apiaccesscontrol.NewPrivilegedApiControlClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) PrivilegedApiRequestsClient(region string) (*apiaccesscontrol.PrivilegedApiRequestsClient, error) {
+	return regionalClient(c, "apiaccesscontrol-requests", region,
+		apiaccesscontrol.NewPrivilegedApiRequestsClientWithConfigurationProvider)
+}
+
+func (c *OciConnection) LockboxClient(region string) (*lockbox.LockboxClient, error) {
+	return regionalClient(c, "lockbox", region, lockbox.NewLockboxClientWithConfigurationProvider)
 }
 
 // --- AI services ------------------------------------------------------------
