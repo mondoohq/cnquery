@@ -6,8 +6,11 @@ package packages
 import (
 	"bytes"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -216,6 +219,84 @@ See /usr/share/common-licenses/GPL-2 for the full license text.
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, "missing"))
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, ""))
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(nil, "bash"))
+}
+
+// A line longer than bufio.Scanner's 64KB default used to end the scan, and
+// every package behind it was dropped while the parser still reported success.
+func TestDpkgLongLineDoesNotTruncate(t *testing.T) {
+	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
+
+	var buf bytes.Buffer
+	buf.WriteString("Package: first\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n\n")
+	buf.WriteString("Package: huge\nStatus: install ok installed\nVersion: 2.0\nArchitecture: amd64\n")
+	buf.WriteString("Depends: " + strings.Repeat("libfoo (>= 1.0), ", 6000) + "libbar\n\n")
+	buf.WriteString("Package: last\nStatus: install ok installed\nVersion: 3.0\nArchitecture: amd64\n\n")
+
+	pkgs, err := ParseDpkgPackages(pf, bytes.NewReader(buf.Bytes()))
+	require.NoError(t, err)
+
+	names := make([]string, len(pkgs))
+	for i := range pkgs {
+		names[i] = pkgs[i].Name
+	}
+	assert.Equal(t, []string{"first", "huge", "last"}, names)
+}
+
+// Past the raised cap the read still stops, and a short package list must not
+// be handed back as a successful parse.
+func TestDpkgOverlongLineIsAnError(t *testing.T) {
+	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
+
+	var buf bytes.Buffer
+	buf.WriteString("Package: first\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n\n")
+	buf.WriteString("Package: huge\nDepends: " + strings.Repeat("x", dpkgMaxLine+1) + "\n\n")
+	buf.WriteString("Package: last\nStatus: install ok installed\nVersion: 3.0\nArchitecture: amd64\n\n")
+
+	pkgs, err := ParseDpkgPackages(pf, bytes.NewReader(buf.Bytes()))
+	require.Error(t, err)
+	assert.Nil(t, pkgs, "a partial inventory must not be reported as a complete one")
+	assert.Contains(t, err.Error(), "could not read the dpkg status stream to its end")
+}
+
+// The trailing add() is guarded now, which must not cost the last package of a
+// stream that ends without an empty line.
+func TestDpkgLastPackage(t *testing.T) {
+	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
+	status := "Package: first\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n\n" +
+		"Package: last\nStatus: install ok installed\nVersion: 2.0\nArchitecture: amd64\n"
+
+	pkgs, err := ParseDpkgPackages(pf, bytes.NewReader([]byte(status)))
+	require.NoError(t, err)
+	require.Len(t, pkgs, 2)
+	assert.Equal(t, "last", pkgs[1].Name)
+
+	// and the same stream closed with an empty line
+	pkgs, err = ParseDpkgPackages(pf, bytes.NewReader([]byte(status+"\n")))
+	require.NoError(t, err)
+	require.Len(t, pkgs, 2)
+	assert.Equal(t, "last", pkgs[1].Name)
+}
+
+// The trailing add() used to run on an empty package for every stream that
+// ends with an empty line, which is every healthy host, and logged it as
+// ignored. Nothing was lost, but the debug log said otherwise once per parse.
+func TestDpkgNoSpuriousIgnoreLog(t *testing.T) {
+	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
+	status := "Package: first\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n\n"
+
+	var out bytes.Buffer
+	origLogger, origLevel := log.Logger, zerolog.GlobalLevel()
+	log.Logger = zerolog.New(&out)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	defer func() {
+		log.Logger = origLogger
+		zerolog.SetGlobalLevel(origLevel)
+	}()
+
+	pkgs, err := ParseDpkgPackages(pf, bytes.NewReader([]byte(status)))
+	require.NoError(t, err)
+	require.Len(t, pkgs, 1)
+	assert.NotContains(t, out.String(), "ignored deb packages since information is missing")
 }
 
 // Both shapes that used to cost a package its description, in the form they
