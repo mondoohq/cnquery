@@ -257,6 +257,12 @@ const (
 	ResourceOciSecurityAttributesApplied                             string = "oci.securityAttributes.applied"
 	ResourceOciSecurityAttributesNamespace                           string = "oci.securityAttributes.namespace"
 	ResourceOciSecurityAttributesAttribute                           string = "oci.securityAttributes.attribute"
+	ResourceOciArtifacts                                             string = "oci.artifacts"
+	ResourceOciArtifactsContainerRepository                          string = "oci.artifacts.containerRepository"
+	ResourceOciArtifactsContainerImage                               string = "oci.artifacts.containerImage"
+	ResourceOciArtifactsContainerImageSignature                      string = "oci.artifacts.containerImageSignature"
+	ResourceOciArtifactsRepository                                   string = "oci.artifacts.repository"
+	ResourceOciArtifactsGenericArtifact                              string = "oci.artifacts.genericArtifact"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1226,6 +1232,30 @@ func init() {
 		"oci.securityAttributes.attribute": {
 			// to override args, implement: initOciSecurityAttributesAttribute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciSecurityAttributesAttribute,
+		},
+		"oci.artifacts": {
+			// to override args, implement: initOciArtifacts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciArtifacts,
+		},
+		"oci.artifacts.containerRepository": {
+			Init:   initOciArtifactsContainerRepository,
+			Create: createOciArtifactsContainerRepository,
+		},
+		"oci.artifacts.containerImage": {
+			Init:   initOciArtifactsContainerImage,
+			Create: createOciArtifactsContainerImage,
+		},
+		"oci.artifacts.containerImageSignature": {
+			// to override args, implement: initOciArtifactsContainerImageSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciArtifactsContainerImageSignature,
+		},
+		"oci.artifacts.repository": {
+			Init:   initOciArtifactsRepository,
+			Create: createOciArtifactsRepository,
+		},
+		"oci.artifacts.genericArtifact": {
+			// to override args, implement: initOciArtifactsGenericArtifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciArtifactsGenericArtifact,
 		},
 	}
 }
@@ -9679,6 +9709,243 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.securityAttributes.attribute.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciSecurityAttributesAttribute).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.containerRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifacts).GetContainerRepositories()).ToDataRes(types.Array(types.Resource("oci.artifacts.containerRepository")))
+	},
+	"oci.artifacts.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifacts).GetContainerImages()).ToDataRes(types.Array(types.Resource("oci.artifacts.containerImage")))
+	},
+	"oci.artifacts.containerImageSignatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifacts).GetContainerImageSignatures()).ToDataRes(types.Array(types.Resource("oci.artifacts.containerImageSignature")))
+	},
+	"oci.artifacts.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifacts).GetRepositories()).ToDataRes(types.Array(types.Resource("oci.artifacts.repository")))
+	},
+	"oci.artifacts.registryNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifacts).GetRegistryNamespace()).ToDataRes(types.String)
+	},
+	"oci.artifacts.isRepositoryCreatedOnFirstPush": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifacts).GetIsRepositoryCreatedOnFirstPush()).ToDataRes(types.Bool)
+	},
+	"oci.artifacts.containerRepository.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetId()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerRepository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetName()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerRepository.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.artifacts.containerRepository.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetNamespace()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerRepository.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"oci.artifacts.containerRepository.isImmutable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetIsImmutable()).ToDataRes(types.Bool)
+	},
+	"oci.artifacts.containerRepository.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetImages()).ToDataRes(types.Array(types.Resource("oci.artifacts.containerImage")))
+	},
+	"oci.artifacts.containerRepository.imageCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetImageCount()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.containerRepository.layerCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetLayerCount()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.containerRepository.layersSizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetLayersSizeInBytes()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.containerRepository.billableSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetBillableSizeInGBs()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.containerRepository.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetState()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerRepository.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerRepository.timeLastPushed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetTimeLastPushed()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.containerRepository.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.containerRepository.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.artifacts.containerRepository.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.artifacts.containerRepository.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerRepository).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.artifacts.containerImage.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetId()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetName()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetDigest()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetVersion()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetRepository()).ToDataRes(types.Resource("oci.artifacts.containerRepository"))
+	},
+	"oci.artifacts.containerImage.repositoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetRepositoryName()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.artifacts.containerImage.signatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetSignatures()).ToDataRes(types.Array(types.Resource("oci.artifacts.containerImageSignature")))
+	},
+	"oci.artifacts.containerImage.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetVersions()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.artifacts.containerImage.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.pullCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetPullCount()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.containerImage.timeLastPulled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetTimeLastPulled()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.containerImage.layersSizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetLayersSizeInBytes()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.containerImage.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetState()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImage.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.containerImage.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.artifacts.containerImage.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.artifacts.containerImage.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImage).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.artifacts.containerImageSignature.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetId()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetName()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.artifacts.containerImageSignature.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetImage()).ToDataRes(types.Resource("oci.artifacts.containerImage"))
+	},
+	"oci.artifacts.containerImageSignature.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetKmsKey()).ToDataRes(types.Resource("oci.kms.key"))
+	},
+	"oci.artifacts.containerImageSignature.kmsKeyVersionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetKmsKeyVersionId()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.signingAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetSigningAlgorithm()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetMessage()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.signature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetSignature()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetState()).ToDataRes(types.String)
+	},
+	"oci.artifacts.containerImageSignature.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.containerImageSignature.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.artifacts.containerImageSignature.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.artifacts.containerImageSignature.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsContainerImageSignature).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.artifacts.repository.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetId()).ToDataRes(types.String)
+	},
+	"oci.artifacts.repository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetName()).ToDataRes(types.String)
+	},
+	"oci.artifacts.repository.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.artifacts.repository.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.artifacts.repository.repositoryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetRepositoryType()).ToDataRes(types.String)
+	},
+	"oci.artifacts.repository.isImmutable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetIsImmutable()).ToDataRes(types.Bool)
+	},
+	"oci.artifacts.repository.artifacts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetArtifacts()).ToDataRes(types.Array(types.Resource("oci.artifacts.genericArtifact")))
+	},
+	"oci.artifacts.repository.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetState()).ToDataRes(types.String)
+	},
+	"oci.artifacts.repository.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.repository.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.artifacts.repository.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsRepository).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.artifacts.genericArtifact.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetId()).ToDataRes(types.String)
+	},
+	"oci.artifacts.genericArtifact.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetName()).ToDataRes(types.String)
+	},
+	"oci.artifacts.genericArtifact.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.artifacts.genericArtifact.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetRepository()).ToDataRes(types.Resource("oci.artifacts.repository"))
+	},
+	"oci.artifacts.genericArtifact.artifactPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetArtifactPath()).ToDataRes(types.String)
+	},
+	"oci.artifacts.genericArtifact.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetVersion()).ToDataRes(types.String)
+	},
+	"oci.artifacts.genericArtifact.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetSha256()).ToDataRes(types.String)
+	},
+	"oci.artifacts.genericArtifact.sizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetSizeInBytes()).ToDataRes(types.Int)
+	},
+	"oci.artifacts.genericArtifact.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetState()).ToDataRes(types.String)
+	},
+	"oci.artifacts.genericArtifact.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.artifacts.genericArtifact.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.artifacts.genericArtifact.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciArtifactsGenericArtifact).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 }
 
@@ -21830,6 +22097,346 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.securityAttributes.attribute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciSecurityAttributesAttribute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.artifacts.containerRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).ContainerRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).ContainerImageSignatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.registryNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).RegistryNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.isRepositoryCreatedOnFirstPush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifacts).IsRepositoryCreatedOnFirstPush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.artifacts.containerRepository.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.isImmutable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).IsImmutable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.imageCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).ImageCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.layerCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).LayerCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.layersSizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).LayersSizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.billableSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).BillableSizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.timeLastPushed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).TimeLastPushed, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerRepository.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerRepository).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.artifacts.containerImage.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Repository, ok = plugin.RawToTValue[*mqlOciArtifactsContainerRepository](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.repositoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).RepositoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.signatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Signatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.pullCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).PullCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.timeLastPulled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).TimeLastPulled, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.layersSizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).LayersSizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImage.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImage).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.artifacts.containerImageSignature.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Image, ok = plugin.RawToTValue[*mqlOciArtifactsContainerImage](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).KmsKey, ok = plugin.RawToTValue[*mqlOciKmsKey](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.kmsKeyVersionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).KmsKeyVersionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.signingAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).SigningAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.signature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Signature, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.containerImageSignature.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsContainerImageSignature).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.artifacts.repository.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.repositoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).RepositoryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.isImmutable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).IsImmutable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.artifacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).Artifacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.repository.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsRepository).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.artifacts.genericArtifact.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Repository, ok = plugin.RawToTValue[*mqlOciArtifactsRepository](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.artifactPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).ArtifactPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.sizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).SizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.artifacts.genericArtifact.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciArtifactsGenericArtifact).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -52938,4 +53545,875 @@ func (c *mqlOciSecurityAttributesAttribute) GetCreated() *plugin.TValue[*time.Ti
 	return plugin.GetOrCompute[*time.Time](&c.Created, func() (*time.Time, error) {
 		return c.created()
 	})
+}
+
+// mqlOciArtifacts for the oci.artifacts resource
+type mqlOciArtifacts struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciArtifactsInternal
+	ContainerRepositories          plugin.TValue[[]any]
+	ContainerImages                plugin.TValue[[]any]
+	ContainerImageSignatures       plugin.TValue[[]any]
+	Repositories                   plugin.TValue[[]any]
+	RegistryNamespace              plugin.TValue[string]
+	IsRepositoryCreatedOnFirstPush plugin.TValue[bool]
+}
+
+// createOciArtifacts creates a new instance of this resource
+func createOciArtifacts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciArtifacts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.artifacts", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciArtifacts) MqlName() string {
+	return "oci.artifacts"
+}
+
+func (c *mqlOciArtifacts) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciArtifacts) GetContainerRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerRepositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts", c.__id, "containerRepositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerRepositories()
+	})
+}
+
+func (c *mqlOciArtifacts) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts", c.__id, "containerImages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerImages()
+	})
+}
+
+func (c *mqlOciArtifacts) GetContainerImageSignatures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImageSignatures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts", c.__id, "containerImageSignatures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerImageSignatures()
+	})
+}
+
+func (c *mqlOciArtifacts) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+func (c *mqlOciArtifacts) GetRegistryNamespace() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RegistryNamespace, func() (string, error) {
+		return c.registryNamespace()
+	})
+}
+
+func (c *mqlOciArtifacts) GetIsRepositoryCreatedOnFirstPush() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsRepositoryCreatedOnFirstPush, func() (bool, error) {
+		return c.isRepositoryCreatedOnFirstPush()
+	})
+}
+
+// mqlOciArtifactsContainerRepository for the oci.artifacts.containerRepository resource
+type mqlOciArtifactsContainerRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciArtifactsContainerRepositoryInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Compartment       plugin.TValue[*mqlOciCompartment]
+	Namespace         plugin.TValue[string]
+	IsPublic          plugin.TValue[bool]
+	IsImmutable       plugin.TValue[bool]
+	Images            plugin.TValue[[]any]
+	ImageCount        plugin.TValue[int64]
+	LayerCount        plugin.TValue[int64]
+	LayersSizeInBytes plugin.TValue[int64]
+	BillableSizeInGBs plugin.TValue[int64]
+	State             plugin.TValue[string]
+	CreatedBy         plugin.TValue[string]
+	TimeLastPushed    plugin.TValue[*time.Time]
+	Created           plugin.TValue[*time.Time]
+	FreeformTags      plugin.TValue[map[string]any]
+	DefinedTags       plugin.TValue[map[string]any]
+	SystemTags        plugin.TValue[map[string]any]
+}
+
+// createOciArtifactsContainerRepository creates a new instance of this resource
+func createOciArtifactsContainerRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciArtifactsContainerRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.artifacts.containerRepository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciArtifactsContainerRepository) MqlName() string {
+	return "oci.artifacts.containerRepository"
+}
+
+func (c *mqlOciArtifactsContainerRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerRepository", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetIsPublic() *plugin.TValue[bool] {
+	return &c.IsPublic
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetIsImmutable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsImmutable, func() (bool, error) {
+		return c.isImmutable()
+	})
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerRepository", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetImageCount() *plugin.TValue[int64] {
+	return &c.ImageCount
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetLayerCount() *plugin.TValue[int64] {
+	return &c.LayerCount
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetLayersSizeInBytes() *plugin.TValue[int64] {
+	return &c.LayersSizeInBytes
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetBillableSizeInGBs() *plugin.TValue[int64] {
+	return &c.BillableSizeInGBs
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetCreatedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CreatedBy, func() (string, error) {
+		return c.createdBy()
+	})
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetTimeLastPushed() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.TimeLastPushed, func() (*time.Time, error) {
+		return c.timeLastPushed()
+	})
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciArtifactsContainerRepository) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciArtifactsContainerImage for the oci.artifacts.containerImage resource
+type mqlOciArtifactsContainerImage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciArtifactsContainerImageInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Digest            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Repository        plugin.TValue[*mqlOciArtifactsContainerRepository]
+	RepositoryName    plugin.TValue[string]
+	Compartment       plugin.TValue[*mqlOciCompartment]
+	Signatures        plugin.TValue[[]any]
+	Versions          plugin.TValue[[]any]
+	CreatedBy         plugin.TValue[string]
+	PullCount         plugin.TValue[int64]
+	TimeLastPulled    plugin.TValue[*time.Time]
+	LayersSizeInBytes plugin.TValue[int64]
+	State             plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	FreeformTags      plugin.TValue[map[string]any]
+	DefinedTags       plugin.TValue[map[string]any]
+	SystemTags        plugin.TValue[map[string]any]
+}
+
+// createOciArtifactsContainerImage creates a new instance of this resource
+func createOciArtifactsContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciArtifactsContainerImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.artifacts.containerImage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciArtifactsContainerImage) MqlName() string {
+	return "oci.artifacts.containerImage"
+}
+
+func (c *mqlOciArtifactsContainerImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciArtifactsContainerImage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciArtifactsContainerImage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciArtifactsContainerImage) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlOciArtifactsContainerImage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOciArtifactsContainerImage) GetRepository() *plugin.TValue[*mqlOciArtifactsContainerRepository] {
+	return plugin.GetOrCompute[*mqlOciArtifactsContainerRepository](&c.Repository, func() (*mqlOciArtifactsContainerRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerImage", c.__id, "repository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciArtifactsContainerRepository), nil
+			}
+		}
+
+		return c.repository()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetRepositoryName() *plugin.TValue[string] {
+	return &c.RepositoryName
+}
+
+func (c *mqlOciArtifactsContainerImage) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerImage", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetSignatures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Signatures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerImage", c.__id, "signatures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.signatures()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		return c.versions()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetCreatedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CreatedBy, func() (string, error) {
+		return c.createdBy()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetPullCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PullCount, func() (int64, error) {
+		return c.pullCount()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetTimeLastPulled() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.TimeLastPulled, func() (*time.Time, error) {
+		return c.timeLastPulled()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetLayersSizeInBytes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LayersSizeInBytes, func() (int64, error) {
+		return c.layersSizeInBytes()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImage) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciArtifactsContainerImage) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciArtifactsContainerImage) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciArtifactsContainerImage) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciArtifactsContainerImage) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciArtifactsContainerImageSignature for the oci.artifacts.containerImageSignature resource
+type mqlOciArtifactsContainerImageSignature struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciArtifactsContainerImageSignatureInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	Image            plugin.TValue[*mqlOciArtifactsContainerImage]
+	KmsKey           plugin.TValue[*mqlOciKmsKey]
+	KmsKeyVersionId  plugin.TValue[string]
+	SigningAlgorithm plugin.TValue[string]
+	Message          plugin.TValue[string]
+	Signature        plugin.TValue[string]
+	State            plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+	SystemTags       plugin.TValue[map[string]any]
+}
+
+// createOciArtifactsContainerImageSignature creates a new instance of this resource
+func createOciArtifactsContainerImageSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciArtifactsContainerImageSignature{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.artifacts.containerImageSignature", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) MqlName() string {
+	return "oci.artifacts.containerImageSignature"
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerImageSignature", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetImage() *plugin.TValue[*mqlOciArtifactsContainerImage] {
+	return plugin.GetOrCompute[*mqlOciArtifactsContainerImage](&c.Image, func() (*mqlOciArtifactsContainerImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerImageSignature", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciArtifactsContainerImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetKmsKey() *plugin.TValue[*mqlOciKmsKey] {
+	return plugin.GetOrCompute[*mqlOciKmsKey](&c.KmsKey, func() (*mqlOciKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.containerImageSignature", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetKmsKeyVersionId() *plugin.TValue[string] {
+	return &c.KmsKeyVersionId
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetSigningAlgorithm() *plugin.TValue[string] {
+	return &c.SigningAlgorithm
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetSignature() *plugin.TValue[string] {
+	return &c.Signature
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciArtifactsContainerImageSignature) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciArtifactsRepository for the oci.artifacts.repository resource
+type mqlOciArtifactsRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciArtifactsRepositoryInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Compartment    plugin.TValue[*mqlOciCompartment]
+	RepositoryType plugin.TValue[string]
+	IsImmutable    plugin.TValue[bool]
+	Artifacts      plugin.TValue[[]any]
+	State          plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
+	FreeformTags   plugin.TValue[map[string]any]
+	DefinedTags    plugin.TValue[map[string]any]
+}
+
+// createOciArtifactsRepository creates a new instance of this resource
+func createOciArtifactsRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciArtifactsRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.artifacts.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciArtifactsRepository) MqlName() string {
+	return "oci.artifacts.repository"
+}
+
+func (c *mqlOciArtifactsRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciArtifactsRepository) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciArtifactsRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciArtifactsRepository) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciArtifactsRepository) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.repository", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciArtifactsRepository) GetRepositoryType() *plugin.TValue[string] {
+	return &c.RepositoryType
+}
+
+func (c *mqlOciArtifactsRepository) GetIsImmutable() *plugin.TValue[bool] {
+	return &c.IsImmutable
+}
+
+func (c *mqlOciArtifactsRepository) GetArtifacts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Artifacts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.repository", c.__id, "artifacts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.artifacts()
+	})
+}
+
+func (c *mqlOciArtifactsRepository) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciArtifactsRepository) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciArtifactsRepository) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciArtifactsRepository) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciArtifactsGenericArtifact for the oci.artifacts.genericArtifact resource
+type mqlOciArtifactsGenericArtifact struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciArtifactsGenericArtifactInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Compartment  plugin.TValue[*mqlOciCompartment]
+	Repository   plugin.TValue[*mqlOciArtifactsRepository]
+	ArtifactPath plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+	SizeInBytes  plugin.TValue[int64]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	FreeformTags plugin.TValue[map[string]any]
+	DefinedTags  plugin.TValue[map[string]any]
+}
+
+// createOciArtifactsGenericArtifact creates a new instance of this resource
+func createOciArtifactsGenericArtifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciArtifactsGenericArtifact{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.artifacts.genericArtifact", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciArtifactsGenericArtifact) MqlName() string {
+	return "oci.artifacts.genericArtifact"
+}
+
+func (c *mqlOciArtifactsGenericArtifact) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.genericArtifact", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetRepository() *plugin.TValue[*mqlOciArtifactsRepository] {
+	return plugin.GetOrCompute[*mqlOciArtifactsRepository](&c.Repository, func() (*mqlOciArtifactsRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.artifacts.genericArtifact", c.__id, "repository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciArtifactsRepository), nil
+			}
+		}
+
+		return c.repository()
+	})
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetArtifactPath() *plugin.TValue[string] {
+	return &c.ArtifactPath
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetSha256() *plugin.TValue[string] {
+	return &c.Sha256
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetSizeInBytes() *plugin.TValue[int64] {
+	return &c.SizeInBytes
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciArtifactsGenericArtifact) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
 }

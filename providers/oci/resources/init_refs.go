@@ -267,6 +267,48 @@ func initOciIdentityIdentityProvider(runtime *plugin.Runtime, args map[string]*l
 	return ociResolveByID(args, "oci.identity.identityProvider", id, items)
 }
 
+func initOciArtifactsContainerRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.artifacts", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciArtifacts).GetContainerRepositories()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.artifacts.containerRepository", id, items)
+}
+
+func initOciArtifactsContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.artifacts", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciArtifacts).GetContainerImages()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.artifacts.containerImage", id, items)
+}
+
+func initOciArtifactsRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.artifacts", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciArtifacts).GetRepositories()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.artifacts.repository", id, items)
+}
+
 func initOciRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, resolve := ociInitArgs(args)
 	if !resolve {
