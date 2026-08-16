@@ -294,6 +294,33 @@ func resolveOciCertRefsByType(runtime *plugin.Runtime, ids []any, ocidType, reso
 	return out, nil
 }
 
+// ociResolveRefs resolves a list of OCIDs to resources of one kind, skipping
+// the ones that cannot be resolved rather than failing the collection.
+func ociResolveRefs(runtime *plugin.Runtime, resourceName, kind string, ids []any) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || id == "" {
+			continue
+		}
+		res, err := NewResource(runtime, resourceName, map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			ociLogSkippedRef(kind, id, err)
+			continue
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// ociLogSkippedRef reports a reference that could not be resolved without
+// failing the collection it was found in.
+func ociLogSkippedRef(kind, id string, err error) {
+	log.Debug().Err(err).Str("id", id).Msgf("skipping unresolvable oci %s", kind)
+}
+
 // resolveOciTopics resolves a list of typed ONS topic resources from a list of
 // destination OCIDs. Monitoring alarms accept both ONS topics and Streaming
 // streams, so non-topic OCIDs are filtered out by prefix. Without that filter a
