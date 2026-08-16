@@ -110,6 +110,32 @@ const (
 	ResourceTomcatWebxml                                  string = "tomcat.webxml"
 	ResourceTomcatUser                                    string = "tomcat.user"
 	ResourceTomcatWebapp                                  string = "tomcat.webapp"
+	ResourceJboss                                         string = "jboss"
+	ResourceJbossConfig                                   string = "jboss.config"
+	ResourceJbossManagement                               string = "jboss.management"
+	ResourceJbossManagementInterface                      string = "jboss.managementInterface"
+	ResourceJbossSecurityRealm                            string = "jboss.securityRealm"
+	ResourceJbossRealmAuthentication                      string = "jboss.realmAuthentication"
+	ResourceJbossLdapAuthentication                       string = "jboss.ldapAuthentication"
+	ResourceJbossKeystore                                 string = "jboss.keystore"
+	ResourceJbossAuditLog                                 string = "jboss.auditLog"
+	ResourceJbossAuditLogger                              string = "jboss.auditLogger"
+	ResourceJbossAuditFormatter                           string = "jboss.auditFormatter"
+	ResourceJbossAuditHandler                             string = "jboss.auditHandler"
+	ResourceJbossInterface                                string = "jboss.interface"
+	ResourceJbossSocketBindingGroup                       string = "jboss.socketBindingGroup"
+	ResourceJbossSocketBinding                            string = "jboss.socketBinding"
+	ResourceJbossVault                                    string = "jboss.vault"
+	ResourceJbossProfile                                  string = "jboss.profile"
+	ResourceJbossSubsystem                                string = "jboss.subsystem"
+	ResourceJbossLogging                                  string = "jboss.logging"
+	ResourceJbossLogHandler                               string = "jboss.logHandler"
+	ResourceJbossWeb                                      string = "jboss.web"
+	ResourceJbossConnector                                string = "jboss.connector"
+	ResourceJbossVirtualServer                            string = "jboss.virtualServer"
+	ResourceJbossJmx                                      string = "jboss.jmx"
+	ResourceJbossDeploymentScanner                        string = "jboss.deploymentScanner"
+	ResourceJbossUser                                     string = "jboss.user"
 	ResourceSquid                                         string = "squid"
 	ResourceSquidConf                                     string = "squid.conf"
 	ResourceSquidConfListen                               string = "squid.conf.listen"
@@ -944,6 +970,110 @@ func init() {
 		"tomcat.webapp": {
 			// to override args, implement: initTomcatWebapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTomcatWebapp,
+		},
+		"jboss": {
+			Init:   initJboss,
+			Create: createJboss,
+		},
+		"jboss.config": {
+			Init:   initJbossConfig,
+			Create: createJbossConfig,
+		},
+		"jboss.management": {
+			Init:   initJbossManagement,
+			Create: createJbossManagement,
+		},
+		"jboss.managementInterface": {
+			// to override args, implement: initJbossManagementInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossManagementInterface,
+		},
+		"jboss.securityRealm": {
+			// to override args, implement: initJbossSecurityRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossSecurityRealm,
+		},
+		"jboss.realmAuthentication": {
+			// to override args, implement: initJbossRealmAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossRealmAuthentication,
+		},
+		"jboss.ldapAuthentication": {
+			// to override args, implement: initJbossLdapAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossLdapAuthentication,
+		},
+		"jboss.keystore": {
+			// to override args, implement: initJbossKeystore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossKeystore,
+		},
+		"jboss.auditLog": {
+			// to override args, implement: initJbossAuditLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossAuditLog,
+		},
+		"jboss.auditLogger": {
+			// to override args, implement: initJbossAuditLogger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossAuditLogger,
+		},
+		"jboss.auditFormatter": {
+			// to override args, implement: initJbossAuditFormatter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossAuditFormatter,
+		},
+		"jboss.auditHandler": {
+			// to override args, implement: initJbossAuditHandler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossAuditHandler,
+		},
+		"jboss.interface": {
+			// to override args, implement: initJbossInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossInterface,
+		},
+		"jboss.socketBindingGroup": {
+			// to override args, implement: initJbossSocketBindingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossSocketBindingGroup,
+		},
+		"jboss.socketBinding": {
+			// to override args, implement: initJbossSocketBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossSocketBinding,
+		},
+		"jboss.vault": {
+			// to override args, implement: initJbossVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossVault,
+		},
+		"jboss.profile": {
+			// to override args, implement: initJbossProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossProfile,
+		},
+		"jboss.subsystem": {
+			// to override args, implement: initJbossSubsystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossSubsystem,
+		},
+		"jboss.logging": {
+			// to override args, implement: initJbossLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossLogging,
+		},
+		"jboss.logHandler": {
+			// to override args, implement: initJbossLogHandler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossLogHandler,
+		},
+		"jboss.web": {
+			// to override args, implement: initJbossWeb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossWeb,
+		},
+		"jboss.connector": {
+			// to override args, implement: initJbossConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossConnector,
+		},
+		"jboss.virtualServer": {
+			// to override args, implement: initJbossVirtualServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossVirtualServer,
+		},
+		"jboss.jmx": {
+			// to override args, implement: initJbossJmx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossJmx,
+		},
+		"jboss.deploymentScanner": {
+			// to override args, implement: initJbossDeploymentScanner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossDeploymentScanner,
+		},
+		"jboss.user": {
+			// to override args, implement: initJbossUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJbossUser,
 		},
 		"squid": {
 			// to override args, implement: initSquid(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4375,6 +4505,645 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"tomcat.webapp.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTomcatWebapp).GetLogging()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.home": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetHome()).ToDataRes(types.String)
+	},
+	"jboss.configFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetConfigFile()).ToDataRes(types.String)
+	},
+	"jboss.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetProduct()).ToDataRes(types.String)
+	},
+	"jboss.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetVersion()).ToDataRes(types.String)
+	},
+	"jboss.launchType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetLaunchType()).ToDataRes(types.String)
+	},
+	"jboss.baseDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetBaseDir()).ToDataRes(types.String)
+	},
+	"jboss.configDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetConfigDir()).ToDataRes(types.String)
+	},
+	"jboss.logDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetLogDir()).ToDataRes(types.String)
+	},
+	"jboss.dataDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetDataDir()).ToDataRes(types.String)
+	},
+	"jboss.deploymentDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetDeploymentDir()).ToDataRes(types.String)
+	},
+	"jboss.vaultDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetVaultDir()).ToDataRes(types.String)
+	},
+	"jboss.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetConfig()).ToDataRes(types.Resource("jboss.config"))
+	},
+	"jboss.configs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetConfigs()).ToDataRes(types.Array(types.Resource("jboss.config")))
+	},
+	"jboss.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetHost()).ToDataRes(types.Resource("jboss.config"))
+	},
+	"jboss.management": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetManagement()).ToDataRes(types.Resource("jboss.management"))
+	},
+	"jboss.managementUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetManagementUsers()).ToDataRes(types.Array(types.Resource("jboss.user")))
+	},
+	"jboss.applicationUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetApplicationUsers()).ToDataRes(types.Array(types.Resource("jboss.user")))
+	},
+	"jboss.startupScript": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetStartupScript()).ToDataRes(types.Resource("file"))
+	},
+	"jboss.startupConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetStartupConfig()).ToDataRes(types.Resource("file"))
+	},
+	"jboss.javaOpts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetJavaOpts()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.securityManagerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetSecurityManagerEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.securityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJboss).GetSecurityPolicy()).ToDataRes(types.String)
+	},
+	"jboss.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"jboss.config.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetName()).ToDataRes(types.String)
+	},
+	"jboss.config.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetMode()).ToDataRes(types.String)
+	},
+	"jboss.config.hostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetHostName()).ToDataRes(types.String)
+	},
+	"jboss.config.management": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetManagement()).ToDataRes(types.Resource("jboss.management"))
+	},
+	"jboss.config.profiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetProfiles()).ToDataRes(types.Array(types.Resource("jboss.profile")))
+	},
+	"jboss.config.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetInterfaces()).ToDataRes(types.Array(types.Resource("jboss.interface")))
+	},
+	"jboss.config.socketBindingGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetSocketBindingGroups()).ToDataRes(types.Array(types.Resource("jboss.socketBindingGroup")))
+	},
+	"jboss.config.vault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetVault()).ToDataRes(types.Resource("jboss.vault"))
+	},
+	"jboss.config.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetDeployments()).ToDataRes(types.Array(types.Dict))
+	},
+	"jboss.config.serverGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetServerGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"jboss.config.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetServers()).ToDataRes(types.Array(types.Dict))
+	},
+	"jboss.config.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetExtensions()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.config.systemProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetSystemProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.config.domainController": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConfig).GetDomainController()).ToDataRes(types.String)
+	},
+	"jboss.management.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagement).GetInterfaces()).ToDataRes(types.Array(types.Resource("jboss.managementInterface")))
+	},
+	"jboss.management.securityRealms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagement).GetSecurityRealms()).ToDataRes(types.Array(types.Resource("jboss.securityRealm")))
+	},
+	"jboss.management.auditLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagement).GetAuditLog()).ToDataRes(types.Resource("jboss.auditLog"))
+	},
+	"jboss.management.accessControlProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagement).GetAccessControlProvider()).ToDataRes(types.String)
+	},
+	"jboss.management.roleMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagement).GetRoleMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"jboss.managementInterface.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetType()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.securityRealm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetSecurityRealm()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.consoleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetConsoleEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.managementInterface.httpUpgradeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetHttpUpgradeEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.managementInterface.httpBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetHttpBinding()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.httpsBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetHttpsBinding()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.nativeBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetNativeBinding()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.socketInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetSocketInterface()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.socketPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetSocketPort()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.socketSecurePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetSocketSecurePort()).ToDataRes(types.String)
+	},
+	"jboss.managementInterface.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossManagementInterface).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.securityRealm.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSecurityRealm).GetName()).ToDataRes(types.String)
+	},
+	"jboss.securityRealm.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSecurityRealm).GetAuthentication()).ToDataRes(types.Resource("jboss.realmAuthentication"))
+	},
+	"jboss.securityRealm.authorizationProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSecurityRealm).GetAuthorizationProperties()).ToDataRes(types.String)
+	},
+	"jboss.securityRealm.mapGroupsToRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSecurityRealm).GetMapGroupsToRoles()).ToDataRes(types.Bool)
+	},
+	"jboss.securityRealm.serverIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSecurityRealm).GetServerIdentity()).ToDataRes(types.Resource("jboss.keystore"))
+	},
+	"jboss.securityRealm.hasSecretIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSecurityRealm).GetHasSecretIdentity()).ToDataRes(types.Bool)
+	},
+	"jboss.realmAuthentication.hasLocal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetHasLocal()).ToDataRes(types.Bool)
+	},
+	"jboss.realmAuthentication.localDefaultUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetLocalDefaultUser()).ToDataRes(types.String)
+	},
+	"jboss.realmAuthentication.localAllowedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetLocalAllowedUsers()).ToDataRes(types.String)
+	},
+	"jboss.realmAuthentication.propertiesPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetPropertiesPath()).ToDataRes(types.String)
+	},
+	"jboss.realmAuthentication.propertiesRelativeTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetPropertiesRelativeTo()).ToDataRes(types.String)
+	},
+	"jboss.realmAuthentication.plainText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetPlainText()).ToDataRes(types.Bool)
+	},
+	"jboss.realmAuthentication.ldap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetLdap()).ToDataRes(types.Resource("jboss.ldapAuthentication"))
+	},
+	"jboss.realmAuthentication.truststore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetTruststore()).ToDataRes(types.Resource("jboss.keystore"))
+	},
+	"jboss.realmAuthentication.jaasName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetJaasName()).ToDataRes(types.String)
+	},
+	"jboss.realmAuthentication.inlineUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossRealmAuthentication).GetInlineUsers()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.ldapAuthentication.connection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetConnection()).ToDataRes(types.String)
+	},
+	"jboss.ldapAuthentication.baseDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetBaseDn()).ToDataRes(types.String)
+	},
+	"jboss.ldapAuthentication.recursive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetRecursive()).ToDataRes(types.Bool)
+	},
+	"jboss.ldapAuthentication.userDn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetUserDn()).ToDataRes(types.String)
+	},
+	"jboss.ldapAuthentication.allowEmptyPasswords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetAllowEmptyPasswords()).ToDataRes(types.Bool)
+	},
+	"jboss.ldapAuthentication.usernameAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetUsernameAttribute()).ToDataRes(types.String)
+	},
+	"jboss.ldapAuthentication.advancedFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetAdvancedFilter()).ToDataRes(types.String)
+	},
+	"jboss.ldapAuthentication.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLdapAuthentication).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.keystore.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossKeystore).GetPath()).ToDataRes(types.String)
+	},
+	"jboss.keystore.relativeTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossKeystore).GetRelativeTo()).ToDataRes(types.String)
+	},
+	"jboss.keystore.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossKeystore).GetProvider()).ToDataRes(types.String)
+	},
+	"jboss.keystore.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossKeystore).GetAlias()).ToDataRes(types.String)
+	},
+	"jboss.keystore.passwordIsVaultExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossKeystore).GetPasswordIsVaultExpression()).ToDataRes(types.Bool)
+	},
+	"jboss.keystore.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossKeystore).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.auditLog.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLog).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.auditLog.logger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLog).GetLogger()).ToDataRes(types.Resource("jboss.auditLogger"))
+	},
+	"jboss.auditLog.serverLogger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLog).GetServerLogger()).ToDataRes(types.Resource("jboss.auditLogger"))
+	},
+	"jboss.auditLog.formatters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLog).GetFormatters()).ToDataRes(types.Array(types.Resource("jboss.auditFormatter")))
+	},
+	"jboss.auditLog.handlers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLog).GetHandlers()).ToDataRes(types.Array(types.Resource("jboss.auditHandler")))
+	},
+	"jboss.auditLogger.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLogger).GetType()).ToDataRes(types.String)
+	},
+	"jboss.auditLogger.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLogger).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.auditLogger.logBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLogger).GetLogBoot()).ToDataRes(types.Bool)
+	},
+	"jboss.auditLogger.logReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLogger).GetLogReadOnly()).ToDataRes(types.Bool)
+	},
+	"jboss.auditLogger.handlers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditLogger).GetHandlers()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.auditFormatter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetName()).ToDataRes(types.String)
+	},
+	"jboss.auditFormatter.includeDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetIncludeDate()).ToDataRes(types.Bool)
+	},
+	"jboss.auditFormatter.dateFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetDateFormat()).ToDataRes(types.String)
+	},
+	"jboss.auditFormatter.dateSeparator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetDateSeparator()).ToDataRes(types.String)
+	},
+	"jboss.auditFormatter.compact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetCompact()).ToDataRes(types.Bool)
+	},
+	"jboss.auditFormatter.escapeNewLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetEscapeNewLine()).ToDataRes(types.Bool)
+	},
+	"jboss.auditFormatter.escapeControlCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetEscapeControlCharacters()).ToDataRes(types.Bool)
+	},
+	"jboss.auditFormatter.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditFormatter).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.auditHandler.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetName()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetType()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.formatter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetFormatter()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetPath()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.relativeTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetRelativeTo()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.rotateAtStartup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetRotateAtStartup()).ToDataRes(types.Bool)
+	},
+	"jboss.auditHandler.maxFailureCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetMaxFailureCount()).ToDataRes(types.Int)
+	},
+	"jboss.auditHandler.syslogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetSyslogFormat()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.appName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetAppName()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.transport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetTransport()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetHost()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetPort()).ToDataRes(types.String)
+	},
+	"jboss.auditHandler.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossAuditHandler).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.interface.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossInterface).GetName()).ToDataRes(types.String)
+	},
+	"jboss.interface.inetAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossInterface).GetInetAddress()).ToDataRes(types.String)
+	},
+	"jboss.interface.anyAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossInterface).GetAnyAddress()).ToDataRes(types.Bool)
+	},
+	"jboss.interface.criteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossInterface).GetCriteria()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.socketBindingGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBindingGroup).GetName()).ToDataRes(types.String)
+	},
+	"jboss.socketBindingGroup.defaultInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBindingGroup).GetDefaultInterface()).ToDataRes(types.String)
+	},
+	"jboss.socketBindingGroup.portOffset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBindingGroup).GetPortOffset()).ToDataRes(types.String)
+	},
+	"jboss.socketBindingGroup.socketBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBindingGroup).GetSocketBindings()).ToDataRes(types.Array(types.Resource("jboss.socketBinding")))
+	},
+	"jboss.socketBindingGroup.outboundSocketBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBindingGroup).GetOutboundSocketBindings()).ToDataRes(types.Array(types.Resource("jboss.socketBinding")))
+	},
+	"jboss.socketBinding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetName()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetInterface()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetPort()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.multicastAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetMulticastAddress()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.multicastPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetMulticastPort()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.fixedPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetFixedPort()).ToDataRes(types.Bool)
+	},
+	"jboss.socketBinding.outbound": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetOutbound()).ToDataRes(types.Bool)
+	},
+	"jboss.socketBinding.remoteHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetRemoteHost()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.remotePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetRemotePort()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.localDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetLocalDestination()).ToDataRes(types.String)
+	},
+	"jboss.socketBinding.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSocketBinding).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.vault.keystoreUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVault).GetKeystoreUrl()).ToDataRes(types.String)
+	},
+	"jboss.vault.keystoreAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVault).GetKeystoreAlias()).ToDataRes(types.String)
+	},
+	"jboss.vault.encryptionDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVault).GetEncryptionDirectory()).ToDataRes(types.String)
+	},
+	"jboss.vault.code": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVault).GetCode()).ToDataRes(types.String)
+	},
+	"jboss.vault.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVault).GetModule()).ToDataRes(types.String)
+	},
+	"jboss.vault.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVault).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.profile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossProfile).GetName()).ToDataRes(types.String)
+	},
+	"jboss.profile.subsystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossProfile).GetSubsystems()).ToDataRes(types.Array(types.Resource("jboss.subsystem")))
+	},
+	"jboss.profile.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossProfile).GetLogging()).ToDataRes(types.Resource("jboss.logging"))
+	},
+	"jboss.profile.web": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossProfile).GetWeb()).ToDataRes(types.Resource("jboss.web"))
+	},
+	"jboss.profile.jmx": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossProfile).GetJmx()).ToDataRes(types.Resource("jboss.jmx"))
+	},
+	"jboss.profile.deploymentScanners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossProfile).GetDeploymentScanners()).ToDataRes(types.Array(types.Resource("jboss.deploymentScanner")))
+	},
+	"jboss.subsystem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSubsystem).GetName()).ToDataRes(types.String)
+	},
+	"jboss.subsystem.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSubsystem).GetNamespace()).ToDataRes(types.String)
+	},
+	"jboss.subsystem.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSubsystem).GetVersion()).ToDataRes(types.String)
+	},
+	"jboss.subsystem.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossSubsystem).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.logging.rootLoggerLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogging).GetRootLoggerLevel()).ToDataRes(types.String)
+	},
+	"jboss.logging.rootLoggerHandlers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogging).GetRootLoggerHandlers()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.logging.handlers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogging).GetHandlers()).ToDataRes(types.Array(types.Resource("jboss.logHandler")))
+	},
+	"jboss.logging.loggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogging).GetLoggers()).ToDataRes(types.Array(types.Dict))
+	},
+	"jboss.logHandler.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetName()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetType()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetLevel()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetPath()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.relativeTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetRelativeTo()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.suffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetSuffix()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.append": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetAppend()).ToDataRes(types.Bool)
+	},
+	"jboss.logHandler.rotateSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetRotateSize()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.maxBackupIndex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetMaxBackupIndex()).ToDataRes(types.Int)
+	},
+	"jboss.logHandler.formatter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetFormatter()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.serverAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetServerAddress()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetPort()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.appName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetAppName()).ToDataRes(types.String)
+	},
+	"jboss.logHandler.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossLogHandler).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.web.defaultVirtualServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossWeb).GetDefaultVirtualServer()).ToDataRes(types.String)
+	},
+	"jboss.web.native": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossWeb).GetNative()).ToDataRes(types.Bool)
+	},
+	"jboss.web.connectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossWeb).GetConnectors()).ToDataRes(types.Array(types.Resource("jboss.connector")))
+	},
+	"jboss.web.virtualServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossWeb).GetVirtualServers()).ToDataRes(types.Array(types.Resource("jboss.virtualServer")))
+	},
+	"jboss.connector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetName()).ToDataRes(types.String)
+	},
+	"jboss.connector.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetProtocol()).ToDataRes(types.String)
+	},
+	"jboss.connector.scheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetScheme()).ToDataRes(types.String)
+	},
+	"jboss.connector.socketBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSocketBinding()).ToDataRes(types.String)
+	},
+	"jboss.connector.secure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSecure()).ToDataRes(types.Bool)
+	},
+	"jboss.connector.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.connector.sslEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.connector.sslProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslProtocol()).ToDataRes(types.String)
+	},
+	"jboss.connector.sslCipherSuite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslCipherSuite()).ToDataRes(types.String)
+	},
+	"jboss.connector.sslVerifyClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslVerifyClient()).ToDataRes(types.String)
+	},
+	"jboss.connector.sslKeyAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslKeyAlias()).ToDataRes(types.String)
+	},
+	"jboss.connector.sslCertificateKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslCertificateKeyFile()).ToDataRes(types.String)
+	},
+	"jboss.connector.sslCaCertificateFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslCaCertificateFile()).ToDataRes(types.String)
+	},
+	"jboss.connector.sslParams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetSslParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.connector.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossConnector).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.virtualServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVirtualServer).GetName()).ToDataRes(types.String)
+	},
+	"jboss.virtualServer.enableWelcomeRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVirtualServer).GetEnableWelcomeRoot()).ToDataRes(types.Bool)
+	},
+	"jboss.virtualServer.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVirtualServer).GetAliases()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.virtualServer.accessLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVirtualServer).GetAccessLogEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.virtualServer.accessLogPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVirtualServer).GetAccessLogPattern()).ToDataRes(types.String)
+	},
+	"jboss.virtualServer.accessLogDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossVirtualServer).GetAccessLogDirectory()).ToDataRes(types.String)
+	},
+	"jboss.jmx.remotingConnectorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossJmx).GetRemotingConnectorEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.jmx.useManagementEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossJmx).GetUseManagementEndpoint()).ToDataRes(types.Bool)
+	},
+	"jboss.jmx.exposeResolvedModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossJmx).GetExposeResolvedModel()).ToDataRes(types.Bool)
+	},
+	"jboss.jmx.exposeExpressionModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossJmx).GetExposeExpressionModel()).ToDataRes(types.Bool)
+	},
+	"jboss.jmx.nonCoreMbeansSensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossJmx).GetNonCoreMbeansSensitive()).ToDataRes(types.Bool)
+	},
+	"jboss.deploymentScanner.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetName()).ToDataRes(types.String)
+	},
+	"jboss.deploymentScanner.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetPath()).ToDataRes(types.String)
+	},
+	"jboss.deploymentScanner.relativeTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetRelativeTo()).ToDataRes(types.String)
+	},
+	"jboss.deploymentScanner.scanEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetScanEnabled()).ToDataRes(types.Bool)
+	},
+	"jboss.deploymentScanner.scanInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetScanInterval()).ToDataRes(types.Int)
+	},
+	"jboss.deploymentScanner.autoDeployExploded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetAutoDeployExploded()).ToDataRes(types.Bool)
+	},
+	"jboss.deploymentScanner.autoDeployZipped": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetAutoDeployZipped()).ToDataRes(types.Bool)
+	},
+	"jboss.deploymentScanner.autoDeployXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetAutoDeployXml()).ToDataRes(types.Bool)
+	},
+	"jboss.deploymentScanner.runtimeFailureCausesRollback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetRuntimeFailureCausesRollback()).ToDataRes(types.Bool)
+	},
+	"jboss.deploymentScanner.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossDeploymentScanner).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jboss.user.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossUser).GetUsername()).ToDataRes(types.String)
+	},
+	"jboss.user.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossUser).GetRealm()).ToDataRes(types.String)
+	},
+	"jboss.user.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossUser).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"jboss.user.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossUser).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"jboss.user.hasPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJbossUser).GetHasPassword()).ToDataRes(types.Bool)
 	},
 	"squid.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSquid).GetVersion()).ToDataRes(types.String)
@@ -16969,6 +17738,962 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tomcat.webapp.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTomcatWebapp).Logging, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.home": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Home, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.configFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).ConfigFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.launchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).LaunchType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.baseDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).BaseDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.configDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).ConfigDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).LogDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.dataDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).DataDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).DeploymentDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.vaultDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).VaultDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Config, ok = plugin.RawToTValue[*mqlJbossConfig](v.Value, v.Error)
+		return
+	},
+	"jboss.configs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Configs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Host, ok = plugin.RawToTValue[*mqlJbossConfig](v.Value, v.Error)
+		return
+	},
+	"jboss.management": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).Management, ok = plugin.RawToTValue[*mqlJbossManagement](v.Value, v.Error)
+		return
+	},
+	"jboss.managementUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).ManagementUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.applicationUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).ApplicationUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.startupScript": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).StartupScript, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"jboss.startupConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).StartupConfig, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"jboss.javaOpts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).JavaOpts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.securityManagerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).SecurityManagerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.securityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJboss).SecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"jboss.config.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.config.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.config.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.config.management": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Management, ok = plugin.RawToTValue[*mqlJbossManagement](v.Value, v.Error)
+		return
+	},
+	"jboss.config.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.socketBindingGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).SocketBindingGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Vault, ok = plugin.RawToTValue[*mqlJbossVault](v.Value, v.Error)
+		return
+	},
+	"jboss.config.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.serverGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).ServerGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.systemProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).SystemProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.config.domainController": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConfig).DomainController, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.management.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagement).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.management.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagement).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.management.securityRealms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagement).SecurityRealms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.management.auditLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagement).AuditLog, ok = plugin.RawToTValue[*mqlJbossAuditLog](v.Value, v.Error)
+		return
+	},
+	"jboss.management.accessControlProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagement).AccessControlProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.management.roleMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagement).RoleMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.managementInterface.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.securityRealm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).SecurityRealm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.consoleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).ConsoleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.httpUpgradeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).HttpUpgradeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.httpBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).HttpBinding, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.httpsBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).HttpsBinding, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.nativeBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).NativeBinding, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.socketInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).SocketInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.socketPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).SocketPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.socketSecurePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).SocketSecurePort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.managementInterface.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossManagementInterface).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.securityRealm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.securityRealm.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.securityRealm.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).Authentication, ok = plugin.RawToTValue[*mqlJbossRealmAuthentication](v.Value, v.Error)
+		return
+	},
+	"jboss.securityRealm.authorizationProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).AuthorizationProperties, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.securityRealm.mapGroupsToRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).MapGroupsToRoles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.securityRealm.serverIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).ServerIdentity, ok = plugin.RawToTValue[*mqlJbossKeystore](v.Value, v.Error)
+		return
+	},
+	"jboss.securityRealm.hasSecretIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSecurityRealm).HasSecretIdentity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.realmAuthentication.hasLocal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).HasLocal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.localDefaultUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).LocalDefaultUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.localAllowedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).LocalAllowedUsers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.propertiesPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).PropertiesPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.propertiesRelativeTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).PropertiesRelativeTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.plainText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).PlainText, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.ldap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).Ldap, ok = plugin.RawToTValue[*mqlJbossLdapAuthentication](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.truststore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).Truststore, ok = plugin.RawToTValue[*mqlJbossKeystore](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.jaasName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).JaasName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.realmAuthentication.inlineUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossRealmAuthentication).InlineUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.ldapAuthentication.connection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).Connection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.baseDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).BaseDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.recursive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).Recursive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.userDn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).UserDn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.allowEmptyPasswords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).AllowEmptyPasswords, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.usernameAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).UsernameAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.advancedFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).AdvancedFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.ldapAuthentication.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLdapAuthentication).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.keystore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.keystore.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.keystore.relativeTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).RelativeTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.keystore.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.keystore.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.keystore.passwordIsVaultExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).PasswordIsVaultExpression, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.keystore.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossKeystore).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLog).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.auditLog.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLog).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLog.logger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLog).Logger, ok = plugin.RawToTValue[*mqlJbossAuditLogger](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLog.serverLogger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLog).ServerLogger, ok = plugin.RawToTValue[*mqlJbossAuditLogger](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLog.formatters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLog).Formatters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLog.handlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLog).Handlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLogger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLogger).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.auditLogger.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLogger).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLogger.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLogger).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLogger.logBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLogger).LogBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLogger.logReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLogger).LogReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditLogger.handlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditLogger).Handlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.auditFormatter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.includeDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).IncludeDate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.dateFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).DateFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.dateSeparator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).DateSeparator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.compact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).Compact, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.escapeNewLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).EscapeNewLine, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.escapeControlCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).EscapeControlCharacters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditFormatter.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditFormatter).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.auditHandler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.formatter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Formatter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.relativeTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).RelativeTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.rotateAtStartup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).RotateAtStartup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.maxFailureCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).MaxFailureCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.syslogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).SyslogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.appName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).AppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.transport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Transport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Port, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.auditHandler.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossAuditHandler).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.interface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossInterface).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.interface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.interface.inetAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossInterface).InetAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.interface.anyAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossInterface).AnyAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.interface.criteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossInterface).Criteria, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBindingGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBindingGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.socketBindingGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBindingGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBindingGroup.defaultInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBindingGroup).DefaultInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBindingGroup.portOffset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBindingGroup).PortOffset, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBindingGroup.socketBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBindingGroup).SocketBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBindingGroup.outboundSocketBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBindingGroup).OutboundSocketBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.socketBinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).Port, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.multicastAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).MulticastAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.multicastPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).MulticastPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.fixedPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).FixedPort, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.outbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).Outbound, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.remoteHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).RemoteHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.remotePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).RemotePort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.localDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).LocalDestination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.socketBinding.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSocketBinding).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.vault.keystoreUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).KeystoreUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.vault.keystoreAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).KeystoreAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.vault.encryptionDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).EncryptionDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.vault.code": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).Code, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.vault.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.vault.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVault).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.profile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.profile.subsystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).Subsystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.profile.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).Logging, ok = plugin.RawToTValue[*mqlJbossLogging](v.Value, v.Error)
+		return
+	},
+	"jboss.profile.web": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).Web, ok = plugin.RawToTValue[*mqlJbossWeb](v.Value, v.Error)
+		return
+	},
+	"jboss.profile.jmx": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).Jmx, ok = plugin.RawToTValue[*mqlJbossJmx](v.Value, v.Error)
+		return
+	},
+	"jboss.profile.deploymentScanners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossProfile).DeploymentScanners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.subsystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSubsystem).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.subsystem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSubsystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.subsystem.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSubsystem).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.subsystem.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSubsystem).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.subsystem.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossSubsystem).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.logging.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogging).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.logging.rootLoggerLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogging).RootLoggerLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logging.rootLoggerHandlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogging).RootLoggerHandlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.logging.handlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogging).Handlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.logging.loggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogging).Loggers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.logHandler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.relativeTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).RelativeTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.suffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Suffix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.append": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Append, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.rotateSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).RotateSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.maxBackupIndex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).MaxBackupIndex, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.formatter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Formatter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.serverAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).ServerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Port, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.appName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).AppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.logHandler.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossLogHandler).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.web.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossWeb).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.web.defaultVirtualServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossWeb).DefaultVirtualServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.web.native": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossWeb).Native, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.web.connectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossWeb).Connectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.web.virtualServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossWeb).VirtualServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.connector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.scheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).Scheme, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.socketBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SocketBinding, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.secure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).Secure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslCipherSuite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslCipherSuite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslVerifyClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslVerifyClient, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslKeyAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslKeyAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslCertificateKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslCertificateKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslCaCertificateFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslCaCertificateFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.sslParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).SslParams, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.connector.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossConnector).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.virtualServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.virtualServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.virtualServer.enableWelcomeRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).EnableWelcomeRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.virtualServer.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.virtualServer.accessLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).AccessLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.virtualServer.accessLogPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).AccessLogPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.virtualServer.accessLogDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossVirtualServer).AccessLogDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.jmx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossJmx).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.jmx.remotingConnectorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossJmx).RemotingConnectorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.jmx.useManagementEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossJmx).UseManagementEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.jmx.exposeResolvedModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossJmx).ExposeResolvedModel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.jmx.exposeExpressionModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossJmx).ExposeExpressionModel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.jmx.nonCoreMbeansSensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossJmx).NonCoreMbeansSensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.deploymentScanner.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.relativeTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).RelativeTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.scanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).ScanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.scanInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).ScanInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.autoDeployExploded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).AutoDeployExploded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.autoDeployZipped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).AutoDeployZipped, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.autoDeployXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).AutoDeployXml, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.runtimeFailureCausesRollback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).RuntimeFailureCausesRollback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jboss.deploymentScanner.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossDeploymentScanner).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jboss.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossUser).__id, ok = v.Value.(string)
+		return
+	},
+	"jboss.user.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossUser).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.user.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossUser).Realm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jboss.user.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossUser).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"jboss.user.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossUser).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jboss.user.hasPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJbossUser).HasPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"squid.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40541,6 +42266,2214 @@ func (c *mqlTomcatWebapp) GetLogging() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Logging, func() (map[string]any, error) {
 		return c.logging()
 	})
+}
+
+// mqlJboss for the jboss resource
+type mqlJboss struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJbossInternal
+	Home                   plugin.TValue[string]
+	ConfigFile             plugin.TValue[string]
+	Product                plugin.TValue[string]
+	Version                plugin.TValue[string]
+	LaunchType             plugin.TValue[string]
+	BaseDir                plugin.TValue[string]
+	ConfigDir              plugin.TValue[string]
+	LogDir                 plugin.TValue[string]
+	DataDir                plugin.TValue[string]
+	DeploymentDir          plugin.TValue[string]
+	VaultDir               plugin.TValue[string]
+	Config                 plugin.TValue[*mqlJbossConfig]
+	Configs                plugin.TValue[[]any]
+	Host                   plugin.TValue[*mqlJbossConfig]
+	Management             plugin.TValue[*mqlJbossManagement]
+	ManagementUsers        plugin.TValue[[]any]
+	ApplicationUsers       plugin.TValue[[]any]
+	StartupScript          plugin.TValue[*mqlFile]
+	StartupConfig          plugin.TValue[*mqlFile]
+	JavaOpts               plugin.TValue[[]any]
+	SecurityManagerEnabled plugin.TValue[bool]
+	SecurityPolicy         plugin.TValue[string]
+}
+
+// createJboss creates a new instance of this resource
+func createJboss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJboss{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJboss) MqlName() string {
+	return "jboss"
+}
+
+func (c *mqlJboss) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJboss) GetHome() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Home, func() (string, error) {
+		return c.home()
+	})
+}
+
+func (c *mqlJboss) GetConfigFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigFile, func() (string, error) {
+		return c.configFile()
+	})
+}
+
+func (c *mqlJboss) GetProduct() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Product, func() (string, error) {
+		return c.product()
+	})
+}
+
+func (c *mqlJboss) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlJboss) GetLaunchType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LaunchType, func() (string, error) {
+		return c.launchType()
+	})
+}
+
+func (c *mqlJboss) GetBaseDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BaseDir, func() (string, error) {
+		return c.baseDir()
+	})
+}
+
+func (c *mqlJboss) GetConfigDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigDir, func() (string, error) {
+		return c.configDir()
+	})
+}
+
+func (c *mqlJboss) GetLogDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDir, func() (string, error) {
+		return c.logDir()
+	})
+}
+
+func (c *mqlJboss) GetDataDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DataDir, func() (string, error) {
+		return c.dataDir()
+	})
+}
+
+func (c *mqlJboss) GetDeploymentDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DeploymentDir, func() (string, error) {
+		return c.deploymentDir()
+	})
+}
+
+func (c *mqlJboss) GetVaultDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VaultDir, func() (string, error) {
+		return c.vaultDir()
+	})
+}
+
+func (c *mqlJboss) GetConfig() *plugin.TValue[*mqlJbossConfig] {
+	return plugin.GetOrCompute[*mqlJbossConfig](&c.Config, func() (*mqlJbossConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "config")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJbossConfig), nil
+			}
+		}
+
+		return c.config()
+	})
+}
+
+func (c *mqlJboss) GetConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "configs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configs()
+	})
+}
+
+func (c *mqlJboss) GetHost() *plugin.TValue[*mqlJbossConfig] {
+	return plugin.GetOrCompute[*mqlJbossConfig](&c.Host, func() (*mqlJbossConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "host")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJbossConfig), nil
+			}
+		}
+
+		return c.host()
+	})
+}
+
+func (c *mqlJboss) GetManagement() *plugin.TValue[*mqlJbossManagement] {
+	return plugin.GetOrCompute[*mqlJbossManagement](&c.Management, func() (*mqlJbossManagement, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "management")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJbossManagement), nil
+			}
+		}
+
+		return c.management()
+	})
+}
+
+func (c *mqlJboss) GetManagementUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagementUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "managementUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managementUsers()
+	})
+}
+
+func (c *mqlJboss) GetApplicationUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "applicationUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationUsers()
+	})
+}
+
+func (c *mqlJboss) GetStartupScript() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.StartupScript, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "startupScript")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.startupScript()
+	})
+}
+
+func (c *mqlJboss) GetStartupConfig() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.StartupConfig, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jboss", c.__id, "startupConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.startupConfig()
+	})
+}
+
+func (c *mqlJboss) GetJavaOpts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.JavaOpts, func() ([]any, error) {
+		return c.javaOpts()
+	})
+}
+
+func (c *mqlJboss) GetSecurityManagerEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SecurityManagerEnabled, func() (bool, error) {
+		return c.securityManagerEnabled()
+	})
+}
+
+func (c *mqlJboss) GetSecurityPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecurityPolicy, func() (string, error) {
+		return c.securityPolicy()
+	})
+}
+
+// mqlJbossConfig for the jboss.config resource
+type mqlJbossConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossConfigInternal it will be used here
+	File                plugin.TValue[*mqlFile]
+	Name                plugin.TValue[string]
+	Mode                plugin.TValue[string]
+	HostName            plugin.TValue[string]
+	Management          plugin.TValue[*mqlJbossManagement]
+	Profiles            plugin.TValue[[]any]
+	Interfaces          plugin.TValue[[]any]
+	SocketBindingGroups plugin.TValue[[]any]
+	Vault               plugin.TValue[*mqlJbossVault]
+	Deployments         plugin.TValue[[]any]
+	ServerGroups        plugin.TValue[[]any]
+	Servers             plugin.TValue[[]any]
+	Extensions          plugin.TValue[[]any]
+	SystemProperties    plugin.TValue[map[string]any]
+	DomainController    plugin.TValue[string]
+}
+
+// createJbossConfig creates a new instance of this resource
+func createJbossConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossConfig) MqlName() string {
+	return "jboss.config"
+}
+
+func (c *mqlJbossConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlJbossConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossConfig) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlJbossConfig) GetHostName() *plugin.TValue[string] {
+	return &c.HostName
+}
+
+func (c *mqlJbossConfig) GetManagement() *plugin.TValue[*mqlJbossManagement] {
+	return &c.Management
+}
+
+func (c *mqlJbossConfig) GetProfiles() *plugin.TValue[[]any] {
+	return &c.Profiles
+}
+
+func (c *mqlJbossConfig) GetInterfaces() *plugin.TValue[[]any] {
+	return &c.Interfaces
+}
+
+func (c *mqlJbossConfig) GetSocketBindingGroups() *plugin.TValue[[]any] {
+	return &c.SocketBindingGroups
+}
+
+func (c *mqlJbossConfig) GetVault() *plugin.TValue[*mqlJbossVault] {
+	return &c.Vault
+}
+
+func (c *mqlJbossConfig) GetDeployments() *plugin.TValue[[]any] {
+	return &c.Deployments
+}
+
+func (c *mqlJbossConfig) GetServerGroups() *plugin.TValue[[]any] {
+	return &c.ServerGroups
+}
+
+func (c *mqlJbossConfig) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlJbossConfig) GetExtensions() *plugin.TValue[[]any] {
+	return &c.Extensions
+}
+
+func (c *mqlJbossConfig) GetSystemProperties() *plugin.TValue[map[string]any] {
+	return &c.SystemProperties
+}
+
+func (c *mqlJbossConfig) GetDomainController() *plugin.TValue[string] {
+	return &c.DomainController
+}
+
+// mqlJbossManagement for the jboss.management resource
+type mqlJbossManagement struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossManagementInternal it will be used here
+	Interfaces            plugin.TValue[[]any]
+	SecurityRealms        plugin.TValue[[]any]
+	AuditLog              plugin.TValue[*mqlJbossAuditLog]
+	AccessControlProvider plugin.TValue[string]
+	RoleMappings          plugin.TValue[[]any]
+}
+
+// createJbossManagement creates a new instance of this resource
+func createJbossManagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossManagement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.management", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossManagement) MqlName() string {
+	return "jboss.management"
+}
+
+func (c *mqlJbossManagement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossManagement) GetInterfaces() *plugin.TValue[[]any] {
+	return &c.Interfaces
+}
+
+func (c *mqlJbossManagement) GetSecurityRealms() *plugin.TValue[[]any] {
+	return &c.SecurityRealms
+}
+
+func (c *mqlJbossManagement) GetAuditLog() *plugin.TValue[*mqlJbossAuditLog] {
+	return &c.AuditLog
+}
+
+func (c *mqlJbossManagement) GetAccessControlProvider() *plugin.TValue[string] {
+	return &c.AccessControlProvider
+}
+
+func (c *mqlJbossManagement) GetRoleMappings() *plugin.TValue[[]any] {
+	return &c.RoleMappings
+}
+
+// mqlJbossManagementInterface for the jboss.managementInterface resource
+type mqlJbossManagementInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossManagementInterfaceInternal it will be used here
+	Type               plugin.TValue[string]
+	SecurityRealm      plugin.TValue[string]
+	ConsoleEnabled     plugin.TValue[bool]
+	HttpUpgradeEnabled plugin.TValue[bool]
+	HttpBinding        plugin.TValue[string]
+	HttpsBinding       plugin.TValue[string]
+	NativeBinding      plugin.TValue[string]
+	SocketInterface    plugin.TValue[string]
+	SocketPort         plugin.TValue[string]
+	SocketSecurePort   plugin.TValue[string]
+	Params             plugin.TValue[map[string]any]
+}
+
+// createJbossManagementInterface creates a new instance of this resource
+func createJbossManagementInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossManagementInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.managementInterface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossManagementInterface) MqlName() string {
+	return "jboss.managementInterface"
+}
+
+func (c *mqlJbossManagementInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossManagementInterface) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlJbossManagementInterface) GetSecurityRealm() *plugin.TValue[string] {
+	return &c.SecurityRealm
+}
+
+func (c *mqlJbossManagementInterface) GetConsoleEnabled() *plugin.TValue[bool] {
+	return &c.ConsoleEnabled
+}
+
+func (c *mqlJbossManagementInterface) GetHttpUpgradeEnabled() *plugin.TValue[bool] {
+	return &c.HttpUpgradeEnabled
+}
+
+func (c *mqlJbossManagementInterface) GetHttpBinding() *plugin.TValue[string] {
+	return &c.HttpBinding
+}
+
+func (c *mqlJbossManagementInterface) GetHttpsBinding() *plugin.TValue[string] {
+	return &c.HttpsBinding
+}
+
+func (c *mqlJbossManagementInterface) GetNativeBinding() *plugin.TValue[string] {
+	return &c.NativeBinding
+}
+
+func (c *mqlJbossManagementInterface) GetSocketInterface() *plugin.TValue[string] {
+	return &c.SocketInterface
+}
+
+func (c *mqlJbossManagementInterface) GetSocketPort() *plugin.TValue[string] {
+	return &c.SocketPort
+}
+
+func (c *mqlJbossManagementInterface) GetSocketSecurePort() *plugin.TValue[string] {
+	return &c.SocketSecurePort
+}
+
+func (c *mqlJbossManagementInterface) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossSecurityRealm for the jboss.securityRealm resource
+type mqlJbossSecurityRealm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossSecurityRealmInternal it will be used here
+	Name                    plugin.TValue[string]
+	Authentication          plugin.TValue[*mqlJbossRealmAuthentication]
+	AuthorizationProperties plugin.TValue[string]
+	MapGroupsToRoles        plugin.TValue[bool]
+	ServerIdentity          plugin.TValue[*mqlJbossKeystore]
+	HasSecretIdentity       plugin.TValue[bool]
+}
+
+// createJbossSecurityRealm creates a new instance of this resource
+func createJbossSecurityRealm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossSecurityRealm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.securityRealm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossSecurityRealm) MqlName() string {
+	return "jboss.securityRealm"
+}
+
+func (c *mqlJbossSecurityRealm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossSecurityRealm) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossSecurityRealm) GetAuthentication() *plugin.TValue[*mqlJbossRealmAuthentication] {
+	return &c.Authentication
+}
+
+func (c *mqlJbossSecurityRealm) GetAuthorizationProperties() *plugin.TValue[string] {
+	return &c.AuthorizationProperties
+}
+
+func (c *mqlJbossSecurityRealm) GetMapGroupsToRoles() *plugin.TValue[bool] {
+	return &c.MapGroupsToRoles
+}
+
+func (c *mqlJbossSecurityRealm) GetServerIdentity() *plugin.TValue[*mqlJbossKeystore] {
+	return &c.ServerIdentity
+}
+
+func (c *mqlJbossSecurityRealm) GetHasSecretIdentity() *plugin.TValue[bool] {
+	return &c.HasSecretIdentity
+}
+
+// mqlJbossRealmAuthentication for the jboss.realmAuthentication resource
+type mqlJbossRealmAuthentication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossRealmAuthenticationInternal it will be used here
+	HasLocal             plugin.TValue[bool]
+	LocalDefaultUser     plugin.TValue[string]
+	LocalAllowedUsers    plugin.TValue[string]
+	PropertiesPath       plugin.TValue[string]
+	PropertiesRelativeTo plugin.TValue[string]
+	PlainText            plugin.TValue[bool]
+	Ldap                 plugin.TValue[*mqlJbossLdapAuthentication]
+	Truststore           plugin.TValue[*mqlJbossKeystore]
+	JaasName             plugin.TValue[string]
+	InlineUsers          plugin.TValue[[]any]
+}
+
+// createJbossRealmAuthentication creates a new instance of this resource
+func createJbossRealmAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossRealmAuthentication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.realmAuthentication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossRealmAuthentication) MqlName() string {
+	return "jboss.realmAuthentication"
+}
+
+func (c *mqlJbossRealmAuthentication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossRealmAuthentication) GetHasLocal() *plugin.TValue[bool] {
+	return &c.HasLocal
+}
+
+func (c *mqlJbossRealmAuthentication) GetLocalDefaultUser() *plugin.TValue[string] {
+	return &c.LocalDefaultUser
+}
+
+func (c *mqlJbossRealmAuthentication) GetLocalAllowedUsers() *plugin.TValue[string] {
+	return &c.LocalAllowedUsers
+}
+
+func (c *mqlJbossRealmAuthentication) GetPropertiesPath() *plugin.TValue[string] {
+	return &c.PropertiesPath
+}
+
+func (c *mqlJbossRealmAuthentication) GetPropertiesRelativeTo() *plugin.TValue[string] {
+	return &c.PropertiesRelativeTo
+}
+
+func (c *mqlJbossRealmAuthentication) GetPlainText() *plugin.TValue[bool] {
+	return &c.PlainText
+}
+
+func (c *mqlJbossRealmAuthentication) GetLdap() *plugin.TValue[*mqlJbossLdapAuthentication] {
+	return &c.Ldap
+}
+
+func (c *mqlJbossRealmAuthentication) GetTruststore() *plugin.TValue[*mqlJbossKeystore] {
+	return &c.Truststore
+}
+
+func (c *mqlJbossRealmAuthentication) GetJaasName() *plugin.TValue[string] {
+	return &c.JaasName
+}
+
+func (c *mqlJbossRealmAuthentication) GetInlineUsers() *plugin.TValue[[]any] {
+	return &c.InlineUsers
+}
+
+// mqlJbossLdapAuthentication for the jboss.ldapAuthentication resource
+type mqlJbossLdapAuthentication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossLdapAuthenticationInternal it will be used here
+	Connection          plugin.TValue[string]
+	BaseDn              plugin.TValue[string]
+	Recursive           plugin.TValue[bool]
+	UserDn              plugin.TValue[string]
+	AllowEmptyPasswords plugin.TValue[bool]
+	UsernameAttribute   plugin.TValue[string]
+	AdvancedFilter      plugin.TValue[string]
+	Params              plugin.TValue[map[string]any]
+}
+
+// createJbossLdapAuthentication creates a new instance of this resource
+func createJbossLdapAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossLdapAuthentication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.ldapAuthentication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossLdapAuthentication) MqlName() string {
+	return "jboss.ldapAuthentication"
+}
+
+func (c *mqlJbossLdapAuthentication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossLdapAuthentication) GetConnection() *plugin.TValue[string] {
+	return &c.Connection
+}
+
+func (c *mqlJbossLdapAuthentication) GetBaseDn() *plugin.TValue[string] {
+	return &c.BaseDn
+}
+
+func (c *mqlJbossLdapAuthentication) GetRecursive() *plugin.TValue[bool] {
+	return &c.Recursive
+}
+
+func (c *mqlJbossLdapAuthentication) GetUserDn() *plugin.TValue[string] {
+	return &c.UserDn
+}
+
+func (c *mqlJbossLdapAuthentication) GetAllowEmptyPasswords() *plugin.TValue[bool] {
+	return &c.AllowEmptyPasswords
+}
+
+func (c *mqlJbossLdapAuthentication) GetUsernameAttribute() *plugin.TValue[string] {
+	return &c.UsernameAttribute
+}
+
+func (c *mqlJbossLdapAuthentication) GetAdvancedFilter() *plugin.TValue[string] {
+	return &c.AdvancedFilter
+}
+
+func (c *mqlJbossLdapAuthentication) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossKeystore for the jboss.keystore resource
+type mqlJbossKeystore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossKeystoreInternal it will be used here
+	Path                      plugin.TValue[string]
+	RelativeTo                plugin.TValue[string]
+	Provider                  plugin.TValue[string]
+	Alias                     plugin.TValue[string]
+	PasswordIsVaultExpression plugin.TValue[bool]
+	Params                    plugin.TValue[map[string]any]
+}
+
+// createJbossKeystore creates a new instance of this resource
+func createJbossKeystore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossKeystore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.keystore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossKeystore) MqlName() string {
+	return "jboss.keystore"
+}
+
+func (c *mqlJbossKeystore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossKeystore) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJbossKeystore) GetRelativeTo() *plugin.TValue[string] {
+	return &c.RelativeTo
+}
+
+func (c *mqlJbossKeystore) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlJbossKeystore) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlJbossKeystore) GetPasswordIsVaultExpression() *plugin.TValue[bool] {
+	return &c.PasswordIsVaultExpression
+}
+
+func (c *mqlJbossKeystore) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossAuditLog for the jboss.auditLog resource
+type mqlJbossAuditLog struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossAuditLogInternal it will be used here
+	Enabled      plugin.TValue[bool]
+	Logger       plugin.TValue[*mqlJbossAuditLogger]
+	ServerLogger plugin.TValue[*mqlJbossAuditLogger]
+	Formatters   plugin.TValue[[]any]
+	Handlers     plugin.TValue[[]any]
+}
+
+// createJbossAuditLog creates a new instance of this resource
+func createJbossAuditLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossAuditLog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.auditLog", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossAuditLog) MqlName() string {
+	return "jboss.auditLog"
+}
+
+func (c *mqlJbossAuditLog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossAuditLog) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlJbossAuditLog) GetLogger() *plugin.TValue[*mqlJbossAuditLogger] {
+	return &c.Logger
+}
+
+func (c *mqlJbossAuditLog) GetServerLogger() *plugin.TValue[*mqlJbossAuditLogger] {
+	return &c.ServerLogger
+}
+
+func (c *mqlJbossAuditLog) GetFormatters() *plugin.TValue[[]any] {
+	return &c.Formatters
+}
+
+func (c *mqlJbossAuditLog) GetHandlers() *plugin.TValue[[]any] {
+	return &c.Handlers
+}
+
+// mqlJbossAuditLogger for the jboss.auditLogger resource
+type mqlJbossAuditLogger struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossAuditLoggerInternal it will be used here
+	Type        plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	LogBoot     plugin.TValue[bool]
+	LogReadOnly plugin.TValue[bool]
+	Handlers    plugin.TValue[[]any]
+}
+
+// createJbossAuditLogger creates a new instance of this resource
+func createJbossAuditLogger(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossAuditLogger{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.auditLogger", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossAuditLogger) MqlName() string {
+	return "jboss.auditLogger"
+}
+
+func (c *mqlJbossAuditLogger) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossAuditLogger) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlJbossAuditLogger) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlJbossAuditLogger) GetLogBoot() *plugin.TValue[bool] {
+	return &c.LogBoot
+}
+
+func (c *mqlJbossAuditLogger) GetLogReadOnly() *plugin.TValue[bool] {
+	return &c.LogReadOnly
+}
+
+func (c *mqlJbossAuditLogger) GetHandlers() *plugin.TValue[[]any] {
+	return &c.Handlers
+}
+
+// mqlJbossAuditFormatter for the jboss.auditFormatter resource
+type mqlJbossAuditFormatter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossAuditFormatterInternal it will be used here
+	Name                    plugin.TValue[string]
+	IncludeDate             plugin.TValue[bool]
+	DateFormat              plugin.TValue[string]
+	DateSeparator           plugin.TValue[string]
+	Compact                 plugin.TValue[bool]
+	EscapeNewLine           plugin.TValue[bool]
+	EscapeControlCharacters plugin.TValue[bool]
+	Params                  plugin.TValue[map[string]any]
+}
+
+// createJbossAuditFormatter creates a new instance of this resource
+func createJbossAuditFormatter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossAuditFormatter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.auditFormatter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossAuditFormatter) MqlName() string {
+	return "jboss.auditFormatter"
+}
+
+func (c *mqlJbossAuditFormatter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossAuditFormatter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossAuditFormatter) GetIncludeDate() *plugin.TValue[bool] {
+	return &c.IncludeDate
+}
+
+func (c *mqlJbossAuditFormatter) GetDateFormat() *plugin.TValue[string] {
+	return &c.DateFormat
+}
+
+func (c *mqlJbossAuditFormatter) GetDateSeparator() *plugin.TValue[string] {
+	return &c.DateSeparator
+}
+
+func (c *mqlJbossAuditFormatter) GetCompact() *plugin.TValue[bool] {
+	return &c.Compact
+}
+
+func (c *mqlJbossAuditFormatter) GetEscapeNewLine() *plugin.TValue[bool] {
+	return &c.EscapeNewLine
+}
+
+func (c *mqlJbossAuditFormatter) GetEscapeControlCharacters() *plugin.TValue[bool] {
+	return &c.EscapeControlCharacters
+}
+
+func (c *mqlJbossAuditFormatter) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossAuditHandler for the jboss.auditHandler resource
+type mqlJbossAuditHandler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossAuditHandlerInternal it will be used here
+	Name            plugin.TValue[string]
+	Type            plugin.TValue[string]
+	Formatter       plugin.TValue[string]
+	Path            plugin.TValue[string]
+	RelativeTo      plugin.TValue[string]
+	RotateAtStartup plugin.TValue[bool]
+	MaxFailureCount plugin.TValue[int64]
+	SyslogFormat    plugin.TValue[string]
+	AppName         plugin.TValue[string]
+	Transport       plugin.TValue[string]
+	Host            plugin.TValue[string]
+	Port            plugin.TValue[string]
+	Params          plugin.TValue[map[string]any]
+}
+
+// createJbossAuditHandler creates a new instance of this resource
+func createJbossAuditHandler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossAuditHandler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.auditHandler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossAuditHandler) MqlName() string {
+	return "jboss.auditHandler"
+}
+
+func (c *mqlJbossAuditHandler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossAuditHandler) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossAuditHandler) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlJbossAuditHandler) GetFormatter() *plugin.TValue[string] {
+	return &c.Formatter
+}
+
+func (c *mqlJbossAuditHandler) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJbossAuditHandler) GetRelativeTo() *plugin.TValue[string] {
+	return &c.RelativeTo
+}
+
+func (c *mqlJbossAuditHandler) GetRotateAtStartup() *plugin.TValue[bool] {
+	return &c.RotateAtStartup
+}
+
+func (c *mqlJbossAuditHandler) GetMaxFailureCount() *plugin.TValue[int64] {
+	return &c.MaxFailureCount
+}
+
+func (c *mqlJbossAuditHandler) GetSyslogFormat() *plugin.TValue[string] {
+	return &c.SyslogFormat
+}
+
+func (c *mqlJbossAuditHandler) GetAppName() *plugin.TValue[string] {
+	return &c.AppName
+}
+
+func (c *mqlJbossAuditHandler) GetTransport() *plugin.TValue[string] {
+	return &c.Transport
+}
+
+func (c *mqlJbossAuditHandler) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlJbossAuditHandler) GetPort() *plugin.TValue[string] {
+	return &c.Port
+}
+
+func (c *mqlJbossAuditHandler) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossInterface for the jboss.interface resource
+type mqlJbossInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossInterfaceInternal it will be used here
+	Name        plugin.TValue[string]
+	InetAddress plugin.TValue[string]
+	AnyAddress  plugin.TValue[bool]
+	Criteria    plugin.TValue[[]any]
+}
+
+// createJbossInterface creates a new instance of this resource
+func createJbossInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.interface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossInterface) MqlName() string {
+	return "jboss.interface"
+}
+
+func (c *mqlJbossInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossInterface) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossInterface) GetInetAddress() *plugin.TValue[string] {
+	return &c.InetAddress
+}
+
+func (c *mqlJbossInterface) GetAnyAddress() *plugin.TValue[bool] {
+	return &c.AnyAddress
+}
+
+func (c *mqlJbossInterface) GetCriteria() *plugin.TValue[[]any] {
+	return &c.Criteria
+}
+
+// mqlJbossSocketBindingGroup for the jboss.socketBindingGroup resource
+type mqlJbossSocketBindingGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossSocketBindingGroupInternal it will be used here
+	Name                   plugin.TValue[string]
+	DefaultInterface       plugin.TValue[string]
+	PortOffset             plugin.TValue[string]
+	SocketBindings         plugin.TValue[[]any]
+	OutboundSocketBindings plugin.TValue[[]any]
+}
+
+// createJbossSocketBindingGroup creates a new instance of this resource
+func createJbossSocketBindingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossSocketBindingGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.socketBindingGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossSocketBindingGroup) MqlName() string {
+	return "jboss.socketBindingGroup"
+}
+
+func (c *mqlJbossSocketBindingGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossSocketBindingGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossSocketBindingGroup) GetDefaultInterface() *plugin.TValue[string] {
+	return &c.DefaultInterface
+}
+
+func (c *mqlJbossSocketBindingGroup) GetPortOffset() *plugin.TValue[string] {
+	return &c.PortOffset
+}
+
+func (c *mqlJbossSocketBindingGroup) GetSocketBindings() *plugin.TValue[[]any] {
+	return &c.SocketBindings
+}
+
+func (c *mqlJbossSocketBindingGroup) GetOutboundSocketBindings() *plugin.TValue[[]any] {
+	return &c.OutboundSocketBindings
+}
+
+// mqlJbossSocketBinding for the jboss.socketBinding resource
+type mqlJbossSocketBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossSocketBindingInternal it will be used here
+	Name             plugin.TValue[string]
+	Interface        plugin.TValue[string]
+	Port             plugin.TValue[string]
+	MulticastAddress plugin.TValue[string]
+	MulticastPort    plugin.TValue[string]
+	FixedPort        plugin.TValue[bool]
+	Outbound         plugin.TValue[bool]
+	RemoteHost       plugin.TValue[string]
+	RemotePort       plugin.TValue[string]
+	LocalDestination plugin.TValue[string]
+	Params           plugin.TValue[map[string]any]
+}
+
+// createJbossSocketBinding creates a new instance of this resource
+func createJbossSocketBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossSocketBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.socketBinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossSocketBinding) MqlName() string {
+	return "jboss.socketBinding"
+}
+
+func (c *mqlJbossSocketBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossSocketBinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossSocketBinding) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlJbossSocketBinding) GetPort() *plugin.TValue[string] {
+	return &c.Port
+}
+
+func (c *mqlJbossSocketBinding) GetMulticastAddress() *plugin.TValue[string] {
+	return &c.MulticastAddress
+}
+
+func (c *mqlJbossSocketBinding) GetMulticastPort() *plugin.TValue[string] {
+	return &c.MulticastPort
+}
+
+func (c *mqlJbossSocketBinding) GetFixedPort() *plugin.TValue[bool] {
+	return &c.FixedPort
+}
+
+func (c *mqlJbossSocketBinding) GetOutbound() *plugin.TValue[bool] {
+	return &c.Outbound
+}
+
+func (c *mqlJbossSocketBinding) GetRemoteHost() *plugin.TValue[string] {
+	return &c.RemoteHost
+}
+
+func (c *mqlJbossSocketBinding) GetRemotePort() *plugin.TValue[string] {
+	return &c.RemotePort
+}
+
+func (c *mqlJbossSocketBinding) GetLocalDestination() *plugin.TValue[string] {
+	return &c.LocalDestination
+}
+
+func (c *mqlJbossSocketBinding) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossVault for the jboss.vault resource
+type mqlJbossVault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossVaultInternal it will be used here
+	KeystoreUrl         plugin.TValue[string]
+	KeystoreAlias       plugin.TValue[string]
+	EncryptionDirectory plugin.TValue[string]
+	Code                plugin.TValue[string]
+	Module              plugin.TValue[string]
+	Options             plugin.TValue[map[string]any]
+}
+
+// createJbossVault creates a new instance of this resource
+func createJbossVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossVault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.vault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossVault) MqlName() string {
+	return "jboss.vault"
+}
+
+func (c *mqlJbossVault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossVault) GetKeystoreUrl() *plugin.TValue[string] {
+	return &c.KeystoreUrl
+}
+
+func (c *mqlJbossVault) GetKeystoreAlias() *plugin.TValue[string] {
+	return &c.KeystoreAlias
+}
+
+func (c *mqlJbossVault) GetEncryptionDirectory() *plugin.TValue[string] {
+	return &c.EncryptionDirectory
+}
+
+func (c *mqlJbossVault) GetCode() *plugin.TValue[string] {
+	return &c.Code
+}
+
+func (c *mqlJbossVault) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlJbossVault) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+// mqlJbossProfile for the jboss.profile resource
+type mqlJbossProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossProfileInternal it will be used here
+	Name               plugin.TValue[string]
+	Subsystems         plugin.TValue[[]any]
+	Logging            plugin.TValue[*mqlJbossLogging]
+	Web                plugin.TValue[*mqlJbossWeb]
+	Jmx                plugin.TValue[*mqlJbossJmx]
+	DeploymentScanners plugin.TValue[[]any]
+}
+
+// createJbossProfile creates a new instance of this resource
+func createJbossProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.profile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossProfile) MqlName() string {
+	return "jboss.profile"
+}
+
+func (c *mqlJbossProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossProfile) GetSubsystems() *plugin.TValue[[]any] {
+	return &c.Subsystems
+}
+
+func (c *mqlJbossProfile) GetLogging() *plugin.TValue[*mqlJbossLogging] {
+	return &c.Logging
+}
+
+func (c *mqlJbossProfile) GetWeb() *plugin.TValue[*mqlJbossWeb] {
+	return &c.Web
+}
+
+func (c *mqlJbossProfile) GetJmx() *plugin.TValue[*mqlJbossJmx] {
+	return &c.Jmx
+}
+
+func (c *mqlJbossProfile) GetDeploymentScanners() *plugin.TValue[[]any] {
+	return &c.DeploymentScanners
+}
+
+// mqlJbossSubsystem for the jboss.subsystem resource
+type mqlJbossSubsystem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossSubsystemInternal it will be used here
+	Name      plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Version   plugin.TValue[string]
+	Params    plugin.TValue[map[string]any]
+}
+
+// createJbossSubsystem creates a new instance of this resource
+func createJbossSubsystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossSubsystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.subsystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossSubsystem) MqlName() string {
+	return "jboss.subsystem"
+}
+
+func (c *mqlJbossSubsystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossSubsystem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossSubsystem) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlJbossSubsystem) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlJbossSubsystem) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossLogging for the jboss.logging resource
+type mqlJbossLogging struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossLoggingInternal it will be used here
+	RootLoggerLevel    plugin.TValue[string]
+	RootLoggerHandlers plugin.TValue[[]any]
+	Handlers           plugin.TValue[[]any]
+	Loggers            plugin.TValue[[]any]
+}
+
+// createJbossLogging creates a new instance of this resource
+func createJbossLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossLogging{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.logging", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossLogging) MqlName() string {
+	return "jboss.logging"
+}
+
+func (c *mqlJbossLogging) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossLogging) GetRootLoggerLevel() *plugin.TValue[string] {
+	return &c.RootLoggerLevel
+}
+
+func (c *mqlJbossLogging) GetRootLoggerHandlers() *plugin.TValue[[]any] {
+	return &c.RootLoggerHandlers
+}
+
+func (c *mqlJbossLogging) GetHandlers() *plugin.TValue[[]any] {
+	return &c.Handlers
+}
+
+func (c *mqlJbossLogging) GetLoggers() *plugin.TValue[[]any] {
+	return &c.Loggers
+}
+
+// mqlJbossLogHandler for the jboss.logHandler resource
+type mqlJbossLogHandler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossLogHandlerInternal it will be used here
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	Level          plugin.TValue[string]
+	Path           plugin.TValue[string]
+	RelativeTo     plugin.TValue[string]
+	Suffix         plugin.TValue[string]
+	Append         plugin.TValue[bool]
+	RotateSize     plugin.TValue[string]
+	MaxBackupIndex plugin.TValue[int64]
+	Formatter      plugin.TValue[string]
+	ServerAddress  plugin.TValue[string]
+	Port           plugin.TValue[string]
+	AppName        plugin.TValue[string]
+	Params         plugin.TValue[map[string]any]
+}
+
+// createJbossLogHandler creates a new instance of this resource
+func createJbossLogHandler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossLogHandler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.logHandler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossLogHandler) MqlName() string {
+	return "jboss.logHandler"
+}
+
+func (c *mqlJbossLogHandler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossLogHandler) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossLogHandler) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlJbossLogHandler) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlJbossLogHandler) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJbossLogHandler) GetRelativeTo() *plugin.TValue[string] {
+	return &c.RelativeTo
+}
+
+func (c *mqlJbossLogHandler) GetSuffix() *plugin.TValue[string] {
+	return &c.Suffix
+}
+
+func (c *mqlJbossLogHandler) GetAppend() *plugin.TValue[bool] {
+	return &c.Append
+}
+
+func (c *mqlJbossLogHandler) GetRotateSize() *plugin.TValue[string] {
+	return &c.RotateSize
+}
+
+func (c *mqlJbossLogHandler) GetMaxBackupIndex() *plugin.TValue[int64] {
+	return &c.MaxBackupIndex
+}
+
+func (c *mqlJbossLogHandler) GetFormatter() *plugin.TValue[string] {
+	return &c.Formatter
+}
+
+func (c *mqlJbossLogHandler) GetServerAddress() *plugin.TValue[string] {
+	return &c.ServerAddress
+}
+
+func (c *mqlJbossLogHandler) GetPort() *plugin.TValue[string] {
+	return &c.Port
+}
+
+func (c *mqlJbossLogHandler) GetAppName() *plugin.TValue[string] {
+	return &c.AppName
+}
+
+func (c *mqlJbossLogHandler) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossWeb for the jboss.web resource
+type mqlJbossWeb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossWebInternal it will be used here
+	DefaultVirtualServer plugin.TValue[string]
+	Native               plugin.TValue[bool]
+	Connectors           plugin.TValue[[]any]
+	VirtualServers       plugin.TValue[[]any]
+}
+
+// createJbossWeb creates a new instance of this resource
+func createJbossWeb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossWeb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.web", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossWeb) MqlName() string {
+	return "jboss.web"
+}
+
+func (c *mqlJbossWeb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossWeb) GetDefaultVirtualServer() *plugin.TValue[string] {
+	return &c.DefaultVirtualServer
+}
+
+func (c *mqlJbossWeb) GetNative() *plugin.TValue[bool] {
+	return &c.Native
+}
+
+func (c *mqlJbossWeb) GetConnectors() *plugin.TValue[[]any] {
+	return &c.Connectors
+}
+
+func (c *mqlJbossWeb) GetVirtualServers() *plugin.TValue[[]any] {
+	return &c.VirtualServers
+}
+
+// mqlJbossConnector for the jboss.connector resource
+type mqlJbossConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossConnectorInternal it will be used here
+	Name                  plugin.TValue[string]
+	Protocol              plugin.TValue[string]
+	Scheme                plugin.TValue[string]
+	SocketBinding         plugin.TValue[string]
+	Secure                plugin.TValue[bool]
+	Enabled               plugin.TValue[bool]
+	SslEnabled            plugin.TValue[bool]
+	SslProtocol           plugin.TValue[string]
+	SslCipherSuite        plugin.TValue[string]
+	SslVerifyClient       plugin.TValue[string]
+	SslKeyAlias           plugin.TValue[string]
+	SslCertificateKeyFile plugin.TValue[string]
+	SslCaCertificateFile  plugin.TValue[string]
+	SslParams             plugin.TValue[map[string]any]
+	Params                plugin.TValue[map[string]any]
+}
+
+// createJbossConnector creates a new instance of this resource
+func createJbossConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.connector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossConnector) MqlName() string {
+	return "jboss.connector"
+}
+
+func (c *mqlJbossConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossConnector) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlJbossConnector) GetScheme() *plugin.TValue[string] {
+	return &c.Scheme
+}
+
+func (c *mqlJbossConnector) GetSocketBinding() *plugin.TValue[string] {
+	return &c.SocketBinding
+}
+
+func (c *mqlJbossConnector) GetSecure() *plugin.TValue[bool] {
+	return &c.Secure
+}
+
+func (c *mqlJbossConnector) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlJbossConnector) GetSslEnabled() *plugin.TValue[bool] {
+	return &c.SslEnabled
+}
+
+func (c *mqlJbossConnector) GetSslProtocol() *plugin.TValue[string] {
+	return &c.SslProtocol
+}
+
+func (c *mqlJbossConnector) GetSslCipherSuite() *plugin.TValue[string] {
+	return &c.SslCipherSuite
+}
+
+func (c *mqlJbossConnector) GetSslVerifyClient() *plugin.TValue[string] {
+	return &c.SslVerifyClient
+}
+
+func (c *mqlJbossConnector) GetSslKeyAlias() *plugin.TValue[string] {
+	return &c.SslKeyAlias
+}
+
+func (c *mqlJbossConnector) GetSslCertificateKeyFile() *plugin.TValue[string] {
+	return &c.SslCertificateKeyFile
+}
+
+func (c *mqlJbossConnector) GetSslCaCertificateFile() *plugin.TValue[string] {
+	return &c.SslCaCertificateFile
+}
+
+func (c *mqlJbossConnector) GetSslParams() *plugin.TValue[map[string]any] {
+	return &c.SslParams
+}
+
+func (c *mqlJbossConnector) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossVirtualServer for the jboss.virtualServer resource
+type mqlJbossVirtualServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossVirtualServerInternal it will be used here
+	Name               plugin.TValue[string]
+	EnableWelcomeRoot  plugin.TValue[bool]
+	Aliases            plugin.TValue[[]any]
+	AccessLogEnabled   plugin.TValue[bool]
+	AccessLogPattern   plugin.TValue[string]
+	AccessLogDirectory plugin.TValue[string]
+}
+
+// createJbossVirtualServer creates a new instance of this resource
+func createJbossVirtualServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossVirtualServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.virtualServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossVirtualServer) MqlName() string {
+	return "jboss.virtualServer"
+}
+
+func (c *mqlJbossVirtualServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossVirtualServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossVirtualServer) GetEnableWelcomeRoot() *plugin.TValue[bool] {
+	return &c.EnableWelcomeRoot
+}
+
+func (c *mqlJbossVirtualServer) GetAliases() *plugin.TValue[[]any] {
+	return &c.Aliases
+}
+
+func (c *mqlJbossVirtualServer) GetAccessLogEnabled() *plugin.TValue[bool] {
+	return &c.AccessLogEnabled
+}
+
+func (c *mqlJbossVirtualServer) GetAccessLogPattern() *plugin.TValue[string] {
+	return &c.AccessLogPattern
+}
+
+func (c *mqlJbossVirtualServer) GetAccessLogDirectory() *plugin.TValue[string] {
+	return &c.AccessLogDirectory
+}
+
+// mqlJbossJmx for the jboss.jmx resource
+type mqlJbossJmx struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossJmxInternal it will be used here
+	RemotingConnectorEnabled plugin.TValue[bool]
+	UseManagementEndpoint    plugin.TValue[bool]
+	ExposeResolvedModel      plugin.TValue[bool]
+	ExposeExpressionModel    plugin.TValue[bool]
+	NonCoreMbeansSensitive   plugin.TValue[bool]
+}
+
+// createJbossJmx creates a new instance of this resource
+func createJbossJmx(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossJmx{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.jmx", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossJmx) MqlName() string {
+	return "jboss.jmx"
+}
+
+func (c *mqlJbossJmx) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossJmx) GetRemotingConnectorEnabled() *plugin.TValue[bool] {
+	return &c.RemotingConnectorEnabled
+}
+
+func (c *mqlJbossJmx) GetUseManagementEndpoint() *plugin.TValue[bool] {
+	return &c.UseManagementEndpoint
+}
+
+func (c *mqlJbossJmx) GetExposeResolvedModel() *plugin.TValue[bool] {
+	return &c.ExposeResolvedModel
+}
+
+func (c *mqlJbossJmx) GetExposeExpressionModel() *plugin.TValue[bool] {
+	return &c.ExposeExpressionModel
+}
+
+func (c *mqlJbossJmx) GetNonCoreMbeansSensitive() *plugin.TValue[bool] {
+	return &c.NonCoreMbeansSensitive
+}
+
+// mqlJbossDeploymentScanner for the jboss.deploymentScanner resource
+type mqlJbossDeploymentScanner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossDeploymentScannerInternal it will be used here
+	Name                         plugin.TValue[string]
+	Path                         plugin.TValue[string]
+	RelativeTo                   plugin.TValue[string]
+	ScanEnabled                  plugin.TValue[bool]
+	ScanInterval                 plugin.TValue[int64]
+	AutoDeployExploded           plugin.TValue[bool]
+	AutoDeployZipped             plugin.TValue[bool]
+	AutoDeployXml                plugin.TValue[bool]
+	RuntimeFailureCausesRollback plugin.TValue[bool]
+	Params                       plugin.TValue[map[string]any]
+}
+
+// createJbossDeploymentScanner creates a new instance of this resource
+func createJbossDeploymentScanner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossDeploymentScanner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.deploymentScanner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossDeploymentScanner) MqlName() string {
+	return "jboss.deploymentScanner"
+}
+
+func (c *mqlJbossDeploymentScanner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossDeploymentScanner) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJbossDeploymentScanner) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJbossDeploymentScanner) GetRelativeTo() *plugin.TValue[string] {
+	return &c.RelativeTo
+}
+
+func (c *mqlJbossDeploymentScanner) GetScanEnabled() *plugin.TValue[bool] {
+	return &c.ScanEnabled
+}
+
+func (c *mqlJbossDeploymentScanner) GetScanInterval() *plugin.TValue[int64] {
+	return &c.ScanInterval
+}
+
+func (c *mqlJbossDeploymentScanner) GetAutoDeployExploded() *plugin.TValue[bool] {
+	return &c.AutoDeployExploded
+}
+
+func (c *mqlJbossDeploymentScanner) GetAutoDeployZipped() *plugin.TValue[bool] {
+	return &c.AutoDeployZipped
+}
+
+func (c *mqlJbossDeploymentScanner) GetAutoDeployXml() *plugin.TValue[bool] {
+	return &c.AutoDeployXml
+}
+
+func (c *mqlJbossDeploymentScanner) GetRuntimeFailureCausesRollback() *plugin.TValue[bool] {
+	return &c.RuntimeFailureCausesRollback
+}
+
+func (c *mqlJbossDeploymentScanner) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlJbossUser for the jboss.user resource
+type mqlJbossUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJbossUserInternal it will be used here
+	Username    plugin.TValue[string]
+	Realm       plugin.TValue[string]
+	File        plugin.TValue[*mqlFile]
+	Roles       plugin.TValue[[]any]
+	HasPassword plugin.TValue[bool]
+}
+
+// createJbossUser creates a new instance of this resource
+func createJbossUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJbossUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jboss.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJbossUser) MqlName() string {
+	return "jboss.user"
+}
+
+func (c *mqlJbossUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJbossUser) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlJbossUser) GetRealm() *plugin.TValue[string] {
+	return &c.Realm
+}
+
+func (c *mqlJbossUser) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlJbossUser) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+func (c *mqlJbossUser) GetHasPassword() *plugin.TValue[bool] {
+	return &c.HasPassword
 }
 
 // mqlSquid for the squid resource

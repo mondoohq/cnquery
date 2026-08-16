@@ -1981,6 +1981,636 @@ private tomcat.webapp @defaults("name path") {
   logging() map[string]string
 }
 
+// JBoss EAP / WildFly application server
+//
+// Locates a JBoss installation through JBOSS_HOME and exposes the server
+// configuration it holds: the management section (management interfaces,
+// security realms, the audit log and access control), the network interfaces
+// and socket bindings, the password vault, and the subsystems declared in
+// each profile. Nothing here needs a running JVM or the management CLI, so it
+// also works against container images and filesystem snapshots.
+//
+// Both operating modes are covered. In standalone mode `config` is the
+// profile the server is actually started with — which is not always
+// standalone.xml, since `--server-config` selects one of the four shipped
+// profiles. In domain mode `config` is domain.xml and `host` is the host
+// controller's host.xml, which is where a domain keeps its management
+// interfaces and security realms.
+//
+// Every nested collection (profiles, subsystems, interfaces, socket bindings,
+// security realms, management interfaces, audit handlers, connectors, log
+// handlers) is a list whenever the element is present — including when the XML
+// holds exactly one — and an empty list when it is absent. It is never null
+// and never a bare map, so a check written against a single-realm server keeps
+// working when a second realm is added.
+//
+// Pass `init(home: "...")` to point at an installation the discovery does not
+// find, and `init(configFile: "...")` to read a profile other than the active
+// one.
+jboss @defaults("home version launchType") {
+  init(home? string, configFile? string)
+  // Installation directory (JBOSS_HOME); empty when no installation is found
+  home() string
+  // Configuration file `config` reads, as a name or an absolute path
+  //
+  // Defaults to the profile the server is started with, which is not always
+  // standalone.xml: `--server-config` selects one of the shipped profiles and
+  // the others stay on disk unused.
+  configFile() string
+  // Product name, e.g. "JBoss EAP" or "WildFly"; empty when it cannot be read
+  product() string
+  // Product version, e.g. "6.4.23.GA"; empty when it cannot be read from disk
+  version() string
+  // Operating mode: "standalone" or "domain"; empty when it cannot be determined
+  launchType() string
+  // Base directory of the operating mode ($JBOSS_HOME/standalone or /domain)
+  baseDir() string
+  // Configuration directory of the operating mode
+  configDir() string
+  // Log directory of the operating mode
+  logDir() string
+  // Data directory of the operating mode, where the audit log lands by default
+  dataDir() string
+  // Deployment directory the deployment scanner watches
+  deploymentDir() string
+  // Password vault directory ($JBOSS_HOME/vault)
+  vaultDir() string
+  // Configuration the server is actually started with; null when none is found
+  config() jboss.config
+  // Every server configuration found in the configuration directory
+  //
+  // A standalone installation ships four profiles and only one of them is
+  // live, so a check that must hold no matter which profile is selected
+  // asserts over this list rather than over `config`.
+  configs() []jboss.config
+  // Host controller configuration (domain/configuration/host.xml); null in standalone mode
+  host() jboss.config
+  // Management section that governs this installation
+  //
+  // Standalone mode reads it from the server profile and domain mode from
+  // host.xml, because that is where each of them declares the management
+  // interfaces, the security realms and the audit log. Null when neither has one.
+  management() jboss.management
+  // Users declared in the management realm's properties file
+  managementUsers() []jboss.user
+  // Users declared in the application realm's properties file
+  applicationUsers() []jboss.user
+  // Startup script of the operating mode (bin/standalone.sh or bin/domain.sh); null when absent
+  startupScript() file
+  // Startup configuration of the operating mode (bin/standalone.conf or bin/domain.conf); null when absent
+  startupConfig() file
+  // JVM options the startup configuration sets, in declaration order
+  javaOpts() []string
+  // Whether the Java Security Manager is turned on at startup
+  //
+  // True when the startup configuration sets SECMGR=true or names
+  // -Djava.security.manager on the JVM command line.
+  securityManagerEnabled() bool
+  // Java security policy named with -Djava.security.policy; empty when none is set
+  securityPolicy() string
+}
+
+// A JBoss server configuration document
+//
+// The same resource models all three: a standalone profile (<server>),
+// domain.xml (<domain>) and host.xml (<host>). Fields that belong to one of
+// them are empty or an empty list on the others — domain.xml has no management
+// interfaces, host.xml has no profiles — and `mode` says which document this is.
+private jboss.config @defaults("name mode") {
+  // File the configuration was parsed from
+  file file
+  // File name, e.g. "standalone-full.xml", "domain.xml" or "host.xml"
+  name string
+  // Root element of the document: "server", "domain" or "host"
+  mode string
+  // @name of the root element; host.xml names the host controller
+  hostName string
+  // <management> section; null when the document has none
+  management jboss.management
+  // <profile> elements; a standalone profile holds exactly one, unnamed
+  profiles []jboss.profile
+  // <interface> elements
+  interfaces []jboss.interface
+  // <socket-binding-group> elements
+  socketBindingGroups []jboss.socketBindingGroup
+  // <vault> element; null when the password vault is not configured
+  vault jboss.vault
+  // <deployment> entries. Keys: name, runtimeName, enabled
+  deployments []dict
+  // <server-group> entries of domain.xml. Keys: name, profile, socketBindingGroup, portOffset
+  serverGroups []dict
+  // <server> entries of host.xml. Keys: name, group, autoStart, portOffset
+  servers []dict
+  // Modules named by <extension module="..."/>
+  extensions []string
+  // <system-property> name/value pairs
+  systemProperties map[string]string
+  // Domain controller of a host controller: "local", "remote" or empty
+  domainController string
+}
+
+// JBoss <management> section
+private jboss.management @defaults("accessControlProvider") {
+  // <http-interface> and <native-interface> children of <management-interfaces>
+  interfaces []jboss.managementInterface
+  // <security-realm> children of <security-realms>
+  securityRealms []jboss.securityRealm
+  // <audit-log> section; null when the element is absent
+  auditLog jboss.auditLog
+  // access-control/@provider
+  //
+  // "simple" when the element is absent, which is the default and means role
+  // based access control is off.
+  accessControlProvider string
+  // access-control/role-mapping/<role> entries
+  //
+  // Keys: name, includeUsers, includeGroups, excludeUsers, excludeGroups.
+  roleMappings []dict
+}
+
+// A JBoss management interface
+//
+// The two operating modes declare the endpoint differently: a standalone
+// profile names socket bindings (<socket-binding http=.. https=..>) and a host
+// controller names an interface and ports (<socket interface=.. port=..>).
+// Both spellings are exposed, and the one the document does not use is empty.
+private jboss.managementInterface @defaults("type securityRealm") {
+  // "http" or "native"
+  type string
+  // @security-realm
+  //
+  // Empty when the interface is not bound to a realm, which means it accepts
+  // unauthenticated management traffic.
+  securityRealm string
+  // Whether the web console is served (@console-enabled, http only); true when unset
+  consoleEnabled bool
+  // Whether the native protocol is upgraded over http (@http-upgrade-enabled); false when unset
+  httpUpgradeEnabled bool
+  // socket-binding/@http — the plaintext binding of a standalone profile
+  httpBinding string
+  // socket-binding/@https — the TLS binding of a standalone profile; empty when none
+  httpsBinding string
+  // socket-binding/@native — the native binding of a standalone profile
+  nativeBinding string
+  // socket/@interface of a host controller
+  socketInterface string
+  // socket/@port of a host controller, as written
+  socketPort string
+  // socket/@secure-port of a host controller, as written; empty when none
+  socketSecurePort string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// JBoss <security-realm> element
+private jboss.securityRealm @defaults("name") {
+  // @name
+  name string
+  // <authentication> block; null when the realm does not authenticate
+  authentication jboss.realmAuthentication
+  // authorization/properties/@path; empty when authorization is not file backed
+  authorizationProperties string
+  // authorization/@map-groups-to-roles; true when unset
+  mapGroupsToRoles bool
+  // server-identities/ssl keystore; null when the realm has no TLS identity
+  serverIdentity jboss.keystore
+  // Whether the realm carries a server-identities/secret
+  hasSecretIdentity bool
+}
+
+// <authentication> block of a JBoss security realm
+private jboss.realmAuthentication @defaults("hasLocal") {
+  // Whether <local/> silent authentication is present
+  //
+  // It lets a client on the same host authenticate without presenting
+  // credentials.
+  hasLocal bool
+  // local/@default-user
+  localDefaultUser string
+  // local/@allowed-users
+  localAllowedUsers string
+  // properties/@path — the user store, as written
+  propertiesPath string
+  // properties/@relative-to
+  propertiesRelativeTo string
+  // properties/@plain-text; false when unset
+  plainText bool
+  // <ldap> authentication; null when the realm does not use a directory
+  ldap jboss.ldapAuthentication
+  // <truststore> that authenticates clients by certificate; null when absent
+  truststore jboss.keystore
+  // jaas/@name; empty when the realm does not delegate to JAAS
+  jaasName string
+  // Names of users declared inline with <users><user name="..."/></users>
+  inlineUsers []string
+}
+
+// <ldap> authentication of a JBoss security realm
+private jboss.ldapAuthentication @defaults("connection baseDn") {
+  // @connection — the outbound LDAP connection this realm authenticates against
+  connection string
+  // @base-dn
+  baseDn string
+  // @recursive; false when unset
+  recursive bool
+  // @user-dn
+  userDn string
+  // @allow-empty-passwords; false when unset
+  allowEmptyPasswords bool
+  // username-filter/@attribute or @username-attribute
+  usernameAttribute string
+  // advanced-filter/@filter
+  advancedFilter string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// A keystore or truststore referenced by a JBoss security realm
+//
+// The password is not exposed as a field of its own. `passwordIsVaultExpression`
+// answers the question a configuration review asks — whether the password is
+// held in the vault rather than written in the clear — without putting the
+// secret itself into a report.
+private jboss.keystore @defaults("path") {
+  // @path or @keystore-path, as written
+  path string
+  // @relative-to
+  relativeTo string
+  // @provider (JKS, PKCS12, ...); empty when unset
+  provider string
+  // @alias
+  alias string
+  // Whether the password is supplied as a ${VAULT::...} expression rather than in the clear
+  passwordIsVaultExpression bool
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// JBoss <audit-log> section
+//
+// Every attribute of the block is exposed on its own rather than folded into
+// a single "auditing is on" boolean, because the record content, the boot
+// coverage, the read-only coverage and the destination are separate
+// requirements that a review has to be able to assert separately.
+private jboss.auditLog @defaults("enabled") {
+  // logger/@enabled — the master switch; false when the <logger> is absent
+  enabled bool
+  // <logger>, which audits the standalone server or the host controller; null when absent
+  logger jboss.auditLogger
+  // <server-logger>, which audits the managed servers of a domain; null when absent
+  serverLogger jboss.auditLogger
+  // <json-formatter> children of <formatters>
+  formatters []jboss.auditFormatter
+  // <file-handler> and <syslog-handler> children of <handlers>
+  handlers []jboss.auditHandler
+}
+
+// <logger> or <server-logger> of a JBoss audit log
+private jboss.auditLogger @defaults("type enabled") {
+  // "logger" or "server-logger"
+  type string
+  // @enabled; false when unset, which is the shipped default
+  enabled bool
+  // @log-boot — whether operations performed while booting are recorded; true when unset
+  logBoot bool
+  // @log-read-only — whether reads are recorded, not just changes; false when unset
+  logReadOnly bool
+  // Names of the handlers the logger writes through (handlers/handler/@name)
+  //
+  // A logger with no handler is enabled but writes nowhere.
+  handlers []string
+}
+
+// <json-formatter> of a JBoss audit log
+private jboss.auditFormatter @defaults("name") {
+  // @name — the name a handler references
+  name string
+  // @include-date — whether each record carries a timestamp; true when unset
+  includeDate bool
+  // @date-format
+  dateFormat string
+  // @date-separator
+  dateSeparator string
+  // @compact; false when unset
+  compact bool
+  // @escape-new-line; false when unset
+  escapeNewLine bool
+  // @escape-control-characters; false when unset
+  escapeControlCharacters bool
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// <file-handler> or <syslog-handler> of a JBoss audit log
+private jboss.auditHandler @defaults("name type") {
+  // @name — the name a logger references
+  name string
+  // "file" or "syslog"
+  type string
+  // @formatter — the formatter this handler renders through
+  formatter string
+  // @path of a file handler, as written
+  path string
+  // @relative-to of a file handler, which resolves @path to a real directory
+  relativeTo string
+  // @rotate-at-startup of a file handler; true when unset
+  rotateAtStartup bool
+  // @max-failure-count; 10 when unset
+  maxFailureCount int
+  // @syslog-format of a syslog handler
+  syslogFormat string
+  // @app-name of a syslog handler
+  appName string
+  // Transport of a syslog handler: "udp", "tcp", "tls" or empty
+  transport string
+  // Destination of a syslog handler (@host of the transport element)
+  host string
+  // Destination port of a syslog handler (@port of the transport element), as written
+  port string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// JBoss <interface> element
+private jboss.interface @defaults("name inetAddress") {
+  // @name; "management" and "public" are the two the shipped profiles declare
+  name string
+  // inet-address/@value, as written — commonly a ${property:default} expression
+  inetAddress string
+  // Whether the interface matches every address (<any-address/>)
+  anyAddress bool
+  // Names of the other selection criteria elements present, e.g. "nic", "loopback"
+  criteria []string
+}
+
+// JBoss <socket-binding-group> element
+private jboss.socketBindingGroup @defaults("name defaultInterface") {
+  // @name
+  name string
+  // @default-interface — the interface a binding that names none is attached to
+  defaultInterface string
+  // @port-offset, as written
+  portOffset string
+  // <socket-binding> children
+  socketBindings []jboss.socketBinding
+  // <outbound-socket-binding> and <remote-destination-outbound-socket-binding> children
+  outboundSocketBindings []jboss.socketBinding
+}
+
+// JBoss <socket-binding> or outbound socket binding
+private jboss.socketBinding @defaults("name port") {
+  // @name
+  name string
+  // @interface; empty means the group's default interface applies
+  interface string
+  // @port, as written — commonly a ${property:default} expression
+  port string
+  // @multicast-address
+  multicastAddress string
+  // @multicast-port, as written
+  multicastPort string
+  // @fixed-port; false when unset
+  fixedPort bool
+  // Whether this is an outbound binding
+  outbound bool
+  // remote-destination/@host of an outbound binding
+  remoteHost string
+  // remote-destination/@port of an outbound binding, as written
+  remotePort string
+  // local-destination/@socket-binding-ref of an outbound binding
+  localDestination string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// JBoss <vault> element, the password vault
+private jboss.vault @defaults("keystoreUrl") {
+  // KEYSTORE_URL vault option — the keystore the vault unlocks
+  keystoreUrl string
+  // KEYSTORE_ALIAS vault option
+  keystoreAlias string
+  // ENC_FILE_DIR vault option
+  encryptionDirectory string
+  // @code of a custom vault implementation; empty for the built-in vault
+  code string
+  // @module of a custom vault implementation
+  module string
+  // Every <vault-option> as a name/value pair
+  options map[string]string
+}
+
+// JBoss <profile> element
+//
+// A standalone profile holds one unnamed <profile>; domain.xml holds several,
+// each named and selected by a server group.
+private jboss.profile @defaults("name") {
+  // @name; empty for the single unnamed profile of a standalone configuration
+  name string
+  // <subsystem> children
+  subsystems []jboss.subsystem
+  // urn:jboss:domain:logging subsystem; null when the profile has none
+  logging jboss.logging
+  // urn:jboss:domain:web subsystem; null when the profile has none
+  //
+  // This is the servlet container of JBoss AS 7 and EAP 6. WildFly 9 and later
+  // replaced it with urn:jboss:domain:undertow, which is reachable through
+  // `subsystems` and is deliberately not typed here.
+  web jboss.web
+  // urn:jboss:domain:jmx subsystem; null when the profile has none
+  jmx jboss.jmx
+  // <deployment-scanner> children of the urn:jboss:domain:deployment-scanner subsystem
+  deploymentScanners []jboss.deploymentScanner
+}
+
+// JBoss <subsystem> element
+//
+// Every subsystem of a profile appears here, including the ones this resource
+// does not type. `jboss.config.file` is the document they were read from, so
+// `parse.xml` reaches anything that has no typed field yet — against a
+// discovered path rather than a guessed one.
+private jboss.subsystem @defaults("name version") {
+  // Short name taken from the namespace, e.g. "logging" for urn:jboss:domain:logging:1.5
+  name string
+  // Namespace of the element (@xmlns)
+  namespace string
+  // Schema version taken from the namespace, e.g. "1.5"
+  version string
+  // All attributes of the <subsystem> element itself, verbatim and unexpanded
+  params map[string]string
+}
+
+// JBoss logging subsystem
+private jboss.logging @defaults("rootLoggerLevel") {
+  // root-logger/level/@name; empty when the profile declares no root logger
+  rootLoggerLevel string
+  // Names of the handlers the root logger writes through
+  rootLoggerHandlers []string
+  // Every handler declared in the subsystem
+  handlers []jboss.logHandler
+  // <logger> entries. Keys: category, level, useParentHandlers, handlers
+  loggers []dict
+}
+
+// A handler of the JBoss logging subsystem
+private jboss.logHandler @defaults("name type") {
+  // @name
+  name string
+  // Element name
+  //
+  // For example "console-handler", "periodic-rotating-file-handler",
+  // "size-rotating-file-handler", "syslog-handler" or "custom-handler".
+  type string
+  // level/@name; empty when the handler declares none
+  level string
+  // file/@path of a file handler, as written
+  path string
+  // file/@relative-to of a file handler
+  relativeTo string
+  // suffix/@value of a periodic rotating handler, which is what sets its rotation period
+  suffix string
+  // append/@value; true when unset
+  append bool
+  // rotate-size/@value of a size rotating handler
+  rotateSize string
+  // max-backup-index/@value; 1 when unset
+  maxBackupIndex int
+  // formatter/named-formatter/@name, or the inline pattern when one is declared
+  formatter string
+  // server-address/@value of a syslog handler
+  serverAddress string
+  // port/@value of a syslog handler, as written
+  port string
+  // app-name/@value of a syslog handler
+  appName string
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// JBoss web subsystem (urn:jboss:domain:web)
+private jboss.web @defaults("defaultVirtualServer") {
+  // @default-virtual-server
+  defaultVirtualServer string
+  // @native — whether the APR connectors are used; true when unset
+  native bool
+  // <connector> children
+  connectors []jboss.connector
+  // <virtual-server> children
+  virtualServers []jboss.virtualServer
+}
+
+// <connector> of the JBoss web subsystem
+//
+// The nested <ssl> element is flattened onto the connector, because a
+// connector has at most one and every TLS question is asked of the connector
+// rather than of the element. `sslEnabled` tells a connector that carries the
+// element from one that does not.
+private jboss.connector @defaults("name protocol sslEnabled") {
+  // @name
+  name string
+  // @protocol, e.g. "HTTP/1.1"
+  protocol string
+  // @scheme, "http" or "https"
+  scheme string
+  // @socket-binding — the binding that supplies the port
+  socketBinding string
+  // @secure — whether requests are reported to the application as secure; false when unset
+  secure bool
+  // @enabled; true when unset
+  enabled bool
+  // Whether the connector carries a nested <ssl> element
+  sslEnabled bool
+  // ssl/@protocol — the TLS versions the connector accepts
+  sslProtocol string
+  // ssl/@cipher-suite
+  sslCipherSuite string
+  // ssl/@verify-client
+  sslVerifyClient string
+  // ssl/@key-alias
+  sslKeyAlias string
+  // ssl/@certificate-key-file
+  sslCertificateKeyFile string
+  // ssl/@ca-certificate-file
+  sslCaCertificateFile string
+  // All attributes of <ssl>, verbatim and unexpanded
+  sslParams map[string]string
+  // All attributes of <connector>, verbatim and unexpanded
+  params map[string]string
+}
+
+// <virtual-server> of the JBoss web subsystem
+private jboss.virtualServer @defaults("name enableWelcomeRoot") {
+  // @name
+  name string
+  // @enable-welcome-root — whether the Welcome application is served from "/"; true when unset
+  enableWelcomeRoot bool
+  // <alias name="..."> entries
+  aliases []string
+  // Whether an <access-log> is configured
+  accessLogEnabled bool
+  // access-log/@pattern
+  accessLogPattern string
+  // access-log/directory/@path
+  accessLogDirectory string
+}
+
+// JBoss jmx subsystem (urn:jboss:domain:jmx)
+private jboss.jmx @defaults("remotingConnectorEnabled") {
+  // Whether <remoting-connector/> exposes the MBean server to remote clients
+  remotingConnectorEnabled bool
+  // remoting-connector/@use-management-endpoint; true when unset
+  useManagementEndpoint bool
+  // Whether <expose-resolved-model/> is present
+  exposeResolvedModel bool
+  // Whether <expose-expression-model/> is present
+  exposeExpressionModel bool
+  // sensitivity/@non-core-mbeans; false when unset
+  nonCoreMbeansSensitive bool
+}
+
+// <deployment-scanner> of the JBoss deployment-scanner subsystem
+private jboss.deploymentScanner @defaults("name scanEnabled") {
+  // @name; "default" when unset
+  name string
+  // @path, as written
+  path string
+  // @relative-to
+  relativeTo string
+  // @scan-enabled — whether applications dropped into the directory are deployed
+  //
+  // True when the attribute is absent, which is the shipped default and means
+  // an absent attribute leaves automatic deployment on.
+  scanEnabled bool
+  // @scan-interval in milliseconds; 5000 when unset
+  scanInterval int
+  // @auto-deploy-exploded; false when unset
+  autoDeployExploded bool
+  // @auto-deploy-zipped; true when unset
+  autoDeployZipped bool
+  // @auto-deploy-xml; true when unset
+  autoDeployXml bool
+  // @runtime-failure-causes-rollback; false when unset
+  runtimeFailureCausesRollback bool
+  // All attributes of the element, verbatim and unexpanded
+  params map[string]string
+}
+
+// A user declared in a JBoss realm properties file
+//
+// The stored password hash is deliberately not exposed. `hasPassword` answers
+// whether the entry carries one without copying the credential into a report.
+private jboss.user @defaults("username realm") {
+  // User name, as written
+  username string
+  // Realm the properties file belongs to, e.g. "ManagementRealm"
+  realm string
+  // File the entry was read from
+  file file
+  // Groups or roles the matching roles file grants the user
+  roles []string
+  // Whether the entry carries a password hash
+  hasPassword bool
+}
+
 // Squid caching proxy
 //
 // Squid proxy server version reported by the daemon binary. Use
