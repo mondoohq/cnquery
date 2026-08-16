@@ -1653,6 +1653,13 @@ bind9 {
   keys() []bind9.key
   // Logging channels declared inside the logging block
   channels() []bind9.channel
+  // DNSSEC key files found on disk
+  //
+  // The key pairs `dnssec-keygen` writes, looked for in the key-directory
+  // option, then the working directory, then the well-known locations. No
+  // named.conf statement names them individually, so they are found rather
+  // than declared.
+  dnssecKeys() []bind9.dnssecKey
   // Logging categories and the channels each is sent to
   //
   // The category name maps to its channel list, so `queries` mapping to
@@ -1710,6 +1717,14 @@ private bind9.acl @defaults("name") {
 // A key used to authenticate transfers, dynamic updates, and rndc. The
 // shared secret is not among the fields.
 private bind9.key @defaults("name algorithm view") {
+  // File the key statement was declared in
+  //
+  // A TSIG key is commonly kept in a file of its own that named.conf
+  // includes, and that file is what an ownership or permission check reads.
+  // The shared secret is still not exposed: this is the file, not its
+  // contents. A key declared inline reports the configuration file it sits
+  // in, which is the honest answer but is not a dedicated key file.
+  file() file
   // Key name
   name string
   // View the key is declared in, empty for a top-level key
@@ -1754,6 +1769,39 @@ private bind9.channel @defaults("name severity") {
   printCategory bool
   // Whether each record carries its severity (print-severity)
   printSeverity bool
+}
+
+// A DNSSEC key pair on disk
+//
+// One entry per `K<zone>.+<algorithm>+<tag>.key` file `dnssec-keygen` wrote.
+// The private half is reported as a file so its mode and owner can be
+// checked; its contents are never read.
+private bind9.dnssecKey @defaults("zone keyTag isKeySigningKey") {
+  // Zone the key was generated for
+  zone string
+  // Key tag, the numeric id in the file name
+  keyTag int
+  // DNSSEC algorithm number, for example 13 for ECDSAP256SHA256
+  algorithm int
+  // Whether this is a key signing key rather than a zone signing key
+  //
+  // Read from the DNSKEY flags field: 257 is a key signing key, 256 a zone
+  // signing key.
+  isKeySigningKey bool
+  // When the key was generated
+  //
+  // Null when the file records no Created: line.
+  created time
+  // The public key file
+  file() file
+  // The private key file
+  //
+  // Always returned, because its path is known whether or not the file is
+  // there: ask `privateFile.exists`. A key signing key whose private half
+  // has been moved off the server -- the state worth checking for -- reports
+  // a file that does not exist, which is a different thing from a key with
+  // no private half defined at all. The key material is never read.
+  privateFile() file
 }
 
 // Nginx HTTP Server

@@ -97,6 +97,7 @@ const (
 	ResourceBind9Acl                                      string = "bind9.acl"
 	ResourceBind9Key                                      string = "bind9.key"
 	ResourceBind9Channel                                  string = "bind9.channel"
+	ResourceBind9DnssecKey                                string = "bind9.dnssecKey"
 	ResourceNginx                                         string = "nginx"
 	ResourceNginxConf                                     string = "nginx.conf"
 	ResourceNginxConfServer                               string = "nginx.conf.server"
@@ -926,6 +927,10 @@ func init() {
 		"bind9.channel": {
 			// to override args, implement: initBind9Channel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createBind9Channel,
+		},
+		"bind9.dnssecKey": {
+			// to override args, implement: initBind9DnssecKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBind9DnssecKey,
 		},
 		"nginx": {
 			// to override args, implement: initNginx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4183,6 +4188,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bind9.channels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9).GetChannels()).ToDataRes(types.Array(types.Resource("bind9.channel")))
 	},
+	"bind9.dnssecKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetDnssecKeys()).ToDataRes(types.Array(types.Resource("bind9.dnssecKey")))
+	},
 	"bind9.logCategories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9).GetLogCategories()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
@@ -4228,6 +4236,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bind9.acl.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Acl).GetEntries()).ToDataRes(types.Array(types.String))
 	},
+	"bind9.key.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Key).GetFile()).ToDataRes(types.Resource("file"))
+	},
 	"bind9.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Key).GetName()).ToDataRes(types.String)
 	},
@@ -4266,6 +4277,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bind9.channel.printSeverity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Channel).GetPrintSeverity()).ToDataRes(types.Bool)
+	},
+	"bind9.dnssecKey.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetZone()).ToDataRes(types.String)
+	},
+	"bind9.dnssecKey.keyTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetKeyTag()).ToDataRes(types.Int)
+	},
+	"bind9.dnssecKey.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetAlgorithm()).ToDataRes(types.Int)
+	},
+	"bind9.dnssecKey.isKeySigningKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetIsKeySigningKey()).ToDataRes(types.Bool)
+	},
+	"bind9.dnssecKey.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetCreated()).ToDataRes(types.Time)
+	},
+	"bind9.dnssecKey.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"bind9.dnssecKey.privateFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9DnssecKey).GetPrivateFile()).ToDataRes(types.Resource("file"))
 	},
 	"nginx.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginx).GetVersion()).ToDataRes(types.String)
@@ -17414,6 +17446,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBind9).Channels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"bind9.dnssecKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).DnssecKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"bind9.logCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9).LogCategories, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -17486,6 +17522,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBind9Key).__id, ok = v.Value.(string)
 		return
 	},
+	"bind9.key.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Key).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
 	"bind9.key.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9Key).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -17540,6 +17580,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bind9.channel.printSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9Channel).PrintSeverity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).__id, ok = v.Value.(string)
+		return
+	},
+	"bind9.dnssecKey.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.keyTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).KeyTag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).Algorithm, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.isKeySigningKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).IsKeySigningKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecKey.privateFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9DnssecKey).PrivateFile, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
 	},
 	"nginx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41116,6 +41188,7 @@ type mqlBind9 struct {
 	Acls             plugin.TValue[[]any]
 	Keys             plugin.TValue[[]any]
 	Channels         plugin.TValue[[]any]
+	DnssecKeys       plugin.TValue[[]any]
 	LogCategories    plugin.TValue[map[string]any]
 }
 
@@ -41348,6 +41421,22 @@ func (c *mqlBind9) GetChannels() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlBind9) GetDnssecKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DnssecKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "dnssecKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dnssecKeys()
+	})
+}
+
 func (c *mqlBind9) GetLogCategories() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.LogCategories, func() (map[string]any, error) {
 		return c.logCategories()
@@ -41518,7 +41607,8 @@ func (c *mqlBind9Acl) GetEntries() *plugin.TValue[[]any] {
 type mqlBind9Key struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBind9KeyInternal it will be used here
+	mqlBind9KeyInternal
+	File      plugin.TValue[*mqlFile]
 	Name      plugin.TValue[string]
 	View      plugin.TValue[string]
 	Algorithm plugin.TValue[string]
@@ -41554,6 +41644,22 @@ func (c *mqlBind9Key) MqlName() string {
 
 func (c *mqlBind9Key) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlBind9Key) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9.key", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
 }
 
 func (c *mqlBind9Key) GetName() *plugin.TValue[string] {
@@ -41655,6 +41761,104 @@ func (c *mqlBind9Channel) GetPrintCategory() *plugin.TValue[bool] {
 
 func (c *mqlBind9Channel) GetPrintSeverity() *plugin.TValue[bool] {
 	return &c.PrintSeverity
+}
+
+// mqlBind9DnssecKey for the bind9.dnssecKey resource
+type mqlBind9DnssecKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlBind9DnssecKeyInternal
+	Zone            plugin.TValue[string]
+	KeyTag          plugin.TValue[int64]
+	Algorithm       plugin.TValue[int64]
+	IsKeySigningKey plugin.TValue[bool]
+	Created         plugin.TValue[*time.Time]
+	File            plugin.TValue[*mqlFile]
+	PrivateFile     plugin.TValue[*mqlFile]
+}
+
+// createBind9DnssecKey creates a new instance of this resource
+func createBind9DnssecKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBind9DnssecKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bind9.dnssecKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBind9DnssecKey) MqlName() string {
+	return "bind9.dnssecKey"
+}
+
+func (c *mqlBind9DnssecKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBind9DnssecKey) GetZone() *plugin.TValue[string] {
+	return &c.Zone
+}
+
+func (c *mqlBind9DnssecKey) GetKeyTag() *plugin.TValue[int64] {
+	return &c.KeyTag
+}
+
+func (c *mqlBind9DnssecKey) GetAlgorithm() *plugin.TValue[int64] {
+	return &c.Algorithm
+}
+
+func (c *mqlBind9DnssecKey) GetIsKeySigningKey() *plugin.TValue[bool] {
+	return &c.IsKeySigningKey
+}
+
+func (c *mqlBind9DnssecKey) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlBind9DnssecKey) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9.dnssecKey", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlBind9DnssecKey) GetPrivateFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.PrivateFile, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9.dnssecKey", c.__id, "privateFile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.privateFile()
+	})
 }
 
 // mqlNginx for the nginx resource
