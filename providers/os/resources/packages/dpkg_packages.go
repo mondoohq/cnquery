@@ -24,6 +24,11 @@ const (
 	DpkgPkgFormat = "deb"
 )
 
+// dpkgMaxLine caps how long a single line of a dpkg control stream may be. The
+// Depends and Conffiles lines of a metapackage are the long ones, and they grow
+// with the number of packages a distribution ships.
+const dpkgMaxLine = 4 * 1024 * 1024
+
 var (
 	// e.g. source with version: samba (2:4.17.12+dfsg-0+deb12u1)
 	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
@@ -85,6 +90,10 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 	}
 
 	scanner := bufio.NewScanner(input)
+	// A line longer than the 64KB default ends the scan, and the packages that
+	// follow it are lost. Raise the cap so a long Depends line cannot shorten
+	// the package list.
+	scanner.Buffer(nil, dpkgMaxLine)
 	pkg := Package{Format: DpkgPkgFormat}
 	state := STATE_RESET
 	for scanner.Scan() {
@@ -126,8 +135,19 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 		}
 	}
 
+	// A read that stopped early leaves the package list short. Reporting that
+	// as a successful parse would present a partial inventory as a complete
+	// one, so it is an error rather than a shorter answer.
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("could not read the dpkg status stream to its end: %w", err)
+	}
+
 	// if the last line is not an empty line we have things in flight, lets check it
-	add(pkg)
+	// a stream that ends with an empty line has nothing left, and reporting
+	// that empty package as ignored only reads like data loss
+	if pkg.Name != "" {
+		add(pkg)
+	}
 
 	return pkgs, nil
 }
@@ -181,6 +201,7 @@ var DPKG_UPDATE_REGEX = regexp.MustCompile(`^Inst\s([a-zA-Z0-9.\-_]+)\s\[([a-zA-
 func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	pkgs := map[string]PackageUpdate{}
 	scanner := bufio.NewScanner(input)
+	scanner.Buffer(nil, dpkgMaxLine)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := DPKG_UPDATE_REGEX.FindStringSubmatch(line)
@@ -192,6 +213,11 @@ func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 			}
 		}
 	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("could not read the dpkg update list to its end: %w", err)
+	}
+
 	return pkgs, nil
 }
 
@@ -234,7 +260,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 
 		list, err := ParseDpkgPackages(dpm.platform, fi)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse dpkg package list")
+			return nil, fmt.Errorf("could not parse dpkg package list: %w", err)
 		}
 		pkgList = append(pkgList, list...)
 	}
@@ -258,7 +284,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 			fi.Close()
 			if err != nil {
 				log.Debug().Err(err).Str("path", path).Msg("could not parse")
-				return fmt.Errorf("could not parse dpkg package list")
+				return fmt.Errorf("could not parse dpkg package list %q: %w", path, err)
 			}
 
 			log.Debug().Int("pkgs", len(list)).Msg("completed parsing")
