@@ -63,11 +63,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 #
 # Only providers that vendor a real platform SDK are listed. Providers that talk to their
 # API over hand-rolled HTTP (vercel, netlify, neon, nextdns, proxmox, clickhousecloud,
-# mistral, huggingface, vllm, grafana, iru) have nothing to probe. Deliberately out of
-# scope: DB drivers (mysqldb, postgresdb, redisdb, mssql, cassandra, clickhousedb),
-# network/hardware (arista, mikrotik, redfish, ipmi, opcua, nmap) and IaC tooling
-# (terraform, helm, kustomize, cloudformation, ansible) — pass their go.mod in
-# single-file mode if you ever want them.
+# mistral, huggingface, vllm, grafana, iru, artifactory, bitwarden, jumpcloud, keycloak,
+# zoom) have nothing to probe. Deliberately out of scope: DB drivers (mysqldb, postgresdb,
+# redisdb, mssql, cassandra, clickhousedb), network and hardware protocol clients (arista,
+# mikrotik, redfish, ipmi, opcua, nmap, activedirectory) and IaC tooling (terraform, helm,
+# kustomize, cloudformation, ansible) — pass their go.mod in single-file mode if you ever
+# want them.
+#
+# equinix vendors github.com/packethost/packngo but the provider is queued for removal
+# (PR #9734), so it is left out rather than wired up.
 #
 # nutanix is EXCLUDED ON PURPOSE — do not add it back. Its SDK version is dictated by the
 # Prism Central release the customer runs, not by what is newest: the v4.1+ clients request
@@ -101,9 +105,13 @@ PROVIDER_PREFIXES = {
     "ms365":          ("github.com/microsoftgraph/", "github.com/microsoft/kiota", "github.com/Azure/"),
     "google-workspace": ("google.golang.org/api",),
     "okta":           ("github.com/okta/okta-sdk-golang",),
+    "auth0":          ("github.com/auth0/go-auth0",),
     "jamf":           ("github.com/deploymenttheory/go-api-sdk-jamfpro",),
     "atlassian":      ("github.com/ctreminiom/go-atlassian",),
     "slack":          ("github.com/slack-go/slack",),
+    # community-maintained, not published by Dropbox: read the repo's commit history
+    # before treating a quiet release feed as "current".
+    "dropbox":        ("github.com/dropbox/dropbox-sdk-go-unofficial",),
 
     # --- devops / SCM SaaS ---
     "github":         ("github.com/google/go-github/", "github.com/bradleyfalzon/ghinstallation"),
