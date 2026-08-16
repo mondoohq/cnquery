@@ -1,4 +1,4 @@
-# ADR 032: Cross-version MQL — schema resolution, migration lenses, and down-adaptation
+# ADR 040: Cross-version MQL — schema resolution, migration lenses, and down-adaptation
 
 ## Status
 
@@ -252,7 +252,7 @@ never silently drift out of sync with the schema it describes.
   degenerate identity lens in part 2 and does not touch structural change or the
   new→old direction; rejected as a headline, absorbed as a special case.
 
-## Relationship to late binding ([ADR 033](033-late-binding-resource-types.md))
+## Relationship to late binding ([ADR 041](041-late-binding-resource-types.md))
 
 This ADR reconciles versions while still *baking* concrete types into content.
 The root cause — that a type is its name, frozen in at compile time — can be
@@ -267,7 +267,7 @@ changes and new→old capability gaps still need lenses (part 2), down-adaptatio
 own and does not require the invasive v14 wire/VM change late binding entails, and
 because this ADR's identity model (migration-chain-canonical, part 1) is
 deliberately written to be satisfied by a late-bound world, late binding is
-proposed as a **separate decision (ADR 033)** on its own timeline rather than
+proposed as a **separate decision (ADR 041)** on its own timeline rather than
 folded here. Folding it in would hold this shippable compatibility layer hostage
 to the hardest, most invasive change. (If we decide the lens burden is only
 tolerable *after* late binding shrinks it, the two collapse into one — but 1-4's
@@ -298,6 +298,6 @@ content is unchanged either way.)
   phase 2 lands; capture both in `CLAUDE.md`.
 - Compiler test: identity stability across a migration (same source + lens ⇒
   identical migration-chain-canonical id).
-- Coordinate rollout with [ADR 033](033-late-binding-resource-types.md) (late
+- Coordinate rollout with [ADR 041](041-late-binding-resource-types.md) (late
   binding depends on this ADR's version axis); cross-link ADR 031 (typed roots /
   cross-provider schema) and ADR 030.
