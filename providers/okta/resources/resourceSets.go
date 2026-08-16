@@ -124,9 +124,10 @@ func initOktaResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 
 func oktaResourceSetArgs(entry *okta.ResourceSet) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
-		"id":          llx.StringData(oktaStr(entry.Id)),
-		"label":       llx.StringData(oktaStr(entry.Label)),
-		"description": llx.StringData(oktaStrFrom(entry.AdditionalProperties["description"])),
+		"id":    llx.StringData(oktaStr(entry.Id)),
+		"label": llx.StringData(oktaStr(entry.Label)),
+		// The resource set types this field, unlike the resources inside it.
+		"description": llx.StringData(oktaStr(entry.Description)),
 		"created":     llx.TimeDataPtr(entry.Created),
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
 	}
