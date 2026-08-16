@@ -17,7 +17,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 	"unicode/utf16"
 
@@ -64,21 +63,15 @@ var DefaultPasswords = []string{"changeit", ""}
 // satisfies every assertion made about its contents.
 var ErrPasswordRequired = errors.New("keystore contents are encrypted and no password worked")
 
-// ErrUnsupportedPKCS12MAC reports a PKCS#12 store this cannot open regardless of
-// the password. keytool has written a SHA-256 integrity MAC for years, and the
-// PKCS#12 reader available to us verifies the MAC before it will decrypt
-// anything and only understands SHA-1. Reporting this as a wrong password would
-// send someone hunting for a credential that was never the problem.
-var ErrUnsupportedPKCS12MAC = errors.New("PKCS#12 store uses an integrity algorithm this cannot verify (only SHA-1 MACs are supported)")
-
-// unsupportedDigestMarker is how golang.org/x/crypto/pkcs12 reports a MAC
-// algorithm it does not implement. It returns a plain error rather than a typed
-// one, so matching the text is the only way to tell that case apart from a wrong
-// password — which matters, because the two need opposite responses. Pinned here
-// so there is one place to fix if the wording upstream ever changes; the tests
-// cover the classification, so a change would fail rather than silently degrade
-// into blaming the credential.
-const unsupportedDigestMarker = "unknown digest algorithm"
+// ErrUnsupportedPKCS12 reports a store built with PKCS#12 features the reader
+// does not implement, which no password will open.
+//
+// The common case is the integrity MAC: keytool has written a SHA-256 one for
+// years, and golang.org/x/crypto/pkcs12 verifies the MAC before it will decrypt
+// anything and accepts only SHA-1 (`mac.go`, and still so in v0.55.0, the newest
+// release). Reporting that as a wrong password would send someone hunting for a
+// credential that was never the problem, so the two are kept apart.
+var ErrUnsupportedPKCS12 = errors.New("PKCS#12 store uses features this reader does not implement")
 
 // Entry is one alias in a keystore.
 type Entry struct {
@@ -302,11 +295,14 @@ func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 		blocks, err := pkcs12.ToPEM(data, candidate)
 		if err != nil {
 			lastErr = err
-			// A MAC we cannot verify fails identically for every password, so
+			// Something unimplemented fails identically for every password, so
 			// stop rather than working through the list and then blaming the
-			// credential.
-			if strings.Contains(err.Error(), unsupportedDigestMarker) {
-				return nil, fmt.Errorf("%w: %v", ErrUnsupportedPKCS12MAC, err)
+			// credential. The upstream package types these, so this reads the
+			// type rather than the message — the wording is an internal detail
+			// and would change without notice.
+			var notImplemented pkcs12.NotImplementedError
+			if errors.As(err, &notImplemented) {
+				return nil, fmt.Errorf("%w: %v", ErrUnsupportedPKCS12, err)
 			}
 			continue
 		}

@@ -161,7 +161,8 @@ func TestParseRejectsGarbage(t *testing.T) {
 // keytool has written a SHA-256 integrity MAC for years and the PKCS#12 reader
 // available here only verifies SHA-1, so such a store cannot be opened with any
 // password. Reporting it as a credential problem would send someone looking for
-// a password that was never the issue, so it gets its own error.
+// a password that was never the issue, so it gets its own error — classified by
+// the upstream error type rather than its wording.
 func TestParsePKCS12ReportsAnUnsupportedMACDistinctly(t *testing.T) {
 	data, err := os.ReadFile("testdata/keystore-sha256mac.p12")
 	if err != nil {
@@ -169,7 +170,7 @@ func TestParsePKCS12ReportsAnUnsupportedMACDistinctly(t *testing.T) {
 	}
 	_, err = java.Parse(data, "changeit")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, java.ErrUnsupportedPKCS12MAC)
+	assert.ErrorIs(t, err, java.ErrUnsupportedPKCS12)
 	assert.NotErrorIs(t, err, java.ErrPasswordRequired,
 		"an unverifiable MAC is not a wrong password")
 }
