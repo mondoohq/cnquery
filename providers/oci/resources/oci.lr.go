@@ -27,6 +27,10 @@ const (
 	ResourceOciIdentityDomainPasswordPolicy                          string = "oci.identity.domain.passwordPolicy"
 	ResourceOciIdentityDomainAuthenticationFactorSettings            string = "oci.identity.domain.authenticationFactorSettings"
 	ResourceOciIdentityDomainApp                                     string = "oci.identity.domain.app"
+	ResourceOciIdentityDomainPolicy                                  string = "oci.identity.domain.policy"
+	ResourceOciIdentityDomainRule                                    string = "oci.identity.domain.rule"
+	ResourceOciIdentityDomainCondition                               string = "oci.identity.domain.condition"
+	ResourceOciIdentityDomainNetworkPerimeter                        string = "oci.identity.domain.networkPerimeter"
 	ResourceOciIdentityUser                                          string = "oci.identity.user"
 	ResourceOciIdentityMfaDevice                                     string = "oci.identity.mfaDevice"
 	ResourceOciIdentityApiKey                                        string = "oci.identity.apiKey"
@@ -302,6 +306,22 @@ func init() {
 		"oci.identity.domain.app": {
 			// to override args, implement: initOciIdentityDomainApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciIdentityDomainApp,
+		},
+		"oci.identity.domain.policy": {
+			// to override args, implement: initOciIdentityDomainPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainPolicy,
+		},
+		"oci.identity.domain.rule": {
+			// to override args, implement: initOciIdentityDomainRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainRule,
+		},
+		"oci.identity.domain.condition": {
+			// to override args, implement: initOciIdentityDomainCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainCondition,
+		},
+		"oci.identity.domain.networkPerimeter": {
+			// to override args, implement: initOciIdentityDomainNetworkPerimeter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciIdentityDomainNetworkPerimeter,
 		},
 		"oci.identity.user": {
 			Init:   initOciIdentityUser,
@@ -1401,6 +1421,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.identity.domain.apps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDomain).GetApps()).ToDataRes(types.Array(types.Resource("oci.identity.domain.app")))
 	},
+	"oci.identity.domain.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetPolicies()).ToDataRes(types.Array(types.Resource("oci.identity.domain.policy")))
+	},
+	"oci.identity.domain.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetRules()).ToDataRes(types.Array(types.Resource("oci.identity.domain.rule")))
+	},
+	"oci.identity.domain.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetConditions()).ToDataRes(types.Array(types.Resource("oci.identity.domain.condition")))
+	},
+	"oci.identity.domain.networkPerimeters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetNetworkPerimeters()).ToDataRes(types.Array(types.Resource("oci.identity.domain.networkPerimeter")))
+	},
+	"oci.identity.domain.keepMeSignedInEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetKeepMeSignedInEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.keepMeSignedInPromptEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetKeepMeSignedInPromptEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.keepMeSignedInTokenValidityInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetKeepMeSignedInTokenValidityInDays()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.keepMeSignedInLastUsedValidityInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetKeepMeSignedInLastUsedValidityInDays()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.keepMeSignedInMaxAllowedSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetKeepMeSignedInMaxAllowedSessions()).ToDataRes(types.Int)
+	},
+	"oci.identity.domain.termsOfUsePromptDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomain).GetTermsOfUsePromptDisabled()).ToDataRes(types.Bool)
+	},
 	"oci.identity.domain.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDomain).GetState()).ToDataRes(types.String)
 	},
@@ -1649,6 +1699,114 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.identity.domain.app.isWebTierPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityDomainApp).GetIsWebTierPolicy()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.policy.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.policy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.policy.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetActive()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.policy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetRules()).ToDataRes(types.Array(types.Resource("oci.identity.domain.rule")))
+	},
+	"oci.identity.domain.policy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetPolicyType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetActive()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.rule.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetLocked()).ToDataRes(types.Bool)
+	},
+	"oci.identity.domain.rule.conditionExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetConditionExpression()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetCondition()).ToDataRes(types.Resource("oci.identity.domain.condition"))
+	},
+	"oci.identity.domain.rule.conditionGroupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetConditionGroupType()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.conditionGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetConditionGroupName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.rule.returns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetReturns()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.identity.domain.rule.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainRule).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.condition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.attributeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetAttributeName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.operator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetOperator()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.attributeValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetAttributeValue()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.evaluateConditionIf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetEvaluateConditionIf()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.condition.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainCondition).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.identity.domain.networkPerimeter.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainNetworkPerimeter).GetId()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.networkPerimeter.ocid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainNetworkPerimeter).GetOcid()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.networkPerimeter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainNetworkPerimeter).GetName()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.networkPerimeter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainNetworkPerimeter).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.identity.domain.networkPerimeter.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainNetworkPerimeter).GetIpAddresses()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.identity.domain.networkPerimeter.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciIdentityDomainNetworkPerimeter).GetCreated()).ToDataRes(types.Time)
 	},
 	"oci.identity.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciIdentityUser).GetId()).ToDataRes(types.String)
@@ -9722,6 +9880,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciIdentityDomain).Apps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.identity.domain.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).NetworkPerimeters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.keepMeSignedInEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).KeepMeSignedInEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.keepMeSignedInPromptEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).KeepMeSignedInPromptEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.keepMeSignedInTokenValidityInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).KeepMeSignedInTokenValidityInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.keepMeSignedInLastUsedValidityInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).KeepMeSignedInLastUsedValidityInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.keepMeSignedInMaxAllowedSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).KeepMeSignedInMaxAllowedSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.termsOfUsePromptDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomain).TermsOfUsePromptDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"oci.identity.domain.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityDomain).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -10072,6 +10270,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.identity.domain.app.isWebTierPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityDomainApp).IsWebTierPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.policy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.conditionExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).ConditionExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Condition, ok = plugin.RawToTValue[*mqlOciIdentityDomainCondition](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.conditionGroupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).ConditionGroupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.conditionGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).ConditionGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.returns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Returns, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.rule.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainRule).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.condition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.attributeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).AttributeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.operator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).Operator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.attributeValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).AttributeValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.evaluateConditionIf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).EvaluateConditionIf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.condition.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainCondition).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.ocid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).Ocid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.identity.domain.networkPerimeter.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciIdentityDomainNetworkPerimeter).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.identity.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21980,24 +22338,34 @@ type mqlOciIdentityDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciIdentityDomainInternal
-	Id                           plugin.TValue[string]
-	Name                         plugin.TValue[string]
-	Description                  plugin.TValue[string]
-	Compartment                  plugin.TValue[*mqlOciCompartment]
-	Type                         plugin.TValue[string]
-	LicenseType                  plugin.TValue[string]
-	HomeRegion                   plugin.TValue[string]
-	ReplicaRegions               plugin.TValue[[]any]
-	IsHiddenOnLogin              plugin.TValue[bool]
-	Users                        plugin.TValue[[]any]
-	Groups                       plugin.TValue[[]any]
-	PasswordPolicies             plugin.TValue[[]any]
-	AuthenticationFactorSettings plugin.TValue[*mqlOciIdentityDomainAuthenticationFactorSettings]
-	Apps                         plugin.TValue[[]any]
-	State                        plugin.TValue[string]
-	Created                      plugin.TValue[*time.Time]
-	FreeformTags                 plugin.TValue[map[string]any]
-	DefinedTags                  plugin.TValue[map[string]any]
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	Description                          plugin.TValue[string]
+	Compartment                          plugin.TValue[*mqlOciCompartment]
+	Type                                 plugin.TValue[string]
+	LicenseType                          plugin.TValue[string]
+	HomeRegion                           plugin.TValue[string]
+	ReplicaRegions                       plugin.TValue[[]any]
+	IsHiddenOnLogin                      plugin.TValue[bool]
+	Users                                plugin.TValue[[]any]
+	Groups                               plugin.TValue[[]any]
+	PasswordPolicies                     plugin.TValue[[]any]
+	AuthenticationFactorSettings         plugin.TValue[*mqlOciIdentityDomainAuthenticationFactorSettings]
+	Apps                                 plugin.TValue[[]any]
+	Policies                             plugin.TValue[[]any]
+	Rules                                plugin.TValue[[]any]
+	Conditions                           plugin.TValue[[]any]
+	NetworkPerimeters                    plugin.TValue[[]any]
+	KeepMeSignedInEnabled                plugin.TValue[bool]
+	KeepMeSignedInPromptEnabled          plugin.TValue[bool]
+	KeepMeSignedInTokenValidityInDays    plugin.TValue[int64]
+	KeepMeSignedInLastUsedValidityInDays plugin.TValue[int64]
+	KeepMeSignedInMaxAllowedSessions     plugin.TValue[int64]
+	TermsOfUsePromptDisabled             plugin.TValue[bool]
+	State                                plugin.TValue[string]
+	Created                              plugin.TValue[*time.Time]
+	FreeformTags                         plugin.TValue[map[string]any]
+	DefinedTags                          plugin.TValue[map[string]any]
 }
 
 // createOciIdentityDomain creates a new instance of this resource
@@ -22162,6 +22530,106 @@ func (c *mqlOciIdentityDomain) GetApps() *plugin.TValue[[]any] {
 		}
 
 		return c.apps()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "conditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.conditions()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetNetworkPerimeters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPerimeters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain", c.__id, "networkPerimeters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkPerimeters()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetKeepMeSignedInEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KeepMeSignedInEnabled, func() (bool, error) {
+		return c.keepMeSignedInEnabled()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetKeepMeSignedInPromptEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KeepMeSignedInPromptEnabled, func() (bool, error) {
+		return c.keepMeSignedInPromptEnabled()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetKeepMeSignedInTokenValidityInDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.KeepMeSignedInTokenValidityInDays, func() (int64, error) {
+		return c.keepMeSignedInTokenValidityInDays()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetKeepMeSignedInLastUsedValidityInDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.KeepMeSignedInLastUsedValidityInDays, func() (int64, error) {
+		return c.keepMeSignedInLastUsedValidityInDays()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetKeepMeSignedInMaxAllowedSessions() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.KeepMeSignedInMaxAllowedSessions, func() (int64, error) {
+		return c.keepMeSignedInMaxAllowedSessions()
+	})
+}
+
+func (c *mqlOciIdentityDomain) GetTermsOfUsePromptDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TermsOfUsePromptDisabled, func() (bool, error) {
+		return c.termsOfUsePromptDisabled()
 	})
 }
 
@@ -22769,6 +23237,366 @@ func (c *mqlOciIdentityDomainApp) GetLandingPageUrl() *plugin.TValue[string] {
 
 func (c *mqlOciIdentityDomainApp) GetIsWebTierPolicy() *plugin.TValue[bool] {
 	return &c.IsWebTierPolicy
+}
+
+// mqlOciIdentityDomainPolicy for the oci.identity.domain.policy resource
+type mqlOciIdentityDomainPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciIdentityDomainPolicyInternal
+	Id          plugin.TValue[string]
+	Ocid        plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	PolicyType  plugin.TValue[string]
+	Active      plugin.TValue[bool]
+	Rules       plugin.TValue[[]any]
+	Created     plugin.TValue[*time.Time]
+}
+
+// createOciIdentityDomainPolicy creates a new instance of this resource
+func createOciIdentityDomainPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainPolicy) MqlName() string {
+	return "oci.identity.domain.policy"
+}
+
+func (c *mqlOciIdentityDomainPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain.policy", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlOciIdentityDomainPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciIdentityDomainRule for the oci.identity.domain.rule resource
+type mqlOciIdentityDomainRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciIdentityDomainRuleInternal
+	Id                  plugin.TValue[string]
+	Ocid                plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	PolicyType          plugin.TValue[string]
+	Active              plugin.TValue[bool]
+	Locked              plugin.TValue[bool]
+	ConditionExpression plugin.TValue[string]
+	Condition           plugin.TValue[*mqlOciIdentityDomainCondition]
+	ConditionGroupType  plugin.TValue[string]
+	ConditionGroupName  plugin.TValue[string]
+	Returns             plugin.TValue[map[string]any]
+	Created             plugin.TValue[*time.Time]
+}
+
+// createOciIdentityDomainRule creates a new instance of this resource
+func createOciIdentityDomainRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainRule) MqlName() string {
+	return "oci.identity.domain.rule"
+}
+
+func (c *mqlOciIdentityDomainRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainRule) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomainRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainRule) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlOciIdentityDomainRule) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlOciIdentityDomainRule) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlOciIdentityDomainRule) GetConditionExpression() *plugin.TValue[string] {
+	return &c.ConditionExpression
+}
+
+func (c *mqlOciIdentityDomainRule) GetCondition() *plugin.TValue[*mqlOciIdentityDomainCondition] {
+	return plugin.GetOrCompute[*mqlOciIdentityDomainCondition](&c.Condition, func() (*mqlOciIdentityDomainCondition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.domain.rule", c.__id, "condition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciIdentityDomainCondition), nil
+			}
+		}
+
+		return c.condition()
+	})
+}
+
+func (c *mqlOciIdentityDomainRule) GetConditionGroupType() *plugin.TValue[string] {
+	return &c.ConditionGroupType
+}
+
+func (c *mqlOciIdentityDomainRule) GetConditionGroupName() *plugin.TValue[string] {
+	return &c.ConditionGroupName
+}
+
+func (c *mqlOciIdentityDomainRule) GetReturns() *plugin.TValue[map[string]any] {
+	return &c.Returns
+}
+
+func (c *mqlOciIdentityDomainRule) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciIdentityDomainCondition for the oci.identity.domain.condition resource
+type mqlOciIdentityDomainCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainConditionInternal it will be used here
+	Id                  plugin.TValue[string]
+	Ocid                plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	AttributeName       plugin.TValue[string]
+	Operator            plugin.TValue[string]
+	AttributeValue      plugin.TValue[string]
+	EvaluateConditionIf plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+}
+
+// createOciIdentityDomainCondition creates a new instance of this resource
+func createOciIdentityDomainCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.condition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainCondition) MqlName() string {
+	return "oci.identity.domain.condition"
+}
+
+func (c *mqlOciIdentityDomainCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainCondition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainCondition) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainCondition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomainCondition) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainCondition) GetAttributeName() *plugin.TValue[string] {
+	return &c.AttributeName
+}
+
+func (c *mqlOciIdentityDomainCondition) GetOperator() *plugin.TValue[string] {
+	return &c.Operator
+}
+
+func (c *mqlOciIdentityDomainCondition) GetAttributeValue() *plugin.TValue[string] {
+	return &c.AttributeValue
+}
+
+func (c *mqlOciIdentityDomainCondition) GetEvaluateConditionIf() *plugin.TValue[string] {
+	return &c.EvaluateConditionIf
+}
+
+func (c *mqlOciIdentityDomainCondition) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciIdentityDomainNetworkPerimeter for the oci.identity.domain.networkPerimeter resource
+type mqlOciIdentityDomainNetworkPerimeter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciIdentityDomainNetworkPerimeterInternal it will be used here
+	Id          plugin.TValue[string]
+	Ocid        plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	IpAddresses plugin.TValue[[]any]
+	Created     plugin.TValue[*time.Time]
+}
+
+// createOciIdentityDomainNetworkPerimeter creates a new instance of this resource
+func createOciIdentityDomainNetworkPerimeter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciIdentityDomainNetworkPerimeter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.identity.domain.networkPerimeter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) MqlName() string {
+	return "oci.identity.domain.networkPerimeter"
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) GetOcid() *plugin.TValue[string] {
+	return &c.Ocid
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+func (c *mqlOciIdentityDomainNetworkPerimeter) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlOciIdentityUser for the oci.identity.user resource
