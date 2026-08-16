@@ -173,6 +173,16 @@ var regionalAccessors = map[string]func(*OciConnection, string) (endpointer, err
 	"ResourceManagerClient":       func(c *OciConnection, r string) (endpointer, error) { return c.ResourceManagerClient(r) },
 	"VulnerabilityScanningClient": func(c *OciConnection, r string) (endpointer, error) { return c.VulnerabilityScanningClient(r) },
 
+	// Access by parties outside the tenancy
+	"OperatorControlClient":           func(c *OciConnection, r string) (endpointer, error) { return c.OperatorControlClient(r) },
+	"OperatorControlAssignmentClient": func(c *OciConnection, r string) (endpointer, error) { return c.OperatorControlAssignmentClient(r) },
+	"OperatorAccessRequestsClient":    func(c *OciConnection, r string) (endpointer, error) { return c.OperatorAccessRequestsClient(r) },
+	"OperatorActionsClient":           func(c *OciConnection, r string) (endpointer, error) { return c.OperatorActionsClient(r) },
+	"DelegateAccessControlClient":     func(c *OciConnection, r string) (endpointer, error) { return c.DelegateAccessControlClient(r) },
+	"PrivilegedApiControlClient":      func(c *OciConnection, r string) (endpointer, error) { return c.PrivilegedApiControlClient(r) },
+	"PrivilegedApiRequestsClient":     func(c *OciConnection, r string) (endpointer, error) { return c.PrivilegedApiRequestsClient(r) },
+	"LockboxClient":                   func(c *OciConnection, r string) (endpointer, error) { return c.LockboxClient(r) },
+
 	// AI services
 	"GenerativeAiClient":      func(c *OciConnection, r string) (endpointer, error) { return c.GenerativeAiClient(r) },
 	"GenerativeAiAgentClient": func(c *OciConnection, r string) (endpointer, error) { return c.GenerativeAiAgentClient(r) },

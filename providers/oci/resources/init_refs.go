@@ -309,6 +309,76 @@ func initOciArtifactsRepository(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return ociResolveByID(args, "oci.artifacts.repository", id, items)
 }
 
+func initOciOperatorAccessControlControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.operatorAccessControl", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciOperatorAccessControl).GetControls()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.operatorAccessControl.control", id, items)
+}
+
+func initOciDelegateAccessControlDelegationControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.delegateAccessControl", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciDelegateAccessControl).GetDelegationControls()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.delegateAccessControl.delegationControl", id, items)
+}
+
+func initOciDelegateAccessControlServiceProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.delegateAccessControl", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciDelegateAccessControl).GetServiceProviders()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.delegateAccessControl.serviceProvider", id, items)
+}
+
+func initOciLockboxLockbox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.lockbox", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciLockbox).GetLockboxes()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.lockbox.lockbox", id, items)
+}
+
+func initOciLockboxApprovalTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.lockbox", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciLockbox).GetApprovalTemplates()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.lockbox.approvalTemplate", id, items)
+}
+
 func initOciRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, resolve := ociInitArgs(args)
 	if !resolve {
