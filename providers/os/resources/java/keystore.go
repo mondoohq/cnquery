@@ -371,7 +371,12 @@ func readPKCS12(data []byte, password string) ([]Entry, error) {
 // pkcs12EntriesFromPEM reads the store through ToPEM, the only entry point that
 // carries the bag attributes an alias and a trust classification come from.
 func pkcs12EntriesFromPEM(data []byte, password string) ([]Entry, error) {
-	blocks, err := pkcs12.ToPEM(data, password)
+	// ToPEM is deprecated because it labels a private key "PRIVATE KEY" while
+	// encoding it as a raw RSA or EC key, which produces a PEM block nothing
+	// else can read. That hazard is confined to key bags, and this reads only
+	// certificate blocks and the bag attributes beside them, which the
+	// replacement it names does not expose at all.
+	blocks, err := pkcs12.ToPEM(data, password) //nolint:staticcheck // only certificate blocks and their attributes are read
 	if err != nil {
 		return nil, err
 	}
