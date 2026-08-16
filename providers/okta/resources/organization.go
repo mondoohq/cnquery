@@ -29,7 +29,7 @@ func initOktaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	ctx := context.Background()
 	client := conn.Client()
-	settings, _, err := client.OrgSettingAPI.GetOrgSettings(ctx).Execute()
+	settings, _, err := client.OrgSettingGeneralAPI.GetOrgSettings(ctx).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -63,7 +63,7 @@ func (o *mqlOktaOrganization) optOutCommunicationEmails() (bool, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	settings, _, err := client.OrgSettingAPI.GetOktaCommunicationSettings(ctx).Execute()
+	settings, _, err := client.OrgSettingCommunicationAPI.GetOktaCommunicationSettings(ctx).Execute()
 	if err != nil {
 		return false, err
 	}
@@ -106,7 +106,7 @@ func (o *mqlOktaOrganization) contactUser(contactType string) (*mqlOktaUser, err
 	client := conn.Client()
 
 	ctx := context.Background()
-	contact, resp, err := client.OrgSettingAPI.GetOrgContactUser(ctx, contactType).Execute()
+	contact, resp, err := client.OrgSettingContactAPI.GetOrgContactUser(ctx, contactType).Execute()
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
 			return nil, nil

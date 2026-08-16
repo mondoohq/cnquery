@@ -6,7 +6,7 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
@@ -161,13 +161,23 @@ func (o *mqlOktaProfileMapping) properties() (any, error) {
 	}
 
 	properties := map[string]any{}
-	if mapping == nil || mapping.Properties == nil {
+	if mapping == nil {
 		return properties, nil
 	}
-	for name, prop := range *mapping.Properties {
+
+	// The endpoint answers with a map of target property name to that
+	// property's mapping, but the generated model types the whole map as a
+	// single mapping object. Only `expression` and `pushStatus` are declared on
+	// it, so every named entry the org actually configured arrives in
+	// AdditionalProperties instead, keyed by property name.
+	for name, raw := range mapping.Properties.AdditionalProperties {
+		prop, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
 		properties[name] = map[string]any{
-			"expression": oktaStr(prop.Expression),
-			"pushStatus": oktaStr(prop.PushStatus),
+			"expression": oktaStrFrom(prop["expression"]),
+			"pushStatus": oktaStrFrom(prop["pushStatus"]),
 		}
 	}
 	return properties, nil

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -128,10 +128,9 @@ func parseOktaTimestamp(s string) *time.Time {
 
 func (o *mqlOkta) riskProviders() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.RiskProviderAPI.ListRiskProviders(ctx).Execute()
+	slice, resp, err := conn.ApiExtension().ListRiskProviders(ctx)
 	if err != nil {
 		// The risk providers endpoint is not available on every org edition
 		// and returns 410 Gone (or 404) when the feature is absent; degrade to
@@ -154,18 +153,10 @@ func (o *mqlOkta) riskProviders() ([]any, error) {
 		return nil
 	}
 
+	// ListRiskProviders follows the Link header itself, so slice is already
+	// every page.
 	if err := appendEntry(slice); err != nil {
 		return nil, err
-	}
-	for resp != nil && resp.HasNextPage() {
-		var page []okta.RiskProvider
-		resp, err = resp.Next(&page)
-		if err != nil {
-			return nil, err
-		}
-		if err := appendEntry(page); err != nil {
-			return nil, err
-		}
 	}
 	return list, nil
 }

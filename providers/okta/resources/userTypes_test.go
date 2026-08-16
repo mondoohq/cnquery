@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestDecodeOktaUserType pins the AdditionalProperties round-trip. The v5 SDK
+// TestDecodeOktaUserType pins the AdditionalProperties round-trip. The SDK
 // declares only `id` on UserType and drops everything else into an untyped map;
 // if its MarshalJSON ever stopped writing that map back out, every field but
 // `id` would silently come back empty rather than failing.

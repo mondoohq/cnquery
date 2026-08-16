@@ -10,13 +10,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
 
-// oktaUserTypeRaw is the user type wire shape. The v5 SDK's UserType struct
+// oktaUserTypeRaw is the user type wire shape. The SDK's UserType struct
 // declares only `id`; every other attribute the API returns lands in its
 // untyped AdditionalProperties map. Its MarshalJSON writes those back out, so
 // re-marshaling an SDK UserType and decoding it here recovers the full object.

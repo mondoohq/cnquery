@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -17,7 +17,7 @@ import (
 
 // oktaLogStreamRaw flattens the polymorphic log stream response (AWS
 // EventBridge or Splunk) into the shared fields plus a type-discriminated
-// settings map. The v5 SDK models the list as a union, so re-marshaling each
+// settings map. The SDK models the list as a union, so re-marshaling each
 // entry to JSON gives one code path over both variants.
 type oktaLogStreamRaw struct {
 	Id          string         `json:"id"`

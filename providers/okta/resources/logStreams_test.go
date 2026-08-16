@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +23,8 @@ func TestDecodeOktaLogStreamAws(t *testing.T) {
 		"status": "ACTIVE",
 		"created": "2026-01-02T03:04:05.000Z",
 		"lastUpdated": "2026-02-03T04:05:06.000Z",
-		"settings": {"accountId": "123456789012", "eventSourceName": "okta", "region": "us-east-1"}
+		"settings": {"accountId": "123456789012", "eventSourceName": "okta", "region": "us-east-1"},
+		"_links": {"self": {"href": "https://example.okta.com/api/v1/logStreams/ls1"}}
 	}`
 
 	stream, err := decodeOktaLogStream(unmarshalLogStream(t, wire))
@@ -49,11 +50,14 @@ func TestDecodeOktaLogStreamSplunkRedactsToken(t *testing.T) {
 		"name": "splunk",
 		"type": "splunk_cloud_logstreaming",
 		"status": "ACTIVE",
+		"created": "2026-01-02T03:04:05.000Z",
+		"lastUpdated": "2026-02-03T04:05:06.000Z",
 		"settings": {
 			"host": "acme.splunkcloud.com",
 			"edition": "gcp",
 			"token": "super-secret-hec-token"
-		}
+		},
+		"_links": {"self": {"href": "https://example.okta.com/api/v1/logStreams/ls2"}}
 	}`
 
 	stream, err := decodeOktaLogStream(unmarshalLogStream(t, wire))
@@ -69,27 +73,23 @@ func TestDecodeOktaLogStreamSplunkRedactsToken(t *testing.T) {
 	assert.NotContains(t, string(encoded), "super-secret-hec-token")
 }
 
-// TestDecodeOktaLogStreamNoSettings documents what the SDK's union decoder does
-// with a response that omits `settings` and the timestamps. It does not produce
-// an absent settings block: it selects a variant and zero-fills that variant's
-// typed fields, so the keys are present with empty values, and the non-pointer
-// `created`/`lastUpdated` come back as the zero time rather than null.
+// TestDecodeOktaLogStreamRejectsPartialPayload pins what the SDK's union
+// decoder does with a response missing the properties it treats as required.
 //
-// The decode must not fail or panic on that shape. Okta always sends these
-// fields for a real log stream, so no coercion is applied; this test exists to
-// make the behavior visible if that ever stops being true.
-func TestDecodeOktaLogStreamNoSettings(t *testing.T) {
+// It does not select a variant and zero-fill it, which is what it used to do:
+// it refuses the whole entry. Because a listing is decoded a page at a time,
+// that means one nonconforming stream fails the entire collection rather than
+// producing one odd row. Okta sends all of these fields for a real log stream,
+// so this is not coerced; the test exists to make the failure mode visible if
+// that ever stops being true.
+func TestDecodeOktaLogStreamRejectsPartialPayload(t *testing.T) {
 	t.Parallel()
-	stream, err := decodeOktaLogStream(unmarshalLogStream(t,
-		`{"id":"ls3","name":"bare","type":"aws_eventbridge","status":"INACTIVE"}`))
-	require.NoError(t, err)
-
-	assert.Equal(t, "ls3", stream.Id)
-	assert.Equal(t, "INACTIVE", stream.Status)
-	assert.Equal(t, "", stream.Settings["accountId"], "zero-filled by the union decoder")
-	assert.NotContains(t, stream.Settings, "token")
-	require.NotNil(t, stream.Created)
-	assert.True(t, stream.Created.IsZero(), "omitted timestamps decode to the zero time")
+	entry := &okta.ListLogStreams200ResponseInner{}
+	err := json.Unmarshal(
+		[]byte(`{"id":"ls3","name":"bare","type":"aws_eventbridge","status":"INACTIVE"}`),
+		entry)
+	require.Error(t, err, "a partial log stream must not decode to a zero-filled one")
+	assert.Contains(t, err.Error(), "required property")
 }
 
 func unmarshalLogStream(t *testing.T, wire string) *okta.ListLogStreams200ResponseInner {

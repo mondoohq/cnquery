@@ -14,7 +14,7 @@ import (
 
 // TestListEmailServersDecodesBareArray is the regression for an org that has
 // configured a custom SMTP server getting an unmarshal error instead of its
-// servers. `/api/v1/email-servers` answers with a bare array, but the v5 SDK
+// servers. `/api/v1/email-servers` answers with a bare array, but the SDK
 // types the response as an EmailServerListResponse object, so the generated
 // call fails with "cannot unmarshal array into Go value of type
 // okta._EmailServerListResponse" and takes the whole collection down.

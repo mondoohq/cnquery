@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	goCache "github.com/patrickmn/go-cache"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -244,7 +244,7 @@ func (c *OktaConnection) ApiExtension() *sdk.ApiExtension {
 }
 
 func (c *OktaConnection) Identifier() (string, error) {
-	settings, _, err := c.client.OrgSettingAPI.GetOrgSettings(context.Background()).Execute()
+	settings, _, err := c.client.OrgSettingGeneralAPI.GetOrgSettings(context.Background()).Execute()
 	if err != nil {
 		return "", errors.Join(errors.New("failed to get Okta org ID"), err)
 	}

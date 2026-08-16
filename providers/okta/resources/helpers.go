@@ -8,21 +8,90 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-// The v5 Okta SDK is OpenAPI-generated and models almost every scalar as a
-// pointer so it can distinguish "unset" from a zero value. The previous v2
-// types were plain values, so these helpers dereference v5 pointers back to the
-// zero-value semantics the resource mappers (and existing MQL queries) expect.
+// The Okta SDK is OpenAPI-generated and models most scalars as a pointer so it
+// can distinguish "unset" from a zero value. These helpers dereference those
+// pointers back to the zero-value semantics the resource mappers (and existing
+// MQL queries) expect.
 
 func oktaStr(s *string) string {
 	if s == nil {
 		return ""
 	}
 	return *s
+}
+
+// oktaTimeFromUnixMillis converts a Unix millisecond timestamp to a time.
+//
+// A nil timestamp stays nil so the field reports null rather than the Unix
+// epoch, which would read as a real date in 1970 rather than as "never
+// connected" or "not reported".
+func oktaTimeFromUnixMillis(ms *int64) *time.Time {
+	if ms == nil {
+		return nil
+	}
+	t := time.UnixMilli(*ms).UTC()
+	return &t
+}
+
+// oktaStrFrom reads a string out of a value the SDK collected into
+// AdditionalProperties, yielding "" when the key was absent or held something
+// other than a string. See oktaStringMapFrom for why these reads exist.
+func oktaStrFrom(v any) string {
+	s, ok := v.(string)
+	if !ok {
+		return ""
+	}
+	return s
+}
+
+// oktaAnySliceFrom reads a list out of a value the SDK collected into
+// AdditionalProperties, in the shape llx.ArrayData expects. A missing key or a
+// non-list value yields an empty list.
+func oktaAnySliceFrom(v any) []any {
+	items, ok := v.([]any)
+	if !ok {
+		return []any{}
+	}
+	return items
+}
+
+// oktaStringMapFrom reads a string-keyed map out of a value the SDK collected
+// into AdditionalProperties.
+//
+// The generated models drop fields between releases while the API keeps
+// sending them, and anything the model does not declare lands in
+// AdditionalProperties instead. Reading from there keeps a shipped MQL field
+// populated rather than silently reporting empty, which would read as "there
+// is nothing set" when the value was in the response all along.
+//
+// Values that are not strings are rendered through their JSON encoding, so a
+// nested object reaches the caller as its serialized form rather than being
+// dropped. A missing or non-object value yields an empty map.
+func oktaStringMapFrom(v any) map[string]any {
+	out := map[string]any{}
+	m, ok := v.(map[string]any)
+	if !ok {
+		return out
+	}
+	for k, val := range m {
+		switch s := val.(type) {
+		case string:
+			out[k] = s
+		case nil:
+			out[k] = ""
+		default:
+			if raw, err := json.Marshal(val); err == nil {
+				out[k] = string(raw)
+			}
+		}
+	}
+	return out
 }
 
 // resolveOktaResourceTarget maps an Okta resource reference (an ORN and/or a
@@ -70,7 +139,7 @@ func resolveOktaResourceTarget(orn, href string) (targetType string, id string) 
 	return "", ""
 }
 
-// oktaLinkHref extracts an href from an Okta HAL `_links` entry, which the v5
+// oktaLinkHref extracts an href from an Okta HAL `_links` entry, which the
 // SDK surfaces as an untyped map[string]interface{} of the shape
 // {"href": "..."}. Returns "" when the entry is missing or malformed.
 func oktaLinkHref(link any) string {
@@ -110,7 +179,7 @@ func oktaRoleIdFromPermissionsHref(href string) string {
 }
 
 // oktaCollectPages appends every remaining page of a paginated SDK call to the
-// first page already fetched. The v5 SDK exposes paging through the response
+// first page already fetched. The SDK exposes paging through the response
 // rather than the request, so callers pass both back in and receive the full
 // collection.
 func oktaCollectPages[T any](first []T, resp *okta.APIResponse) ([]T, error) {
@@ -152,7 +221,7 @@ const oktaErrCodeFeatureNotEnabled = "E0000015"
 
 // oktaErrorCode returns the Okta error code (for example "E0000015") carried in
 // an API error's response body, or "" when the error is not an Okta API error
-// or the body does not parse. The v5 SDK only decodes the error model for a
+// or the body does not parse. The SDK only decodes the error model for a
 // couple of status codes but always keeps the raw body, so the body is the one
 // place the code can be read from reliably.
 func oktaErrorCode(err error) string {

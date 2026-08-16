@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func TestDecodeOktaAppLink(t *testing.T) {
 		"_links": {"login": {"href": "https://example.okta.com/home/google/x"}}
 	}`
 
-	var src okta.AppLink
+	var src okta.AssignedAppLink
 	require.NoError(t, json.Unmarshal([]byte(payload), &src))
 
 	entry, err := decodeOktaAppLink(&src)
@@ -56,7 +56,7 @@ func TestDecodeOktaAppLink(t *testing.T) {
 // a hidden link that reported itself as visible, or an unconfigured one that
 // reported credentials in place, would each invert what a review concludes.
 func TestDecodeOktaAppLinkDefaults(t *testing.T) {
-	var src okta.AppLink
+	var src okta.AssignedAppLink
 	require.NoError(t, json.Unmarshal([]byte(`{"id": "0oa1", "label": "Bare"}`), &src))
 
 	entry, err := decodeOktaAppLink(&src)
@@ -121,7 +121,7 @@ func TestOktaUserManagerId(t *testing.T) {
 func TestOktaUserFromAnyKeepsRealmId(t *testing.T) {
 	const payload = `{"id": "00u1", "realmId": "guo1abc", "status": "ACTIVE"}`
 
-	var m okta.GroupMember
+	var m okta.User
 	require.NoError(t, json.Unmarshal([]byte(payload), &m))
 
 	user, err := oktaUserFromAny(&m)

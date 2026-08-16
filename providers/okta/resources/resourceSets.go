@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
@@ -33,12 +33,19 @@ func oktaSelfHref(l okta.LinksSelf) string {
 	return s.GetHref()
 }
 
+// oktaResourceSelfHref reads the self link of a resource-set resource, whose
+// links object is typed separately from the shared self-link one.
+func oktaResourceSelfHref(l okta.ResourceSetResourceLinks) string {
+	s := l.GetSelf()
+	return s.GetHref()
+}
+
 func (o *mqlOkta) resourceSets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.ResourceSetAPI.ListResourceSets(ctx).Execute()
+	slice, resp, err := client.RoleCResourceSetAPI.ListResourceSets(ctx).Execute()
 	if err != nil {
 		// Resource sets require custom admin roles to be enabled for the org.
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
@@ -97,7 +104,7 @@ func initOktaResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	set, resp, err := client.ResourceSetAPI.GetResourceSet(ctx, id).Execute()
+	set, resp, err := client.RoleCResourceSetAPI.GetResourceSet(ctx, id).Execute()
 	if err != nil {
 		if isOktaNotFound(resp) {
 			return nil, nil, fmt.Errorf("%w: okta.resourceSet %q", errOktaResourceNotFound, id)
@@ -118,7 +125,7 @@ func oktaResourceSetArgs(entry *okta.ResourceSet) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"id":          llx.StringData(oktaStr(entry.Id)),
 		"label":       llx.StringData(oktaStr(entry.Label)),
-		"description": llx.StringData(oktaStr(entry.Description)),
+		"description": llx.StringData(oktaStrFrom(entry.AdditionalProperties["description"])),
 		"created":     llx.TimeDataPtr(entry.Created),
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
 	}
@@ -138,7 +145,7 @@ func (o *mqlOktaResourceSet) resources() ([]any, error) {
 
 	ctx := context.Background()
 	setID := o.Id.Data
-	page, resp, err := client.ResourceSetAPI.ListResourceSetResources(ctx, setID).Execute()
+	page, resp, err := client.RoleCResourceSetResourceAPI.ListResourceSetResources(ctx, setID).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -175,20 +182,15 @@ func (o *mqlOktaResourceSet) resources() ([]any, error) {
 }
 
 func newMqlOktaResourceSetResource(runtime *plugin.Runtime, setID string, entry *okta.ResourceSetResource) (any, error) {
-	href := oktaSelfHref(entry.GetLinks())
-	var orn string
-	if entry.AdditionalProperties != nil {
-		if v, ok := entry.AdditionalProperties["orn"].(string); ok {
-			orn = v
-		}
-	}
+	href := oktaResourceSelfHref(entry.GetLinks())
+	orn := oktaStr(entry.Orn)
 	targetType, targetID := resolveOktaResourceTarget(orn, href)
 
 	resourceID := oktaStr(entry.Id)
 	r, err := CreateResource(runtime, "okta.resourceSet.resource", map[string]*llx.RawData{
 		"__id":        llx.StringData(fmt.Sprintf("%s/%s", setID, resourceID)),
 		"id":          llx.StringData(resourceID),
-		"description": llx.StringData(oktaStr(entry.Description)),
+		"description": llx.StringData(oktaStrFrom(entry.AdditionalProperties["description"])),
 		"href":        llx.StringData(href),
 		"orn":         llx.StringData(orn),
 	})
@@ -207,7 +209,7 @@ func (o *mqlOktaResourceSet) bindings() ([]any, error) {
 
 	ctx := context.Background()
 	setID := o.Id.Data
-	page, resp, err := client.ResourceSetAPI.ListBindings(ctx, setID).Execute()
+	page, resp, err := client.RoleDResourceSetBindingAPI.ListBindings(ctx, setID).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +252,7 @@ func (o *mqlOktaResourceSet) bindings() ([]any, error) {
 // bindingMembers lists the members of a single binding and partitions them into
 // user and group ids by resolving each member's self-link.
 func (o *mqlOktaResourceSet) bindingMembers(ctx context.Context, client *okta.APIClient, setID, roleID string) (userIDs []string, groupIDs []string, err error) {
-	page, resp, err := client.ResourceSetAPI.ListMembersOfBinding(ctx, setID, roleID).Execute()
+	page, resp, err := client.RoleDResourceSetBindingMemberAPI.ListMembersOfBinding(ctx, setID, roleID).Execute()
 	if err != nil {
 		return nil, nil, err
 	}

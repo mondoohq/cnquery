@@ -14,7 +14,7 @@ import (
 
 // PolicyWrapper models the fields we expose from Okta's /api/v1/policies
 // endpoint. We decode the policy ourselves (rather than via the generated SDK)
-// because the v5 policy listing is a discriminated union whose `settings` block
+// because the policy listing is a discriminated union whose `settings` block
 // varies per policy type; capturing `conditions` and `settings` as raw JSON
 // preserves the full shape for the dict fields.
 type PolicyWrapper struct {

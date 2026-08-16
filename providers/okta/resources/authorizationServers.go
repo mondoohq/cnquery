@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -17,7 +17,7 @@ import (
 )
 
 // authzServerPolicyRaw captures the authorization-server policy fields we
-// expose. v5 keeps these scalars in the model's AdditionalProperties map, so we
+// expose. The SDK keeps these scalars in the model's AdditionalProperties map, so we
 // decode the canonical JSON into this shared shape instead.
 type authzServerPolicyRaw struct {
 	Id          string          `json:"id,omitempty"`
@@ -72,8 +72,8 @@ func (o *mqlOkta) authorizationServers() ([]any, error) {
 }
 
 func newMqlOktaAuthorizationServer(runtime *plugin.Runtime, entry *okta.AuthorizationServer) (any, error) {
-	// v5 no longer types the `default` flag on the authorization server; it is
-	// returned as an additional property, so read it from there.
+	// The SDK does not type the `default` flag on the authorization server; it
+	// is returned as an additional property, so read it from there.
 	defaultValue := false
 	if v, ok := entry.AdditionalProperties["default"].(bool); ok {
 		defaultValue = v
@@ -270,9 +270,9 @@ func (o *mqlOktaAuthorizationServer) keys() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	ctx := context.Background()
 
-	// v5's typed AuthorizationServerJsonWebKey drops created/lastUpdated/
+	// The typed AuthorizationServerJsonWebKey drops created/lastUpdated/
 	// expiresAt/keyOps/x5c/x5t/x5tS256, so fetch the keys directly to retain the
-	// full JWK shape the v2 SDK exposed.
+	// full JWK shape.
 	apiSupplement := conn.ApiExtension()
 	keys, err := apiSupplement.ListAuthorizationServerKeys(ctx, o.Id.Data)
 	if err != nil {
@@ -425,7 +425,7 @@ func newMqlOktaAuthorizationServerScope(runtime *plugin.Runtime, authServerId st
 	return CreateResource(runtime, "okta.authorizationServer.scope", map[string]*llx.RawData{
 		"authorizationServerId": llx.StringData(authServerId),
 		"id":                    llx.StringData(oktaStr(entry.Id)),
-		"name":                  llx.StringData(oktaStr(entry.Name)),
+		"name":                  llx.StringData(entry.Name),
 		"displayName":           llx.StringData(oktaStr(entry.DisplayName)),
 		"description":           llx.StringData(oktaStr(entry.Description)),
 		"consent":               llx.StringData(oktaStr(entry.Consent)),

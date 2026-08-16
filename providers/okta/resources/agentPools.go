@@ -6,7 +6,7 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
+	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
@@ -86,7 +86,7 @@ func newMqlOktaAgent(runtime *plugin.Runtime, poolID string, entry *okta.Agent) 
 		"type":                llx.StringData(oktaStr(entry.Type)),
 		"version":             llx.StringData(oktaStr(entry.Version)),
 		"isLatestGAedVersion": llx.BoolDataPtr(entry.IsLatestGAedVersion),
-		"lastConnection":      llx.TimeDataPtr(entry.LastConnection),
+		"lastConnection":      llx.TimeDataPtr(oktaTimeFromUnixMillis(entry.LastConnection)),
 		"operationalStatus":   llx.StringData(oktaStr(entry.OperationalStatus)),
 		"updateStatus":        llx.StringData(oktaStr(entry.UpdateStatus)),
 		"updateMessage":       llx.StringData(oktaStr(entry.UpdateMessage)),

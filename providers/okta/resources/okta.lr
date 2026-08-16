@@ -524,7 +524,10 @@ private okta.role @defaults("label status") {
   // Identifies the standard administrator role granting the privileges,
   // such as SUPER_ADMIN, ORG_ADMIN, API_ADMIN, APP_ADMIN, USER_ADMIN,
   // GROUP_MEMBERSHIP_ADMIN, MOBILE_ADMIN, HELP_DESK_ADMIN, REPORT_ADMIN,
-  // or READ_ONLY_ADMIN. A value of CUSTOM_ROLE indicates a custom role
+  // or READ_ONLY_ADMIN. Okta also grants several roles through its
+  // identity governance features, reported as ACCESS_CERTIFICATIONS_ADMIN,
+  // ACCESS_REQUESTS_ADMIN, API_ACCESS_MANAGEMENT_ADMIN, and
+  // WORKFLOWS_ADMIN. A value of CUSTOM_ROLE indicates a custom role
   // whose permissions are defined by the org.
   type string
   // Custom role definition
