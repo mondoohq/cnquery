@@ -76,8 +76,12 @@ build_bundle(){
     PROVIDER_EXECUTABLE="${PROVIDER_EXECUTABLE}.exe"
   fi
 
-  # Build the binary into the arch-specific directory
-  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${ARCH_DIST}/${PROVIDER_EXECUTABLE} main.go
+  # Build the binary into the arch-specific directory.
+  #
+  # NOTE: the build target must stay the package ("."), not main.go. Go only
+  # links rsrc_windows_*.syso when building a package directory; passing an
+  # explicit .go file silently drops the version resource and manifest.
+  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${ARCH_DIST}/${PROVIDER_EXECUTABLE} .
 
   if [[ "${GOOS}" == "windows" ]]; then
     ### SIGN THE BINARY
@@ -149,6 +153,46 @@ if [ -f "$SKIP_FILE" ]; then
 fi
 
 echo "  - Building ${#BUILDS[@]} architecture targets (max parallel: ${MAX_PARALLEL})..."
+
+# The generated resource objects live in the provider source directory, so drop
+# them once every target has been linked rather than leaving them in the tree.
+remove_winres() {
+  rm -f "${PROVIDER_PATH}"/rsrc_windows_*.syso
+}
+
+# On every exit path, not just the expected ones: nothing clears these objects
+# at the start of a run, so a leaked one would be linked into the next windows
+# build of this provider carrying a stale version. A background build does not
+# inherit an EXIT trap, so this cannot fire while another target is linking.
+trap remove_winres EXIT
+
+# Windows binaries carry a VERSIONINFO resource and an application manifest.
+# Without them the provider .exe reports no CompanyName/ProductName/
+# FileDescription, which contributes to heuristic AV/EDR misclassification.
+#
+# This has to happen before the build loop below rather than inside
+# build_bundle: both windows targets share these files, so generating them per
+# target would race whenever MAX_PARALLEL > 1.
+#
+# The template carries only what go-winres does not already default to. Of the
+# manifest settings, `dpi-awareness` is the one that is not a default: left out,
+# a binary is marked DPI-aware, which is a claim a headless plugin has no
+# business making.
+for build in "${BUILDS[@]}"; do
+  if [[ "${build}" == windows* ]]; then
+    echo "  - Generate the Windows version resource..."
+    WINRES_JSON="${PROVIDER_DIST}/winres.json"
+    sed "s|__PROVIDER_NAME__|${PROVIDER_NAME}|g" \
+      "${REPOROOT}/scripts/winres/provider.json.tmpl" > "${WINRES_JSON}"
+    go run github.com/tc-hib/go-winres@v0.3.3 make \
+      --in "${WINRES_JSON}" \
+      --out "${PROVIDER_PATH}/rsrc" \
+      --arch amd64,arm64 \
+      --file-version "${PROVIDER_VERSION}" \
+      --product-version "${PROVIDER_VERSION}"
+    break
+  fi
+done
 
 # Kill all background build processes on interrupt/termination
 cleanup() {
