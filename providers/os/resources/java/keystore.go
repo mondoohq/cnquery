@@ -338,11 +338,11 @@ func ParsePKCS12(data []byte, password string) (*Keystore, error) {
 // keystore as unreadable. DecodeChain imposes the fewest constraints, so its
 // failure is the store's rather than the entry point's.
 func readPKCS12(data []byte, password string) ([]Entry, error) {
-	if entries, err := pkcs12EntriesFromPEM(data, password); err == nil {
+	if entries, err := pkcs12EntriesFromPEM(data, password); err == nil && len(entries) > 0 {
 		return entries, nil
 	}
 
-	if certs, err := pkcs12.DecodeTrustStore(data, password); err == nil {
+	if certs, err := pkcs12.DecodeTrustStore(data, password); err == nil && len(certs) > 0 {
 		entries := make([]Entry, 0, len(certs))
 		for _, cert := range certs {
 			// Every certificate in a trust store is a trust anchor by
@@ -365,6 +365,10 @@ func readPKCS12(data []byte, password string) ([]Entry, error) {
 		// the classification ToPEM reaches through localKeyId.
 		entries = append(entries, Entry{Certs: [][]byte{ca.Raw}})
 	}
+	// DecodeChain is the last attempt, so what it read is the answer even when
+	// that is nothing. It reports "certificate missing" for a store that holds
+	// no certificate at all, so reaching here with an empty list means the
+	// store parsed and its contents are genuinely empty.
 	return entries, nil
 }
 

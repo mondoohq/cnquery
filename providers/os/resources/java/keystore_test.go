@@ -235,3 +235,20 @@ func TestParsePKCS12WrongPasswordIsNotAnUnsupportedStore(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, ks.Entries)
 }
+
+// A store that holds a private key and no certificate. It must not come back as
+// a keystore with no entries: an empty store satisfies every assertion made
+// about its contents, so "nothing to read here" and "nothing in here" have to
+// stay apart.
+//
+// The fixture is what `openssl pkcs12 -export -nocerts` writes, which is a
+// single authenticated safe. Every entry point rejects that shape, so the
+// reader reports it rather than returning an empty keystore.
+func TestParsePKCS12WithNoCertificatesIsNotAnEmptyStore(t *testing.T) {
+	data, err := os.ReadFile("testdata/keyonly.p12")
+	require.NoError(t, err)
+
+	ks, err := java.Parse(data, "changeit")
+	require.Error(t, err, "a store whose certificates cannot be read is not an empty store")
+	assert.Nil(t, ks)
+}
