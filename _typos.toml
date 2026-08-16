@@ -109,6 +109,11 @@ referers = "referers"
 # or "Deactive". Documenting it any other way would not match what the API
 # returns.
 deactive = "deactive"
+# SCIM comparison operator meaning "not in", used by OCI identity domain
+# condition rules alongside eq, ne, co, sw, ew, gt, ge, lt, le and in.
+# Documenting the operator set any other way would not match what a rule
+# actually compares on.
+nin = "nin"
 # Databricks Go SDK type name GetPrivateAccesRequest (missing the second "s").
 # The SDK's own spelling, so references to it cannot be renamed.
 acces = "acces"
@@ -132,3 +137,11 @@ childs = "childs"
 setings = "setings"
 softwares = "softwares"
 splitted = "splitted"
+
+# Whole identifiers that must stay verbatim. Narrower than extend-words: this
+# exempts the named identifier only, rather than every occurrence of the
+# fragment inside it.
+[default.extend-identifiers]
+# OCI Go SDK field identitydomains.KmsiSetting.TouPromptDisabled, where "Tou"
+# is Terms Of Use. The SDK's own spelling, so reads of it cannot be renamed.
+TouPromptDisabled = "TouPromptDisabled"
