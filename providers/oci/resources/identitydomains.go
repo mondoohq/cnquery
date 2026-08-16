@@ -196,6 +196,10 @@ type mqlOciIdentityDomainInternal struct {
 	// inside the lock is a data race.
 	clientLock   sync.Mutex
 	cachedClient atomic.Pointer[identitydomains.IdentityDomainsClient]
+
+	// The domain's keep-me-signed-in settings, read once and shared by the six
+	// fields that report parts of them.
+	kmsi ociRetryLazy[*identitydomains.KmsiSetting]
 }
 
 func (o *mqlOciIdentityDomain) id() (string, error) {

@@ -166,6 +166,44 @@ private oci.identity.domain @defaults("name type state") {
   authenticationFactorSettings() oci.identity.domain.authenticationFactorSettings
   // Applications registered in the domain
   apps() []oci.identity.domain.app
+  // Policies evaluated when a user signs in or a password is set
+  //
+  // The sign-on policies are the ones carrying `policyType` SignOn, and they
+  // are where multi-factor authentication is required rather than merely
+  // offered. A policy is an ordered list of rules; the rules are what state
+  // the requirement.
+  policies() []oci.identity.domain.policy
+  // Rules defined in the domain
+  //
+  // Every rule in the domain, whether or not a policy currently references
+  // it. Read a policy's `rules` for the ones it evaluates, in the order it
+  // evaluates them.
+  rules() []oci.identity.domain.rule
+  // Conditions rules match on
+  conditions() []oci.identity.domain.condition
+  // Network perimeters naming ranges of client addresses
+  //
+  // A rule that matches on a network perimeter says "when the client comes
+  // from perimeter X", and this is what X contains.
+  networkPerimeters() []oci.identity.domain.networkPerimeter
+  // Whether users may keep a session open across browser restarts
+  //
+  // Keep-me-signed-in issues a long-lived token that lets a returning user
+  // skip sign-in, so with it enabled a multi-factor requirement is satisfied
+  // once and then bypassed for the life of the token.
+  keepMeSignedInEnabled() bool
+  // Whether users are prompted to keep the session open
+  keepMeSignedInPromptEnabled() bool
+  // Days a keep-me-signed-in token stays valid
+  keepMeSignedInTokenValidityInDays() int
+  // Days a keep-me-signed-in token survives without being used
+  keepMeSignedInLastUsedValidityInDays() int
+  // Concurrent keep-me-signed-in sessions allowed per user
+  keepMeSignedInMaxAllowedSessions() int
+  // Whether the terms-of-use prompt is suppressed
+  //
+  // Configured alongside the keep-me-signed-in settings.
+  termsOfUsePromptDisabled() bool
   // Domain lifecycle state (CREATING, ACTIVE, DELETING, INACTIVE, FAILED)
   state string
   // Domain creation time
@@ -414,6 +452,144 @@ private oci.identity.domain.app @defaults("displayName isOAuthClient active") {
   isWebTierPolicy bool
 }
 
+
+// Oracle Cloud Infrastructure (OCI) identity domain policy
+//
+// Policy evaluated at sign-in, keyed by its SCIM id. A policy is an ordered
+// list of rules and carries no requirement of its own, so `rules` is where a
+// multi-factor requirement, an address restriction or an outright denial is
+// actually stated. `policyType` separates SignOn from the password and
+// notification policies the same API returns. `active` is the difference
+// between a policy that is written and one that is in force.
+private oci.identity.domain.policy @defaults("name policyType active") {
+  // Policy SCIM id
+  id string
+  // Policy OCID
+  ocid string
+  // Policy name
+  name string
+  // Policy description
+  description string
+  // Kind of decision the policy governs
+  //
+  // SignOn for sign-in policies, and Password, IdentityProvider or
+  // NotificationRoute for the others the domain defines.
+  policyType string
+  // Whether the policy is in force
+  active bool
+  // Rules the policy evaluates, in evaluation order
+  //
+  // The first rule whose condition matches decides the outcome, so the order
+  // is part of the meaning: a permissive rule ahead of a restrictive one
+  // makes the restrictive one unreachable.
+  rules() []oci.identity.domain.rule
+  // Policy creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain rule
+//
+// One rule within a sign-on policy, and the place a requirement is stated.
+// `returns` carries the outcome as name and value pairs, so a rule allowing
+// access without a second factor and one demanding multi-factor differ only
+// there. `condition` is what the rule matches on, and it is null when the
+// rule matches on a group of conditions instead, named by
+// `conditionGroupName`. An inactive rule is never evaluated.
+private oci.identity.domain.rule @defaults("name active") {
+  // Rule SCIM id
+  id string
+  // Rule OCID
+  ocid string
+  // Rule name
+  name string
+  // Rule description
+  description string
+  // Kind of policy the rule belongs to
+  //
+  // SignOn for sign-in rules, and Password, IdentityProvider or
+  // NotificationRoute for the others.
+  policyType string
+  // Whether the rule is evaluated
+  active bool
+  // Whether the rule is locked against modification
+  locked bool
+  // Expression the rule matches on
+  conditionExpression string
+  // Condition the rule matches on
+  //
+  // Null when the rule matches on a condition group rather than a single
+  // condition, in which case `conditionGroupName` names the group.
+  condition() oci.identity.domain.condition
+  // Whether the rule matches a single condition or a group of them
+  //
+  // Condition or ConditionGroup.
+  conditionGroupType string
+  // Name of the condition or condition group the rule matches on
+  conditionGroupName string
+  // Outcome the rule produces, keyed by name
+  //
+  // A sign-on rule states its decision here. `effect` carries ALLOW or DENY,
+  // and the factor and session settings a matching sign-in is subject to
+  // appear alongside it.
+  returns map[string]string
+  // Rule creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain condition
+//
+// Single test a rule matches on, written as an attribute, an operator and a
+// value. Conditions are defined once for the domain and referenced by any
+// number of rules, so reading one tells you what every rule naming it
+// actually tests. Common attributes are the client's network perimeter, the
+// user's group membership, and the application being signed in to.
+private oci.identity.domain.condition @defaults("name attributeName operator attributeValue") {
+  // Condition SCIM id
+  id string
+  // Condition OCID
+  ocid string
+  // Condition name
+  name string
+  // Condition description
+  description string
+  // Attribute the condition tests
+  attributeName string
+  // Comparison the condition applies
+  //
+  // One of eq, ne, co, coany, sw, ew, gt, ge, lt, le, in, or nin.
+  operator string
+  // Value the attribute is compared against
+  attributeValue string
+  // Expression gating whether the condition is evaluated at all
+  evaluateConditionIf string
+  // Condition creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) identity domain network perimeter
+//
+// Named set of client addresses a sign-on rule can match on. A rule reading
+// "allow from the corporate perimeter" means nothing without this: the
+// perimeter may hold a pair of office prefixes or a range wide enough to
+// cover the public internet, and `ipAddresses` is the only place that
+// difference shows.
+private oci.identity.domain.networkPerimeter @defaults("name") {
+  // Network perimeter SCIM id
+  id string
+  // Network perimeter OCID
+  ocid string
+  // Network perimeter name
+  name string
+  // Network perimeter description
+  description string
+  // Client addresses the perimeter covers
+  //
+  // Each entry carries `value` with the address or range, `type` as CIDR,
+  // RANGE or EXACT, and `version` as IPV4 or IPV6.
+  ipAddresses []dict
+  // Network perimeter creation time
+  created time
+}
 
 // Oracle Cloud Infrastructure (OCI) IAM user
 private oci.identity.user @defaults("name") {
