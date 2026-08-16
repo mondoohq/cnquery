@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"github.com/spf13/afero"
 	"io"
 	"path/filepath"
 	"strings"
@@ -455,6 +456,10 @@ func (b *mqlBind9) keys() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			// The parser records which file every statement came from, after
+			// include expansion, so a key kept in its own included file can be
+			// checked for ownership and mode.
+			res.(*mqlBind9Key).declaredIn = k.File
 			out = append(out, res)
 		}
 		return nil
@@ -568,4 +573,148 @@ func bind9IsYes(v string) bool {
 		return true
 	}
 	return false
+}
+
+// mqlBind9KeyInternal carries the file the key statement was read from, which
+// the parser records but the resource fields do not otherwise expose.
+type mqlBind9KeyInternal struct {
+	declaredIn string
+}
+
+func (k *mqlBind9Key) file() (*mqlFile, error) {
+	if k.declaredIn == "" {
+		k.File.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	f, err := CreateResource(k.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(k.declaredIn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return f.(*mqlFile), nil
+}
+
+// dnssecKeyDirs are where a key pair is looked for when the configuration does
+// not say. `key-directory` and the working directory come first; these are the
+// locations a distribution uses when neither is set.
+var dnssecKeyDirs = []string{
+	"/etc/bind/keys",
+	"/var/cache/bind",
+	"/etc/named/keys",
+	"/var/named",
+	"/etc/bind",
+}
+
+func (b *mqlBind9) dnssecKeys() ([]any, error) {
+	if err := b.parse(); err != nil {
+		return nil, err
+	}
+
+	conn := b.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+
+	// The configuration's own answer wins over the well-known locations: a
+	// server told to keep its keys somewhere is keeping them there.
+	opts, err := b.optionsBlock()
+	if err != nil {
+		return nil, err
+	}
+	var dirs []string
+	if d := bind9.Value(opts, "key-directory"); d != "" {
+		dirs = append(dirs, strings.Trim(d, `"`))
+	}
+	if d := bind9.Value(opts, "directory"); d != "" {
+		dirs = append(dirs, strings.Trim(d, `"`))
+	}
+	dirs = append(dirs, dnssecKeyDirs...)
+
+	seen := map[string]bool{}
+	out := []any{}
+
+	for _, dir := range dirs {
+		if dir == "" || seen[dir] {
+			continue
+		}
+		seen[dir] = true
+
+		entries, err := afs.ReadDir(dir)
+		if err != nil {
+			// A directory that is not there is not an error: most of the list
+			// is a guess. A directory that exists but cannot be read is left
+			// to the file resource to report per key.
+			continue
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() || !bind9.IsDNSSECKeyFile(entry.Name()) {
+				continue
+			}
+			path := filepath.Join(dir, entry.Name())
+			if seen[path] {
+				continue
+			}
+			seen[path] = true
+
+			content, err := afs.ReadFile(path)
+			if err != nil {
+				continue
+			}
+			parsed := bind9.ParseDNSSECKeyFile(entry.Name(), string(content))
+			if parsed == nil {
+				continue
+			}
+
+			created := llx.NilData
+			if !parsed.Created.IsZero() {
+				at := parsed.Created
+				created = llx.TimeData(at)
+			}
+
+			res, err := CreateResource(b.MqlRuntime, "bind9.dnssecKey", map[string]*llx.RawData{
+				"__id":            llx.StringData(path),
+				"zone":            llx.StringData(parsed.Zone),
+				"keyTag":          llx.IntData(int64(parsed.KeyTag)),
+				"algorithm":       llx.IntData(int64(parsed.Algorithm)),
+				"isKeySigningKey": llx.BoolData(parsed.KeySigningKey),
+				"created":         created,
+			})
+			if err != nil {
+				return nil, err
+			}
+			key := res.(*mqlBind9DnssecKey)
+			key.publicPath = path
+			key.privatePath = bind9.PrivateKeyPath(path)
+			out = append(out, key)
+		}
+	}
+
+	return out, nil
+}
+
+// mqlBind9DnssecKeyInternal carries the two paths, so the file resources are
+// created only if a check asks for them.
+type mqlBind9DnssecKeyInternal struct {
+	publicPath  string
+	privatePath string
+}
+
+func (k *mqlBind9DnssecKey) file() (*mqlFile, error) {
+	f, err := CreateResource(k.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(k.publicPath),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return f.(*mqlFile), nil
+}
+
+func (k *mqlBind9DnssecKey) privateFile() (*mqlFile, error) {
+	f, err := CreateResource(k.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(k.privatePath),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return f.(*mqlFile), nil
 }
