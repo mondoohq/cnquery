@@ -46,6 +46,44 @@ A missed dimension is not a cosmetic bug. `CreateResource` returns the **cached 
 
 Test it directly: two entries with the same name in different scopes, and assert the ids are distinct.
 
+### Three design decisions that decide whether the resource can be trusted
+
+**One bad record must not blind the collection.** When a resource returns many independently-meaningful records, a single unparseable one must not take the set down with it — and skipping it silently is just as wrong, because a shorter list satisfies every assertion made about it. Skip, and expose a count:
+
+> `java.keystore` handed a whole trust store to the certificate parser. Red Hat's store has **one** certificate out of 133 with a negative serial — legal when issued in 2003, rejected by Go now — and the store reported **nothing at all**. One twenty-year-old CA blinded every check. Skipping it and counting it in `unreadableCertificates` turned that into 132 readable certificates, 54 of them SHA-1 signed and 18 expired: all previously invisible.
+
+Applies to any collection assembled from records that fail independently — certificates, log entries, package databases, zone records.
+
+**Read the layout out of the artifact instead of lengthening a path list.** A daemon usually knows where its own configuration lives, and often says so in its binary:
+
+```bash
+strings /usr/local/apache2/bin/httpd | grep -E '^ -D (HTTPD_ROOT|SERVER_CONFIG_FILE)'
+ -D HTTPD_ROOT="/usr/local/apache2"
+ -D SERVER_CONFIG_FILE="conf/httpd.conf"
+```
+
+> `apache2.conf` tried five packaged paths and found nothing on a source build — `file.path` came back null and *every* check errored. It now reads the compiled-in values, verified identical in shape across a source build, Red Hat and Debian. Packaged paths are still tried first, so a distribution install resolves exactly as before and pays nothing.
+
+Reading the binary rather than running `httpd -V` is the point: it works on an image or a mounted filesystem, where nothing can be executed. The same trick reads a version without a command.
+
+**Check what the credential actually protects before assuming you need one.** A password on a file format may guard integrity rather than confidentiality:
+
+> A JKS keystore encrypts *private keys only*. Its password protects a trailing digest, not the certificates — so a trust store is fully readable without any credential, which is what lets it be read from a container image. A PKCS#12 store is the opposite: its bags sit inside encrypted content.
+
+### Returning a type another provider owns
+
+A resource may return a type from another provider — `network.certificate` is the common one. It goes through the shared-resource bridge, not `CreateResource`:
+
+```go
+certs, err := runtime.CreateSharedResource("certificates", map[string]*llx.RawData{
+    "pem": llx.StringData(pemBundle),
+})
+list, err := runtime.GetSharedData("certificates", certs.MqlID(), "list")
+return list.Value.([]any), nil
+```
+
+Declared in the `.lr` as `[]network.certificate(content, path)` for a list resource, or `certificates() []network.certificate` for a field. `parse.certificates` and `os.rootCertificates` are working examples.
+
 ## 3. Traps that bite even though they are documented
 
 Each of these is in CLAUDE.md. Each still gets walked into, because the failure looks like a bug in your Go code rather than a naming rule. Match the fingerprint:
@@ -56,6 +94,15 @@ Each of these is in CLAUDE.md. Each still gets walked into, because the failure 
 | `is not a list type` | a list field whose path equals its element resource type | plural field over singular element resource (`zones` → `bind9.zone`) |
 | `undefined: mql<Name>Internal` | an `Internal` struct added or removed after codegen | run `./mqlr generate` a second time |
 | a generated accessor collides with an internal cache field | both named `directory` | prefix the cache field (`baseDir`, `cachePath`) |
+| your change has no effect, and the old behaviour is still there | `make providers/install/<p>` **copies from `dist/`, it does not build** — a failed or skipped build leaves the previous binary in place and install cheerfully ships it | always `make providers/build/<p>` **then** install, and check the `dist/` mtime |
+| `go test ./providers/<p>/...` fails in a worktree but passes in your main checkout | a generated mock is untracked and exists only where it was generated (`mock_volumemounter.go`) | not your change — confirm with `git ls-files --error-unmatch <file>` before investigating |
+| `license-check` fails with "N file(s) would be updated with new copyright years" | header written as `// Copyright (c) Mondoo, Inc.` | the accepted form carries years: `// Copyright Mondoo, Inc. 2024, 2026` |
+
+**The install trap is worth dwelling on**, because it fails in the most misleading way available:
+
+> Verifying a merged parser fix, the resource still showed the old behaviour. The obvious reading was that the fix did not work, and the next step would have been reporting a phantom regression upstream. The build had silently failed and `install` had copied a pre-fix binary. What caught it was a **control in the same file** — a bare directive and a wrapped one, where the bare one resolved and the wrapped one did not — which isolated the fault to the binary rather than the code.
+
+`strings` on the binary will not settle it: Go concatenates string literals, so even terms you know are present grep to zero. Rebuild, or use a control.
 
 **The init argument form is positional, not named.** This is not in CLAUDE.md and the `nginx.conf` doc comment gets it wrong:
 
@@ -95,6 +142,16 @@ Automated tests do not prove a resource; they prove the parser. Run every new fi
 - **Secrets.** If the format carries key material, sweep for it: `mql run ... -j | grep -c '<the secret>'` must be 0. Then state the guarantee precisely — "this field carries no secret" is true; "the secret is not exposed" is false while `file.content` exists.
 - **Composability.** `<resource>.files { permissions { ... } }` — permission and ownership checks should reach every file that contributed, not just the entry point.
 
+**Exercise the fallback, not just the path that hides it.** A fallback added alongside a working primary source never runs in a normal test, so it ships unverified. Disable the primary deliberately:
+
+> The `ServerRoot` fallback in `apache2.conf` would have shipped untested — the upstream image's config *declares* `ServerRoot`, so the new code never executed. Commenting it out and adding a relative `Include` showed the include resolving through the compiled-in root, where before it would have resolved against the platform default and found nothing.
+
+**A fix's fixture must contain the shape that triggered the bug.** This is the one that most often produces a green test proving nothing:
+
+> A parser fix for discarded `<IfModule>` blocks passed its fixture identically before and after — because the fixture wrote its settings at top level, and the Red Hat layout it was built on does not wrap its virtual host the way Debian's does. The suite could not have caught the bug and still cannot. The evidence that the fix worked came from a *stock vendor config* elsewhere: a `<Directory>` nested inside a TLS virtual host that had been invisible, taking the directory count from 7 to 8.
+
+After fixing a parser bug, ask which fixture now contains the triggering shape. If none does, the test suite is silent about the thing you just fixed.
+
 ## 6. Before the PR
 
 ```bash
@@ -108,6 +165,18 @@ git diff -U0 -- '*.lr' | grep '^+' | grep -c "—"          # em dashes: check y
 Check the diff, not the whole file: `os.lr` already carries 38 em dashes from before the rule, so grepping the file reports a problem you did not create.
 
 Then write the PR body around what you **ran**, not what you wrote: the queries, the values they returned, and the cases that failed before the fix. A table of observed results is worth more than a description of the schema, and it is what lets a reviewer disagree with you about something real.
+
+If a fixture carries anything credential-shaped — a generated key in a `.jks`, a password in a config — remember the secret scanner reads **every commit in the PR**, not the final diff. Removing it in a later commit does not help; the branch has to be squashed.
+
+## 7. Reading review feedback
+
+Check a review's premise before rewriting around it, in both directions. On this codebase both failure modes have happened on the same PR:
+
+> A review blocked `java.keystore` on the grounds that `pkcs12.ToPEM` is deprecated and `pkcs12.DecodeChain` handles SHA-256 MACs natively, which would delete an error type entirely. On the pinned version *and* on the newest release, `DecodeChain` does not exist, `ToPEM` carries no `Deprecated:` marker, and `Decode` fails with the identical error — both route through a MAC verifier that only accepts SHA-1. Two minutes of checking against a rewrite.
+>
+> The same review's other finding was real, and **worse than it described**: an `__id` built from a possibly-duplicate alias did not merely return the wrong entry, it let the second entry's data overwrite the cached first one's, so one entry was reported where there were two, carrying the wrong contents.
+
+The useful move when a suggestion is wrong but points at something real: fix what is real, show the measurement that disproves the rest, and file the underlying need as an issue recording the dead ends — so the next person does not re-spend the time. A typed error usually exists where you were tempted to match on message text; look for it before pinning a string.
 
 ## Reference implementations
 
