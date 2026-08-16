@@ -1495,7 +1495,7 @@ private okta.authorizationServer @defaults("name status issuer") {
   // Key set used to encrypt tokens
   //
   // The encryption keys as served, each carrying kid, kty, use, status and
-  // the RSA values n and e. Null when the server does not encrypt tokens,
+  // the RSA values n and e. Empty when the server does not encrypt tokens,
   // which is the default and the common case.
   jwks dict
 }

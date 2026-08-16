@@ -133,10 +133,13 @@ func (o *mqlOkta) riskProviders() ([]any, error) {
 	slice, resp, err := conn.ApiExtension().ListRiskProviders(ctx)
 	if err != nil {
 		// The risk providers endpoint is not available on every org edition
-		// and returns 410 Gone (or 404) when the feature is absent; degrade to
-		// an empty result rather than failing the query.
+		// and answers 410 Gone (or 404) when the feature is absent. That is a
+		// list we could not read, not a list we read and found empty, so it
+		// degrades to null: an empty list would assert the org has no risk
+		// providers, and an audit written on that would pass without anything
+		// having been checked.
 		if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusGone) {
-			return nil, nil
+			return oktaUnreadableList(&o.RiskProviders)
 		}
 		return nil, err
 	}
