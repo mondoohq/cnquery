@@ -303,7 +303,7 @@ func (k *mqlRegistrykey) children() ([]any, error) {
 
 	for i := range children {
 		child := children[i]
-		res = append(res, child.Path)
+		res = append(res, child.Name)
 	}
 
 	return res, nil

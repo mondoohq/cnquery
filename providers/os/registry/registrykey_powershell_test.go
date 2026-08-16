@@ -5,6 +5,7 @@ package registry
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,8 +31,23 @@ func TestWindowsRegistryKeyChildParser(t *testing.T) {
 	require.NoError(t, err)
 
 	items, err := ParsePowershellRegistryKeyChildren(r)
-	assert.Nil(t, err)
-	assert.Equal(t, 5, len(items))
+	require.NoError(t, err)
+	require.Len(t, items, 5)
+	assert.Equal(t, RegistryKeyChild{
+		Name:       "ActiveDesktop",
+		Path:       `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop`,
+		Properties: []string{"NoAddingComponents", "NoComponents", "NoHTMLWallPaper"},
+	}, items[0])
+	assert.Equal(t, "DataCollection", items[1].Name)
+	assert.Equal(t, `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection`, items[1].Path)
+}
+
+func TestGetRegistryKeyChildItemsScriptEnumeratesImmediateChildren(t *testing.T) {
+	script := GetRegistryKeyChildItemsScript(`HKEY_LOCAL_MACHINE\SOFTWARE\Example`)
+
+	assert.Contains(t, script, `Get-ChildItem -Path ('Registry::' + $path)`)
+	assert.NotContains(t, strings.ToLower(script), "-rec")
+	assert.Contains(t, script, `"name" = $_.PSChildName`)
 }
 
 func TestWindowsRegistryKeyMultiStringParser(t *testing.T) {
