@@ -15,7 +15,9 @@ okta.agentPool.agent.updateMessage 13.4.4
 okta.agentPool.agent.updateStatus 13.4.4
 okta.agentPool.agent.version 13.4.4
 okta.agentPool.agents 13.4.4
+okta.agentPool.disruptedAgents 13.5.2
 okta.agentPool.id 13.4.4
+okta.agentPool.inactiveAgents 13.5.2
 okta.agentPool.name 13.4.4
 okta.agentPool.operationalStatus 13.4.4
 okta.agentPool.type 13.4.4
@@ -36,6 +38,7 @@ okta.apiServiceIntegration.createdBy 13.3.2
 okta.apiServiceIntegration.grantedScopes 13.3.2
 okta.apiServiceIntegration.id 13.3.2
 okta.apiServiceIntegration.name 13.3.2
+okta.apiServiceIntegration.properties 13.5.2
 okta.apiServiceIntegration.type 13.3.2
 okta.apiServiceIntegrations 13.3.2
 okta.apiTokens 13.1.6
@@ -99,6 +102,10 @@ okta.application.token.scopes 13.4.4
 okta.application.token.status 13.4.4
 okta.application.token.user 13.4.4
 okta.application.tokens 13.4.4
+okta.application.universalLogoutIdentityStack 13.5.2
+okta.application.universalLogoutProtocol 13.5.2
+okta.application.universalLogoutStatus 13.5.2
+okta.application.universalLogoutSupportType 13.5.2
 okta.application.user 13.3.2
 okta.application.user.created 13.3.2
 okta.application.user.credentials 13.3.2
@@ -131,6 +138,7 @@ okta.authenticator.type 13.1.6
 okta.authenticator.userVerification 13.1.6
 okta.authenticators 13.1.6
 okta.authorizationServer 13.2.6
+okta.authorizationServer.accessTokenEncryptedResponseAlgorithm 13.5.2
 okta.authorizationServer.audiences 13.2.6
 okta.authorizationServer.claim 13.2.6
 okta.authorizationServer.claim.alwaysIncludeInToken 13.2.6
@@ -151,6 +159,8 @@ okta.authorizationServer.description 13.2.6
 okta.authorizationServer.id 13.2.6
 okta.authorizationServer.issuer 13.2.6
 okta.authorizationServer.issuerMode 13.2.6
+okta.authorizationServer.jwks 13.5.2
+okta.authorizationServer.jwksUri 13.5.2
 okta.authorizationServer.key 13.2.6
 okta.authorizationServer.key.alg 13.2.6
 okta.authorizationServer.key.authorizationServerId 13.2.6
@@ -487,6 +497,7 @@ okta.resourceSet.lastUpdated 13.3.2
 okta.resourceSet.resource 13.3.2
 okta.resourceSet.resource.application 13.3.2
 okta.resourceSet.resource.description 13.3.2
+okta.resourceSet.resource.excludedOrns 13.5.2
 okta.resourceSet.resource.group 13.3.2
 okta.resourceSet.resource.href 13.3.2
 okta.resourceSet.resource.id 13.3.2

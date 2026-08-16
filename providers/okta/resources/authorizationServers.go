@@ -90,22 +90,32 @@ func newMqlOktaAuthorizationServer(runtime *plugin.Runtime, entry *okta.Authoriz
 		signingNextRotation = s.NextRotation
 	}
 
+	// Jwks is the key set tokens are encrypted against, which is a different
+	// set from the signing keys the server publishes.
+	jwks, err := convert.JsonToDict(entry.Jwks)
+	if err != nil {
+		return nil, err
+	}
+
 	return CreateResource(runtime, "okta.authorizationServer", map[string]*llx.RawData{
-		"id":                  llx.StringData(oktaStr(entry.Id)),
-		"name":                llx.StringData(oktaStr(entry.Name)),
-		"description":         llx.StringData(oktaStr(entry.Description)),
-		"status":              llx.StringData(oktaStr(entry.Status)),
-		"default":             llx.BoolData(defaultValue),
-		"issuer":              llx.StringData(oktaStr(entry.Issuer)),
-		"issuerMode":          llx.StringData(oktaStr(entry.IssuerMode)),
-		"audiences":           llx.ArrayData(convert.SliceAnyToInterface(entry.Audiences), types.String),
-		"signingKid":          llx.StringData(signingKid),
-		"signingRotationMode": llx.StringData(signingRotationMode),
-		"signingLastRotated":  llx.TimeDataPtr(signingLastRotated),
-		"signingNextRotation": llx.TimeDataPtr(signingNextRotation),
-		"signingUse":          llx.StringData(signingUse),
-		"created":             llx.TimeDataPtr(entry.Created),
-		"lastUpdated":         llx.TimeDataPtr(entry.LastUpdated),
+		"id":                                    llx.StringData(oktaStr(entry.Id)),
+		"name":                                  llx.StringData(oktaStr(entry.Name)),
+		"description":                           llx.StringData(oktaStr(entry.Description)),
+		"status":                                llx.StringData(oktaStr(entry.Status)),
+		"default":                               llx.BoolData(defaultValue),
+		"issuer":                                llx.StringData(oktaStr(entry.Issuer)),
+		"issuerMode":                            llx.StringData(oktaStr(entry.IssuerMode)),
+		"accessTokenEncryptedResponseAlgorithm": llx.StringData(oktaStr(entry.AccessTokenEncryptedResponseAlgorithm)),
+		"jwksUri":                               llx.StringData(oktaStr(entry.JwksUri)),
+		"jwks":                                  llx.DictData(jwks),
+		"audiences":                             llx.ArrayData(convert.SliceAnyToInterface(entry.Audiences), types.String),
+		"signingKid":                            llx.StringData(signingKid),
+		"signingRotationMode":                   llx.StringData(signingRotationMode),
+		"signingLastRotated":                    llx.TimeDataPtr(signingLastRotated),
+		"signingNextRotation":                   llx.TimeDataPtr(signingNextRotation),
+		"signingUse":                            llx.StringData(signingUse),
+		"created":                               llx.TimeDataPtr(entry.Created),
+		"lastUpdated":                           llx.TimeDataPtr(entry.LastUpdated),
 	})
 }
 

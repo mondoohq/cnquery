@@ -39,6 +39,17 @@ func oktaTimeFromUnixMillis(ms *int64) *time.Time {
 	return &t
 }
 
+// oktaInt64 widens an optional 32-bit count to the width llx reports ints at,
+// keeping nil as nil so an unreported count stays null rather than becoming a
+// confident zero.
+func oktaInt64(v *int32) *int64 {
+	if v == nil {
+		return nil
+	}
+	widened := int64(*v)
+	return &widened
+}
+
 // oktaStrFrom reads a string out of a value the SDK collected into
 // AdditionalProperties, yielding "" when the key was absent or held something
 // other than a string. See oktaStringMapFrom for why these reads exist.

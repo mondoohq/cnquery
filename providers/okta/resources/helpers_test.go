@@ -219,3 +219,22 @@ func TestOktaStringMapFrom(t *testing.T) {
 	assert.Equal(t, "", got["empty"])
 	assert.Equal(t, `{"a":"b"}`, got["nested"])
 }
+
+// TestOktaInt64 covers the widening of an optional count.
+//
+// The nil case is the one worth pinning: an agent pool whose disrupted count
+// the API does not report must leave the field null. A zero would assert that
+// nothing is disrupted, which is the opposite reading and the one a health
+// check would pass on.
+func TestOktaInt64(t *testing.T) {
+	t.Parallel()
+
+	assert.Nil(t, oktaInt64(nil), "an unreported count must stay null")
+
+	for _, n := range []int32{0, 1, 4096} {
+		got := oktaInt64(&n)
+		if assert.NotNil(t, got) {
+			assert.Equal(t, int64(n), *got)
+		}
+	}
+}

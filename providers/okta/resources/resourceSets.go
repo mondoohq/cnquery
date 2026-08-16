@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 type mqlOktaResourceSetResourceInternal struct {
@@ -186,13 +187,24 @@ func newMqlOktaResourceSetResource(runtime *plugin.Runtime, setID string, entry 
 	orn := oktaStr(entry.Orn)
 	targetType, targetID := resolveOktaResourceTarget(orn, href)
 
+	// Exclusions narrow what the entry actually grants. An absent conditions
+	// block means nothing is carved out, which is an empty list rather than a
+	// null: the API answered, and the answer is "none".
+	excluded := []any{}
+	if entry.Conditions != nil && entry.Conditions.Exclude != nil {
+		for _, orn := range entry.Conditions.Exclude.OktaORN {
+			excluded = append(excluded, orn)
+		}
+	}
+
 	resourceID := oktaStr(entry.Id)
 	r, err := CreateResource(runtime, "okta.resourceSet.resource", map[string]*llx.RawData{
-		"__id":        llx.StringData(fmt.Sprintf("%s/%s", setID, resourceID)),
-		"id":          llx.StringData(resourceID),
-		"description": llx.StringData(oktaStrFrom(entry.AdditionalProperties["description"])),
-		"href":        llx.StringData(href),
-		"orn":         llx.StringData(orn),
+		"__id":         llx.StringData(fmt.Sprintf("%s/%s", setID, resourceID)),
+		"id":           llx.StringData(resourceID),
+		"description":  llx.StringData(oktaStrFrom(entry.AdditionalProperties["description"])),
+		"href":         llx.StringData(href),
+		"orn":          llx.StringData(orn),
+		"excludedOrns": llx.ArrayData(excluded, types.String),
 	})
 	if err != nil {
 		return nil, err
