@@ -243,6 +243,7 @@ bind9.forwarders 13.40.8
 bind9.key 13.40.8
 bind9.key.algorithm 13.40.8
 bind9.key.name 13.40.8
+bind9.key.view 13.40.8
 bind9.keys 13.40.8
 bind9.listenOn 13.40.8
 bind9.listenOnPort 13.40.8

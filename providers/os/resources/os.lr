@@ -1709,9 +1709,15 @@ private bind9.acl @defaults("name") {
 //
 // A key used to authenticate transfers, dynamic updates, and rndc. The
 // shared secret is not among the fields.
-private bind9.key @defaults("name algorithm") {
+private bind9.key @defaults("name algorithm view") {
   // Key name
   name string
+  // View the key is declared in, empty for a top-level key
+  //
+  // A key statement is legal inside a view, and two views may declare
+  // different keys under the same name, so the view is part of what
+  // identifies a key rather than a detail of it.
+  view string
   // Signing algorithm, e.g. "hmac-sha256"
   algorithm string
 }

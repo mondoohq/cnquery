@@ -115,3 +115,48 @@ view "internal" {
 	bind9EachZone(stmts, func(view string, z bind9.Statement) { count++ })
 	assert.Equal(t, 1, count)
 }
+
+// A key statement is legal inside a view, and two views may declare different
+// keys under the same name. The view is therefore part of what identifies a
+// key: an id built from the name alone makes the second key resolve to the
+// cached first one, which reports the wrong algorithm — and reports it as the
+// stronger of the two when the weaker one is in the internet-facing view.
+func TestBind9KeyIdentityIncludesTheView(t *testing.T) {
+	stmts, err := bind9.Parse(`
+key "top-level" { algorithm hmac-sha512; secret "a"; };
+view "internal" {
+	key "shared-name" { algorithm hmac-sha256; secret "b"; };
+};
+view "external" {
+	key "shared-name" { algorithm hmac-md5; secret "c"; };
+};
+`)
+	require.NoError(t, err)
+
+	// the ids the resource builds, in the order it builds them
+	var ids []string
+	var algorithms []string
+	collect := func(block []bind9.Statement, view string) {
+		for _, k := range bind9.Find(block, "key") {
+			ids = append(ids, "/etc/bind/named.conf/key/"+view+"/"+k.Arg(0))
+			algorithms = append(algorithms, bind9.Value(k.Block, "algorithm"))
+		}
+	}
+	collect(stmts, "")
+	for _, v := range bind9.Find(stmts, "view") {
+		collect(v.Block, v.Arg(0))
+	}
+
+	assert.Equal(t, []string{
+		"/etc/bind/named.conf/key//top-level",
+		"/etc/bind/named.conf/key/internal/shared-name",
+		"/etc/bind/named.conf/key/external/shared-name",
+	}, ids)
+	assert.Equal(t, []string{"hmac-sha512", "hmac-sha256", "hmac-md5"}, algorithms)
+
+	seen := map[string]bool{}
+	for _, id := range ids {
+		require.False(t, seen[id], "two keys share the id %q, so one shadows the other in the resource cache", id)
+		seen[id] = true
+	}
+}

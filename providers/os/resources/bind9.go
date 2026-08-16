@@ -436,13 +436,18 @@ func (b *mqlBind9) keys() ([]any, error) {
 	}
 
 	var out []any
-	// Keys are declared at the top level and inside views.
-	collect := func(stmts []bind9.Statement) error {
+	// Keys are declared at the top level and inside views. Two views may
+	// declare different keys under the same name, so the view belongs in the
+	// id: without it the second key resolves to the cached first one and
+	// reports its algorithm, which reads as the stronger of the two when a
+	// view is the one using the weaker.
+	collect := func(stmts []bind9.Statement, view string) error {
 		for _, k := range bind9.Find(stmts, "key") {
 			name := k.Arg(0)
 			res, err := CreateResource(b.MqlRuntime, "bind9.key", map[string]*llx.RawData{
-				"__id": llx.StringData(b.confPath + "/key/" + name),
+				"__id": llx.StringData(b.confPath + "/key/" + view + "/" + name),
 				"name": llx.StringData(name),
+				"view": llx.StringData(view),
 				// The secret statement is deliberately left behind: reading it
 				// would copy key material into scan results.
 				"algorithm": llx.StringData(bind9.Value(k.Block, "algorithm")),
@@ -455,11 +460,11 @@ func (b *mqlBind9) keys() ([]any, error) {
 		return nil
 	}
 
-	if err := collect(b.cfg.Statements); err != nil {
+	if err := collect(b.cfg.Statements, ""); err != nil {
 		return nil, err
 	}
 	for _, view := range bind9.Find(b.cfg.Statements, "view") {
-		if err := collect(view.Block); err != nil {
+		if err := collect(view.Block, view.Arg(0)); err != nil {
 			return nil, err
 		}
 	}

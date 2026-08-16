@@ -4086,6 +4086,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bind9.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Key).GetName()).ToDataRes(types.String)
 	},
+	"bind9.key.view": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Key).GetView()).ToDataRes(types.String)
+	},
 	"bind9.key.algorithm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBind9Key).GetAlgorithm()).ToDataRes(types.String)
 	},
@@ -16665,6 +16668,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bind9.key.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBind9Key).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.key.view": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Key).View, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"bind9.key.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39677,6 +39684,7 @@ type mqlBind9Key struct {
 	__id       string
 	// optional: if you define mqlBind9KeyInternal it will be used here
 	Name      plugin.TValue[string]
+	View      plugin.TValue[string]
 	Algorithm plugin.TValue[string]
 }
 
@@ -39714,6 +39722,10 @@ func (c *mqlBind9Key) MqlID() string {
 
 func (c *mqlBind9Key) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlBind9Key) GetView() *plugin.TValue[string] {
+	return &c.View
 }
 
 func (c *mqlBind9Key) GetAlgorithm() *plugin.TValue[string] {
