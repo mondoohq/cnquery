@@ -92,6 +92,11 @@ const (
 	ResourceApache2ConfVirtualHost                        string = "apache2.conf.virtualHost"
 	ResourceApache2ConfDirectory                          string = "apache2.conf.directory"
 	ResourceApache2ConfLocation                           string = "apache2.conf.location"
+	ResourceBind9                                         string = "bind9"
+	ResourceBind9Zone                                     string = "bind9.zone"
+	ResourceBind9Acl                                      string = "bind9.acl"
+	ResourceBind9Key                                      string = "bind9.key"
+	ResourceBind9Channel                                  string = "bind9.channel"
 	ResourceNginx                                         string = "nginx"
 	ResourceNginxConf                                     string = "nginx.conf"
 	ResourceNginxConfServer                               string = "nginx.conf.server"
@@ -872,6 +877,26 @@ func init() {
 		"apache2.conf.location": {
 			// to override args, implement: initApache2ConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createApache2ConfLocation,
+		},
+		"bind9": {
+			Init:   initBind9,
+			Create: createBind9,
+		},
+		"bind9.zone": {
+			// to override args, implement: initBind9Zone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBind9Zone,
+		},
+		"bind9.acl": {
+			// to override args, implement: initBind9Acl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBind9Acl,
+		},
+		"bind9.key": {
+			// to override args, implement: initBind9Key(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBind9Key,
+		},
+		"bind9.channel": {
+			// to override args, implement: initBind9Channel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBind9Channel,
 		},
 		"nginx": {
 			// to override args, implement: initNginx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3946,6 +3971,156 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"apache2.conf.location.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfLocation).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"bind9.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"bind9.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"bind9.recursion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetRecursion()).ToDataRes(types.Bool)
+	},
+	"bind9.dnssecValidation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetDnssecValidation()).ToDataRes(types.String)
+	},
+	"bind9.directory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetDirectory()).ToDataRes(types.String)
+	},
+	"bind9.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetVersion()).ToDataRes(types.String)
+	},
+	"bind9.minimalResponses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetMinimalResponses()).ToDataRes(types.String)
+	},
+	"bind9.allowQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAllowQuery()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.allowRecursion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAllowRecursion()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.allowTransfer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAllowTransfer()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.allowUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAllowUpdate()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.listenOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetListenOn()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.listenOnPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetListenOnPort()).ToDataRes(types.Int)
+	},
+	"bind9.listenOnV6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetListenOnV6()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.listenOnV6Port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetListenOnV6Port()).ToDataRes(types.Int)
+	},
+	"bind9.alsoNotify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAlsoNotify()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.forwarders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetForwarders()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"bind9.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetZones()).ToDataRes(types.Array(types.Resource("bind9.zone")))
+	},
+	"bind9.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetAcls()).ToDataRes(types.Array(types.Resource("bind9.acl")))
+	},
+	"bind9.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetKeys()).ToDataRes(types.Array(types.Resource("bind9.key")))
+	},
+	"bind9.channels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetChannels()).ToDataRes(types.Array(types.Resource("bind9.channel")))
+	},
+	"bind9.logCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9).GetLogCategories()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"bind9.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetName()).ToDataRes(types.String)
+	},
+	"bind9.zone.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetClass()).ToDataRes(types.String)
+	},
+	"bind9.zone.view": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetView()).ToDataRes(types.String)
+	},
+	"bind9.zone.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetType()).ToDataRes(types.String)
+	},
+	"bind9.zone.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetPath()).ToDataRes(types.String)
+	},
+	"bind9.zone.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"bind9.zone.allowTransfer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetAllowTransfer()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.zone.allowUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetAllowUpdate()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.zone.allowQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetAllowQuery()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.zone.primaries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetPrimaries()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.zone.alsoNotify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetAlsoNotify()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.zone.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Zone).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"bind9.acl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Acl).GetName()).ToDataRes(types.String)
+	},
+	"bind9.acl.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Acl).GetEntries()).ToDataRes(types.Array(types.String))
+	},
+	"bind9.key.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Key).GetName()).ToDataRes(types.String)
+	},
+	"bind9.key.view": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Key).GetView()).ToDataRes(types.String)
+	},
+	"bind9.key.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Key).GetAlgorithm()).ToDataRes(types.String)
+	},
+	"bind9.channel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetName()).ToDataRes(types.String)
+	},
+	"bind9.channel.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetPath()).ToDataRes(types.String)
+	},
+	"bind9.channel.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetTarget()).ToDataRes(types.String)
+	},
+	"bind9.channel.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetVersions()).ToDataRes(types.Int)
+	},
+	"bind9.channel.sizeLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetSizeLimit()).ToDataRes(types.Int)
+	},
+	"bind9.channel.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetSeverity()).ToDataRes(types.String)
+	},
+	"bind9.channel.syslogFacility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetSyslogFacility()).ToDataRes(types.String)
+	},
+	"bind9.channel.printTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetPrintTime()).ToDataRes(types.Bool)
+	},
+	"bind9.channel.printCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetPrintCategory()).ToDataRes(types.Bool)
+	},
+	"bind9.channel.printSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBind9Channel).GetPrintSeverity()).ToDataRes(types.Bool)
 	},
 	"nginx.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginx).GetVersion()).ToDataRes(types.String)
@@ -16325,6 +16500,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"apache2.conf.location.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlApache2ConfLocation).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"bind9.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).__id, ok = v.Value.(string)
+		return
+	},
+	"bind9.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"bind9.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.recursion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Recursion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bind9.dnssecValidation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).DnssecValidation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.directory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Directory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.minimalResponses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).MinimalResponses, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.allowQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).AllowQuery, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.allowRecursion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).AllowRecursion, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.allowTransfer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).AllowTransfer, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.allowUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).AllowUpdate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.listenOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).ListenOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.listenOnPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).ListenOnPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.listenOnV6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).ListenOnV6, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.listenOnV6Port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).ListenOnV6Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.alsoNotify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).AlsoNotify, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.forwarders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Forwarders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.channels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).Channels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.logCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9).LogCategories, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).__id, ok = v.Value.(string)
+		return
+	},
+	"bind9.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.view": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).View, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.allowTransfer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).AllowTransfer, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.allowUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).AllowUpdate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.allowQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).AllowQuery, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.primaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).Primaries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.alsoNotify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).AlsoNotify, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.zone.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Zone).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"bind9.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Acl).__id, ok = v.Value.(string)
+		return
+	},
+	"bind9.acl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Acl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.acl.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Acl).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bind9.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Key).__id, ok = v.Value.(string)
+		return
+	},
+	"bind9.key.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Key).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.key.view": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Key).View, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.key.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Key).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).__id, ok = v.Value.(string)
+		return
+	},
+	"bind9.channel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).Versions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.sizeLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).SizeLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.syslogFacility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).SyslogFacility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.printTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).PrintTime, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.printCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).PrintCategory, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bind9.channel.printSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBind9Channel).PrintSeverity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"nginx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38856,6 +39251,574 @@ func (c *mqlApache2ConfLocation) GetProxyPass() *plugin.TValue[string] {
 
 func (c *mqlApache2ConfLocation) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
+}
+
+// mqlBind9 for the bind9 resource
+type mqlBind9 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlBind9Internal
+	File             plugin.TValue[*mqlFile]
+	Files            plugin.TValue[[]any]
+	Recursion        plugin.TValue[bool]
+	DnssecValidation plugin.TValue[string]
+	Directory        plugin.TValue[string]
+	Version          plugin.TValue[string]
+	MinimalResponses plugin.TValue[string]
+	AllowQuery       plugin.TValue[[]any]
+	AllowRecursion   plugin.TValue[[]any]
+	AllowTransfer    plugin.TValue[[]any]
+	AllowUpdate      plugin.TValue[[]any]
+	ListenOn         plugin.TValue[[]any]
+	ListenOnPort     plugin.TValue[int64]
+	ListenOnV6       plugin.TValue[[]any]
+	ListenOnV6Port   plugin.TValue[int64]
+	AlsoNotify       plugin.TValue[[]any]
+	Forwarders       plugin.TValue[[]any]
+	Params           plugin.TValue[map[string]any]
+	Zones            plugin.TValue[[]any]
+	Acls             plugin.TValue[[]any]
+	Keys             plugin.TValue[[]any]
+	Channels         plugin.TValue[[]any]
+	LogCategories    plugin.TValue[map[string]any]
+}
+
+// createBind9 creates a new instance of this resource
+func createBind9(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBind9{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bind9", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBind9) MqlName() string {
+	return "bind9"
+}
+
+func (c *mqlBind9) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBind9) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlBind9) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlBind9) GetRecursion() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Recursion, func() (bool, error) {
+		return c.recursion()
+	})
+}
+
+func (c *mqlBind9) GetDnssecValidation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DnssecValidation, func() (string, error) {
+		return c.dnssecValidation()
+	})
+}
+
+func (c *mqlBind9) GetDirectory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Directory, func() (string, error) {
+		return c.directory()
+	})
+}
+
+func (c *mqlBind9) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlBind9) GetMinimalResponses() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MinimalResponses, func() (string, error) {
+		return c.minimalResponses()
+	})
+}
+
+func (c *mqlBind9) GetAllowQuery() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowQuery, func() ([]any, error) {
+		return c.allowQuery()
+	})
+}
+
+func (c *mqlBind9) GetAllowRecursion() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowRecursion, func() ([]any, error) {
+		return c.allowRecursion()
+	})
+}
+
+func (c *mqlBind9) GetAllowTransfer() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowTransfer, func() ([]any, error) {
+		return c.allowTransfer()
+	})
+}
+
+func (c *mqlBind9) GetAllowUpdate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowUpdate, func() ([]any, error) {
+		return c.allowUpdate()
+	})
+}
+
+func (c *mqlBind9) GetListenOn() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenOn, func() ([]any, error) {
+		return c.listenOn()
+	})
+}
+
+func (c *mqlBind9) GetListenOnPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ListenOnPort, func() (int64, error) {
+		return c.listenOnPort()
+	})
+}
+
+func (c *mqlBind9) GetListenOnV6() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenOnV6, func() ([]any, error) {
+		return c.listenOnV6()
+	})
+}
+
+func (c *mqlBind9) GetListenOnV6Port() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ListenOnV6Port, func() (int64, error) {
+		return c.listenOnV6Port()
+	})
+}
+
+func (c *mqlBind9) GetAlsoNotify() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlsoNotify, func() ([]any, error) {
+		return c.alsoNotify()
+	})
+}
+
+func (c *mqlBind9) GetForwarders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Forwarders, func() ([]any, error) {
+		return c.forwarders()
+	})
+}
+
+func (c *mqlBind9) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		return c.params()
+	})
+}
+
+func (c *mqlBind9) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+func (c *mqlBind9) GetAcls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "acls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.acls()
+	})
+}
+
+func (c *mqlBind9) GetKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "keys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keys()
+	})
+}
+
+func (c *mqlBind9) GetChannels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Channels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9", c.__id, "channels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.channels()
+	})
+}
+
+func (c *mqlBind9) GetLogCategories() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.LogCategories, func() (map[string]any, error) {
+		return c.logCategories()
+	})
+}
+
+// mqlBind9Zone for the bind9.zone resource
+type mqlBind9Zone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlBind9ZoneInternal
+	Name          plugin.TValue[string]
+	Class         plugin.TValue[string]
+	View          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Path          plugin.TValue[string]
+	File          plugin.TValue[*mqlFile]
+	AllowTransfer plugin.TValue[[]any]
+	AllowUpdate   plugin.TValue[[]any]
+	AllowQuery    plugin.TValue[[]any]
+	Primaries     plugin.TValue[[]any]
+	AlsoNotify    plugin.TValue[[]any]
+	Params        plugin.TValue[map[string]any]
+}
+
+// createBind9Zone creates a new instance of this resource
+func createBind9Zone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBind9Zone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bind9.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBind9Zone) MqlName() string {
+	return "bind9.zone"
+}
+
+func (c *mqlBind9Zone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBind9Zone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBind9Zone) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlBind9Zone) GetView() *plugin.TValue[string] {
+	return &c.View
+}
+
+func (c *mqlBind9Zone) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlBind9Zone) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlBind9Zone) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bind9.zone", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlBind9Zone) GetAllowTransfer() *plugin.TValue[[]any] {
+	return &c.AllowTransfer
+}
+
+func (c *mqlBind9Zone) GetAllowUpdate() *plugin.TValue[[]any] {
+	return &c.AllowUpdate
+}
+
+func (c *mqlBind9Zone) GetAllowQuery() *plugin.TValue[[]any] {
+	return &c.AllowQuery
+}
+
+func (c *mqlBind9Zone) GetPrimaries() *plugin.TValue[[]any] {
+	return &c.Primaries
+}
+
+func (c *mqlBind9Zone) GetAlsoNotify() *plugin.TValue[[]any] {
+	return &c.AlsoNotify
+}
+
+func (c *mqlBind9Zone) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlBind9Acl for the bind9.acl resource
+type mqlBind9Acl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBind9AclInternal it will be used here
+	Name    plugin.TValue[string]
+	Entries plugin.TValue[[]any]
+}
+
+// createBind9Acl creates a new instance of this resource
+func createBind9Acl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBind9Acl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bind9.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBind9Acl) MqlName() string {
+	return "bind9.acl"
+}
+
+func (c *mqlBind9Acl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBind9Acl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBind9Acl) GetEntries() *plugin.TValue[[]any] {
+	return &c.Entries
+}
+
+// mqlBind9Key for the bind9.key resource
+type mqlBind9Key struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBind9KeyInternal it will be used here
+	Name      plugin.TValue[string]
+	View      plugin.TValue[string]
+	Algorithm plugin.TValue[string]
+}
+
+// createBind9Key creates a new instance of this resource
+func createBind9Key(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBind9Key{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bind9.key", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBind9Key) MqlName() string {
+	return "bind9.key"
+}
+
+func (c *mqlBind9Key) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBind9Key) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBind9Key) GetView() *plugin.TValue[string] {
+	return &c.View
+}
+
+func (c *mqlBind9Key) GetAlgorithm() *plugin.TValue[string] {
+	return &c.Algorithm
+}
+
+// mqlBind9Channel for the bind9.channel resource
+type mqlBind9Channel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBind9ChannelInternal it will be used here
+	Name           plugin.TValue[string]
+	Path           plugin.TValue[string]
+	Target         plugin.TValue[string]
+	Versions       plugin.TValue[int64]
+	SizeLimit      plugin.TValue[int64]
+	Severity       plugin.TValue[string]
+	SyslogFacility plugin.TValue[string]
+	PrintTime      plugin.TValue[bool]
+	PrintCategory  plugin.TValue[bool]
+	PrintSeverity  plugin.TValue[bool]
+}
+
+// createBind9Channel creates a new instance of this resource
+func createBind9Channel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBind9Channel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bind9.channel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBind9Channel) MqlName() string {
+	return "bind9.channel"
+}
+
+func (c *mqlBind9Channel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBind9Channel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBind9Channel) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlBind9Channel) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlBind9Channel) GetVersions() *plugin.TValue[int64] {
+	return &c.Versions
+}
+
+func (c *mqlBind9Channel) GetSizeLimit() *plugin.TValue[int64] {
+	return &c.SizeLimit
+}
+
+func (c *mqlBind9Channel) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlBind9Channel) GetSyslogFacility() *plugin.TValue[string] {
+	return &c.SyslogFacility
+}
+
+func (c *mqlBind9Channel) GetPrintTime() *plugin.TValue[bool] {
+	return &c.PrintTime
+}
+
+func (c *mqlBind9Channel) GetPrintCategory() *plugin.TValue[bool] {
+	return &c.PrintCategory
+}
+
+func (c *mqlBind9Channel) GetPrintSeverity() *plugin.TValue[bool] {
+	return &c.PrintSeverity
 }
 
 // mqlNginx for the nginx resource
