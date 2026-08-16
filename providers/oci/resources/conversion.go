@@ -14,6 +14,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
@@ -122,6 +123,30 @@ func stringsToAny(in []string) []any {
 		out[i] = s
 	}
 	return out
+}
+
+// dictSlice converts a slice of SDK structs to []dict, keeping an absent one
+// empty rather than nil.
+//
+// convert.JsonToDictSlice marshals a nil slice to "null" and unmarshals that
+// back into a nil slice, because encoding/json sets a slice to nil for a JSON
+// null rather than leaving the empty one it was given. So a resource whose
+// list the API omitted ends up with a nil where every other list field in this
+// provider has an empty slice.
+//
+// Today that renders the same, but only because rawDataString reaches the
+// value through a bare `value.([]any)` that a typed nil happens to satisfy.
+// That is not a property worth depending on, and the inconsistency is the kind
+// that surfaces later as "why is this one field null".
+func dictSlice(in any) ([]any, error) {
+	out, err := convert.JsonToDictSlice(in)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return []any{}, nil
+	}
+	return out, nil
 }
 
 // strMapToAny converts an OCI freeform-tags-style map[string]string to

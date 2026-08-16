@@ -12,7 +12,6 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/lockbox"
 	"github.com/oracle/oci-go-sdk/v65/operatoraccesscontrol"
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -716,7 +715,7 @@ func (o *mqlOciApiAccessControl) privilegedApiRequests() ([]any, error) {
 			for i := range items {
 				request := items[i]
 
-				operations, err := convert.JsonToDictSlice(request.PrivilegedOperationList)
+				operations, err := dictSlice(request.PrivilegedOperationList)
 				if err != nil {
 					return nil, err
 				}
