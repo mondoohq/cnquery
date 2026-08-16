@@ -55,24 +55,6 @@ ${REPOROOT}/lr go ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr --dist ${PROVID
 echo "  - Generate the resource versions..."
 ${REPOROOT}/lr versions ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr
 
-# Windows binaries carry a VERSIONINFO resource and an application manifest.
-# Without them the provider .exe reports no CompanyName/ProductName/
-# FileDescription, which contributes to heuristic AV/EDR misclassification.
-#
-# This has to happen before the build loop below: both windows targets share
-# these files, so generating them inside build_bundle would race whenever
-# MAX_PARALLEL > 1.
-echo "  - Generate the Windows version resource..."
-WINRES_JSON="${PROVIDER_DIST}/winres.json"
-sed "s|__PROVIDER_NAME__|${PROVIDER_NAME}|g" \
-  "${REPOROOT}/scripts/winres/provider.json.tmpl" > "${WINRES_JSON}"
-go run github.com/tc-hib/go-winres@v0.3.3 make \
-  --in "${WINRES_JSON}" \
-  --out "${PROVIDER_PATH}/rsrc" \
-  --arch amd64,arm64 \
-  --file-version "${PROVIDER_VERSION}" \
-  --product-version "${PROVIDER_VERSION}"
-
 build_bundle(){
   set -eo pipefail
   local GOOS=$1
@@ -178,6 +160,40 @@ remove_winres() {
   rm -f "${PROVIDER_PATH}"/rsrc_windows_*.syso
 }
 
+# On every exit path, not just the expected ones: nothing clears these objects
+# at the start of a run, so a leaked one would be linked into the next windows
+# build of this provider carrying a stale version. A background build does not
+# inherit an EXIT trap, so this cannot fire while another target is linking.
+trap remove_winres EXIT
+
+# Windows binaries carry a VERSIONINFO resource and an application manifest.
+# Without them the provider .exe reports no CompanyName/ProductName/
+# FileDescription, which contributes to heuristic AV/EDR misclassification.
+#
+# This has to happen before the build loop below rather than inside
+# build_bundle: both windows targets share these files, so generating them per
+# target would race whenever MAX_PARALLEL > 1.
+#
+# The template carries only what go-winres does not already default to. Of the
+# manifest settings, `dpi-awareness` is the one that is not a default: left out,
+# a binary is marked DPI-aware, which is a claim a headless plugin has no
+# business making.
+for build in "${BUILDS[@]}"; do
+  if [[ "${build}" == windows* ]]; then
+    echo "  - Generate the Windows version resource..."
+    WINRES_JSON="${PROVIDER_DIST}/winres.json"
+    sed "s|__PROVIDER_NAME__|${PROVIDER_NAME}|g" \
+      "${REPOROOT}/scripts/winres/provider.json.tmpl" > "${WINRES_JSON}"
+    go run github.com/tc-hib/go-winres@v0.3.3 make \
+      --in "${WINRES_JSON}" \
+      --out "${PROVIDER_PATH}/rsrc" \
+      --arch amd64,arm64 \
+      --file-version "${PROVIDER_VERSION}" \
+      --product-version "${PROVIDER_VERSION}"
+    break
+  fi
+done
+
 # Kill all background build processes on interrupt/termination
 cleanup() {
   echo ""
@@ -186,7 +202,6 @@ cleanup() {
     kill "$pid" 2>/dev/null || true
   done
   wait 2>/dev/null
-  remove_winres
   exit 130
 }
 trap cleanup INT TERM
@@ -214,8 +229,6 @@ done
 for pid in "${PIDS[@]}"; do
   wait "$pid" || FAILED=1
 done
-
-remove_winres
 
 if [ $FAILED -ne 0 ]; then
   echo "One or more architecture builds failed."
