@@ -448,6 +448,20 @@ var kdeneon = &PlatformResolver{
 	},
 }
 
+// elxr is a Debian derivative (os-release carries ID=elxr, ID_LIKE=debian).
+// It ships dpkg/apt, so it has to resolve inside the debian family for the
+// package manager and the debian-specific resources to be selected.
+var elxr = &PlatformResolver{
+	Name:     "elxr",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "elxr" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
 	Name:     "redhat",
@@ -1252,7 +1266,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux, tails, kdeneon},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux, tails, kdeneon, elxr},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},

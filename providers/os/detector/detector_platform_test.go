@@ -1250,6 +1250,17 @@ func TestGardenLinuxDetector_1877(t *testing.T) {
 	assert.Equal(t, "1877.9", di.Version, "os version should be identified")
 }
 
+func TestElxrDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-elxr-12.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "elxr", di.Name, "os name should be identified")
+	assert.Equal(t, "eLxr 12 (aria)", di.Title, "os title should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+	assert.Equal(t, "12", di.Version, "os version should be identified")
+}
+
 func TestCachyOSDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-cachyos.toml")
 	assert.Nil(t, err, "was able to create the provider")
