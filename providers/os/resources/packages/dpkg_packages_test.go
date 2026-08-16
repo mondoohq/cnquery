@@ -284,14 +284,16 @@ func TestDpkgNoSpuriousIgnoreLog(t *testing.T) {
 	pf := &inventory.Platform{Name: "ubuntu", Version: "24.04", Arch: "amd64"}
 	status := "Package: first\nStatus: install ok installed\nVersion: 1.0\nArchitecture: amd64\n\n"
 
+	// The parser logs through the process-wide zerolog logger, so observing
+	// what it writes means swapping that logger for the duration of this test.
+	// No test in this package runs in parallel and the parser logs from the
+	// calling goroutine only, so nothing else can read the logger while it is
+	// swapped. If a parallel test is ever added here, this has to move to a
+	// logger passed into the parser rather than the global one.
 	var out bytes.Buffer
-	origLogger, origLevel := log.Logger, zerolog.GlobalLevel()
+	origLogger := log.Logger
 	log.Logger = zerolog.New(&out)
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	defer func() {
-		log.Logger = origLogger
-		zerolog.SetGlobalLevel(origLevel)
-	}()
+	defer func() { log.Logger = origLogger }()
 
 	pkgs, err := ParseDpkgPackages(pf, bytes.NewReader([]byte(status)))
 	require.NoError(t, err)
