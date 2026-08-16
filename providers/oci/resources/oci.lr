@@ -9328,7 +9328,7 @@ private oci.artifacts.containerImage @defaults("name digest state") {
   // Principal that pushed the image
   createdBy() string
   // Number of times the image has been pulled
-  pullCount int
+  pullCount() int
   // Time the image was last pulled
   timeLastPulled() time
   // Bytes consumed by the image's layers

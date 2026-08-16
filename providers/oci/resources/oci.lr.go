@@ -53980,7 +53980,9 @@ func (c *mqlOciArtifactsContainerImage) GetCreatedBy() *plugin.TValue[string] {
 }
 
 func (c *mqlOciArtifactsContainerImage) GetPullCount() *plugin.TValue[int64] {
-	return &c.PullCount
+	return plugin.GetOrCompute[int64](&c.PullCount, func() (int64, error) {
+		return c.pullCount()
+	})
 }
 
 func (c *mqlOciArtifactsContainerImage) GetTimeLastPulled() *plugin.TValue[*time.Time] {
