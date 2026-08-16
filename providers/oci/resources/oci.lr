@@ -2623,13 +2623,29 @@ private oci.objectStorage.retentionRule @defaults("name") {
 // Oracle Cloud Infrastructure (OCI) File Storage
 //
 // Managed NFS file systems across the tenancy's availability domains,
-// exposed through fileSystems. Each entry reports its metered byte
-// usage, lifecycle state, the KMS key protecting its data at rest,
-// and the availability domain it is anchored to, so you can audit
-// encryption coverage and storage consumption fleet-wide.
+// exposed through fileSystems, together with the machinery that decides
+// who may mount them. `exports` carries the NFS export options that
+// authorize clients by source CIDR, `mountTargets` carries the network
+// placement and Kerberos or LDAP identity mapping each export is served
+// through, and `exportSets` groups the exports served by one mount
+// target. `replications`, `snapshotPolicies` and `outboundConnectors`
+// cover cross-region copies, snapshot retention, and the LDAP servers
+// mount targets bind to.
 oci.fileStorage {
   // File systems
   fileSystems() []oci.fileStorage.fileSystem
+  // Mount targets serving NFS exports
+  mountTargets() []oci.fileStorage.mountTarget
+  // Export sets grouping the exports on a mount target
+  exportSets() []oci.fileStorage.exportSet
+  // NFS exports and the client options authorizing them
+  exports() []oci.fileStorage.export
+  // Snapshot policies and their schedules
+  snapshotPolicies() []oci.fileStorage.snapshotPolicy
+  // Cross-region file system replications
+  replications() []oci.fileStorage.replication
+  // Outbound connectors mount targets bind to for LDAP identity mapping
+  outboundConnectors() []oci.fileStorage.outboundConnector
 }
 
 // Oracle Cloud Infrastructure (OCI) file system
@@ -2662,6 +2678,28 @@ private oci.fileStorage.fileSystem @defaults("name") {
   parentFileSystem() oci.fileStorage.fileSystem
   // Whether this file system is the parent of at least one clone
   isCloneParent bool
+  // NFS exports publishing this file system
+  //
+  // Each export publishes the file system at a path on one mount target and
+  // carries the client options deciding which source addresses may mount it
+  // and with what access. A file system with no exports is unreachable over
+  // NFS whatever its mount targets allow.
+  exports() []oci.fileStorage.export
+  // Snapshots of this file system
+  snapshots() []oci.fileStorage.snapshot
+  // Snapshot policy scheduling this file system's snapshots
+  snapshotPolicy() oci.fileStorage.snapshotPolicy
+  // Storage quota rules applied to this file system
+  //
+  // Rules are reported for every principal scope the service supports:
+  // whole-file-system, default user and group, and individual users and
+  // groups.
+  quotaRules() []oci.fileStorage.quotaRule
+  // Quota enforcement state
+  //
+  // One of ENABLING, ENABLED, DISABLING, DISABLED, SYNCING, or FAILED. Only
+  // ENABLED means the rules in `quotaRules` are being applied.
+  quotaEnforcementState string
   // File system creation time
   created time
   // Free-form tags for resource management
@@ -2674,6 +2712,447 @@ private oci.fileStorage.fileSystem @defaults("name") {
   // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) mount target
+//
+// NFS endpoint a file system is served through. The mount target owns the
+// network placement of the share: `subnet` and `securityGroups` decide which
+// clients can reach it at all, and `privateIpIds` are the addresses it answers
+// on. Identity mapping is set here too, through `idmapType` with the `ldap`
+// fields, or through Kerberos with `kerberosEnabled` and `kerberosRealm`. The
+// exports served through this target hang off `exportSet`.
+private oci.fileStorage.mountTarget @defaults("name state availabilityDomain") {
+  // Mount target OCID
+  id string
+  // Mount target display name
+  name string
+  // Compartment containing the mount target
+  compartment() oci.compartment
+  // Availability domain the mount target is in
+  availabilityDomain string
+  // Mount target lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Subnet the mount target's addresses are allocated from
+  subnet() oci.network.subnet
+  // Network security groups applied to the mount target
+  //
+  // The NSGs are the mount target's own packet filter, evaluated in addition
+  // to the subnet's security lists. A mount target with no NSGs is
+  // constrained only by its subnet.
+  securityGroups() []oci.network.networkSecurityGroup
+  // Export set holding the exports this mount target serves
+  exportSet() oci.fileStorage.exportSet
+  // OCIDs of the private IP addresses the mount target answers on
+  privateIpIds []string
+  // OCIDs of the IPv6 addresses the mount target answers on
+  ipv6Ids []string
+  // Identity mapping mode for UNIX credentials
+  //
+  // LDAP when the mount target maps incoming UIDs and GIDs through the
+  // directory named by the `ldap` fields, NONE when it trusts the credentials
+  // the client presents.
+  idmapType() string
+  // LDAP schema the identity mapping reads
+  //
+  // RFC2307 or RFC2307BIS.
+  ldapSchemaType() string
+  // Base distinguished name user lookups start from
+  ldapUserSearchBase() string
+  // Base distinguished name group lookups start from
+  ldapGroupSearchBase() string
+  // Seconds between refreshes of the identity mapping cache
+  ldapCacheRefreshIntervalSeconds() int
+  // Seconds a cached identity mapping stays valid
+  ldapCacheLifetimeSeconds() int
+  // Seconds a failed identity lookup is remembered
+  ldapNegativeCacheLifetimeSeconds() int
+  // Outbound connectors the identity mapping binds to
+  ldapOutboundConnectors() []oci.fileStorage.outboundConnector
+  // Whether Kerberos authentication is enabled on the mount target
+  //
+  // With Kerberos enabled the export options may demand KRB5, KRB5I or KRB5P
+  // rather than AUTH_SYS, which is what moves the trust decision off the
+  // client's self-asserted UID.
+  kerberosEnabled() bool
+  // Kerberos realm the mount target authenticates against
+  kerberosRealm() string
+  // Vault secret holding the mount target's Kerberos keytab
+  kerberosKeyTabSecret() oci.vault.secret
+  // Keytab secret version currently in use
+  kerberosKeyTabSecretVersion() int
+  // Keytab secret version kept as the fallback
+  kerberosBackupKeyTabSecretVersion() int
+  // Throughput requested for the mount target, in bytes per second
+  requestedThroughput int
+  // Throughput currently observed on the mount target, in bytes per second
+  observedThroughput int
+  // Storage capacity reserved for the mount target, in bytes
+  reservedStorageCapacity int
+  // Mount target creation time
+  created time
+  // Security attributes applied to the mount target, keyed by namespace
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to this mount target's values. Zero Trust
+  // Packet Routing authorizes traffic from these rather than from the mount
+  // target's address.
+  securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) export set
+//
+// Group of NFS exports served through one mount target. The export set is
+// bound to a VCN, so it also records which virtual network the file systems
+// under it are published into. `maxFsStatBytes` and `maxFsStatFiles` are the
+// capacity figures the exports report back to NFS clients.
+private oci.fileStorage.exportSet @defaults("name state availabilityDomain") {
+  // Export set OCID
+  id string
+  // Export set display name
+  name string
+  // Compartment containing the export set
+  compartment() oci.compartment
+  // Availability domain the export set is in
+  availabilityDomain string
+  // Export set lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED)
+  state string
+  // Virtual cloud network the export set publishes into
+  vcn() oci.network.vcn
+  // Exports in this export set
+  exports() []oci.fileStorage.export
+  // Capacity reported to NFS clients, in bytes
+  maxFsStatBytes() int
+  // File count reported to NFS clients
+  maxFsStatFiles() int
+  // Export set creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) NFS export
+//
+// Publication of one file system at a path on one mount target, and the point
+// where NFS access is authorized. The `options` list is the access control:
+// each entry admits a source CIDR with read-write or read-only access, decides
+// whether root is squashed, and names the authentication flavors accepted. An
+// export whose options admit `0.0.0.0/0` with `identitySquash` set to NONE is
+// an open share with root access.
+private oci.fileStorage.export @defaults("path state") {
+  // Export OCID
+  id string
+  // Path the file system is exported at
+  path string
+  // Export lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED)
+  state string
+  // File system published by this export
+  fileSystem() oci.fileStorage.fileSystem
+  // Export set this export belongs to
+  exportSet() oci.fileStorage.exportSet
+  // Client options authorizing access to the export
+  options() []oci.fileStorage.export.option
+  // Whether supplementary groups are looked up through identity mapping for AUTH_SYS clients
+  //
+  // With this off, an AUTH_SYS client's own list of supplementary groups is
+  // trusted as sent, so a client can claim membership of any group.
+  isIdmapGroupsForSysAuth bool
+  // Export creation time
+  created time
+}
+
+// Client options on an NFS export
+//
+// One access rule on an export: which client addresses it covers and what they
+// are allowed to do. `source` is the CIDR or address the rule applies to,
+// `access` is READ_WRITE or READ_ONLY, and `identitySquash` decides whether
+// incoming root or all users are remapped to the anonymous UID and GID.
+// `allowedAuth` names the authentication flavors accepted, which is where a
+// Kerberos requirement is expressed.
+private oci.fileStorage.export.option @defaults("source access identitySquash") {
+  // Source address or CIDR block the rule applies to
+  source string
+  // Access granted to matching clients
+  //
+  // READ_WRITE or READ_ONLY.
+  access string
+  // Which incoming identities are remapped to the anonymous UID and GID
+  //
+  // NONE leaves client credentials as sent, ROOT remaps only UID 0, and ALL
+  // remaps every user. NONE on a wide source is what lets a client mount the
+  // share as root.
+  identitySquash string
+  // Whether clients must connect from a privileged source port below 1024
+  requirePrivilegedSourcePort bool
+  // UID that squashed identities are remapped to
+  anonymousUid int
+  // GID that squashed identities are remapped to
+  anonymousGid int
+  // Whether unauthenticated access is allowed
+  isAnonymousAccessAllowed bool
+  // Authentication flavors accepted from matching clients
+  //
+  // Any of SYS, KRB5, KRB5I, or KRB5P. SYS is unauthenticated in the sense
+  // that the client asserts its own UID and GID.
+  allowedAuth []string
+}
+
+// Oracle Cloud Infrastructure (OCI) file system snapshot
+//
+// Point-in-time copy of a file system. `snapshotType` separates snapshots a
+// user took from ones a snapshot policy or a replication created, and
+// `expirationTime` is when a policy-created snapshot is due to be removed.
+private oci.fileStorage.snapshot @defaults("name snapshotType state") {
+  // Snapshot OCID
+  id string
+  // Snapshot name
+  name string
+  // Snapshot lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED)
+  state string
+  // File system this snapshot was taken from
+  fileSystem() oci.fileStorage.fileSystem
+  // How the snapshot was created
+  //
+  // USER for a manually taken snapshot, POLICY_BASED for one a snapshot
+  // policy scheduled, and REPLICATION for one taken to support replication.
+  snapshotType string
+  // Time the snapshot represents
+  snapshotTime time
+  // Time the snapshot is due to be removed
+  expirationTime time
+  // Whether a file system has been cloned from this snapshot
+  isCloneSource bool
+  // Bytes held only by this snapshot and no other
+  exclusiveBytes int
+  // Snapshot creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) file system snapshot policy
+//
+// Schedule governing when snapshots of the file systems attached to it are
+// taken and how long they are kept. The `schedules` carry the period and the
+// retention duration, so this is where a retention requirement is proved or
+// disproved. A policy in the INACTIVE state takes no snapshots at all while
+// still being attached.
+private oci.fileStorage.snapshotPolicy @defaults("name state availabilityDomain") {
+  // Snapshot policy OCID
+  id string
+  // Snapshot policy display name
+  name string
+  // Compartment containing the snapshot policy
+  compartment() oci.compartment
+  // Availability domain the snapshot policy is in
+  availabilityDomain string
+  // Snapshot policy lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, INACTIVE, FAILED)
+  state string
+  // Prefix prepended to the names of snapshots this policy takes
+  policyPrefix string
+  // Schedules on which snapshots are taken
+  schedules() []oci.fileStorage.snapshotPolicy.schedule
+  // Snapshot policy creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Schedule on a file system snapshot policy
+//
+// One recurrence in a snapshot policy: how often a snapshot is taken and how
+// long it is kept. `retentionDurationInSeconds` is the retention control, and
+// it is absent when snapshots taken on this schedule are kept indefinitely.
+private oci.fileStorage.snapshotPolicy.schedule @defaults("period retentionDurationInSeconds") {
+  // How often the schedule runs
+  //
+  // One of HOURLY, DAILY, WEEKLY, MONTHLY, or YEARLY.
+  period string
+  // Time zone the schedule's clock fields are interpreted in
+  //
+  // UTC or REGIONAL_DATA_CENTER_TIME.
+  timeZone string
+  // Prefix prepended to the names of snapshots this schedule takes
+  schedulePrefix string
+  // Time the schedule starts taking snapshots
+  timeScheduleStart time
+  // Seconds a snapshot taken on this schedule is kept
+  //
+  // Null when snapshots on this schedule are kept indefinitely.
+  retentionDurationInSeconds int
+  // Hour of the day the schedule runs
+  hourOfDay int
+  // Day of the week the schedule runs
+  //
+  // One of MONDAY through SUNDAY.
+  dayOfWeek string
+  // Day of the month the schedule runs
+  dayOfMonth int
+  // Month the schedule runs
+  //
+  // One of JANUARY through DECEMBER.
+  month string
+}
+
+// Oracle Cloud Infrastructure (OCI) file system replication
+//
+// Scheduled copy of a file system to a target file system, usually in another
+// region. Replication moves the data out of the source region on the interval
+// in `replicationInterval`, so this is the resource that answers where a file
+// system's contents are allowed to land. `recoveryPointTime` is how current
+// the target copy is.
+private oci.fileStorage.replication @defaults("name state replicationInterval") {
+  // Replication OCID
+  id string
+  // Replication display name
+  name string
+  // Compartment containing the replication
+  compartment() oci.compartment
+  // Availability domain the replication is in
+  availabilityDomain string
+  // Replication lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // File system being copied
+  sourceFileSystem() oci.fileStorage.fileSystem
+  // File system being copied to
+  //
+  // Null when the target is in a region this scan does not cover, which is
+  // the common case for a cross-region replication.
+  targetFileSystem() oci.fileStorage.fileSystem
+  // Seconds between replication cycles
+  replicationInterval int
+  // Time the target copy is current as of
+  recoveryPointTime time
+  // Progress of the current replication cycle
+  //
+  // One of IDLE, CAPTURING, APPLYING, TRANSFERRING, SERVICE_ERROR,
+  // USER_ERROR, or FAILED.
+  deltaStatus() string
+  // Detail behind the current lifecycle state
+  lifecycleDetails string
+  // Replication creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) outbound connector
+//
+// Directory server a mount target binds to when it maps UNIX identities
+// through LDAP. The connector is credential-bearing: `bindDistinguishedName`
+// is the account it binds as, `passwordSecret` holds that account's password,
+// and `trustedCertificateSecret` holds the certificate the LDAP connection is
+// validated against. `endpoints` are the hosts and ports it connects to.
+private oci.fileStorage.outboundConnector @defaults("name connectorType state") {
+  // Outbound connector OCID
+  id string
+  // Outbound connector display name
+  name string
+  // Compartment containing the outbound connector
+  compartment() oci.compartment
+  // Availability domain the outbound connector is in
+  availabilityDomain string
+  // Outbound connector lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED)
+  state string
+  // Kind of directory the connector reaches
+  //
+  // LDAPBIND is the only kind the service offers today.
+  connectorType string
+  // Distinguished name the connector binds to the directory as
+  bindDistinguishedName string
+  // Directory hosts and ports the connector reaches, each with `hostname` and `port`
+  endpoints []dict
+  // Vault secret holding the bind account's password
+  passwordSecret() oci.vault.secret
+  // Vault secret version holding the bind account's password
+  passwordSecretVersion() int
+  // Vault secret holding the certificate the LDAP connection is validated against
+  //
+  // Null when the connector does not validate the directory's certificate.
+  trustedCertificateSecret() oci.vault.secret
+  // Vault secret version holding the trusted certificate
+  trustedCertificateSecretVersion() int
+  // Outbound connector creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) file system quota rule
+//
+// Storage limit applied to a file system as a whole or to one user or group
+// within it. `isHardQuota` separates a limit that blocks writes from one that
+// only reports, and `usageInBytes` against `quotaLimitInGigabytes` is how far
+// the principal is from that limit.
+private oci.fileStorage.quotaRule @defaults("name principalType quotaLimitInGigabytes") {
+  // Quota rule OCID
+  id string
+  // Quota rule display name
+  name string
+  // File system the quota rule applies to
+  fileSystem() oci.fileStorage.fileSystem
+  // Scope the quota rule applies to
+  //
+  // One of FILE_SYSTEM_LEVEL, DEFAULT_USER, DEFAULT_GROUP, INDIVIDUAL_USER,
+  // or INDIVIDUAL_GROUP.
+  principalType string
+  // UID or GID the rule applies to, for the individual scopes
+  principalId int
+  // Whether exceeding the limit blocks writes rather than only being reported
+  isHardQuota bool
+  // Storage limit in gigabytes
+  quotaLimitInGigabytes int
+  // Storage currently consumed under this rule, in bytes
+  usageInBytes int
+  // Quota rule creation time
+  created time
+  // Last modification time
+  timeUpdated time
 }
 
 // Oracle Cloud Infrastructure (OCI) Events

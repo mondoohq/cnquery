@@ -84,6 +84,16 @@ const (
 	ResourceOciObjectStorageRetentionRule                            string = "oci.objectStorage.retentionRule"
 	ResourceOciFileStorage                                           string = "oci.fileStorage"
 	ResourceOciFileStorageFileSystem                                 string = "oci.fileStorage.fileSystem"
+	ResourceOciFileStorageMountTarget                                string = "oci.fileStorage.mountTarget"
+	ResourceOciFileStorageExportSet                                  string = "oci.fileStorage.exportSet"
+	ResourceOciFileStorageExport                                     string = "oci.fileStorage.export"
+	ResourceOciFileStorageExportOption                               string = "oci.fileStorage.export.option"
+	ResourceOciFileStorageSnapshot                                   string = "oci.fileStorage.snapshot"
+	ResourceOciFileStorageSnapshotPolicy                             string = "oci.fileStorage.snapshotPolicy"
+	ResourceOciFileStorageSnapshotPolicySchedule                     string = "oci.fileStorage.snapshotPolicy.schedule"
+	ResourceOciFileStorageReplication                                string = "oci.fileStorage.replication"
+	ResourceOciFileStorageOutboundConnector                          string = "oci.fileStorage.outboundConnector"
+	ResourceOciFileStorageQuotaRule                                  string = "oci.fileStorage.quotaRule"
 	ResourceOciEvents                                                string = "oci.events"
 	ResourceOciEventsRule                                            string = "oci.events.rule"
 	ResourceOciCloudGuard                                            string = "oci.cloudGuard"
@@ -520,6 +530,46 @@ func init() {
 		"oci.fileStorage.fileSystem": {
 			Init:   initOciFileStorageFileSystem,
 			Create: createOciFileStorageFileSystem,
+		},
+		"oci.fileStorage.mountTarget": {
+			// to override args, implement: initOciFileStorageMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageMountTarget,
+		},
+		"oci.fileStorage.exportSet": {
+			Init:   initOciFileStorageExportSet,
+			Create: createOciFileStorageExportSet,
+		},
+		"oci.fileStorage.export": {
+			// to override args, implement: initOciFileStorageExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageExport,
+		},
+		"oci.fileStorage.export.option": {
+			// to override args, implement: initOciFileStorageExportOption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageExportOption,
+		},
+		"oci.fileStorage.snapshot": {
+			// to override args, implement: initOciFileStorageSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageSnapshot,
+		},
+		"oci.fileStorage.snapshotPolicy": {
+			Init:   initOciFileStorageSnapshotPolicy,
+			Create: createOciFileStorageSnapshotPolicy,
+		},
+		"oci.fileStorage.snapshotPolicy.schedule": {
+			// to override args, implement: initOciFileStorageSnapshotPolicySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageSnapshotPolicySchedule,
+		},
+		"oci.fileStorage.replication": {
+			// to override args, implement: initOciFileStorageReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageReplication,
+		},
+		"oci.fileStorage.outboundConnector": {
+			Init:   initOciFileStorageOutboundConnector,
+			Create: createOciFileStorageOutboundConnector,
+		},
+		"oci.fileStorage.quotaRule": {
+			// to override args, implement: initOciFileStorageQuotaRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageQuotaRule,
 		},
 		"oci.events": {
 			// to override args, implement: initOciEvents(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3661,6 +3711,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.fileStorage.fileSystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorage).GetFileSystems()).ToDataRes(types.Array(types.Resource("oci.fileStorage.fileSystem")))
 	},
+	"oci.fileStorage.mountTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetMountTargets()).ToDataRes(types.Array(types.Resource("oci.fileStorage.mountTarget")))
+	},
+	"oci.fileStorage.exportSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetExportSets()).ToDataRes(types.Array(types.Resource("oci.fileStorage.exportSet")))
+	},
+	"oci.fileStorage.exports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetExports()).ToDataRes(types.Array(types.Resource("oci.fileStorage.export")))
+	},
+	"oci.fileStorage.snapshotPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetSnapshotPolicies()).ToDataRes(types.Array(types.Resource("oci.fileStorage.snapshotPolicy")))
+	},
+	"oci.fileStorage.replications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetReplications()).ToDataRes(types.Array(types.Resource("oci.fileStorage.replication")))
+	},
+	"oci.fileStorage.outboundConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetOutboundConnectors()).ToDataRes(types.Array(types.Resource("oci.fileStorage.outboundConnector")))
+	},
 	"oci.fileStorage.fileSystem.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetId()).ToDataRes(types.String)
 	},
@@ -3691,6 +3759,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.fileStorage.fileSystem.isCloneParent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetIsCloneParent()).ToDataRes(types.Bool)
 	},
+	"oci.fileStorage.fileSystem.exports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetExports()).ToDataRes(types.Array(types.Resource("oci.fileStorage.export")))
+	},
+	"oci.fileStorage.fileSystem.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetSnapshots()).ToDataRes(types.Array(types.Resource("oci.fileStorage.snapshot")))
+	},
+	"oci.fileStorage.fileSystem.snapshotPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetSnapshotPolicy()).ToDataRes(types.Resource("oci.fileStorage.snapshotPolicy"))
+	},
+	"oci.fileStorage.fileSystem.quotaRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetQuotaRules()).ToDataRes(types.Array(types.Resource("oci.fileStorage.quotaRule")))
+	},
+	"oci.fileStorage.fileSystem.quotaEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetQuotaEnforcementState()).ToDataRes(types.String)
+	},
 	"oci.fileStorage.fileSystem.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetCreated()).ToDataRes(types.Time)
 	},
@@ -3702,6 +3785,402 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.fileStorage.fileSystem.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.mountTarget.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.fileStorage.mountTarget.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
+	},
+	"oci.fileStorage.mountTarget.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
+	"oci.fileStorage.mountTarget.exportSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetExportSet()).ToDataRes(types.Resource("oci.fileStorage.exportSet"))
+	},
+	"oci.fileStorage.mountTarget.privateIpIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetPrivateIpIds()).ToDataRes(types.Array(types.String))
+	},
+	"oci.fileStorage.mountTarget.ipv6Ids": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetIpv6Ids()).ToDataRes(types.Array(types.String))
+	},
+	"oci.fileStorage.mountTarget.idmapType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetIdmapType()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.ldapSchemaType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapSchemaType()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.ldapUserSearchBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapUserSearchBase()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.ldapGroupSearchBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapGroupSearchBase()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.ldapCacheRefreshIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapCacheRefreshIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.ldapCacheLifetimeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapCacheLifetimeSeconds()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.ldapNegativeCacheLifetimeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapNegativeCacheLifetimeSeconds()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.ldapOutboundConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetLdapOutboundConnectors()).ToDataRes(types.Array(types.Resource("oci.fileStorage.outboundConnector")))
+	},
+	"oci.fileStorage.mountTarget.kerberosEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetKerberosEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.fileStorage.mountTarget.kerberosRealm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetKerberosRealm()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.mountTarget.kerberosKeyTabSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetKerberosKeyTabSecret()).ToDataRes(types.Resource("oci.vault.secret"))
+	},
+	"oci.fileStorage.mountTarget.kerberosKeyTabSecretVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetKerberosKeyTabSecretVersion()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.kerberosBackupKeyTabSecretVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetKerberosBackupKeyTabSecretVersion()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.requestedThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetRequestedThroughput()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.observedThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetObservedThroughput()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.reservedStorageCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetReservedStorageCapacity()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.mountTarget.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.mountTarget.securityAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetSecurityAttributes()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.mountTarget.appliedSecurityAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetAppliedSecurityAttributes()).ToDataRes(types.Array(types.Resource("oci.securityAttributes.applied")))
+	},
+	"oci.fileStorage.mountTarget.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.fileStorage.mountTarget.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.fileStorage.mountTarget.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageMountTarget).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.exportSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.exportSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.exportSet.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.fileStorage.exportSet.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.exportSet.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.exportSet.vcn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetVcn()).ToDataRes(types.Resource("oci.network.vcn"))
+	},
+	"oci.fileStorage.exportSet.exports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetExports()).ToDataRes(types.Array(types.Resource("oci.fileStorage.export")))
+	},
+	"oci.fileStorage.exportSet.maxFsStatBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetMaxFsStatBytes()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.exportSet.maxFsStatFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetMaxFsStatFiles()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.exportSet.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportSet).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.export.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.export.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetPath()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.export.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.export.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetFileSystem()).ToDataRes(types.Resource("oci.fileStorage.fileSystem"))
+	},
+	"oci.fileStorage.export.exportSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetExportSet()).ToDataRes(types.Resource("oci.fileStorage.exportSet"))
+	},
+	"oci.fileStorage.export.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetOptions()).ToDataRes(types.Array(types.Resource("oci.fileStorage.export.option")))
+	},
+	"oci.fileStorage.export.isIdmapGroupsForSysAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetIsIdmapGroupsForSysAuth()).ToDataRes(types.Bool)
+	},
+	"oci.fileStorage.export.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExport).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.export.option.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetSource()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.export.option.access": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetAccess()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.export.option.identitySquash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetIdentitySquash()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.export.option.requirePrivilegedSourcePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetRequirePrivilegedSourcePort()).ToDataRes(types.Bool)
+	},
+	"oci.fileStorage.export.option.anonymousUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetAnonymousUid()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.export.option.anonymousGid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetAnonymousGid()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.export.option.isAnonymousAccessAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetIsAnonymousAccessAllowed()).ToDataRes(types.Bool)
+	},
+	"oci.fileStorage.export.option.allowedAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageExportOption).GetAllowedAuth()).ToDataRes(types.Array(types.String))
+	},
+	"oci.fileStorage.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshot.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshot.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetFileSystem()).ToDataRes(types.Resource("oci.fileStorage.fileSystem"))
+	},
+	"oci.fileStorage.snapshot.snapshotType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetSnapshotType()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshot.snapshotTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetSnapshotTime()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.snapshot.expirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetExpirationTime()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.snapshot.isCloneSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetIsCloneSource()).ToDataRes(types.Bool)
+	},
+	"oci.fileStorage.snapshot.exclusiveBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetExclusiveBytes()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.snapshot.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.snapshot.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.fileStorage.snapshot.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.fileStorage.snapshot.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshot).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.snapshotPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.fileStorage.snapshotPolicy.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.policyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetPolicyPrefix()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.schedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetSchedules()).ToDataRes(types.Array(types.Resource("oci.fileStorage.snapshotPolicy.schedule")))
+	},
+	"oci.fileStorage.snapshotPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.snapshotPolicy.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.fileStorage.snapshotPolicy.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.fileStorage.snapshotPolicy.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicy).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.period": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetPeriod()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.timeZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetTimeZone()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.schedulePrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetSchedulePrefix()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.timeScheduleStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetTimeScheduleStart()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.retentionDurationInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetRetentionDurationInSeconds()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.hourOfDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetHourOfDay()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.dayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetDayOfWeek()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.dayOfMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetDayOfMonth()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.month": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageSnapshotPolicySchedule).GetMonth()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.fileStorage.replication.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.sourceFileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetSourceFileSystem()).ToDataRes(types.Resource("oci.fileStorage.fileSystem"))
+	},
+	"oci.fileStorage.replication.targetFileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetTargetFileSystem()).ToDataRes(types.Resource("oci.fileStorage.fileSystem"))
+	},
+	"oci.fileStorage.replication.replicationInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetReplicationInterval()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.replication.recoveryPointTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetRecoveryPointTime()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.replication.deltaStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetDeltaStatus()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.replication.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.replication.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.fileStorage.replication.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.fileStorage.replication.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageReplication).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.outboundConnector.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.outboundConnector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.outboundConnector.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.fileStorage.outboundConnector.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.outboundConnector.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.outboundConnector.connectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetConnectorType()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.outboundConnector.bindDistinguishedName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetBindDistinguishedName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.outboundConnector.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.fileStorage.outboundConnector.passwordSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetPasswordSecret()).ToDataRes(types.Resource("oci.vault.secret"))
+	},
+	"oci.fileStorage.outboundConnector.passwordSecretVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetPasswordSecretVersion()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.outboundConnector.trustedCertificateSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetTrustedCertificateSecret()).ToDataRes(types.Resource("oci.vault.secret"))
+	},
+	"oci.fileStorage.outboundConnector.trustedCertificateSecretVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetTrustedCertificateSecretVersion()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.outboundConnector.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.outboundConnector.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.fileStorage.outboundConnector.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.fileStorage.outboundConnector.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageOutboundConnector).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.fileStorage.quotaRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.quotaRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.quotaRule.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetFileSystem()).ToDataRes(types.Resource("oci.fileStorage.fileSystem"))
+	},
+	"oci.fileStorage.quotaRule.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.quotaRule.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetPrincipalId()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.quotaRule.isHardQuota": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetIsHardQuota()).ToDataRes(types.Bool)
+	},
+	"oci.fileStorage.quotaRule.quotaLimitInGigabytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetQuotaLimitInGigabytes()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.quotaRule.usageInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetUsageInBytes()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.quotaRule.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.fileStorage.quotaRule.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageQuotaRule).GetTimeUpdated()).ToDataRes(types.Time)
 	},
 	"oci.events.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciEvents).GetRules()).ToDataRes(types.Array(types.Resource("oci.events.rule")))
@@ -12567,6 +13046,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciFileStorage).FileSystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.fileStorage.mountTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).MountTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).ExportSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).Exports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).SnapshotPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).Replications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).OutboundConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.fileStorage.fileSystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFileStorageFileSystem).__id, ok = v.Value.(string)
 		return
@@ -12611,6 +13114,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciFileStorageFileSystem).IsCloneParent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"oci.fileStorage.fileSystem.exports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).Exports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.snapshotPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).SnapshotPolicy, ok = plugin.RawToTValue[*mqlOciFileStorageSnapshotPolicy](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.quotaRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).QuotaRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.quotaEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).QuotaEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"oci.fileStorage.fileSystem.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFileStorageFileSystem).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -12625,6 +13148,574 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.fileStorage.fileSystem.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciFileStorageFileSystem).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.mountTarget.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.exportSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).ExportSet, ok = plugin.RawToTValue[*mqlOciFileStorageExportSet](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.privateIpIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).PrivateIpIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ipv6Ids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).Ipv6Ids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.idmapType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).IdmapType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapSchemaType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapSchemaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapUserSearchBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapUserSearchBase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapGroupSearchBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapGroupSearchBase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapCacheRefreshIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapCacheRefreshIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapCacheLifetimeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapCacheLifetimeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapNegativeCacheLifetimeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapNegativeCacheLifetimeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.ldapOutboundConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).LdapOutboundConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.kerberosEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).KerberosEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.kerberosRealm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).KerberosRealm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.kerberosKeyTabSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).KerberosKeyTabSecret, ok = plugin.RawToTValue[*mqlOciVaultSecret](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.kerberosKeyTabSecretVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).KerberosKeyTabSecretVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.kerberosBackupKeyTabSecretVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).KerberosBackupKeyTabSecretVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.requestedThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).RequestedThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.observedThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).ObservedThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.reservedStorageCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).ReservedStorageCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.securityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).SecurityAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.appliedSecurityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).AppliedSecurityAttributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.mountTarget.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageMountTarget).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.exportSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.vcn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).Vcn, ok = plugin.RawToTValue[*mqlOciNetworkVcn](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.exports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).Exports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.maxFsStatBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).MaxFsStatBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.maxFsStatFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).MaxFsStatFiles, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.exportSet.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportSet).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.export.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).FileSystem, ok = plugin.RawToTValue[*mqlOciFileStorageFileSystem](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.exportSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).ExportSet, ok = plugin.RawToTValue[*mqlOciFileStorageExportSet](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.isIdmapGroupsForSysAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).IsIdmapGroupsForSysAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExport).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.export.option.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.identitySquash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).IdentitySquash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.requirePrivilegedSourcePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).RequirePrivilegedSourcePort, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.anonymousUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).AnonymousUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.anonymousGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).AnonymousGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.isAnonymousAccessAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).IsAnonymousAccessAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.export.option.allowedAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageExportOption).AllowedAuth, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).FileSystem, ok = plugin.RawToTValue[*mqlOciFileStorageFileSystem](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.snapshotType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).SnapshotType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.snapshotTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).SnapshotTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.expirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).ExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.isCloneSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).IsCloneSource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.exclusiveBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).ExclusiveBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshot.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshot).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.policyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).PolicyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).Schedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicy).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.period": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).Period, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.timeZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).TimeZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.schedulePrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).SchedulePrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.timeScheduleStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).TimeScheduleStart, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.retentionDurationInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).RetentionDurationInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.hourOfDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).HourOfDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.dayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).DayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.dayOfMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).DayOfMonth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.snapshotPolicy.schedule.month": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageSnapshotPolicySchedule).Month, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.replication.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.sourceFileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).SourceFileSystem, ok = plugin.RawToTValue[*mqlOciFileStorageFileSystem](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.targetFileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).TargetFileSystem, ok = plugin.RawToTValue[*mqlOciFileStorageFileSystem](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.replicationInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).ReplicationInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.recoveryPointTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).RecoveryPointTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.deltaStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).DeltaStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.replication.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageReplication).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.outboundConnector.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.connectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).ConnectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.bindDistinguishedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).BindDistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.passwordSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).PasswordSecret, ok = plugin.RawToTValue[*mqlOciVaultSecret](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.passwordSecretVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).PasswordSecretVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.trustedCertificateSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).TrustedCertificateSecret, ok = plugin.RawToTValue[*mqlOciVaultSecret](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.trustedCertificateSecretVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).TrustedCertificateSecretVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.outboundConnector.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageOutboundConnector).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.quotaRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).FileSystem, ok = plugin.RawToTValue[*mqlOciFileStorageFileSystem](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).PrincipalId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.isHardQuota": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).IsHardQuota, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.quotaLimitInGigabytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).QuotaLimitInGigabytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.usageInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).UsageInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.quotaRule.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageQuotaRule).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.events.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29300,7 +30391,13 @@ type mqlOciFileStorage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOciFileStorageInternal it will be used here
-	FileSystems plugin.TValue[[]any]
+	FileSystems        plugin.TValue[[]any]
+	MountTargets       plugin.TValue[[]any]
+	ExportSets         plugin.TValue[[]any]
+	Exports            plugin.TValue[[]any]
+	SnapshotPolicies   plugin.TValue[[]any]
+	Replications       plugin.TValue[[]any]
+	OutboundConnectors plugin.TValue[[]any]
 }
 
 // createOciFileStorage creates a new instance of this resource
@@ -29356,25 +30453,126 @@ func (c *mqlOciFileStorage) GetFileSystems() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlOciFileStorage) GetMountTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MountTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "mountTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mountTargets()
+	})
+}
+
+func (c *mqlOciFileStorage) GetExportSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExportSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "exportSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exportSets()
+	})
+}
+
+func (c *mqlOciFileStorage) GetExports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "exports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exports()
+	})
+}
+
+func (c *mqlOciFileStorage) GetSnapshotPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SnapshotPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "snapshotPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshotPolicies()
+	})
+}
+
+func (c *mqlOciFileStorage) GetReplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Replications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "replications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replications()
+	})
+}
+
+func (c *mqlOciFileStorage) GetOutboundConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OutboundConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "outboundConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.outboundConnectors()
+	})
+}
+
 // mqlOciFileStorageFileSystem for the oci.fileStorage.fileSystem resource
 type mqlOciFileStorageFileSystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciFileStorageFileSystemInternal
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	CompartmentID      plugin.TValue[string]
-	Compartment        plugin.TValue[*mqlOciCompartment]
-	AvailabilityDomain plugin.TValue[string]
-	State              plugin.TValue[string]
-	KmsKey             plugin.TValue[*mqlOciKmsKey]
-	MeteredBytes       plugin.TValue[int64]
-	ParentFileSystem   plugin.TValue[*mqlOciFileStorageFileSystem]
-	IsCloneParent      plugin.TValue[bool]
-	Created            plugin.TValue[*time.Time]
-	FreeformTags       plugin.TValue[map[string]any]
-	DefinedTags        plugin.TValue[map[string]any]
-	SystemTags         plugin.TValue[map[string]any]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	CompartmentID         plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain    plugin.TValue[string]
+	State                 plugin.TValue[string]
+	KmsKey                plugin.TValue[*mqlOciKmsKey]
+	MeteredBytes          plugin.TValue[int64]
+	ParentFileSystem      plugin.TValue[*mqlOciFileStorageFileSystem]
+	IsCloneParent         plugin.TValue[bool]
+	Exports               plugin.TValue[[]any]
+	Snapshots             plugin.TValue[[]any]
+	SnapshotPolicy        plugin.TValue[*mqlOciFileStorageSnapshotPolicy]
+	QuotaRules            plugin.TValue[[]any]
+	QuotaEnforcementState plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+	SystemTags            plugin.TValue[map[string]any]
 }
 
 // createOciFileStorageFileSystem creates a new instance of this resource
@@ -29490,6 +30688,74 @@ func (c *mqlOciFileStorageFileSystem) GetIsCloneParent() *plugin.TValue[bool] {
 	return &c.IsCloneParent
 }
 
+func (c *mqlOciFileStorageFileSystem) GetExports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.fileSystem", c.__id, "exports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exports()
+	})
+}
+
+func (c *mqlOciFileStorageFileSystem) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.fileSystem", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+func (c *mqlOciFileStorageFileSystem) GetSnapshotPolicy() *plugin.TValue[*mqlOciFileStorageSnapshotPolicy] {
+	return plugin.GetOrCompute[*mqlOciFileStorageSnapshotPolicy](&c.SnapshotPolicy, func() (*mqlOciFileStorageSnapshotPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.fileSystem", c.__id, "snapshotPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageSnapshotPolicy), nil
+			}
+		}
+
+		return c.snapshotPolicy()
+	})
+}
+
+func (c *mqlOciFileStorageFileSystem) GetQuotaRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.QuotaRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.fileSystem", c.__id, "quotaRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.quotaRules()
+	})
+}
+
+func (c *mqlOciFileStorageFileSystem) GetQuotaEnforcementState() *plugin.TValue[string] {
+	return &c.QuotaEnforcementState
+}
+
 func (c *mqlOciFileStorageFileSystem) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
@@ -29504,6 +30770,1399 @@ func (c *mqlOciFileStorageFileSystem) GetDefinedTags() *plugin.TValue[map[string
 
 func (c *mqlOciFileStorageFileSystem) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+// mqlOciFileStorageMountTarget for the oci.fileStorage.mountTarget resource
+type mqlOciFileStorageMountTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageMountTargetInternal
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Compartment                       plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain                plugin.TValue[string]
+	State                             plugin.TValue[string]
+	Subnet                            plugin.TValue[*mqlOciNetworkSubnet]
+	SecurityGroups                    plugin.TValue[[]any]
+	ExportSet                         plugin.TValue[*mqlOciFileStorageExportSet]
+	PrivateIpIds                      plugin.TValue[[]any]
+	Ipv6Ids                           plugin.TValue[[]any]
+	IdmapType                         plugin.TValue[string]
+	LdapSchemaType                    plugin.TValue[string]
+	LdapUserSearchBase                plugin.TValue[string]
+	LdapGroupSearchBase               plugin.TValue[string]
+	LdapCacheRefreshIntervalSeconds   plugin.TValue[int64]
+	LdapCacheLifetimeSeconds          plugin.TValue[int64]
+	LdapNegativeCacheLifetimeSeconds  plugin.TValue[int64]
+	LdapOutboundConnectors            plugin.TValue[[]any]
+	KerberosEnabled                   plugin.TValue[bool]
+	KerberosRealm                     plugin.TValue[string]
+	KerberosKeyTabSecret              plugin.TValue[*mqlOciVaultSecret]
+	KerberosKeyTabSecretVersion       plugin.TValue[int64]
+	KerberosBackupKeyTabSecretVersion plugin.TValue[int64]
+	RequestedThroughput               plugin.TValue[int64]
+	ObservedThroughput                plugin.TValue[int64]
+	ReservedStorageCapacity           plugin.TValue[int64]
+	Created                           plugin.TValue[*time.Time]
+	SecurityAttributes                plugin.TValue[map[string]any]
+	AppliedSecurityAttributes         plugin.TValue[[]any]
+	FreeformTags                      plugin.TValue[map[string]any]
+	DefinedTags                       plugin.TValue[map[string]any]
+	SystemTags                        plugin.TValue[map[string]any]
+}
+
+// createOciFileStorageMountTarget creates a new instance of this resource
+func createOciFileStorageMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageMountTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.mountTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageMountTarget) MqlName() string {
+	return "oci.fileStorage.mountTarget"
+}
+
+func (c *mqlOciFileStorageMountTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageMountTarget) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageMountTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageMountTarget) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciFileStorageMountTarget) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageMountTarget) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlOciNetworkSubnet](&c.Subnet, func() (*mqlOciNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetExportSet() *plugin.TValue[*mqlOciFileStorageExportSet] {
+	return plugin.GetOrCompute[*mqlOciFileStorageExportSet](&c.ExportSet, func() (*mqlOciFileStorageExportSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "exportSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageExportSet), nil
+			}
+		}
+
+		return c.exportSet()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetPrivateIpIds() *plugin.TValue[[]any] {
+	return &c.PrivateIpIds
+}
+
+func (c *mqlOciFileStorageMountTarget) GetIpv6Ids() *plugin.TValue[[]any] {
+	return &c.Ipv6Ids
+}
+
+func (c *mqlOciFileStorageMountTarget) GetIdmapType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IdmapType, func() (string, error) {
+		return c.idmapType()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapSchemaType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LdapSchemaType, func() (string, error) {
+		return c.ldapSchemaType()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapUserSearchBase() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LdapUserSearchBase, func() (string, error) {
+		return c.ldapUserSearchBase()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapGroupSearchBase() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LdapGroupSearchBase, func() (string, error) {
+		return c.ldapGroupSearchBase()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapCacheRefreshIntervalSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LdapCacheRefreshIntervalSeconds, func() (int64, error) {
+		return c.ldapCacheRefreshIntervalSeconds()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapCacheLifetimeSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LdapCacheLifetimeSeconds, func() (int64, error) {
+		return c.ldapCacheLifetimeSeconds()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapNegativeCacheLifetimeSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LdapNegativeCacheLifetimeSeconds, func() (int64, error) {
+		return c.ldapNegativeCacheLifetimeSeconds()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetLdapOutboundConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LdapOutboundConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "ldapOutboundConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ldapOutboundConnectors()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetKerberosEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KerberosEnabled, func() (bool, error) {
+		return c.kerberosEnabled()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetKerberosRealm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KerberosRealm, func() (string, error) {
+		return c.kerberosRealm()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetKerberosKeyTabSecret() *plugin.TValue[*mqlOciVaultSecret] {
+	return plugin.GetOrCompute[*mqlOciVaultSecret](&c.KerberosKeyTabSecret, func() (*mqlOciVaultSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "kerberosKeyTabSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVaultSecret), nil
+			}
+		}
+
+		return c.kerberosKeyTabSecret()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetKerberosKeyTabSecretVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.KerberosKeyTabSecretVersion, func() (int64, error) {
+		return c.kerberosKeyTabSecretVersion()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetKerberosBackupKeyTabSecretVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.KerberosBackupKeyTabSecretVersion, func() (int64, error) {
+		return c.kerberosBackupKeyTabSecretVersion()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetRequestedThroughput() *plugin.TValue[int64] {
+	return &c.RequestedThroughput
+}
+
+func (c *mqlOciFileStorageMountTarget) GetObservedThroughput() *plugin.TValue[int64] {
+	return &c.ObservedThroughput
+}
+
+func (c *mqlOciFileStorageMountTarget) GetReservedStorageCapacity() *plugin.TValue[int64] {
+	return &c.ReservedStorageCapacity
+}
+
+func (c *mqlOciFileStorageMountTarget) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciFileStorageMountTarget) GetSecurityAttributes() *plugin.TValue[map[string]any] {
+	return &c.SecurityAttributes
+}
+
+func (c *mqlOciFileStorageMountTarget) GetAppliedSecurityAttributes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppliedSecurityAttributes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.mountTarget", c.__id, "appliedSecurityAttributes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appliedSecurityAttributes()
+	})
+}
+
+func (c *mqlOciFileStorageMountTarget) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciFileStorageMountTarget) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciFileStorageMountTarget) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciFileStorageExportSet for the oci.fileStorage.exportSet resource
+type mqlOciFileStorageExportSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageExportSetInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Compartment        plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain plugin.TValue[string]
+	State              plugin.TValue[string]
+	Vcn                plugin.TValue[*mqlOciNetworkVcn]
+	Exports            plugin.TValue[[]any]
+	MaxFsStatBytes     plugin.TValue[int64]
+	MaxFsStatFiles     plugin.TValue[int64]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciFileStorageExportSet creates a new instance of this resource
+func createOciFileStorageExportSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageExportSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.exportSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageExportSet) MqlName() string {
+	return "oci.fileStorage.exportSet"
+}
+
+func (c *mqlOciFileStorageExportSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageExportSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageExportSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageExportSet) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.exportSet", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciFileStorageExportSet) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciFileStorageExportSet) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageExportSet) GetVcn() *plugin.TValue[*mqlOciNetworkVcn] {
+	return plugin.GetOrCompute[*mqlOciNetworkVcn](&c.Vcn, func() (*mqlOciNetworkVcn, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.exportSet", c.__id, "vcn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkVcn), nil
+			}
+		}
+
+		return c.vcn()
+	})
+}
+
+func (c *mqlOciFileStorageExportSet) GetExports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.exportSet", c.__id, "exports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exports()
+	})
+}
+
+func (c *mqlOciFileStorageExportSet) GetMaxFsStatBytes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxFsStatBytes, func() (int64, error) {
+		return c.maxFsStatBytes()
+	})
+}
+
+func (c *mqlOciFileStorageExportSet) GetMaxFsStatFiles() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxFsStatFiles, func() (int64, error) {
+		return c.maxFsStatFiles()
+	})
+}
+
+func (c *mqlOciFileStorageExportSet) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciFileStorageExport for the oci.fileStorage.export resource
+type mqlOciFileStorageExport struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageExportInternal
+	Id                      plugin.TValue[string]
+	Path                    plugin.TValue[string]
+	State                   plugin.TValue[string]
+	FileSystem              plugin.TValue[*mqlOciFileStorageFileSystem]
+	ExportSet               plugin.TValue[*mqlOciFileStorageExportSet]
+	Options                 plugin.TValue[[]any]
+	IsIdmapGroupsForSysAuth plugin.TValue[bool]
+	Created                 plugin.TValue[*time.Time]
+}
+
+// createOciFileStorageExport creates a new instance of this resource
+func createOciFileStorageExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageExport{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.export", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageExport) MqlName() string {
+	return "oci.fileStorage.export"
+}
+
+func (c *mqlOciFileStorageExport) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageExport) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageExport) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlOciFileStorageExport) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageExport) GetFileSystem() *plugin.TValue[*mqlOciFileStorageFileSystem] {
+	return plugin.GetOrCompute[*mqlOciFileStorageFileSystem](&c.FileSystem, func() (*mqlOciFileStorageFileSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.export", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageFileSystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
+}
+
+func (c *mqlOciFileStorageExport) GetExportSet() *plugin.TValue[*mqlOciFileStorageExportSet] {
+	return plugin.GetOrCompute[*mqlOciFileStorageExportSet](&c.ExportSet, func() (*mqlOciFileStorageExportSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.export", c.__id, "exportSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageExportSet), nil
+			}
+		}
+
+		return c.exportSet()
+	})
+}
+
+func (c *mqlOciFileStorageExport) GetOptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Options, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.export", c.__id, "options")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.options()
+	})
+}
+
+func (c *mqlOciFileStorageExport) GetIsIdmapGroupsForSysAuth() *plugin.TValue[bool] {
+	return &c.IsIdmapGroupsForSysAuth
+}
+
+func (c *mqlOciFileStorageExport) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciFileStorageExportOption for the oci.fileStorage.export.option resource
+type mqlOciFileStorageExportOption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciFileStorageExportOptionInternal it will be used here
+	Source                      plugin.TValue[string]
+	Access                      plugin.TValue[string]
+	IdentitySquash              plugin.TValue[string]
+	RequirePrivilegedSourcePort plugin.TValue[bool]
+	AnonymousUid                plugin.TValue[int64]
+	AnonymousGid                plugin.TValue[int64]
+	IsAnonymousAccessAllowed    plugin.TValue[bool]
+	AllowedAuth                 plugin.TValue[[]any]
+}
+
+// createOciFileStorageExportOption creates a new instance of this resource
+func createOciFileStorageExportOption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageExportOption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.export.option", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageExportOption) MqlName() string {
+	return "oci.fileStorage.export.option"
+}
+
+func (c *mqlOciFileStorageExportOption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageExportOption) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOciFileStorageExportOption) GetAccess() *plugin.TValue[string] {
+	return &c.Access
+}
+
+func (c *mqlOciFileStorageExportOption) GetIdentitySquash() *plugin.TValue[string] {
+	return &c.IdentitySquash
+}
+
+func (c *mqlOciFileStorageExportOption) GetRequirePrivilegedSourcePort() *plugin.TValue[bool] {
+	return &c.RequirePrivilegedSourcePort
+}
+
+func (c *mqlOciFileStorageExportOption) GetAnonymousUid() *plugin.TValue[int64] {
+	return &c.AnonymousUid
+}
+
+func (c *mqlOciFileStorageExportOption) GetAnonymousGid() *plugin.TValue[int64] {
+	return &c.AnonymousGid
+}
+
+func (c *mqlOciFileStorageExportOption) GetIsAnonymousAccessAllowed() *plugin.TValue[bool] {
+	return &c.IsAnonymousAccessAllowed
+}
+
+func (c *mqlOciFileStorageExportOption) GetAllowedAuth() *plugin.TValue[[]any] {
+	return &c.AllowedAuth
+}
+
+// mqlOciFileStorageSnapshot for the oci.fileStorage.snapshot resource
+type mqlOciFileStorageSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageSnapshotInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	State          plugin.TValue[string]
+	FileSystem     plugin.TValue[*mqlOciFileStorageFileSystem]
+	SnapshotType   plugin.TValue[string]
+	SnapshotTime   plugin.TValue[*time.Time]
+	ExpirationTime plugin.TValue[*time.Time]
+	IsCloneSource  plugin.TValue[bool]
+	ExclusiveBytes plugin.TValue[int64]
+	Created        plugin.TValue[*time.Time]
+	FreeformTags   plugin.TValue[map[string]any]
+	DefinedTags    plugin.TValue[map[string]any]
+	SystemTags     plugin.TValue[map[string]any]
+}
+
+// createOciFileStorageSnapshot creates a new instance of this resource
+func createOciFileStorageSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageSnapshot) MqlName() string {
+	return "oci.fileStorage.snapshot"
+}
+
+func (c *mqlOciFileStorageSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageSnapshot) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageSnapshot) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageSnapshot) GetFileSystem() *plugin.TValue[*mqlOciFileStorageFileSystem] {
+	return plugin.GetOrCompute[*mqlOciFileStorageFileSystem](&c.FileSystem, func() (*mqlOciFileStorageFileSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.snapshot", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageFileSystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
+}
+
+func (c *mqlOciFileStorageSnapshot) GetSnapshotType() *plugin.TValue[string] {
+	return &c.SnapshotType
+}
+
+func (c *mqlOciFileStorageSnapshot) GetSnapshotTime() *plugin.TValue[*time.Time] {
+	return &c.SnapshotTime
+}
+
+func (c *mqlOciFileStorageSnapshot) GetExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.ExpirationTime
+}
+
+func (c *mqlOciFileStorageSnapshot) GetIsCloneSource() *plugin.TValue[bool] {
+	return &c.IsCloneSource
+}
+
+func (c *mqlOciFileStorageSnapshot) GetExclusiveBytes() *plugin.TValue[int64] {
+	return &c.ExclusiveBytes
+}
+
+func (c *mqlOciFileStorageSnapshot) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciFileStorageSnapshot) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciFileStorageSnapshot) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciFileStorageSnapshot) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciFileStorageSnapshotPolicy for the oci.fileStorage.snapshotPolicy resource
+type mqlOciFileStorageSnapshotPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageSnapshotPolicyInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Compartment        plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain plugin.TValue[string]
+	State              plugin.TValue[string]
+	PolicyPrefix       plugin.TValue[string]
+	Schedules          plugin.TValue[[]any]
+	Created            plugin.TValue[*time.Time]
+	FreeformTags       plugin.TValue[map[string]any]
+	DefinedTags        plugin.TValue[map[string]any]
+	SystemTags         plugin.TValue[map[string]any]
+}
+
+// createOciFileStorageSnapshotPolicy creates a new instance of this resource
+func createOciFileStorageSnapshotPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageSnapshotPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.snapshotPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) MqlName() string {
+	return "oci.fileStorage.snapshotPolicy"
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.snapshotPolicy", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetPolicyPrefix() *plugin.TValue[string] {
+	return &c.PolicyPrefix
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetSchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.snapshotPolicy", c.__id, "schedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schedules()
+	})
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciFileStorageSnapshotPolicy) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciFileStorageSnapshotPolicySchedule for the oci.fileStorage.snapshotPolicy.schedule resource
+type mqlOciFileStorageSnapshotPolicySchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciFileStorageSnapshotPolicyScheduleInternal it will be used here
+	Period                     plugin.TValue[string]
+	TimeZone                   plugin.TValue[string]
+	SchedulePrefix             plugin.TValue[string]
+	TimeScheduleStart          plugin.TValue[*time.Time]
+	RetentionDurationInSeconds plugin.TValue[int64]
+	HourOfDay                  plugin.TValue[int64]
+	DayOfWeek                  plugin.TValue[string]
+	DayOfMonth                 plugin.TValue[int64]
+	Month                      plugin.TValue[string]
+}
+
+// createOciFileStorageSnapshotPolicySchedule creates a new instance of this resource
+func createOciFileStorageSnapshotPolicySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageSnapshotPolicySchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.snapshotPolicy.schedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) MqlName() string {
+	return "oci.fileStorage.snapshotPolicy.schedule"
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetPeriod() *plugin.TValue[string] {
+	return &c.Period
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetTimeZone() *plugin.TValue[string] {
+	return &c.TimeZone
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetSchedulePrefix() *plugin.TValue[string] {
+	return &c.SchedulePrefix
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetTimeScheduleStart() *plugin.TValue[*time.Time] {
+	return &c.TimeScheduleStart
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetRetentionDurationInSeconds() *plugin.TValue[int64] {
+	return &c.RetentionDurationInSeconds
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetHourOfDay() *plugin.TValue[int64] {
+	return &c.HourOfDay
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetDayOfWeek() *plugin.TValue[string] {
+	return &c.DayOfWeek
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetDayOfMonth() *plugin.TValue[int64] {
+	return &c.DayOfMonth
+}
+
+func (c *mqlOciFileStorageSnapshotPolicySchedule) GetMonth() *plugin.TValue[string] {
+	return &c.Month
+}
+
+// mqlOciFileStorageReplication for the oci.fileStorage.replication resource
+type mqlOciFileStorageReplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageReplicationInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Compartment         plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain  plugin.TValue[string]
+	State               plugin.TValue[string]
+	SourceFileSystem    plugin.TValue[*mqlOciFileStorageFileSystem]
+	TargetFileSystem    plugin.TValue[*mqlOciFileStorageFileSystem]
+	ReplicationInterval plugin.TValue[int64]
+	RecoveryPointTime   plugin.TValue[*time.Time]
+	DeltaStatus         plugin.TValue[string]
+	LifecycleDetails    plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	FreeformTags        plugin.TValue[map[string]any]
+	DefinedTags         plugin.TValue[map[string]any]
+	SystemTags          plugin.TValue[map[string]any]
+}
+
+// createOciFileStorageReplication creates a new instance of this resource
+func createOciFileStorageReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageReplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.replication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageReplication) MqlName() string {
+	return "oci.fileStorage.replication"
+}
+
+func (c *mqlOciFileStorageReplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageReplication) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageReplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageReplication) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.replication", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciFileStorageReplication) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciFileStorageReplication) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageReplication) GetSourceFileSystem() *plugin.TValue[*mqlOciFileStorageFileSystem] {
+	return plugin.GetOrCompute[*mqlOciFileStorageFileSystem](&c.SourceFileSystem, func() (*mqlOciFileStorageFileSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.replication", c.__id, "sourceFileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageFileSystem), nil
+			}
+		}
+
+		return c.sourceFileSystem()
+	})
+}
+
+func (c *mqlOciFileStorageReplication) GetTargetFileSystem() *plugin.TValue[*mqlOciFileStorageFileSystem] {
+	return plugin.GetOrCompute[*mqlOciFileStorageFileSystem](&c.TargetFileSystem, func() (*mqlOciFileStorageFileSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.replication", c.__id, "targetFileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageFileSystem), nil
+			}
+		}
+
+		return c.targetFileSystem()
+	})
+}
+
+func (c *mqlOciFileStorageReplication) GetReplicationInterval() *plugin.TValue[int64] {
+	return &c.ReplicationInterval
+}
+
+func (c *mqlOciFileStorageReplication) GetRecoveryPointTime() *plugin.TValue[*time.Time] {
+	return &c.RecoveryPointTime
+}
+
+func (c *mqlOciFileStorageReplication) GetDeltaStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DeltaStatus, func() (string, error) {
+		return c.deltaStatus()
+	})
+}
+
+func (c *mqlOciFileStorageReplication) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciFileStorageReplication) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciFileStorageReplication) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciFileStorageReplication) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciFileStorageReplication) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciFileStorageOutboundConnector for the oci.fileStorage.outboundConnector resource
+type mqlOciFileStorageOutboundConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageOutboundConnectorInternal
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Compartment                     plugin.TValue[*mqlOciCompartment]
+	AvailabilityDomain              plugin.TValue[string]
+	State                           plugin.TValue[string]
+	ConnectorType                   plugin.TValue[string]
+	BindDistinguishedName           plugin.TValue[string]
+	Endpoints                       plugin.TValue[[]any]
+	PasswordSecret                  plugin.TValue[*mqlOciVaultSecret]
+	PasswordSecretVersion           plugin.TValue[int64]
+	TrustedCertificateSecret        plugin.TValue[*mqlOciVaultSecret]
+	TrustedCertificateSecretVersion plugin.TValue[int64]
+	Created                         plugin.TValue[*time.Time]
+	FreeformTags                    plugin.TValue[map[string]any]
+	DefinedTags                     plugin.TValue[map[string]any]
+	SystemTags                      plugin.TValue[map[string]any]
+}
+
+// createOciFileStorageOutboundConnector creates a new instance of this resource
+func createOciFileStorageOutboundConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageOutboundConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.outboundConnector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageOutboundConnector) MqlName() string {
+	return "oci.fileStorage.outboundConnector"
+}
+
+func (c *mqlOciFileStorageOutboundConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.outboundConnector", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetConnectorType() *plugin.TValue[string] {
+	return &c.ConnectorType
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetBindDistinguishedName() *plugin.TValue[string] {
+	return &c.BindDistinguishedName
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetPasswordSecret() *plugin.TValue[*mqlOciVaultSecret] {
+	return plugin.GetOrCompute[*mqlOciVaultSecret](&c.PasswordSecret, func() (*mqlOciVaultSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.outboundConnector", c.__id, "passwordSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVaultSecret), nil
+			}
+		}
+
+		return c.passwordSecret()
+	})
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetPasswordSecretVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordSecretVersion, func() (int64, error) {
+		return c.passwordSecretVersion()
+	})
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetTrustedCertificateSecret() *plugin.TValue[*mqlOciVaultSecret] {
+	return plugin.GetOrCompute[*mqlOciVaultSecret](&c.TrustedCertificateSecret, func() (*mqlOciVaultSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.outboundConnector", c.__id, "trustedCertificateSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVaultSecret), nil
+			}
+		}
+
+		return c.trustedCertificateSecret()
+	})
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetTrustedCertificateSecretVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TrustedCertificateSecretVersion, func() (int64, error) {
+		return c.trustedCertificateSecretVersion()
+	})
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciFileStorageOutboundConnector) GetSystemTags() *plugin.TValue[map[string]any] {
+	return &c.SystemTags
+}
+
+// mqlOciFileStorageQuotaRule for the oci.fileStorage.quotaRule resource
+type mqlOciFileStorageQuotaRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciFileStorageQuotaRuleInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	FileSystem            plugin.TValue[*mqlOciFileStorageFileSystem]
+	PrincipalType         plugin.TValue[string]
+	PrincipalId           plugin.TValue[int64]
+	IsHardQuota           plugin.TValue[bool]
+	QuotaLimitInGigabytes plugin.TValue[int64]
+	UsageInBytes          plugin.TValue[int64]
+	Created               plugin.TValue[*time.Time]
+	TimeUpdated           plugin.TValue[*time.Time]
+}
+
+// createOciFileStorageQuotaRule creates a new instance of this resource
+func createOciFileStorageQuotaRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageQuotaRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.quotaRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageQuotaRule) MqlName() string {
+	return "oci.fileStorage.quotaRule"
+}
+
+func (c *mqlOciFileStorageQuotaRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetFileSystem() *plugin.TValue[*mqlOciFileStorageFileSystem] {
+	return plugin.GetOrCompute[*mqlOciFileStorageFileSystem](&c.FileSystem, func() (*mqlOciFileStorageFileSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.quotaRule", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageFileSystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetPrincipalId() *plugin.TValue[int64] {
+	return &c.PrincipalId
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetIsHardQuota() *plugin.TValue[bool] {
+	return &c.IsHardQuota
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetQuotaLimitInGigabytes() *plugin.TValue[int64] {
+	return &c.QuotaLimitInGigabytes
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetUsageInBytes() *plugin.TValue[int64] {
+	return &c.UsageInBytes
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciFileStorageQuotaRule) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
 }
 
 // mqlOciEvents for the oci.events resource

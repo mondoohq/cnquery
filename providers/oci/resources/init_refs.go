@@ -197,6 +197,48 @@ func initOciFileStorageFileSystem(runtime *plugin.Runtime, args map[string]*llx.
 	return ociResolveByID(args, "oci.fileStorage.fileSystem", id, items)
 }
 
+func initOciFileStorageExportSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.fileStorage", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciFileStorage).GetExportSets()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.fileStorage.exportSet", id, items)
+}
+
+func initOciFileStorageSnapshotPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.fileStorage", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciFileStorage).GetSnapshotPolicies()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.fileStorage.snapshotPolicy", id, items)
+}
+
+func initOciFileStorageOutboundConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, resolve := ociInitArgs(args)
+	if !resolve {
+		return args, nil, nil
+	}
+	items, err := ociServiceCollection(runtime, "oci.fileStorage", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOciFileStorage).GetOutboundConnectors()
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return ociResolveByID(args, "oci.fileStorage.outboundConnector", id, items)
+}
+
 func initOciApigatewayGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, resolve := ociInitArgs(args)
 	if !resolve {
