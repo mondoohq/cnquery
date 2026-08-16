@@ -210,14 +210,18 @@ func (o *mqlOciIdentityDomain) rules() ([]any, error) {
 		conditionGroupType, conditionGroupName, conditionID := ociRuleConditionGroup(rule.ConditionGroup)
 
 		mqlRule, err := CreateResource(o.MqlRuntime, "oci.identity.domain.rule", map[string]*llx.RawData{
-			"__id":                llx.StringData(o.Id.Data + "/rule/" + stringValue(rule.Id)),
-			"id":                  llx.StringDataPtr(rule.Id),
-			"ocid":                llx.StringDataPtr(rule.Ocid),
-			"name":                llx.StringDataPtr(rule.Name),
-			"description":         llx.StringDataPtr(rule.Description),
-			"policyType":          llx.StringData(policyType),
-			"active":              llx.BoolData(boolValue(rule.Active)),
-			"locked":              llx.BoolData(boolValue(rule.Locked)),
+			"__id":        llx.StringData(o.Id.Data + "/rule/" + stringValue(rule.Id)),
+			"id":          llx.StringDataPtr(rule.Id),
+			"ocid":        llx.StringDataPtr(rule.Ocid),
+			"name":        llx.StringDataPtr(rule.Name),
+			"description": llx.StringDataPtr(rule.Description),
+			"policyType":  llx.StringData(policyType),
+			// Null rather than false when the service omits the flag: it does
+			// not report `active` or `locked` for the rules it ships with, and
+			// answering false there would state that the rule requiring
+			// multi-factor authentication is switched off.
+			"active":              llx.BoolDataPtr(rule.Active),
+			"locked":              llx.BoolDataPtr(rule.Locked),
 			"conditionExpression": llx.StringDataPtr(rule.Condition),
 			"conditionGroupType":  llx.StringData(conditionGroupType),
 			"conditionGroupName":  llx.StringData(conditionGroupName),

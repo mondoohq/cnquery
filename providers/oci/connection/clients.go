@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/aidocument"
@@ -217,8 +218,43 @@ func (c *OciConnection) IdentityDomainsClient(endpoint string) (*identitydomains
 		if err != nil {
 			return nil, err
 		}
+		client.Interceptor = collapseScimAttributeSets
 		return &client, nil
 	})
+}
+
+// collapseScimAttributeSets rewrites a repeated attributeSets query parameter
+// into the single comma-delimited value the SCIM service expects.
+//
+// The SDK tags the parameter collectionFormat:"multi", so asking for two
+// attribute sets goes out as `attributeSets=default&attributeSets=request`. The
+// identity domains service honors only the first of those and drops the rest,
+// and it reports nothing about having done so: the response is a well-formed
+// listing that is simply missing every attribute the second set would have
+// carried. Asking for the request set alongside the default one therefore
+// returned the default set alone, so a user's last login and MFA enrollment
+// date came back null, a group's members came back empty, and a sign-on
+// policy's rules came back empty - each reading as a fact about the tenancy
+// rather than as an unasked-for attribute.
+//
+// Joining the values with a comma is the form the service documents, and it
+// returns the union: a strict superset of the default listing. This runs as a
+// request interceptor because the SDK applies it before signing, so the
+// rewritten query is the one that gets signed.
+func collapseScimAttributeSets(req *http.Request) error {
+	if req == nil || req.URL == nil {
+		return nil
+	}
+
+	query := req.URL.Query()
+	sets := query["attributeSets"]
+	if len(sets) < 2 {
+		return nil
+	}
+
+	query.Set("attributeSets", strings.Join(sets, ","))
+	req.URL.RawQuery = query.Encode()
+	return nil
 }
 
 // --- Core (compute, networking, block storage) ------------------------------
