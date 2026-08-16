@@ -9210,3 +9210,255 @@ private oci.securityAttributes.attribute @defaults("name isRetired") {
   // Creation time
   created() time
 }
+
+// Oracle Cloud Infrastructure (OCI) Artifact Registry
+//
+// Container images and generic artifacts stored in the tenancy's registry.
+// `containerRepositories` reports which repositories are readable without
+// credentials and which reject overwriting a published tag,
+// `containerImages` what is stored in them, and `containerImageSignatures`
+// which of those images were signed and with which key. Together they answer
+// whether an OKE cluster enforcing an image policy is pulling from
+// repositories that can satisfy it. `repositories` and their artifacts cover
+// the generic, non-container side of the same registry.
+oci.artifacts {
+  // Container repositories in the registry
+  containerRepositories() []oci.artifacts.containerRepository
+  // Container images stored in the registry
+  containerImages() []oci.artifacts.containerImage
+  // Signatures applied to container images
+  containerImageSignatures() []oci.artifacts.containerImageSignature
+  // Generic artifact repositories
+  repositories() []oci.artifacts.repository
+  // Registry namespace for the tenancy
+  //
+  // The first segment of every image path, so it is what a pull reference in
+  // a deployment has to match.
+  registryNamespace() string
+  // Whether pushing to an unknown repository creates it
+  //
+  // With this on, any principal that can push can bring a new repository into
+  // existence, so the set of repositories is not something an administrator
+  // has approved in advance.
+  isRepositoryCreatedOnFirstPush() bool
+}
+
+// Oracle Cloud Infrastructure (OCI) container repository
+//
+// Repository holding container images, and the place two registry-side
+// controls are set. `isPublic` reports whether the repository can be pulled
+// anonymously from the internet, and `isImmutable` whether a published tag
+// can be moved to point at different content. A mutable tag means an image
+// verified once is not necessarily the image that runs next.
+private oci.artifacts.containerRepository @defaults("name isPublic imageCount") {
+  // Container repository OCID
+  id string
+  // Repository name, which is the image path below the registry namespace
+  name string
+  // Compartment containing the repository
+  compartment() oci.compartment
+  // Registry namespace the repository sits under
+  namespace string
+  // Whether the repository can be pulled without credentials
+  isPublic bool
+  // Whether a published tag is prevented from being moved to other content
+  isImmutable() bool
+  // Images stored in the repository
+  images() []oci.artifacts.containerImage
+  // Number of images in the repository
+  imageCount int
+  // Number of layers across the repository
+  layerCount int
+  // Bytes consumed by the repository's layers
+  layersSizeInBytes int
+  // Billable size of the repository in gigabytes
+  billableSizeInGBs int
+  // Repository lifecycle state (AVAILABLE, DELETING, or DELETED)
+  state string
+  // Principal that created the repository
+  createdBy() string
+  // Time an image was last pushed to the repository
+  timeLastPushed() time
+  // Repository creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) container image
+//
+// One image manifest in a container repository, identified by its `digest`.
+// `signatures` is what an image policy checks, so an image with none cannot
+// satisfy a cluster that enforces one. `versions` lists the tags currently
+// resolving to this digest, which is how a tag in a deployment is traced back
+// to the content it actually pulls.
+private oci.artifacts.containerImage @defaults("name digest state") {
+  // Container image OCID
+  id string
+  // Image path and tag, as it appears in a pull reference
+  name string
+  // Content digest of the image manifest
+  digest string
+  // Tag this listing entry refers to
+  version string
+  // Repository the image is stored in
+  repository() oci.artifacts.containerRepository
+  // Name of the repository the image is stored in
+  repositoryName string
+  // Compartment containing the image
+  compartment() oci.compartment
+  // Signatures applied to the image
+  //
+  // An image with no signatures cannot satisfy a cluster whose image policy
+  // requires one, whatever keys that policy names.
+  signatures() []oci.artifacts.containerImageSignature
+  // Tags currently resolving to this digest
+  //
+  // Each entry carries `version` with the tag, `createdBy` with the principal
+  // that pushed it, and `timeCreated`.
+  versions() []dict
+  // Principal that pushed the image
+  createdBy() string
+  // Number of times the image has been pulled
+  pullCount int
+  // Time the image was last pulled
+  timeLastPulled() time
+  // Bytes consumed by the image's layers
+  layersSizeInBytes() int
+  // Image lifecycle state (AVAILABLE, DELETING, or DELETED)
+  state string
+  // Image creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) container image signature
+//
+// Signature over a container image's digest, and the evidence an image policy
+// evaluates. `kmsKey` is the key the signature was produced with, which is
+// what a cluster's image policy names when it decides whose signatures it
+// trusts, and `signingAlgorithm` is how it was produced. A signature made
+// with a key the policy does not name satisfies nothing.
+private oci.artifacts.containerImageSignature @defaults("name signingAlgorithm") {
+  // Signature OCID
+  id string
+  // Signature display name
+  name string
+  // Compartment containing the signature
+  compartment() oci.compartment
+  // Image the signature covers
+  image() oci.artifacts.containerImage
+  // Vault key the signature was produced with
+  kmsKey() oci.kms.key
+  // Version of the vault key used
+  //
+  // Reported as an identifier because a key version is reachable only through
+  // the key that owns it, which `kmsKey` resolves.
+  kmsKeyVersionId string
+  // How the signature was produced
+  //
+  // One of SHA_224_RSA_PKCS_PSS, SHA_256_RSA_PKCS_PSS,
+  // SHA_384_RSA_PKCS_PSS, or SHA_512_RSA_PKCS_PSS.
+  signingAlgorithm string
+  // Base64-encoded payload that was signed
+  message string
+  // Base64-encoded signature over the message
+  signature string
+  // Signature lifecycle state (e.g., AVAILABLE, DELETING, DELETED)
+  state string
+  // Signature creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
+}
+
+// Oracle Cloud Infrastructure (OCI) artifact repository
+//
+// Repository holding generic, non-container artifacts. `isImmutable` reports
+// whether an artifact already published at a path and version can be
+// replaced, which is the same tamper question a container repository answers
+// for tags.
+private oci.artifacts.repository @defaults("name repositoryType isImmutable") {
+  // Repository OCID
+  id string
+  // Repository display name
+  name string
+  // Repository description
+  description string
+  // Compartment containing the repository
+  compartment() oci.compartment
+  // Kind of repository
+  //
+  // GENERIC is the only kind the service offers today.
+  repositoryType string
+  // Whether an artifact already published cannot be replaced
+  isImmutable bool
+  // Artifacts stored in the repository
+  artifacts() []oci.artifacts.genericArtifact
+  // Repository lifecycle state (e.g., AVAILABLE, DELETING, DELETED)
+  state string
+  // Repository creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) generic artifact
+//
+// One file stored in an artifact repository, identified by its path and
+// version. `sha256` is the content digest a consumer can verify a download
+// against, and it is the only integrity evidence a generic artifact carries,
+// since these are not signed the way container images are.
+private oci.artifacts.genericArtifact @defaults("name version sizeInBytes") {
+  // Artifact OCID
+  id string
+  // Artifact display name, which is the path and version
+  name string
+  // Compartment containing the artifact
+  compartment() oci.compartment
+  // Repository the artifact is stored in
+  repository() oci.artifacts.repository
+  // Path the artifact is published at
+  artifactPath string
+  // Version the artifact is published under
+  version string
+  // SHA-256 digest of the artifact's content
+  sha256 string
+  // Size of the artifact in bytes
+  sizeInBytes int
+  // Artifact lifecycle state (e.g., AVAILABLE, DELETING, DELETED)
+  state string
+  // Artifact creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}

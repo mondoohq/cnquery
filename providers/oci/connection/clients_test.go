@@ -112,6 +112,7 @@ var regionalAccessors = map[string]func(*OciConnection, string) (endpointer, err
 	"BlockstorageClient": func(c *OciConnection, r string) (endpointer, error) { return c.BlockstorageClient(r) },
 
 	// Storage
+	"ArtifactsClient":     func(c *OciConnection, r string) (endpointer, error) { return c.ArtifactsClient(r) },
 	"ObjectStorageClient": func(c *OciConnection, r string) (endpointer, error) { return c.ObjectStorageClient(r) },
 	"FileStorageClient":   func(c *OciConnection, r string) (endpointer, error) { return c.FileStorageClient(r) },
 

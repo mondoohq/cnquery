@@ -14,6 +14,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/aispeech"
 	"github.com/oracle/oci-go-sdk/v65/aivision"
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
+	"github.com/oracle/oci-go-sdk/v65/artifacts"
 	"github.com/oracle/oci-go-sdk/v65/audit"
 	"github.com/oracle/oci-go-sdk/v65/bastion"
 	"github.com/oracle/oci-go-sdk/v65/certificatesmanagement"
@@ -231,6 +232,10 @@ func (c *OciConnection) BlockstorageClient(region string) (*core.BlockstorageCli
 }
 
 // --- Storage ----------------------------------------------------------------
+
+func (c *OciConnection) ArtifactsClient(region string) (*artifacts.ArtifactsClient, error) {
+	return regionalClient(c, "artifacts", region, artifacts.NewArtifactsClientWithConfigurationProvider)
+}
 
 func (c *OciConnection) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
 	return regionalClient(c, "objectstorage", region, objectstorage.NewObjectStorageClientWithConfigurationProvider)
