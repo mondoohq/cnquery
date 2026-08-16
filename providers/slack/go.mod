@@ -7,7 +7,7 @@ go 1.26.5
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/rs/zerolog v1.35.1
-	github.com/slack-go/slack v0.27.0
+	github.com/slack-go/slack v0.29.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.32.2
 )
