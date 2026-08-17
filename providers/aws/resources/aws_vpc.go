@@ -1540,6 +1540,15 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 
 	if region != "" && vpcId != "" {
 		conn := runtime.Connection.(*connection.AwsConnection)
+
+		// Check again now the ARN can be derived. The check above only fires
+		// for a caller that passed one, and callers passing an id instead are
+		// the ones that repeat.
+		if cached := cachedByArn(runtime, ResourceAwsVpc,
+			fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), vpcId)); cached != nil {
+			return args, cached, nil
+		}
+
 		svc := conn.Ec2(region)
 		resp, err := svc.DescribeVpcs(context.Background(), &ec2.DescribeVpcsInput{
 			VpcIds: []string{vpcId},

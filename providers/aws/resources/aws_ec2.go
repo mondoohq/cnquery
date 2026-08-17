@@ -1604,6 +1604,14 @@ func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 
+	// A reference already materialized by an earlier referrer or by the
+	// list that built it. NewResource consults the cache only after this
+	// init returns, so without this the same target is fetched once per
+	// referring resource and the result discarded.
+	if cached := cachedArgByArn(runtime, ResourceAwsEc2Networkinterface, args); cached != nil {
+		return args, cached, nil
+	}
+
 	if args["id"] == nil {
 		return nil, nil, errors.New("id required to fetch aws network interface")
 	}
@@ -1615,6 +1623,17 @@ func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
+	// With the id and a region in hand the ARN is derivable, so check before
+	// paying for a lookup -- and before the region fan-out below, which costs
+	// one call per region for a single interface. Callers that pass an id
+	// rather than an ARN miss the check above, which is the case this catches.
+	if region != "" {
+		if cached := cachedByArn(runtime, ResourceAwsEc2Networkinterface,
+			fmt.Sprintf(networkInterfaceArnPattern, region, conn.AccountId(), eniId)); cached != nil {
+			return args, cached, nil
+		}
+	}
+
 	if region == "" {
 		// Region is required for a targeted DescribeNetworkInterfaces lookup, but
 		// it's not encoded in the ENI id itself. Fan out across regions in
@@ -2213,6 +2232,17 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	if region != "" && groupId != "" {
 		conn := runtime.Connection.(*connection.AwsConnection)
+
+		// Check again now that the ARN can be derived. The check above only
+		// fires for a caller that passed one, and the callers that pass an id
+		// instead are the hot path: a policy scan over 160 assets spent 2,862
+		// DescribeSecurityGroups calls on 102 distinct groups, 40% of all its
+		// API traffic, because every reference re-derived the same group.
+		if cached := cachedByArn(runtime, ResourceAwsEc2Securitygroup,
+			NewSecurityGroupArn(region, conn.AccountId(), groupId)); cached != nil {
+			return args, cached, nil
+		}
+
 		svc := conn.Ec2(region)
 		resp, err := svc.DescribeSecurityGroups(context.Background(), &ec2.DescribeSecurityGroupsInput{
 			GroupIds: []string{groupId},
@@ -2559,6 +2589,14 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return args, nil, nil
 	}
 
+	// A reference already materialized by an earlier referrer or by the
+	// list that built it. NewResource consults the cache only after this
+	// init returns, so without this the same target is fetched once per
+	// referring resource and the result discarded.
+	if cached := cachedArgByArn(runtime, ResourceAwsEc2Volume, args); cached != nil {
+		return args, cached, nil
+	}
+
 	if len(args) == 0 {
 		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
@@ -2806,6 +2844,14 @@ func buildSnapshotResource(runtime *plugin.Runtime, region, accountID string, sn
 func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
+	}
+
+	// A reference already materialized by an earlier referrer or by the
+	// list that built it. NewResource consults the cache only after this
+	// init returns, so without this the same target is fetched once per
+	// referring resource and the result discarded.
+	if cached := cachedArgByArn(runtime, ResourceAwsEc2Snapshot, args); cached != nil {
+		return args, cached, nil
 	}
 
 	if len(args) == 0 {

@@ -1095,6 +1095,14 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+
+	// A reference already materialized by an earlier referrer or by the
+	// list that built it. NewResource consults the cache only after this
+	// init returns, so without this the same target is fetched once per
+	// referring resource and the result discarded.
+	if cached := cachedArgByArn(runtime, ResourceAwsIamUser, args); cached != nil {
+		return args, cached, nil
+	}
 	// The lookup is name-driven (GetUser); discovery sets the asset name to
 	// the IAM user name.
 	if len(args) == 0 {
