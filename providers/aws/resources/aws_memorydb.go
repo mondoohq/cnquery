@@ -98,7 +98,7 @@ func initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the cluster's region and name from the ARN carried on the asset.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformMemorydbCluster); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

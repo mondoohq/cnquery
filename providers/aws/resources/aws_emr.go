@@ -114,7 +114,7 @@ func initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEmrCluster); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

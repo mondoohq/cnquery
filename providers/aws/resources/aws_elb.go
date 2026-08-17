@@ -450,7 +450,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformElbLoadbalancer); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

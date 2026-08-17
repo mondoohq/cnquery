@@ -157,12 +157,6 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch ecs cluster")
 	}
@@ -430,12 +424,6 @@ func (s *mqlAwsEcsTask) id() (string, error) {
 func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
 	}
 
 	if args["arn"] == nil {
@@ -2096,12 +2084,6 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch ecs service")
 	}
@@ -2608,7 +2590,7 @@ func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEcsTaskdefinition); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

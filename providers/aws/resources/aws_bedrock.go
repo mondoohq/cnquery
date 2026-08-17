@@ -250,12 +250,6 @@ func initAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["modelArn"] = llx.StringData(assetArn)
-		}
-	}
-
 	if args["modelArn"] == nil {
 		return nil, nil, errors.New("modelArn required to fetch bedrock custom model")
 	}
@@ -505,12 +499,6 @@ type mqlAwsBedrockGuardrailInternal struct {
 func initAwsBedrockGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
 	}
 
 	var identifier, region string
@@ -1339,12 +1327,6 @@ type mqlAwsBedrockKnowledgeBaseInternal struct {
 func initAwsBedrockKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
 	}
 
 	var kbId, region string

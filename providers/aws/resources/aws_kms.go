@@ -884,7 +884,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformKmsKey); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

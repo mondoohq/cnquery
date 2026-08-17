@@ -614,7 +614,7 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformBatchJobdefinition); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

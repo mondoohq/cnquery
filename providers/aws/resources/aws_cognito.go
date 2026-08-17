@@ -119,7 +119,7 @@ func initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the pool's region and id from the ARN carried on the asset.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformCognitoUserpool); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

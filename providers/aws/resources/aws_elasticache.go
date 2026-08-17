@@ -690,7 +690,7 @@ func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformElasticacheCluster); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

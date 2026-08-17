@@ -115,7 +115,7 @@ func initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	// Get asset identifier if no args provided
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformOpensearchDomain); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

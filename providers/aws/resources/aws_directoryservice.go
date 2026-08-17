@@ -53,7 +53,7 @@ func initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformDirectoryserviceDirectory); assetArn != "" {
 			if parsed, err := arn.Parse(assetArn); err == nil {
 				args["directoryId"] = llx.StringData(strings.TrimPrefix(parsed.Resource, "directory/"))
 			}

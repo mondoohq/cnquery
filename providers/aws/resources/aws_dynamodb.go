@@ -334,7 +334,7 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformDynamodbTable); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -929,7 +929,7 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformDynamodbGlobaltable); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

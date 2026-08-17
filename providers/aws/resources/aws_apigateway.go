@@ -129,7 +129,7 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformGatewayRestapi); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

@@ -274,7 +274,7 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSagemakerNotebookinstance); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -2152,7 +2152,7 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSagemakerDomain); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -4552,7 +4552,7 @@ func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSagemakerTrainingjob); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -4594,7 +4594,7 @@ func initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSagemakerProcessingjob); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

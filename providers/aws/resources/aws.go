@@ -478,12 +478,25 @@ const (
 // is a display name (possibly a Name tag), never a resource key, and must not
 // be used for resolution. Callers must only inject a non-empty result into
 // init args — an empty args["arn"] defeats `args["arn"] == nil` guards.
-func getAssetIdentifier(runtime *plugin.Runtime) string {
+// The platform argument is the platform of the resource asking. The scanned
+// asset's platform is the exact discriminator for what kind of thing it is
+// (connection.Platforms holds one entry per discoverable object type), so
+// requiring it here stops an init from adopting the ARN of an unrelated asset.
+// Without that check a bare query -- e.g. the policy filter
+// `aws.secretsmanager.secret.lastChangedDate != null`, which cnspec evaluates
+// against every asset -- made each init fetch the scanned asset's own ARN and
+// call its own API with it. That cost 1,494 DescribeSecret and 504
+// DescribeClusterV2 calls per scan on ARNs that could never resolve.
+func getAssetIdentifier(runtime *plugin.Runtime, platform string) string {
 	var a *inventory.Asset
 	if conn, ok := runtime.Connection.(*connection.AwsConnection); ok {
 		a = conn.Asset()
 	}
 	if a == nil {
+		return ""
+	}
+	if a.Platform == nil || a.Platform.Name != platform {
+		// the scanned asset is not this kind of resource, so its ARN is not ours
 		return ""
 	}
 

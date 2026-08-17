@@ -2183,7 +2183,7 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSecurityGroup); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -2560,7 +2560,7 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEbsVolume); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -2709,7 +2709,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	log.Debug().Msg("init an ec2 instance")
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEc2Instance); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -2809,7 +2809,7 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEbsSnapshot); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

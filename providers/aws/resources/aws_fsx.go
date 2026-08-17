@@ -125,12 +125,6 @@ func initAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch fsx filesystem")
 	}
@@ -319,12 +313,6 @@ func initAwsFsxCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch fsx cache")
 	}
@@ -494,12 +482,6 @@ func (a *mqlAwsFsx) getBackups(conn *connection.AwsConnection) []*jobpool.Job {
 func initAwsFsxBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
-	}
-
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
 	}
 
 	if args["arn"] == nil {

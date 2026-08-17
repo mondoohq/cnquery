@@ -199,7 +199,7 @@ func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformNeptuneCluster); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
